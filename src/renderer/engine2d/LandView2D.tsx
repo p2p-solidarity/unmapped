@@ -25,7 +25,7 @@ import { nearestTarget, sceneTargets, triggersWithin, triggerTarget } from "../e
 import { isSprinting, matchesAction, moveAxis, useKeys } from "../engine/useKeys";
 import { loadAtlases } from "./atlases";
 import type { SpriteAtlases } from "./canvasRenderer";
-import { chapterScene, readChapter } from "./chapterLayer";
+import { chapterScene, readChapter, residentTiles } from "./chapterLayer";
 import { continentMarkers, continentTargets, mergeChunks, mergeNotes } from "./continentLayer";
 import { landLightAt } from "./landLight";
 import { canStandAt } from "./landModel";
@@ -165,8 +165,13 @@ export function LandView2D({
     const stage = next === null ? null : (story?.progress[next.id]?.stage ?? null);
     const draft = stage?.kind === "land" ? readChapter(stage.source) : null;
     if (next === null || stage === null || draft === null) return null;
-    return chapterScene(next, stage, draft, (x, z) =>
-      canStandAt(graph, landSeed, chunks, x + 0.5, z + 0.5, land),
+    const residents = residentTiles(chunks);
+    return chapterScene(
+      next,
+      stage,
+      draft,
+      (x, z) =>
+        !residents.has(`${x},${z}`) && canStandAt(graph, landSeed, chunks, x + 0.5, z + 0.5, land),
     );
   }, [story, graph, landSeed, chunks, land]);
   const extraTargets = useMemo(

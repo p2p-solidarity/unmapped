@@ -19,6 +19,7 @@ import type { DayLight, Rgb } from "./dayClock";
 import { keepsakeItems } from "./keepsakes";
 import { cachedTerrain, landTileAt } from "./landModel";
 import { drawRift, placeMarkers } from "./placeLayer";
+import { drawPropShape } from "./propShapes";
 import { drawStoryCompass, type StoryMarker, type StoryView, storyMarkers } from "./storyLayer";
 import type { Foe, ShotTrace } from "./useLandCombat";
 
@@ -338,7 +339,9 @@ function pushProp(
     draw: () => {
       const [cx, cy] = toScreen(transform, x, z);
       if (asset === undefined) {
-        drawFallback(frame.ctx, cx, cy, transform.tileSize, prop.kind);
+        if (!drawPropShape(frame.ctx, prop.kind, cx, cy, transform.tileSize, frame.now)) {
+          drawFallback(frame.ctx, cx, cy, transform.tileSize);
+        }
         return;
       }
       const scale = Math.max(0.65, Math.min(prop.scale, 2.2));
@@ -504,21 +507,16 @@ function drawSprite(
   ctx.drawImage(atlases[asset.atlas], asset.sx, asset.sy, asset.sw, asset.sh, dx, dy, dw, dh);
 }
 
+/** A prop kind with neither a sprite nor a shape (a future kind): a plain block, never a label. */
 function drawFallback(
   ctx: CanvasRenderingContext2D,
   cx: number,
   cy: number,
   tileSize: number,
-  label: string,
 ): void {
   const size = tileSize * 0.55;
   ctx.fillStyle = LAND_2D_PALETTE.fallbackBody;
   ctx.fillRect(cx - size / 2, cy - size / 2, size, size);
-  ctx.fillStyle = LAND_2D_PALETTE.fallbackText;
-  ctx.font = `${Math.max(8, Math.round(tileSize * 0.18))}px sans-serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(label.slice(0, 2), cx, cy);
 }
 
 function toScreen(transform: ScreenTransform, x: number, z: number): [number, number] {

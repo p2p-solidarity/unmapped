@@ -4,7 +4,9 @@
 // from the gate instead. Pure: the caller says which ground can be stood on.
 
 import { type ChapterDraft, parseChapter } from "@dsl";
+import type { ChunkStatus } from "@renderer/state";
 import { type ChapterStage, chapterMonsterId, chapterTarget, settleAround } from "@shared/chapter";
+import { CHUNK_SIZE } from "@shared/chunks";
 import { episodeGate, type StoryEpisode } from "@shared/story";
 import type { SceneGraph } from "@shared/world";
 
@@ -18,6 +20,23 @@ export function readChapter(source: string): ChapterDraft | null {
     read.set(source, parsed.ok ? parsed.value : null);
   }
   return read.get(source) ?? null;
+}
+
+/**
+ * World tiles where a witnessed resident stands ("x,z"). The chapter's people and finds never stand
+ * on one: the resident comes first among the targets, so it would always be the nearest there and
+ * whoever stood under it could never be reached — the chapter could never be cleared.
+ */
+export function residentTiles(chunks: Readonly<Record<string, ChunkStatus>>): Set<string> {
+  const tiles = new Set<string>();
+  for (const [key, chunk] of Object.entries(chunks)) {
+    if (chunk.status !== "written") continue;
+    const [cx = 0, cz = 0] = key.split(",").map(Number);
+    for (const npc of chunk.scene.npcs) {
+      tiles.add(`${cx * CHUNK_SIZE + npc.x},${cz * CHUNK_SIZE + npc.z}`);
+    }
+  }
+  return tiles;
 }
 
 export function chapterScene(

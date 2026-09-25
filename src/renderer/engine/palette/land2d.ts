@@ -2,7 +2,16 @@
 export const LAND_2D_PALETTE = {
   background: "#101712",
   fallbackBody: "#75624c",
-  fallbackText: "#e2d4b8",
+  /** Props the atlases have no sprite for (engine2d/propShapes.ts). */
+  propShadow: "rgba(8, 10, 8, 0.28)",
+  propStone: "#9a9486",
+  propStoneLight: "#c8c1b0",
+  propStoneDark: "#5f5a50",
+  propWood: "#7a5536",
+  propWoodDark: "#553a24",
+  propWater: "#24384a",
+  propFlame: "#f29a3a",
+  propFlameCore: "#ffe39a",
   markerSurface: "#172018",
   treasure: "#d8a849",
   exit: "#8fe6ff",
