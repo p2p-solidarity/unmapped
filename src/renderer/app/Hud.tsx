@@ -46,7 +46,9 @@ export function Hud(): JSX.Element {
   const armed = useEncounterStore((state) => state.weapon !== null);
   const openLand = useEngineStore((state) => state.chunk !== null);
   const controls = openLand
-    ? "WASD Move · Shift Sprint · Space Jump · E Interact · N Notes · V Camera"
+    ? cameraMode === "topdown"
+      ? "WASD Move · Shift Sprint · E Interact · N Notes"
+      : "WASD Move · Shift Sprint · Space Jump · E Interact · N Notes · V Camera"
     : cameraMode === "fps"
       ? armed
         ? "WASD Move · LMB Fire · R End turn · F Flashlight · E Interact"

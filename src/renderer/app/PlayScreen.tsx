@@ -2,6 +2,7 @@
 // session state (`busy` + `floorFailure`), so the same value drives this overlay and the input lock.
 
 import { GameCanvas } from "@renderer/engine";
+import { isOpenLand2D, LandView2D } from "@renderer/engine2d";
 import { useT } from "@renderer/i18n";
 import { AltarPanel, DialogueCard } from "@renderer/narrative";
 import { useRunStore, useSessionStore, useWorldStore } from "@renderer/state";
@@ -59,6 +60,7 @@ export function PlayScreen() {
   const setEnding = useSessionStore((state) => state.setEnding);
   const setScreen = useSessionStore((state) => state.setScreen);
   const scene = useWorldStore((state) => state.scene);
+  const gameplayRules = useWorldStore((state) => state.gameplayRules);
   const runOutcome = useRunStore((state) => state.outcome);
   const runScore = useRunStore((state) => state.score);
   const runKills = useRunStore((state) => state.kills);
@@ -69,6 +71,7 @@ export function PlayScreen() {
     (state) => state.activeInstance?.instance.save.endless !== undefined,
   );
   const legacy = useWorldStore((state) => state.origin?.kind === "legacy");
+  const use2DLand = scene.status === "ready" && isOpenLand2D(scene.value, gameplayRules);
 
   useInteractions({ onAdvanceFloor: advance, onDescend: descend });
   usePositionAutosave();
@@ -84,7 +87,15 @@ export function PlayScreen() {
 
   return (
     <div style={{ position: "relative", height: "100%", width: "100%", overflow: "hidden" }}>
-      <GameCanvas />
+      {use2DLand && scene.status === "ready" ? (
+        <LandView2D
+          key={scene.value.contract?.sceneId ?? scene.value.name}
+          rawGraph={scene.value}
+          gameplayRules={gameplayRules}
+        />
+      ) : (
+        <GameCanvas />
+      )}
       <Hud />
       <DialogueCard />
       <AltarPanel />

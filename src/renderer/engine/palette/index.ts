@@ -7,6 +7,7 @@
 
 import type { Biome, Tile } from "@shared/world";
 
+export { LAND_2D_PALETTE } from "./land2d";
 export { MONSTER_LOOK, type MonsterLook, type MonsterShape } from "./monsters";
 export {
   type GeoKey,

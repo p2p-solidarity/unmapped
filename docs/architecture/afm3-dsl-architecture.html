@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Unwritten Land：Apple Foundation Models 與跨平台遊戲畫面 DSL 生成架構評估與導入計畫">
-  <title>AFM × Game DSL｜工程架構評估</title>
+  <meta name="description" content="Unwritten Land 新版規格：降低 AI 生成、執行與修改互動作品的成本。2D 優先、玩法由 AI 定義、三階段開發計劃與可複製 Prompt。">
+  <title>Unwritten Land｜AI 互動作品框架 · 新版規格</title>
   <style>
     :root {
       color-scheme: dark;
@@ -40,7 +40,7 @@
     }
 
     * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; scroll-padding-top: 28px; }
+    html { scroll-behavior: smooth; scroll-padding-top: 92px; }
     body {
       margin: 0;
       min-width: 320px;
@@ -82,11 +82,16 @@
     }
 
     .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
-      margin-bottom: 32px;
+      margin: -8px 0 20px;
+      padding: 8px 0;
+      background: linear-gradient(var(--bg) 72%, transparent);
     }
     .brand {
       display: flex;
@@ -110,6 +115,20 @@
       box-shadow: inset 0 1px rgba(255,255,255,.08);
     }
     .top-actions { display: flex; gap: 8px; }
+    .page-name {
+      color: var(--text-muted);
+      font: 650 12px/1 var(--mono);
+      white-space: nowrap;
+    }
+    .menu-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      min-width: 106px;
+    }
+    .menu-icon { display: grid; gap: 4px; width: 17px; }
+    .menu-icon i { display: block; height: 1px; border-radius: 1px; background: currentColor; }
     .ghost-button {
       min-height: 44px;
       padding: 0 14px;
@@ -121,11 +140,12 @@
       transition: border-color .18s ease, color .18s ease, background .18s ease;
     }
     .ghost-button:hover { border-color: var(--line-strong); color: var(--text); background: var(--surface-2); }
+    button:active { transform: scale(.96); }
 
     .hero {
       position: relative;
       overflow: hidden;
-      padding: clamp(28px, 6vw, 64px);
+      padding: clamp(24px, 4vw, 42px);
       border: 1px solid var(--line);
       border-radius: var(--radius-lg);
       background:
@@ -134,6 +154,7 @@
         var(--bg-elevated);
       box-shadow: var(--shadow);
     }
+    .hero[hidden] { display: none; }
     .hero::after {
       content: "";
       position: absolute;
@@ -157,7 +178,7 @@
     }
     .eyebrow::before { content: ""; width: 22px; height: 1px; background: currentColor; }
     h1, h2, h3, h4 { margin: 0; line-height: 1.15; text-wrap: balance; }
-    h1 { max-width: 900px; font-size: clamp(38px, 7vw, 78px); letter-spacing: -.055em; }
+    h1 { max-width: 900px; font-size: clamp(34px, 5.5vw, 64px); letter-spacing: -.055em; }
     h2 { font-size: clamp(28px, 4vw, 44px); letter-spacing: -.04em; }
     h3 { font-size: 20px; letter-spacing: -.02em; }
     h4 { font-size: 16px; }
@@ -173,6 +194,52 @@
       gap: 10px;
       margin-top: 28px;
     }
+
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 70;
+      border: 0;
+      background: rgba(3, 5, 9, .7);
+      backdrop-filter: blur(5px);
+      cursor: default;
+    }
+    .drawer-backdrop[hidden], .drawer[hidden] { display: none; }
+    .drawer {
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 80;
+      width: min(390px, calc(100vw - 28px));
+      padding: 24px;
+      overflow-y: auto;
+      background: #0f131b;
+      border-right: 1px solid var(--line-strong);
+      box-shadow: 28px 0 70px rgba(0, 0, 0, .48);
+    }
+    .drawer-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 26px; }
+    .drawer-title { margin: 0; color: var(--text); font: 750 13px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .drawer-nav { display: grid; gap: 10px; }
+    .doc-tab {
+      display: grid;
+      grid-template-columns: 40px minmax(0, 1fr);
+      gap: 12px;
+      min-height: 72px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+      color: var(--text-muted);
+      cursor: pointer;
+      text-align: left;
+      transition: border-color .18s ease, color .18s ease, background-color .18s ease, transform .18s ease;
+    }
+    .doc-tab:hover { border-color: var(--line-strong); color: var(--text); background: var(--surface-2); }
+    .doc-tab[aria-current="page"] { color: var(--text); border-color: #6758a0; background: var(--primary-soft); }
+    .doc-tab-index { color: var(--primary); font: 750 12px/1.3 var(--mono); }
+    .doc-tab-copy { display: grid; gap: 4px; font-weight: 750; }
+    .doc-tab small { color: var(--text-muted); font: 500 11px/1.45 var(--mono); }
+    .drawer-note { margin: 24px 0 0; padding-top: 18px; border-top: 1px solid var(--line); color: var(--text-muted); font-size: 12px; }
+    body.drawer-open { overflow: hidden; }
     .pill, .status {
       display: inline-flex;
       align-items: center;
@@ -189,42 +256,62 @@
     .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
     .status.verified { color: var(--success); border-color: #28583a; background: var(--success-soft); }
     .status.inference { color: var(--info); border-color: #2d4e72; background: var(--info-soft); }
-    .status.unverified { color: var(--warning); border-color: #5c4b20; background: var(--warning-soft); }
-    .status.corrected { color: var(--danger); border-color: #663039; background: var(--danger-soft); }
+    .status.unverified, .status.unknown { color: var(--warning); border-color: #5c4b20; background: var(--warning-soft); }
+    .status.corrected, .status.rejected { color: var(--danger); border-color: #663039; background: var(--danger-soft); }
 
     .layout {
-      display: grid;
-      grid-template-columns: 230px minmax(0, 1fr);
-      gap: 40px;
-      margin-top: 48px;
+      display: block;
+      margin-top: 22px;
       align-items: start;
     }
-    .toc {
-      position: sticky;
-      top: 24px;
-      padding: 18px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: rgba(17, 21, 29, .88);
-      backdrop-filter: blur(12px);
+    .page-intro {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      margin: 26px 0 14px;
+      padding: 0 4px;
     }
-    .toc-label { margin: 0 0 10px; color: var(--text-muted); font: 700 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
-    .toc a {
-      display: block;
-      padding: 8px 10px;
-      border-radius: 8px;
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 14px;
-      transition: color .18s ease, background .18s ease;
-    }
-    .toc a:hover, .toc a.active { color: var(--text); background: var(--surface-2); }
+    .page-intro[hidden] { display: none; }
+    .page-intro p { max-width: 720px; margin: 8px 0 0; color: var(--text-muted); }
+    .page-intro [data-page-title] { color: var(--text); font-size: clamp(26px, 3vw, 38px); }
 
-    main { min-width: 0; }
-    section { margin-bottom: 80px; }
+    main { display: flex; min-width: 0; flex-direction: column; }
+    main > .page-intro { order: 0; }
+    main > section[data-section] { order: 10; }
+    main > .footer { order: 999; }
+    section[data-section] {
+      margin-bottom: 12px;
+      padding: clamp(20px, 4vw, 34px);
+      border-radius: 20px;
+      background: rgba(17, 21, 29, .72);
+      box-shadow: 0 16px 42px rgba(0,0,0,.16), inset 0 0 0 1px rgba(255,255,255,.065);
+    }
+    section[data-section][hidden] { display: none; }
+    section[data-section].is-collapsed { padding-block: 22px; }
+    section[data-section].is-collapsed > :not(.section-head) { display: none; }
+    section[data-section].is-collapsed .section-head { margin-bottom: 0; }
     .section-head { margin-bottom: 24px; }
+    section[data-section] .section-head { position: relative; padding-right: 110px; }
     .section-kicker { margin: 0 0 8px; color: var(--primary); font: 700 12px/1 var(--mono); letter-spacing: .09em; text-transform: uppercase; }
     .section-intro { max-width: 760px; margin: 14px 0 0; color: var(--text-soft); }
+    section[data-section] h2 { font-size: clamp(25px, 3.2vw, 38px); }
+    .section-toggle {
+      position: absolute;
+      top: 0;
+      right: 0;
+      min-width: 88px;
+      min-height: 42px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--surface-2);
+      color: var(--text-soft);
+      cursor: pointer;
+      font: 650 12px/1 var(--mono);
+      transition: color .18s ease, background-color .18s ease, transform .18s ease;
+    }
+    .section-toggle:hover { color: var(--text); background: var(--surface-3); }
 
     .verdict {
       display: grid;
@@ -359,6 +446,7 @@
     .details-body { padding: 18px; }
 
     .code-wrap { position: relative; }
+    .prompt-code { white-space: pre-wrap; overflow-wrap: anywhere; padding-top: 58px; }
     pre {
       overflow: auto;
       margin: 0;
@@ -437,6 +525,138 @@
     .decision::before { content: counter(decision, decimal-leading-zero); color: var(--primary); font: 700 13px var(--mono); }
     .decision p { margin: 5px 0 0; color: var(--text-soft); }
 
+    .mechanism-tabs {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: var(--bg-elevated);
+    }
+    .tab-list {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      padding: 6px;
+      background: var(--line);
+    }
+    .tab-button {
+      min-height: 58px;
+      padding: 10px 14px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--surface);
+      color: var(--text-muted);
+      cursor: pointer;
+      font: 700 13px/1.3 var(--mono);
+      text-align: left;
+    }
+    .tab-button small { display: block; margin-top: 4px; color: inherit; font-size: 10px; font-weight: 500; }
+    .tab-button[aria-selected="true"] { background: var(--primary-soft); color: #ddd6fe; box-shadow: inset 0 0 0 1px #6655a7; }
+    .tab-panel { padding: clamp(18px, 3vw, 28px); }
+    .tab-panel[hidden] { display: none; }
+    .tab-panel > h3 { font-size: 26px; }
+    .tab-panel > p { max-width: 780px; color: var(--text-soft); }
+
+    .screen-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .screen-card {
+      overflow: hidden;
+      margin: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    .screen-card img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; outline: 1px solid rgba(255,255,255,.1); outline-offset: -1px; background: #090b10; }
+    .screen-card figcaption { padding: 14px 16px; color: var(--text-soft); font-size: 13px; }
+    .screen-card strong { display: block; margin-bottom: 4px; color: var(--text); font-size: 15px; }
+    .screen-card--wide { grid-column: 1 / -1; }
+    .screen-card--wide img { aspect-ratio: 16 / 9; }
+    .capture-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 8px;
+      color: var(--success);
+      font: 700 10px/1 var(--mono);
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+    .capture-label::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .spec-path {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 18px 0;
+    }
+    .spec-path div { padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+    .spec-path b { display: block; color: var(--primary); font: 750 11px/1.2 var(--mono); letter-spacing: .06em; }
+    .spec-path span { display: block; margin-top: 7px; color: var(--text-soft); font-size: 14px; }
+    .function-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
+    .function-item { padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+    .function-item b { display: block; color: var(--text); font-size: 13px; }
+    .function-item span { display: block; margin-top: 6px; color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+    .step-list { display: grid; gap: 10px; counter-reset: create-step; }
+    .create-step {
+      counter-increment: create-step;
+      display: grid;
+      grid-template-columns: 44px 160px minmax(0, 1fr) minmax(180px, .75fr);
+      gap: 14px;
+      align-items: start;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+    .create-step::before { content: counter(create-step, decimal-leading-zero); color: var(--primary); font: 750 13px var(--mono); }
+    .create-step h3 { font-size: 15px; }
+    .create-step p { margin: 0; color: var(--text-soft); font-size: 14px; }
+    .create-step small { color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+
+    .mermaid-map {
+      overflow-x: auto;
+      margin: 18px 0;
+      padding: 22px;
+      border: 1px dashed #59657b;
+      border-radius: var(--radius);
+      background:
+        linear-gradient(rgba(103,232,249,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(103,232,249,.025) 1px, transparent 1px),
+        #0c1016;
+      background-size: 22px 22px;
+    }
+    .diagram-title { margin: 0 0 16px; color: var(--text-muted); font: 700 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .diagram-row { display: flex; align-items: stretch; gap: 10px; min-width: 760px; }
+    .diagram-row + .diagram-row { margin-top: 12px; }
+    .diagram-node {
+      flex: 1;
+      min-width: 120px;
+      padding: 14px;
+      border: 1px solid #566176;
+      border-radius: 10px 13px 9px 12px;
+      background: rgba(21,26,36,.94);
+      box-shadow: 2px 2px 0 rgba(167,139,250,.10);
+    }
+    .diagram-node.ai { border-color: #7563b7; background: rgba(36,31,61,.94); }
+    .diagram-node.data { border-color: #397484; background: rgba(17,44,52,.94); }
+    .diagram-node.guard { border-color: #4e7558; background: rgba(21,51,35,.94); }
+    .diagram-node.future { border-style: dashed; border-color: #806d35; background: rgba(56,47,22,.8); }
+    .diagram-node b { display: block; color: var(--text); font-size: 14px; }
+    .diagram-node span { display: block; margin-top: 5px; color: var(--text-muted); font-size: 12px; line-height: 1.45; }
+    .diagram-edge { display: grid; place-items: center; flex: 0 0 22px; color: var(--cyan); font: 700 18px/1 var(--mono); }
+    .diagram-note { margin: 14px 0 0; color: var(--text-muted); font-size: 12px; }
+
+    .wireframe {
+      position: relative;
+      min-height: 300px;
+      overflow: hidden;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: linear-gradient(145deg, #142030, #0a0d12 58%);
+    }
+    .wire-canvas { position: absolute; inset: 0; display: grid; place-items: center; color: #60708b; font: 700 12px var(--mono); }
+    .wire-hud { position: absolute; top: 14px; left: 14px; right: 14px; display: flex; justify-content: space-between; gap: 10px; }
+    .wire-box { padding: 9px 12px; border: 1px solid #526078; border-radius: 8px; background: rgba(8,11,16,.78); color: var(--text-soft); font: 650 11px/1.3 var(--mono); }
+    .wire-dock { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; gap: 6px; }
+    .wire-modal { position: absolute; inset: 24% 25%; display: grid; place-items: center; border: 1px solid #7968b3; border-radius: 12px; background: rgba(17,21,29,.94); color: #ddd6fe; font: 700 12px var(--mono); text-align: center; }
+
     .footer {
       padding-top: 28px;
       border-top: 1px solid var(--line);
@@ -446,10 +666,6 @@
     .footer strong { color: var(--text-soft); }
 
     @media (max-width: 980px) {
-      .layout { grid-template-columns: 1fr; }
-      .toc { position: static; display: flex; overflow-x: auto; gap: 4px; padding: 10px; }
-      .toc-label { display: none; }
-      .toc a { white-space: nowrap; }
       .arch-row { grid-template-columns: 1fr; }
       .arch-arrow { transform: rotate(90deg); height: 24px; }
       .arch-rail { grid-template-columns: repeat(2, 1fr); }
@@ -457,6 +673,10 @@
       .flow-step:not(:last-child)::after { display: none; }
       .plan-step { grid-template-columns: 72px 1fr; }
       .gate { grid-column: 2; padding: 12px 0 0; border-left: 0; border-top: 1px solid var(--line); }
+      .screen-grid { grid-template-columns: 1fr; }
+      .function-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .create-step { grid-template-columns: 38px 140px 1fr; }
+      .create-step small { grid-column: 3; }
     }
 
     @media (max-width: 680px) {
@@ -466,7 +686,13 @@
       .hero { padding: 28px 22px; }
       .hero::after { opacity: .55; }
       .layout { margin-top: 28px; gap: 28px; }
-      section { margin-bottom: 60px; }
+      .page-name { display: none; }
+      .top-actions .ghost-button#print { display: none; }
+      .spec-path, .function-grid { grid-template-columns: 1fr; }
+      .create-step { grid-template-columns: 34px minmax(0, 1fr); }
+      .create-step p, .create-step small { grid-column: 2; }
+      section[data-section] .section-head { padding-right: 0; padding-top: 52px; }
+      .section-toggle { left: 0; right: auto; }
       .verdict, .grid-2, .grid-3 { grid-template-columns: 1fr; }
       .score strong { font-size: 50px; }
       .evidence { grid-template-columns: 1fr; gap: 10px; }
@@ -474,8 +700,9 @@
       .arch-rail { grid-template-columns: 1fr; }
       .plan-step { grid-template-columns: 1fr; }
       .gate { grid-column: 1; }
-      .top-actions .ghost-button:first-child { display: none; }
       pre { font-size: 12px; padding-top: 52px; }
+      .tab-list { grid-template-columns: 1fr; }
+      .wire-modal { inset: 28% 12%; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -486,7 +713,7 @@
       :root { color-scheme: light; --bg: #fff; --bg-elevated: #fff; --surface: #fff; --surface-2: #f6f7f9; --surface-3: #eef0f4; --text: #111827; --text-soft: #374151; --text-muted: #64748b; --line: #d7dce4; --line-strong: #b8c0cc; --primary-soft: #f2efff; --cyan-soft: #ecfeff; --success-soft: #ecfdf5; --warning-soft: #fffbeb; --danger-soft: #fef2f2; --info-soft: #eff6ff; }
       body { background: #fff; }
       .shell { width: 100%; padding: 0; }
-      .topbar, .toc, .copy { display: none !important; }
+      .topbar, .drawer, .drawer-backdrop, .copy { display: none !important; }
       .layout { display: block; margin-top: 28px; }
       .hero { box-shadow: none; }
       section { break-inside: avoid; }
@@ -500,747 +727,343 @@
   <a class="skip-link" href="#main">跳到主要內容</a>
   <div class="shell">
     <header class="topbar">
-      <a class="brand" href="#top" aria-label="回到文件頂端">
-        <span class="brand-mark" aria-hidden="true">UL</span>
-        <span>Unwritten Land · Architecture Brief</span>
-      </a>
-      <div class="top-actions">
-        <button class="ghost-button" type="button" id="expand-all">展開所有介面</button>
-        <button class="ghost-button" type="button" id="print">列印 / PDF</button>
+      <a class="brand" href="#top" aria-label="回到文件頂端"><span class="brand-mark" aria-hidden="true">UL</span><span>Unwritten Land · Framework Specification</span></a>
+      <div class="top-actions"><span class="page-name" id="page-name">產品方向</span><button class="ghost-button" type="button" id="print">列印 / PDF</button>
+        <button class="ghost-button menu-button" type="button" id="menu-open" aria-haspopup="dialog" aria-controls="doc-drawer" aria-expanded="false"><span class="menu-icon" aria-hidden="true"><i></i><i></i><i></i></span>分頁目錄</button>
       </div>
     </header>
-
-    <div class="hero" id="top">
-      <p class="eyebrow">Architecture assessment + implementation map · 2026-09-22</p>
-      <h1>因果先行、Typed AST、跨平台 Provider</h1>
-      <p class="hero-lede">把 Apple Foundation Models 接進既有 Electron／OpenUI Lang 遊戲引擎的端到端設計；核心 contract、stdio transport、Swift typed generation 與本地 acceptance gate 已在目標 macOS 27 機器完成小型 spike 驗證。</p>
-      <div class="hero-meta" aria-label="文件摘要">
-        <span class="pill">macOS 27 first</span>
-        <span class="pill">Windows-ready seam</span>
-        <span class="pill">Swift stdio bridge</span>
-        <span class="pill">Parser remains source of truth</span>
-      </div>
-    </div>
-
-    <div class="layout">
-      <nav class="toc" aria-label="本頁目錄">
-        <p class="toc-label">Contents</p>
-        <a href="#verdict">01 · 結論</a>
-        <a href="#evidence">02 · 研究校正</a>
-        <a href="#baseline">03 · 現況差距</a>
-        <a href="#architecture">04 · 系統架構</a>
-        <a href="#contracts">05 · 介面定義</a>
-        <a href="#ipc">06 · Native IPC</a>
-        <a href="#routing">07 · Local / PCC</a>
-        <a href="#validation">08 · 驗證管線</a>
-        <a href="#sequence">09 · 資料時序</a>
-        <a href="#plan">10 · 導入計畫</a>
-        <a href="#current-mechanisms">11 · 現行機制</a>
-        <a href="#risks">12 · 風險與決策</a>
+    <button class="drawer-backdrop" type="button" id="menu-backdrop" aria-label="關閉分頁目錄" hidden></button>
+    <aside class="drawer" id="doc-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" hidden>
+      <div class="drawer-head"><p class="drawer-title" id="drawer-title">新版規格</p><button class="ghost-button" type="button" id="menu-close">關閉</button></div>
+      <nav class="drawer-nav" aria-label="規格文件分頁">
+        <button class="doc-tab" type="button" aria-current="page" data-doc-page="core" data-page-target="entry"><span class="doc-tab-index">01</span><span class="doc-tab-copy">產品方向<small>AI 更好產 · 2D 優先 · 成本指標</small></span></button>
+        <button class="doc-tab" type="button" data-doc-page="progress" data-page-target="progress"><span class="doc-tab-index">02</span><span class="doc-tab-copy">開發計劃與 Prompt<small>驗證方式 → 播放器 → 創作閉環</small></span></button>
+        <button class="doc-tab" type="button" data-doc-page="technical" data-page-target="verdict"><span class="doc-tab-index">03</span><span class="doc-tab-copy">作品契約與現況<small>責任分工 · 執行邊界 · 舊架構銜接</small></span></button>
       </nav>
+      <p class="drawer-note">這是新的目標規格，不是已完成功能清單。三頁可獨立閱讀；列印時展開全文。開發 Prompt 依序使用。</p>
+    </aside>
+    <div class="hero" id="top" data-page-hero="core">
+      <p class="eyebrow">Product direction · Revision 2 · 2026-09-22</p>
+      <h1>讓 AI 更容易產出，<br>讓每次修改更便宜。</h1>
+      <p class="hero-lede">Unwritten Land 是讓 AI 生成、執行與修改互動作品的框架。降低製作與試錯成本是核心價值；遊戲是主要用途，2D 是預設，Three.js 是可選能力。</p>
+      <div class="hero-meta"><span class="pill">HTML / CSS / JavaScript</span><span class="pill">玩法由作品定義</span><span class="pill">局部修改與修補</span><span class="pill">目標規格 · 待實作驗證</span></div>
+    </div>
+    <div class="layout"><main id="main">
+      <div class="page-intro" data-page-intro="core"><div><p class="section-kicker">Page 01 · Product direction</p><h2 data-page-title>先降低產出的成本</h2><p>框架的工作是讓想法更快成為可操作的作品，再讓創作者低成本迭代。</p></div><span class="status inference">方向已確認</span></div>
+      <div class="page-intro" data-page-intro="progress" hidden><div><p class="section-kicker">Page 02 · Delivery plan</p><h2 data-page-title>三階段，逐步驗證</h2><p>先驗證生成媒介，再建立播放器，最後接上生成與修改。以下階段尚未由本次文件更新實作。</p></div><span class="status unknown">待啟動</span></div>
+      <div class="page-intro" data-page-intro="technical" hidden><div><p class="section-kicker">Page 03 · Contract &amp; migration</p><h2 data-page-title>固定服務介面，開放作品玩法</h2><p>區分新方向、待驗證的執行方式，以及現有可重用的資料責任。</p></div><span class="status unknown">契約待原型確認</span></div>
+        <section id="entry" data-section data-page="core" data-open-default>
+          <div class="section-head"><p class="section-kicker">01 · Core value</p><h2>框架以「AI 更好產」為第一優先</h2><p class="section-intro">同一個需求，選擇能讓模型用更少上下文、更少錯誤與更少修補，產出可玩結果的表示方式。</p></div>
 
-      <main id="main">
-        <section id="verdict" data-section>
-          <div class="section-head">
-            <p class="section-kicker">01 · Executive verdict</p>
-            <h2>可行，但要修正兩個核心假設</h2>
+          <div class="grid-3">
+            <article class="card card-accent"><h3>更容易生成</h3><p>優先使用模型能直接產出的文字、圖片、布局與互動程式。簡單需求不必先解決 3D 座標、碰撞與相機。</p></article>
+            <article class="card card-cyan"><h3>更便宜地修改</h3><p>換角色圖、改勝利條件或調整畫面，都能定位到小範圍內容；保留沒有要求改動的部分。</p></article>
+            <article class="card"><h3>更快發現與修補錯誤</h3><p>生成後直接預覽，收集可定位的錯誤，有限次修補。隨時保留上一個可執行版本。</p></article>
           </div>
-          <div class="verdict">
-            <div>
-              <div class="score"><strong>7.5</strong><span>/ 10</span></div>
-              <span class="status inference">條件式可行</span>
-            </div>
-            <div>
-              <p><strong>推薦方向：</strong>PCC 低頻產生 <code>WorldPlan / RoomGraph</code>；本機 AFM 以兩階段 guided generation 先產 <code>EventPlan</code>、再產 <code>SceneLayout</code>；最後交給現有 serializer、OpenUI parser 與新的幾何／導航驗證器。</p>
-              <p><strong>不要直接做：</strong>把 PCC 當成固定可選的「AFM 3 Cloud Pro」、宣稱本機必然有 100–200+ TPS，或把 OpenJEV 當成會生成事件鏈的模型。這三點目前都沒有足夠公開證據。</p>
-            </div>
-          </div>
+          <div class="callout"><strong>價值順序：</strong>先證明框架降低製作成本，再讓創作者透過低成本試錯改善遊戲。作品是否有趣需要試玩，但不把完成一款大型遊戲當成框架第一階段的前置條件。</div>
+        </section>
+        <section id="product" data-section data-page="core" data-open-default>
+          <div class="section-head"><p class="section-kicker">02 · Scope</p><h2>2D 優先，呈現方式跟著需求走</h2><p class="section-intro">「任意玩法」代表不必先新增專用底層模組；不代表第一版支援所有大型遊戲、任意依賴或無限制的系統權限。</p></div>
+<div class="table-wrap" role="region" aria-label="產品範圍" tabindex="0"><table><thead><tr><th scope="col">面向</th><th scope="col">新版決策</th><th scope="col">第一版界線</th></tr></thead><tbody>
+<tr><td>呈現</td><td>HTML／CSS、文字與圖片為預設；Canvas 按需使用</td><td>Three.js 可選；3D、物理與世界地形都不是必經路徑</td></tr>
+<tr><td>玩法</td><td>模型產生具體互動、狀態與規則</td><td>先用小型作品驗證自由度，不要求涵蓋每個 genre</td></tr>
+<tr><td>模組</td><td>提供通用服務與可重用素材</td><td>不先做玩法目錄；新玩法原則上只改作品</td></tr>
+<tr><td>創作</td><td>一句需求 → 生成 → 試玩 → 自然語言修改</td><td>不強制 Genre Matrix、Capability Compiler 或六步 Create</td></tr>
+<tr><td>圖片與元素</td><td>素材引用與程式分離，可獨立替換</td><td>先用實際提供的素材或明確設計的 CSS 圖形；圖片生成不是起跑依賴</td></tr>
+<tr><td>暫緩</td><td>多人、商店、鏈上經濟、大型編輯器</td><td>AFM／PCC 專項優化依量測需求排程，不綁定單一 provider</td></tr>
+</tbody></table></div>
+        </section>
+        <section id="experience" data-section data-page="core" data-open-default>
+          <div class="section-head"><p class="section-kicker">03 · Creation loop</p><h2>先玩到，再用一句話改掉</h2><p class="section-intro">下列是目標流程示意，不是新版 app 截圖。玩法摘要由模型提出，不再要求使用者先填工程表單。</p></div>
 
-          <div class="grid-3" style="margin-top:16px">
-            <article class="card card-accent">
-              <div class="metric">高 <small>架構相容性</small></div>
-              <h3>保留既有 DSL 真相層</h3>
-              <p>typed AST 是更可靠的生成入口，但 canonical OpenUI Lang、現有 parser、limits 與 cartridge hash 仍是最終真相。</p>
-            </article>
-            <article class="card card-cyan">
-              <div class="metric">中 <small>平台風險</small></div>
-              <h3>PCC 不是無條件雲端 API</h3>
-              <p>受 OS、Apple Intelligence、網路、每日 quota、entitlement 與發佈資格限制；必須有可見的本機降級路徑。</p>
-            </article>
-            <article class="card card-warn">
-              <div class="metric">中高 <small>工程量</small></div>
-              <h3>驗證器比 Provider 更關鍵</h3>
-              <p>目前已有 parse、引用與資產檢查，但 AABB、可走性與 headless 物理煙霧測試仍需新增。</p>
-            </article>
+          <div class="flowline" aria-label="目標創作流程">
+            <div class="flow-step"><b>01 · DESCRIBE</b><span>一句話描述想做的體驗</span></div>
+            <div class="flow-step"><b>02 · GENERATE</b><span>模型產生畫面、規則與素材引用</span></div>
+            <div class="flow-step"><b>03 · PLAY</b><span>在同一個播放器直接試玩</span></div>
+            <div class="flow-step"><b>04 · REFINE</b><span>提出修改，查看結果與差異</span></div>
+            <div class="flow-step"><b>05 · KEEP</b><span>保存可玩版本，隨時回復</span></div>
+          </div>
+          <div class="grid-2" style="margin-top:20px">
+            <article class="card"><h3>生成時</h3><p>顯示真實進度，可取消；素材未完成就顯示缺少項目。模型不可用時提供原因，不以預製作品冒充生成結果。</p></article>
+            <article class="card"><h3>修改時</h3><p>規則、布局、文字與素材可分別修改。修補在草稿中完成，不覆蓋正式作品；存檔不相容時明示需重開或遷移。</p></article>
+          </div>
+          <div class="callout"><strong>何時加入框架：</strong>某件事反覆生成、容易出錯，而且由框架處理不會限制創作時，再抽成共用服務。例如素材載入與存檔；具體遊戲規則留在作品。</div>
+        </section>
+        <section id="metrics" data-section data-page="core" data-open-default>
+          <div class="section-head"><p class="section-kicker">04 · Evaluation</p><h2>用實測比較生成成本</h2><p class="section-intro">以下是量測定義，沒有填入尚未跑出的成功率或速度承諾。以相同題目、模型設定與環境比較，保留失敗樣本。</p></div>
+<div class="table-wrap" role="region" aria-label="量測指標" tabindex="0"><table><thead><tr><th scope="col">指標</th><th scope="col">如何量測</th></tr></thead><tbody>
+<tr><td>首次可玩成功率</td><td>第一次輸出、未修補前，能完成題目指定的核心操作之件數／全部嘗試件數；不是只檢查載入成功</td></tr>
+<tr><td>生成時間與成本</td><td>需求提交至首次可操作的時間；分列模型、素材、驗證／修補耗時及可取得的 tokens／實際費用</td></tr>
+<tr><td>修改成功率</td><td>修改要求達成，且列出的既有行為仍正常之件數／全部修改嘗試；依改規則、換素材、調畫面分組</td></tr>
+<tr><td>修補負擔</td><td>首次錯誤、修補次數、變更檔案與範圍；超出上限的失敗仍計入</td></tr>
+<tr><td>框架耦合</td><td>新增玩法需要修改播放器或增加專用模組的次數；三個原型應共用同一播放器</td></tr>
+<tr><td>模型理解成本</td><td>注入的契約說明長度、必要宿主 API 數量與契約誤用；不為追求數字壓縮到難以理解</td></tr>
+</tbody></table></div><div class="callout warn"><strong>比較原則：</strong>可使用現有 DSL 路徑支援的重疊題目做基準，不強迫它執行不支援的玩法。沒有模型就標示未量測，不以手寫原型推論模型生成成功率。</div>
+        </section>
+        <section id="progress" data-section data-page="progress" data-open-default>
+          <div class="section-head"><p class="section-kicker">01 · Delivery scope</p><h2>這次先完成框架的最小閉環</h2><p class="section-intro">本文件完成方向更新；下列三階段是後續開發工作，並非已交付功能。</p></div>
+<div class="table-wrap" role="region" aria-label="階段狀態" tabindex="0"><table><thead><tr><th scope="col">階段</th><th scope="col">產出</th><th scope="col">進入下一階段的條件</th><th scope="col">狀態</th></tr></thead><tbody>
+<tr><td>1 · 生成方式原型</td><td>同一播放器、三種互動作品、成本紀錄、最小契約建議</td><td>不需要玩法專用模組；可說明哪些成本降低、哪些尚未量測</td><td>待驗證</td></tr>
+<tr><td>2 · 最小播放器</td><td>隔離執行、素材、存檔、錯誤與版本載入</td><td>三作品共用 runtime；錯誤可恢復、權限邊界與存檔經驗收</td><td>待階段 1</td></tr>
+<tr><td>3 · 生成與修改閉環</td><td>一句需求 → 可玩作品 → 局部修改 → 保存／回復</td><td>真實生成與三類修改跑通，記錄成功率與成本</td><td>待階段 2</td></tr>
+</tbody></table></div><div class="callout"><strong>完成定義：</strong>有程式碼只代表已有實作。完成還需要專案檢查、實機操作、失敗／取消／重新開啟驗收；執行邊界依 L 級流程設計與 review。這份文件更新本身不代表已通過上述產品驗收。</div>
+        </section>
+        <section id="stages" data-section data-page="progress" data-open-default>
+          <div class="section-head"><p class="section-kicker">02 · Acceptance</p><h2>每階段只解決一個問題</h2><p class="section-intro">先證明生成方式，再固定執行契約；避免一開始把新的框架做成另一個龐大引擎。</p></div>
+
+          <div class="plan-list">
+            <article class="plan-step"><div class="phase">PHASE 1</div><div><h3>AI 能否直接產出不同玩法？</h3><p>用圖文分支、卡牌交換、場景推理三個題目建立可丟棄原型。共同契約保持最小；記錄生成與局部修改的實際結果。</p></div><div class="gate"><b>交付</b>可執行實驗、原始紀錄、契約建議與下一步結論。不把實驗直接當正式 runtime。</div></article>
+            <article class="plan-step"><div class="phase">PHASE 2</div><div><h3>作品能否可靠地執行與保存？</h3><p>落實作品載入、生命周期、素材與存檔；決定隔離機制、訊息邊界、依賴與資源限制。新舊作品格式明確分流。</p></div><div class="gate"><b>交付</b>最小 app 入口；確認一個作品失敗不破壞宿主與其他作品，退出重開仍能讀取進度。</div></article>
+            <article class="plan-step"><div class="phase">PHASE 3</div><div><h3>修改是否比重做便宜？</h3><p>沿用可用模型連線，加入草稿生成、預覽、定位錯誤與有限修補。修改採相符版本基底，不覆蓋晚到結果。</p></div><div class="gate"><b>交付</b>真實生成與規則／素材／布局修改，展示差異、回復與成本紀錄，不擴充發布平台。</div></article>
           </div>
         </section>
+        <section id="prompts" data-section data-page="progress" data-open-default>
+          <div class="section-head"><p class="section-kicker">03 · Development prompts</p><h2>可分開執行的開發 Prompt</h2><p class="section-intro">依 1 → 2 → 3 執行。每段都可獨立交給開發代理；下一段需讀取上一段的實際產出，不能假設驗收已通過。</p></div>
+<details><summary>Prompt 1 · 驗證生成方式</summary><div class="details-body"><div class="code-wrap"><button class="copy" type="button" aria-label="複製開發 Prompt 1">複製 Prompt 1</button><pre class="prompt-code"><code>請在 /Users/kidney/Workspace/Hackathon/26ethtokyo 為 Unwritten Land 驗證新的 AI 遊戲生成方向。
 
-        <section id="evidence" data-section>
-          <div class="section-head">
-            <p class="section-kicker">02 · Evidence audit</p>
-            <h2>研究前提：哪些能用，哪些要改寫</h2>
-            <p class="section-intro">架構只建立在可重現的公開能力上。以下把「官方已證實」、「合理推論」與「應撤回的說法」分開。</p>
-          </div>
+產品決策：框架核心是降低 AI 生成、修改與修補互動作品的成本。不強制 Three.js、SceneGraph 或 gameplay kit；預設探索 HTML／CSS／JavaScript 的 2D 作品，圖片與 Canvas 按需使用。框架提供通用服務，玩法由 AI 產生。暫不遷移或刪除舊路徑。
 
-          <div class="evidence-list">
-            <article class="evidence">
-              <span class="status verified">已證實</span>
-              <p><strong><code>@Generable</code> 使用 constrained sampling。</strong> Apple 明確說 guided generation 會把 Swift type 轉成 schema，並以 constrained sampling 防止 malformed output。這足以作為 typed AST 的結構保證，但不保證引用、拓撲或玩法語意。<br><a href="https://developer.apple.com/documentation/foundationmodels/generating-swift-data-structures-with-guided-generation">Apple · Guided generation</a></p>
-            </article>
-            <article class="evidence">
-              <span class="status verified">已證實</span>
-              <p><strong>OS 27 的 PCC 提供 32K context、reasoning、每日使用限制。</strong> On-device 為 4K、離線且無 request limit；PCC 需要網路並應處理 quota 與 availability。<br><a href="https://developer.apple.com/videos/play/wwdc2026/319/">Apple WWDC26 · Private Cloud Compute</a></p>
-            </article>
-            <article class="evidence">
-              <span class="status verified">已證實</span>
-              <p><strong><code>.fmadapter</code> toolkit 停在 26.0.0，且不相容 OS 27+。</strong> 因此 AFM3 路線不應依賴 Apple adapter。<br><a href="https://developer.apple.com/apple-intelligence/foundation-models-adapter/">Apple · Foundation Models adapter training</a></p>
-            </article>
-            <article class="evidence">
-              <span class="status corrected">需校正</span>
-              <p><strong>Flash-to-DRAM 是 AFM 3 Core Advanced 的架構敘述，不是所有 AFM 3 Core 的同義詞。</strong> Apple 說完整權重存於 NAND、依 prompt routing，且生成期間會週期性重選 experts；公開文章沒有支援「100–200+ TPS」這個數字。頁面與產品文案不應承諾該吞吐。<br><a href="https://machinelearning.apple.com/research/introducing-third-generation-of-apple-foundation-models">Apple ML Research · Third-generation AFM</a></p>
-            </article>
-            <article class="evidence">
-              <span class="status corrected">需校正</span>
-              <p><strong>OpenJEV 是 NLI cross-encoder／verifier，不是因果事件生成器。</strong> 它可比較 premise 與 hypothesis、rerank 候選；Minecraft 範例的 backward chaining 是外部 scaffold。建議把它定位為可選的事件一致性評分器。<br><a href="https://huggingface.co/AlexWortega/openjev">OpenJEV model card</a></p>
-            </article>
-            <article class="evidence">
-              <span class="status inference">合理推論</span>
-              <p><strong>OpenUI 的緊湊 DSL 思路可直接沿用，但「靠 grammar masking 得到全部收益」不是 OUI-1 文章的結論。</strong> 官方文章主張 OpenUI Lang 最多節省 67% tokens，且以 parser 驗證／修復；本 repo 的 GBNF 遮罩目前只對 llama.cpp 生效。<br><a href="https://www.openui.com/blog/oui-1">OpenUI · Introducing OUI-1</a></p>
-            </article>
-          </div>
-          <div class="callout warn"><strong>用語修正：</strong>「端側 0ms 網路延遲」應改成「端側路徑沒有網路 RTT」。模型載入、prompt evaluation、sampling、IPC 與驗證仍有可測量延遲。</div>
+先讀 AGENTS.md（若有）、CLAUDE.md、plan.md 與 docs/architecture/afm3-dsl-architecture.html。新版 HTML 是本次方向依據；現有規範描述的 data-only 邊界仍適用於舊路徑。依專案流程評估規模，使用 prototype skill 建立獨立、可丟棄的實驗。涉及新執行邊界時按 L 級處理，不在宿主直接執行生成程式。
+
+用同一個最小播放器承載：
+1. 圖文選擇與分支結果。
+2. 卡牌交換與自訂勝利條件。
+3. 點擊場景、收集線索與推理。
+
+三者只是題目，不得各自新增專用引擎模組。實驗樣本需標明來源，不冒充正式資料或模型輸出。
+
+比較模型所需上下文、首次可玩成功率、耗時、可取得的 tokens／費用、修補次數，以及修改規則時的變更範圍。確認第二、第三種玩法不需要修改播放器。有模型時實際生成；沒有時完成獨立可驗證工作，明列未量測項目，不虛構數據。
+
+交付可執行原型、實驗結果與最小作品契約建議，說明哪些由作品決定、哪些由播放器提供。依證據推薦下一階段。先不做通用模組平台、完整編輯器或舊功能遷移。</code></pre></div></div></details>
+<details><summary>Prompt 2 · 建立最小播放器</summary><div class="details-body"><div class="code-wrap"><button class="copy" type="button" aria-label="複製開發 Prompt 2">複製 Prompt 2</button><pre class="prompt-code"><code>請在 /Users/kidney/Workspace/Hackathon/26ethtokyo，依前一階段原型結果，實作最小 AI 互動作品播放器。
+
+先讀專案規範、新版 docs/architecture/afm3-dsl-architecture.html 與原型結論。原型尚未完成時先驗證關鍵假設。此工作涉及生成程式執行邊界，依 L 級流程規劃、grilling、實作與 code-review。
+
+目標是同一播放器執行不同 2D 玩法，不新增玩法專用 kit，不強制 Three.js。
+
+範圍：作品入口與本機素材載入；開始／重新開始／退出；最小存檔讀寫介面；載入與執行錯誤回報；修正後重新載入。支援 HTML／CSS／JavaScript，其他依賴依真實需求加入。
+
+沿用 Cartridge／Instance／Workspace 的責任分離與版本機制，但不把互動作品硬塞進 Scene DSL。新增格式使用明確版本或作品類型，舊卡帶保持可讀。新舊路徑的規範差異需明確記錄，不放寬所有舊 mods 的權限。
+
+生成作品在隔離環境執行，不能直接接觸宿主 preload、Node、檔案系統、憑證或任意網路。宿主服務透過有限且驗證過的訊息介面提供。先提出具體隔離、資源限制與故障復原設計，不假設現有 data-only 驗證已足夠。
+
+驗收三種玩法共用播放器、新作品不修改播放器、重開可恢復進度、單一作品故障不破壞宿主與其他作品。權限與跨邊界驗證有必要測試，完成專案檢查與實機流程。
+
+交付可操作的最小入口與驗收結果，先不做完整創作 UI、多人、商店或模組目錄。</code></pre></div></div></details>
+<details><summary>Prompt 3 · 接上生成、試玩與局部修改</summary><div class="details-body"><div class="code-wrap"><button class="copy" type="button" aria-label="複製開發 Prompt 3">複製 Prompt 3</button><pre class="prompt-code"><code>請在 /Users/kidney/Workspace/Hackathon/26ethtokyo，基於已驗證的互動作品播放器，實作最小 AI 創作閉環。先讀專案規範、新版 docs/architecture/afm3-dsl-architecture.html 與前階段契約／驗收結果，依規模選擇流程。
+
+目標是降低生成與修改成本，不重新引入 Genre Matrix、Capability Compiler 或強制六步 Create。
+
+使用流程：一句需求 → 生成作品 → 直接試玩 → 輸入修改要求 → 更新預覽 → 保存版本。
+
+給模型最小作品契約與宿主 API 說明，讓模型自行定義畫面、互動、狀態與規則。沿用可用模型連線；新格式只新增必要薄介面，不重寫整套 inference。
+
+作品檔案與素材引用分離，讓換圖或改規則可局部進行。第一版可用文字、CSS 圖形與實際提供的素材；缺圖需明示，不放假素材或聲稱已生成。
+
+收集語法、載入與執行錯誤供模型定位，設定明確修補上限。所有生成與修補先寫草稿，保留上一個可執行版本；支援取消，晚到或基底已變更的結果不得覆蓋新草稿。呈現修改摘要，可回復前版。正式版本不可變，遊玩進度分開；修改若影響存檔相容性需明示，不靜默損壞進度。
+
+至少用三個不同需求及改規則、換素材、調畫面三類修改驗收。確認要求生效，也確認未要求修改的行為正常。記錄首次可玩成功率、耗時、可取得的 tokens／費用、修補次數與修改成功率，只報真實結果，不以預製作品冒充即時生成。
+
+完成必要測試、專案檢查與實機驗收。交付可現場展示的生成→試玩→修改流程及下一個成本瓶頸，先不擴充發布平台與大型編輯器。</code></pre></div></div></details>
         </section>
-
-        <section id="baseline" data-section>
-          <div class="section-head">
-            <p class="section-kicker">03 · Current state</p>
-            <h2>現有程式已具備一半骨架</h2>
-            <p class="section-intro">目前不是從零開始。Apple local provider、Electron IPC 與 artifact gate 已接上；真正剩下的是 PCC、Windows adapter 與動態物理／NavMesh，而不是再造一條 DSL。</p>
-          </div>
-
-          <div class="table-wrap" role="region" aria-label="現況與目標差距表" tabindex="0">
-            <table>
-              <thead><tr><th>層</th><th>現在</th><th>可保留</th><th>要新增 / 改造</th></tr></thead>
-              <tbody>
-                <tr><td><strong>生成入口</strong></td><td><code>generateSceneArtifact()</code> → preload → main-owned <code>SceneArtifactService</code></td><td>既有 chat / repair 路徑不變</td><td>只在需要時將舊 scene flow 遷到 artifact client</td></tr>
-                <tr><td><strong>Provider</strong></td><td><code>AppleLocalSceneProvider</code> → persistent Swift helper</td><td>llama.cpp / Ollama / vLLM chat fallback</td><td>PCC planner 與 Windows llama.cpp scene adapter</td></tr>
-                <tr><td><strong>約束</strong></td><td>llama.cpp 專用 GBNF；其他 provider 主要靠 prompt + parser</td><td><code>sceneGrammar()</code>、Zod schema、limits</td><td>typed AST schema、capability negotiation、provider-specific constraint strategy</td></tr>
-                <tr><td><strong>真相層</strong></td><td>OpenUI Lang → parser → <code>SceneGraph</code></td><td>全部保留</td><td>新增 AST → deterministic serializer；要求 round-trip equality</td></tr>
-                <tr><td><strong>驗證</strong></td><td>schema、因果鏈、資產 integrity、AABB、exit clearance、格網 reachability</td><td><code>validateWorkspace</code> 與 artifact receipt</td><td>headless Rapier smoke test；自由 mesh 時才評估 Recast</td></tr>
-                <tr><td><strong>平台</strong></td><td>單一 config 選一個 provider</td><td>main process owns secrets / sidecar</td><td>同一請求內可組合 PCC planner + local expander，Windows 換 llama.cpp</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="callout"><strong>最重要的整合原則：</strong>不要讓 Swift 回傳可直接渲染的物件，也不要讓 renderer 信任 native output。Swift 只回 typed draft；TypeScript 仍負責 canonicalize、parse、validate、hash 與 persist。</div>
+        <section id="demo" data-section data-page="progress" data-open-default>
+          <div class="section-head"><p class="section-kicker">04 · Demo &amp; definition of done</p><h2>展示一個想法如何便宜地變成作品</h2><p class="section-intro">這是新方向的 demo 驗收設計，沒有聲稱目前 app 已提供這些操作。</p></div>
+<div class="table-wrap" role="region" aria-label="新版展示流程" tabindex="0"><table><thead><tr><th scope="col">步驟</th><th scope="col">展示</th><th scope="col">證明</th></tr></thead><tbody>
+<tr><td>生成</td><td>輸入一個小型作品需求，直接看到可操作結果</td><td>AI 能在少量框架說明下產出作品</td></tr>
+<tr><td>修改</td><td>一句話改規則，再換素材或調整布局</td><td>修改可以局部生效，不必整個重做</td></tr>
+<tr><td>回復</td><td>切回上一個可玩版本，再退出／重開</td><td>試錯可回復，作品與進度有清楚歸屬</td></tr>
+<tr><td>換玩法</td><td>載入另一種互動作品</td><td>新玩法沒有要求新增底層模組</td></tr>
+<tr><td>成本</td><td>展示真實耗時、修補與使用量紀錄</td><td>降低成本有證據，不只是一段生成動畫</td></tr>
+</tbody></table></div><div class="callout"><strong>可稱為完整的第一版：</strong>一條真實生成 → 試玩 → 修改 → 保存／回復的閉環；同一播放器承載三種不同互動，通過執行邊界與恢復驗收，且有可重現成本紀錄。遊戲內容深度與商業化另行驗證。</div>
         </section>
+        <section id="verdict" data-section data-page="technical" data-open-default>
+          <div class="section-head"><p class="section-kicker">01 · Responsibility</p><h2>AI 定義作品，宿主提供共用服務</h2><p class="section-intro">新版允許探索生成可執行的玩法程式。這是新的作品類型與信任邊界，不是把任意程式塞進現有可信 renderer。</p></div>
 
-        <section id="architecture" data-section>
-          <div class="section-head">
-            <p class="section-kicker">04 · Target architecture</p>
-            <h2>端到端系統架構圖</h2>
-            <p class="section-intro">對外只有一個場景生成服務；對內以能力路由器組合世界規劃、事件計畫、空間展開與驗證。PCC 永遠不在玩家移動或逐幀 hot path。</p>
-          </div>
-
-          <figure class="architecture" aria-labelledby="arch-caption">
+          <div class="architecture" aria-label="目標架構示意，尚未實作">
             <div class="arch-row">
-              <div class="arch-box">
-                <small>Untrusted UI</small>
-                <strong>Electron Renderer</strong>
-                <span>只送 intent + immutable state snapshot；接收 progress / validated artifact</span>
-              </div>
-              <div class="arch-arrow" aria-hidden="true">→</div>
-              <div class="arch-box">
-                <small>Trust boundary</small>
-                <strong>Preload · window.seed</strong>
-                <span>版本化 IPC contract、Zod 驗證、abort 與事件訂閱</span>
-              </div>
-              <div class="arch-arrow" aria-hidden="true">→</div>
-              <div class="arch-box primary">
-                <small>Orchestrator</small>
-                <strong>SceneGenerationService</strong>
-                <span>ProviderRouter · ContextBuilder · RepairPolicy · Artifact receipt</span>
-              </div>
+              <div class="arch-box primary"><small>AUTHORING</small><strong>需求與修改</strong><span>模型取得精簡契約、相關檔案與必要錯誤上下文</span></div><div class="arch-arrow" aria-hidden="true">→</div>
+              <div class="arch-box cloud"><small>WORKSPACE</small><strong>作品草稿</strong><span>入口、樣式、玩法程式、素材引用；獨立版本與候選</span></div><div class="arch-arrow" aria-hidden="true">→</div>
+              <div class="arch-box guard"><small>PLAYER</small><strong>隔離預覽與執行</strong><span>檢查 → 試玩 → 回饋；有限修補後保存可玩版本</span></div>
             </div>
-            <div class="arch-row">
-              <div class="arch-box cloud">
-                <small>Low frequency · network</small>
-                <strong>Apple PCC Planner</strong>
-                <span>WorldPlan · RoomGraph · quest topology · long context；可用才呼叫並快取</span>
-              </div>
-              <div class="arch-arrow" aria-hidden="true">↘</div>
-              <div class="arch-box primary">
-                <small>Universal provider layer</small>
-                <strong>Provider Router</strong>
-                <span>capabilities → route policy → macOS Native / llama.cpp / remote endpoint</span>
-              </div>
-              <div class="arch-arrow" aria-hidden="true">↙</div>
-              <div class="arch-box">
-                <small>High frequency · local</small>
-                <strong>AFM Local Expander</strong>
-                <span>EventPlan first → SceneLayout；Swift <code>@Generable</code> constrained sampling</span>
-              </div>
-            </div>
-            <div class="arch-row">
-              <div class="arch-box">
-                <small>Platform adapter</small>
-                <strong>Swift Helper · stdio NDJSON</strong>
-                <span>persistent child process、request multiplexing、stream / cancel、stderr logs</span>
-              </div>
-              <div class="arch-arrow" aria-hidden="true">→</div>
-              <div class="arch-box">
-                <small>Canonicalization</small>
-                <strong>AST → OpenUI Lang</strong>
-                <span>deterministic serializer → existing parser → <code>SceneGraph</code></span>
-              </div>
-              <div class="arch-arrow" aria-hidden="true">→</div>
-              <div class="arch-box guard">
-                <small>Non-negotiable gate</small>
-                <strong>Validation Pipeline</strong>
-                <span>schema · refs · assets · AABB · navigation · physics smoke · hash</span>
-              </div>
-            </div>
-            <div class="arch-rail" aria-label="跨平台實作">
-              <div>macOS 27<br><strong>FoundationModels</strong></div>
-              <div>Windows / Linux<br><strong>llama.cpp + GBNF</strong></div>
-              <div>Fallback<br><strong>OpenAI-compatible</strong></div>
-              <div>Optional verifier<br><strong>OpenJEV rerank</strong></div>
-            </div>
-            <figcaption class="legend" id="arch-caption">
-              <span><i></i> 核心協調／local generation</span>
-              <span><i></i> 有網路與 quota 的 PCC</span>
-              <span><i></i> 所有輸出的強制 gate</span>
-            </figcaption>
-          </figure>
-
-          <div class="flowline" aria-label="因果先行資料模型">
-            <div class="flow-step"><b>01 · PLAN</b><span>WorldPlan / RoomGraph</span></div>
-            <div class="flow-step"><b>02 · CAUSE</b><span>EventPlan：前置條件與效果</span></div>
-            <div class="flow-step"><b>03 · PLACE</b><span>SceneLayout：座標與資產</span></div>
-            <div class="flow-step"><b>04 · COMPILE</b><span>Canonical OpenUI Lang</span></div>
-            <div class="flow-step"><b>05 · PROVE</b><span>ValidationReport + receipt</span></div>
+            <div class="arch-rail"><div>作品生命周期</div><div>素材存取</div><div>分隔的存檔</div><div>錯誤與量測</div></div>
+            <p class="diagram-note">架構示意；隔離技術、檔案契約與 API 名稱由原型與第二階段確認。</p>
           </div>
+<div class="table-wrap" role="region" aria-label="框架與作品分工" tabindex="0"><table><thead><tr><th scope="col">責任</th><th scope="col">AI 生成的作品</th><th scope="col">框架／宿主</th></tr></thead><tbody>
+<tr><td>畫面</td><td>布局、文字、角色與物件呈現</td><td>預覽區域、資產載入與顯示錯誤</td></tr>
+<tr><td>規則</td><td>狀態轉移、操作結果、勝敗條件</td><td>不新增每種玩法專用的判定器</td></tr>
+<tr><td>保存</td><td>可序列化的作品進度與狀態版本</td><td>按作品／實例隔離，限定大小、原子保存與恢復</td></tr>
+<tr><td>依賴</td><td>使用契約允許的能力與素材</td><td>固定可用依賴、資產來源與執行資源範圍</td></tr>
+<tr><td>模型</td><td>創作與修改階段產生檔案</td><td>模型連線、憑證、取消與使用量留在宿主</td></tr>
+</tbody></table></div>
         </section>
-
-        <section id="contracts" data-section>
-          <div class="section-head">
-            <p class="section-kicker">05 · Contracts</p>
-            <h2>模組介面定義</h2>
-            <p class="section-intro">使用者要求的 <code>generateScene(intent, state)</code> 保留為應用層 facade；跨 IPC 的 production contract 依 repo 規則回傳 <code>Result</code>，不 throw。</p>
-          </div>
-
-          <details open>
-            <summary>TypeScript · Universal Provider Interface</summary>
-            <div class="details-body">
-              <div class="code-wrap">
-                <button class="copy" type="button" aria-label="複製 TypeScript Provider 介面">複製</button>
-                <pre><code>export type ProviderId = "apple-local" | "apple-pcc" | "llamacpp" | "openai-compatible";
-
-export interface ProviderCapabilities {
-  providerId: ProviderId;
-  available: boolean;
-  locality: "device" | "private-cloud" | "remote";
-  constraintModes: readonly ("swift-generable" | "gbnf" | "json-schema" | "none")[];
-  contextTokens: number | null;
-  supportsStreaming: boolean;
-  supportsReasoning: boolean;
-  unavailableReason?: string;
-}
-
-export interface SceneIntent {
-  requestId: string;
-  purpose: "new-room" | "repair-room" | "expand-room";
-  brief: string;
-  language: string;
-  sceneId: string;
-  topology?: RoomNode;
-}
-
-export interface SceneState {
-  worldPlan: WorldPlan | null;
-  currentScene: SceneGraph | null;
-  flags: Readonly&lt;Record&lt;string, string | number | boolean&gt;&gt;;
-  inventory: readonly ItemSpec[];
-  assetCatalog: readonly AssetRef[];
-  capabilityProfile: CapabilityProfile;
-}
-
-export interface GenerationOptions {
-  signal: AbortSignal;
-  maxRepairAttempts: 2;
-  onEvent?(event: GenerationEvent): void;
-}
-
-export interface SceneProvider {
-  readonly id: ProviderId;
-  capabilities(): Promise&lt;Result&lt;ProviderCapabilities&gt;&gt;;
-  generateScene(
-    intent: SceneIntent,
-    state: SceneState,
-    options: GenerationOptions,
-  ): Promise&lt;Result&lt;SceneDraft&gt;&gt;;
-}
-
-// App-facing logical API. This is the only method renderer features depend on.
-export interface SceneGenerationService {
-  generateScene(
-    intent: SceneIntent,
-    state: SceneState,
-    options: GenerationOptions,
-  ): Promise&lt;Result&lt;SceneArtifact&gt;&gt;;
-}
-
-export interface SceneArtifact {
-  ast: SceneAST;
-  source: string;                 // canonical OpenUI Lang
-  graph: SceneGraph;              // existing parser output
-  validation: ValidationReport;
-  receipt: GenerationReceipt;
-}</code></pre>
-              </div>
-              <p class="code-note">設計重點：provider 產生的是 <code>SceneDraft</code>，不是可持久化 artifact；只有 service 完成 canonicalize + validation 後才能回傳 <code>SceneArtifact</code>。</p>
-            </div>
-          </details>
-
-          <details open>
-            <summary>TypeScript · 因果 AST 與驗證 contract</summary>
-            <div class="details-body">
-              <div class="code-wrap">
-                <button class="copy" type="button" aria-label="複製 TypeScript AST 介面">複製</button>
-                <pre><code>export interface EventPlan {
-  entryEventId: string;
-  events: readonly CausalEvent[];
-  terminalEventIds: readonly string[];
-}
-
-export interface CausalEvent {
-  id: string;
-  trigger: "enter" | "interact" | "collect" | "defeat" | "exit";
-  subjectId: string | null;
-  requires: readonly Predicate[];
-  effects: readonly Effect[];
-}
-
-export interface SceneAST {
-  sceneId: string;
-  eventPlan: EventPlan;
-  floor: FloorNode;
-  objects: readonly SpatialNode[];
-  exits: readonly ExitNode[];
-  lights: readonly LightNode[];
-}
-
-export interface ValidationIssue {
-  stage: "schema" | "semantic" | "asset" | "geometry" | "navigation" | "simulation";
-  severity: "error" | "warning";
-  code: string;
-  path: string;
-  message: string;
-  repairHint?: string;
-}
-
-export interface ValidationReport {
-  valid: boolean;
-  issues: readonly ValidationIssue[];
-  metrics: {
-    reachableRequiredTargets: number;
-    requiredTargetCount: number;
-    overlappingAabbs: number;
-    simulationTicks: number;
-  };
-}
-
-export interface SceneValidator {
-  validate(input: {
-    ast: SceneAST;
-    graph: SceneGraph;
-    assets: readonly AssetRef[];
-    profile: CapabilityProfile;
-  }): Promise&lt;ValidationReport&gt;;
-}</code></pre>
-              </div>
-            </div>
-          </details>
-
-          <details>
-            <summary>Swift · <code>@Generable</code> 中間表示</summary>
-            <div class="details-body">
-              <div class="code-wrap">
-                <button class="copy" type="button" aria-label="複製 Swift Generable 介面">複製</button>
-                <pre><code>import Foundation
-import FoundationModels
-
-@available(macOS 27.0, *)
-@Generable
-enum EventTrigger: String, Codable {
-    case enter, interact, collect, defeat, exit
-}
-
-@available(macOS 27.0, *)
-@Generable(description: "One causal event. References IDs supplied in the request.")
-struct CausalEventDraft: Codable {
-    var id: String
-    var trigger: EventTrigger
-    var subjectID: String?
-    @Guide(.maximumCount(8)) var requires: [PredicateDraft]
-    @Guide(.maximumCount(8)) var effects: [EffectDraft]
-}
-
-@available(macOS 27.0, *)
-@Generable(description: "Causal plan generated before spatial layout.")
-struct EventPlanDraft: Codable {
-    var entryEventID: String
-    @Guide(.maximumCount(32)) var events: [CausalEventDraft]
-    @Guide(.maximumCount(8)) var terminalEventIDs: [String]
-}
-
-@available(macOS 27.0, *)
-@Generable(description: "Spatial expansion of an already validated event plan.")
-struct SceneLayoutDraft: Codable {
-    var sceneID: String
-    var floor: FloorDraft
-    @Guide(.maximumCount(64)) var objects: [SpatialObjectDraft]
-    @Guide(.maximumCount(8)) var exits: [ExitDraft]
-    @Guide(.maximumCount(12)) var lights: [LightDraft]
-}
-
-@available(macOS 27.0, *)
-protocol NativeSceneGenerating: Sendable {
-    func capabilities() async -> NativeCapabilities
-    func planWorld(_ request: WorldPlanRequest) async throws -> WorldPlanDraft
-    func generateEvents(_ request: EventPlanRequest) async throws -> EventPlanDraft
-    func generateLayout(
-        _ request: SceneLayoutRequest
-    ) -> AsyncThrowingStream&lt;NativeGenerationEvent, Error&gt;
-    func cancel(requestID: UUID) async
-}</code></pre>
-              </div>
-              <p class="code-note">這是介面草圖，不是可直接編譯的實作。真正 spike 應以安裝的 Xcode 27 SDK 確認 macro、Guide overload、PCC availability 與 streaming API 的精確符號。</p>
-            </div>
-          </details>
+        <section id="contracts" data-section data-page="technical" data-open-default>
+          <div class="section-head"><p class="section-kicker">02 · Minimum contract</p><h2>固定少量介面，不設計另一套龐大 DSL</h2><p class="section-intro">以下定義必要責任；不是已定稿的 JSON schema 或 SDK。先讓原型證明這些欄位真的必要，再固定名稱。</p></div>
+<div class="table-wrap" role="region" aria-label="最小作品契約" tabindex="0"><table><thead><tr><th scope="col">契約部分</th><th scope="col">第一版應描述的事</th><th scope="col">不應綁住的事</th></tr></thead><tbody>
+<tr><td>作品標識</td><td>格式版本、作品類型、入口、內容檔案與相對素材引用</td><td>不要求 SceneGraph、genre、相機或 kit</td></tr>
+<tr><td>生命周期</td><td>載入、ready、重新開始、退出、錯誤；需要時回報完成</td><td>不規定回合制、探索或固定結局結構</td></tr>
+<tr><td>宿主通道</td><td>有限命令、request／response、大小限制、session 歸屬</td><td>不暴露 window.seed 或任意 IPC</td></tr>
+<tr><td>存檔</td><td>作品 revision／hash、state schema version、可序列化狀態</td><td>不把個人進度打包成發布內容</td></tr>
+<tr><td>修改</td><td>基底 revision、變更檔案、摘要、候選與驗證結果</td><td>不要求所有修改都重生全作品</td></tr>
+<tr><td>素材</td><td>存在性、來源、檔案完整性、替換範圍</td><td>不要求一次生成全部圖片或綁特定圖片 provider</td></tr>
+</tbody></table></div><div class="callout warn"><strong>最小依賴：</strong>第一版不允許作品自行下載、安裝任意套件。若確有需要，再固定受支援依賴與版本；省下安裝、建置與修補成本。HTML／CSS／JavaScript 是預設候選，具體產物格式以階段 1 的證據確認。</div>
         </section>
-
-        <section id="ipc" data-section>
-          <div class="section-head">
-            <p class="section-kicker">06 · Native bridge</p>
-            <h2>先用常駐 Swift CLI + NDJSON</h2>
-            <p class="section-intro">第一版不建議直接做 N-API。模型推論與驗證才是主要延遲；stdio 的隔離、可診斷性與打包簡單度更重要。只有 benchmark 證明 bridge overhead 成為 p95 瓶頸，才升級 N-API。</p>
-          </div>
+        <section id="validation" data-section data-page="technical" data-open-default>
+          <div class="section-head"><p class="section-kicker">03 · Execution &amp; repair</p><h2>可執行程式需要新的驗證方式</h2><p class="section-intro">OpenUI parser 仍服務既有 DSL 卡帶；它不能替代新作品的隔離執行、宿主訊息驗證與行為檢查。</p></div>
 
           <div class="grid-2">
-            <article class="card card-accent">
-              <h3>推薦：persistent stdio</h3>
-              <ul>
-                <li>Electron main 啟動內嵌且已簽章的 Swift helper，一個 app session 一個 process。</li>
-                <li>stdin/stdout 只傳版本化 NDJSON protocol；stderr 只寫人類可讀 log。</li>
-                <li><code>requestId + seq</code> 支援多請求、串流、去重、abort 與終止事件。</li>
-                <li>helper crash 時所有 inflight request 以 typed error 結束；可做一次有界重啟。</li>
-              </ul>
-            </article>
-            <article class="card">
-              <h3>保留：N-API adapter</h3>
-              <ul>
-                <li>與 stdio 共用同一個 <code>NativeTransport</code> 介面，不改 provider 或 UI。</li>
-                <li>只有在量測顯示大量小事件序列化成本不可接受時導入。</li>
-                <li>代價是 Swift/C++/Node ABI、Electron major version、簽章與 crash domain 綁得更緊。</li>
-              </ul>
-            </article>
+            <article class="card"><h3>執行邊界 · 階段 2 必做</h3><ul><li>作品不直接存取 Node、preload、宿主 DOM、檔案系統或憑證。</li><li>預設不提供任意網路、視窗開啟與導覽；素材經受控途徑供應。</li><li>宿主驗證訊息來源、作品 session、命令、payload 與大小，不信任作品自己宣稱的身份。</li><li>定義資源上限、逾時、終止與復原；實測失控程式不會拖垮宿主。</li><li>隔離機制需原型驗證與 code-review，不把某個容器名稱當成安全證明。</li></ul></article>
+            <article class="card"><h3>生成閉環 · 階段 3 必做</h3><ul><li>檢查檔案路徑、入口、素材與依賴完整性，再做語法與載入檢查。</li><li>於隔離環境執行，收集檔案／位置／錯誤類型與可重現步驟。</li><li>設定有限修補次數；超限保留錯誤，不覆蓋上一個可玩版本。</li><li>只在基底版本仍相符時接納結果；取消與晚到回應不得污染草稿。</li><li>驗證要求修改的行為及必要回歸，再保存新版本；不相容存檔明示重開或遷移。</li></ul></article>
           </div>
-
-          <details open style="margin-top:16px">
-            <summary>IPC envelope · TypeScript / Swift 共同 wire contract</summary>
-            <div class="details-body">
-              <div class="code-wrap">
-                <button class="copy" type="button" aria-label="複製 Native IPC contract">複製</button>
-                <pre><code>type NativeRequest = {
-  v: 1;
-  requestId: string;
-  method: "capabilities" | "planWorld" | "generateEvents" | "generateLayout" | "cancel";
-  payload: unknown;
-};
-
-type NativeEvent =
-  | { v: 1; requestId: string; seq: number; type: "accepted" }
-  | { v: 1; requestId: string; seq: number; type: "partial"; payload: unknown }
-  | { v: 1; requestId: string; seq: number; type: "progress"; phase: string }
-  | { v: 1; requestId: string; seq: number; type: "result"; payload: unknown }
-  | { v: 1; requestId: string; seq: number; type: "error"; error: AppError }
-  | { v: 1; requestId: string; seq: number; type: "cancelled" };
-
-interface NativeTransport {
-  request(request: NativeRequest, onEvent: (event: NativeEvent) => void): Promise&lt;Result&lt;void&gt;&gt;;
-  cancel(requestId: string): Promise&lt;void&gt;;
-  close(): Promise&lt;void&gt;;
-}</code></pre>
-              </div>
-              <p class="code-note">邊界規則：每行大小上限、UTF-8、未知欄位拒絕、單一 terminal event、stdout 不得混入 log、renderer payload 在 main 與 helper 兩側都驗證。</p>
-            </div>
-          </details>
+          <div class="callout"><strong>成本取捨：</strong>只建立能幫助生成、執行、修改或修補的機制。不先做通用插件生態、萬用遊戲語言或完整資產流水線。</div>
         </section>
-
-        <section id="routing" data-section>
-          <div class="section-head">
-            <p class="section-kicker">07 · Model routing</p>
-            <h2>Local 與 PCC 的責任切分</h2>
-            <p class="section-intro">切分依據不是「哪個模型比較強」，而是 context、失敗成本與呼叫頻率。世界級決策可等待、可快取；每個房間的物件與事件必須離線可降級。</p>
-          </div>
-
-          <div class="table-wrap" role="region" aria-label="模型路由策略" tabindex="0">
-            <table>
-              <thead><tr><th>工作</th><th>主要路由</th><th>輸出</th><th>失敗策略</th></tr></thead>
-              <tbody>
-                <tr><td><strong>世界觀整合、長歷史摘要</strong></td><td>Apple PCC</td><td><code>WorldPlan</code></td><td>使用已有快取；沒有快取則本機縮小 scope 或明確 error</td></tr>
-                <tr><td><strong>Room Graph / 關卡拓撲</strong></td><td>Apple PCC</td><td>房間、邊、必要能力、終點，不含精細座標</td><td>quota／offline 時以 local planner 產較小圖；標示 degraded</td></tr>
-                <tr><td><strong>因果事件鏈</strong></td><td>AFM Local</td><td><code>EventPlan</code></td><td>本機 repair；可選 OpenJEV 對候選做 entailment rerank</td></tr>
-                <tr><td><strong>物件、座標、光照</strong></td><td>AFM Local</td><td><code>SceneLayoutDraft</code></td><td>只重生失敗的 layout，不重跑 PCC</td></tr>
-                <tr><td><strong>Windows 同等路徑</strong></td><td>llama.cpp / Qwen</td><td>GBNF-constrained compact AST/DSL</td><td>同一 validator；provider 差異不穿透 service</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="callout"><strong>快取鍵：</strong><code>worldIntentHash + stateRevision + schemaVersion + providerFamily + planningPolicyVersion</code>。PCC 回傳的是可重用 plan，不是一次性 UI text；任何版本改變都必須顯式失效。</div>
+        <section id="baseline" data-section data-page="technical" data-open-default>
+          <div class="section-head"><p class="section-kicker">04 · Existing implementation</p><h2>沿用資料責任，逐步移開強制引擎依賴</h2><p class="section-intro">依現有原始碼整理可重用方向；不是宣稱新版播放器已完成。舊遊戲與新互動作品先並存。</p></div>
+<div class="table-wrap" role="region" aria-label="現有能力與新版差距" tabindex="0"><table><thead><tr><th scope="col">現有部分</th><th scope="col">新版處置</th><th scope="col">仍待完成</th></tr></thead><tbody>
+<tr><td>Cartridge／Instance／Workspace</td><td>保留發布內容、個人進度、草稿分開的責任</td><td>新增作品類型與相容驗證；不直接沿用固定 Scene 欄位</td></tr>
+<tr><td>Three.js／R3F／Rapier／Scene DSL</td><td>保留舊卡帶路徑；新作品不必經過</td><td>最小 2D 播放器與清楚的類型路由</td></tr>
+<tr><td>Genre Matrix／Capability Compiler／六步 Create</td><td>退出新版必要創作流程</td><td>一句需求、預覽與自然語言修改入口</td></tr>
+<tr><td>Inference／AFM scene artifact</td><td>優先重用可用模型連線與取消機制；AFM 場景能力留給適用作品</td><td>新檔案產物契約與修補上下文；不假設原有場景管線可直接通用</td></tr>
+<tr><td>備份與版本</td><td>保留精確 revision 與 hash 的身份原則</td><td>目前 instance 備份未包含顯影 chunks、lore、notes；不宣稱現有世界備份完整</td></tr>
+<tr><td>多人／身份／ENS／鏈上發布</td><td>既有能力保留；不當新播放器的前置條件</td><td>待生成成本與核心閉環被驗證後，另定分享範圍</td></tr>
+</tbody></table></div><div class="callout warn"><strong>規格銜接：</strong>本頁取代舊版 HTML 的產品主軸。<code>plan.md</code> 的「見證人／無限地圖」與 <code>CLAUDE.md</code> 的 data-only 規則仍描述舊路徑；實作新作品類型時要同步界定適用範圍。此次只更新文件，不默默放寬現有程式權限，也不刪除舊遊戲。</div>
         </section>
-
-        <section id="validation" data-section>
-          <div class="section-head">
-            <p class="section-kicker">08 · Validation</p>
-            <h2>本地驗證是安全邊界，不是品質加分</h2>
-            <p class="section-intro">所有 provider 都是不可信輸入。驗證應由便宜到昂貴排列，第一個錯誤不立刻停止：收集可修復的一組 issues，再做最多兩輪局部 repair。</p>
-          </div>
-
-          <div class="sequence">
-            <div class="seq-num">1</div><div class="seq-body"><strong>Schema / parser</strong><span>typed draft schema、數值範圍、array 上限、OpenUI parse；拒絕未知 component 與多餘欄位。</span></div>
-            <div class="seq-num">2</div><div class="seq-body"><strong>Semantic / causal</strong><span>ID 唯一、所有引用存在、event precondition 可被前序 effect 滿足、entry 可達 terminal、kit 與 capability 相容。</span></div>
-            <div class="seq-num">3</div><div class="seq-body"><strong>Asset allowlist</strong><span>只允許已安裝 asset id；核對 role、path、content hash。直接沿用目前 <code>validateAssetRef</code>。</span></div>
-            <div class="seq-num">4</div><div class="seq-body"><strong>AABB / placement</strong><span>物件在 floor bounds 內；spawn、exit、互動半徑有 clearance；使用 sweep-and-prune broad phase 避免 O(n²)。</span></div>
-            <div class="seq-num">5</div><div class="seq-body"><strong>Navigation feasibility</strong><span>v1 對現有 tile / axis-aligned geometry 先用 occupancy grid + flood fill/A*；抽象成 <code>NavigationValidator</code>，未來任意 mesh 再接 Recast NavMesh。</span></div>
-            <div class="seq-num">6</div><div class="seq-body"><strong>Headless simulation</strong><span>以與 renderer 相同 collider recipe 建 Rapier world，固定 timestep 跑有限 ticks；檢查 spawn 穩定、動態物件 settle、必要路徑未被堵死。</span></div>
-            <div class="seq-num">7</div><div class="seq-body"><strong>Canonicalize / receipt</strong><span><code>serialize → parse</code> deep-equal；寫入 validation metrics、provider、schema version、request hash 與 content hash，之後才可 persist / render。</span></div>
-          </div>
-
-          <div class="callout warn"><strong>NavMesh 的務實取捨：</strong>現有 DSL 主要是方格地板、牆與 AABB 平台，第一版直接上 Recast 會增加 WASM／worker／mesh bake 複雜度。先以同等「可達性證明」的格網 validator 上線，當 DSL 支援自由 mesh 後再換實作，介面不變。</div>
+        <section id="risks" data-section data-page="technical">
+          <div class="section-head"><p class="section-kicker">05 · Open decisions</p><h2>用原型回答，現在不硬定</h2><p class="section-intro">先固定方向與驗收問題，避免把未驗證的工程選擇寫成既成事實。</p></div>
+<div class="table-wrap" role="region" aria-label="尚待決定事項" tabindex="0"><table><thead><tr><th scope="col">問題</th><th scope="col">何時決定</th><th scope="col">需要的證據</th></tr></thead><tbody>
+<tr><td>單檔或多檔作品？是否需要建置？</td><td>階段 1</td><td>首次成功率、修改範圍、上下文大小與建置成本</td></tr>
+<tr><td>用什麼機制隔離執行？</td><td>階段 2 設計前</td><td>權限、故障隔離、資源控制、可診斷性及實機驗證</td></tr>
+<tr><td>宿主 API 最少需要幾個？</td><td>階段 1 → 2</td><td>三種作品的重複需求，而非預想的遊戲類型數量</td></tr>
+<tr><td>局部修改採什麼格式？</td><td>階段 3</td><td>修改成功率、版本衝突與保留既有行為的能力</td></tr>
+<tr><td>何時接圖片生成或 3D？</td><td>核心閉環之後，依需求</td><td>確實降低作品製作成本，且收益大於額外等待與修補負擔</td></tr>
+</tbody></table></div>
         </section>
-
-        <section id="sequence" data-section>
-          <div class="section-head">
-            <p class="section-kicker">09 · Data flow</p>
-            <h2>資料流與時序設計</h2>
-          </div>
-
-          <details open>
-            <summary>A · 新世界：PCC 規劃 + 本機生成</summary>
-            <div class="details-body">
-              <div class="table-wrap" role="region" aria-label="新世界生成時序" tabindex="0">
-                <table>
-                  <thead><tr><th>#</th><th>Caller</th><th>Receiver</th><th>Message / invariant</th></tr></thead>
-                  <tbody>
-                    <tr><td>1</td><td>Renderer</td><td>Main service</td><td><code>generateScene(intent, stateRevision)</code>；main 驗證 payload 與 snapshot revision</td></tr>
-                    <tr><td>2</td><td>Router</td><td>PCC provider</td><td>只在無有效 <code>WorldPlan</code> 且 PCC available / below quota 時呼叫</td></tr>
-                    <tr><td>3</td><td>PCC</td><td>Main cache</td><td>回傳 typed <code>WorldPlan / RoomGraph</code>；先驗證 topology，再以版本化 key 快取</td></tr>
-                    <tr><td>4</td><td>Router</td><td>Local AFM</td><td>傳單一 room node + 最小必要 state；先生成 <code>EventPlan</code></td></tr>
-                    <tr><td>5</td><td>Validator</td><td>Local AFM</td><td>事件 plan 合格後才生成 layout；不合格只 repair event phase</td></tr>
-                    <tr><td>6</td><td>Local AFM</td><td>Main</td><td>以 partial event 串流進度；不可把 partial AST 直接渲染</td></tr>
-                    <tr><td>7</td><td>Main</td><td>Validator</td><td>AST → OpenUI source → parser → static / navigation / simulation</td></tr>
-                    <tr><td>8</td><td>Main</td><td>Renderer</td><td>只送 <code>done(SceneArtifact)</code> 或 typed error；所有 listener 均有 terminal event</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </details>
-
-          <details>
-            <summary>B · 驗證失敗：分階段修復</summary>
-            <div class="details-body">
-              <p style="margin-top:0;color:var(--text-soft)">Validator 將 issue 依 owner 分組：<code>event</code>、<code>layout</code>、<code>serialization</code>。只把失敗 phase、原 draft 與精簡 repair hints 回送相同 provider；最多兩次。若仍失敗，回傳 error，不建立手寫 fallback scene。PCC topology 只有在 topology 自身無法滿足時才重跑。</p>
-            </div>
-          </details>
-
-          <details>
-            <summary>C · Abort / crash / quota</summary>
-            <div class="details-body">
-              <ul style="margin:0;color:var(--text-soft)">
-                <li><strong>Abort：</strong>Renderer → main → helper；helper 回 <code>cancelled</code>，晚到的 seq 被丟棄。</li>
-                <li><strong>Helper crash：</strong>main 結束所有 inflight request，回 <code>native-helper-exited</code>；最多自動重啟一次，不自動重送非冪等請求。</li>
-                <li><strong>PCC quota：</strong>router 在呼叫前查 availability / quota；使用 cache 或明確降級到 local planner，UI 顯示 degraded reason。</li>
-                <li><strong>State changed：</strong>若完成時 <code>stateRevision</code> 已不同，artifact 標為 stale，不落盤，由 caller 決定 rerun。</li>
-              </ul>
-            </div>
-          </details>
-        </section>
-
-        <section id="plan" data-section>
-          <div class="section-head">
-            <p class="section-kicker">10 · Delivery plan</p>
-            <h2>分 Gate 導入，不先重寫整條 inference</h2>
-            <p class="section-intro">每一階段都可以獨立判斷是否繼續；PCC、N-API 與 OpenJEV 都不是第一個 milestone 的前置條件。</p>
-          </div>
-
-          <div class="callout"><strong>2026-09-22 實作狀態：</strong>Gate 1 的 provider contract、router、NDJSON transport（abort、duplicate id、helper crash）與 receipt 已完成；Gate 2 的 Swift <code>@Generable</code> EventPlan → Layout 垂直切片已在 M2 Pro／macOS 27 真機跑通，並由 <code>AppleLocalSceneProvider</code>、Electron main IPC 與 renderer artifact client 串接。橋接器會驗證前置條件可由前序 effect 滿足，並把互動物件種類一路帶到 layout gate；可重現 eval 同時檢查取消、共享詞彙 drift 與 wire shape，小型三案 corpus 為 3/3 通過既有 artifact acceptance gate。Gate 3 已有 parser → asset → AABB／出口淨空／格網可達 gate。Rapier smoke test、PCC adapter、Windows adapter、artifact persistence policy 和打包仍未開始；PCC 無 entitlement 的實際 request 仍失敗。</div>
-
-          <div class="plan">
-            <article class="plan-step"><div class="phase">GATE 0</div><div><h3>可用性 spike</h3><p>在目標 Apple Silicon + macOS 27 建最小 Swift helper：local typed output、stream、cancel、PCC availability / quota、簽章與打包。建立 30–50 個真實 scene eval cases。</p></div><div class="gate"><b>Exit criteria</b>能從 Electron main 往返 typed sample；無未解決的 entitlement／distribution blocker；記錄 cold / warm latency。</div></article>
-            <article class="plan-step"><div class="phase">GATE 1</div><div><h3>Provider contract 與 transport</h3><p>建立 <code>SceneGenerationService</code>、capability negotiation、stdio transport、error taxonomy 與 request receipt；把現有 OpenAI-compatible client 包成 adapter，不改 UI 行為。</p></div><div class="gate"><b>Exit criteria</b>現有 llama.cpp / OpenAI tests 透過新介面仍通過；abort、duplicate id、helper crash 有測試。</div></article>
-            <article class="plan-step"><div class="phase">GATE 2</div><div><h3>AFM local：EventPlan → Layout</h3><p>新增 Swift <code>@Generable</code> schemas、AST serializer 與 round-trip tests；以同一批 corpus 比較 direct DSL 與 typed AST。</p></div><div class="gate"><b>Exit criteria</b>成功回傳的 value 100% 通過 schema；最終 semantic pass rate 達產品門檻；session failure 皆為 typed error。</div></article>
-            <article class="plan-step"><div class="phase">GATE 3</div><div><h3>Geometry / navigation / simulation</h3><p>先做 AABB + grid reachability；把 collider recipe 提取成 shared pure data，再在 worker / main 跑固定 timestep Rapier smoke test。</p></div><div class="gate"><b>Exit criteria</b>測試 fixture 能抓到堵門、重疊、越界、不可達與不穩定 dynamic body；validator deterministic。</div></article>
-            <article class="plan-step"><div class="phase">GATE 4</div><div><h3>PCC world planner</h3><p>新增 <code>WorldPlan / RoomGraph</code>、cache 與降級政策。PCC 只處理 macro topology；用 chaos tests 模擬 offline、quota reached 與 stale cache。</p></div><div class="gate"><b>Exit criteria</b>沒有 PCC 也能完成受限生成或給明確錯誤；PCC 不出現在每房／每 chunk 必經路徑。</div></article>
-            <article class="plan-step"><div class="phase">GATE 5</div><div><h3>Windows parity 與可選 verifier</h3><p>llama.cpp/Qwen 實作相同 AST contract；若 eval 顯示因果錯誤仍高，再實驗 OpenJEV rerank。最後才評估 N-API。</p></div><div class="gate"><b>Exit criteria</b>同一 golden corpus、同一 validation report、provider 可互換；任何新增模型都必須有統計收益。</div></article>
-          </div>
-
-          <div class="callout"><strong>建議量測：</strong>first-pass parse rate、semantic pass rate、repair 次數、P50/P95 cold/warm latency、prompt/output tokens、peak RSS、abort latency、PCC fallback rate、validator 各 stage 耗時。不要用單一 TPS 決定架構。</div>
-        </section>
-
-        <section id="current-mechanisms" data-section>
-          <div class="section-head">
-            <p class="section-kicker">11 · Implemented mechanism map</p>
-            <h2>目前實際運行的生成路徑</h2>
-            <p class="section-intro">這一節是程式碼對照圖，不是另一套設計。它描述目前 Apple local 場景生成如何穿越 renderer、Electron、Swift 與 acceptance gate；舊有 chat inference 不在這條路徑上。</p>
-          </div>
-
-          <div class="flowline" aria-label="目前 Apple local 場景生成資料流">
-            <div class="flow-step"><b>01 · REQUEST</b><span>Renderer 只送 intent + scene source</span></div>
-            <div class="flow-step"><b>02 · TRUST</b><span>Main 以 Zod + OpenUI 重解析</span></div>
-            <div class="flow-step"><b>03 · CAUSE</b><span>Swift 先產 EventPlan</span></div>
-            <div class="flow-step"><b>04 · PLACE</b><span>同一 plan 產 SceneLayout</span></div>
-            <div class="flow-step"><b>05 · ACCEPT</b><span>Artifact gate 後才回 UI</span></div>
-          </div>
-
-          <div class="grid-2" style="margin-top:16px">
-            <article class="card card-accent">
-              <h3>主路徑：一份 request、一個 validated artifact</h3>
-              <ol>
-                <li><code>renderer/narrative/sceneGeneration.ts</code> 先訂閱 event，再呼叫 <code>window.seed.inference.generateScene()</code>；renderer 送的是 <code>currentSceneSource</code>，不是可被偽造的 <code>SceneGraph</code>。</li>
-                <li><code>sceneGenerationIpc.ts</code> 在 main 以 Zod 限制大小、欄位與 enum，並以既有 <code>parseScene()</code> 重建 graph。</li>
-                <li><code>SceneArtifactService</code> 選擇可用 provider。現在掛載的是 <code>AppleLocalSceneProvider</code>；非 macOS 或 native helper 不可用時，回傳 typed unavailable error。</li>
-                <li>Apple provider 對同一 state snapshot 依序呼叫 <code>generateEvents</code> 與 <code>generateLayout</code>；layout 不得修改已驗證的 event plan，也不得漏掉 interact subject。</li>
-                <li>只有完成 canonical OpenUI round-trip、資產／幾何／導航檢查的 <code>SceneArtifact</code> 才會經 <code>inference:scene-generate</code> 回傳。</li>
-              </ol>
-            </article>
-            <article class="card card-cyan">
-              <h3>Swift helper：長駐、版本化、可取消</h3>
-              <ol>
-                <li>Electron boot 在 macOS 建立 managed Apple provider；app quit 會關閉 helper。helper 路徑由 app bundle / development path 決定，不由 renderer 輸入。</li>
-                <li><code>NativeTransport</code> 使用一行一筆的 versioned NDJSON。stdout 僅承載 protocol；診斷只寫 stderr。</li>
-                <li>每個 native request 有唯一 ID、單一 terminal event；duplicate ID、helper crash、malformed / out-of-order output 都會被隔離成 typed failure。</li>
-                <li>Abort 從 renderer 的 <code>AbortSignal</code> 經 main controller 送至 helper <code>cancel</code> request；UI 一定收到 completed、error 或 cancelled 其中之一。</li>
-                <li><code>@Generable</code> 只保證 typed generation shape；Swift 仍檢查 payload keys、causal prerequisites、subject requirements 與 layout vocabulary。</li>
-              </ol>
-            </article>
-          </div>
-
-          <details open>
-            <summary>跨程序資料契約：只傳可驗證的最小資料</summary>
-            <div class="details-body">
-              <div class="code-wrap">
-                <button class="copy" type="button" aria-label="複製現行場景生成資料契約">複製</button>
-                <pre><code>Renderer → main
-SceneGenerationRequest {
-  intent: { requestId, purpose, brief, language, sceneId, topology? },
-  state: {
-    worldPlan, currentSceneSource, flags,
-    inventory, assetCatalog, capabilityProfile
-  },
-  maxRepairAttempts: 0..2
-}
-
-Main → renderer (only after every gate)
-Result&lt;SceneArtifact&gt; {
-  ast: { eventPlan, floor, objects, exits, lights },
-  source: "canonical OpenUI Lang",
-  graph: "reparsed SceneGraph",
-  validation: ValidationReport,
-  receipt: { requestHash, contentHash, providerId, degraded }
-}</code></pre>
-              </div>
-              <p class="code-note"><code>source</code> 與 <code>graph</code> 不是雙重真相：graph 是重新 parse canonical source 的結果。partial draft、raw Swift response 與 layout repair candidate 都不會送進 renderer 或持久化層。</p>
-            </div>
-          </details>
-
-          <div class="table-wrap" role="region" aria-label="現行機制與責任對照" tabindex="0" style="margin-top:16px">
-            <table>
-              <thead><tr><th>機制</th><th>實際責任</th><th>拒絕條件</th><th>程式入口</th></tr></thead>
-              <tbody>
-                <tr><td><strong>Capability probe</strong></td><td>確認 macOS helper、FoundationModels guided generation 與 shared vocabulary</td><td>平台、SDK、方法或 enum vocabulary 不匹配</td><td><code>appleLocalProvider.ts</code></td></tr>
-                <tr><td><strong>Causal gate</strong></td><td>entry / terminal / transition、precondition 可由前序 effect 滿足</td><td>缺 event、未宣告 edge、無法滿足的 requires、subject drift</td><td><code>Generation.swift</code> + <code>sceneArtifactService.ts</code></td></tr>
-                <tr><td><strong>Layout gate</strong></td><td>從 immutable EventPlan 生成 OpenUI source 與 AST</td><td>改寫 event plan、缺必要 prop、DSL parser failure</td><td><code>Generation.swift</code> + <code>appleLocalProvider.ts</code></td></tr>
-                <tr><td><strong>Acceptance gate</strong></td><td>canonicalize、asset integrity、AABB、exit clearance、格網 route</td><td>asset hash / path、重疊、越界、堵門、不可達</td><td><code>sceneArtifactService.ts</code> + <code>scene-validation.ts</code></td></tr>
-                <tr><td><strong>Lifecycle / cancel</strong></td><td>session-owned helper；inflight controller；terminal event</td><td>duplicate request、timeout、cancel、child exit</td><td><code>appleLocalHelper.ts</code> + <code>nativeTransport.ts</code> + <code>inference/ipc.ts</code></td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="grid-2" style="margin-top:16px">
-            <article class="card">
-              <h3>已接上</h3>
-              <ul>
-                <li>macOS local typed EventPlan → Layout generation</li>
-                <li>persistent stdio bridge、availability probe、timeout / cancellation</li>
-                <li>main-process request validation 與 renderer event subscription</li>
-                <li>OpenUI round-trip、asset integrity、AABB、exit clearance、格網可達性</li>
-                <li>request / content receipt 與 focused transport/provider/validation tests</li>
-              </ul>
-            </article>
-            <article class="card card-warn">
-              <h3>刻意未接上</h3>
-              <ul>
-                <li>PCC live planner、quota cache 與 entitlement rollout</li>
-                <li>Windows llama.cpp / Qwen scene provider adapter</li>
-                <li>OpenJEV rerank（只有 eval 證明收益才加入）</li>
-                <li>Rapier smoke test / Recast NavMesh；目前是 deterministic grid proof</li>
-                <li>自動持久化 artifact；caller 必須明確決定何時寫入 workspace / cartridge</li>
-              </ul>
-            </article>
-          </div>
-
-          <div class="callout warn"><strong>不要過度工程：</strong>下一個合理的決策點是擴大真機 eval corpus，觀察 first-pass acceptance、repair 次數、cold/warm latency 與 cancellation latency。只有這些數據顯示明確瓶頸，才考慮 PCC、N-API、Recast 或 verifier；它們都不是現行 artifact path 的前置條件。</div>
-        </section>
-
-        <section id="risks" data-section>
-          <div class="section-head">
-            <p class="section-kicker">12 · Grilled decisions</p>
-            <h2>壓力測試後的決策紀錄</h2>
-            <p class="section-intro">以下是最容易讓方案在第二階段返工的隱藏假設，已直接寫回設計。</p>
-          </div>
-
-          <div class="decision-list">
-            <article class="decision"><div><h3>Parser 永遠在 typed AST 之後</h3><p><code>@Generable</code> 不取代現有 parser。它解決形狀，不解決跨欄位、拓撲、資產與玩法語意。</p></div></article>
-            <article class="decision"><div><h3>PCC 不承諾固定 AFM 3 Cloud / Pro 型號</h3><p>第三方公開入口是 OS-managed model；receipt 記錄 capability 與 route，不虛構不可見的 model ID。</p></div></article>
-            <article class="decision"><div><h3>Partial AST 不進 renderer</h3><p>串流只用於進度與 preview metadata。未完成物件可能缺欄位、缺引用或之後被 repair，不能進物理世界。</p></div></article>
-            <article class="decision"><div><h3>事件與空間分兩次 constrained generation</h3><p>只靠 struct property order 不足以隔離錯誤。先驗證 EventPlan，再把它當 immutable input 生成 layout。</p></div></article>
-            <article class="decision"><div><h3>OpenJEV 是 optional judge</h3><p>只有當 deterministic rules 無法辨別「語意合理性」，且 eval 證明 rerank 有收益時才加入；不能成為 correctness gate 的唯一來源。</p></div></article>
-            <article class="decision"><div><h3>stdio 是決策，不是永遠的承諾</h3><p>以 transport abstraction 保留 N-API；先量測序列化與 context switch，再決定是否承擔 native addon 維護成本。</p></div></article>
-            <article class="decision"><div><h3>持久化只接受 validated artifact</h3><p>draft、partial、repair candidate 與 stale result 都不得寫進 cartridge / instance；這延續現有 immutable revision 規則。</p></div></article>
-          </div>
-
-          <div class="grid-2" style="margin-top:16px">
-            <article class="card">
-              <h3>現在就能批准的部分</h3>
-              <ul><li>Universal provider contract</li><li>Swift stdio helper spike</li><li>EventPlan / SceneLayout 分階段 AST</li><li>現有 parser / serializer / asset validation 保留</li><li>驗證器介面與 golden corpus</li></ul>
-            </article>
-            <article class="card card-warn">
-              <h3>要等 Gate 0/2 數據再批准</h3>
-              <ul><li>PCC 作為預設 world planner</li><li>具體 latency / TPS 產品承諾</li><li>N-API 取代 stdio</li><li>OpenJEV 常駐或 rerank</li><li>Recast NavMesh 取代 grid validator</li></ul>
-            </article>
-          </div>
-        </section>
-
-        <footer class="footer">
-          <p><strong>範圍：</strong>這是一份單檔的工程總覽：研究前提、系統圖、wire contract、現行機制、驗證 gate 與下一步都在本頁。它對照 <code>CLAUDE.md</code>、<code>src/shared/scene-generation.ts</code>、<code>src/main/inference/*</code>、<code>src/renderer/narrative/*</code>、<code>src/dsl/*</code> 與 <code>src/shared/scene-validation.ts</code>；補充來源分級仍可見 <a href="../research/afm3-architecture-source-audit.md">AFM3 architecture source audit</a>。</p>
-          <p>所有效能數字都應由 Gate 0 在實際目標硬體量測；本文件不採用未有官方來源的 100–200+ TPS 假設。</p>
-        </footer>
-      </main>
-    </div>
+      <footer class="footer">
+        <p><strong>文件狀態：</strong>2026-09-22 新版方向規格。產品方向已確認；原型、播放器與生成閉環仍待依階段實作驗收。本頁保留原檔名以維持入口，AFM／DSL 不再代表整體產品的必經架構。</p>
+        <p><strong>實作參考：</strong><a href="../../CLAUDE.md">現有工程規範</a> · <a href="../../plan.md">既有遊戲計劃</a> · <a href="../../src/main/instances/backup.ts">目前備份邊界</a> · <a href="../research/afm3-architecture-source-audit.md">AFM 歷史研究</a>。這些是既有能力與研究參考，不代表新版執行作品已交付。</p>
+      </footer>
+    </main></div>
   </div>
 
   <script>
+    const sections = [...document.querySelectorAll('[data-section]')];
+    const pageTabs = [...document.querySelectorAll('.doc-tab')];
+    const pageIntros = [...document.querySelectorAll('[data-page-intro]')];
+    const pageHero = document.querySelector('[data-page-hero]');
     const allDetails = [...document.querySelectorAll('details')];
-    const expandButton = document.querySelector('#expand-all');
-    expandButton?.addEventListener('click', () => {
-      const shouldOpen = allDetails.some((item) => !item.open);
-      allDetails.forEach((item) => { item.open = shouldOpen; });
-      expandButton.textContent = shouldOpen ? '收合所有介面' : '展開所有介面';
+    const drawer = document.querySelector('#doc-drawer');
+    const backdrop = document.querySelector('#menu-backdrop');
+    const menuOpen = document.querySelector('#menu-open');
+    const menuClose = document.querySelector('#menu-close');
+    const pageName = document.querySelector('#page-name');
+    const pageNames = { core: '產品方向', progress: '開發計劃', technical: '作品契約' };
+
+    const setSectionOpen = (section, open) => {
+      section.classList.toggle('is-collapsed', !open);
+      const button = section.querySelector('.section-toggle');
+      if (!button) return;
+      button.setAttribute('aria-expanded', String(open));
+      button.textContent = open ? '收合' : '展開';
+    };
+
+    sections.forEach((section) => {
+      const heading = section.querySelector('.section-head');
+      if (!heading) return;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'section-toggle';
+      button.setAttribute('aria-controls', section.id);
+      button.addEventListener('click', () => setSectionOpen(section, section.classList.contains('is-collapsed')));
+      heading.append(button);
+      setSectionOpen(section, section.hasAttribute('data-open-default'));
     });
 
+    const closeDrawer = () => {
+      drawer.hidden = true;
+      backdrop.hidden = true;
+      document.body.classList.remove('drawer-open');
+      menuOpen.setAttribute('aria-expanded', 'false');
+    };
+
+    const openDrawer = () => {
+      drawer.hidden = false;
+      backdrop.hidden = false;
+      document.body.classList.add('drawer-open');
+      menuOpen.setAttribute('aria-expanded', 'true');
+      pageTabs.find((tab) => tab.dataset.docPage === activePage)?.focus();
+    };
+
+    let activePage = 'core';
+    const setPage = (page, { scroll = true, updateHash = true } = {}) => {
+      activePage = page;
+      pageTabs.forEach((tab) => {
+        const selected = tab.dataset.docPage === page;
+        if (selected) tab.setAttribute('aria-current', 'page');
+        else tab.removeAttribute('aria-current');
+      });
+      sections.forEach((section) => { section.hidden = section.dataset.page !== page; });
+      pageIntros.forEach((intro) => { intro.hidden = intro.dataset.pageIntro !== page; });
+      pageHero.hidden = pageHero.dataset.pageHero !== page;
+      pageName.textContent = pageNames[page] ?? '規格';
+      const selected = pageTabs.find((tab) => tab.dataset.docPage === page);
+      const targetId = selected?.dataset.pageTarget;
+      if (updateHash && targetId) history.pushState(null, '', `#${targetId}`);
+      closeDrawer();
+      if (scroll) document.querySelector('.layout')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    pageTabs.forEach((tab) => tab.addEventListener('click', () => setPage(tab.dataset.docPage)));
+    menuOpen.addEventListener('click', openDrawer);
+    menuClose.addEventListener('click', closeDrawer);
+    backdrop.addEventListener('click', closeDrawer);
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && !drawer.hidden) {
+        closeDrawer();
+        menuOpen.focus();
+      }
+    });
+
+    const followHash = (scroll = false) => {
+      const target = location.hash ? document.getElementById(location.hash.slice(1)) : null;
+      setPage(target?.dataset.page ?? 'core', { scroll: false, updateHash: false });
+      if (target?.matches('[data-section]')) setSectionOpen(target, true);
+      if (scroll) target?.scrollIntoView({ block: 'start' });
+    };
+    followHash();
+    window.addEventListener('hashchange', () => followHash(true));
+
     document.querySelector('#print')?.addEventListener('click', () => window.print());
+    window.addEventListener('beforeprint', () => {
+      sections.forEach((section) => { section.hidden = false; setSectionOpen(section, true); });
+      pageIntros.forEach((intro) => { intro.hidden = false; });
+      pageHero.hidden = false;
+      allDetails.forEach((item) => { item.open = true; });
+    });
+    window.addEventListener('afterprint', () => setPage(activePage, { scroll: false, updateHash: false }));
+
+    document.querySelectorAll('[data-tabs]').forEach((tabs) => {
+      const buttons = [...tabs.querySelectorAll('[role="tab"]')];
+      const panels = [...tabs.querySelectorAll('[role="tabpanel"]')];
+      const activate = (button) => {
+        const target = button.dataset.tabTarget;
+        buttons.forEach((item) => {
+          const selected = item === button;
+          item.setAttribute('aria-selected', String(selected));
+          item.tabIndex = selected ? 0 : -1;
+        });
+        panels.forEach((panel) => { panel.hidden = panel.id !== target; });
+      };
+      buttons.forEach((button, index) => {
+        button.addEventListener('click', () => activate(button));
+        button.addEventListener('keydown', (event) => {
+          if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+          event.preventDefault();
+          const delta = event.key === 'ArrowRight' ? 1 : -1;
+          const next = buttons[(index + delta + buttons.length) % buttons.length];
+          activate(next);
+          next.focus();
+        });
+      });
+    });
 
     document.querySelectorAll('.copy').forEach((button) => {
       button.addEventListener('click', async () => {
@@ -1256,21 +1079,6 @@ Result&lt;SceneArtifact&gt; {
       });
     });
 
-    const links = [...document.querySelectorAll('.toc a')];
-    const sections = [...document.querySelectorAll('[data-section]')];
-    const observer = new IntersectionObserver((entries) => {
-      const visible = entries
-        .filter((entry) => entry.isIntersecting)
-        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-      if (!visible) return;
-      links.forEach((link) => {
-        const active = link.getAttribute('href') === `#${visible.target.id}`;
-        link.classList.toggle('active', active);
-        if (active) link.setAttribute('aria-current', 'location');
-        else link.removeAttribute('aria-current');
-      });
-    }, { rootMargin: '-15% 0px -65% 0px', threshold: [0, .2, .5] });
-    sections.forEach((section) => observer.observe(section));
   </script>
 </body>
 </html>
