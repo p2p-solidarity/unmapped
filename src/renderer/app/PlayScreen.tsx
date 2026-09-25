@@ -31,6 +31,7 @@ import { usePositionAutosave } from "./usePositionAutosave";
 function CenterOverlay({ children }: { children: ReactNode }) {
   return (
     <div
+      data-layer="overlay"
       style={{
         position: "absolute",
         inset: 0,

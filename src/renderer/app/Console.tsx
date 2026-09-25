@@ -40,6 +40,7 @@ export function Console() {
 
   return (
     <div
+      data-layer="console"
       style={{
         position: "absolute",
         top: 0,

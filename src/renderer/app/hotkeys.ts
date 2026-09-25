@@ -16,6 +16,11 @@ export interface HotkeyContext {
   consoleOpen: boolean;
   altarOpen: boolean;
   dialogueOpen: boolean;
+  /**
+   * A change proposal waits for approve / reject: Escape (or a pad's B) must neither discard it by
+   * leaving Play nor decide it.
+   */
+  proposalOpen: boolean;
   /** Focus is in an <input>/<textarea>/contenteditable — printable keys belong to it. */
   typing: boolean;
 }
@@ -28,6 +33,7 @@ export function hotkeyAction(code: string, ctx: HotkeyContext): HotkeyAction {
     if (ctx.consoleOpen) return "close-console";
     if (ctx.altarOpen) return "close-altar";
     if (ctx.dialogueOpen) return "close-dialogue";
+    if (ctx.proposalOpen) return null;
     if (ctx.screen === "play") return "exit-play";
     return null;
   }

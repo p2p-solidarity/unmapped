@@ -131,6 +131,7 @@ export function DialogueCard() {
 
   return (
     <div
+      data-layer="dialogue"
       style={{
         position: "fixed",
         left: 0,

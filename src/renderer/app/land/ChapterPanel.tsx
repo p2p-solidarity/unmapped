@@ -158,6 +158,7 @@ export function ChapterPanel(): JSX.Element | null {
 function Card({ children }: { children: React.ReactNode }): JSX.Element {
   return (
     <div
+      data-layer="chapter"
       style={{
         position: "absolute",
         left: 0,

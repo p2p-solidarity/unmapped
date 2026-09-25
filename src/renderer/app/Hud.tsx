@@ -1,7 +1,8 @@
 // Heads-up display: The Seed VRMMO aesthetic, but every readout is a store value (Rule 2).
 // Layout only — the three cards live in ./hud, the numbers in ./hud/summary.ts.
 
-import { useT } from "@renderer/i18n";
+import { type StringKey, useT } from "@renderer/i18n";
+import { padControlsHint, useInputDevice } from "@renderer/input";
 import {
   useEncounterStore,
   useEngineStore,
@@ -47,23 +48,23 @@ export function Hud(): JSX.Element {
   const armed = useEncounterStore((state) => state.weapon !== null);
   const openLand = useEngineStore((state) => state.chunk !== null);
   const t = useT();
-  const controls = t(
-    openLand
-      ? cameraMode === "topdown"
-        ? armed
-          ? "hud.controlsLandArmed"
-          : "hud.controlsLand"
-        : "hud.controlsLand3d"
-      : cameraMode === "fps"
-        ? armed
-          ? "hud.controlsFpsArmed"
-          : "hud.controlsFps"
-        : cameraMode === "side"
-          ? "hud.controlsSide"
-          : cameraMode === "topdown"
-            ? "hud.controlsTopdown"
-            : "hud.controlsTps",
-  );
+  const pad = useInputDevice() === "pad";
+  const line: StringKey = openLand
+    ? cameraMode === "topdown"
+      ? armed
+        ? "hud.controlsLandArmed"
+        : "hud.controlsLand"
+      : "hud.controlsLand3d"
+    : cameraMode === "fps"
+      ? armed
+        ? "hud.controlsFpsArmed"
+        : "hud.controlsFps"
+      : cameraMode === "side"
+        ? "hud.controlsSide"
+        : cameraMode === "topdown"
+          ? "hud.controlsTopdown"
+          : "hud.controlsTps";
+  const controls = t(pad ? padControlsHint(line) : line);
 
   return (
     <div

@@ -1,8 +1,9 @@
-// Root of the renderer: screen routing, the global keyboard, and the four cross-cutting hooks
-// (inference sync, input lock, world hot-reload, world persistence).
+// Root of the renderer: screen routing, the global keyboard and gamepad, and the four cross-cutting
+// hooks (inference sync, input lock, world hot-reload, world persistence).
 
 import { TitleDiorama } from "@renderer/hd2d";
 import { errorLine, translate } from "@renderer/i18n";
+import { useGamepad } from "@renderer/input";
 import { useInferenceSync } from "@renderer/narrative";
 import { setActiveContinent, useActiveContinent } from "@renderer/net/continent";
 import { useContinentSync } from "@renderer/net/continentSync";
@@ -32,11 +33,13 @@ function useGlobalKeys(): void {
         consoleOpen: state.consoleOpen,
         altarOpen:
           state.altarOpen ||
+          state.tweakOpen ||
           state.doorOpen ||
           state.notesOpen ||
           state.episodeOpen !== null ||
           useContinentStore.getState().doorCard !== null,
         dialogueOpen: state.dialogue !== null,
+        proposalOpen: state.changeProposals.length > 0,
         typing: isTypingTarget(event.target),
       });
       if (action === null) return;
@@ -50,6 +53,7 @@ function useGlobalKeys(): void {
           return;
         case "close-altar":
           state.closeAltar();
+          state.closeTweak();
           state.closeDoor();
           useContinentStore.getState().openDoorCard(null);
           state.toggleNotes(false);
@@ -142,6 +146,8 @@ export function App() {
 
   useInputLock();
   useGlobalKeys();
+  // One pad poller for every screen: it plays the land as keys and drives menus by focus.
+  useGamepad();
   useWorldSync();
   usePersistWorld();
   useRoomSync(activeRoom);

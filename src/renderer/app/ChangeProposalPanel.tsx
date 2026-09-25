@@ -47,6 +47,7 @@ export function ChangeProposalPanel() {
 
   return (
     <div
+      data-layer="proposal"
       style={{ position: "absolute", right: space.xl, bottom: space.xl, zIndex: zIndex.overlay }}
     >
       <Surface variant="card" padding="lg" style={{ width: 420 }}>

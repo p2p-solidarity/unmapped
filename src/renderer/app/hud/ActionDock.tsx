@@ -3,7 +3,7 @@
 
 import { useT } from "@renderer/i18n";
 import { useEngineStore, useSessionStore } from "@renderer/state";
-import { Button, colors, font, radius, space, Text } from "@renderer/ui";
+import { Button, colors, font, radius, space, Text, useHintKeys } from "@renderer/ui";
 import type { JSX } from "react";
 import { nearbyPrompt } from "../prompts";
 
@@ -11,6 +11,8 @@ const dockButton = { fontSize: font.size.caption, padding: `${space.xs}px ${spac
 
 export function NearbyPrompt(): JSX.Element | null {
   const nearby = useEngineStore((state) => state.nearby);
+  // "E", or the pad's "A" after a pad input.
+  const { labels } = useHintKeys(["E"]);
   const prompt = nearbyPrompt(nearby);
   if (prompt === null) return null;
   return (
@@ -36,7 +38,7 @@ export function NearbyPrompt(): JSX.Element | null {
           fontWeight: font.weight.bold,
         }}
       >
-        E
+        {labels.join(" ")}
       </kbd>
       <Text variant="bodyLarge" tone="accent" style={{ letterSpacing: 1 }}>
         {prompt}

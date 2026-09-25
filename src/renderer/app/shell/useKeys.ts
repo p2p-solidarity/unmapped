@@ -1,5 +1,7 @@
 // Screen-local keyboard bindings keyed by `event.code`. Printable keys are ignored while a text
-// field has focus; Escape always fires so the player can back out of a form.
+// field has focus; Escape always fires so the player can back out of a form. A key another handler
+// already took (`defaultPrevented`, e.g. a list's own ↑/↓/Enter) is not handled twice. The
+// gamepad's B and Start reach these maps as an Escape key-down (renderer/input).
 
 import { useEffect, useRef } from "react";
 import { isTypingTarget } from "../hotkeys";
@@ -15,7 +17,7 @@ export function useKeys(map: KeyMap, enabled = true): void {
   useEffect(() => {
     if (!enabled) return;
     const onKeyDown = (event: KeyboardEvent): void => {
-      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
       if (isTypingTarget(event.target) && !ALWAYS.has(event.code)) return;
       const handler = ref.current[event.code];
       if (handler === undefined) return;

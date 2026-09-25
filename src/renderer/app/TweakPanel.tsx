@@ -118,6 +118,7 @@ export function TweakPanel(): JSX.Element | null {
   };
   return (
     <div
+      data-layer="tweak"
       style={{
         position: "absolute",
         inset: 0,

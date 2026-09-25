@@ -1,4 +1,5 @@
 import type { CSSProperties, MouseEventHandler, ReactNode } from "react";
+import { KeyHint } from "./KeyHint";
 import { colors, font, HIT_TARGET, shadow, space, surfaces } from "./tokens";
 
 /**
@@ -27,7 +28,7 @@ export interface ButtonProps {
   onFocus?: () => void;
   onMouseEnter?: () => void;
   type?: "button" | "submit";
-  /** Keyboard hint rendered at the right edge, e.g. "E" or "1". */
+  /** Keyboard hint rendered at the right edge, e.g. "E" or "1" (a pad glyph after pad input). */
   hotkey?: string;
   style?: CSSProperties;
   children: ReactNode;
@@ -131,7 +132,7 @@ export function Button({
       }}
     >
       <span style={{ flex: 1, minWidth: 0 }}>{children}</span>
-      {hotkey ? <kbd className="ui-key">{hotkey}</kbd> : null}
+      {hotkey ? <KeyHint keys={[hotkey]} /> : null}
     </button>
   );
 }

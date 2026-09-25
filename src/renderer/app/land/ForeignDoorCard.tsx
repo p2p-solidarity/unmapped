@@ -81,6 +81,7 @@ export function ForeignDoorCard(): JSX.Element | null {
 
   return (
     <div
+      data-layer="foreign-door"
       style={{
         position: "absolute",
         inset: 0,

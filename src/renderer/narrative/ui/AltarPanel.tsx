@@ -114,6 +114,7 @@ export function AltarPanel() {
 
   return (
     <div
+      data-layer="altar"
       style={{
         position: "fixed",
         inset: 0,

@@ -56,6 +56,7 @@ export function NotePanel(): JSX.Element | null {
 
   return (
     <div
+      data-layer="notes"
       style={{
         position: "absolute",
         inset: 0,

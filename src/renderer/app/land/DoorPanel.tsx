@@ -52,6 +52,7 @@ export function DoorPanel(): JSX.Element | null {
 
   return (
     <div
+      data-layer="door"
       style={{
         position: "absolute",
         inset: 0,
