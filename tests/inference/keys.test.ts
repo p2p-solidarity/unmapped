@@ -14,15 +14,19 @@
 //  6. Corrupt storage — an undecodable or tampered key file crashes or yields a half-read key
 //     instead of reading as "not set".
 //  7. Status leak — the status the renderer sees carries the key (or any part of it).
+//  8. Lost fallback — a saved key that no longer reads (keychain locked, file damaged) blocks
+//     the working OPENAI_API_KEY in .env, so every model and picture call fails.
 
 import {
   describeKey,
   parseKeyRecord,
   parseSetApiKey,
   pickApiKey,
+  resolveKey,
   serializeKeyRecord,
 } from "@main/inference/keys";
 import { type InferenceConfig, PROVIDER_PRESETS } from "@shared/llm";
+import { err, ok } from "@shared/result";
 import { describe, expect, it } from "vitest";
 
 const KEY = "sk-test-not-real-0123456789";
@@ -114,6 +118,19 @@ describe("resolution order", () => {
   it("[5] never sends an .env key to a custom endpoint", () => {
     const env = { OPENAI_API_KEY: "sk-from-env-0123456789" };
     expect(pickApiKey(custom("https://models.example/v1"), null, env)).toBeNull();
+  });
+
+  it("[8] a saved key that no longer reads still lets the .env key through", () => {
+    const env = { OPENAI_API_KEY: "sk-from-env-0123456789" };
+    const broken = err("key-unreadable", "The saved openai key could not be read.");
+    expect(resolveKey(openai, broken, env)).toEqual(ok({ key: env.OPENAI_API_KEY, source: "env" }));
+    const none = resolveKey(openai, broken, {});
+    expect(none.ok ? null : none.error.code).toBe("key-unreadable");
+    const customBroken = resolveKey(custom("https://models.example/v1"), broken, env);
+    expect(customBroken.ok ? null : customBroken.error.code).toBe("key-unreadable");
+    expect(resolveKey(openai, ok(savedFor("openai", KEY)), env)).toEqual(
+      ok({ key: KEY, source: "saved" }),
+    );
   });
 });
 

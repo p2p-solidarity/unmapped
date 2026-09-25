@@ -148,6 +148,21 @@ export function pickApiKey(
   return fromEnv === null ? null : { key: fromEnv, source: "env" };
 }
 
+/**
+ * `pickApiKey` over the result of reading the saved record. .env is always the fallback: a saved
+ * key that no longer reads still lets the .env key through (System → Model keeps showing it as
+ * unreadable), and it is an error only when there is no .env key either.
+ */
+export function resolveKey(
+  config: InferenceConfig,
+  saved: Result<KeyRecord | null>,
+  env: EnvLike,
+): Result<{ key: string; source: "saved" | "env" } | null> {
+  if (saved.ok) return ok(pickApiKey(config, saved.value, env));
+  const fromEnv = pickApiKey(config, null, env);
+  return fromEnv === null ? saved : ok(fromEnv);
+}
+
 /** What the renderer may know about a provider's key. */
 export function describeKey(
   provider: KeyProvider,

@@ -20,6 +20,7 @@ import {
   type KeyRecord,
   parseKeyRecord,
   pickApiKey,
+  resolveKey,
   serializeKeyRecord,
 } from "./keys";
 
@@ -122,8 +123,8 @@ export async function keyStatusMap(env: EnvLike = process.env): Promise<KeyStatu
 }
 
 /**
- * The key a request to this endpoint may carry (saved first, then .env), ok(null) for none, or the
- * error of a saved key that cannot be read — a broken saved key never silently falls back.
+ * The key a request to this endpoint may carry (saved first, then .env), ok(null) for none. A saved
+ * key that cannot be read falls back to .env (`resolveKey`); its error surfaces only without one.
  */
 export async function resolveApiKey(
   config: InferenceConfig,
@@ -132,7 +133,5 @@ export async function resolveApiKey(
   if (config.kind !== "openai" && config.kind !== "openui-gateway" && config.kind !== "custom") {
     return ok(pickApiKey(config, null, env));
   }
-  const saved = await readKeyRecord(config.kind);
-  if (!saved.ok) return saved;
-  return ok(pickApiKey(config, saved.value, env));
+  return resolveKey(config, await readKeyRecord(config.kind), env);
 }
