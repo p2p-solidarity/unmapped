@@ -4,6 +4,7 @@
 
 import { useSessionStore } from "@renderer/state";
 import { Button, colors, StatePanel, Surface, space, Text, TextField } from "@renderer/ui";
+import type { LedgerConfig, LedgerRevision } from "@shared/chain";
 import { fromResult, type Loadable, loading } from "@shared/result";
 import type { WorkDraft, WorkManifest, WorkPlay, WorkRef } from "@shared/works";
 import { type JSX, useCallback, useEffect, useState } from "react";
@@ -14,6 +15,58 @@ interface Library {
   drafts: WorkDraft[];
   works: WorkManifest[];
   plays: WorkPlay[];
+}
+
+/** Optional on-chain provenance: what the ledger says about each saved world, when configured. */
+function useProvenance(works: WorkManifest[]): {
+  config: LedgerConfig | null;
+  known: Record<string, LedgerRevision | null>;
+  note: string | null;
+  register: (work: WorkManifest) => Promise<void>;
+} {
+  const [config, setConfig] = useState<LedgerConfig | null>(null);
+  const [known, setKnown] = useState<Record<string, LedgerRevision | null>>({});
+  const [note, setNote] = useState<string | null>(null);
+  const hashes = works.map((work) => work.contentHash).join(",");
+
+  useEffect(() => {
+    void window.seed.chain.config().then(setConfig);
+  }, []);
+
+  useEffect(() => {
+    if (config?.readable !== true || hashes === "") return;
+    let live = true;
+    void Promise.all(
+      hashes.split(",").map(async (hash) => [hash, await window.seed.chain.lookup(hash)] as const),
+    ).then((rows) => {
+      if (!live) return;
+      const next: Record<string, LedgerRevision | null> = {};
+      for (const [hash, result] of rows) if (result.ok) next[hash] = result.value;
+      setKnown(next);
+    });
+    return () => {
+      live = false;
+    };
+  }, [config?.readable, hashes]);
+
+  const register = async (work: WorkManifest): Promise<void> => {
+    setNote(`Registering ${work.title}…`);
+    const result = await window.seed.chain.publish({
+      contentHash: work.contentHash,
+      parent: work.lineage.parent?.contentHash ?? null,
+      kind: "world",
+      uri: "",
+    });
+    if (!result.ok) {
+      setNote(`${result.error.code}: ${result.error.message}`);
+      return;
+    }
+    setNote(`Registered · ${result.value.txHash}`);
+    const fresh = await window.seed.chain.lookup(work.contentHash);
+    if (fresh.ok) setKnown((current) => ({ ...current, [work.contentHash]: fresh.value }));
+  };
+
+  return { config, known, note, register };
 }
 
 type View =
@@ -48,6 +101,8 @@ function refOf(manifest: WorkManifest): WorkRef {
 
 export function WorksScreen(): JSX.Element {
   const setScreen = useSessionStore((state) => state.setScreen);
+  const [ledgerWorks, setLedgerWorks] = useState<WorkManifest[]>([]);
+  const provenance = useProvenance(ledgerWorks);
   const [view, setView] = useState<View>({ kind: "library" });
   const [library, setLibrary] = useState<Loadable<Library>>(loading());
   const [request, setRequest] = useState("");
@@ -55,7 +110,10 @@ export function WorksScreen(): JSX.Element {
   const [problem, setProblem] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
-    void loadLibrary().then(setLibrary);
+    void loadLibrary().then((next) => {
+      setLibrary(next);
+      setLedgerWorks(next.status === "ready" ? next.value.works : []);
+    });
   }, []);
   useEffect(refresh, [refresh]);
 
@@ -183,8 +241,24 @@ export function WorksScreen(): JSX.Element {
                     <Text variant="caption" tone="muted">
                       {work.description || "No summary."}
                     </Text>
+                    {provenance.config?.readable !== true ? null : (
+                      <Text
+                        variant="caption"
+                        tone={provenance.known[work.contentHash] ? "success" : "dim"}
+                      >
+                        {provenance.known[work.contentHash]
+                          ? `on chain · ${provenance.known[work.contentHash]?.author.slice(0, 10)}…`
+                          : "not on chain"}
+                      </Text>
+                    )}
                     <div style={{ display: "flex", gap: space.sm }}>
                       <Button onClick={() => void startPlay([work])}>Play</Button>
+                      {provenance.config?.writable === true &&
+                      !provenance.known[work.contentHash] ? (
+                        <Button variant="chip" onClick={() => void provenance.register(work)}>
+                          Register on chain
+                        </Button>
+                      ) : null}
                       <Button
                         variant="chip"
                         active={picked}
@@ -204,6 +278,11 @@ export function WorksScreen(): JSX.Element {
                   </Surface>
                 );
               })}
+              {provenance.note === null ? null : (
+                <Text variant="caption" tone="muted">
+                  {provenance.note}
+                </Text>
+              )}
               {journey.length > 1 ? (
                 <Button variant="primary" onClick={() => void startPlay(journey)}>
                   Start journey ({journey.length} worlds)

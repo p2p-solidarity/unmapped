@@ -16,6 +16,12 @@ import type {
   WorkspacePreview,
   WorkspaceRecord,
 } from "@shared/cartridge";
+import type {
+  LedgerConfig,
+  LedgerRevision,
+  PublishOnChainInput,
+  WitnessOnChainInput,
+} from "@shared/chain";
 import type { DataKeyWrappingRecord } from "@shared/identity";
 import type {
   AppInfo,
@@ -238,6 +244,15 @@ const api: SeedApi = {
       invoke<Result<WorkSession>>(IPC.works.openSession, source),
     closeSession: (token: string, kill: boolean) =>
       invoke<Result<void>>(IPC.works.closeSession, token, kill),
+  },
+  chain: {
+    config: () => invoke<LedgerConfig>(IPC.chain.config),
+    lookup: (contentHash: string) =>
+      invoke<Result<LedgerRevision | null>>(IPC.chain.lookup, contentHash),
+    publish: (input: PublishOnChainInput) =>
+      invoke<Result<{ txHash: string }>>(IPC.chain.publish, input),
+    witness: (input: WitnessOnChainInput) =>
+      invoke<Result<{ txHash: string }>>(IPC.chain.witness, input),
   },
   app: {
     info: () => invoke<AppInfo>(IPC.app.info),

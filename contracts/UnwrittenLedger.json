@@ -1,0 +1,242 @@
+{
+  "contract": "UnwrittenLedger",
+  "solc": "0.8.37+commit.f401782d.Emscripten.clang",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "contentHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "AlreadyPublished",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "EmptyHash",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "length",
+          "type": "uint256"
+        }
+      ],
+      "name": "NoteTooLong",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "parent",
+          "type": "bytes32"
+        }
+      ],
+      "name": "UnknownParent",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "contentHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "UnknownRevision",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "contentHash",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "author",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "parent",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "enum UnwrittenLedger.Kind",
+          "name": "kind",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "uri",
+          "type": "string"
+        }
+      ],
+      "name": "Published",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "contentHash",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "witness",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "note",
+          "type": "string"
+        }
+      ],
+      "name": "Witnessed",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "MAX_NOTE",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "contentHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "isPublished",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "contentHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "parent",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "enum UnwrittenLedger.Kind",
+          "name": "kind",
+          "type": "uint8"
+        },
+        {
+          "internalType": "string",
+          "name": "uri",
+          "type": "string"
+        }
+      ],
+      "name": "publish",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "contentHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "revisionOf",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "author",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "parent",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "publishedAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "enum UnwrittenLedger.Kind",
+              "name": "kind",
+              "type": "uint8"
+            },
+            {
+              "internalType": "string",
+              "name": "uri",
+              "type": "string"
+            }
+          ],
+          "internalType": "struct UnwrittenLedger.Revision",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "contentHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "string",
+          "name": "note",
+          "type": "string"
+        }
+      ],
+      "name": "witness",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080604052348015600e575f5ffd5b506108c68061001c5f395ff3fe608060405234801561000f575f5ffd5b5060043610610055575f3560e01c806358a7400514610059578063639637ce146100825780637a94064a1461009757806392727498146100d1578063a8cb5ea9146100e8575b5f5ffd5b61006c610067366004610501565b6100fb565b604051610079919061054c565b60405180910390f35b610095610090366004610612565b610242565b005b6100c16100a5366004610501565b5f908152602081905260409020546001600160a01b0316151590565b6040519015158152602001610079565b6100da61011881565b604051908152602001610079565b6100956100f636600461065a565b6102ed565b61012c6040805160a0810182525f808252602082018190529181018290529060608201908152602001606081525090565b5f8281526020818152604091829020825160a08101845281546001600160a01b0316815260018083015493820193909352600282015467ffffffffffffffff8116948201949094529290916060840191600160401b900460ff169081111561019657610196610518565b60018111156101a7576101a7610518565b81526020016003820180546101bb906106c2565b80601f01602080910402602001604051908101604052809291908181526020018280546101e7906106c2565b80156102325780601f1061020957610100808354040283529160200191610232565b820191905f5260205f20905b81548152906001019060200180831161021557829003601f168201915b5050505050815250509050919050565b5f838152602081905260409020546001600160a01b031661027e57604051633b308b6360e11b8152600481018490526024015b60405180910390fd5b6101188111156102a4576040516386075f7760e01b815260048101829052602401610275565b336001600160a01b0316837f5e85c28b9c34a82d46a104db36043e90c9b0054d1410fb22c0b0d361d59200df84846040516102e0929190610722565b60405180910390a3505050565b8461030b57604051631c37cddf60e21b815260040160405180910390fd5b5f858152602081905260409020546001600160a01b03161561034357604051636857728b60e11b815260048101869052602401610275565b831580159061036657505f848152602081905260409020546001600160a01b0316155b1561038757604051630c45b2fb60e21b815260048101859052602401610275565b6040518060a00160405280336001600160a01b031681526020018581526020014267ffffffffffffffff1681526020018460018111156103c9576103c9610518565b815260200183838080601f0160208091040260200160405190810160405280939291908181526020018383808284375f9201829052509390945250508781526020818152604091829020845181546001600160a01b0319166001600160a01b03909116178155908401516001808301919091559184015160028201805467ffffffffffffffff19811667ffffffffffffffff909316928317825560608701519395509293909268ffffffffffffffffff191690911790600160401b90849081111561049657610496610518565b0217905550608082015160038201906104af90826107a8565b5090505083336001600160a01b0316867ffdf84c9eac8ef61293db3fe95d326ae6065cb1ed0e6691c0a9169078d5bf461a8686866040516104f293929190610867565b60405180910390a45050505050565b5f60208284031215610511575f5ffd5b5035919050565b634e487b7160e01b5f52602160045260245ffd5b6002811061054857634e487b7160e01b5f52602160045260245ffd5b9052565b6020815260018060a01b0382511660208201526020820151604082015267ffffffffffffffff60408301511660608201525f6060830151610590608084018261052c565b50608083015160a08084015280518060c0850152806020830160e086015e5f60e0828601015260e0601f19601f8301168501019250505092915050565b5f5f83601f8401126105dd575f5ffd5b50813567ffffffffffffffff8111156105f4575f5ffd5b60208301915083602082850101111561060b575f5ffd5b9250929050565b5f5f5f60408486031215610624575f5ffd5b83359250602084013567ffffffffffffffff811115610641575f5ffd5b61064d868287016105cd565b9497909650939450505050565b5f5f5f5f5f6080868803121561066e575f5ffd5b853594506020860135935060408601356002811061068a575f5ffd5b9250606086013567ffffffffffffffff8111156106a5575f5ffd5b6106b1888289016105cd565b969995985093965092949392505050565b600181811c908216806106d657607f821691505b6020821081036106f457634e487b7160e01b5f52602260045260245ffd5b50919050565b81835281816020850137505f828201602090810191909152601f909101601f19169091010190565b602081525f6107356020830184866106fa565b949350505050565b634e487b7160e01b5f52604160045260245ffd5b601f8211156107a357828211156107a357805f5260205f20601f840160051c602085101561077c57505f5b90810190601f840160051c035f5b8181101561079f575f8382015560010161078a565b5050505b505050565b815167ffffffffffffffff8111156107c2576107c261073d565b6107d6816107d084546106c2565b84610751565b6020601f821160018114610808575f83156107f15750848201515b5f19600385901b1c1916600184901b178455610860565b5f84815260208120601f198516915b828110156108375787850151825560209485019460019092019101610817565b508482101561085457868401515f19600387901b60f8161c191681555b505060018360011b0184555b5050505050565b610871818561052c565b604060208201525f6108876040830184866106fa565b9594505050505056fea26469706673582212201caa86f1cd5da9c93ec3813b81ec1a56689f070a81055bd620e1075d2aa94ddd64736f6c63430008250033"
+}

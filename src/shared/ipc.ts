@@ -17,6 +17,12 @@ import type {
   WorkspacePreview,
   WorkspaceRecord,
 } from "./cartridge";
+import type {
+  LedgerConfig,
+  LedgerRevision,
+  PublishOnChainInput,
+  WitnessOnChainInput,
+} from "./chain";
 import type { DataKeyWrappingRecord } from "./identity";
 import type {
   AppendNoteInput,
@@ -154,6 +160,12 @@ export const IPC = {
     changePlay: "works:change-play",
     openSession: "works:open-session",
     closeSession: "works:close-session",
+  },
+  chain: {
+    config: "chain:config",
+    lookup: "chain:lookup",
+    publish: "chain:publish",
+    witness: "chain:witness",
   },
   app: {
     info: "app:info",
@@ -411,6 +423,13 @@ export interface SeedApi {
     openSession(source: WorkSessionSource): Promise<Result<WorkSession>>;
     /** Forgets a session; `kill` also stops its frame process (a hung world). */
     closeSession(token: string, kill: boolean): Promise<Result<void>>;
+  };
+  /** Optional on-chain provenance (contracts/src/UnwrittenLedger.sol); absent config is not an error. */
+  chain: {
+    config(): Promise<LedgerConfig>;
+    lookup(contentHash: string): Promise<Result<LedgerRevision | null>>;
+    publish(input: PublishOnChainInput): Promise<Result<{ txHash: string }>>;
+    witness(input: WitnessOnChainInput): Promise<Result<{ txHash: string }>>;
   };
   app: {
     info(): Promise<AppInfo>;

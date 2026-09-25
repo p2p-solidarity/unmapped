@@ -10,6 +10,7 @@ import { registerAuthoringIpc } from "./workspaces/authoring-ipc";
 
 import { registerAppIpc } from "./app/ipc";
 import { registerCartridgesIpc } from "./cartridges/ipc";
+import { registerChainIpc } from "./chain/ipc";
 import type { MainContext } from "./context";
 import { registerGameIpc } from "./game/base";
 import { registerInferenceIpc } from "./inference/ipc";
@@ -36,4 +37,5 @@ export function registerIpc(ctx: MainContext): void {
   registerInferenceIpc(ctx);
   registerModsIpc(ctx);
   registerWorksIpc(ctx);
+  registerChainIpc();
 }

@@ -20,7 +20,9 @@
     "eval:afm-provider": "bun --tsconfig-override tsconfig.test.json native/afm-bridge/Eval/provider-run.ts",
     "eval:afm-main": "node scripts/build-afm-bridge.mjs debug && electron-vite build && node scripts/eval-afm-main.mjs",
     "afm:build": "node scripts/build-afm-bridge.mjs debug",
-    "dist": "node scripts/build-afm-bridge.mjs release && electron-vite build && electron-builder"
+    "dist": "node scripts/build-afm-bridge.mjs release && electron-vite build && electron-builder",
+    "contracts:build": "node scripts/build-contracts.mjs",
+    "contracts:deploy": "node scripts/deploy-ledger.mjs"
   },
   "dependencies": {
     "@deepseek-ai/cordis": "^4.0.2",
@@ -45,6 +47,9 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.13",
+    "@ethereumjs/common": "^10.1.3",
+    "@ethereumjs/evm": "^10.1.3",
+    "@ethereumjs/util": "^10.1.3",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.0",
@@ -54,6 +59,7 @@
     "electron": "^44.3.0",
     "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
+    "solc": "^0.8.37",
     "typescript": "^5.9.0",
     "vite": "^8.3.0",
     "vitest": "^5.0.0"

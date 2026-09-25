@@ -100,6 +100,7 @@ describe("packFiles / unpackFiles", () => {
       vault: {} as SeedApi["vault"],
       mods: {} as SeedApi["mods"],
       works: {} as SeedApi["works"],
+      chain: {} as SeedApi["chain"],
       app: {} as SeedApi["app"],
     } as SeedApi;
     const previous = globalThis.window;
@@ -159,6 +160,7 @@ describe("packFiles / unpackFiles", () => {
       vault: {} as SeedApi["vault"],
       mods: {} as SeedApi["mods"],
       works: {} as SeedApi["works"],
+      chain: {} as SeedApi["chain"],
       app: {} as SeedApi["app"],
     } as SeedApi;
     const previous = globalThis.window;

@@ -30,6 +30,7 @@ export function EpisodePanel(): JSX.Element | null {
   const [stage, setStage] = useState<string | null>(null);
   const [error, setError] = useState<AppError | null>(null);
   const [playing, setPlaying] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const controller = useRef<AbortController | null>(null);
 
   // However the panel closes (button, Esc, leaving play), an unfinished generation stops with it.
@@ -53,10 +54,12 @@ export function EpisodePanel(): JSX.Element | null {
     setPlaying(false);
     setError(null);
     setStage(null);
+    setNotice(null);
     close();
   };
 
-  const prepare = async (target: StoryEpisode): Promise<void> => {
+  /** Writes an episode's world (generate → check → publish → journey) without opening it. */
+  const prepare = async (target: StoryEpisode, andPlay = true): Promise<void> => {
     if (plan === null || bible === null) return;
     const land = useLandStore.getState();
     const signal = new AbortController();
@@ -115,7 +118,8 @@ export function EpisodePanel(): JSX.Element | null {
     if (!play.ok) return finish(play.error);
     useLandStore.getState().setEpisode(target.id, { work, playId: play.value.playId });
     finish(null);
-    setPlaying(true);
+    if (andPlay) setPlaying(true);
+    else setNotice(`“${target.title}” is ready at its gate.`);
   };
 
   function finish(problem: AppError | null): void {
@@ -180,6 +184,9 @@ export function EpisodePanel(): JSX.Element | null {
 
   const unlocked = episodeUnlocked(plan, progress.episodes ?? {}, episode.id);
   const previous = plan.episodes[index - 1];
+  const after = plan.episodes[index + 1];
+  const upcoming =
+    after !== undefined && (progress.episodes?.[after.id]?.playId ?? null) === null ? after : null;
   const busy = stage !== null;
   return (
     <div style={{ ...frame, alignItems: "center", justifyContent: "center", padding: space.xl }}>
@@ -201,6 +208,14 @@ export function EpisodePanel(): JSX.Element | null {
           </Text>
         ) : null}
         {stage === null ? null : <Text tone="accent">{stage}</Text>}
+        {notice === null ? null : <Text tone="success">{notice}</Text>}
+        {/* Once this one is done, the next world can be written while the player is still here, so
+            its gate opens without a wait. Explicit: writing a world costs model time. */}
+        {record?.cleared && upcoming !== null && !busy ? (
+          <Button variant="secondary" onClick={() => void prepare(upcoming, false)}>
+            Prepare the next episode now · {upcoming.title}
+          </Button>
+        ) : null}
         {checker}
         {error === null ? null : <ErrorBlock error={error} />}
         <div style={{ display: "flex", gap: space.sm }}>

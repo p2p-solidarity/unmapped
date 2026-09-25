@@ -100,8 +100,22 @@ describe("story in a cartridge", () => {
         bible: { core: "A quiet land.", style: "Language: zh-TW\nShort sentences." },
         story,
       };
-      // The renderer sends this over IPC; the strict schema must let the story through.
+      // The renderer sends this over IPC; the strict schema must let a good story through…
       expect(publishCartridgeInputSchema.safeParse(input).success).toBe(true);
+      // …and reject a malformed one rather than hashing it into a cartridge.
+      const tooFew = {
+        ...input,
+        story: { ...story, episodes: story.episodes.slice(0, 1) },
+      };
+      expect(publishCartridgeInputSchema.safeParse(tooFew).success).toBe(false);
+      const offMap = {
+        ...input,
+        story: {
+          ...story,
+          episodes: story.episodes.map((episode) => ({ ...episode, cx: 9_999 })),
+        },
+      };
+      expect(publishCartridgeInputSchema.safeParse(offMap).success).toBe(false);
       const published = unwrap(await publishCartridgeRevision(root, input));
       expect(published.files.some((file) => file.path === "bible/story.json")).toBe(true);
       const read = unwrap(

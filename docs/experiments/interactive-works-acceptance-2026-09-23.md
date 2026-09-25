@@ -112,6 +112,51 @@ RPG → ARPG → maze → platformer and was played through:
   back on the library and the journey had already advanced to world 4. A second journey
   (maze → platformer) stayed on "World cleared · Next world →" as designed.
 
+## Story → RPG map → episodes (added the same day)
+
+One story ("the last postman on a single-track line", written in the world's language) became a
+world bible plus **five episodes**, each a different kind of play (find hidden things, chase and
+catch, path puzzle, run back and forth, turn-based duel), placed on the open land at chunks
+(1,0), (-1,1), (0,-3), (2,3), (-5,-1).
+
+| Step | Result |
+| --- | --- |
+| Bible → story plan | ~2 s and ~4 s of model time; the plan is hashed into the cartridge as `bible/story.json` |
+| Episode 1 world, written at the gate | passed first try: 22.8 s (16.2 s model), 1,229 in / 2,863 out tokens |
+| Episode 2 world | passed first try: 27.8 s (21.2 s model), 1,248 in / 3,211 out tokens |
+| Playing them | episode 1 cleared (found the letter), episode 2 cleared (caught the letter) |
+| Carry between episodes | episode 2 saw `{"leaflet1":true,"lettersFound":1}` in `host.carry`; after clearing, the save held `{"leaflet1":true,"lettersFound":1,"ticket":true,"items":["ticket"]}` |
+| Record in the RPG | `episodes.e1/e2` pinned to exact revisions, plus a `witness` karma entry per clear |
+| Full app restart mid-story | reopened on the same gate with `Story 1/5` and the player where they stood |
+
+Bugs this found and fixed: a player standing inside a prop collider could never walk out (every
+direction refused); `host.asset` now also accepts a library path, because models keep passing one
+instead of an id, and an unknown id is reported as an error so the checker sends it to repair.
+The same immutable world then rendered its tiles correctly without changing a byte of its code.
+
+Not fixed (the older witnessing pipeline, unrelated to this change): writing a chunk failed with
+"this place name is already taken" after 2 repairs, so that chunk stayed unwritten.
+
+## Generated images
+
+Three images generated through the workshop with `gpt-image-1-mini` (transparent PNG, scaled to
+256 px): a slime, a stone wall tile and a monster. Each took ~16 s of model time and ~1,056 output
+tokens (107–115 input); files are 20–41 KB. Cost is not returned by the API. Each one went in as an
+ordinary asset candidate and had to pass the player check before becoming current.
+
+## On-chain provenance (optional)
+
+`contracts/src/UnwrittenLedger.sol` keeps two ledgers on the sha256 content hash the app already
+uses: `publish` (author, lineage, uri — one hash, one author, forever) and `witness` (short notes
+players leave on a revision). Contract rules are tested by running the compiled contract in an
+in-process EVM (duplicate publish, unknown parent, note length, notes only on published hashes),
+and a test recompiles the source and compares bytecode with the committed artifact. The app's
+adapter is tested against a stub RPC, including the messages when nothing is configured.
+
+**Not done:** never deployed to a public testnet and never sent a real transaction — that spends
+gas and needs your key (`bun run contracts:deploy`). With no chain configured the app behaves
+exactly as before; the UI simply shows no provenance.
+
 ## Next cost to cut
 
 The most expensive step was not the first generation but **repairs that rewrite whole files**

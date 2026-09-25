@@ -738,20 +738,22 @@
       <nav class="drawer-nav" aria-label="規格文件分頁">
         <button class="doc-tab" type="button" aria-current="page" data-doc-page="core" data-page-target="entry"><span class="doc-tab-index">01</span><span class="doc-tab-copy">產品方向<small>AI 更好產 · 2D 優先 · 成本指標</small></span></button>
         <button class="doc-tab" type="button" data-doc-page="progress" data-page-target="progress"><span class="doc-tab-index">02</span><span class="doc-tab-copy">開發計劃與 Prompt<small>驗證方式 → 播放器 → 創作閉環</small></span></button>
-        <button class="doc-tab" type="button" data-doc-page="technical" data-page-target="verdict"><span class="doc-tab-index">03</span><span class="doc-tab-copy">作品契約與現況<small>責任分工 · 執行邊界 · 舊架構銜接</small></span></button>
+        <button class="doc-tab" type="button" data-doc-page="technical" data-page-target="verdict"><span class="doc-tab-index">03</span><span class="doc-tab-copy">作品契約與現況<small>責任分工 · 執行邊界 · 故事章節</small></span></button>
+        <button class="doc-tab" type="button" data-doc-page="chain" data-page-target="chain-why"><span class="doc-tab-index">04</span><span class="doc-tab-copy">智能合約與流通<small>出處帳本 · 見證帳本 · 設定與現況</small></span></button>
       </nav>
-      <p class="drawer-note">這是新的目標規格，不是已完成功能清單。三頁可獨立閱讀；列印時展開全文。開發 Prompt 依序使用。</p>
+      <p class="drawer-note">這是現況規格：第 01–03 頁描述已交付並實機驗收的設計，第 04 頁是選配的鏈上出處。四頁可獨立閱讀；列印時展開全文。</p>
     </aside>
     <div class="hero" id="top" data-page-hero="core">
-      <p class="eyebrow">Product direction · Revision 2 · 2026-09-22</p>
+      <p class="eyebrow">Product direction · Revision 3 · 2026-09-23</p>
       <h1>讓 AI 更容易產出，<br>讓每次修改更便宜。</h1>
       <p class="hero-lede">Unwritten Land 是讓 AI 生成、執行與修改互動作品的框架。降低製作與試錯成本是核心價值；遊戲是主要用途，2D 是預設，Three.js 是可選能力。</p>
       <div class="hero-meta"><span class="pill">HTML / CSS / JavaScript</span><span class="pill">玩法由作品定義</span><span class="pill">局部修改與修補</span><span class="pill">目標規格 · 待實作驗證</span></div>
     </div>
     <div class="layout"><main id="main">
       <div class="page-intro" data-page-intro="core"><div><p class="section-kicker">Page 01 · Product direction</p><h2 data-page-title>先降低產出的成本</h2><p>框架的工作是讓想法更快成為可操作的作品，再讓創作者低成本迭代。</p></div><span class="status inference">方向已確認</span></div>
-      <div class="page-intro" data-page-intro="progress" hidden><div><p class="section-kicker">Page 02 · Delivery plan</p><h2 data-page-title>三階段，逐步驗證</h2><p>先驗證生成媒介，再建立播放器，最後接上生成與修改。以下階段尚未由本次文件更新實作。</p></div><span class="status unknown">待啟動</span></div>
-      <div class="page-intro" data-page-intro="technical" hidden><div><p class="section-kicker">Page 03 · Contract &amp; migration</p><h2 data-page-title>固定服務介面，開放作品玩法</h2><p>區分新方向、待驗證的執行方式，以及現有可重用的資料責任。</p></div><span class="status unknown">契約待原型確認</span></div>
+      <div class="page-intro" data-page-intro="progress" hidden><div><p class="section-kicker">Page 02 · Delivery plan</p><h2 data-page-title>三階段已交付，接著把故事接上地圖</h2><p>生成方式、隔離播放器與創作閉環都已實作並實機驗收；本頁只寫實際量到的數字與下一階段。</p></div><span class="status verified">階段 1–4 已交付</span></div>
+      <div class="page-intro" data-page-intro="technical" hidden><div><p class="section-kicker">Page 03 · Contract &amp; world</p><h2 data-page-title>固定服務介面，開放作品玩法</h2><p>作品契約、執行邊界、儲存責任與故事章節都已落地；本頁是現況，不是提案。</p></div><span class="status verified">契約已實作</span></div>
+      <div class="page-intro" data-page-intro="chain" hidden><div><p class="section-kicker">Page 04 · On-chain</p><h2 data-page-title>上鏈只記出處與見證</h2><p>內容永遠不上鏈；鏈上只有雜湊、作者、血緣與玩家留下的話。沒有設定鏈，整個遊戲照常運作。</p></div><span class="status unverified">合約已寫與測試 · 尚未部署</span></div>
         <section id="entry" data-section data-page="core" data-open-default>
           <div class="section-head"><p class="section-kicker">01 · Core value</p><h2>框架以「AI 更好產」為第一優先</h2><p class="section-intro">同一個需求，選擇能讓模型用更少上下文、更少錯誤與更少修補，產出可玩結果的表示方式。</p></div>
 
@@ -801,12 +803,23 @@
 </tbody></table></div><div class="callout warn"><strong>比較原則：</strong>可使用現有 DSL 路徑支援的重疊題目做基準，不強迫它執行不支援的玩法。沒有模型就標示未量測，不以手寫原型推論模型生成成功率。</div>
         </section>
         <section id="progress" data-section data-page="progress" data-open-default>
-          <div class="section-head"><p class="section-kicker">01 · Delivery scope</p><h2>這次先完成框架的最小閉環</h2><p class="section-intro">本文件完成方向更新；下列三階段是後續開發工作，並非已交付功能。</p></div>
+          <div class="section-head"><p class="section-kicker">01 · Delivery scope</p><h2>最小閉環已經跑起來了</h2><p class="section-intro">以下狀態來自實機驗收，不是計劃。數字全部取自實際執行紀錄（模型：gpt-5.4-mini）。</p></div>
 <div class="table-wrap" role="region" aria-label="階段狀態" tabindex="0"><table><thead><tr><th scope="col">階段</th><th scope="col">產出</th><th scope="col">進入下一階段的條件</th><th scope="col">狀態</th></tr></thead><tbody>
-<tr><td>1 · 生成方式原型</td><td>同一播放器、三種互動作品、成本紀錄、最小契約建議</td><td>不需要玩法專用模組；可說明哪些成本降低、哪些尚未量測</td><td>待驗證</td></tr>
-<tr><td>2 · 最小播放器</td><td>隔離執行、素材、存檔、錯誤與版本載入</td><td>三作品共用 runtime；錯誤可恢復、權限邊界與存檔經驗收</td><td>待階段 1</td></tr>
-<tr><td>3 · 生成與修改閉環</td><td>一句需求 → 可玩作品 → 局部修改 → 保存／回復</td><td>真實生成與三類修改跑通，記錄成功率與成本</td><td>待階段 2</td></tr>
-</tbody></table></div><div class="callout"><strong>完成定義：</strong>有程式碼只代表已有實作。完成還需要專案檢查、實機操作、失敗／取消／重新開啟驗收；執行邊界依 L 級流程設計與 review。這份文件更新本身不代表已通過上述產品驗收。</div>
+<tr><td>1 · 生成方式原型</td><td>同一播放器承載三種互動作品，含原始成本紀錄</td><td>不需玩法專用模組</td><td><span class="status verified">已完成</span></td></tr>
+<tr><td>2 · 最小播放器</td><td><code>interactive-web@1</code>：sandbox iframe + 自訂 scheme + nonce CSP + 驗證過的訊息；不可變版本、釘住的遊玩進度、草稿候選</td><td>惡意作品拿不到宿主能力；無窮迴圈只殺自己的行程</td><td><span class="status verified">已完成並實機對抗測試</span></td></tr>
+<tr><td>3 · 生成與修改閉環</td><td>一句需求 → 可玩 → 一句話改 → 保存／回復；修補上限 2 次</td><td>4 個玩法 3 類修改真跑通</td><td><span class="status verified">已完成</span></td></tr>
+<tr><td>4 · 故事 → RPG 地圖</td><td>故事 → 章節計畫（寫進卡帶雜湊）→ 地圖上的門 → 進門即生成該章節世界 → 帶著道具回到 RPG</td><td>章節可生成、可過關、進度與攜帶物跨重開保留</td><td><span class="status verified">已完成，兩章實玩通過</span></td></tr>
+<tr><td>5 · 素材生成</td><td>缺圖的素材槽可由影像模型補上，走同一條候選→檢查→保存</td><td>產出可用、可回退、成本有紀錄</td><td><span class="status verified">已接上（測試 3 張）</span></td></tr>
+</tbody></table></div>
+<div class="table-wrap" role="region" aria-label="實測數字" tabindex="0"><table><thead><tr><th scope="col">量到的</th><th scope="col">結果</th></tr></thead><tbody>
+<tr><td>首次可玩（自動檢查通過）</td><td>四個玩法（RPG／ARPG／迷宮／瑪利歐式平台）3/4 第一次就過，全部在 1 次修補內可玩；故事章節 2/2 第一次就過</td></tr>
+<tr><td>生成耗時</td><td>單一世界 16–52 秒（其中模型 13–30 秒）；故事章節 23 秒與 28 秒</td></tr>
+<tr><td>Token（可取得，費用 API 不回傳）</td><td>生成四個世界共 7,405 in / 11,073 out；章節各約 1,230 in / 3,000 out</td></tr>
+<tr><td>修改成本</td><td>改一條規則 6.7 秒 / 225 out tokens、換素材 5.2 秒 / 155 out、調畫面 6.9 秒 / 507 out；5 次修改全部生效，4 次一次過</td></tr>
+<tr><td>素材生成</td><td>3 張 256px 透明 PNG，各約 16 秒、約 1,056 output tokens</td></tr>
+<tr><td>隔離</td><td>惡意作品拿不到 preload／Node／父頁面／儲存／eval／網路／彈窗／導頁；無窮迴圈只吃掉自己的行程（97% CPU），宿主往返仍 95–98 毫秒</td></tr>
+</tbody></table></div>
+<div class="callout"><strong>完成定義：</strong>有程式碼只代表已有實作。以上每一項都跑過專案檢查（801 測試）與實機操作；失敗、取消與重新開啟也各驗過一次。詳細紀錄與未量測項目見 <a href="../experiments/interactive-works-acceptance-2026-09-23.md">驗收文件</a>。</div>
         </section>
         <section id="stages" data-section data-page="progress" data-open-default>
           <div class="section-head"><p class="section-kicker">02 · Acceptance</p><h2>每階段只解決一個問題</h2><p class="section-intro">先證明生成方式，再固定執行契約；避免一開始把新的框架做成另一個龐大引擎。</p></div>
@@ -818,7 +831,7 @@
           </div>
         </section>
         <section id="prompts" data-section data-page="progress" data-open-default>
-          <div class="section-head"><p class="section-kicker">03 · Development prompts</p><h2>可分開執行的開發 Prompt</h2><p class="section-intro">依 1 → 2 → 3 執行。每段都可獨立交給開發代理；下一段需讀取上一段的實際產出，不能假設驗收已通過。</p></div>
+          <div class="section-head"><p class="section-kicker">03 · Development prompts</p><h2>已執行完的三段 Prompt（保留作紀錄）</h2><p class="section-intro">Prompt 1–3 都已交付並驗收，內容保留在這裡當作可追溯的來源。下一階段的工作寫在本頁第 05 節。</p></div>
 <details><summary>Prompt 1 · 驗證生成方式</summary><div class="details-body"><div class="code-wrap"><button class="copy" type="button" aria-label="複製開發 Prompt 1">複製 Prompt 1</button><pre class="prompt-code"><code>請在 /Users/kidney/Workspace/Hackathon/26ethtokyo 為 Unwritten Land 驗證新的 AI 遊戲生成方向。
 
 產品決策：框架核心是降低 AI 生成、修改與修補互動作品的成本。不強制 Three.js、SceneGraph 或 gameplay kit；預設探索 HTML／CSS／JavaScript 的 2D 作品，圖片與 Canvas 按需使用。框架提供通用服務，玩法由 AI 產生。暫不遷移或刪除舊路徑。
@@ -908,16 +921,16 @@
 </tbody></table></div><div class="callout warn"><strong>最小依賴：</strong>第一版不允許作品自行下載、安裝任意套件。若確有需要，再固定受支援依賴與版本；省下安裝、建置與修補成本。HTML／CSS／JavaScript 是預設候選，具體產物格式以階段 1 的證據確認。</div>
         </section>
         <section id="validation" data-section data-page="technical" data-open-default>
-          <div class="section-head"><p class="section-kicker">03 · Execution &amp; repair</p><h2>可執行程式需要新的驗證方式</h2><p class="section-intro">OpenUI parser 仍服務既有 DSL 卡帶；它不能替代新作品的隔離執行、宿主訊息驗證與行為檢查。</p></div>
+          <div class="section-head"><p class="section-kicker">03 · Execution &amp; repair</p><h2>可執行程式的驗證方式（已實作）</h2><p class="section-intro">OpenUI parser 仍服務既有 DSL 卡帶；新作品走的是隔離執行、訊息驗證與行為檢查這一條，以下都已落地並實測。</p></div>
 
           <div class="grid-2">
-            <article class="card"><h3>執行邊界 · 階段 2 必做</h3><ul><li>作品不直接存取 Node、preload、宿主 DOM、檔案系統或憑證。</li><li>預設不提供任意網路、視窗開啟與導覽；素材經受控途徑供應。</li><li>宿主驗證訊息來源、作品 session、命令、payload 與大小，不信任作品自己宣稱的身份。</li><li>定義資源上限、逾時、終止與復原；實測失控程式不會拖垮宿主。</li><li>隔離機制需原型驗證與 code-review，不把某個容器名稱當成安全證明。</li></ul></article>
-            <article class="card"><h3>生成閉環 · 階段 3 必做</h3><ul><li>檢查檔案路徑、入口、素材與依賴完整性，再做語法與載入檢查。</li><li>於隔離環境執行，收集檔案／位置／錯誤類型與可重現步驟。</li><li>設定有限修補次數；超限保留錯誤，不覆蓋上一個可玩版本。</li><li>只在基底版本仍相符時接納結果；取消與晚到回應不得污染草稿。</li><li>驗證要求修改的行為及必要回歸，再保存新版本；不相容存檔明示重開或遷移。</li></ul></article>
+            <article class="card card-accent"><h3>執行邊界 · 已實作並實測</h3><ul><li>每個 session 一個隨機 <code>ulwork://</code> 主機，由主行程供頁，帶自己的 nonce CSP；sandbox iframe 不給 same-origin。</li><li>實測擋下：preload／Node／父頁 DOM／localStorage／eval／fetch／WebSocket／外部圖片／彈窗／自行導頁。</li><li>訊息只認這個 session 的視窗、不透明來源、token、schema、大小與頻率；其餘丟棄並計數。</li><li>心跳斷了 4 秒就終止那一個行程；實測 97% CPU 的無窮迴圈不影響宿主與其他作品。</li><li>已記錄的殘留風險：WebRTC 無法用 CSP 擋（作品身上沒有任何秘密可外流）。</li></ul></article>
+            <article class="card card-cyan"><h3>生成閉環 · 已實作並實測</h3><ul><li>候選先在真的播放器裡跑：要開得起來、要畫出東西、被重放的按鍵與點擊打過一輪不出錯。</li><li>再從它自己存的檔重開一次；很多世界的存檔根本還原不了，這一關會抓到並送去修補。</li><li>錯誤帶著 <code>main.js:行:列</code> 回給模型，最多修補 2 次；超過就保留錯誤，不動可玩版本。</li><li>只有基底仍是目前版本時才接受結果（compare-and-set）；取消與晚到的結果都進不了。</li><li>保存版本是不可變的；遊玩進度釘住當時那一版，新版本另開一局，不偷偷遷移。</li></ul></article>
           </div>
           <div class="callout"><strong>成本取捨：</strong>只建立能幫助生成、執行、修改或修補的機制。不先做通用插件生態、萬用遊戲語言或完整資產流水線。</div>
         </section>
         <section id="baseline" data-section data-page="technical" data-open-default>
-          <div class="section-head"><p class="section-kicker">04 · Existing implementation</p><h2>沿用資料責任，逐步移開強制引擎依賴</h2><p class="section-intro">依現有原始碼整理可重用方向；不是宣稱新版播放器已完成。舊遊戲與新互動作品先並存。</p></div>
+          <div class="section-head"><p class="section-kicker">04 · Existing implementation</p><h2>沿用資料責任，舊路徑保持可玩</h2><p class="section-intro">新舊並存的現況：卡帶／實例／草稿的責任分離被沿用，AI 作品是它旁邊的新類型，不是取代。</p></div>
 <div class="table-wrap" role="region" aria-label="現有能力與新版差距" tabindex="0"><table><thead><tr><th scope="col">現有部分</th><th scope="col">新版處置</th><th scope="col">仍待完成</th></tr></thead><tbody>
 <tr><td>Cartridge／Instance／Workspace</td><td>保留發布內容、個人進度、草稿分開的責任</td><td>新增作品類型與相容驗證；不直接沿用固定 Scene 欄位</td></tr>
 <tr><td>Three.js／R3F／Rapier／Scene DSL</td><td>保留舊卡帶路徑；新作品不必經過</td><td>最小 2D 播放器與清楚的類型路由</td></tr>
@@ -927,18 +940,77 @@
 <tr><td>多人／身份／ENS／鏈上發布</td><td>既有能力保留；不當新播放器的前置條件</td><td>待生成成本與核心閉環被驗證後，另定分享範圍</td></tr>
 </tbody></table></div><div class="callout warn"><strong>規格銜接：</strong>本頁取代舊版 HTML 的產品主軸。<code>plan.md</code> 的「見證人／無限地圖」與 <code>CLAUDE.md</code> 的 data-only 規則仍描述舊路徑；實作新作品類型時要同步界定適用範圍。此次只更新文件，不默默放寬現有程式權限，也不刪除舊遊戲。</div>
         </section>
+        <section id="story" data-section data-page="technical" data-open-default>
+          <div class="section-head"><p class="section-kicker">05 · Story → map</p><h2>玩家寫故事，地圖長出章節</h2><p class="section-intro">RPG 是外框，小遊戲是劇情。故事一次變成一串章節，散在同一張無限地圖上，道具跟著人走。</p></div>
+<div class="table-wrap" role="region" aria-label="故事章節" tabindex="0"><table><thead><tr><th scope="col">誰負責</th><th scope="col">內容</th><th scope="col">存在哪裡</th></tr></thead><tbody>
+<tr><td>模型</td><td>世界聖經（core／style）＋ 3–6 個章節：標題、地點、玩法種類、一段簡述</td><td>章節計畫寫進卡帶 <code>bible/story.json</code>，和內容雜湊綁在一起</td></tr>
+<tr><td>宿主</td><td>把每章放到地圖上的一個區塊（黃金角螺旋，越後面越遠）、畫門、指南針、鎖與解鎖順序</td><td>純函式，位置不由模型決定</td></tr>
+<tr><td>章節世界</td><td>進門當下才生成，走同一條 生成 → 檢查 → 修補 → 發布版本</td><td>不可變作品版本；進度是釘住那一版的單章旅程</td></tr>
+<tr><td>攜帶物</td><td>每章結束回傳的東西由宿主合併（不讓世界把前面的東西蓋掉），再帶進下一章</td><td>存檔的 <code>land.storyCarry</code>；過關同時寫一筆見證 karma</td></tr>
+</tbody></table></div>
+          <div class="callout"><strong>為什麼章節不預先全部生成：</strong>玩家可能永遠走不到第五章，先生成就是先付錢。等走到門口再寫，成本只花在真的被看見的地方——這也是之後做「無限」時要延續的原則：在玩目前這章時，背景先寫好下一章。</div>
+        </section>
+        <section id="assets" data-section data-page="technical" data-open-default>
+          <div class="section-head"><p class="section-kicker">06 · Assets</p><h2>缺圖就說缺圖，需要時再讓模型畫</h2><p class="section-intro">素材引用與程式分離：換一張圖只動 <code>assets.json</code> 與一個檔案，不必重寫玩法。</p></div>
+<div class="table-wrap" role="region" aria-label="素材來源" tabindex="0"><table><thead><tr><th scope="col">來源</th><th scope="col">怎麼用</th><th scope="col">邊界</th></tr></thead><tbody>
+<tr><td>內建 CC0 圖庫</td><td>角色、地形、道具、愛心；用 id 或直接用 <code>library/…</code> 路徑都可以</td><td>隨 app 散布，授權可公開（Ninja Adventure, CC0）</td></tr>
+<tr><td>影像模型</td><td>對著素材槽的說明生成一張透明 PNG（預設 gpt-image-1-mini，縮到 256px）</td><td>金鑰只在主行程；生成也是一個候選，要通過播放器檢查才會變成目前版本</td></tr>
+<tr><td>玩家自己的圖</td><td>從檔案挑一張換掉某個素材槽</td><td>同一條路徑，同樣可回退</td></tr>
+<tr><td>沒有圖</td><td>世界必須畫出標著「missing: id」的方塊</td><td>不允許假素材冒充；宿主也會把「要了不存在的素材」當錯誤回報給模型修補</td></tr>
+</tbody></table></div>
+        </section>
         <section id="risks" data-section data-page="technical">
-          <div class="section-head"><p class="section-kicker">05 · Open decisions</p><h2>用原型回答，現在不硬定</h2><p class="section-intro">先固定方向與驗收問題，避免把未驗證的工程選擇寫成既成事實。</p></div>
+          <div class="section-head"><p class="section-kicker">07 · Open decisions</p><h2>已經被實測回答的，與還沒回答的</h2><p class="section-intro">原本這裡都是待答問題；現在多數有答案了，剩下的仍然只寫問題與需要的證據。</p></div>
 <div class="table-wrap" role="region" aria-label="尚待決定事項" tabindex="0"><table><thead><tr><th scope="col">問題</th><th scope="col">何時決定</th><th scope="col">需要的證據</th></tr></thead><tbody>
-<tr><td>單檔或多檔作品？是否需要建置？</td><td>階段 1</td><td>首次成功率、修改範圍、上下文大小與建置成本</td></tr>
-<tr><td>用什麼機制隔離執行？</td><td>階段 2 設計前</td><td>權限、故障隔離、資源控制、可診斷性及實機驗證</td></tr>
-<tr><td>宿主 API 最少需要幾個？</td><td>階段 1 → 2</td><td>三種作品的重複需求，而非預想的遊戲類型數量</td></tr>
-<tr><td>局部修改採什麼格式？</td><td>階段 3</td><td>修改成功率、版本衝突與保留既有行為的能力</td></tr>
-<tr><td>何時接圖片生成或 3D？</td><td>核心閉環之後，依需求</td><td>確實降低作品製作成本，且收益大於額外等待與修補負擔</td></tr>
+<tr><td>單檔或多檔作品？是否需要建置？</td><td><span class="status verified">已回答</span></td><td>三個檔案（main.js／style.css／assets.json）＋素材，不需要建置；規則、畫面、素材各改各的</td></tr>
+<tr><td>用什麼機制隔離執行？</td><td><span class="status verified">已回答</span></td><td>每個 session 一個隨機 <code>ulwork://</code> 主機、sandbox iframe（不給 same-origin）、nonce CSP、驗證過的 postMessage；實測連無窮迴圈都只死自己</td></tr>
+<tr><td>宿主 API 最少需要幾個？</td><td><span class="status verified">已回答</span></td><td>七個：<code>root, carry, load, save, complete, status, asset</code></td></tr>
+<tr><td>局部修改採什麼格式？</td><td><span class="status verified">已回答</span></td><td>@@ 行協議：整檔替換或 SEARCH/REPLACE；改一條規則只動 3 行</td></tr>
+<tr><td>模型重複犯的錯要不要由框架吸收？</td><td><span class="status inference">正在回答</span></td><td>已吸收：狀態列洗頻、素材路徑、攜帶物被蓋掉、存檔無法還原（新增復原檢查）。下一個候選：時間單位與存檔輔助</td></tr>
+<tr><td>無限化怎麼做才不先付錢？</td><td><span class="status unknown">下一階段</span></td><td>玩目前章節時背景生成下一章的成功率與等待時間；世界聖經能否讓長線故事不漂移</td></tr>
+<tr><td>HD-2D 值不值得？</td><td><span class="status unknown">下一階段</span></td><td>先在既有 Three.js 路徑做一個區塊的原型，比較視覺收益與 FPS／複雜度成本</td></tr>
+</tbody></table></div>
+        </section>
+        <section id="chain-why" data-section data-page="chain" data-open-default>
+          <div class="section-head"><p class="section-kicker">01 · Why a chain at all</p><h2>只把「誰先寫下」與「誰看過」放上鏈</h2><p class="section-intro">遊戲本身不需要鏈。上鏈要解的是兩件離線做不到的事：不可否認的出處，以及任何人都能讀到、不被單一伺服器刪掉的見證。</p></div>
+          <div class="grid-3">
+            <article class="card card-accent"><h3>上鏈的</h3><p>不可變版本的 sha256 內容雜湊、作者位址、血緣（remix 自哪一版）、可取得檔案的 URI，以及玩家對某一版留下的短見證。</p></article>
+            <article class="card"><h3>不上鏈的</h3><p>作品檔案、素材、存檔、故事章節進度、模型輸出與任何個人資料。鏈上沒有內容，只有指向內容的雜湊。</p></article>
+            <article class="card card-cyan"><h3>可以完全不用</h3><p>沒設定 RPC 與合約位址時，生成、試玩、修改、保存版本全部照常；畫面只顯示「未設定鏈」，不擋任何流程。</p></article>
+          </div>
+          <div class="callout"><strong>為什麼這個形狀：</strong>app 早就用 sha256 內容雜湊當版本身分（卡帶與作品都是），所以鏈上不必重新定義識別碼；下載者自己重算雜湊比對，就能判斷手上的檔案是不是鏈上那一版。</div>
+        </section>
+        <section id="chain-ledger" data-section data-page="chain" data-open-default>
+          <div class="section-head"><p class="section-kicker">02 · UnwrittenLedger</p><h2>兩本帳：事實與見證</h2><p class="section-intro">對應 plan.md 的雙帳本精神：不可變的事實帳，加上可互相矛盾、永不調和的人話帳。合約原始碼在 <code>contracts/src/UnwrittenLedger.sol</code>。</p></div>
+<div class="table-wrap" role="region" aria-label="合約介面" tabindex="0"><table><thead><tr><th scope="col">介面</th><th scope="col">做什麼</th><th scope="col">規則</th></tr></thead><tbody>
+<tr><td><code>publish(contentHash, parent, kind, uri)</code></td><td>事實帳：記下某個不可變版本由誰發布、remix 自哪一版、去哪裡拿檔案</td><td>同一個雜湊只能發布一次；parent 必須是已發布的雜湊或 0；空雜湊被拒絕</td></tr>
+<tr><td><code>witness(contentHash, note)</code></td><td>見證帳：玩家對看過的版本留下 280 字以內的話</td><td>只能掛在已發布的雜湊上；任何人都能留；不覆寫、不調和、不排序</td></tr>
+<tr><td><code>revisionOf(hash)</code> / <code>isPublished(hash)</code></td><td>讀出作者、血緣、時間、種類與 URI</td><td>純讀取，不需要金鑰</td></tr>
+<tr><td>事件 <code>Published</code> / <code>Witnessed</code></td><td>索引用：依雜湊、作者、血緣查詢</td><td>三個 indexed 欄位，方便之後做分享頁或排行</td></tr>
+</tbody></table></div>
+          <div class="callout"><strong>刻意沒做：</strong>代幣、版稅、拍賣、治理、把存檔或素材寫上鏈。這些都能之後加在同一個雜湊身分上，但不是核心閉環的前置條件。</div>
+        </section>
+        <section id="chain-app" data-section data-page="chain" data-open-default>
+          <div class="section-head"><p class="section-kicker">03 · App integration</p><h2>金鑰留在主行程，畫面只看得到結果</h2><p class="section-intro">與模型金鑰同一條規則（CLAUDE.md Rule 6）：renderer 永遠拿不到 RPC URL 與私鑰，只能請主行程去查或去送。</p></div>
+<div class="table-wrap" role="region" aria-label="設定與行為" tabindex="0"><table><thead><tr><th scope="col">設定（.env）</th><th scope="col">開啟什麼</th><th scope="col">沒設定時</th></tr></thead><tbody>
+<tr><td><code>UNWRITTEN_RPC_URL</code> + <code>UNWRITTEN_LEDGER_ADDRESS</code></td><td>讀出處：作品列表顯示「on chain · 作者」或「not on chain」</td><td>不顯示出處區塊，回傳 <code>ledger-not-configured</code> 並附上怎麼設定</td></tr>
+<tr><td>再加 <code>UNWRITTEN_PRIVATE_KEY</code></td><td>寫出處：保存版本後可按「Register on chain」；主行程簽章送出</td><td>只讀模式，按鈕不出現，錯誤碼 <code>ledger-read-only</code></td></tr>
+<tr><td><code>UNWRITTEN_CHAIN_ID</code></td><td>選鏈，並在已知鏈上給出 explorer 連結</td><td>當作本地鏈，沒有 explorer 連結</td></tr>
+</tbody></table></div>
+          <div class="callout"><strong>部署由人來做：</strong><code>bun run contracts:build</code> 編譯並更新已提交的 artifact，<code>bun run contracts:deploy</code> 用你自己的金鑰部署並印出位址。這一步會花 gas，所以不由代理代跑。</div>
+        </section>
+        <section id="chain-status" data-section data-page="chain">
+          <div class="section-head"><p class="section-kicker">04 · Status &amp; limits</p><h2>做到哪裡，還沒驗到哪裡</h2><p class="section-intro">只寫實際跑過的；沒跑過的就說沒跑過。</p></div>
+<div class="table-wrap" role="region" aria-label="合約現況" tabindex="0"><table><thead><tr><th scope="col">項目</th><th scope="col">狀態</th></tr></thead><tbody>
+<tr><td>合約邏輯（重複發布、未知血緣、見證長度、只能掛已發布版本）</td><td><span class="status verified">在行程內 EVM 實跑通過</span></td></tr>
+<tr><td>編譯產物與原始碼一致</td><td><span class="status verified">測試會重編並比對 bytecode</span></td></tr>
+<tr><td>App 讀取與錯誤訊息（未設定、只讀、壞雜湊）</td><td><span class="status verified">以 stub RPC 測過</span></td></tr>
+<tr><td>部署到公開測試網、用真實交易寫入</td><td><span class="status unverified">尚未進行（需要你的金鑰與 gas）</span></td></tr>
+<tr><td>ENS 名稱、分享頁、跨機器下載驗證</td><td><span class="status unknown">設計已留位置，尚未實作</span></td></tr>
 </tbody></table></div>
         </section>
       <footer class="footer">
-        <p><strong>文件狀態：</strong>2026-09-22 新版方向規格。產品方向已確認；原型、播放器與生成閉環仍待依階段實作驗收。本頁保留原檔名以維持入口，AFM／DSL 不再代表整體產品的必經架構。</p>
+        <p><strong>文件狀態：</strong>2026-09-23。階段 1–3（生成方式、隔離播放器、創作閉環）與故事章節、素材生成已實作並實機驗收，數字見第 02 頁與 <a href="../experiments/interactive-works-acceptance-2026-09-23.md">驗收紀錄</a>；智能合約已寫、已測、尚未部署。本頁保留原檔名以維持入口，AFM／DSL 不再代表整體產品的必經架構。</p>
         <p><strong>實作參考：</strong><a href="../../CLAUDE.md">現有工程規範</a> · <a href="../../plan.md">既有遊戲計劃</a> · <a href="../../src/main/instances/backup.ts">目前備份邊界</a> · <a href="../research/afm3-architecture-source-audit.md">AFM 歷史研究</a>。這些是既有能力與研究參考，不代表新版執行作品已交付。</p>
       </footer>
     </main></div>
@@ -955,7 +1027,7 @@
     const menuOpen = document.querySelector('#menu-open');
     const menuClose = document.querySelector('#menu-close');
     const pageName = document.querySelector('#page-name');
-    const pageNames = { core: '產品方向', progress: '開發計劃', technical: '作品契約' };
+    const pageNames = { core: '產品方向', progress: '開發計劃', technical: '作品契約', chain: '智能合約' };
 
     const setSectionOpen = (section, open) => {
       section.classList.toggle('is-collapsed', !open);

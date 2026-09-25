@@ -141,6 +141,18 @@ secrets into a frame, and treat every frame message as untrusted (`src/renderer/
 Worlds are stored beside cartridges, not inside them: `works/` (immutable, hashed),
 `work-plays/` (pinned progress), `work-drafts/` (candidates; head moves only by compare-and-set).
 
+### Rule 13. A story is content; the chain is optional
+A world made from a story keeps its episode plan in the cartridge (`bible/story.json`, hashed with
+everything else); which episodes were played, their generated worlds and the carried items live in
+the save (`land.episodes`, `land.storyCarry`). Episode worlds are written when the player reaches
+the gate, never up front. The host — not the model — decides where a gate stands and merges the
+carry a world hands back, so one world cannot erase what earlier ones gave.
+
+On-chain provenance (`contracts/src/UnwrittenLedger.sol`) is optional and additive: content never
+goes on chain, only the sha256 hash the app already computes, its author, its lineage and short
+player notes. `UNWRITTEN_*` env vars live in main only (Rule 6). With nothing configured every
+screen must still work and say plainly that no ledger is set up.
+
 ## Module contracts (what each module MUST export)
 
 ### `src/harness` (framework-agnostic; `@deepseek-ai/cordis` + zod + js-yaml; no React/Electron)
@@ -268,6 +280,16 @@ export function WorksScreen(): JSX.Element;   // title → "AI Worlds": new worl
 ```
 The model-facing contract is `WORK_CONTRACT` in `src/shared/workPrompt.ts`; the host API a world sees
 is exactly `host.{root, carry, load, save, complete, status, asset}`.
+
+### `src/main/chain` + `src/shared/chain.ts` (optional ledger, Rule 13)
+```ts
+export function ledgerConfig(env?): LedgerConfig;          // { readable, writable, chainId, address, explorer }
+export function lookupRevision(contentHash, clients?): Promise<Result<LedgerRevision | null>>;
+export function publishRevisionOnChain(input, clients?): Promise<Result<{ txHash: string }>>;
+export function witnessOnChain(input, clients?): Promise<Result<{ txHash: string }>>;
+// `bun run contracts:build` recompiles contracts/UnwrittenLedger.json (committed);
+// `bun run contracts:deploy` is run by a person — it spends gas.
+```
 
 ### `src/renderer/net`
 ```ts
