@@ -8,6 +8,7 @@ import {
   type PublishCartridgeInput,
   type WorldBible,
 } from "@shared/cartridge";
+import { hashOrder } from "@shared/hashOrder";
 import { err, fail, ok, type Result, toError } from "@shared/result";
 import { parseStoryText, STORY_FILE, type StoryPlan } from "@shared/story";
 import {
@@ -145,8 +146,8 @@ export async function readCartridgeRevision(
       story = parsed.value;
       files.push(fileIntegrity(STORY_FILE, raw));
     }
-    const declared = [...manifest.files].sort((a, b) => a.path.localeCompare(b.path));
-    const actualIntegrity = [...files].sort((a, b) => a.path.localeCompare(b.path));
+    const declared = [...manifest.files].sort((a, b) => hashOrder(a.path, b.path));
+    const actualIntegrity = [...files].sort((a, b) => hashOrder(a.path, b.path));
     const expectedPaths = [MANIFEST_FILE, ...actualIntegrity.map((file) => file.path)].sort();
     const actualPaths = await listRevisionFiles(revisionDir);
     const hash = cartridgeContentHash(manifestCore(manifest), actualIntegrity);

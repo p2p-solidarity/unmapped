@@ -8,6 +8,7 @@ import {
   dialogueFile,
   dialogueKeyOfFile,
 } from "@shared/cartridge";
+import { hashOrder } from "@shared/hashOrder";
 import { err, fail, ok, type Result, toError } from "@shared/result";
 import { parseStoryText, STORY_FILE, type StoryPlan, storyText } from "@shared/story";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
@@ -176,7 +177,7 @@ export function unpackCartridge(bytes: Uint8Array): Result<CartridgeRevision> {
     files.push(fileIntegrity(dialogueFile(key), source));
   }
   const packedAssets: Record<string, Uint8Array> = {};
-  for (const [path, bytes] of [...assets].sort(([a], [b]) => a.localeCompare(b))) {
+  for (const [path, bytes] of [...assets].sort(([a], [b]) => hashOrder(a, b))) {
     packedAssets[path] = bytes;
     files.push({ path: `assets/${path}`, bytes: bytes.byteLength, contentHash: sha256(bytes) });
   }
@@ -198,8 +199,8 @@ export function unpackCartridge(bytes: Uint8Array): Result<CartridgeRevision> {
     story = parsed.value;
     files.push(fileIntegrity(STORY_FILE, storyRaw));
   }
-  files.sort((a, b) => a.path.localeCompare(b.path));
-  const declaredFiles = [...manifest.files].sort((a, b) => a.path.localeCompare(b.path));
+  files.sort((a, b) => hashOrder(a.path, b.path));
+  const declaredFiles = [...manifest.files].sort((a, b) => hashOrder(a.path, b.path));
   const hash = cartridgeContentHash(manifestCore(manifest), files);
   if (JSON.stringify(files) !== JSON.stringify(declaredFiles) || hash !== manifest.contentHash) {
     return err(

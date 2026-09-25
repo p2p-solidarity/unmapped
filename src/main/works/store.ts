@@ -7,6 +7,7 @@ import { mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promise
 import { dirname, join } from "node:path";
 import type { CartridgeFileIntegrity, ContentHash } from "@shared/cartridge";
 import { compareCartridgeVersions } from "@shared/cartridge";
+import { hashOrder } from "@shared/hashOrder";
 import { err, ok, type Result } from "@shared/result";
 import { mergeCarry } from "@shared/story";
 import {
@@ -94,7 +95,7 @@ export function workContentHash(
   core: WorkManifestCore,
   files: CartridgeFileIntegrity[],
 ): ContentHash {
-  const sorted = [...files].sort((a, b) => a.path.localeCompare(b.path));
+  const sorted = [...files].sort((a, b) => hashOrder(a.path, b.path));
   return sha256(canonicalJson({ manifest: core, files: sorted }));
 }
 

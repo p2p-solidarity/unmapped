@@ -13,6 +13,8 @@
 //     camera or one kit is explicitly forbidden, so disagreement on a splittable key *splits*
 //     rather than errors.
 
+import { hashOrder } from "./hashOrder";
+
 export const CAPABILITY_KEYS = [
   "camera",
   "physics",
@@ -306,7 +308,7 @@ function groupContexts(byMode: Map<string, Map<CapabilityKey, string>>): Context
 function contextIdFor(values: Map<CapabilityKey, string>): string {
   return (
     [...values]
-      .sort(([a], [b]) => a.localeCompare(b))
+      .sort(([a], [b]) => hashOrder(a, b))
       .map(([key, value]) => `${key}:${value}`)
       .join("+") || "main"
   );

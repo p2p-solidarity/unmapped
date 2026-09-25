@@ -7,6 +7,7 @@ import type {
   ContentHash,
   RuntimePin,
 } from "@shared/cartridge";
+import { hashOrder } from "@shared/hashOrder";
 import { EMPTY_MOD_LOCK } from "@shared/mods";
 import { checkPhysics, PHYSICS_VERSION, physicsOf } from "@shared/physics";
 import { err, ok, type Result } from "@shared/result";
@@ -42,7 +43,7 @@ export function cartridgeContentHash(
   files: CartridgeFileIntegrity[],
 ): ContentHash {
   return sha256(
-    canonicalJson({ manifest, files: [...files].sort((a, b) => a.path.localeCompare(b.path)) }),
+    canonicalJson({ manifest, files: [...files].sort((a, b) => hashOrder(a.path, b.path)) }),
   );
 }
 

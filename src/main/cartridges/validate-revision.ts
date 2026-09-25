@@ -23,6 +23,7 @@ import {
 } from "@shared/cartridge";
 import { kitFor } from "@shared/forge";
 import type { SceneContract } from "@shared/gameplay";
+import { hashOrder } from "@shared/hashOrder";
 import { err, ok, type Result } from "@shared/result";
 import { parseStoryText, STORY_FILE, type StoryPlan, storyText } from "@shared/story";
 import type { SceneGraph } from "@shared/world";
@@ -477,7 +478,7 @@ export function prepare(input: PublishCartridgeInput): Result<CartridgeRevision>
   if (!dialogues.ok) return dialogues;
   files.push(...dialogues.value.files);
   const assets = input.assets ?? {};
-  for (const [path, bytes] of Object.entries(assets).sort(([a], [b]) => a.localeCompare(b))) {
+  for (const [path, bytes] of Object.entries(assets).sort(([a], [b]) => hashOrder(a, b))) {
     if (!/^[a-z0-9][a-z0-9_./-]{0,239}$/.test(path) || path.includes("..")) {
       return err("cartridge-asset-path-invalid", `Unsafe asset path: ${path}`);
     }
@@ -489,7 +490,7 @@ export function prepare(input: PublishCartridgeInput): Result<CartridgeRevision>
   const story = prepareStory(input.story);
   if (!story.ok) return story;
   files.push(...storyIntegrity(story.value));
-  const integrity = [...files].sort((a, b) => a.path.localeCompare(b.path));
+  const integrity = [...files].sort((a, b) => hashOrder(a.path, b.path));
   const contentHash = cartridgeContentHash(manifest, integrity);
   const revision = {
     manifest: { ...manifest, contentHash, files: integrity },
