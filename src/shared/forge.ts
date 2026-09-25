@@ -121,6 +121,11 @@ const PROGRESSION_VALUE: Partial<Record<ProgressionKind, number>> = {
   stat_growth: 3,
 };
 
+/** Stock tuning of one kit, for a scene that plays a kit its cartridge did not start with. */
+export function kitTuning(kit: GameplayKitId): GameplayRules["kits"][number] {
+  return { id: kit, ...KIT_TUNING[kit] };
+}
+
 export function rulesFor(profile: CapabilityProfile): GameplayRules {
   const kit = kitFor(profile);
   const timing = pickValue(profile, "timing") ?? "realtime";

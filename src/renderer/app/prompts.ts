@@ -3,6 +3,7 @@
 // here; when a label is empty the prompt degrades to the verb alone.
 
 import type { NearbyTarget } from "@shared/events";
+import { PLACE_BACK, PLACE_GOAL } from "@shared/places";
 
 export const INTERACT_KEY = "E";
 
@@ -17,6 +18,8 @@ export function nearbyPrompt(target: NearbyTarget | null): string | null {
     case "treasure":
       return `${PREFIX}Open`;
     case "exit":
+      if (label === PLACE_BACK) return `${PREFIX}Back to the land`;
+      if (label === PLACE_GOAL) return `${PREFIX}Finish and return`;
       return `${PREFIX}Descend`;
     case "altar":
       return `${PREFIX}Make a wish`;
@@ -29,6 +32,7 @@ export function nearbyPrompt(target: NearbyTarget | null): string | null {
     case "door":
       return `${PREFIX}Open the door`;
     case "episode":
+    case "place":
       return `${PREFIX}${label.length > 0 ? `Enter · ${label}` : "Enter"}`;
   }
 }

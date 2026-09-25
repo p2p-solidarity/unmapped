@@ -56,9 +56,18 @@ const canvasStyle = {
   height: "100%",
 } as const;
 
-export function GameCanvas(): JSX.Element {
-  const scene = useWorldStore((state) => state.scene);
-  const gameplayRules = useWorldStore((state) => state.gameplayRules);
+/**
+ * With no props it plays the loaded scene. A place on the land passes its own built scene and the
+ * rules its kit plays under; its ground is final, so no run layout is applied on top (`prepared`).
+ */
+export function GameCanvas(
+  props: { graph?: SceneGraph; rules?: GameplayRules | null } = {},
+): JSX.Element {
+  const loaded = useWorldStore((state) => state.scene);
+  const loadedRules = useWorldStore((state) => state.gameplayRules);
+  const scene: typeof loaded =
+    props.graph === undefined ? loaded : { status: "ready", value: props.graph };
+  const gameplayRules = props.rules === undefined ? loadedRules : props.rules;
   // The contract returns JSX.Element, and idle/loading/error must render nothing at all — the app
   // layer owns the <StatePanel> for those states.
   // biome-ignore lint/complexity/noUselessFragments: "render nothing" while returning JSX.Element
@@ -77,7 +86,11 @@ export function GameCanvas(): JSX.Element {
       style={canvasStyle}
     >
       <Suspense fallback={null}>
-        <Stage graph={scene.value} gameplayRules={gameplayRules} />
+        <Stage
+          graph={scene.value}
+          gameplayRules={gameplayRules}
+          prepared={props.graph !== undefined}
+        />
       </Suspense>
     </Canvas>
   );
@@ -86,9 +99,12 @@ export function GameCanvas(): JSX.Element {
 export function Stage({
   graph: rawGraph,
   gameplayRules,
+  prepared = false,
 }: {
   graph: SceneGraph;
   gameplayRules: GameplayRules | null;
+  /** The scene's layout is already final (a place): no generated or shuffled layout on top. */
+  prepared?: boolean;
 }): JSX.Element {
   // An authored scene's generated layout comes from the run's own seed. A floor in the endless
   // depths must come back identical after a reload, so it uses its save's seed and depth instead.
@@ -107,8 +123,8 @@ export function Stage({
     return save === undefined ? seedFromText(rawGraph.name) : landSeedOf(save);
   });
   const graph = useMemo(
-    () => sceneForRun(rawGraph, gameplayRules, seed),
-    [rawGraph, gameplayRules, seed],
+    () => (prepared ? rawGraph : sceneForRun(rawGraph, gameplayRules, seed)),
+    [rawGraph, gameplayRules, seed, prepared],
   );
   const player = useRef<THREE.Vector3>(new THREE.Vector3());
   // Which way the body points. In side-on and top-down games this, not the camera, is the aim.

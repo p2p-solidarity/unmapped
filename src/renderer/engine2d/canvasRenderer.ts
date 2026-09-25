@@ -1,6 +1,7 @@
 import type { ChunkStatus } from "@renderer/state";
 import { CHUNK_SIZE, chunkKey } from "@shared/chunks";
 import type { LandNote, LandProgress } from "@shared/land";
+import type { LandPlace } from "@shared/places";
 import type { PropSpec, SceneGraph } from "@shared/world";
 import { doorPosition } from "../engine/home";
 import { LAND_2D_PALETTE, MONSTER_LOOK } from "../engine/palette";
@@ -12,6 +13,7 @@ import {
   type SpriteAsset,
 } from "./assetCatalog";
 import { cachedTerrain, landTileAt } from "./landModel";
+import { placeMarkers } from "./placeLayer";
 import { drawStoryCompass, type StoryView, storyMarkers } from "./storyLayer";
 import type { Foe, ShotTrace } from "./useLandCombat";
 
@@ -41,6 +43,8 @@ export interface LandFrame {
   /** Living hostiles when the cartridge has combat (they replace the scene's monster marks). */
   foes?: readonly Foe[] | null;
   shot?: ShotTrace | null;
+  /** Entrances of the land's places (courses and dungeons). */
+  places?: readonly LandPlace[];
   now: number;
 }
 
@@ -210,7 +214,11 @@ function collectScenery(frame: LandFrame, transform: ScreenTransform): DrawItem[
     const [x, z] = doorPosition(frame.scene, frame.progress.home);
     pushMarker(items, frame, transform, x, z, LAND_2D_PALETTE.door, "門");
   }
-  for (const marker of frame.story === null ? [] : storyMarkers(frame.story)) {
+  const marks = [
+    ...(frame.story === null ? [] : storyMarkers(frame.story)),
+    ...placeMarkers(frame.places ?? []),
+  ];
+  for (const marker of marks) {
     pushMarker(
       items,
       frame,

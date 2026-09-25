@@ -25,6 +25,7 @@ import { loadAtlases } from "./atlases";
 import type { SpriteAtlases } from "./canvasRenderer";
 import { blockedByProps, cachedTerrain, walkableAt } from "./landModel";
 import { hd2dSurface, type LandSurface, pixelSurface } from "./landSurface";
+import { placeTargets } from "./placeLayer";
 import { type StoryView, storyTargets } from "./storyLayer";
 import { useLandCombat } from "./useLandCombat";
 
@@ -102,7 +103,9 @@ export function LandView2D({
   const look = useEngineStore((state) => state.landLook);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
-  const player = useRef<PlayerState>(initialPlayer(graph));
+  // Once per mount: it consumes the way back from a place.
+  const [start] = useState(() => initialPlayer(graph));
+  const player = useRef<PlayerState>(start);
   const fired = useRef<Set<string>>(new Set());
 
   const kit: GameplayKitRules = useMemo(() => {
@@ -121,9 +124,14 @@ export function LandView2D({
           },
     [plan, progress],
   );
+  const places = useMemo(() => progress?.places ?? [], [progress]);
   const extraTargets = useMemo(
-    () => [...landTargets(chunks, progress, graph), ...(story === null ? [] : storyTargets(story))],
-    [chunks, progress, graph, story],
+    () => [
+      ...landTargets(chunks, progress, graph),
+      ...(story === null ? [] : storyTargets(story)),
+      ...placeTargets(places),
+    ],
+    [chunks, progress, graph, story, places],
   );
   const targets = useMemo(
     () => [...sceneTargets(graph, opened), ...extraTargets],
@@ -219,11 +227,23 @@ export function LandView2D({
     kit,
     landSeed,
     notes,
+    places,
     progress,
     story,
     targets,
   });
-  live.current = { chunks, gameplayRules, graph, kit, landSeed, notes, progress, story, targets };
+  live.current = {
+    chunks,
+    gameplayRules,
+    graph,
+    kit,
+    landSeed,
+    notes,
+    places,
+    progress,
+    story,
+    targets,
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -306,6 +326,7 @@ export function LandView2D({
         story: state.story,
         foes: combatRef.current.foes(),
         shot: combatRef.current.shot.current,
+        places: state.places,
         now,
       });
 
@@ -361,6 +382,9 @@ export function LandView2D({
 }
 
 function initialPlayer(scene: SceneGraph): PlayerState {
+  // Coming back out of a place: stand at its entrance, not where the save last put the player.
+  const back = useSessionStore.getState().takeLandReturn();
+  if (back !== null) return { x: back.x, z: back.z, yaw: 0, facing: "south", moving: false };
   const sceneId = scene.contract?.sceneId ?? null;
   const saved = useSessionStore.getState().activeInstance?.instance.save.position;
   if (sceneId !== null && saved?.sceneId === sceneId) {

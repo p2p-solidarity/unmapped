@@ -44,6 +44,21 @@ export interface Foe {
 /** Chest height of a shot on flat ground, like the 2.5D kits. */
 const SHOT_HEIGHT = 0.6;
 
+/**
+ * Who has fallen on each land this session, kept outside the component: stepping into a place and
+ * back out remounts the land view, and that must not raise the dead.
+ */
+const FELLED = new Map<string, Set<string>>();
+
+function felledOn(land: string): Set<string> {
+  let set = FELLED.get(land);
+  if (set === undefined) {
+    set = new Set();
+    FELLED.set(land, set);
+  }
+  return set;
+}
+
 export interface LandCombat {
   /** True while the player holds a weapon on this land. */
   armed(): boolean;
@@ -65,7 +80,7 @@ export function useLandCombat(input: {
   const chunk = useEngineStore((state) => state.chunk);
   const clock = useRef(newCombatClock());
   const shot = useRef<ShotTrace | null>(null);
-  const defeated = useRef(new Set<string>());
+  const defeated = useRef(felledOn(`${seed}:${graph.contract?.sceneId ?? graph.name}`));
   const combat = rules?.combat ?? null;
   const blockers = useMemo(() => shotBlockers(graph.walls), [graph.walls]);
 
@@ -76,7 +91,8 @@ export function useLandCombat(input: {
   // Whoever is near makes up the fight. Crossing a chunk rebuilds it; the player's wounds carry.
   const cx = chunk?.cx ?? chunkOf(player.current.x, player.current.z).cx;
   const cz = chunk?.cz ?? chunkOf(player.current.x, player.current.z).cz;
-  useEffect(() => {
+  const hp = useRef<number | null>(null);
+  const rebuild = useCallback((): void => {
     const store = useEncounterStore.getState();
     if (rules === null || rules.combat === null) {
       store.clear();
@@ -94,12 +110,33 @@ export function useLandCombat(input: {
       store.clear();
       return;
     }
-    const before = store.combatants.find((one) => one.id === PLAYER_ID);
+    const wounds = hp.current;
     const combatants = built.combatants.map((one) =>
-      one.id === PLAYER_ID && before !== undefined ? { ...one, hp: before.hp } : one,
+      one.id === PLAYER_ID && wounds !== null ? { ...one, hp: Math.min(one.maxHp, wounds) } : one,
     );
     store.begin({ ...built, combatants });
   }, [graph, rules, seed, cx, cz]);
+
+  useEffect(rebuild, [rebuild]);
+
+  // A place's 3D canvas tears its own fight down after the land has come back; when that clears the
+  // store under the land, the land's fight is set up again rather than silently lost.
+  useEffect(() => {
+    let live = true;
+    const stop = useEncounterStore.subscribe((state, previous) => {
+      const you = state.combatants.find((one) => one.id === PLAYER_ID);
+      if (you !== undefined && state.turn !== null) hp.current = you.hp;
+      if (previous.turn !== null && state.turn === null && rules?.combat) {
+        queueMicrotask(() => {
+          if (live) rebuild();
+        });
+      }
+    });
+    return () => {
+      live = false;
+      stop();
+    };
+  }, [rebuild, rules]);
 
   useEffect(() => () => useEncounterStore.getState().clear(), []);
 

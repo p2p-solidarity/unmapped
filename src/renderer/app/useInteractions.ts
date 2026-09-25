@@ -8,11 +8,13 @@ import { sendRoomInteraction } from "@renderer/net/sync";
 import { useEncounterStore, useEngineStore, useSessionStore, useWorldStore } from "@renderer/state";
 import { endlessObjectiveOf } from "@shared/endless";
 import type { NearbyTarget } from "@shared/events";
+import { parsePlaceTarget } from "@shared/places";
 import { parseEpisodeTarget } from "@shared/story";
 import type { SceneGraph } from "@shared/world";
 import { useEffect, useRef } from "react";
 import { makeKarmaEntry } from "./karmaFile";
 import { searchAt } from "./land/errands";
+import { enterPlace, leavePlace } from "./land/places";
 import { talkOnLand } from "./land/talk";
 
 export interface InteractionHandlers {
@@ -30,6 +32,9 @@ function session() {
 }
 
 function currentScene(): SceneGraph | null {
+  // Inside a place, what the player can touch is the place's.
+  const place = useSessionStore.getState().place;
+  if (place !== null) return place.graph;
   const scene = useWorldStore.getState().scene;
   return scene.status === "ready" ? scene.value : null;
 }
@@ -149,9 +154,17 @@ function dispatch(target: NearbyTarget, handlers: Handlers): void {
     case "treasure":
       openTreasure(target, scene);
       return;
-    case "exit":
+    case "exit": {
+      // A place's exits lead back out onto the land; its far end counts as crossing it.
+      const place = session().place;
+      if (place !== null) {
+        const exit = place.graph.exits.find((one) => one.to === target.label);
+        leavePlace(exit?.x === place.goalExit.x && exit?.z === place.goalExit.z);
+        return;
+      }
       descend(target, scene, handlers);
       return;
+    }
     case "monster":
       inspectMonster(target, scene);
       return;
@@ -168,6 +181,11 @@ function dispatch(target: NearbyTarget, handlers: Handlers): void {
     case "episode": {
       const id = parseEpisodeTarget(target.id);
       if (id !== null) session().openEpisode(id);
+      return;
+    }
+    case "place": {
+      const id = parsePlaceTarget(target.id);
+      if (id !== null) enterPlace(id);
       return;
     }
   }

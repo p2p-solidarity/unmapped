@@ -16,6 +16,7 @@ export { type InferenceState, useInferenceStore } from "./inferenceStore";
 export { type ChunkStatus, type LandState, useLandStore } from "./landStore";
 export { type RunState, useRunStore } from "./runStore";
 export {
+  type ActivePlace,
   type FloorFailure,
   type Screen,
   type SessionState,

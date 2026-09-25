@@ -68,7 +68,9 @@ export async function startDialogue(
   const world = useWorldStore.getState();
   session.openDialogue(npcId);
 
-  if (world.scene.status !== "ready") {
+  // Inside a place (a course or dungeon off the land) the people are the place's, not the land's.
+  const scene = session.place?.graph ?? (world.scene.status === "ready" ? world.scene.value : null);
+  if (scene === null) {
     session.setDialogue(
       errored({
         code: "no-scene",
@@ -78,7 +80,7 @@ export async function startDialogue(
     );
     return;
   }
-  const npc = world.scene.value.npcs.find((candidate) => candidate.id === npcId);
+  const npc = scene.npcs.find((candidate) => candidate.id === npcId);
   if (npc === undefined) {
     session.setDialogue(
       errored({
@@ -113,7 +115,7 @@ export async function startDialogue(
   const result = await generateDialogue(
     {
       npc,
-      scene: world.scene.value,
+      scene,
       genesis: world.genesis,
       karma: useWorldStore.getState().karma,
       inventory: useWorldStore.getState().inventory,

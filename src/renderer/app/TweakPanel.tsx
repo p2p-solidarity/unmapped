@@ -1,12 +1,13 @@
 import { SandboxPreview } from "@renderer/engine/SandboxPreview";
 import { ScenePreviewCanvas } from "@renderer/engine/ScenePreviewCanvas";
 import { generateModProposal } from "@renderer/narrative/modProposal";
-import { useSessionStore, useWorldStore } from "@renderer/state";
+import { useLandStore, useSessionStore, useWorldStore } from "@renderer/state";
 import { Button, colors, StatePanel, Surface, space, Text, TextField, zIndex } from "@renderer/ui";
 import type { CartridgeManifest } from "@shared/cartridge";
 import type { ModProposalPreview } from "@shared/mods";
 import { errored, idle, type Loadable, loading } from "@shared/result";
 import { type JSX, useEffect, useState } from "react";
+import { PlaceMaker } from "./PlaceMaker";
 import { openInstance } from "./useInstanceLoader";
 
 export function TweakPanel(): JSX.Element | null {
@@ -19,6 +20,8 @@ export function TweakPanel(): JSX.Element | null {
   const [publishing, setPublishing] = useState(false);
   const [previewScene, setPreviewScene] = useState("");
   const [playtest, setPlaytest] = useState(false);
+  const [mode, setMode] = useState<"rules" | "place">("rules");
+  const openLand = useLandStore((state) => state.progress !== null);
   useEffect(() => {
     if (!open) {
       setPreview(idle());
@@ -96,15 +99,31 @@ export function TweakPanel(): JSX.Element | null {
           gap: space.md,
         }}
       >
+        <div style={{ display: "flex", gap: space.sm }}>
+          <Button
+            variant={mode === "rules" ? "primary" : "secondary"}
+            onClick={() => setMode("rules")}
+          >
+            Change the rules
+          </Button>
+          <Button
+            variant={mode === "place" ? "primary" : "secondary"}
+            onClick={() => setMode("place")}
+          >
+            Add a place
+          </Button>
+        </div>
         <Text variant="title" as="h2">
-          Create a mod revision
+          {mode === "rules" ? "Create a mod revision" : "Add a place to this land"}
         </Text>
         <Text variant="caption" tone="dim">
-          Describe a weapon, monsters, pacing, a squad or a scene change. Anything the cartridge
-          lacks for it is added for you. Review the proposal, then publish a new cartridge version;
-          your current run stays on its original version.
+          {mode === "rules"
+            ? "Describe a weapon, monsters, pacing, a squad or a scene change. Anything the cartridge lacks for it is added for you. Review the proposal, then publish a new cartridge version; your current run stays on its original version."
+            : "A side-scrolling course or a grid dungeon, written into this save now. You walk into it from its entrance on the land and come back out where you went in, with what you found."}
         </Text>
-        {origin?.kind !== "instance" ? (
+        {mode === "place" ? (
+          <PlaceMaker canUse={openLand} />
+        ) : origin?.kind !== "instance" ? (
           <Text variant="body">Open a published v2 cartridge to create a mod revision.</Text>
         ) : (
           <>
@@ -205,25 +224,29 @@ export function TweakPanel(): JSX.Element | null {
           </>
         )}
         <div style={{ display: "flex", gap: space.sm, flexWrap: "wrap" }}>
-          <Button
-            variant="secondary"
-            disabled={busy || !wish.trim() || origin?.kind !== "instance"}
-            onClick={() => void ask()}
-          >
-            Generate proposal
-          </Button>
-          <Button
-            variant="primary"
-            disabled={busy || preview.status !== "ready" || published !== null}
-            onClick={() => void approve()}
-          >
-            Approve & publish revision
-          </Button>
-          {published ? (
-            <Button variant="primary" disabled={busy} onClick={() => void playRevision()}>
-              Play new version
-            </Button>
-          ) : null}
+          {mode === "place" ? null : (
+            <>
+              <Button
+                variant="secondary"
+                disabled={busy || !wish.trim() || origin?.kind !== "instance"}
+                onClick={() => void ask()}
+              >
+                Generate proposal
+              </Button>
+              <Button
+                variant="primary"
+                disabled={busy || preview.status !== "ready" || published !== null}
+                onClick={() => void approve()}
+              >
+                Approve & publish revision
+              </Button>
+              {published ? (
+                <Button variant="primary" disabled={busy} onClick={() => void playRevision()}>
+                  Play new version
+                </Button>
+              ) : null}
+            </>
+          )}
           <Button variant="ghost" disabled={busy} onClick={close}>
             Close
           </Button>

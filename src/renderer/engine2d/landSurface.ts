@@ -3,6 +3,7 @@
 
 import type { ChunkStatus } from "@renderer/state";
 import type { LandNote, LandProgress } from "@shared/land";
+import type { LandPlace } from "@shared/places";
 import type { SceneGraph } from "@shared/world";
 import { createHd2dRenderer } from "../hd2d/renderer";
 import { type Player2D, renderLandFrame, type SpriteAtlases } from "./canvasRenderer";
@@ -23,6 +24,7 @@ export interface SurfaceFrame {
   foes: readonly Foe[] | null;
   /** The last shot, drawn for a moment after it is fired. */
   shot: ShotTrace | null;
+  places: readonly LandPlace[];
   now: number;
 }
 
@@ -75,6 +77,7 @@ export function hd2dSurface(
         story: frame.story,
         foes: frame.foes,
         shot: frame.shot,
+        places: frame.places,
         focus: frame.player,
         player: frame.player,
         now: frame.now,

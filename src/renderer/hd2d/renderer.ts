@@ -175,7 +175,15 @@ export function createHd2dRenderer(
         ? "off"
         : frame.foes.map((foe) => foe.id).join(",");
     const key = `${coords.map(chunkKey).join("|")}#${foes}`;
-    const refs = [frame.origin, frame.chunks, frame.progress, frame.notes, frame.story, frame.seed];
+    const refs = [
+      frame.origin,
+      frame.chunks,
+      frame.progress,
+      frame.notes,
+      frame.story,
+      frame.seed,
+      frame.places,
+    ];
     if (key === contentKey && refs.every((ref, index) => ref === contentRefs[index])) return;
     contentKey = key;
     contentRefs = refs;

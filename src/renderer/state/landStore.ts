@@ -12,6 +12,7 @@ import {
   type WitnessedErrands,
 } from "@shared/land";
 import type { LoreNode } from "@shared/lore";
+import type { LandPlace } from "@shared/places";
 import type { AppError, Loadable } from "@shared/result";
 import { idle } from "@shared/result";
 import type { EpisodeProgress, StoryEpisode } from "@shared/story";
@@ -73,6 +74,9 @@ export interface LandState {
   setStoryCarry(carry: Json | null): void;
   /** Appends a chapter the land wrote (save-owned); an id already present is left as it is. */
   addEpisode(episode: StoryEpisode): void;
+  /** Adds a place (course or dungeon) to this land; an id already present is left as it is. */
+  addPlace(place: LandPlace): void;
+  setPlaceCleared(id: string): void;
   reset(): void;
 }
 
@@ -190,6 +194,20 @@ export const useLandStore = create<LandState>()((set) => ({
       const more = state.progress.storyMore ?? [];
       if (more.some((one) => one.id === episode.id)) return state;
       return { progress: { ...state.progress, storyMore: [...more, episode] } };
+    }),
+  addPlace: (place) =>
+    set((state) => {
+      if (state.progress === null) return state;
+      const places = state.progress.places ?? [];
+      if (places.some((one) => one.id === place.id)) return state;
+      return { progress: { ...state.progress, places: [...places, place] } };
+    }),
+  setPlaceCleared: (id) =>
+    set((state) => {
+      const places = state.progress?.places;
+      if (state.progress === null || places === undefined) return state;
+      const next = places.map((one) => (one.id === id ? { ...one, cleared: true } : one));
+      return { progress: { ...state.progress, places: next } };
     }),
   reset: () =>
     set({ instanceId: null, load: idle(), chunks: {}, lore: [], notes: [], progress: null }),

@@ -5,11 +5,13 @@
 import type { ChunkStatus } from "@renderer/state";
 import { CHUNK_SIZE, type ChunkCoord, chunkKey, groundAt } from "@shared/chunks";
 import type { LandNote, LandProgress } from "@shared/land";
+import type { LandPlace } from "@shared/places";
 import { episodeGate, nextEpisode } from "@shared/story";
 import type { FloorSpec, PropSpec, SceneGraph, Tile } from "@shared/world";
 import { doorPosition } from "../engine/home";
 import { LAND_2D_PALETTE, MONSTER_LOOK } from "../engine/palette";
 import { cachedTerrain, landTileAt } from "../engine2d/landModel";
+import { placeMarkers } from "../engine2d/placeLayer";
 import { type StoryView, storyMarkers } from "../engine2d/storyLayer";
 import type { Foe } from "../engine2d/useLandCombat";
 import { type Billboard, pickBoard, SUNKEN, TILE_HEIGHT } from "./assets";
@@ -27,6 +29,8 @@ export interface LandSource {
   story: StoryView | null;
   /** Living hostiles when the cartridge has combat; they replace the scene's own monster marks. */
   foes?: readonly Foe[] | null;
+  /** Entrances of the land's places (courses and dungeons). */
+  places?: readonly LandPlace[];
 }
 
 export function floorOf(source: Pick<LandSource, "origin">): FloorSpec {
@@ -202,6 +206,16 @@ function collectMarkers(source: LandSource, height: Height): MarkerInstance[] {
       beam: false,
     });
   }
+  placeMarkers(source.places ?? []).forEach((marker, index) => {
+    markers.push({
+      key: `place:${index}`,
+      ...at(marker.x, marker.z),
+      color: marker.color,
+      glyph: marker.glyph,
+      label: marker.label,
+      beam: false,
+    });
+  });
   if (source.story !== null) {
     storyMarkers(source.story).forEach((marker, index) => {
       markers.push({

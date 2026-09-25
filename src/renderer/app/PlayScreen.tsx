@@ -76,6 +76,7 @@ export function PlayScreen() {
     (state) => (state.activeInstance?.cartridge.story ?? null) !== null,
   );
   const use2DLand = scene.status === "ready" && isOpenLand2D(scene.value, gameplayRules);
+  const place = useSessionStore((state) => state.place);
   const instanceId = useSessionStore(
     (state) => state.activeInstance?.instance.meta.instanceId ?? null,
   );
@@ -87,6 +88,8 @@ export function PlayScreen() {
 
   // Losing on a generated floor: it regenerates identically from the save, so retrying is honest.
   const retryFloor = (): void => {
+    // Falling inside a place sends the player back out to its entrance on the land.
+    useSessionStore.getState().leavePlace();
     const active = useSessionStore.getState().activeInstance;
     if (active !== null) hydrateInstance(active);
     resetRun();
@@ -94,7 +97,9 @@ export function PlayScreen() {
 
   return (
     <div style={{ position: "relative", height: "100%", width: "100%", overflow: "hidden" }}>
-      {use2DLand && scene.status === "ready" ? (
+      {place !== null ? (
+        <GameCanvas key={`place:${place.id}`} graph={place.graph} rules={place.rules} />
+      ) : use2DLand && scene.status === "ready" ? (
         <LandView2D
           // Another save (a new version of the same cartridge) is another walk: remount, so the
           // player starts where that save stands rather than where the last one left off.

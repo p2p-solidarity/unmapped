@@ -5,6 +5,7 @@ import type { SaveState } from "./cartridge";
 import type { ChunkCoord } from "./chunks";
 import { seedFromText } from "./endless";
 import type { LoreNode } from "./lore";
+import type { LandPlace } from "./places";
 import type { EpisodeProgress, StoryEpisode } from "./story";
 import type { Json } from "./works";
 import type { ItemSpec } from "./world";
@@ -69,6 +70,8 @@ export interface LandProgress {
    * belong to this save, not the cartridge; ids and gates are chosen by the host (`STORY_CAP`).
    */
   storyMore?: StoryEpisode[];
+  /** Side-scrolling courses and grid dungeons added to this land, entered from their gates. */
+  places?: LandPlace[];
 }
 
 export const DOOR_SLOTS = 4;

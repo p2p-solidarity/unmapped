@@ -271,6 +271,17 @@ export function TitleDiorama({ seedText }): JSX.Element;   // App's MenuBackdrop
   pass through `clearFords` when they enter the land store. Story gates stand at chunk centres, so
   spawn and every gate are always joined by land. Don't place gates anywhere else.
 
+### Combat and mods (one combat model; mods never refuse a missing module)
+- `src/renderer/engine/combat/combatLoop.ts` is the only combat logic (trigger, cooldown, aim
+  preview, turns, `strike`). `CombatControl` (3D) and `useLandCombat` (open land) only feed it an
+  aim and a clock. On land the roster is the origin's monsters + `wildMonsters` of the 3 × 3 chunks
+  around the player (only when `rules.combat !== null`; kind + level, never names or lines); an
+  endless roster never "clears" a run, only defeat ends it.
+- `src/main/mods/modules.ts`: a proposal that needs a capability the cartridge lacks gets the module
+  (and its requirements) locked, its rules turned on with fresh tuning, and a reason line — never an
+  error. The only refusal is a module the engine does not have. A mod revision carries the bible,
+  story, dialogues and assets of its base unchanged.
+
 ### `src/renderer/identity`
 ```ts
 export function unlock(): Promise<Result<UnlockedKey>>;   // PRF/keychain derives a wrapping key, then unwraps or creates the random Data Key

@@ -2,10 +2,11 @@
 
 import type { ResolvedInstance } from "@shared/cartridge";
 import type { ChangeProposal } from "@shared/effects";
+import type { GameplayRules } from "@shared/gameplay";
 import type { PlayerProfile } from "@shared/player";
 import type { AppError, Loadable } from "@shared/result";
 import { idle } from "@shared/result";
-import type { DialogueGraph, ItemSpec } from "@shared/world";
+import type { DialogueGraph, ItemSpec, SceneGraph } from "@shared/world";
 import { create } from "zustand";
 
 /**
@@ -38,6 +39,15 @@ export interface CartridgeEnding {
   depths: boolean;
 }
 
+/** A place being played: the built scene, the rules its kit plays under, and its far exit. */
+export interface ActivePlace {
+  id: string;
+  title: string;
+  graph: SceneGraph;
+  rules: GameplayRules | null;
+  goalExit: { x: number; z: number };
+}
+
 export interface SessionState {
   screen: Screen;
   ending: CartridgeEnding | null;
@@ -61,6 +71,10 @@ export interface SessionState {
   notesOpen: boolean;
   /** Id of the story episode whose gate is open (its world is played in a panel); null when shut. */
   episodeOpen: string | null;
+  /** A place (course or dungeon) played on top of the land, or null while walking the land. */
+  place: ActivePlace | null;
+  /** Where the land puts the player when they come back out of a place; read once. */
+  landReturn: { x: number; z: number } | null;
   altarResult: Loadable<ItemSpec>;
   /** Identity: which key unlocked saves this session. */
   unlock: { method: "prf" | "keychain"; credentialId: string | null } | null;
@@ -93,6 +107,9 @@ export interface SessionState {
   closeDoor(): void;
   openEpisode(id: string): void;
   closeEpisode(): void;
+  enterPlace(place: ActivePlace, from: { x: number; z: number }): void;
+  leavePlace(): void;
+  takeLandReturn(): { x: number; z: number } | null;
   toggleNotes(open?: boolean): void;
   closeTweak(): void;
   setAltarResult(state: Loadable<ItemSpec>): void;
@@ -115,7 +132,7 @@ export interface SessionState {
 
 let toastSeq = 0;
 
-export const useSessionStore = create<SessionState>()((set) => ({
+export const useSessionStore = create<SessionState>()((set, get) => ({
   screen: "worlds",
   ending: null,
   consoleOpen: false,
@@ -127,6 +144,8 @@ export const useSessionStore = create<SessionState>()((set) => ({
   tweakOpen: false,
   doorOpen: false,
   episodeOpen: null,
+  place: null,
+  landReturn: null,
   notesOpen: false,
   altarResult: idle(),
   unlock: null,
@@ -154,6 +173,8 @@ export const useSessionStore = create<SessionState>()((set) => ({
             doorOpen: false,
             notesOpen: false,
             episodeOpen: null,
+            place: null,
+            landReturn: null,
           },
     ),
   setEnding: (ending) => set({ ending }),
@@ -177,6 +198,13 @@ export const useSessionStore = create<SessionState>()((set) => ({
   closeDoor: () => set({ doorOpen: false }),
   openEpisode: (episodeOpen) => set({ episodeOpen }),
   closeEpisode: () => set({ episodeOpen: null }),
+  enterPlace: (place, from) => set({ place, landReturn: from }),
+  leavePlace: () => set({ place: null }),
+  takeLandReturn: () => {
+    const back = get().landReturn;
+    if (back !== null) set({ landReturn: null });
+    return back;
+  },
   toggleNotes: (open) => set((state) => ({ notesOpen: open ?? !state.notesOpen })),
   setAltarResult: (altarResult) => set({ altarResult }),
   closeAltar: () => set({ altarOpen: false, altarResult: idle() }),

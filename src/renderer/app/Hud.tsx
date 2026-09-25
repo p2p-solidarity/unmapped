@@ -89,13 +89,14 @@ export function Hud(): JSX.Element {
 
       {cameraMode === "fps" ? <Reticle /> : null}
 
+      {/* Read-only: the prompt and key hints must not catch a click meant as a shot. */}
       <div
         style={{
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           gap: space.sm,
-          pointerEvents: "auto",
+          pointerEvents: "none",
         }}
       >
         <NearbyPrompt />
