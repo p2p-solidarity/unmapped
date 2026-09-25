@@ -17,8 +17,10 @@
 // 8. A backup exported by an older build (instance/save format 1) fails with "expected 2" instead
 //    of being upgraded against its exact cartridge revision.
 // 9. A format 1 backup whose exact revision is not installed is re-pinned to something else.
+// 10. Export hands out a backup import will refuse — one file over its own limit while the whole
+//     archive is under the total — so the player keeps a backup that can never be restored.
 
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -269,6 +271,22 @@ describe("an archive is untrusted", () => {
     expect(codeOf(await unpackInstanceBackup(zipSync(crowd), cartridgesDir))).toBe(
       "backup-too-large",
     );
+  });
+});
+
+describe("export and import agree", () => {
+  it("refuses to export a save import could not restore (10)", async () => {
+    const id = await walkedSave();
+    // ~18 MiB of valid notes: over notes.jsonl's own 16 MiB limit, far under the 256 MiB total.
+    const lines = Array.from({ length: 40_000 }, (_, n) =>
+      JSON.stringify({ ...first, id: `note-${String(n).padStart(8, "0")}`, text: "x".repeat(280) }),
+    );
+    await writeFile(
+      join(instancesDir, id, "saves", "default", "notes.jsonl"),
+      `${lines.join("\n")}\n`,
+    );
+    const packed = await packInstanceBackup(instancesDir, id, cartridgesDir);
+    expect(codeOf(packed)).toBe("backup-too-large");
   });
 });
 

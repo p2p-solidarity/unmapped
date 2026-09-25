@@ -745,15 +745,15 @@
       <p class="drawer-note">這是現況規格：第 01 頁是方向，第 02 頁是遊戲現在的樣子（全是實機截圖），第 03–04 頁是已交付並實機驗收的設計，第 05 頁是選配的鏈上出處與 ENSv2 卡帶名稱。五頁可獨立閱讀；列印時展開全文。</p>
     </aside>
     <div class="hero" id="top" data-page-hero="core">
-      <p class="eyebrow">Product direction · Revision 5 · 2026-09-23</p>
+      <p class="eyebrow">Product direction · Revision 5 · gameplay milestone</p>
       <h1>讓 AI 更容易產出，<br>讓每次修改更便宜。</h1>
       <p class="hero-lede">Unwritten Land 是讓 AI 生成、執行與修改互動作品的框架。降低製作與試錯成本是核心價值；遊戲是主要用途，2D 是預設，Three.js 是可選能力。現在的主作品是一張無限的 HD-2D 大地：故事寫成一章接一章的章節（最多 99 章），戰鬥、橫向捲軸與地城都在同一張地圖上。</p>
       <div class="hero-meta"><span class="pill">HTML / CSS / JavaScript</span><span class="pill">玩法由作品定義</span><span class="pill">局部修改與修補</span><span class="pill">HD-2D 大地 · 已實機驗收</span></div>
     </div>
     <div class="layout"><main id="main">
       <div class="page-intro" data-page-intro="core"><div><p class="section-kicker">Page 01 · Product direction</p><h2 data-page-title>先降低產出的成本</h2><p>框架的工作是讓想法更快成為可操作的作品，再讓創作者低成本迭代。</p></div><span class="status inference">方向已確認</span></div>
-      <div class="page-intro" data-page-intro="game" hidden><div><p class="section-kicker">Page 02 · The game today</p><h2 data-page-title>現在的遊戲：一張無限的 HD-2D 大地</h2><p>標題、開新世界、章節、戰鬥、調整機制與地點。以下全是開發版的實機截圖，文字寫的是它們現在怎麼運作。</p></div><span class="status verified">實機截圖 · 2026-09-23</span></div>
-          <div class="page-intro" data-page-intro="progress" hidden><div><p class="section-kicker">Page 03 · Delivery plan</p><h2 data-page-title>故事、戰鬥與地點都接上同一張地圖</h2><p>生成方式、隔離播放器、創作閉環、無限章節、HD-2D、大地戰鬥、地點、角色圖與 Create a game 都已實作並實機驗收；模型切換的雲端流程也已實測。本頁只寫實際量到的數字。</p></div><span class="status verified">階段 1–14 已交付；本機模型待實測</span></div>
+      <div class="page-intro" data-page-intro="game" hidden><div><p class="section-kicker">Page 02 · The game today</p><h2 data-page-title>現在的遊戲：一張無限的 HD-2D 大地</h2><p>標題、開新世界、章節、戰鬥、調整機制與地點。以下全是開發版的實機截圖，文字寫的是它們現在怎麼運作。</p></div><span class="status verified">實機截圖 · 遊戲里程碑</span></div>
+          <div class="page-intro" data-page-intro="progress" hidden><div><p class="section-kicker">Page 03 · Delivery plan</p><h2 data-page-title>故事、戰鬥與地點都接上同一張地圖</h2><p>生成方式、隔離播放器、創作閉環、無限章節、HD-2D、大地戰鬥、地點、角色圖與 Create a game 都已實作並實機驗收；模型切換的雲端流程也已實測。本頁只寫實際量到的數字。</p></div><span class="status verified">階段 1–17 已交付；本機模型生成待實測</span></div>
       <div class="page-intro" data-page-intro="technical" hidden><div><p class="section-kicker">Page 04 · Contract &amp; world</p><h2 data-page-title>固定服務介面，開放作品玩法</h2><p>作品契約、執行邊界、儲存責任與故事章節都已落地；本頁是現況，不是提案。</p></div><span class="status verified">契約已實作</span></div>
       <div class="page-intro" data-page-intro="chain" hidden><div><p class="section-kicker">Page 05 · On-chain</p><h2 data-page-title>上鏈只記出處、見證與名稱</h2><p>內容永遠不上鏈；鏈上只有雜湊、作者、血緣、玩家留下的話，以及指向卡帶版本的 ENSv2 名稱。沒有設定鏈，整個遊戲照常運作。</p></div><span class="status unverified">合約已測 · ENSv2 已模擬 · 尚未送出交易</span></div>
         <section id="entry" data-section data-page="core" data-open-default>
@@ -805,11 +805,12 @@
 </tbody></table></div><div class="callout warn"><strong>比較原則：</strong>可使用現有 DSL 路徑支援的重疊題目做基準，不強迫它執行不支援的玩法。沒有模型就標示未量測，不以手寫原型推論模型生成成功率。</div>
         </section>
         <section id="game-entry" data-section data-page="game" data-open-default>
-          <div class="section-head"><p class="section-kicker">01 · Title &amp; Create a game</p><h2>標題畫面就是大地本身；自己的遊戲三步做好</h2><p class="section-intro">選單後面不是一張背景圖，是同一個 HD-2D 畫面層即時畫出來的地形。選單是 Continue、New Game（輸入或擲一個 8 碼種子，同一個種子就是同一片大地，不需要模型）、Create a game、AI Worlds、Join、Cartridges、System。Create a game 分三步：寫下世界與玩法 → 看模型提出的計畫並修改 → 建立並進入。</p></div>
+          <div class="section-head"><p class="section-kicker">01 · Title &amp; Create a game</p><h2>標題畫面就是大地本身；自己的遊戲四步做好</h2><p class="section-intro">選單後面不是一張背景圖，是同一個 HD-2D 畫面層即時畫出來的地形。選單是 Continue、New Game（輸入或擲一個 8 碼種子，同一個種子就是同一片大地，不需要模型）、Create a game、AI Worlds、Join、Cartridges、System。Create a game 分四步：構想 → 世界 → 故事 → 建立並進入；建立前內容保存在草稿。</p></div>
           <div class="screen-grid">
             <figure class="screen-card screen-card--wide"><img src="assets/unwritten-land-title.jpg" alt="未記之地 · Unwritten Land" loading="lazy"><figcaption><span class="capture-label">HD-2D · 標題</span><strong>未記之地 · Unwritten Land</strong>選單疊在即時算出的大地上：用 three/examples 的後製管線，bloom 是內建的 UnrealBloomPass，tilt-shift 與調色是自寫 shader；沒有預渲染圖，也沒有假的示範世界。</figcaption></figure>
-            <figure class="screen-card"><img src="assets/unwritten-land-create-world.jpg" alt="Create a game：世界與玩法" loading="lazy"><figcaption><span class="capture-label">Create a game · 1</span><strong>世界與玩法</strong>名字、一句話的世界設定、選填的故事、語言，再選怎麼玩：探索（沒有戰鬥）、冒險·槍、冒險·刃，可以自己替武器取名。故事會變成章節；玩法直接寫進卡帶規則，不用事後再加模組。</figcaption></figure>
-            <figure class="screen-card"><img src="assets/unwritten-land-create-plan.jpg" alt="Create a game：計畫" loading="lazy"><figcaption><span class="capture-label">Create a game · 2</span><strong>先看計畫，再建立</strong>模型寫好世界聖經與章節，還沒發布。每章的標題、地點、種類（交談／尋找／戰鬥／攀爬／迷宮）與內容都能改，可以刪章或自己加章；右邊是門會站在哪裡的小地圖。按「Build and play」才寫起點並發布。</figcaption></figure>
+            <figure class="screen-card"><img src="../e2e/milestone-create-four-step/00-idea.jpg" alt="Create a game：構想與玩法" loading="lazy"><figcaption><span class="capture-label">Create a game · 1</span><strong>構想與玩法</strong>名字、一句話的世界設定、選填的故事、語言，再選探索、槍或刀劍。即使沒有填故事，模型也會依世界構想寫章節。</figcaption></figure>
+            <figure class="screen-card"><img src="../e2e/milestone-create-four-step/03-world-review.jpg" alt="Create a game：世界設定卡片" loading="lazy"><figcaption><span class="capture-label">Create a game · 2</span><strong>審查世界</strong>六張設定卡片可以各自編輯或重寫；改語言與玩法會標示舊設定需要更新。</figcaption></figure>
+            <figure class="screen-card"><img src="../e2e/milestone-create-four-step/04-story-review.jpg" alt="Create a game：故事章節" loading="lazy"><figcaption><span class="capture-label">Create a game · 3</span><strong>審查故事</strong>章節可以重寫、插入、刪除、排序與鎖定；地圖上的門跟著章節順序重排。第 4 步才建立起點、發布卡帶並進入遊戲。</figcaption></figure>
             <figure class="screen-card"><img src="assets/unwritten-land-cartridges.jpg" alt="每個版本都還在" loading="lazy"><figcaption><span class="capture-label">Cartridges</span><strong>每個版本都還在</strong>卡帶的每個已發布版本與釘住它的存檔。繼續、備份、匯入都在這裡；舊版本不會被新版本覆蓋。</figcaption></figure>
           </div>
         </section>
@@ -850,7 +851,7 @@
             <figure class="screen-card"><img src="assets/unwritten-land-place-side.jpg" alt="橫向捲軸" loading="lazy"><figcaption><span class="capture-label">Side-scroller</span><strong>橫向捲軸</strong>鏡頭鎖在側面。平台、矮牆與出口由種子決定；史萊姆站在平台之間的地面上，同一把槍照樣能打。</figcaption></figure>
             <figure class="screen-card"><img src="assets/unwritten-land-place-dungeon.jpg" alt="地城" loading="lazy"><figcaption><span class="capture-label">Dungeon · first person</span><strong>地城</strong>第一人稱格子迷宮；進門轉身就是回大地的出口（E · Back to the land），骷髏守在走廊裡。</figcaption></figure>
           </div>
-          <div class="callout"><strong>關於這些圖：</strong>全部是 2026-09-23 在開發版實機截的（模型 gpt-5.4-mini，視窗 1440×868），沒有設計稿、沒有後製修圖。舊版文件的示範截圖已經移除。</div>
+          <div class="callout"><strong>關於這些圖：</strong>全部是在遊戲里程碑的開發版實機截圖（模型 gpt-5.4-mini，視窗 1440×868），沒有設計稿、沒有後製修圖。舊版文件的示範截圖已經移除。</div>
         </section>
         <section id="game-ai" data-section data-page="game" data-open-default>
           <div class="section-head"><p class="section-kicker">05 · AI Worlds</p><h2>一句話生成的小遊戲</h2><p class="section-intro">標題選單的 AI Worlds 是另一條路：一句話讓模型寫出一個 HTML／JavaScript 小遊戲，在 sandbox 裡跑（Rule 12），可以再用一句話修改、存成版本、串成旅程。它和故事章節分開：章節在大地上玩，AI Worlds 是獨立的小遊戲。</p></div>
@@ -873,12 +874,13 @@
 <tr><td>8 · 大地戰鬥與調整機制</td><td>一套戰鬥模型，大地上直接打；調整機制缺什麼補什麼（武器、怪物、隊伍），不再拒絕</td><td>沒有戰鬥的卡帶也能「加一把槍」並發布</td><td><span class="status verified">已完成</span></td></tr>
 <tr><td>9 · 地點</td><td>橫向捲軸與地城，從大地走進去、走出來；存檔自己的，不產生新版本</td><td>地形一定走得通；離開後回到入口旁、大地狀態不變</td><td><span class="status verified">已完成，兩種都實玩通過</span></td></tr>
 <tr><td>10 · 角色與怪物圖</td><td>9 種 NPC 職業、8 種怪物各一張，由影像模型畫一次（gpt-image-1-mini，18 張），兩種外觀都用</td><td>遊戲執行時不產圖；每張的 prompt 與用量有紀錄</td><td><span class="status verified">已完成</span></td></tr>
-<tr><td>11 · Create a game</td><td>三步：世界與玩法 → 可修改的計畫（聖經、章節、門的地圖）→ 建立並進入；舊的六步 Genre Matrix 流程連同它的 authoring workspace 與 IPC 已刪除</td><td>只有建立會發布；聖經會配合玩法（有戰鬥就不把怪物列為禁忌）</td><td><span class="status verified">已完成，實際建立並進入一個新世界</span></td></tr>
-<tr><td>12 · 測試改以 E2E 為主</td><td>刪掉 E2E 已經涵蓋、或只是重述實作的單元測試：834 → 384 個，119 → 93 檔。留下的只守 E2E 碰不到的失敗：不可信輸入、模型寫壞的輸出、存檔悄悄遺失、加密、多種子的不變量、鏈上編碼。CLAUDE.md Rule 0：之後以 E2E 驗證功能，每次結束在 <code>docs/e2e/</code> 留下可重播的紀錄並更新本頁</td><td><code>bun run check</code> 全綠；實機 E2E（新遊戲 → 固定種子 → 走路 → 切換畫面）通過，renderer 無錯誤</td><td><span class="status verified">已完成 · <a href="../e2e/2026-09-24-test-prune/result.md">E2E 紀錄</a></span></td></tr>
-<tr><td>13 · ENSv2 與卡帶名稱</td><td>ENS 讀取改走 ENSv2 Universal Resolver（預設 Sepolia，可切主網，支援 CCIP-Read 與 DNS 名稱）；每個發布的卡帶可在 Sepolia 認領 <code>&lt;cartridgeId&gt;.&lt;父名稱&gt;.eth</code>，紀錄只有 id、版本與 sha256。<code>bun run ens:setup</code> 做一次性設定，<code>--dry-run</code> 用 <code>eth_simulateV1</code> 跑完整條鏈上流程（見第 05 頁）</td><td>模擬中的子名稱能從 Universal Resolver 讀回；app 內 Sepolia／主網解析、卡帶名稱列與「用 ENS 名稱開啟」實機通過，renderer 0 個錯誤（E2E 38 秒）</td><td><span class="status verified">已完成 · 鏈上只以模擬驗證，尚未送出真實交易 · <a href="../e2e/2026-09-24-ensv2-cartridge-names/result.md">E2E 紀錄</a></span></td></tr>
-<tr><td>14 · 大地日夜與語言</td><td>新遊戲可選大地的中文／日文／英文；大地光色隨時間與 lore 氣氛變化，HD-2D 有遠方地標剪影，16-bit 有同一時間的色調</td><td>以全新測試資料進入固定種子；用開發時計時器拍下上午、黃昏、夜晚的 HD-2D 與夜晚 16-bit。當次 HUD 顯示 44 FPS（剛載入）與 56 FPS（切換後）</td><td><span class="status verified">畫面切換已實機確認；遠方地標與完整日夜循環尚未單獨驗收 · <a href="../e2e/2026-09-25-takeover-land/result.md">E2E 紀錄</a></span></td></tr>
-<tr><td>15 · 模型切換與 Create 起點</td><td>標題的「系統 → 模型」可切換雲端與本機模型、寫入鑰匙圈金鑰；Create 的世界計畫與起點依選定模型生成。本機請求送出前檢查上下文容量。</td><td>在隔離資料目錄中選回 OpenAI，完成世界計畫、起點、發布並進入大地；本機模型限制明列於紀錄</td><td><span class="status verified">雲端流程已實機驗證 · <a href="../e2e/2026-09-25-model-switch/result.md">E2E 紀錄</a></span></td></tr>
-<tr><td>16 · 遊玩循環與大陸入口</td><td>標題選存檔加入大陸；地點生成時把 NPC 台詞存進存檔；門落點檢查碰撞與領地；大地兩種外觀加入家中紀念物展示，並調整章節背景生成的共用工作</td><td>實機重播：標題→新遊戲→家門→切換兩種外觀→標題加入大陸（0 位夥伴）→生成地城→讀取 1 份已存台詞；10 張截圖、renderer 0 個錯誤；當時 <code>bun run check</code> 為 93 檔／385 測試全過。非空紀念物、第二位夥伴及章節取消／接續尚未實機驗證</td><td><span class="status verified">部分驗證 · <a href="../e2e/2026-09-25-play-loop/result.md">E2E 紀錄</a></span></td></tr>
+<tr><td>11 · Create a game</td><td>四步：構想 → 可局部重寫的世界卡片 → 可編輯、重寫、插入、刪除、排序、鎖定的故事章節 → 建立並進入；草稿存於 workspace，取消可保留原內容，改語言或玩法會標示過期</td><td>只有建立會發布；空白故事原文也能生成章節；非英文名稱保留在卡帶名稱與 ID；實機建立 1 個世界、4 章，取消 1 次重寫</td><td><span class="status verified">已完成 · <a href="../e2e/milestone-create-four-step/result.md">E2E 紀錄</a></span></td></tr>
+<tr><td>12 · 測試改以 E2E 為主</td><td>刪掉 E2E 已經涵蓋、或只是重述實作的單元測試：834 → 384 個，119 → 93 檔。留下的只守 E2E 碰不到的失敗：不可信輸入、模型寫壞的輸出、存檔悄悄遺失、加密、多種子的不變量、鏈上編碼。CLAUDE.md Rule 0：之後以 E2E 驗證功能，每次結束在 <code>docs/e2e/</code> 留下可重播的紀錄並更新本頁</td><td><code>bun run check</code> 全綠；實機 E2E（新遊戲 → 固定種子 → 走路 → 切換畫面）通過，renderer 無錯誤</td><td><span class="status verified">已完成 · <a href="../e2e/milestone-e2e-first/result.md">E2E 紀錄</a></span></td></tr>
+<tr><td>13 · ENSv2 與卡帶名稱</td><td>ENS 讀取改走 ENSv2 Universal Resolver（預設 Sepolia，可切主網，支援 CCIP-Read 與 DNS 名稱）；每個發布的卡帶可在 Sepolia 認領 <code>&lt;cartridgeId&gt;.&lt;父名稱&gt;.eth</code>，紀錄只有 id、版本與 sha256。<code>bun run ens:setup</code> 做一次性設定，<code>--dry-run</code> 用 <code>eth_simulateV1</code> 跑完整條鏈上流程（見第 05 頁）</td><td>模擬中的子名稱能從 Universal Resolver 讀回；app 內 Sepolia／主網解析、卡帶名稱列與「用 ENS 名稱開啟」實機通過，renderer 0 個錯誤（E2E 38 秒）</td><td><span class="status verified">已完成 · 鏈上只以模擬驗證，尚未送出真實交易 · <a href="../e2e/milestone-ensv2-cartridge-names/result.md">E2E 紀錄</a></span></td></tr>
+<tr><td>14 · 大地日夜與語言</td><td>新遊戲可選大地的中文／日文／英文；大地光色隨時間與 lore 氣氛變化，HD-2D 有遠方地標剪影，16-bit 有同一時間的色調</td><td>以全新測試資料進入固定種子；用開發時計時器拍下上午、黃昏、夜晚的 HD-2D 與夜晚 16-bit。當次 HUD 顯示 44 FPS（剛載入）與 56 FPS（切換後）</td><td><span class="status verified">畫面切換已實機確認；遠方地標與完整日夜循環尚未單獨驗收 · <a href="../e2e/milestone-land-lighting/result.md">E2E 紀錄</a></span></td></tr>
+<tr><td>15 · 模型切換與 Create 起點</td><td>標題的「系統 → 模型」可切換雲端與本機模型、寫入鑰匙圈金鑰；Create 的世界計畫與起點依選定模型生成。本機請求送出前檢查上下文容量。</td><td>在隔離資料目錄中選回 OpenAI，完成世界計畫、起點、發布並進入大地；本機模型限制明列於紀錄</td><td><span class="status verified">雲端流程已實機驗證 · <a href="../e2e/milestone-model-switch/result.md">E2E 紀錄</a></span></td></tr>
+<tr><td>16 · 遊玩循環與大陸入口</td><td>標題選存檔加入大陸；地點生成時把 NPC 台詞存進存檔；門落點檢查碰撞與領地；大地兩種外觀加入家中紀念物展示，並調整章節背景生成的共用工作</td><td>實機重播：標題→新遊戲→家門→切換兩種外觀→標題加入大陸（0 位夥伴）→生成地城→讀取 1 份已存台詞；10 張截圖、renderer 0 個錯誤；當時 <code>bun run check</code> 為 93 檔／385 測試全過。非空紀念物、第二位夥伴及章節取消／接續尚未實機驗證</td><td><span class="status verified">部分驗證 · <a href="../e2e/milestone-play-loop/result.md">E2E 紀錄</a></span></td></tr>
+<tr><td>17 · 整合驗收里程碑</td><td>把 16 階段合在一起從頭走一次，並修掉審查與實機找到的問題：金鑰讀不到時回錯誤、備份匯出與匯入用同一套上限、Create 拒絕大地玩不了的章節種類、起點提示補上範例程式、HD-2D 怪物畫在它走到的位置、標題移除舊的「加入房間」</td><td>全新資料：系統 → 模型（OpenAI 1,444 毫秒連線）→ Create 四步：世界 4.6 秒、單卡重寫 1.8 秒、故事 5.9 秒（4 章）、單章重寫 2.6 秒、插入 3.2 秒、全篇備註 4.4 秒且鎖定章節不變 → 關掉 app 重開草稿仍在 → 建立：修正前起點 3 次呼叫都缺地面而失敗，修正後 2 次呼叫進入大地 → 野怪追上並造成傷害、倒下後可回家重來；renderer 0 個錯誤；<code>bun run check</code> 96 檔／409 測試</td><td><span class="status verified">部分驗證 · HD-2D 怪物移動的修正未再實機觀察、戰鬥傷害速率待查 · <a href="../e2e/milestone-integration/result.md">E2E 紀錄</a></span></td></tr>
 </tbody></table></div>
 <div class="table-wrap" role="region" aria-label="實測數字" tabindex="0"><table><thead><tr><th scope="col">量到的</th><th scope="col">結果</th></tr></thead><tbody>
 <tr><td>首次可玩（自動檢查通過）</td><td>四個玩法（RPG／ARPG／迷宮／瑪利歐式平台）3/4 第一次就過，全部在 1 次修補內可玩；故事章節（當時是 AI 網頁小遊戲）2/2 第一次就過</td></tr>
@@ -888,7 +890,7 @@
 <tr><td>素材生成</td><td>3 張 256px 透明 PNG，各約 16 秒、約 1,056 output tokens</td></tr>
 <tr><td>隔離</td><td>惡意作品拿不到 preload／Node／父頁面／儲存／eval／網路／彈窗／導頁；無窮迴圈只吃掉自己的行程（97% CPU），宿主往返仍 95–98 毫秒</td></tr>
 </tbody></table></div>
-<div class="callout"><strong>完成定義：</strong>有程式碼只代表已有實作。以上每一項都跑過專案檢查（當時 808 測試；階段 12 起只留守 E2E 碰不到之處的測試，現為 385 個）與實機操作；失敗、取消與重新開啟也各驗過一次。詳細紀錄與未量測項目見 <a href="../experiments/interactive-works-acceptance-2026-09-23.md">驗收文件</a>；階段 12 起每次實機驗收都留在 <code>docs/e2e/&lt;日期&gt;-&lt;流程&gt;/</code>（<code>run.json</code> 可重播、<code>result.md</code>、截圖）。</div>
+<div class="callout"><strong>完成定義：</strong>有程式碼只代表已有實作。以上每一項都跑過專案檢查（當時 808 測試；階段 12 起只留守 E2E 碰不到之處的測試，現為 385 個）與實機操作；失敗、取消與重新開啟也各驗過一次。詳細紀錄與未量測項目見 <a href="../experiments/interactive-works-acceptance.md">驗收文件</a>；階段 12 起每次實機驗收都留在 <code>docs/e2e/milestone-&lt;流程&gt;/</code>（<code>run.json</code> 可重播、<code>result.md</code>、截圖）。</div>
         </section>
         <section id="stages" data-section data-page="progress" data-open-default>
           <div class="section-head"><p class="section-kicker">02 · Acceptance</p><h2>每階段只解決一個問題</h2><p class="section-intro">先證明生成方式，再固定執行契約；避免一開始把新的框架做成另一個龐大引擎。</p></div>
@@ -1003,7 +1005,7 @@
 <div class="table-wrap" role="region" aria-label="現有能力與新版差距" tabindex="0"><table><thead><tr><th scope="col">現有部分</th><th scope="col">新版處置</th><th scope="col">仍待完成</th></tr></thead><tbody>
 <tr><td>Cartridge／Instance／Workspace</td><td>保留發布內容、個人進度、草稿分開的責任</td><td>已完成：AI 作品另存 works／work-plays／work-drafts（Rule 12）</td></tr>
 <tr><td>Three.js／R3F／Rapier／Scene DSL</td><td>大地走 engine2d（2D canvas 或 three.js HD-2D 兩種畫法，自己的移動與碰撞）；地點（橫向捲軸、地城）走 R3F／Rapier 的 GameCanvas；故事章節在大地或地點裡玩</td><td>AI Worlds 的網頁作品與卡帶路由分開、各自存檔；攜帶物只在大地章節之間</td></tr>
-<tr><td>Genre Matrix／Capability Compiler／六步 Create</td><td>已刪除（約 5,000 行，含 authoring workspace 與 IPC）；Create a game 換成三步（世界與玩法 → 計畫 → 建立）</td><td>卡帶的發布管線（capabilities、forge）仍在，Create a game 與調整機制都用它</td></tr>
+<tr><td>Genre Matrix／Capability Compiler／六步 Create</td><td>已刪除（約 5,000 行，含 authoring workspace 與 IPC）；Create a game 換成四步（構想 → 世界 → 故事 → 建立）</td><td>卡帶的發布管線（capabilities、forge）仍在，Create a game 與調整機制都用它</td></tr>
 <tr><td>Inference／AFM scene artifact</td><td>優先重用可用模型連線與取消機制；AFM 場景能力留給適用作品</td><td>已完成：@@ 行協議、錯誤帶 main.js:行:列、修補最多 2 次</td></tr>
 <tr><td>備份與版本</td><td>保留精確 revision 與 hash 的身份原則</td><td>目前 instance 備份未包含顯影 chunks、lore、notes；不宣稱現有世界備份完整</td></tr>
 <tr><td>多人／身份／ENS／鏈上發布</td><td>既有能力保留；不當新播放器的前置條件。ENS 讀取已改走 ENSv2，卡帶可認領子名稱（第 05 頁）</td><td>分享頁與跨機器下載驗證仍待另定範圍</td></tr>
@@ -1107,7 +1109,7 @@
 </tbody></table></div>
         </section>
       <footer class="footer">
-        <p><strong>文件狀態：</strong>2026-09-24（Revision 6，已和程式逐項比對）。階段 1–11（生成方式、隔離播放器、創作閉環、故事章節、素材生成、無限章節、HD-2D、大地戰鬥與調整機制、地點、角色與怪物圖、Create a game）已實作並實機驗收；階段 12 把測試改成以 E2E 為主；畫面見第 02 頁，數字見第 03 頁與 <a href="../experiments/interactive-works-acceptance-2026-09-23.md">驗收紀錄</a>；智能合約已寫、已測、尚未部署；ENS 已改用 ENSv2，卡帶子名稱的鏈上流程已模擬通過、尚未送出真實交易。本頁保留原檔名以維持入口，AFM／DSL 不再代表整體產品的必經架構。</p>
+        <p><strong>文件狀態：</strong>Revision 6，已和程式逐項比對。階段 1–11（生成方式、隔離播放器、創作閉環、故事章節、素材生成、無限章節、HD-2D、大地戰鬥與調整機制、地點、角色與怪物圖、Create a game）已實作並實機驗收；階段 12 把測試改成以 E2E 為主；畫面見第 02 頁，數字見第 03 頁與 <a href="../experiments/interactive-works-acceptance.md">驗收紀錄</a>；智能合約已寫、已測、尚未部署；ENS 已改用 ENSv2，卡帶子名稱的鏈上流程已模擬通過、尚未送出真實交易。本頁保留原檔名以維持入口，AFM／DSL 不再代表整體產品的必經架構。</p>
         <p><strong>實作參考：</strong><a href="../../CLAUDE.md">現有工程規範</a> · <a href="../../plan.md">既有遊戲計劃</a> · <a href="../../src/main/instances/backup.ts">目前備份邊界</a> · <a href="../research/afm3-architecture-source-audit.md">AFM 歷史研究</a>。這些是既有能力與研究參考，不代表新版執行作品已交付。</p>
       </footer>
     </main></div>

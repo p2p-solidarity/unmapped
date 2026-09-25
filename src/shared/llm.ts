@@ -116,8 +116,11 @@ export type KeyProvider = (typeof KEY_PROVIDERS)[number];
 
 export interface KeyStatus {
   set: boolean;
-  /** `saved`: encrypted in this computer's app data; `env`: from the .env file. */
-  source: "saved" | "env" | null;
+  /**
+   * `saved`: encrypted in this computer's app data; `env`: from the .env file; `unreadable`: a
+   * saved key exists but cannot be decrypted or read here (it is never silently ignored).
+   */
+  source: "saved" | "env" | "unreadable" | null;
   /** The only base URL this key is ever sent to. */
   boundTo: string | null;
 }

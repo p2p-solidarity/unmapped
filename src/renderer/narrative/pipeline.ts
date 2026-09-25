@@ -76,8 +76,6 @@ export interface GenerateProgramInput<T> {
   grammar?: string | null;
   maxTokens?: number;
   temperature?: number;
-  /** Aborting stops the model call in flight and every repair round after it. */
-  signal?: AbortSignal;
   onDelta?(text: string): void;
   /** Aborts the model call in flight (`chat(..., { signal })`) and stops between repair rounds. */
   signal?: AbortSignal;

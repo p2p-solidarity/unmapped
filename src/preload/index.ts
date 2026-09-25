@@ -21,6 +21,7 @@ import type {
   PublishOnChainInput,
   WitnessOnChainInput,
 } from "@shared/chain";
+import type { CreateDraft, CreateDraftEntry, DraftIdea } from "@shared/createDraft";
 import type { ClaimNameResult, EnsNamesConfig } from "@shared/ensNames";
 import type { DataKeyWrappingRecord } from "@shared/identity";
 import type {
@@ -270,6 +271,13 @@ const api: SeedApi = {
       invoke<Result<{ path: string; base64: string } | null>>(IPC.app.pickFile, options),
     saveFile: (input: SaveFileInput) =>
       invoke<Result<{ path: string } | null>>(IPC.app.saveFile, input),
+  },
+  createDrafts: {
+    list: () => invoke<Result<CreateDraftEntry[]>>(IPC.createDrafts.list),
+    create: (idea: DraftIdea) => invoke<Result<CreateDraft>>(IPC.createDrafts.create, idea),
+    read: (draftId: string) => invoke<Result<CreateDraft>>(IPC.createDrafts.read, draftId),
+    save: (draft: CreateDraft) => invoke<Result<CreateDraft>>(IPC.createDrafts.save, draft),
+    remove: (draftId: string) => invoke<Result<void>>(IPC.createDrafts.remove, draftId),
   },
 };
 

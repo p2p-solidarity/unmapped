@@ -3,7 +3,7 @@
 // plain face plus a few worn variants so a meadow does not repeat one stamp for a whole chunk.
 
 import type { PropKind, Tile } from "@shared/world";
-import type { AtlasId } from "../engine2d/assetCatalog";
+import { type AtlasId, GENERATED_PROP_ASSETS, type SpriteAsset } from "../engine2d/assetCatalog";
 
 export interface SheetRect {
   atlas: AtlasId;
@@ -120,6 +120,10 @@ export function tileHash(x: number, z: number, salt = 0): number {
 }
 
 export function pickBoard(kind: PropKind, x: number, z: number): Billboard | null {
+  const generated = (GENERATED_PROP_ASSETS as Partial<Record<PropKind, SpriteAsset>>)[kind];
+  if (generated !== undefined) {
+    return { ...generated, widthTiles: generated.widthTiles ?? generated.sw / 16 };
+  }
   const options = PROP_BOARDS[kind];
   if (options === undefined || options.length === 0) return null;
   return options[Math.floor(tileHash(x, z, 7) * options.length)] ?? options[0] ?? null;

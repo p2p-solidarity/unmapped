@@ -53,6 +53,30 @@ export const MODEL_ERRORS: Record<string, ErrorText> = {
       ja: "「システム → モデル」で有効なキーを入力するか、.env のキーを確認してください。",
     },
   },
+  "key-unreadable": {
+    message: {
+      en: "The saved API key could not be read.",
+      "zh-TW": "讀不到已儲存的 API 金鑰。",
+      ja: "保存した API キーを読み込めませんでした。",
+    },
+    hint: {
+      en: "Open System → Model, remove the saved key and enter it again.",
+      "zh-TW": "請到「系統 → 模型」移除已存的金鑰後重新輸入。",
+      ja: "「システム → モデル」で保存したキーを削除し、入力し直してください。",
+    },
+  },
+  "key-storage-unavailable": {
+    message: {
+      en: "This computer's keychain encryption is not available.",
+      "zh-TW": "這台電腦的鑰匙圈加密目前無法使用。",
+      ja: "このコンピュータのキーチェーン暗号化を利用できません。",
+    },
+    hint: {
+      en: "Unlock the OS keychain and restart, or use a key from .env.",
+      "zh-TW": "請解鎖作業系統鑰匙圈後重新啟動，或改用 .env 裡的金鑰。",
+      ja: "OS のキーチェーンを解除して再起動するか、.env のキーを使ってください。",
+    },
+  },
   "no-api-key": {
     message: {
       en: "An API key is missing.",
@@ -418,6 +442,30 @@ export const MODEL_ERRORS: Record<string, ErrorText> = {
   },
 
   // ── Stories ────────────────────────────────────────────────────────────────────────────────
+  "story-kind-unknown": {
+    message: {
+      en: "A chapter asks for a kind of play this game does not have.",
+      "zh-TW": "有章節要求這個遊戲沒有的玩法。",
+      ja: "この遊びにない種類の遊び方を求める章があります。",
+    },
+    hint: {
+      en: "Give it meet, search, fight, climb or maze.",
+      "zh-TW": "請改成相遇、搜尋、戰鬥、攀登或迷宮。",
+      ja: "出会い・探索・戦闘・クライム・迷宮のどれかにしてください。",
+    },
+  },
+  "story-kind-fight": {
+    message: {
+      en: "A chapter is a fight, but this game has no fighting.",
+      "zh-TW": "有章節是戰鬥，但這個遊戲沒有戰鬥。",
+      ja: "戦闘の章がありますが、この遊びには戦闘がありません。",
+    },
+    hint: {
+      en: "Change that chapter's kind, or choose a play style with fighting.",
+      "zh-TW": "請修改那一章的種類，或改選有戰鬥的玩法。",
+      ja: "その章の種類を変えるか、戦闘ありの遊び方を選んでください。",
+    },
+  },
   "story-reply-invalid": {
     message: {
       en: "The model's story plan is incomplete.",

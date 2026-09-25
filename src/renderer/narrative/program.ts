@@ -35,8 +35,6 @@ export interface ProgramSpec<T, E extends AppError> {
   maxTokens?: number;
   temperature?: number;
   maxRepairs?: number;
-  /** Checked before every round: an aborted program asks the model nothing more. */
-  signal?: AbortSignal;
   onDelta?(text: string): void;
   /** Checked between repair rounds; the in-flight call is aborted by the chat it was given to. */
   signal?: AbortSignal;

@@ -15,6 +15,15 @@ export interface NewWorldContext {
   language: string;
   /** How the world is fought in: absent or "none" for a world where nobody fights. */
   fights?: "none" | "gun" | "blade";
+  /** The player's own story, if they wrote one: the world must be able to hold it. */
+  material?: string;
+}
+
+function materialSection(material: string | undefined): string {
+  const text = clampText(material ?? "", 1_500);
+  return text === ""
+    ? ""
+    : `\n\n## The player's story (material: the world must be able to hold it)\n${text}`;
 }
 
 /** The bible must allow what the game will put on the land, or every chapter contradicts it. */
@@ -34,7 +43,7 @@ export const BIBLE_EXAMPLE = `root = Bible("A coast where the survey ships stopp
 
 export function biblePrompt(ctx: NewWorldContext): string {
   return bibleLibrary.prompt({
-    preamble: `${ROLE}\n\n## The world the player asked for\nName: ${clampText(ctx.name, 60)}\nIntent: ${clampText(ctx.intent, 400)}\n\nThe mood is a Shōwa-era countryside where the map stopped being drawn: utility poles, a single-track railway, empty stations, a bathhouse chimney, a vending machine glowing in a field, breakwaters, windmills, terraced fields. Quiet, a little lonely, but warm. Not sword and sorcery.`,
+    preamble: `${ROLE}\n\n## The world the player asked for\nName: ${clampText(ctx.name, 60)}\nIntent: ${clampText(ctx.intent, 400)}${materialSection(ctx.material)}\n\nThe mood is a Shōwa-era countryside where the map stopped being drawn: utility poles, a single-track railway, empty stations, a bathhouse chimney, a vending machine glowing in a field, breakwaters, windmills, terraced fields. Quiet, a little lonely, but warm. Not sword and sorcery.`,
     additionalRules: [
       "The whole program is ONE statement: root = Bible(...) with every string and list written inline inside the call. Never define premise, rules or any other value as its own statement.",
       `Write every part in ${languageName(ctx.language)}.`,
@@ -45,6 +54,21 @@ export function biblePrompt(ctx: NewWorldContext): string {
     examples: [BIBLE_EXAMPLE],
   });
 }
+
+/**
+ * Syntax demonstration only (Rule 2), never saved. Without it the chat model guessed the program's
+ * shape and about half the time left the Floor out of the Scene or passed its children wrongly.
+ */
+export const ORIGIN_EXAMPLE = `root = Scene("Low Well Corner", "countryside", [ground, sky, sun, house1, pole1, stop1, tree1, well1, aki])
+ground = Floor(16, 16, "grass")
+sky = Sky("#cfdde3", "#c6d4d8", 0.06)
+sun = Light("sun", "#fff1c9", 4)
+house1 = Prop("house", 3, 3, 1)
+pole1 = Prop("utility_pole", 6, 4, 1)
+stop1 = Prop("bus_stop", 11, 5, 1)
+tree1 = Prop("tree", 12, 12, 1)
+well1 = Prop("well", 4, 11, 1)
+aki = NPC("aki", "Aki", 10, 7, "farmer", "calm", "#6d7d4a")`;
 
 export function originPrompt(ctx: NewWorldContext, bible: WorldBible): string {
   return scenePromptLibrary.prompt({
@@ -57,8 +81,10 @@ export function originPrompt(ctx: NewWorldContext, bible: WorldBible): string {
       "Walls only as short pieces of a building; no Wall may touch the edge of the Floor — every side stays open.",
       "No Monster, Treasure, Exit, Trigger or Platform. At most one Quest.",
       "The player wakes on the centre tile: keep it empty.",
+      'root = Scene(name, "countryside", [children]) and the children list MUST include exactly one Floor.',
+      "The example shows syntax only. Never reuse its words or places.",
     ],
-    examples: [],
+    examples: [ORIGIN_EXAMPLE],
   });
 }
 

@@ -1,6 +1,6 @@
 # 未記之地（Unwritten Land）：一個遊戲、一片無限的地
 
-> 本文件是目前產品與工程的最高層規格（2026-09-17 改向）。它取代「可組裝 60 種類型的遊戲卡帶主機」
+> 本文件是目前產品與工程的最高層規格（產品方向里程碑）。它取代「可組裝 60 種類型的遊戲卡帶主機」
 > 作為**主路徑**的假設。上一版完整保留在 `docs/ref/plan-cartridge-console.md`：其中的
 > cartridge / instance / workspace 儲存模型、hash 驗證、typed proposal、Mod 邊界**仍然有效**，
 > Create 的 Genre Matrix / Capability Compiler / Scene Gallery 則降為進階的「重制」入口（§9）。
@@ -33,7 +33,7 @@
    允許互相矛盾，不做共識、不做投票。
 7. **地理屬於世界 seed。** `landSeed = seedFromText(save.seed ?? cartridgeId)`：同一個 seed 的所有玩家站在同一片地上，
    座標對每個人意義相同（手記才錨得住）；換 seed 就是另一片地。沒有 seed 的舊存檔沿用 cartridgeId。
-   （2026-09-17 改向：主路徑是**一個內建遊戲 × 多個 seed**，不再是每個玩家建一張卡帶。）
+   （產品方向里程碑：主路徑是**一個內建遊戲 × 多個 seed**，不再是每個玩家建一張卡帶。）
 8. 既有規則照舊：DSL 是真相、repair ≤ 2 輪、數值 clamp、無假資料、cartridge 不可變、Play 不寫 cartridge、
    每檔 ≤ 600 行、不過度工程（CLAUDE.md）。
 
@@ -136,7 +136,7 @@ parser 驗證（id 不撞、links 指向存在的節點、語言 = `genesis.lang
   顯影層不是 cartridge 內容，是見證出來的進度，所以可以走。
 - 單機世界各自分歧是預期行為：每個人的世界由自己見證；透過門拜訪時，你進的是**對方的**世界。
 
-**大陸（2026-09-24 取代上面的「房間 = 房主的世界」）**：沒有房主。每個世界保留自己的原點、seed 與存檔；
+**大陸里程碑（取代上面的「房間 = 房主的世界」）**：沒有房主。每個世界保留自己的原點、seed 與存檔；
 穿過門牌加入大陸時拿到一個**錨點**（區塊偏移，螺旋格位相距 `CONTINENT_SPACING` = 6），大陸依最近錨點劃分領地，
 各世界只在自己的領地顯影、只寫自己的存檔。別人的地、居民、手記、家門依錨點差平移到自己的座標系畫出，
 每個世界原點立一個偏移標誌（主人 · 世界名 · 偏移）。在別人的地留的手記進對方的 notes.jsonl。
@@ -145,20 +145,14 @@ parser 驗證（id 不撞、links 指向存在的節點、語言 = `genesis.lang
 未實機驗到：兩個行程互連——本機環境連同頁面內兩個 RTCPeerConnection 都卡在 ICE checking（VPN／防火牆），
 信令與單一 initiator 已驗證；文件合併由兩份 Y.Doc 的單元測試驗證。
 
-## 9. 砍掉、下架、保留
+## 9. 現行入口與保留邊界
 
-| 處置 | 項目 |
-| --- | --- |
-| **砍掉（主遊戲不出現）** | 許願祭壇／`generateItem` UI、互動當下的 `generateDialogue`、塔與樓層、HUD 的 FLOOR |
-| **下架為進階入口「重制」** | Genre Matrix、Capability Compiler、多 context、Scene Candidate Gallery、Design Interview、Story 步驟。定位：拿這個基礎世界改聖經／規則／原點場景 → 發布帶 lineage 的新 cartridge。先從路由拿掉，新流程可玩後再決定刪不刪 |
-| **保留但不加功能** | 戰鬥與其他 kit（由 cartridge 宣告才出現）、workspaces、mod proposal、endless depths |
-| **保留並依賴** | cartridge／instance 儲存、hash 驗證、Data Key 加密、harness（sections／tools／effects）、repair、y-webrtc 房間 |
+- **Create a game** 現在是 Idea → World → Story → Build 四步。Idea 收世界名、意圖、可選故事素材、語言與探索／槍／刀；World 是六張可編修且可單張重寫的聖經卡；Story 是 3–8 章，即使沒有故事素材也產生，可編修、重寫、插入、移動、刪除及鎖定章節；Build 顯示實際規則與模型路由，才產生原點、發布不可變 cartridge 並建存檔。草稿自動存於 `workspaces/create.<draftId>/draft.json`；改 Idea 會標記依賴內容過期。實測見 [四步 Create](docs/e2e/milestone-create-four-step/result.md)。
+- **System → Model** 可選 Cloud API、Apple on-device、Ollama、llama.cpp、自訂相容端點；Create 的 Build 顯示選定模型、探測結果及原點路由。Apple bridge 只在選 Apple 且本機可用時寫原點；聖經與章節仍走所選 chat 模型。OpenAI 路徑已實機驗證；Apple 生成尚未實測（本機 `fm license` 未同意）。見 [模型切換](docs/e2e/milestone-model-switch/result.md)。
+- **Play**：開放地有 HD-2D／16-bit 兩種畫法、顯影、故事閘門、門牌與大陸加入、家與紀念物、調整提案和存檔自有的橫向／地城地點。界面不再走舊 Genre Matrix／Scene Gallery／六步 Create；原本的 cartridge、instance、workspace、hash、harness、mod proposal、限定場景 3D kit 與舊存檔 reader 仍是有效基礎。實測界線見 [遊玩循環](docs/e2e/milestone-play-loop/result.md)。
+- **素材**：CC0 地面／村落／主角、已產生的居民與怪、15 種已產生的道具 sprite 都已接入兩種開放地畫法（`src/renderer/engine2d/atlases.ts`）；沒有素材時不得假稱已生成。後續畫新素材要明確計算並告知模型費用。
 
-主路徑（2026-09-17 起）：**New Game → 選 seed（隨機或輸入）→ Start**，遊戲本體是內建卡帶《未記之地》。
-極簡 Create 退到 seed 畫面底部的進階連結，舊 Create 在「Remix」。
-
-極簡 Create：**世界名 + 一句意圖 + 語言** → 模型寫世界聖經與原點場景 → 發布 cartridge
-（`tps_exploration@1`）→ 直接進遊戲。沒有模型 → `error` 狀態與可行動的 hint，不出貨任何預製世界（Rule 2）。
+`SCENE_BASES` 與其無 caller 的 `sceneFor`、沒有畫面 caller 的 `ModsPanel` 已移除。`SceneBaseSelection` 仍在遊戲定義資料型別中，為讀舊資料保留。`GameCanvas` 仍負責限定場景、地點與舊卡帶；3D 開放地相關程式有引擎引用，需單獨驗證後才能移除。
 
 ## 10. 分階段與驗收
 
@@ -171,7 +165,7 @@ parser 驗證（id 不撞、links 指向存在的節點、語言 = `genesis.lang
 | **P4 連線** | overlays／lore／notes／home 走 Yjs；門牌加入 | 兩台機器同一區塊看到同一批居民與彼此的手記 |
 | **P5 重制入口** | 舊 Create 移到進階入口；主路徑換成極簡 Create | 新玩家三次輸入內進到遊戲 |
 
-### 目前狀態（2026-09-17）
+### 產品方向里程碑的狀態
 
 **P1 完成並實機驗證**：`bun run check` 全綠（88 檔 678 測試）；在 dev app 內實際走過——
 《P0 Finale Test》（9×9 白天 meadow）連續衝刺到 `LAND 0 · -3`、《湯屋來信》到 `LAND -1 · -1`，
@@ -186,7 +180,7 @@ parser 驗證（id 不撞、links 指向存在的節點、語言 = `genesis.lang
 
 P1 尚未做：同座標重開後地形相同只由單元測試保證（未實機重開比對）；5 分鐘長跑未做（只跑了約 15 秒）。
 
-**P1.5 完成並實機驗證**（2026-09-17）：`bun run check` 全綠（88 檔 679 測試）。
+**P1.5 完成並實機驗證**：`bun run check` 全綠（88 檔 679 測試）。
 
 - 相機：open 世界按 `V`（或 HUD 的 `Cam` 按鈕）在 orbit／fps 間切換；其他 kit 仍顯示 `scene locked`。
   `CameraRig.tsx`（`switchable`、`switchedCamera`）、`hud/ActionDock.tsx`、`Hud.tsx` 操作提示。
@@ -200,7 +194,7 @@ P1 尚未做：同座標重開後地形相同只由單元測試保證（未實�
 
 P1.5 沒做：app 被直接關掉時，最後 5 秒內的移動不會寫入（只有定期與離開 Play 時寫）。
 
-**P2 顯影 完成並實機驗證**（2026-09-17）：`bun run check` 全綠（91 檔 689 測試）。
+**P2 顯影 完成並實機驗證**：`bun run check` 全綠（91 檔 689 測試）。
 
 - 世界聖經：cartridge 多 `bible/core.md`、`bible/style.md`（`WorldBible`），進檔案表與 content hash，publish／read／pack／unpack 全線支援；
   舊卡帶 `bible === null` → HUD 顯示「此卡帶沒有聖經」與 hint，不塞預設聖經。
@@ -233,7 +227,7 @@ P2 沒做／已知問題：
   TPS 相機沒有碰撞，民家會遮住鏡頭。
 - 原點作者居民的靜態對話（原點區塊顯影時一併寫）只有程式與單元測試，測試卡帶原點沒有 NPC，未實機驗到。
 
-**P3 家與門 完成並實機驗證**（2026-09-17）：`bun run check` 全綠（91 檔 692 測試）。
+**P3 家與門 完成並實機驗證**：`bun run check` 全綠（91 檔 692 測試）。
 
 - 委託 = 顯影時寫好的確定性模板：`Find(id, giver, ask, x, z, reward, thanks)`（在本區某格搜尋）、
   `Deliver(…, place, …)`／`Guide(…, place, …)`（走進另一個已記地點的區塊）；獎勵是同一程式裡的 `Item`（沿用 Item DSL，限 charm／tool／consumable）。
@@ -252,7 +246,7 @@ P3 沒做／已知問題：
 - 家只能是原點；「認領別的區塊當家」未做。紀念物是自動排成一列，不能自由擺放；台座只是方塊 + 名牌，沒有依 meshDna 組模型。
 - 門傳送的落點是該區第一位居民旁，沒有檢查碰撞體。
 
-**P4 連線 完成並實機驗證**（2026-09-17）：`bun run check` 全綠（91 檔 694 測試）。
+**P4 連線 完成並實機驗證**：`bun run check` 全綠（91 檔 694 測試）。
 
 - 手記（para-ledger）：`LandNote { id, author, at, coord{cx,cz,x,z}, anchors[], text, contests }`，玩家自己打的字；
   `saves/<id>/notes.jsonl` append-only（main zod，contests 必須指向既有手記），IPC `instances.appendNote`；karma 記 `note` 事實。
@@ -274,7 +268,7 @@ P4 沒做／已知問題：
 - 位置同步沒有插值以外的處理（沒有動畫、只有膠囊 + 名字）。
 - 多人仍要求 v2 卡帶（既有閘門）；手記備份同 P2：`.spire-backup` 不含 notes.jsonl。
 
-**P5 重制入口 完成並實機驗證**（2026-09-17）：`bun run check` 全綠（92 檔 696 測試）。
+**P5 重制入口 完成並實機驗證**：`bun run check` 全綠（92 檔 696 測試）。
 
 - 標題選單「New Game」→ 極簡 Create（`app/NewWorldScreen.tsx`）：世界名 + 一句意圖 + 語言（預設 OS 語系）→ Make this world。
   管線 `narrative/newWorld.ts`：模型寫 `Bible(premise, tone, rules[], taboos[], naming, voice)`（新方言，確定性轉成 core.md／style.md，
@@ -294,13 +288,13 @@ P5 沒做／已知問題：
 
 實測發現、與本計畫無關但擋路的 bug：v2 存檔格式沒有 v1 reader，
 `~/Library/Application Support/Unwritten Land/instances/` 下既有的 v1 instance 全部讀不到。
-（2026-09-17 緩解）以前只要有一個 v1 存檔，整個存檔清單就失敗、Cartridges 面板只剩 `instance-invalid`、Continue 變灰，
+（存檔相容里程碑已緩解）以前只要有一個 v1 存檔，整個存檔清單就失敗、Cartridges 面板只剩 `instance-invalid`、Continue 變灰，
 新玩家完全進不了遊戲。現在清單會跳過 v1 存檔，Cartridges 面板另外列出「N 個舊格式存檔讀不到、檔案未動」；
 直接打開 v1 存檔回 `instance-legacy-format`。v1 reader 本身仍未做。
 同日另修：啟動時第一次模型探測失敗會一直卡在「不可達」——探測逾時 3 → 8 秒、不可達時每 15 秒靜默重測、
 New Game 進畫面就重測，且「Make this world」不再被探測結果鎖住（真的失敗會顯示實際錯誤）。
 
-**單一遊戲 × 多 seed 完成並實機驗證**（2026-09-17）：`bun run check` 全綠（95 檔 705 測試）。
+**單一遊戲 × 多 seed 完成並實機驗證**：`bun run check` 全綠（95 檔 705 測試）。
 
 - 內建遊戲《未記之地》`aether-land@1.0.0`：`src/main/game/aether-land.json`（由 `scripts/build-base-game.mjs` 經 `openLandCartridge` 產生，
   聖經依本計畫 §2 手寫、英文；原點只有地板、天空、太陽，**沒有預製居民**——居民照樣由顯影寫）。
@@ -315,7 +309,7 @@ New Game 進畫面就重測，且「Make this world」不再被探測結果鎖�
 - 同 seed 的兩個存檔地形相同，但居民各自顯影、彼此不同（顯影寫在存檔裡）；要「同 seed 同居民」只能靠房間。
 - v1 存檔 reader 依決定延後。內建遊戲的聖經是英文、`Language:` 行沒寫，顯影語言跟 OS 語系。
 
-**推論 provider：OpenAI／Apple Foundation Models**（2026-09-17）：
+**推論 provider：OpenAI／Apple Foundation Models**：
 
 - 預設順序：`.env` 有 `OPENAI_API_KEY` → OpenAI（`gpt-5.4-mini`）；沒有 key 但有 `/usr/bin/fm` → `apple-fm`；否則 llama.cpp sidecar。
   已存在的 `inference.json` 不會被改寫，要換就到 F12 → Inference 選 kind。
@@ -329,49 +323,49 @@ provider 沒做／沒驗到：
 - **Apple 模型生成完全沒驗到**（需要使用者自己 `sudo fm license`）。串流、`stop`、`max_tokens` 是否被 fm serve 支援未知；
   顯影 prompt 約 3.8k tokens + 最多 3.2k 輸出，可能超過 Apple 模型的 context，屆時會以錯誤顯示、區塊維持未記。
 
-**2D 開放地 · AI 世界 · 故事劇集 · 選配鏈**（2026-09-22 → 09-23）：`bun run check` 全綠（115 檔 806 測試）。
+**里程碑：2D 開放地 · AI 世界 · 故事劇集 · 選配鏈**：`bun run check` 全綠（115 檔 806 測試）。
 
-- **2D 開放地**（`83a4225`）：開放地改用 2D canvas 繪製（CC0 Ninja Adventure 貼圖），區塊串流、道具碰撞、
+- **2D 開放地**：開放地改用 2D canvas 繪製（CC0 Ninja Adventure 貼圖），區塊串流、道具碰撞、
   站進碰撞體時的脫困處理。程式在 `src/renderer/engine2d/`。
-- **AI 世界 `interactive-web@1`**（`64fb5b4`，Rule 12）：模型寫 `main.js`／`style.css`／`assets.json`，
+- **AI 世界 `interactive-web@1`**（Rule 12）：模型寫 `main.js`／`style.css`／`assets.json`，
   只跑在 `<iframe sandbox="allow-scripts">` + 每個 session 一個 `ulwork://<token>/` + nonce CSP；
   世界看得到的只有 `host.{root, carry, load, save, loop, complete, status, asset}`。
   產生 → 玩 → 改 → 存版本 → 旅程全線可用（入口：標題 → AI Worlds）。
   儲存在卡帶**旁邊**：`works/`（不可變、有 hash）、`work-plays/`、`work-drafts/`（head 只能 compare-and-set）。
   「可玩」是自動關卡：全新開一次 + 用它自己的存檔再開一次，兩次都過才動 head；修不好最多 repair 2 次。
-- **圖片**（`763ea31`）：`gpt-image-1-mini` 畫素材，key 只在主程式，縮到 256px，照樣要過檢查才生效。
-- **故事 → RPG 地圖**（`baf6ce0`，Rule 13）：一段故事 → 世界聖經 + 3–8 段劇集，閘門由**主程式**散在開放地上；
+- **圖片**：`gpt-image-1-mini` 畫素材，key 只在主程式，縮到 256px，照樣要過檢查才生效。
+- **故事 → RPG 地圖**（Rule 13）：一段故事 → 世界聖經 + 3–8 段劇集，閘門由**主程式**散在開放地上；
   走到閘門才寫那一段的世界，清掉後 carry 由主程式合併帶往下一段，並記一筆 `witness` karma。
   計畫是卡帶內容（`bible/story.json`，進 content hash）；進度在存檔（`land.episodes`、`land.storyCarry`）。
-- **選配鏈上出處**（`ef75aea`、`4fc229b`）：`contracts/src/UnwrittenLedger.sol` 只記 app 本來就算好的 sha256、
+- **選配鏈上出處**：`contracts/src/UnwrittenLedger.sol` 只記 app 本來就算好的 sha256、
   作者、血緣與短註記；沒設定 `UNWRITTEN_*` 時每個畫面照常運作並說明沒有帳本。合約規則用 in-process EVM 測過。
 - 實測數據（邊界逃逸、4 個世界的產生時間／token、5 次修改、旅程重開、5 段劇集、圖片、鏈）全在
-  `docs/experiments/interactive-works-acceptance-2026-09-23.md`。
+  `docs/experiments/interactive-works-acceptance.md`。
 
-這一輪沒做／已知問題（09-23 下午已處理的見下一段）：
+這個里程碑沒做／已知問題（已處理的見下一段）：
 - 合約**從未部署到任何公開網路**、沒送過真實交易（要花 gas、要使用者的 key：`bun run contracts:deploy`）。
 - 沙箱 frame 裡 `RTCPeerConnection` 仍存在（CSP 擋不掉），記錄為可接受殘留；換圖的原生對話框沒有自動化測試。
 
-**無限遊戲 · HD-2D · 走得到的地**（2026-09-23 下午）：`bun run check` 全綠（118 檔 830 測試）。
+**里程碑：無限遊戲 · HD-2D · 走得到的地**：`bun run check` 全綠（118 檔 830 測試）。
 
-- **無限遊戲**（`5d33003`、`ed9aec0`）：`EpisodePrefetch` 在走路時背景寫好下一段劇集的世界（檢查 frame 就在角落卡片裡，
+- **無限遊戲**：`EpisodePrefetch` 在走路時背景寫好下一段劇集的世界（檢查 frame 就在角落卡片裡，
   看得見才有 animation frame）；作者劇集全清後土地用一個 `@@episode` 續寫下一章（`land.storyMore`，上限 `STORY_CAP = 99`），
   再寫它的世界。續寫的章沿「步道」擺：離上一個閘門約 2.5 區塊、每章轉黃金角，永遠是同一段路。Pause 是裝置偏好。
   實機（燈塔守夜人，zh-TW，5 段）：e1 背景寫好 23.0 s／4,948 in／3,165 out（1 次 repair）→ 走到閘門按 E 是 **Continue** 秒開 →
   玩完 carry `{"wick":true,…}` → 關面板後 e2 自動開寫（29.5 s，2 次 repair，repair 只花 136／119 out tokens）→
   e2–e5 以改存檔模擬清除 → 土地續寫第 6 章「潮口猜點」並寫好它的世界（18.3 s，1,285 in／2,958 out，一次過）。
-- **v1 存檔**（`dad1a2b`）：format 1 的 instance 讀取時補上 runtime pin（不改檔，下次 checkpoint 才寫 format 2）。
+- **v1 存檔**：format 1 的 instance 讀取時補上 runtime pin（不改檔，下次 checkpoint 才寫 format 2）。
   `.spire-backup` 匯入舊格式仍會報 `expected 2`——沒修。
-- **走得到的地**（`e49b530`、`b01148f`）：原本約 7% 的 seed 出生點被湖圍死、約 18% 的區塊中心（閘門所在）在水裡或孤島上。
+- **走得到的地**：原本約 7% 的 seed 出生點被湖圍死、約 18% 的區塊中心（閘門所在）在水裡或孤島上。
   現在每個區塊的中央橫排／直排是 3 格寬的淺灘（水變沙、不長東西），原點區塊不積水；顯影寫的道具／牆落在淺灘上的一律不立（存檔原文不動）。
   150 個 seed：0 個被困、900 個閘門 0 個走不到。
-- **HD-2D**（`c4d8881`、`f73676b`）：開放地可用 three.js 畫成透視模型：區塊地面貼圖 + 柔和明暗、岩地是有斷崖的台地、
+- **HD-2D**：開放地可用 three.js 畫成透視模型：區塊地面貼圖 + 柔和明暗、岩地是有斷崖的台地、
   水／岩漿／虛空是下陷的盆地與土岸、像素 sprite 直立並投影、雲影、光塵、bloom + 移軸景深。移動／碰撞／目標全沒動，只換繪製面。
   `V`（Dock 的 Look）切 HD-2D ↔ 16-bit；沒有 WebGL 就退回 16-bit 並提示。持續 60 FPS（衝刺跨區塊量過）。無新相依（全用 three 內建）。
   標題與所有選單改站在這片活的地上（同一個實例跨選單不中斷）；介面從等寬 console 換成書本 serif + 墨藍視窗雙框 + 金色。
 - 其他：關窗時補存最後幾步的位置；16-bit 的樹 sprite 切錯與走路動畫轉置修好。
 
-**調整機制不再拒絕 · 開放地上直接戰鬥**（2026-09-23 晚）：`bun run check` 全綠（118 檔 832 測試）。
+**里程碑：調整機制不再拒絕 · 開放地上直接戰鬥**：`bun run check` 全綠（118 檔 832 測試）。
 - 要一把槍但卡帶沒有戰鬥模組 → 主程式自動加上 `shooter_combat@1`（與依賴）、開啟戰鬥規則、在提案裡寫明；
   只有引擎根本沒有的模組才會拒絕。提案可一併放怪（`AddMonster`）。mod 發版不再遺失聖經／故事／對白／素材，
   預設版本會跳過已存在的版本。實機：「加一把槍，再在起點附近放三隻史萊姆」→ 一次過 → 發 3.0.0 → 新存檔保留故事與顯影。
@@ -381,7 +375,7 @@ provider 沒做／沒驗到：
 - 還沒做：從 RPG 裡**新增內建 kit 的地點**（橫向捲軸、網格地城…）——出口已能進入別的場景，但 mod 不能加場景、
   劇集也一律是沙箱 AI 世界。
 
-**地點：橫向捲軸與地城接進 RPG**（2026-09-23 晚）：`bun run check` 全綠（119 檔 836 測試）。
+**里程碑：地點，橫向捲軸與地城接進 RPG**：`bun run check` 全綠（119 檔 836 測試）。
 - 調整機制多一個「Add a place」：選橫向捲軸或地城、說一句話（可指定東南西北），模型寫裡面的東西（名字、光、居民、寶箱、
   有戰鬥時的怪、目標），主程式蓋地形（有間隙的平台路線／保證有路的迷宮）並把入口放在附近的區塊中心。存在存檔裡，不發新版本、不開新局。
 - 走到入口按 E → 用引擎自己的 kit 玩（側視跳躍、第一人稱格子迷宮），武器／戰鬥／等級一路帶著；近出口回地面，遠端出口＝通關（標記變 ✓、記 karma），都回到入口旁。
@@ -390,10 +384,16 @@ provider 沒做／沒驗到：
 - 沒做：地點內的怪在即時制不反擊（與 3D 一致）；地點內 NPC 對話會在互動時呼叫模型（一般卡帶場景的既有行為）；
   地點的 3D 畫面是引擎原本的低多邊形風格，不是 HD-2D。
 
-仍未做：`.spire-backup` 舊格式匯入；顯影偶發 lore id 撞名（沒重現到）；閘門面板打開時背景那一章的進行中呼叫會丟掉；
-帳本部署（要使用者本人）。
+**目前里程碑**：四步 Create、模型切換與遊玩循環的實機記錄在 §9 所連的 E2E 文件；15 種道具 sprite 已接入。上述里程碑記錄保留為當時狀態，不代表目前入口。這次清理只移除確認無 caller 的舊程式，沒有擴充遊戲規則。
 
-下一步與作法寫在 `docs/handoff-next-session.md`。
+**里程碑：整合驗收**（[紀錄](docs/e2e/milestone-integration/result.md)）：`.spire-backup` 已含區塊／lore／手記並能匯入 format 1，
+匯出與匯入用同一套上限；閘門面板改為接手背景那一章的呼叫。實機找到並修掉：透過聊天模型寫起點時缺範例程式（3 次都缺地面）、
+HD-2D 的怪物圖停在出生點、標題的舊「加入房間」。
+
+仍未做：顯影偶發 lore id 撞名（沒重現到）；即時戰鬥一次量到約 3 秒掉 54 HP（調校上限每秒 7.5），原因待查；
+本機模型（Apple／Ollama／llama.cpp）實際生成；帳本與 ENS 真實交易（要使用者本人）。
+
+下一步與作法寫在 `docs/handoff-next-session.md`.
 
 ## 11. 已知未決
 

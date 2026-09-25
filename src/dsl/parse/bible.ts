@@ -1,23 +1,24 @@
-// Bible program → the two fixed anchor files of a cartridge. Rendering is deterministic, so the
-// content hash of a world depends only on what the model wrote.
+// Bible program → the six parts of a world bible (@shared/bible), bounded and checked. The player
+// reviews and edits those parts in Create a game; `flattenBible` renders the cartridge's two anchor
+// files from them at publish, deterministically, so a world's content hash depends only on its
+// words.
 
-import type { WorldBible } from "@shared/cartridge";
+import {
+  BIBLE_LIMITS,
+  type BibleFields,
+  bibleProblems,
+  clampLine,
+  cleanItems,
+} from "@shared/bible";
 import { ok, type Result } from "@shared/result";
 import { bibleLibrary } from "../libraries";
-import { clampText, truncate } from "../limits";
 import { BIBLE_PROPS } from "../schemas/bible";
 import type { DslError } from "../types";
 import { createDialect, dslError, failWith, parseRoot, propError } from "./program";
 
 const dialect = createDialect(bibleLibrary);
 
-const lines = (values: readonly string[], max: number): string[] =>
-  truncate(
-    values.map((value) => clampText(value, 160)).filter((value) => value !== ""),
-    max,
-  );
-
-export function parseBible(source: string): Result<WorldBible, DslError> {
+export function parseBible(source: string): Result<BibleFields, DslError> {
   const root = parseRoot(dialect, source);
   if (!root.ok) return root;
   const parsed = BIBLE_PROPS.Bible.safeParse(root.value.props);
@@ -31,22 +32,21 @@ export function parseBible(source: string): Result<WorldBible, DslError> {
     );
   }
   const p = parsed.data;
-  const rules = lines(p.rules, 6);
-  const taboos = lines(p.taboos, 5);
-  const issues = [];
-  if (rules.length < 3)
-    issues.push(propError("Bible", "Fewer than 3 rules.", "Write 3 to 6 rules."));
-  if (taboos.length < 2)
-    issues.push(propError("Bible", "Fewer than 2 taboos.", "Write 2 to 5 taboos."));
-  for (const [name, value] of [
-    ["premise", p.premise],
-    ["tone", p.tone],
-    ["naming", p.naming],
-    ["voice", p.voice],
-  ] as const) {
-    if (value.trim() === "")
-      issues.push(propError("Bible", `${name} is empty.`, `Write the ${name}.`));
-  }
+  const fields: BibleFields = {
+    premise: clampLine(p.premise, BIBLE_LIMITS.premise),
+    tone: clampLine(p.tone, BIBLE_LIMITS.tone),
+    rules: cleanItems("rules", p.rules),
+    taboos: cleanItems("taboos", p.taboos),
+    naming: clampLine(p.naming, BIBLE_LIMITS.naming),
+    voice: clampLine(p.voice, BIBLE_LIMITS.voice),
+  };
+  const issues = bibleProblems(fields).map((problem) => {
+    if (problem.part === "rules")
+      return propError("Bible", "Fewer than 3 rules.", "Write 3 to 6 rules.");
+    if (problem.part === "taboos")
+      return propError("Bible", "Fewer than 2 taboos.", "Write 2 to 5 taboos.");
+    return propError("Bible", `${problem.part} is empty.`, `Write the ${problem.part}.`);
+  });
   if (issues.length > 0) {
     return failWith(
       dslError({
@@ -57,15 +57,5 @@ export function parseBible(source: string): Result<WorldBible, DslError> {
       }),
     );
   }
-  return ok({
-    core: [
-      `Premise: ${clampText(p.premise, 600)}`,
-      `Tone: ${clampText(p.tone, 200)}`,
-      "Rules:",
-      ...rules.map((rule) => `- ${rule}`),
-      "Never:",
-      ...taboos.map((taboo) => `- ${taboo}`),
-    ].join("\n"),
-    style: [`Naming: ${clampText(p.naming, 300)}`, `Voice: ${clampText(p.voice, 300)}`].join("\n"),
-  });
+  return ok(fields);
 }

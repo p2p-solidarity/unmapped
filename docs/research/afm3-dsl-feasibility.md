@@ -1,6 +1,6 @@
 # AFM3 生成遊戲 DSL 的可行性
 
-研究日期：2026-09-15
+研究里程碑：AFM／DSL 可行性
 
 ## 結論先行
 
@@ -8,7 +8,7 @@
 
 - Apple 已開放第三方 app 透過 `PrivateCloudComputeLanguageModel()` 使用 PCC 上的 Apple server model；它支援 32K context、reasoning、guided generation 與 tool calling。[Apple PCC 開發者文件](https://developer.apple.com/documentation/foundationmodels/adding-server-side-intelligence-with-private-cloud-compute)
 - 公開 API 沒有 AFM 3 Cloud／Cloud Pro 的 model ID 選擇，也不是 OpenAI-compatible HTTP API。它只有由 OS 管理的 `PrivateCloudComputeLanguageModel()` 入口；因此不能假設 app 可指定 Cloud Pro，或取得模型權重。[`PrivateCloudComputeLanguageModel`](https://developer.apple.com/documentation/FoundationModels/PrivateCloudComputeLanguageModel) · [`init()`](https://developer.apple.com/documentation/foundationmodels/privatecloudcomputelanguagemodel/init%28%29)
-- Apple 公開的 LoRA adapter training 是給**裝置端 system language model**。目前最後一版 toolkit 是 26.0.0，Apple 明確標示不相容 macOS/iOS/iPadOS/visionOS 27；所以截至本研究日期，沒有官方支援的 AFM3／OS 27 adapter 訓練路徑，更沒有 PCC cloud model 的 LoRA 掛載 API。[Apple Foundation Models adapter training](https://developer.apple.com/apple-intelligence/foundation-models-adapter/)
+- Apple 公開的 LoRA adapter training 是給**裝置端 system language model**。目前最後一版 toolkit 是 26.0.0，Apple 明確標示不相容 macOS/iOS/iPadOS/visionOS 27；因此，查核到的官方資料未提供 AFM3／OS 27 adapter 訓練路徑，更沒有 PCC cloud model 的 LoRA 掛載 API。[Apple Foundation Models adapter training](https://developer.apple.com/apple-intelligence/foundation-models-adapter/)
 - 對本專案最實用的方式不是先做 LoRA，而是讓 AFM 透過 guided generation 產生**型別化 AST**，再由 deterministic serializer 輸出 OpenUI Lang，最後仍交給現有 parser 與 limits 驗證。這能保留 `CLAUDE.md` 的「DSL is the truth, model is a guest」。
 - 建議保留 Qwen 3.5 4B 作為 Windows、離線與無 Apple Intelligence 裝置的 backend；macOS 可新增 AFM on-device route，PCC 僅用於長上下文或複雜規劃，不要放進每個 chunk／每次對話的高頻 hot path。
 

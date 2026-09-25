@@ -1,98 +1,37 @@
-// Create a game (plan.md §9), in two halves the player sees apart. `planWorld`: a name, one
-// sentence, a story and a language become the world bible and the chapters on the map — cheap to
-// read, edit or ask for again. `buildWorld`: the place the player wakes in is written, the ordinary
-// Forge publishes an open-land cartridge (tps_exploration@1) with the bible, the story and the
-// chosen play style, and a save is created. With no model there is no world — the caller shows
-// the error and its hint, never a prebuilt world.
+// Create a game (plan.md §9), last step. Everything before it — the bible, the story, every
+// partial rewrite — is reviewed and edited in the Create screen (worldDraft.ts) and kept in a
+// draft; nothing is published until here. `buildWorld`: the place the player wakes in is written,
+// the ordinary Forge publishes an open-land cartridge (tps_exploration@1) with the bible, the
+// story and the chosen play style, and a save is created. With no model there is no world — the
+// caller shows the error and its hint, never a prebuilt world.
 
-import { biblePrompt, type NewWorldContext, parseBible } from "@dsl";
-import { chat } from "@renderer/llm";
+import type { NewWorldContext } from "@dsl";
+import { playerName } from "@renderer/net/room";
+import { useSessionStore } from "@renderer/state/sessionStore";
 import type { InstanceMeta, WorldBible } from "@shared/cartridge";
 import { fail, ok, type Result } from "@shared/result";
 import type { GenerationEvent } from "@shared/scene-generation";
-import { parseStoryReply, type StoryPlan, storyMessages } from "@shared/story";
+import type { StoryPlan } from "@shared/story";
+import { checkPlayKinds } from "@shared/storyEdits";
 import { openLandCartridge, type PlayStyle } from "./openLandCartridge";
 import { generateOrigin } from "./originScene";
-import { generateProgram } from "./pipeline";
 
-export type NewWorldStage = "bible" | "story" | "origin" | "publish";
-
-const STORY_REPAIRS = 2;
-
-/**
- * The player's story → a plan of episodes placed on the map. The model answers in the @@ line
- * protocol; a malformed plan goes back with the reason, at most twice. No story, no plan: a world
- * made from one sentence simply has no episodes.
- */
-export async function planStory(
-  story: string,
-  bible: WorldBible,
-  language: string,
-  combat: boolean,
-  signal?: AbortSignal,
-): Promise<Result<StoryPlan>> {
-  const messages = storyMessages({ story, core: bible.core, style: bible.style, language, combat });
-  for (let attempt = 0; ; attempt += 1) {
-    const reply = await chat(
-      { messages, maxTokens: 4_000, temperature: 0.7, grammar: null, stop: [], tools: [] },
-      undefined,
-      signal === undefined ? {} : { signal },
-    );
-    if (!reply.ok) return reply;
-    const plan = parseStoryReply(reply.value.text);
-    if (plan.ok || attempt >= STORY_REPAIRS) return plan;
-    messages.push(
-      { role: "assistant", content: reply.value.text.slice(0, 20_000) },
-      {
-        role: "user",
-        content: `${plan.error.message} ${plan.error.hint ?? ""} Answer again in the exact format.`,
-      },
-    );
-  }
-}
+export type NewWorldStage = "origin" | "publish";
 
 /** What the player asked for on the first page of Create a game. */
 export interface WorldIdea extends NewWorldContext {
-  /** Their story; empty makes a world without chapters. */
+  /** Their own story: optional material for the bible and the chapters. */
   story: string;
   play: PlayStyle;
 }
 
-/** What the model proposed, before anything is published; the player may edit the chapters. */
+/** What the player reviewed and kept: the bible as published, and the chapters. */
 export interface WorldPlan {
   bible: WorldBible;
   story: StoryPlan | null;
 }
 
 const aborted = () => fail({ code: "request-aborted", message: "World generation was cancelled." });
-
-export async function planWorld(
-  idea: WorldIdea,
-  onStage: (stage: NewWorldStage) => void,
-  signal?: AbortSignal,
-): Promise<Result<WorldPlan>> {
-  const ctx = { ...idea, fights: idea.play.fights };
-  onStage("bible");
-  const bible = await generateProgram<WorldBible>({
-    system: biblePrompt(ctx),
-    user: "Write the Bible program for this world now. Output the program only.",
-    purpose: "free",
-    language: ctx.language,
-    parse: parseBible,
-    maxTokens: 1400,
-    temperature: 0.9,
-    ...(signal === undefined ? {} : { signal }),
-  });
-  if (!bible.ok) return bible;
-  if (signal?.aborted) return aborted();
-  if (ctx.story.trim().length === 0) return ok({ bible: bible.value.graph, story: null });
-  onStage("story");
-  const combat = ctx.play.fights !== "none";
-  const planned = await planStory(ctx.story, bible.value.graph, ctx.language, combat, signal);
-  if (!planned.ok) return planned;
-  if (signal?.aborted) return aborted();
-  return ok({ bible: bible.value.graph, story: planned.value });
-}
 
 export async function buildWorld(
   ctx: WorldIdea,
@@ -102,8 +41,13 @@ export async function buildWorld(
   signal?: AbortSignal,
 ): Promise<Result<InstanceMeta>> {
   const story = plan.story ?? undefined;
+  // Checked again here, before any model call or publish: never a chapter the land cannot play.
+  if (story !== undefined) {
+    const kinds = checkPlayKinds(story.episodes, ctx.play.fights !== "none");
+    if (!kinds.ok) return kinds;
+  }
   onStage("origin");
-  // Apple's bridge or the chat model, whichever System → Model selected (originScene.ts).
+  // The selected System → Model route writes this scene, including non-Apple chat providers.
   const origin = await generateOrigin({
     world: ctx,
     bible: plan.bible,
@@ -112,13 +56,15 @@ export async function buildWorld(
   });
   if (!origin.ok) return origin;
 
+  // A cancel that lands while the origin was being checked still stops before anything is published.
+  if (signal?.aborted) return aborted();
   onStage("publish");
   // The world keeps the language it was made in, inside its hashed bible (Rule 10).
   const input = await openLandCartridge({
     cartridgeId: cartridgeIdFor(ctx.name),
     version: "1.0.0",
     name: ctx.name.trim(),
-    author: "you",
+    author: authorName(),
     premise: ctx.intent.trim(),
     originSource: origin.value.source,
     bible: {
@@ -140,14 +86,48 @@ export async function buildWorld(
   return created.ok ? ok(created.value.instance.meta) : created;
 }
 
-/** A new world's cartridge id: its name made ascii, plus a random tail so names may repeat. */
-function cartridgeIdFor(name: string): string {
-  const stem =
-    name
-      .toLowerCase()
-      .normalize("NFKD")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 60) || "cartridge";
-  return `${stem}-${crypto.randomUUID().slice(0, 8)}`;
+/** Who made the world: the player's profile name, else the name this device plays under. */
+function authorName(): string {
+  const profile = useSessionStore.getState().playerProfile?.displayName.trim() ?? "";
+  if (profile !== "") return profile.slice(0, 120);
+  return playerName().trim().slice(0, 120);
+}
+
+/** One word of a name as an id label: plain ascii, accents dropped, else its IDNA (punycode) form. */
+function idLabel(word: string): string | null {
+  const plain = word
+    .normalize("NFKD")
+    .replace(/\p{M}+/gu, "")
+    .toLowerCase();
+  if (/^[a-z0-9]+$/.test(plain)) return plain;
+  try {
+    // The form a browser gives a non-ascii host name ("xn--…"): ascii, and it decodes back.
+    const host = new URL(`http://${word.normalize("NFC")}.invalid/`).hostname;
+    const label = host.slice(0, host.indexOf("."));
+    return /^[a-z0-9-]+$/.test(label) ? label : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A new world's cartridge id: a readable ascii form of its name (Latin names as themselves,
+ * other scripts as punycode, which decodes back to the name) plus a short random tail so names
+ * may repeat and a rebuilt world never collides with an earlier one. Always a valid cartridge id.
+ */
+export function cartridgeIdFor(name: string): string {
+  const labels: string[] = [];
+  let length = 0;
+  for (const word of name.normalize("NFC").split(/[^\p{L}\p{N}\p{M}]+/u)) {
+    const label = word === "" ? null : idLabel(word);
+    if (label === null) continue;
+    if (length + label.length + 1 > 60) {
+      // A first word longer than the whole stem still names the world, cut short.
+      if (labels.length === 0) labels.push(label.slice(0, 60).replace(/-+$/, ""));
+      break;
+    }
+    labels.push(label);
+    length += label.length + 1;
+  }
+  return `${labels.join("-") || "world"}-${crypto.randomUUID().slice(0, 6)}`;
 }

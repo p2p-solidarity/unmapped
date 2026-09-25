@@ -74,6 +74,7 @@ export {
   BIBLE_EXAMPLE,
   biblePrompt,
   type NewWorldContext,
+  ORIGIN_EXAMPLE,
   originIssues,
   originPrompt,
 } from "./prompts/newWorld";

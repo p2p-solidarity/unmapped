@@ -9,6 +9,7 @@ import {
   type InferenceConfig,
   KEY_PROVIDERS,
   type KeyProvider,
+  type KeyStatus,
   type KeyStatusMap,
 } from "@shared/llm";
 import { err, fail, ok, type Result, toError } from "@shared/result";
@@ -37,15 +38,39 @@ function keyPath(provider: KeyProvider): string | null {
   return root === null ? null : join(root, `${provider}.key`);
 }
 
-export async function readKeyRecord(provider: KeyProvider): Promise<KeyRecord | null> {
+const UNREADABLE_HINT = "Open System → Model, remove the saved key and enter it again.";
+
+/**
+ * The saved key for `provider`: ok(null) only when none was saved. A file that exists but cannot
+ * be read, decrypted or validated is an error (Rule 5), never "no key".
+ */
+export async function readKeyRecord(provider: KeyProvider): Promise<Result<KeyRecord | null>> {
   const path = keyPath(provider);
-  if (path === null || !safeStorage.isEncryptionAvailable()) return null;
+  if (path === null) return ok(null);
+  let bytes: Buffer;
   try {
-    const record = parseKeyRecord(safeStorage.decryptString(await readFile(path)));
-    return record?.provider === provider ? record : null;
-  } catch {
-    return null;
+    bytes = await readFile(path);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return ok(null);
+    return fail({ ...toError(error, "key-read-failed"), hint: UNREADABLE_HINT });
   }
+  if (!safeStorage.isEncryptionAvailable()) {
+    return err(
+      "key-storage-unavailable",
+      `The saved ${provider} key cannot be decrypted: this computer's keychain encryption is not available.`,
+      "Unlock the OS keychain and restart Unwritten Land, or remove the saved key in System → Model.",
+    );
+  }
+  let record: KeyRecord | null;
+  try {
+    record = parseKeyRecord(safeStorage.decryptString(bytes));
+  } catch {
+    record = null;
+  }
+  if (record === null || record.provider !== provider) {
+    return err("key-unreadable", `The saved ${provider} key could not be read.`, UNREADABLE_HINT);
+  }
+  return ok(record);
 }
 
 export async function writeKeyRecord(record: KeyRecord): Promise<Result<void>> {
@@ -85,22 +110,29 @@ export async function clearKeyRecord(provider: KeyProvider): Promise<Result<void
 
 export async function keyStatusMap(env: EnvLike = process.env): Promise<KeyStatusMap> {
   const entries = await Promise.all(
-    KEY_PROVIDERS.map(
-      async (provider) =>
-        [provider, describeKey(provider, await readKeyRecord(provider), env)] as const,
-    ),
+    KEY_PROVIDERS.map(async (provider) => {
+      const saved = await readKeyRecord(provider);
+      const status: KeyStatus = saved.ok
+        ? describeKey(provider, saved.value, env)
+        : { set: false, source: "unreadable", boundTo: null };
+      return [provider, status] as const;
+    }),
   );
   return Object.fromEntries(entries) as KeyStatusMap;
 }
 
-/** The key a request to this endpoint may carry (saved first, then .env), or null for none. */
+/**
+ * The key a request to this endpoint may carry (saved first, then .env), ok(null) for none, or the
+ * error of a saved key that cannot be read — a broken saved key never silently falls back.
+ */
 export async function resolveApiKey(
   config: InferenceConfig,
   env: EnvLike = process.env,
-): Promise<{ key: string; source: "saved" | "env" } | null> {
-  const saved =
-    config.kind === "openai" || config.kind === "openui-gateway" || config.kind === "custom"
-      ? await readKeyRecord(config.kind)
-      : null;
-  return pickApiKey(config, saved, env);
+): Promise<Result<{ key: string; source: "saved" | "env" } | null>> {
+  if (config.kind !== "openai" && config.kind !== "openui-gateway" && config.kind !== "custom") {
+    return ok(pickApiKey(config, null, env));
+  }
+  const saved = await readKeyRecord(config.kind);
+  if (!saved.ok) return saved;
+  return ok(pickApiKey(config, saved.value, env));
 }

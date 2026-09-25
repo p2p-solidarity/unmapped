@@ -1,0 +1,32 @@
+{
+  "env": {
+    "platform": "macOS",
+    "userData": "fresh throwaway directory via AETHER_TEST_USER_DATA",
+    "cdpPort": 9360,
+    "language": "zh-TW"
+  },
+  "model": "openai · gpt-5.4-mini (automatic land witness, not evaluated here)",
+  "actions": [
+    { "text": true },
+    { "clickText": "新遊戲" },
+    { "wait": 500 },
+    { "eval": "document.activeElement.select()" },
+    { "type": "TEST2E2E" },
+    { "eval": "document.querySelector('input').value" },
+    { "clickText": "開始" },
+    { "wait": 6000 },
+    { "text": true },
+    { "eval": "window.__landClock.hour()" },
+    { "shot": "docs/e2e/milestone-land-lighting/01-day-hd2d.jpg" },
+    { "eval": "window.__landClock.hold(19.5)" },
+    { "wait": 1200 },
+    { "shot": "docs/e2e/milestone-land-lighting/02-dusk-hd2d.jpg" },
+    { "eval": "window.__landClock.hold(23)" },
+    { "wait": 1200 },
+    { "shot": "docs/e2e/milestone-land-lighting/03-night-hd2d.jpg" },
+    { "hold": "KeyV", "ms": 100 },
+    { "wait": 600 },
+    { "shot": "docs/e2e/milestone-land-lighting/04-night-pixel.jpg" },
+    { "text": true }
+  ]
+}

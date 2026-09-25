@@ -1,16 +1,10 @@
-// Profile → cartridge. The deterministic half of Forge: given a resolved capability profile and a
-// Scene Base, this works out the rules and the scene that express them. No model involved, so a
-// player can build and play a cartridge with nothing running locally.
-//
-// Rule 7 all the way down: the output is a GameplayRules value and a SceneGraph, both of which are
-// serialised through the DSL before anything is published. Nothing here writes `.oui` text.
+// Profile → cartridge. The deterministic half of Forge resolves capability profiles to
+// versioned kits and gameplay rules. No model involved; rules are serialised through the DSL.
 
 import type { CapabilityProfile } from "./capabilities";
 import type { GameplayKitId, GameplayRules } from "./gameplay";
 import type { ProgressionKind, ProgressionRule } from "./progression";
-import { exitTile, type SceneBase } from "./scene-bases";
 import { TIMING_SYSTEMS, type TimingSystemId } from "./timing";
-import type { PropKind, SceneGraph } from "./world";
 
 /** Value of one capability key in the profile, or null when the profile never decided it. */
 function pickValue(profile: CapabilityProfile, key: string): string | null {
@@ -189,95 +183,5 @@ export function rulesFor(profile: CapabilityProfile): GameplayRules {
               },
         ]
       : [],
-  };
-}
-
-/** Deterministic scatter so the same base always composes the same way before generation runs. */
-function scatter(base: SceneBase, count: number): { kind: PropKind; x: number; z: number }[] {
-  const placed: { kind: PropKind; x: number; z: number }[] = [];
-  const centreX = Math.floor(base.width / 2);
-  const centreZ = Math.floor(base.depth / 2);
-  for (let index = 0; index < count; index += 1) {
-    const kind = base.props[index % base.props.length];
-    if (kind === undefined) continue;
-    // A deterministic spiral keeps props spread out without needing a random source here.
-    const angle = index * 2.39996;
-    const radius = 2 + (index / count) * (Math.min(base.width, base.depth) / 2 - 3);
-    const x = Math.round(centreX + Math.cos(angle) * radius);
-    const z = Math.round(centreZ + Math.sin(angle) * radius);
-    if (x < 1 || z < 1 || x >= base.width - 1 || z >= base.depth - 1) continue;
-    if (Math.abs(x - centreX) + Math.abs(z - centreZ) < 3) continue;
-    placed.push({ kind, x, z });
-  }
-  return placed;
-}
-
-export interface SceneForgeInput {
-  base: SceneBase;
-  profile: CapabilityProfile;
-  sceneId: string;
-  title: string;
-  /** Monsters to place; 0 for a cartridge with no combat. */
-  monsters: number;
-}
-
-export function sceneFor(input: SceneForgeInput): SceneGraph {
-  const { base } = input;
-  const sandbox = pickValues(input.profile, "physics").includes("rigid_body");
-  const exit = exitTile(base);
-  const centreX = Math.floor(base.width / 2);
-  const centreZ = Math.floor(base.depth / 2);
-
-  return {
-    name: input.title,
-    biome: base.biome,
-    contract: {
-      sceneId: input.sceneId,
-      kit: kitFor(input.profile),
-      requiresFlags: [],
-      requiresItems: [],
-      inventoryPolicy: "carry",
-      grantsFlags: [`${input.sceneId}_done`],
-      terminal: true,
-    },
-    floor: { width: base.width, depth: base.depth, tile: base.tile },
-    patches: [],
-    platforms: [],
-    walls: [],
-    // In a sandbox the base's own scatter is what you get to throw around; nothing extra is
-    // invented for it, the same props are simply simulated instead of nailed down.
-    props: scatter(base, 14).map((prop) => ({
-      ...prop,
-      scale: 1.2,
-      tint: null,
-      dynamic: sandbox,
-    })),
-    npcs: [],
-    monsters: Array.from({ length: input.monsters }, (_, index) => {
-      const angle = index * 1.7 + 0.6;
-      const radius = Math.min(base.width, base.depth) / 2 - 3;
-      return {
-        id: `foe_${index + 1}`,
-        kind: index % 2 === 0 ? ("drone" as const) : ("golem" as const),
-        x: Math.max(1, Math.min(base.width - 2, Math.round(centreX + Math.cos(angle) * radius))),
-        z: Math.max(1, Math.min(base.depth - 2, Math.round(centreZ + Math.sin(angle) * radius))),
-        level: 1 + (index % 3),
-        weakness: "",
-        size: index % 2 === 0 ? 1 : 1.3,
-        color: null,
-      };
-    }),
-    treasures: [],
-    exits: [{ x: exit.x, z: exit.z, to: "Exit", targetSceneId: null }],
-    lights: base.lights.map((light) => ({
-      kind: light.kind,
-      color: light.color,
-      intensity: light.intensity,
-      x: light.kind === "point" ? centreX : null,
-      z: light.kind === "point" ? centreZ : null,
-    })),
-    sky: base.sky,
-    triggers: [],
-    quests: [],
   };
 }

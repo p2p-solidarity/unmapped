@@ -9,7 +9,6 @@ export const TITLE = {
   menuNewGame: { en: "New Game", "zh-TW": "新遊戲", ja: "はじめから" },
   menuCreate: { en: "Create a game", "zh-TW": "創作遊戲", ja: "ゲームをつくる" },
   menuWorlds: { en: "AI Worlds", "zh-TW": "AI 世界", ja: "AI ワールド" },
-  menuJoin: { en: "Join", "zh-TW": "加入房間", ja: "ルームに参加" },
   menuContinent: { en: "Join a continent", "zh-TW": "加入大陸", ja: "大陸に参加" },
   continentIntro: {
     en: "Choose the saved world you will bring, then enter a friend's door number.",

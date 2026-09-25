@@ -18,6 +18,7 @@ import { registerModsIpc } from "./mods/ipc";
 import { registerSeedIpc } from "./seeds/ipc";
 import { registerVaultIpc } from "./vault/ipc";
 import { registerWorksIpc } from "./works/ipc";
+import { registerCreateDraftsIpc } from "./workspaces/createDraftsIpc";
 import { registerWorkspacesIpc } from "./workspaces/ipc";
 import { registerWorldsIpc } from "./worlds/ipc";
 
@@ -36,4 +37,5 @@ export function registerIpc(ctx: MainContext): void {
   registerModsIpc(ctx);
   registerWorksIpc(ctx);
   registerChainIpc(ctx);
+  registerCreateDraftsIpc(ctx);
 }

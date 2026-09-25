@@ -128,12 +128,19 @@ export function registerInferenceIpc(ctx: MainContext): void {
     try {
       const config = await currentConfig();
       const [key, context] = await Promise.all([resolveApiKey(config), contextFor(config, false)]);
+      if (!key.ok) {
+        process.stdout.write(
+          `[inference] fail ${request.id} · ${config.kind} · ${key.error.code}\n`,
+        );
+        emit({ id: request.id, type: "error", error: key.error });
+        return;
+      }
       const result = await streamChat(
         config,
         request,
         (text) => emit({ id: request.id, type: "delta", text }),
         controller.signal,
-        { apiKey: key?.key ?? null, context },
+        { apiKey: key.value?.key ?? null, context },
       );
       // Provider, time and budget only — never a prompt, an answer or a key.
       const head = `[inference] ${result.ok ? "done" : "fail"} ${request.id} · ${config.kind} ${config.model} · ${Date.now() - started} ms`;
@@ -201,7 +208,8 @@ export function registerInferenceIpc(ctx: MainContext): void {
       await sidecar.start(config.sidecar);
     }
     const key = await resolveApiKey(config);
-    const reached = await probe(config, key?.key ?? null);
+    if (!key.ok) return key;
+    const reached = await probe(config, key.value?.key ?? null);
     if (!reached.ok) return reached;
     const context = reached.value.reachable ? await contextFor(config, true) : null;
     return ok({ ...reached.value, context });

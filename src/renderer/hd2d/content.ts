@@ -88,6 +88,21 @@ export interface StandingContent {
   markers: MarkerInstance[];
 }
 
+/**
+ * The fight's hostiles where they stand this frame. They walk, so they are never part of the
+ * cached content (`collectContent`): the renderer sets them on their own layer every frame.
+ */
+export function foeBoards(source: LandSource): BoardInstance[] {
+  const tileAt = tileAtFor(source);
+  return (source.foes ?? []).map((foe) => ({
+    board: MONSTER_BOARDS[foe.kind],
+    x: foe.x,
+    y: standHeight(tileAt, foe.x, foe.z),
+    z: foe.z,
+    scale: 1,
+  }));
+}
+
 export function collectContent(source: LandSource, coords: readonly ChunkCoord[]): StandingContent {
   const content: StandingContent = { boards: [], blocks: [], walls: [], markers: [] };
   const floor = floorOf(source);
@@ -110,10 +125,6 @@ export function collectContent(source: LandSource, coords: readonly ChunkCoord[]
   // A chapter's foes are in the fight's roster while one is on; its people and finds always stand.
   if (source.chapter !== null && source.chapter !== undefined) {
     pushScene(content, height, source.chapter, 0, 0, !fighting);
-  }
-  for (const foe of source.foes ?? []) {
-    const board = MONSTER_BOARDS[foe.kind];
-    content.boards.push({ board, x: foe.x, y: height(foe.x, foe.z), z: foe.z, scale: 1 });
   }
   if (source.origin !== null) {
     for (const item of keepsakeSpots(source.origin, source.progress)) {

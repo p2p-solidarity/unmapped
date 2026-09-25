@@ -10,6 +10,8 @@ import { type CapabilityRequirement, compileCapabilities } from "@shared/capabil
 import { BUILTIN_MODULES } from "@shared/capability-modules";
 import type { PublishCartridgeInput, WorldBible } from "@shared/cartridge";
 import { hashText } from "@shared/content-hash";
+import { rulesFor } from "@shared/forge";
+import type { GameplayRules } from "@shared/gameplay";
 import { type ModeSelection, requirementsFor } from "@shared/mode-catalog";
 import { err, ok, type Result } from "@shared/result";
 import type { AuthoringSnapshot } from "@shared/scene-gallery";
@@ -163,6 +165,24 @@ export async function openLandCartridge(
     bible: input.bible,
     ...(input.story === undefined ? {} : { story: input.story }),
   });
+}
+
+/**
+ * The rules a play style compiles to — the same resolution `openLandCartridge` forges — so
+ * Create a game can show real numbers before anything is published.
+ */
+export function playRules(play: PlayStyle): Result<GameplayRules> {
+  const resolution = compileCapabilities({
+    requirements: [...requirementsFor(SELECTION), ...styleRequirements(play)],
+    modules: BUILTIN_MODULES,
+    overrides: {},
+    accepted: {},
+  });
+  const context = resolution.contexts[0];
+  if (resolution.status !== "ready" || context?.profile == null) {
+    return err("open-land-capabilities", "The open-land game could not be compiled.");
+  }
+  return ok(rulesFor(context.profile));
 }
 
 /** The forged rules with the player's own name on the starting weapon. */

@@ -254,20 +254,28 @@ export function storyStep(
 
 const FIELD = /^(title|place|kind|brief)\s*[:：]\s*(.*)$/i;
 
-type EpisodeText = Omit<StoryEpisode, "id" | "cx" | "cz">;
+export type EpisodeText = Omit<StoryEpisode, "id" | "cx" | "cz">;
 
 /**
  * Reads the story line protocol: an optional `@@logline` section, then `@@episode` blocks with
  * `title:`, `place:`, `kind:` and `brief:` lines (a brief may run over several lines), up to
  * `@@end`. Fields are cut to their limits; whether anything is missing is the caller's check.
+ * `numbers[i]` is the chapter number written on episode i's header (`@@episode 3`), else null.
  */
-function readStoryBlocks(reply: string): { logline: string; episodes: EpisodeText[] } {
+export function readStoryBlocks(reply: string): {
+  logline: string;
+  episodes: EpisodeText[];
+  numbers: Array<number | null>;
+} {
   let logline = "";
   const episodes: EpisodeText[] = [];
+  const numbers: Array<number | null> = [];
   let section: "logline" | "episode" | null = null;
+  let number: number | null = null;
   let current: Record<string, string> = {};
   const flush = (): void => {
     if (section === "episode" && Object.keys(current).length > 0) {
+      numbers.push(number);
       episodes.push({
         title: (current.title ?? "").slice(0, STORY_LIMITS.titleChars),
         place: (current.place ?? "").slice(0, STORY_LIMITS.placeChars),
@@ -285,9 +293,11 @@ function readStoryBlocks(reply: string): { logline: string; episodes: EpisodeTex
       section = "logline";
       continue;
     }
-    if (/^@@episode\b/i.test(line)) {
+    const header = /^@@episode\b\s*(\d{1,2})?/i.exec(line);
+    if (header !== null) {
       flush();
       section = "episode";
+      number = header[1] === undefined ? null : Number(header[1]);
       continue;
     }
     if (/^@@end\b/i.test(line)) {
@@ -304,7 +314,7 @@ function readStoryBlocks(reply: string): { logline: string; episodes: EpisodeTex
     }
   }
   flush();
-  return { logline: logline.slice(0, STORY_LIMITS.loglineChars), episodes };
+  return { logline: logline.slice(0, STORY_LIMITS.loglineChars), episodes, numbers };
 }
 
 /**
@@ -339,30 +349,44 @@ export function parseStoryReply(reply: string): Result<StoryPlan> {
  * What a chapter can be, because the game can play it: no card tables, dice or pages of choices,
  * which the land cannot show (@shared/chapter).
  */
-function kindsOfPlay(combat: boolean): string {
+export function kindsOfPlay(combat: boolean): string {
   return combat
     ? "The kinds of play the game has: meet (people to talk to), search (things to find), fight (foes to beat), climb (a side-scrolling course) and maze (a dungeon); a land chapter usually mixes meeting, finding and fighting."
     : "The kinds of play the game has: meet (people to talk to), search (things to find), climb (a side-scrolling course) and maze (a dungeon). This game has no fighting: never write a fight.";
 }
 
-function kindLine(combat: boolean): string {
+export function kindLine(combat: boolean): string {
   return combat ? "meet, search, fight, climb, maze" : "meet, search, climb, maze";
 }
 
 export interface StoryPromptInput {
+  /** The player's own story; empty asks the model to invent one that fits the world. */
   story: string;
   core: string;
   style: string;
   language: string;
   /** Whether the game has fighting; without it no chapter is a fight. Defaults to true. */
   combat?: boolean;
+  /** The world's name and one-sentence idea, so a story invented for it fits. */
+  world?: { name: string; intent: string };
+}
+
+function storyAsk(input: StoryPromptInput): string {
+  const world =
+    input.world === undefined
+      ? ""
+      : `The world "${input.world.name.slice(0, 60)}": ${input.world.intent.slice(0, 400)}\n`;
+  const story = input.story.trim();
+  return story === ""
+    ? `${world}The player gave no story of their own: invent one that fits this world.`
+    : `${world}The player's story:\n${story.slice(0, STORY_LIMITS.storyChars)}`;
 }
 
 export function storyMessages(input: StoryPromptInput): ChatMessage[] {
   return [
     {
       role: "system",
-      content: `You turn a player's story into a short chain of playable episodes for an open-world RPG.
+      content: `You turn a player's story (or, without one, a story you invent for the world) into a short chain of playable episodes for an open-world RPG.
 Each episode is one chapter played in the game itself at a place on the map. ${kindsOfPlay(input.combat ?? true)} Vary the kind between episodes and let the stakes rise toward the end.
 Write every text in ${languageName(input.language)}. Keep the world's rules and tone:
 CORE: ${input.core.slice(0, 1_500)}
@@ -378,7 +402,7 @@ kind: <one of: ${kindLine(input.combat ?? true)}>
 brief: <2-3 sentences: what the player does there, how it is won, what they carry away>
 @@end`,
     },
-    { role: "user", content: input.story.slice(0, STORY_LIMITS.storyChars) },
+    { role: "user", content: storyAsk(input) },
   ];
 }
 

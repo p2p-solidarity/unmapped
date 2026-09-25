@@ -61,6 +61,11 @@ export const MODEL = {
   },
   keyEnv: { en: "Key from .env", "zh-TW": "金鑰來自 .env", ja: "キーは .env から読み込み" },
   keyMissing: { en: "No key set", "zh-TW": "尚未設定金鑰", ja: "キー未設定" },
+  keyUnreadable: {
+    en: "The saved key cannot be read on this computer — remove it and enter it again",
+    "zh-TW": "這台電腦讀不到已存的金鑰——請移除後重新輸入",
+    ja: "保存したキーをこのコンピュータで読めません。削除して入力し直してください",
+  },
   keyBound: { en: "Sent only to {url}", "zh-TW": "只會送往 {url}", ja: "送信先は {url} のみ" },
   saveKey: { en: "Save key", "zh-TW": "儲存金鑰", ja: "キーを保存" },
   clearKey: { en: "Remove saved key", "zh-TW": "移除已存金鑰", ja: "保存したキーを削除" },

@@ -1,8 +1,8 @@
 # Interactive web works — player (Prompt 2) + creation loop (Prompt 3)
 
-Status: implemented 2026-09-23; acceptance run and measurements in
-`docs/experiments/interactive-works-acceptance-2026-09-23.md`. Evidence for the design:
-`docs/experiments/interactive-work-player-2026-09-22.md` (Prompt 1) and the isolation spike below.
+Status: implementation milestone complete; acceptance run and measurements in
+`docs/experiments/interactive-works-acceptance.md`. Evidence for the design:
+`docs/experiments/interactive-work-player.md` (Prompt 1) and the isolation spike below.
 The 2D open land (`src/renderer/engine2d`) and the Three.js path stay as they are; this adds a
 sibling content type.
 
@@ -32,7 +32,7 @@ Storage mirrors Rule 9 with separate directories so no old cartridge reader ever
 - `work-drafts/<draftId>/` — mutable authoring: `draft.json` (head = last playable candidate,
   candidate history with request, summary, status, metrics) + `candidates/<id>/` snapshots.
 
-## Isolation (spike-verified in Electron 44 on 2026-09-22)
+## Isolation milestone (spike verified in Electron 44)
 
 - Each session is `<iframe sandbox="allow-scripts">` (no `allow-same-origin`) on a **fresh random
   host** `ulwork://w<token>/`, served by main via `protocol.handle` with its own CSP:

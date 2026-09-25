@@ -22,6 +22,7 @@ import type {
   PublishOnChainInput,
   WitnessOnChainInput,
 } from "./chain";
+import type { CreateDraft, CreateDraftEntry, DraftIdea } from "./createDraft";
 import type { ClaimNameResult, EnsNamesConfig } from "./ensNames";
 import type { DataKeyWrappingRecord } from "./identity";
 import type {
@@ -187,6 +188,14 @@ export const IPC = {
     openExternal: "app:open-external",
     pickFile: "app:pick-file",
     saveFile: "app:save-file",
+  },
+  /** Create a game drafts (<userData>/workspaces/create.<id>/draft.json). */
+  createDrafts: {
+    list: "create-drafts:list",
+    create: "create-drafts:create",
+    read: "create-drafts:read",
+    save: "create-drafts:save",
+    remove: "create-drafts:remove",
   },
 } as const;
 
@@ -462,5 +471,14 @@ export interface SeedApi {
     openExternal(url: string): Promise<Result<void>>;
     pickFile(options: PickFileOptions): Promise<Result<{ path: string; base64: string } | null>>;
     saveFile(input: SaveFileInput): Promise<Result<{ path: string } | null>>;
+  };
+  /** Create a game drafts: nothing here is published; Build does that. */
+  createDrafts: {
+    list(): Promise<Result<CreateDraftEntry[]>>;
+    create(idea: DraftIdea): Promise<Result<CreateDraft>>;
+    read(draftId: string): Promise<Result<CreateDraft>>;
+    /** Replaces the draft whole (autosave); main stamps `updatedAt`. */
+    save(draft: CreateDraft): Promise<Result<CreateDraft>>;
+    remove(draftId: string): Promise<Result<void>>;
   };
 }

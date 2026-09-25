@@ -30,7 +30,9 @@ export function assetPrompt(input: { note: string; assetId: string; world: strin
 
 export async function generateImage(prompt: string): Promise<Result<GeneratedImage>> {
   // The same lookup chat uses: the key saved in System → Model, else OPENAI_API_KEY from .env.
-  const key = await resolveApiKey({ ...PROVIDER_PRESETS.openai, sidecar: null });
+  const resolved = await resolveApiKey({ ...PROVIDER_PRESETS.openai, sidecar: null });
+  if (!resolved.ok) return resolved;
+  const key = resolved.value;
   if (key === null) {
     return err(
       "no-api-key",

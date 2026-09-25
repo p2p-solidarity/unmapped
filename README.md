@@ -51,10 +51,13 @@ bun run check   # typecheck + biome + 600-line limit + vitest
 
 Engineering rules, layout and module contracts: [`CLAUDE.md`](CLAUDE.md).
 
-## Status
+## Milestones
 
-Phase 1 (this repo): genesis covenant → generated floor → explore → NPC dialogue with world
-mutation → wish altar → descend → dotfile saves → encrypted seed export/restore → shared
-scene/karma room over WebRTC with public signaling.
-Phase 2 (not started): combat, Uniswap v4 hook contracts for seed trading, Steam Workshop, R2
-distribution of `.seed` packs.
+The repository history groups the working product into 20 feature commits. See
+[the commit index](docs/milestones.md) for each delivered slice, its evidence, and the
+remaining verification gaps.
+
+The current app has a four-step Create flow, a playable open land in HD-2D and 16-bit looks,
+chapter gates, places, real-time combat, model selection, cartridges and saves, and optional ENSv2
+cartridge names. The [integration record](docs/e2e/milestone-integration/result.md) lists the
+flows exercised in the app and the features still awaiting end-to-end verification.

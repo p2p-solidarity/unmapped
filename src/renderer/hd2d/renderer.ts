@@ -16,6 +16,7 @@ import {
   chunksAround,
   collectContent,
   compassTarget,
+  foeBoards,
   type LandSource,
   standHeight,
   tileAtFor,
@@ -114,6 +115,8 @@ export function createHd2dRenderer(
   scene.add(standing);
   const far = createFarLayer(scene);
   const boards = new BoardLayer(standing, textures);
+  // Hostiles walk: their boards are set every frame, apart from the cached standing content.
+  const foes = new BoardLayer(standing, textures);
   const blocks = new BlockLayer(
     standing,
     new THREE.MeshStandardMaterial({ color: HD2D_PALETTE.fallbackBlock, roughness: 0.9 }),
@@ -188,12 +191,10 @@ export function createHd2dRenderer(
   };
 
   const syncContent = (frame: Hd2dFrame, coords: ReturnType<typeof chunksAround>): void => {
-    // Foes move nowhere between frames; only who is still standing changes what is drawn.
-    const foes =
-      frame.foes === null || frame.foes === undefined
-        ? "off"
-        : frame.foes.map((foe) => foe.id).join(",");
-    const key = `${coords.map(chunkKey).join("|")}#${foes}`;
+    // Whether a fight is on changes what stands (a fight holds the authored monsters); the foes
+    // themselves are drawn every frame on their own layer, because they walk.
+    const fighting = frame.foes === null || frame.foes === undefined ? "off" : "on";
+    const key = `${coords.map(chunkKey).join("|")}#${fighting}`;
     const refs = [
       frame.origin,
       frame.chunks,
@@ -242,6 +243,7 @@ export function createHd2dRenderer(
       const coords = chunksAround(frame.focus.x, frame.focus.z, REACH);
       syncGround(frame, coords);
       syncContent(frame, coords);
+      foes.set(foeBoards(frame));
       far.sync(frame);
 
       // The camera eases after the focus so walking reads as a glide, not a locked grid.
@@ -333,6 +335,7 @@ export function createHd2dRenderer(
       for (const chunk of ground.values()) chunk.dispose();
       ground.clear();
       boards.dispose();
+      foes.dispose();
       blocks.dispose();
       walls.dispose();
       far.dispose();

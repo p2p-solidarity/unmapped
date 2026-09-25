@@ -211,7 +211,7 @@ export interface AppliedReply {
 /**
  * What a reply is answering. A first generation writes whole files; an edit may use either form;
  * a repair must patch with SEARCH/REPLACE, because a whole-file rewrite to fix one line is the most
- * expensive thing a model does here (docs/experiments/interactive-works-acceptance-2026-09-23.md).
+ * expensive thing a model does here (docs/experiments/interactive-works-acceptance.md).
  */
 export type WorkReplyMode = "generate" | "edit" | "repair";
 

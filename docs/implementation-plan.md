@@ -210,7 +210,7 @@ scene starts, and input remains locked under dialogue/editor overlays.
 The directory and manifest formats leave seams for these features, but Phase A does not pretend
 they already work.
 
-## Status — 2026-09-16
+## Milestone: cartridge runtime baseline
 
 Slices 1–7 are implemented and reviewed (Standards + Spec, four independent passes). Verified by
 `bun run check` (64 files, 526 tests), `bun run build`, and in-app smoke of Join, Cartridges,

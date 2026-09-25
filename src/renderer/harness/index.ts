@@ -1,5 +1,4 @@
 export { createEffectProvider } from "./effectProvider";
-export { ModsPanel } from "./ModsPanel";
 export { persistInventory, persistMeta, persistScene } from "./persist";
 export {
   applySceneEffect,

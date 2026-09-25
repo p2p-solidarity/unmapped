@@ -33,7 +33,7 @@ read by the main process; `.env` keys are also read in main as a fallback.
   only restates it, and it breaks on every refactor.
 - **E2E is the preferred and normally the only testing mechanism.** Use it to verify every complex
   feature: drive the real app (see "Verify before claiming done"). Every E2E run ends with a
-  verifiable, repeatable artifact in `docs/e2e/<YYYY-MM-DD>-<flow>/`: `run.json` (the exact
+  verifiable, repeatable artifact in `docs/e2e/milestone-<flow>/`: `run.json` (the exact
   `scripts/cdp-drive.ts` actions, the env, and the model), `result.md` (what you checked, the
   outputs you observed, the numbers from dev logs), and the screenshots it took. Someone else can
   replay `run.json` against a throwaway userData and compare.
@@ -332,11 +332,13 @@ export function TitleDiorama({ seedText }): JSX.Element;   // App's MenuBackdrop
   `leavePlace` (far end = crossed) and the land resumes at the entrance via `landReturn`.
 
 ### Create a game (`app/create/`, `narrative/newWorld.ts`)
-- Three steps: the world and how it is played (`PlayStyle`: fights none | gun | blade, the weapon's
-  name in the player's words) → `planWorld` (bible + story plan; the bible is told the play style so
-  it never forbids the monsters the game will field) → the player edits the chapters (ids and gates
-  re-derived by `episodePlaces`) → `buildWorld` (origin scene, `openLandCartridge` with the play
-  style as capability requirements, publish, new save). Only building publishes.
+- Four steps: idea (world, optional story material, language, `PlayStyle`: fights none | gun | blade)
+  → world (six editable bible cards, each independently rewritable) → story (3–8 editable chapters,
+  even without player story material; rewrite, insert, move, remove, lock, or revise the unlocked
+  chapters; ids and gates re-derived by `episodePlaces`) → `buildWorld` (origin scene,
+  `openLandCartridge` with play style as capability requirements, publish, new save). Only building
+  publishes. Autosaved drafts live in `<userData>/workspaces/create.<draftId>/draft.json`, not in
+  published cartridges. Changing the idea marks dependent world/story content stale.
 - The legacy six-step Create (scene bases, Genre Matrix, capability report, its authoring
   workspaces and IPC) was deleted; do not bring it back. Offer no option the land cannot play
   (companions exist in the rules but are not drawn or followed on the land yet).

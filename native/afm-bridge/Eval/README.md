@@ -18,11 +18,11 @@ scene, run:
 bun --tsconfig-override tsconfig.test.json native/afm-bridge/Eval/provider-run.ts
 ```
 
-The 2026-09-21 integration run reported `apple-local` available with a 4,096-token context,
+The integration milestone reported `apple-local` available with a 4,096-token context,
 completed `events → layout`, and produced a valid artifact with three causal events, no validation
 issues, two reachable required targets, and zero overlaps.
 
-## Measured run — 2026-09-21
+## Measured integration run
 
 Target: Apple M2 Pro (16 GB), macOS 27.0 `26A428`, Xcode 27.0 `27A266a`, Swift 6.4.
 On-device availability and guided generation both reported available.

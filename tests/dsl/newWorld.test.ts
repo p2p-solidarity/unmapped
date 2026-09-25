@@ -1,7 +1,14 @@
-import { originIssues, parseScene } from "@dsl/index";
+import { ORIGIN_EXAMPLE, originIssues, parseScene } from "@dsl/index";
 import { describe, expect, it } from "vitest";
 
 describe("new world", () => {
+  // A prompt example that does not parse, or is itself unfit, teaches the model to fail.
+  it("shows the model an origin example that parses and is fit to start in", () => {
+    const example = parseScene(ORIGIN_EXAMPLE);
+    if (!example.ok) throw new Error(example.error.message);
+    expect(originIssues(example.value)).toEqual([]);
+  });
+
   it("sends back an origin that walls in its edges or brings monsters", () => {
     const walled = parseScene(`root = Scene("Edge", "countryside", [ground, sun1, wall1, ren, boar])
 ground = Floor(14, 14, "grass")

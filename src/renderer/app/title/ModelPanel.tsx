@@ -263,14 +263,19 @@ export function ModelPanel(): JSX.Element {
       ) : null}
       {provider !== null ? (
         <>
-          <Text variant="caption" tone={keyState?.set ? "success" : "dim"}>
+          <Text
+            variant="caption"
+            tone={keyState?.source === "unreadable" ? "danger" : keyState?.set ? "success" : "dim"}
+          >
             {keyState === null
               ? t("model.checking")
               : keyState.source === "saved"
                 ? t("model.keySaved")
                 : keyState.source === "env"
                   ? t("model.keyEnv")
-                  : t("model.keyMissing")}
+                  : keyState.source === "unreadable"
+                    ? t("model.keyUnreadable")
+                    : t("model.keyMissing")}
           </Text>
           {keyState?.boundTo ? (
             <Text variant="caption" tone="dim">
@@ -291,7 +296,7 @@ export function ModelPanel(): JSX.Element {
             <Button disabled={busy || secret.length === 0} onClick={() => void saveKey()}>
               {t("model.saveKey")}
             </Button>
-            {keyState?.source === "saved" ? (
+            {keyState?.source === "saved" || keyState?.source === "unreadable" ? (
               <Button variant="ghost" disabled={busy} onClick={() => void clearKey()}>
                 {t("model.clearKey")}
               </Button>

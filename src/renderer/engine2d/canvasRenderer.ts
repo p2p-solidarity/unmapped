@@ -22,7 +22,7 @@ import { placeMarkers } from "./placeLayer";
 import { drawStoryCompass, type StoryMarker, type StoryView, storyMarkers } from "./storyLayer";
 import type { Foe, ShotTrace } from "./useLandCombat";
 
-export type SpriteAtlases = Record<AtlasId, HTMLImageElement>;
+export type SpriteAtlases = Record<AtlasId, HTMLImageElement | HTMLCanvasElement>;
 
 export interface Player2D {
   x: number;
@@ -327,8 +327,8 @@ function pushProp(
         return;
       }
       const scale = Math.max(0.65, Math.min(prop.scale, 2.2));
-      const width = transform.tileSize * (asset.sw / 16) * scale;
-      const height = transform.tileSize * (asset.sh / 16) * scale;
+      const width = transform.tileSize * (asset.widthTiles ?? asset.sw / 16) * scale;
+      const height = width * (asset.sh / asset.sw);
       drawSprite(
         frame.ctx,
         frame.atlases,

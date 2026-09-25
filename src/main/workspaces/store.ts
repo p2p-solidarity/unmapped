@@ -15,6 +15,7 @@ import { err, fail, ok, type Result, toError } from "@shared/result";
 import { manifestCore, sha256 } from "../cartridges/integrity";
 import { isCartridgeId, isCartridgeVersion, isSceneId } from "../cartridges/paths";
 import { publishCartridgeRevision } from "../cartridges/store";
+import { isCreateDraftDir } from "./createDrafts";
 import { isWorkspaceId, workspaceDir, workspaceScenePath } from "./paths";
 import { workspaceMetaSchema } from "./schemas";
 import { validateWorkspace } from "./validation";
@@ -332,7 +333,9 @@ export async function listWorkspaces(workspacesDir: string): Promise<Result<Work
     const metas: WorkspaceMeta[] = [];
     const entries = await readdir(workspacesDir, { withFileTypes: true });
     for (const entry of entries) {
-      if (!entry.isDirectory() || !isWorkspaceId(entry.name)) continue;
+      // Create a game keeps its drafts here too (createDrafts.ts); they are not Remix workspaces.
+      if (!entry.isDirectory() || isCreateDraftDir(entry.name) || !isWorkspaceId(entry.name))
+        continue;
       const workspace = await readWorkspace(workspacesDir, entry.name);
       if (!workspace.ok) return workspace;
       metas.push(workspace.value.meta);

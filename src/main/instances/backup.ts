@@ -78,15 +78,28 @@ export async function packInstanceBackup(
     return err(
       "backup-too-large",
       `This save is ${total} bytes in ${Object.keys(files).length} files, more than one backup holds.`,
-      "Copy the instance folder itself to keep it; a .spire-backup cannot hold this much land.",
+      TOO_LARGE_TO_EXPORT,
     );
   }
+  let packed: Uint8Array;
   try {
-    return ok(zipSync(files, { level: ZIP_LEVEL }));
+    packed = zipSync(files, { level: ZIP_LEVEL });
   } catch (error) {
     return fail(toError(error, "backup-pack-failed"));
   }
+  // Export refuses exactly what import refuses — the same reader and the same per-file, chunk and
+  // dialogue limits — so a player is never handed a backup that can never be restored.
+  const readable = readBackupFiles(packed);
+  if (!readable.ok) {
+    return readable.error.code === "backup-too-large"
+      ? err("backup-too-large", readable.error.message, TOO_LARGE_TO_EXPORT)
+      : readable;
+  }
+  return ok(packed);
 }
+
+const TOO_LARGE_TO_EXPORT =
+  "Copy the instance folder itself to keep it; a .spire-backup cannot hold this much land.";
 
 function parseJson(text: string, file: string, code: string): Result<unknown> {
   try {
