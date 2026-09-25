@@ -1,0 +1,517 @@
+{
+ "env": {
+  "userData": "fresh empty temporary directory via AETHER_TEST_USER_DATA (interactive run: $TMPDIR/ud-p2-pad-b; this list replayed whole: $TMPDIR/ud-p2-pad-b2, and after the last fix $TMPDIR/ud-p2-pad-b3)",
+  "launch": "mkdir -p \"$TMPDIR/ud-p2-pad-b3\" && AETHER_TEST_USER_DATA=\"$TMPDIR/ud-p2-pad-b3\" bun run dev --remoteDebuggingPort 9333",
+  "debugPort": 9333,
+  "locale": "zh-TW (system default)",
+  "build": "main at 7a04adf + the uncommitted rev 6 phase-2 working tree, with this run's fixes (see result.md)",
+  "window": "1440 × 868, in the background (backgroundThrottling is off under AETHER_TEST_USER_DATA)",
+  "input": "Gamepad only. Before the first {wait}: Emulation.setFocusEmulationEnabled (a background window has no document focus, so :focus — and with it the pad's focus ring — never matches; a player's window has focus) and one eval that defines read-only helpers on window.__e2e (positions, the chapter's people and finds, a standing spot next to the next one). After it: only pad, wait, eval (read-only: no clicks, no focus(), no store writes) and shot. {pad:{toward}} leans the left stick toward a point read from those helpers, the way a player walks to what they see; {repeat} loops until the chapter is cleared.",
+  "note": "The seed is rolled at random by New game, so the land differs per replay; the walk uses the chunk-centre ford rows (always walkable) and the chapter's people are found through the helpers, so the list replays on any seed."
+ },
+ "model": "openai · gpt-5.4-mini (Settings → Model default on a fresh userData: Cloud API, key from .env)",
+ "actions": [
+  {
+   "cdp": {
+    "method": "Emulation.setFocusEmulationEnabled",
+    "params": {
+     "enabled": true
+    }
+   }
+  },
+  {
+   "eval": "(() => {\n  const e2e = (window.__e2e = window.__e2e || {});\n  // Shared modules are served under /@fs/<absolute path>; read that URL from a renderer module\n  // that imports them, so the helper runs on any checkout.\n  e2e.shared = async (name) => {\n    e2e.urls = e2e.urls || {};\n    if (!e2e.urls[name]) {\n      const code = await (await fetch('/engine2d/LandView2D.tsx')).text();\n      const found = code.match(new RegExp('\"(/@fs/[^\"]*/src/shared/' + name + '\\\\.ts[^\"]*)\"'));\n      e2e.urls[name] = found ? found[1] : null;\n    }\n    return import(e2e.urls[name]);\n  };\n  e2e.pos = async () => {\n    const p = (await import('/engine/playerProbe.ts')).samplePlayer();\n    return p === null ? null : [Math.round(p.x * 10) / 10, Math.round(p.z * 10) / 10];\n  };\n  // What a player sees of the current chapter: its gate, its people and treasures (world tiles).\n  e2e.chapter = async () => {\n    const S = await import('/state/index.ts');\n    const L = await import('/engine2d/chapterLayer.ts');\n    const M = await import('/engine2d/landModel.ts');\n    const story = await e2e.shared('story');\n    const land = await e2e.shared('land');\n    const session = S.useSessionStore.getState();\n    const world = S.useWorldStore.getState();\n    const landState = S.useLandStore.getState();\n    const active = session.activeInstance;\n    if (!active || world.scene.status !== 'ready' || !active.cartridge.story) return null;\n    const progress = landState.progress;\n    const episodes = story.storyEpisodes(active.cartridge.story, progress?.storyMore);\n    const next = story.nextEpisode(episodes, progress?.episodes ?? {});\n    if (!next) return { cleared: true, episodes: progress?.episodes ?? {} };\n    const gate = story.episodeGate(next);\n    const stage = progress?.episodes?.[next.id]?.stage ?? null;\n    const base = { id: next.id, title: next.title, gate: [gate.x, gate.z], written: stage !== null };\n    if (!stage || stage.kind !== 'land') return { ...base, kind: stage?.kind ?? null };\n    const draft = L.readChapter(stage.source);\n    if (!draft) return { ...base, unreadable: true };\n    const seed = land.landSeedOf(active.instance.save);\n    const graph = world.scene.value;\n    const residents = L.residentTiles ? L.residentTiles(landState.chunks) : new Set();\n    const free = (x, z) => !residents.has(x + ',' + z) && M.canStandAt(graph, seed, landState.chunks, x + 0.5, z + 0.5, null);\n    const scene = L.chapterScene(next, stage, draft, free);\n    return {\n      ...base,\n      npcs: scene.npcs.map((n) => ({ id: n.id, name: n.name, at: [n.x + 0.5, n.z + 0.5],\n        met: stage.met.includes(n.id.split(':')[2]) })),\n      treasures: scene.treasures.map((t) => ({ id: t.id, at: [t.x + 0.5, t.z + 0.5],\n        found: stage.found.includes(t.id.split(':')[2]) })),\n      monsters: scene.monsters.length,\n      met: stage.met, found: stage.found,\n    };\n  };\n  // The next thing of the chapter still to do: the nearest unmet person or unopened treasure.\n  e2e.nextTodo = async () => {\n    const c = await e2e.chapter();\n    const at = await e2e.pos();\n    if (!c || !c.npcs || !at) return null;\n    const todo = [...c.npcs.filter((n) => !n.met), ...c.treasures.filter((t) => !t.found)];\n    todo.sort((a, b) => Math.hypot(a.at[0] - at[0], a.at[1] - at[1]) - Math.hypot(b.at[0] - at[0], b.at[1] - at[1]));\n    return todo[0] ?? null;\n  };\n  // Where a player would stand to face it: a free spot next to it from which it, and nothing else\n  // (the gate, a neighbour, a resident of the land), is the nearest thing when A is pressed.\n  e2e.others = async () => {\n    const S = await import('/state/index.ts');\n    const c = await e2e.chapter();\n    // [x, z, reach]: a gate reaches 0.8 tiles further than a person (engine2d/storyLayer).\n    const points = c && c.gate ? [[c.gate[0], c.gate[1], 0.8]] : [];\n    if (c && c.npcs) points.push(...c.npcs.map((n) => [...n.at, 0]), ...c.treasures.filter((t) => !t.found).map((t) => [...t.at, 0]));\n    for (const [key, chunk] of Object.entries(S.useLandStore.getState().chunks)) {\n      if (chunk.status !== 'written') continue;\n      const [cx, cz] = key.split(',').map(Number);\n      for (const n of chunk.scene.npcs) points.push([cx * 32 + n.x + 0.5, cz * 32 + n.z + 0.5, 0]);\n    }\n    return points;\n  };\n  e2e.spot = async () => {\n    const t = await e2e.nextTodo();\n    const at = await e2e.pos();\n    if (!t || !at) return null;\n    const S = await import('/state/index.ts');\n    const M = await import('/engine2d/landModel.ts');\n    const land = await e2e.shared('land');\n    const active = S.useSessionStore.getState().activeInstance;\n    const graph = S.useWorldStore.getState().scene.value;\n    const seed = land.landSeedOf(active.instance.save);\n    const chunks = S.useLandStore.getState().chunks;\n    const others = (await e2e.others()).filter((p) => Math.hypot(p[0] - t.at[0], p[1] - t.at[1]) > 0.01);\n    const spots = [];\n    for (const r of [0.8, 1.2]) {\n      for (let i = 0; i < 16; i += 1) {\n        const a = (i / 16) * Math.PI * 2;\n        const p = [t.at[0] + Math.cos(a) * r, t.at[1] + Math.sin(a) * r];\n        if (!M.canStandAt(graph, seed, chunks, p[0], p[1], null)) continue;\n        const nearestOther = Math.min(...others.map((o) => Math.hypot(o[0] - p[0], o[1] - p[1]) - o[2]));\n        if (nearestOther <= r + 0.3) continue;\n        spots.push(p);\n      }\n    }\n    spots.sort((a, b) => Math.hypot(a[0] - at[0], a[1] - at[1]) - Math.hypot(b[0] - at[0], b[1] - at[1]));\n    return spots[0] ?? t.at;\n  };\n  e2e.state = async () => {\n    const S = await import('/state/index.ts');\n    const s = S.useSessionStore.getState();\n    const en = S.useEngineStore.getState();\n    const layer = [...document.querySelectorAll('[data-layer], [role=dialog]')].filter((l) => l.getClientRects().length > 0).map((l) => l.getAttribute('data-layer') ?? l.getAttribute('role'));\n    return {\n      screen: s.screen, input: document.documentElement.dataset.input ?? null,\n      pos: await e2e.pos(), chunk: en.chunk, nearby: en.nearby && { kind: en.nearby.kind, id: en.nearby.id, label: en.nearby.label },\n      locked: en.inputLocked, dialogue: s.dialogue?.status ?? null, speaker: s.dialogueSpeaker,\n      episodeOpen: s.episodeOpen, layers: layer,\n      focus: document.activeElement && document.activeElement !== document.body ? (document.activeElement.innerText || document.activeElement.getAttribute('aria-label') || document.activeElement.tagName).slice(0, 60) : null,\n    };\n  };\n  return Object.keys(e2e);\n})()\n"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(async()=>{window.__e2e.t0=Date.now(); return {input: document.documentElement.dataset.input ?? null, menu:[...document.querySelectorAll('button')].filter(b=>b.offsetParent).slice(0,4).map(b=>({t:b.innerText.trim(),disabled:b.disabled})), focus: document.activeElement?.innerText, keys: [...document.querySelectorAll('.ui-key')].filter(k=>k.offsetParent).map(k=>k.innerText+(k.dataset.pad==='true'?'(pad)':''))}})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p2-gamepad/b-00-title.jpg"
+  },
+  {
+   "pad": {
+    "axes": [
+     0,
+     0.4,
+     0,
+     0
+    ],
+    "ms": 500
+   }
+  },
+  {
+   "eval": "({input: document.documentElement.dataset.input, focus: document.activeElement?.innerText, keys: [...document.querySelectorAll('.ui-key')].filter(k=>k.offsetParent).map(k=>k.innerText+(k.dataset.pad==='true'?'(pad)':''))})"
+  },
+  {
+   "pad": {
+    "axes": [
+     0,
+     1,
+     0,
+     0
+    ],
+    "ms": 150
+   }
+  },
+  {
+   "eval": "document.activeElement?.innerText"
+  },
+  {
+   "pad": {
+    "buttons": [
+     13
+    ]
+   }
+  },
+  {
+   "eval": "document.activeElement?.innerText"
+  },
+  {
+   "pad": {
+    "buttons": [
+     0
+    ]
+   }
+  },
+  {
+   "wait": 600
+  },
+  {
+   "eval": "(()=>{const d=document.querySelector('[role=dialog]'); const menu=[...document.querySelectorAll('button')].find(b=>b.innerText.trim()==='世界'); return {dialog: d?.getAttribute('aria-label') ?? null, focusInDialog: d?.contains(document.activeElement) ?? false, menuInert: menu?.closest('[inert]')!==null, ring: (()=>{const a=document.activeElement; if(!a||a===document.body) return null; const cs=getComputedStyle(a); return {text:(a.innerText||'').slice(0,40), outline:cs.outlineStyle+' '+cs.outlineWidth, shadow:cs.boxShadow}})()}})()"
+  },
+  {
+   "pad": {
+    "buttons": [
+     13
+    ]
+   }
+  },
+  {
+   "eval": "(()=>{const a=document.activeElement; if(!a||a===document.body) return null; const cs=getComputedStyle(a); return {text:(a.innerText||'').slice(0,40), outline:cs.outlineStyle+' '+cs.outlineWidth, shadow:cs.boxShadow}})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p2-gamepad/b-01-settings-dialog-pad.jpg"
+  },
+  {
+   "pad": {
+    "buttons": [
+     1
+    ]
+   }
+  },
+  {
+   "wait": 500
+  },
+  {
+   "eval": "({dialog: document.querySelector('[role=dialog]') !== null, focus: document.activeElement?.innerText})"
+  },
+  {
+   "pad": {
+    "buttons": [
+     12
+    ]
+   }
+  },
+  {
+   "pad": {
+    "buttons": [
+     12
+    ]
+   }
+  },
+  {
+   "eval": "document.activeElement?.innerText"
+  },
+  {
+   "pad": {
+    "buttons": [
+     0
+    ]
+   }
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "({nav:[...document.querySelectorAll('.library__nav button')].map(b=>b.innerText.replace(/\\n/g,' ')), focus: document.activeElement?.innerText, ring: (()=>{const a=document.activeElement; if(!a||a===document.body) return null; const cs=getComputedStyle(a); return {text:(a.innerText||'').slice(0,40), outline:cs.outlineStyle+' '+cs.outlineWidth, shadow:cs.boxShadow}})(), keys: [...document.querySelectorAll('.ui-key')].filter(k=>k.offsetParent).map(k=>k.innerText+(k.dataset.pad==='true'?'(pad)':''))})"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p2-gamepad/b-02-library-pad.jpg"
+  },
+  {
+   "pad": {
+    "buttons": [
+     0
+    ]
+   }
+  },
+  {
+   "eval": "(async()=>{for(let i=0;i<60;i++){if(document.activeElement?.innerText?.trim()==='開始') return {focus:'開始', ms: Date.now()-window.__e2e.t0}; await new Promise(r=>setTimeout(r,200));} return {focus: document.activeElement?.innerText ?? null}})()"
+  },
+  {
+   "eval": "(()=>{const a=document.activeElement; if(!a||a===document.body) return null; const cs=getComputedStyle(a); return {text:(a.innerText||'').slice(0,40), outline:cs.outlineStyle+' '+cs.outlineWidth, shadow:cs.boxShadow}})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p2-gamepad/b-03-new-game-pad.jpg"
+  },
+  {
+   "pad": {
+    "buttons": [
+     0
+    ]
+   }
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); for(let i=0;i<120;i++){const s=S.useSessionStore.getState(); if(s.screen==='play'&&s.activeInstance){window.__e2e.tPlay=Date.now(); return {ms: Date.now()-window.__e2e.t0, cartridge: s.activeInstance.instance.save.cartridge, seed: s.activeInstance.instance.save.seed}} await new Promise(r=>setTimeout(r,250));} return S.useSessionStore.getState().screen})()"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(async()=>({state: await window.__e2e.state(), keys: [...document.querySelectorAll('.ui-key')].filter(k=>k.offsetParent).map(k=>k.innerText+(k.dataset.pad==='true'?'(pad)':'')), prompt: [...document.querySelectorAll('kbd')].map(k=>k.parentElement?.innerText.replace(/\\n/g,' ')).slice(0,3), hint: [...document.querySelectorAll('div,span')].find(e=>e.children.length===0 && /移動/.test(e.innerText))?.innerText ?? null}))()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p2-gamepad/b-04-play-pad.jpg"
+  },
+  {
+   "eval": "window.__e2e.pos()"
+  },
+  {
+   "pad": {
+    "axes": [
+     0.25,
+     0,
+     0,
+     0
+    ],
+    "ms": 1000
+   }
+  },
+  {
+   "eval": "window.__e2e.pos()"
+  },
+  {
+   "pad": {
+    "axes": [
+     -0.2,
+     0.2,
+     0,
+     0
+    ],
+    "ms": 1000
+   }
+  },
+  {
+   "eval": "window.__e2e.pos()"
+  },
+  {
+   "pad": {
+    "toward": "[8.5,16.5]",
+    "within": 0.4,
+    "timeoutMs": 8000
+   }
+  },
+  {
+   "eval": "window.__e2e.pos()"
+  },
+  {
+   "pad": {
+    "axes": [
+     1,
+     0,
+     0,
+     0
+    ],
+    "ms": 1000
+   }
+  },
+  {
+   "eval": "window.__e2e.pos()"
+  },
+  {
+   "pad": {
+    "buttons": [
+     5
+    ],
+    "axes": [
+     1,
+     0,
+     0,
+     0
+    ],
+    "ms": 1000
+   }
+  },
+  {
+   "eval": "window.__e2e.pos()"
+  },
+  {
+   "pad": {
+    "toward": "[80.5,16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 40000
+   }
+  },
+  {
+   "eval": "(async()=>({ms: Date.now()-window.__e2e.t0, state: await window.__e2e.state(), hud: [...document.querySelectorAll('div')].find(e=>/^大地/.test(e.innerText) && e.innerText.length<20)?.innerText ?? null}))()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p2-gamepad/b-05-at-gate.jpg"
+  },
+  {
+   "eval": "(async()=>{for(let i=0;i<360;i++){const c=await window.__e2e.chapter(); if(c&&c.written){return {ms: Date.now()-window.__e2e.t0, npcs: c.npcs?.map(n=>n.name), treasures: c.treasures?.length, monsters: c.monsters};} const card=[...document.querySelectorAll('div')].find(e=>/撰寫下一章|寫作失敗|失敗/.test(e.innerText) && e.innerText.length<300); if(card && /失敗|錯誤|error/i.test(card.innerText)) return {failed: card.innerText}; await new Promise(r=>setTimeout(r,500));} return 'not written after 180 s'})()"
+  },
+  {
+   "pad": {
+    "toward": "[80.5,16.5]",
+    "within": 0.6,
+    "timeoutMs": 8000
+   }
+  },
+  {
+   "eval": "window.__e2e.state().then(s=>({pos:s.pos, nearby:s.nearby}))"
+  },
+  {
+   "pad": {
+    "buttons": [
+     0
+    ]
+   }
+  },
+  {
+   "wait": 500
+  },
+  {
+   "eval": "(async()=>({state: await window.__e2e.state(), card: (()=>{const l=document.querySelector('[data-layer=chapter]'); return l ? l.innerText.slice(-160) : null})(), ring: (()=>{const a=document.activeElement; if(!a||a===document.body) return null; const cs=getComputedStyle(a); return {text:(a.innerText||'').slice(0,40), outline:cs.outlineStyle+' '+cs.outlineWidth, shadow:cs.boxShadow}})()}))()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p2-gamepad/b-06-gate-card.jpg"
+  },
+  {
+   "pad": {
+    "buttons": [
+     1
+    ]
+   }
+  },
+  {
+   "wait": 400
+  },
+  {
+   "eval": "window.__e2e.state().then(s=>({layers:s.layers, episodeOpen:s.episodeOpen, locked:s.locked}))"
+  },
+  {
+   "pad": {
+    "buttons": [
+     0
+    ]
+   }
+  },
+  {
+   "wait": 500
+  },
+  {
+   "eval": "window.__e2e.state().then(s=>({layers:s.layers, focus:s.focus}))"
+  },
+  {
+   "pad": {
+    "buttons": [
+     0
+    ],
+    "ms": 300
+   }
+  },
+  {
+   "wait": 500
+  },
+  {
+   "eval": "window.__e2e.state().then(s=>({layers:s.layers, episodeOpen:s.episodeOpen, locked:s.locked}))"
+  },
+  {
+   "eval": "window.__e2e.nextTodo()"
+  },
+  {
+   "pad": {
+    "toward": "window.__e2e.spot()",
+    "within": 0.3,
+    "timeoutMs": 12000
+   }
+  },
+  {
+   "eval": "window.__e2e.state().then(s=>s.nearby)"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p2-gamepad/b-07-facing-person.jpg"
+  },
+  {
+   "pad": {
+    "buttons": [
+     0
+    ]
+   }
+  },
+  {
+   "wait": 600
+  },
+  {
+   "eval": "(async()=>({state: await window.__e2e.state(), dialogue: (()=>{const l=document.querySelector('[data-layer=dialogue]'); return l ? {text:l.innerText.slice(0,400), choices:[...l.querySelectorAll('button')].map(b=>b.innerText.replace(/\\n/g,' '))} : null})(), ring: (()=>{const a=document.activeElement; if(!a||a===document.body) return null; const cs=getComputedStyle(a); return {text:(a.innerText||'').slice(0,40), outline:cs.outlineStyle+' '+cs.outlineWidth, shadow:cs.boxShadow}})()}))()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p2-gamepad/b-08-dialogue-focus.jpg"
+  },
+  {
+   "pad": {
+    "buttons": [
+     13
+    ]
+   }
+  },
+  {
+   "eval": "(()=>{const a=document.activeElement; if(!a||a===document.body) return null; const cs=getComputedStyle(a); return {text:(a.innerText||'').slice(0,40), outline:cs.outlineStyle+' '+cs.outlineWidth, shadow:cs.boxShadow}})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p2-gamepad/b-09-dialogue-choice-2.jpg"
+  },
+  {
+   "pad": {
+    "buttons": [
+     0
+    ],
+    "ms": 300
+   }
+  },
+  {
+   "wait": 400
+  },
+  {
+   "eval": "window.__e2e.state().then(s=>({dialogue:s.dialogue, layers:s.layers, locked:s.locked, nearby:s.nearby}))"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "window.__e2e.state().then(s=>({dialogue:s.dialogue, layers:s.layers}))"
+  },
+  {
+   "repeat": {
+    "times": 10,
+    "until": "(async()=>{const S=await import('/state/index.ts'); return S.useLandStore.getState().progress?.episodes?.e1?.cleared===true})()",
+    "actions": [
+     {
+      "eval": "window.__e2e.nextTodo()"
+     },
+     {
+      "pad": {
+       "toward": "window.__e2e.spot()",
+       "within": 0.3,
+       "timeoutMs": 15000
+      }
+     },
+     {
+      "eval": "window.__e2e.state().then(s=>s.nearby)"
+     },
+     {
+      "repeat": {
+       "times": 1,
+       "until": "(async()=>{const s=await window.__e2e.state(); const t=await window.__e2e.nextTodo(); return !t || !s.nearby || s.nearby.id!==t.id})()",
+       "actions": [
+        {
+         "pad": {
+          "buttons": [
+           0
+          ]
+         }
+        }
+       ]
+      }
+     },
+     {
+      "wait": 600
+     },
+     {
+      "eval": "window.__e2e.state().then(s=>({dialogue:s.dialogue, speaker:s.speaker, focus:s.focus}))"
+     },
+     {
+      "repeat": {
+       "times": 1,
+       "until": "(async()=>{const S=await import('/state/index.ts'); return S.useSessionStore.getState().dialogue===null})()",
+       "actions": [
+        {
+         "pad": {
+          "buttons": [
+           0
+          ],
+          "ms": 200
+         }
+        },
+        {
+         "wait": 600
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); const p=S.useLandStore.getState().progress; const e=p.episodes.e1; return {ms: Date.now()-window.__e2e.t0, cleared:e.cleared, summary:e.summary, met:e.stage?.met, found:e.stage?.found, carry:p.storyCarry, hudStory:[...document.querySelectorAll('div')].find(d=>/^故事 \\d/.test(d.innerText)&&d.innerText.length<80)?.innerText ?? null, lastChoice:[...document.querySelectorAll('div,span')].find(d=>d.children.length===0&&/^上次選擇/.test(d.innerText))?.innerText ?? null}})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p2-gamepad/b-10-chapter-cleared.jpg"
+  },
+  {
+   "pad": {
+    "buttons": [
+     3
+    ]
+   }
+  },
+  {
+   "wait": 500
+  },
+  {
+   "eval": "window.__e2e.state().then(s=>({layers:s.layers, locked:s.locked, focus:s.focus}))"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p2-gamepad/b-11-notes-y.jpg"
+  },
+  {
+   "pad": {
+    "buttons": [
+     1
+    ]
+   }
+  },
+  {
+   "wait": 400
+  },
+  {
+   "eval": "window.__e2e.state().then(s=>({layers:s.layers, locked:s.locked}))"
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); const w=S.useWorldStore.getState(); const a=S.useSessionStore.getState().activeInstance; return {version: a.instance.save.cartridge.version, combat: w.gameplayRules?.combat ?? null, story: a.cartridge.story?.episodes.map(e=>e.id+':'+e.kind+'@'+e.cx+','+e.cz)}})()"
+  },
+  {
+   "pad": {
+    "buttons": [
+     9
+    ]
+   }
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); for(let i=0;i<40;i++){if(S.useSessionStore.getState().screen==='worlds') break; await new Promise(r=>setTimeout(r,250));} await new Promise(r=>setTimeout(r,800)); return {ms: Date.now()-window.__e2e.t0, screen:S.useSessionStore.getState().screen, menu:[...document.querySelectorAll('button')].filter(b=>b.offsetParent).slice(0,4).map(b=>({t:b.innerText.trim(),disabled:b.disabled})), focus: document.activeElement?.innerText, keys: [...document.querySelectorAll('.ui-key')].filter(k=>k.offsetParent).map(k=>k.innerText+(k.dataset.pad==='true'?'(pad)':''))}})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p2-gamepad/b-12-title-after-start.jpg"
+  },
+  {
+   "eval": "window.seed.instances.list().then(r=>r.ok?r.value.map(m=>({name:m.name, cartridge:m.cartridge.cartridgeId+'@'+m.cartridge.version})):r)"
+  }
+ ]
+}

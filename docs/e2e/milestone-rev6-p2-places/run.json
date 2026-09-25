@@ -1,0 +1,634 @@
+{
+ "env": {
+  "userData": "fresh empty temporary directory via AETHER_TEST_USER_DATA (interactive run: $TMPDIR/ud-p2-places; this list replayed whole: $TMPDIR/ud-p2-places-replay)",
+  "launch": "mkdir -p \"$TMPDIR/ud-p2-places-replay\" && AETHER_TEST_USER_DATA=\"$TMPDIR/ud-p2-places-replay\" bun run dev --remoteDebuggingPort 9333",
+  "debugPort": 9333,
+  "locale": "zh-TW (system default)",
+  "build": "main at 7a04adf (was ca6394b before the 2026-09-26 rewrite) + the uncommitted rev 6 phase 2 working tree, with this run's fixes (see result.md)",
+  "window": "1440 x 868, in the background",
+  "injected": "Two writes, both evals: (1) the two places of the interactive run (a side-scroller p1 '青苔石階路' seed 2620891176 and a dungeon p2 '舊礦道' seed 2460322787, the programs and residents' words the model wrote there, stored in the save) are added with useLandStore.addPlace at chunks (1,0) and (0,1) instead of asking the model again, so the places are identical on every replay; (2) chapter e1's stage is set to kind 'side' with p1's program on seed 1234567 (the built-in story has no climb or maze). Everything else is keys (hold), the virtual pad's stick for walking the land along the fords (pad.toward), clicks on dialogue choices, and read-only evals: the helpers read the place view's own body refs through React's fiber and route with the app's own gridMaze/gridOpen/sideCourse.",
+  "note": "New game rolls a random land seed, so the walks go along the chunk-centre ford rows and columns (always walkable). Inside the places everything is deterministic from the stored seeds."
+ },
+ "model": "none at interaction time. openai gpt-5.4-mini (Settings -> Model default on a fresh userData, key from .env) writes the built-in world's witnessings and chapter 1 in the background while this runs; no call is made for a place, a talk or a chest.",
+ "actions": [
+  {
+   "eval": "document.body.innerText.includes('世界')"
+  },
+  {
+   "clickText": "世界"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "新遊戲"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "window.__e2e={t0:Date.now()}; true"
+  },
+  {
+   "clickText": "開始"
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); for(let i=0;i<120;i++){const s=S.useSessionStore.getState(); if(s.screen==='play'&&s.activeInstance) return {ms:Date.now()-window.__e2e.t0, cartridge:s.activeInstance.instance.save.cartridge}; await new Promise(r=>setTimeout(r,250));} return null})()"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(() => {\n  const e2e = (window.__e2e = window.__e2e || {});\n  // Read-only: the place view's own body refs, found through React's fiber of the place canvas.\n  e2e.placeCanvas = () => [...document.querySelectorAll('canvas')].find((c) => /側面畫面|俯視畫面|seen from/.test(c.getAttribute('aria-label') || '')) || null;\n  e2e.placeBody = () => {\n    const c = e2e.placeCanvas();\n    if (!c) return null;\n    const k = Object.keys(c).find((key) => key.startsWith('__reactFiber'));\n    let f = c[k];\n    while (f && !(f.type && f.type.name === 'PlaceView2D')) f = f.return;\n    if (!f) return null;\n    let h = f.memoizedState;\n    while (h) {\n      const v = h.memoizedState;\n      if (v && typeof v === 'object' && 'current' in v && v.current && typeof v.current === 'object') {\n        const b = v.current;\n        if ('grounded' in b) return { mode: 'side', x: +b.x.toFixed(3), y: +b.y.toFixed(3), vy: +b.vy.toFixed(2), grounded: b.grounded, facing: b.facing };\n      }\n      h = h.next;\n    }\n    return null;\n  };\n  e2e.gridBody = () => {\n    const c = e2e.placeCanvas();\n    if (!c) return null;\n    const k = Object.keys(c).find((key) => key.startsWith('__reactFiber'));\n    let f = c[k];\n    while (f && !(f.type && f.type.name === 'PlaceView2D')) f = f.return;\n    if (!f) return null;\n    let h = f.memoizedState;\n    while (h) {\n      const v = h.memoizedState;\n      if (v && typeof v === 'object' && 'current' in v && v.current && typeof v.current === 'object' && 'progress' in v.current && 'from' in v.current) {\n        const b = v.current;\n        return { mode: 'grid', from: b.from, to: b.to, facing: b.facing, moving: b.moving, x: b.to.x + 0.5, z: b.to.z + 0.5 };\n      }\n      h = h.next;\n    }\n    return null;\n  };\n  e2e.place = async () => {\n    const S = await import('/state/index.ts');\n    const s = S.useSessionStore.getState();\n    const en = S.useEngineStore.getState();\n    const p = s.place;\n    if (!p) return null;\n    return {\n      id: p.id, title: p.title, chapter: p.chapter ?? null, kit: p.graph.contract?.kit ?? null,\n      floor: [p.graph.floor.width, p.graph.floor.depth], goalExit: p.goalExit,\n      exits: p.graph.exits.map((e) => ({ x: e.x, z: e.z, to: e.to })),\n      npcs: p.graph.npcs.map((n) => ({ id: n.id, name: n.name, x: n.x, z: n.z })),\n      treasures: p.graph.treasures.map((t) => ({ id: t.id, x: t.x, z: t.z })),\n      monsters: p.graph.monsters.map((m) => ({ id: m.id, kind: m.kind, x: m.x, z: m.z, level: m.level })),\n      platforms: p.graph.platforms.length, walls: p.graph.walls.length,\n      nearby: en.nearby && { kind: en.nearby.kind, id: en.nearby.id, label: en.nearby.label },\n      opened: [...(en.openedTreasures ?? [])], locked: en.inputLocked, camera: en.cameraMode,\n    };\n  };\n  e2e.canvases = () => [...document.querySelectorAll('canvas')].map((c) => ({ label: c.getAttribute('aria-label'), engine: c.dataset.engine ?? null }));\n  e2e.state = async () => {\n    const S = await import('/state/index.ts');\n    const s = S.useSessionStore.getState();\n    const en = S.useEngineStore.getState();\n    const probe = (await import('/engine/playerProbe.ts')).samplePlayer();\n    return {\n      screen: s.screen, place: s.place && s.place.id, landReturn: s.landReturn,\n      pos: probe && [+probe.x.toFixed(2), +probe.z.toFixed(2)], chunk: en.chunk,\n      nearby: en.nearby && { kind: en.nearby.kind, id: en.nearby.id, label: en.nearby.label },\n      locked: en.inputLocked, dialogue: s.dialogue?.status ?? null, speaker: s.dialogueSpeaker,\n      toasts: s.toasts.map((t) => t.text),\n    };\n  };\n  e2e.karma = async () => (await import('/state/index.ts')).useWorldStore.getState().karma.slice(-4).map((k) => ({ action: k.action, choice: k.choice, effect: k.effect, cx: k.cx ?? null, cz: k.cz ?? null }));\n  e2e.places = async () => ((await import('/state/index.ts')).useLandStore.getState().progress?.places ?? []).map((p) => ({ id: p.id, kind: p.kind, title: p.title, cx: p.cx, cz: p.cz, cleared: p.cleared, playId: p.playId ?? null }));\n  e2e.sample = (ms, every) => {\n    e2e.log = [];\n    const t0 = performance.now();\n    const id = setInterval(() => {\n      const b = e2e.placeBody() || e2e.gridBody();\n      e2e.log.push({ t: Math.round(performance.now() - t0), ...b });\n      if (performance.now() - t0 > ms) clearInterval(id);\n    }, every || 16);\n    return true;\n  };\n  e2e.jumpStats = () => {\n    const l = e2e.log || [];\n    const up = l.findIndex((s) => s.y > 0.001);\n    const top = l.reduce((m, s) => (s.y > m.y ? s : m), { y: -1 });\n    const land = l.findIndex((s, i) => i > up && up >= 0 && s.grounded && s.y <= top.y && i > l.indexOf(top));\n    return { samples: l.length, start: up >= 0 ? l[up].t : null, apex: top.y, apexAt: top.t, landedAt: land >= 0 ? l[land].t : null, landedY: land >= 0 ? l[land].y : null, x0: l[0]?.x, x1: l.at(-1)?.x };\n  };\n  // The next key of the shortest open route (the app's own gridMaze/gridOpen) to the tile `goal`,\n  // or null once standing within `near` tiles of it (Manhattan) or when there is no route.\n  e2e.stepKey = async (goal, near) => {\n    const S = await import('/state/index.ts');\n    const M = await import('/engine2d/place/placeMotion.ts');\n    const place = S.useSessionStore.getState().place;\n    const body = e2e.gridBody();\n    if (!place || !body || body.moving) return null;\n    const maze = M.gridMaze(place.graph);\n    const start = [body.to.x, body.to.z];\n    const d0 = Math.abs(start[0] - goal[0]) + Math.abs(start[1] - goal[1]);\n    if (d0 <= (near ?? 0)) return null;\n    const key = (x, z) => x + ',' + z;\n    const prev = new Map([[key(...start), null]]);\n    const queue = [start];\n    const dirs = [[1, 0, 'KeyD'], [-1, 0, 'KeyA'], [0, 1, 'KeyS'], [0, -1, 'KeyW']];\n    let found = null;\n    while (queue.length) {\n      const [x, z] = queue.shift();\n      if (x === goal[0] && z === goal[1]) { found = [x, z]; break; }\n      for (const [dx, dz, code] of dirs) {\n        const nx = x + dx, nz = z + dz;\n        if (prev.has(key(nx, nz))) continue;\n        if (!M.gridOpen(maze, nx, nz) && !(nx === goal[0] && nz === goal[1])) continue;\n        prev.set(key(nx, nz), [x, z, code]);\n        queue.push([nx, nz]);\n      }\n    }\n    if (!found) return null;\n    let at = found, first = null;\n    while (true) { const p = prev.get(key(...at)); if (!p) break; first = p[2]; at = [p[0], p[1]]; }\n    e2e.route = (e2e.route || 0) + 1;\n    return first;\n  };\n  // The keys a player holds to run the course toward x = goal: that way, jumping when a wall\n  // stands just ahead (the app's own sideCourse); null once within `near` of it.\n  e2e.sideKeys = async (goal, near) => {\n    const S = await import('/state/index.ts');\n    const M = await import('/engine2d/place/placeMotion.ts');\n    const place = S.useSessionStore.getState().place;\n    const b = e2e.placeBody();\n    if (!place || !b) return null;\n    if (Math.abs(b.x - goal) <= (near ?? 0.6)) return null;\n    const dir = goal > b.x ? 1 : -1;\n    const course = M.sideCourse(place.graph);\n    const wall = course.blocks.some((k) => (dir > 0 ? k.x0 - b.x : b.x - k.x1) >= -0.05 && (dir > 0 ? k.x0 - b.x : b.x - k.x1) < 1.1 && k.top > b.y + 0.05);\n    const keys = [dir > 0 ? 'KeyD' : 'KeyA'];\n    if (wall && b.grounded) keys.push('Space');\n    return keys;\n  };\n  // Read-only: the live fight as a view draws it (LandView2D's or PlaceView2D's combat ref).\n  e2e.fight = (name) => {\n    for (const c of document.querySelectorAll('canvas')) {\n      const k = Object.keys(c).find((key) => key.startsWith('__reactFiber'));\n      let f = k && c[k];\n      while (f && !(f.type && f.type.name === name)) f = f.return;\n      if (!f) continue;\n      let h = f.memoizedState;\n      while (h) {\n        const v = h.memoizedState;\n        if (v && typeof v === 'object' && 'current' in v && v.current && typeof v.current.foes === 'function') return v.current;\n        h = h.next;\n      }\n    }\n    return null;\n  };\n  e2e.foes = (name) => { const f = e2e.fight(name || 'LandView2D'); const list = f && f.foes(); return list && list.map((o) => ({ id: o.id, kind: o.kind, x: +o.x.toFixed(2), z: +o.z.toFixed(2), hp: o.hp, lv: o.level })); };\n  e2e.combat = async () => {\n    const S = await import('/state/index.ts');\n    const E = S.useEncounterStore.getState();\n    const R = S.useRunStore.getState();\n    const you = E.combatants.find((o) => o.side !== 'hostile');\n    return { you: you && { hp: you.hp, maxHp: you.maxHp }, weapon: E.weapon && E.weapon.name, turn: E.turn, paused: E.paused, hostiles: E.combatants.filter((o) => o.side === 'hostile').length, kills: R.kills, score: R.score, outcome: R.outcome };\n  };\n  // Samples HP, position and the foes near the player every `every` ms for `ms` (read-only).\n  e2e.watch = (ms, every) => {\n    e2e.wlog = [];\n    const t0 = performance.now();\n    const id = setInterval(async () => {\n      const S = await import('/state/index.ts');\n      const you = S.useEncounterStore.getState().combatants.find((o) => o.side !== 'hostile');\n      const p = (await import('/engine/playerProbe.ts')).samplePlayer();\n      const foes = e2e.foes() || [];\n      const near = foes.filter((f) => p && Math.hypot(f.x - p.x, f.z - p.z) < 9);\n      const inHome = foes.filter((f) => f.x >= 0 && f.x < 32 && f.z >= 0 && f.z < 32);\n      e2e.wlog.push({ t: Math.round(performance.now() - t0), hp: you && you.hp, at: p && [+p.x.toFixed(2), +p.z.toFixed(2)], near: near.map((f) => [f.id, f.x, f.z, +Math.hypot(f.x - p.x, f.z - p.z).toFixed(2)]), inHome: inHome.map((f) => f.id) });\n      if (performance.now() - t0 > ms) clearInterval(id);\n    }, every || 250);\n    return true;\n  };\n  e2e.watchSummary = () => {\n    const l = e2e.wlog || [];\n    const hps = l.map((s) => s.hp);\n    const minD = {};\n    for (const s of l) for (const [id, , , d] of s.near) minD[id] = Math.min(minD[id] ?? 99, d);\n    return { samples: l.length, span: l.length ? l.at(-1).t : 0, hpFirst: hps[0], hpLast: hps.at(-1), hpMin: Math.min(...hps), hpChanges: hps.filter((h, i) => i > 0 && h !== hps[i - 1]).length, inHomeEver: [...new Set(l.flatMap((s) => s.inHome))], maxPlayerZ: Math.max(...l.map((s) => s.at ? s.at[1] : 0)), minFoeDistance: minD, first: l[0] && l[0].near, last: l.at(-1) && l.at(-1).near };\n  };\n  e2e.gridAt = () => { const b = e2e.gridBody(); return b && [b.to.x, b.to.z]; };\n  if (!e2e.toastHooked) {\n    e2e.toastHooked = true;\n    e2e.toastLog = [];\n    import('/state/index.ts').then((S) => S.useSessionStore.subscribe((st, prev) => {\n      for (const t of st.toasts) if (!prev.toasts.some((p) => p.id === t.id)) e2e.toastLog.push({ at: Date.now(), tone: t.tone, text: t.text });\n    }));\n  }\n  return Object.keys(e2e);\n})()\n"
+  },
+  {
+   "eval": "(async () => {\n  // The only writes of this run (see env.injected): the two stored places of the interactive run,\n  // added to the save the way PlaceMaker's createPlace does after its model call (addPlace).\n  const S = await import('/state/index.ts');\n  const places = [{\"id\": \"p1\", \"title\": \"青苔石階路\", \"cx\": 1, \"cz\": 0, \"cleared\": false, \"kind\": \"side\", \"seed\": 2620891176, \"source\": \"root = Scene(\\\"青苔石階路\\\", \\\"countryside\\\", [floor1, sky1, light1, light2, elder_shin, chest_old, quest_shrine])\\nfloor1 = Floor(20, 20, \\\"stone\\\")\\nsky1 = Sky(\\\"#b9c7b3\\\", \\\"#d8d0b8\\\", 0.08)\\nlight1 = Light(\\\"ambient\\\", \\\"#e9dfc8\\\", 1.2)\\nlight2 = Light(\\\"sun\\\", \\\"#f6e7b6\\\", 0.9)\\nelder_shin = NPC(\\\"elder_shin\\\", \\\"新爺\\\", 1, 1, \\\"elder\\\", \\\"calm\\\", \\\"#7a6b58\\\", \\\"elder\\\", \\\"none\\\", \\\"none\\\", \\\"#8c7b66\\\")\\nchest_old = Treasure(\\\"chest_old\\\", 1, 1, [\\\"舊布\\\", \\\"銅錢\\\", \\\"小鈴\\\"])\\nquest_shrine = Quest(\\\"quest_shrine\\\", \\\"看過東邊青苔石階，走到盡頭的小祠。\\\")\\n\", \"dialogues\": {\"elder_shin\": \"root = Dialogue(\\\"elder_shin\\\", \\\"風涼。這石階長了青苔，走慢些。盡頭那座小祠，別踩過門檻。\\\", [c1, c2, c3])\\nc1 = Choice(\\\"我會小心\\\", \\\"talk\\\", \\\"新爺點點頭。\\\", [])\\nc2 = Choice(\\\"寶箱裡有什麼\\\", \\\"talk\\\", \\\"新爺說，放著些舊布和銅錢。\\\", [])\\nc3 = Choice(\\\"我先走了\\\", \\\"leave\\\", \\\"新爺繼續看著石階。\\\", [])\\n\"}}, {\"id\": \"p2\", \"title\": \"舊礦道\", \"cx\": 0, \"cz\": 1, \"cleared\": false, \"kind\": \"dungeon\", \"seed\": 2460322787, \"source\": \"root = Scene(\\\"舊礦道\\\", \\\"countryside\\\", [floor1, sky1, light1, light2, prop1, prop2, prop3, prop4, prop5, mine_lost, corner_chest, find_south_tunnel])\\nfloor1 = Floor(20, 20, \\\"stone\\\")\\nsky1 = Sky(\\\"#1b1a18\\\", \\\"#2a2722\\\", 0.08)\\nlight1 = Light(\\\"ambient\\\", \\\"#b79f7a\\\", 0.5)\\nlight2 = Light(\\\"point\\\", \\\"#d8b37a\\\", 0.8, 1, 1)\\nprop1 = Prop(\\\"torch\\\", 1, 1, 1, \\\"#7a5a3a\\\")\\nprop2 = Prop(\\\"torch\\\", 1, 1, 1, \\\"#7a5a3a\\\")\\nprop3 = Prop(\\\"crate\\\", 1, 1, 1, \\\"#8a6a4a\\\")\\nprop4 = Prop(\\\"pillar\\\", 1, 1, 1, \\\"#7b7468\\\")\\nprop5 = Prop(\\\"pipe_stack\\\", 1, 1, 1, \\\"#6e6a62\\\")\\nmine_lost = NPC(\\\"mine_lost\\\", \\\"阿炭\\\", 1, 1, \\\"stranger\\\", \\\"mournful\\\", \\\"#6f665c\\\", \\\"stout\\\", \\\"none\\\", \\\"lantern\\\", \\\"#8a7f72\\\")\\ncorner_chest = Treasure(\\\"corner_chest\\\", 1, 1, [\\\"舊銅幣\\\", \\\"煤塊\\\"])\\nfind_south_tunnel = Quest(\\\"find_south_tunnel\\\", \\\"找出南邊舊礦坑的地下通道，並把迷路的阿炭帶到出口。\\\")\\n\", \"dialogues\": {\"mine_lost\": \"root = Dialogue(\\\"mine_lost\\\", \\\"外頭還冷嗎？我在這裡轉了兩圈，還是找不到南邊那段路。\\\", [c1, c2, c3])\\nc1 = Choice(\\\"我幫你看路\\\", \\\"talk\\\", \\\"阿炭點點頭。\\\", [])\\nc2 = Choice(\\\"你先歇一下\\\", \\\"leave\\\", \\\"阿炭靠著牆坐下。\\\", [])\\nc3 = Choice(\\\"這角落有什麼？\\\", \\\"talk\\\", \\\"阿炭往黑處看了一眼。\\\", [])\\n\"}}];\n  for (const place of places) S.useLandStore.getState().addPlace(place);\n  return (S.useLandStore.getState().progress.places || []).map((p) => [p.id, p.kind, p.title, p.cx, p.cz, p.seed]);\n})()"
+  },
+  {
+   "pad": {
+    "toward": "[8.5, 16.5]",
+    "within": 0.5,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[44.5, 16.5]",
+    "within": 0.5,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[48.5, 17.6]",
+    "within": 0.5,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "eval": "__e2e.state()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p2-places/r-01-at-side-entrance.jpg"
+  },
+  {
+   "hold": "KeyE",
+   "ms": 80
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "(async()=>({state: await __e2e.state(), place: await __e2e.place(), body: __e2e.placeBody() || __e2e.gridBody(), canvases: __e2e.canvases(), count: document.querySelectorAll('canvas').length}))()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p2-places/r-02-side-inside.jpg"
+  },
+  {
+   "eval": "__e2e.sample(1600, 10)"
+  },
+  {
+   "hold": "Space",
+   "ms": 90
+  },
+  {
+   "wait": 1700
+  },
+  {
+   "eval": "({jump: __e2e.jumpStats()})"
+  },
+  {
+   "eval": "__e2e.sample(1200, 20)"
+  },
+  {
+   "hold": "KeyD",
+   "ms": 1000
+  },
+  {
+   "wait": 300
+  },
+  {
+   "eval": "({walk1s: __e2e.jumpStats()})"
+  },
+  {
+   "eval": "__e2e.sample(1200, 20)"
+  },
+  {
+   "hold": [
+    "KeyD",
+    "ShiftLeft"
+   ],
+   "ms": 1000
+  },
+  {
+   "wait": 300
+  },
+  {
+   "eval": "({sprint1s: __e2e.jumpStats()})"
+  },
+  {
+   "repeat": {
+    "times": 80,
+    "until": "(async()=>{const b=__e2e.placeBody(); return b && b.grounded && Math.abs(b.x-39.6)<=0.5})()",
+    "actions": [
+     {
+      "hold": {
+       "from": "__e2e.sideKeys(39.6,0.5)"
+      },
+      "ms": 90
+     },
+     {
+      "wait": 60
+     }
+    ]
+   }
+  },
+  {
+   "wait": 200
+  },
+  {
+   "eval": "(async()=>({body: __e2e.placeBody() || __e2e.gridBody(), nearby: (await __e2e.place())?.nearby ?? (await __e2e.state()).nearby}))()"
+  },
+  {
+   "eval": "window.__e2e.chats=performance.now(); true"
+  },
+  {
+   "hold": "KeyE",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); const s=S.useSessionStore.getState(); return {dialogue:s.dialogue?.status, speaker:s.dialogueSpeaker, line: s.dialogue?.value?.line ?? null}})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p2-places/r-03-side-talk.jpg"
+  },
+  {
+   "clickText": "寶箱裡有什麼"
+  },
+  {
+   "wait": 500
+  },
+  {
+   "repeat": {
+    "times": 80,
+    "until": "(async()=>{const b=__e2e.placeBody(); return b && b.grounded && Math.abs(b.x-35.6)<=0.5})()",
+    "actions": [
+     {
+      "hold": {
+       "from": "__e2e.sideKeys(35.6,0.5)"
+      },
+      "ms": 90
+     },
+     {
+      "wait": 60
+     }
+    ]
+   }
+  },
+  {
+   "wait": 200
+  },
+  {
+   "eval": "(async()=>({body: __e2e.placeBody() || __e2e.gridBody(), nearby: (await __e2e.place())?.nearby ?? (await __e2e.state()).nearby}))()"
+  },
+  {
+   "hold": "KeyE",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); return {opened:[...S.useEngineStore.getState().openedTreasures], inv: S.useWorldStore.getState().inventory, toasts: __e2e.toastLog.slice(-2).map(t=>t.text)}})()"
+  },
+  {
+   "repeat": {
+    "times": 80,
+    "until": "(async()=>{const b=__e2e.placeBody(); return b && b.grounded && Math.abs(b.x-34.4)<=0.3})()",
+    "actions": [
+     {
+      "hold": {
+       "from": "__e2e.sideKeys(34.4,0.3)"
+      },
+      "ms": 90
+     },
+     {
+      "wait": 60
+     }
+    ]
+   }
+  },
+  {
+   "wait": 200
+  },
+  {
+   "hold": "Space",
+   "ms": 90
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "({onLedge: __e2e.placeBody()})"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p2-places/r-04-side-on-ledge.jpg"
+  },
+  {
+   "eval": "__e2e.sample(1000, 10)"
+  },
+  {
+   "hold": "KeyS",
+   "ms": 150
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(()=>{const l=__e2e.log; const s=l.findIndex(x=>x.y<0.999); const g=l.findIndex((x,i)=>i>s&&s>=0&&x.grounded&&x.y<0.01); return {dropped: __e2e.placeBody(), fallMs: s>=0&&g>=0? l[g].t-l[s].t : null}})()"
+  },
+  {
+   "repeat": {
+    "times": 80,
+    "until": "(async()=>{const b=__e2e.placeBody(); return b && b.grounded && Math.abs(b.x-59.3)<=0.5})()",
+    "actions": [
+     {
+      "hold": {
+       "from": "__e2e.sideKeys(59.3,0.5)"
+      },
+      "ms": 90
+     },
+     {
+      "wait": 60
+     }
+    ]
+   }
+  },
+  {
+   "wait": 200
+  },
+  {
+   "eval": "(async()=>({body: __e2e.placeBody() || __e2e.gridBody(), nearby: (await __e2e.place())?.nearby ?? (await __e2e.state()).nearby}))()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p2-places/r-05-side-goal.jpg"
+  },
+  {
+   "hold": "KeyE",
+   "ms": 80
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(async()=>({state: await __e2e.state(), places: await __e2e.places(), karma: (await __e2e.karma()).slice(-1), toasts: __e2e.toastLog.slice(-2).map(t=>t.text), canvases: __e2e.canvases()}))()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p2-places/r-06-side-crossed.jpg"
+  },
+  {
+   "hold": "KeyE",
+   "ms": 80
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "hold": "KeyA",
+   "ms": 300
+  },
+  {
+   "wait": 200
+  },
+  {
+   "eval": "(async()=>({body: __e2e.placeBody() || __e2e.gridBody(), nearby: (await __e2e.place())?.nearby ?? (await __e2e.state()).nearby}))()"
+  },
+  {
+   "hold": "KeyE",
+   "ms": 80
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "(async()=>({state: await __e2e.state(), places: await __e2e.places(), karma: (await __e2e.karma()).slice(-1), toasts: __e2e.toastLog.slice(-2).map(t=>t.text), canvases: __e2e.canvases()}))()"
+  },
+  {
+   "pad": {
+    "toward": "[48.5, 48.5]",
+    "within": 0.5,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[16.5, 49.6]",
+    "within": 0.5,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "hold": "KeyE",
+   "ms": 80
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "(async()=>({state: await __e2e.state(), place: await __e2e.place(), body: __e2e.placeBody() || __e2e.gridBody(), canvases: __e2e.canvases(), count: document.querySelectorAll('canvas').length}))()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p2-places/r-07-dungeon-inside.jpg"
+  },
+  {
+   "hold": "KeyW",
+   "ms": 600
+  },
+  {
+   "wait": 300
+  },
+  {
+   "eval": "({wallNorth: __e2e.gridBody()})"
+  },
+  {
+   "eval": "window.__e2e.tWalk=Date.now(); true"
+  },
+  {
+   "repeat": {
+    "times": 120,
+    "until": "(()=>{const a=__e2e.gridAt(); const b=__e2e.gridBody(); return a && !b.moving && Math.abs(a[0]-2)+Math.abs(a[1]-1)<=1})()",
+    "actions": [
+     {
+      "hold": {
+       "from": "__e2e.stepKey([2,1],1)"
+      },
+      "ms": 70
+     },
+     {
+      "wait": 190
+     }
+    ]
+   }
+  },
+  {
+   "wait": 300
+  },
+  {
+   "eval": "(async()=>({ms: Date.now()-__e2e.tWalk, at: __e2e.gridAt(), nearby: (await __e2e.place()).nearby}))()"
+  },
+  {
+   "hold": "KeyE",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "eval": "(async()=>({opened:[...(await import('/state/index.ts')).useEngineStore.getState().openedTreasures], nearby: (await __e2e.place()).nearby}))()"
+  },
+  {
+   "hold": "KeyE",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p2-places/r-08-dungeon-talk.jpg"
+  },
+  {
+   "clickText": "我幫你看路"
+  },
+  {
+   "wait": 500
+  },
+  {
+   "eval": "window.__e2e.tWalk=Date.now(); true"
+  },
+  {
+   "repeat": {
+    "times": 120,
+    "until": "(()=>{const a=__e2e.gridAt(); const b=__e2e.gridBody(); return a && !b.moving && Math.abs(a[0]-17)+Math.abs(a[1]-17)<=1})()",
+    "actions": [
+     {
+      "hold": {
+       "from": "__e2e.stepKey([17,17],1)"
+      },
+      "ms": 70
+     },
+     {
+      "wait": 190
+     }
+    ]
+   }
+  },
+  {
+   "wait": 300
+  },
+  {
+   "eval": "(async()=>({ms: Date.now()-__e2e.tWalk, at: __e2e.gridAt(), nearby: (await __e2e.place()).nearby}))()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p2-places/r-09-dungeon-goal.jpg"
+  },
+  {
+   "hold": "KeyE",
+   "ms": 80
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(async()=>({state: await __e2e.state(), places: await __e2e.places(), karma: (await __e2e.karma()).slice(-1), toasts: __e2e.toastLog.slice(-2).map(t=>t.text), canvases: __e2e.canvases()}))()"
+  },
+  {
+   "hold": "KeyE",
+   "ms": 80
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(async()=>({at: __e2e.gridAt(), nearby: (await __e2e.place()).nearby}))()"
+  },
+  {
+   "hold": "KeyE",
+   "ms": 80
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(async()=>({state: await __e2e.state(), places: await __e2e.places(), karma: (await __e2e.karma()).slice(-1), toasts: __e2e.toastLog.slice(-2).map(t=>t.text), canvases: __e2e.canvases()}))()"
+  },
+  {
+   "eval": "(async () => {\n  // Injected (env.injected): chapter e1 of the built-in story is a meet on the land; its stage is\n  // set to a side-scrolling place with p1's stored program on another seed, once its own background\n  // write has landed (otherwise that write would replace this stage).\n  const S = await import('/state/index.ts');\n  for (let i = 0; i < 240 && !S.useLandStore.getState().progress?.episodes?.e1?.stage; i++) await new Promise((r) => setTimeout(r, 250));\n  const L = S.useLandStore.getState();\n  const p = L.progress;\n  const src = p.places.find((x) => x.id === 'p1');\n  L.setProgress({ ...p, episodes: { ...p.episodes, e1: { ...p.episodes.e1, stage: { kind: 'side', source: src.source, dialogues: src.dialogues, seed: 1234567, found: [], felled: [], met: [] } } } });\n  return S.useLandStore.getState().progress.episodes.e1.stage.kind;\n})()"
+  },
+  {
+   "pad": {
+    "toward": "[48.5, 48.5]",
+    "within": 0.5,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[48.5, 16.5]",
+    "within": 0.5,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[80.5, 17.7]",
+    "within": 0.5,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "hold": "KeyE",
+   "ms": 80
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "[...document.querySelectorAll('[data-layer]')].map(e=>e.getAttribute('data-layer')+': '+e.innerText.slice(0,300))"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p2-places/r-10-chapter-card.jpg"
+  },
+  {
+   "clickText": "進入"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "(async()=>({state: await __e2e.state(), place: await __e2e.place(), body: __e2e.placeBody() || __e2e.gridBody(), canvases: __e2e.canvases(), count: document.querySelectorAll('canvas').length}))()"
+  },
+  {
+   "repeat": {
+    "times": 80,
+    "until": "(async()=>{const b=__e2e.placeBody(); return b && b.grounded && Math.abs(b.x-35.3)<=0.5})()",
+    "actions": [
+     {
+      "hold": {
+       "from": "__e2e.sideKeys(35.3,0.5)"
+      },
+      "ms": 90
+     },
+     {
+      "wait": 60
+     }
+    ]
+   }
+  },
+  {
+   "wait": 200
+  },
+  {
+   "hold": "KeyE",
+   "ms": 80
+  },
+  {
+   "wait": 500
+  },
+  {
+   "repeat": {
+    "times": 80,
+    "until": "(async()=>{const b=__e2e.placeBody(); return b && b.grounded && Math.abs(b.x-43.4)<=0.5})()",
+    "actions": [
+     {
+      "hold": {
+       "from": "__e2e.sideKeys(43.4,0.5)"
+      },
+      "ms": 90
+     },
+     {
+      "wait": 60
+     }
+    ]
+   }
+  },
+  {
+   "wait": 200
+  },
+  {
+   "hold": "KeyE",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "clickText": "我會小心"
+  },
+  {
+   "wait": 500
+  },
+  {
+   "repeat": {
+    "times": 80,
+    "until": "(async()=>{const b=__e2e.placeBody(); return b && b.grounded && Math.abs(b.x-59.3)<=0.5})()",
+    "actions": [
+     {
+      "hold": {
+       "from": "__e2e.sideKeys(59.3,0.5)"
+      },
+      "ms": 90
+     },
+     {
+      "wait": 60
+     }
+    ]
+   }
+  },
+  {
+   "wait": 200
+  },
+  {
+   "hold": "KeyE",
+   "ms": 80
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); const p=S.useLandStore.getState().progress; return {state: await __e2e.state(), e1: {cleared: p.episodes.e1.cleared, summary: p.episodes.e1.summary}, karma: (await __e2e.karma()).slice(-1), toasts: __e2e.toastLog.slice(-2).map(t=>t.text)}})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p2-places/r-11-chapter-cleared.jpg"
+  },
+  {
+   "eval": "({t: Date.now()-__e2e.t0})"
+  }
+ ]
+}

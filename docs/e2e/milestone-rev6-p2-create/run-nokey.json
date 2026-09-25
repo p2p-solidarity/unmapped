@@ -1,0 +1,28 @@
+{
+  "env": {
+    "userData": "fresh temporary directory seeded with ./nokey-userData (one Create draft at the world step, written by gpt-5.4-mini in run A)",
+    "launch": "rm -rf \"$TMPDIR/ud-p2-nokey\" && cp -R docs/e2e/milestone-rev6-p2-create/nokey-userData \"$TMPDIR/ud-p2-nokey\" && OPENAI_API_KEY= AETHER_TEST_USER_DATA=\"$TMPDIR/ud-p2-nokey\" bun run dev --remoteDebuggingPort 9333",
+    "why": "The look pictures always use the OpenAI image provider, whatever chat model is selected, so choosing another chat provider in Settings → Model never makes the look step key-less. An empty OPENAI_API_KEY in the launch environment hides the .env key from this one process (dotenv does not override a variable that is already set) without touching .env or any saved key; the fresh userData has no saved key. With no cloud key the default chat model is Apple on-device, which is not served here, so the story cannot be written either — that is expected and not what this run checks.",
+    "debugPort": 9333,
+    "locale": "zh-TW (system default)",
+    "build": "main at 7a04adf + the uncommitted rev 6 phase-2 working tree (bun run dev)"
+  },
+  "model": "none reachable: keyStatus().openai.set === false; chat defaults to apple-fm (not running)",
+  "actions": [
+    { "eval": "window.seed.inference.keyStatus().then(r=>r.value.openai)" },
+    { "clickText": "創造世界" },
+    { "wait": 1500 },
+    { "clickText": "繼續" },
+    { "wait": 1500 },
+    { "eval": "({cards: document.querySelectorAll('[data-card]').length, toLookEnabled: [...document.querySelectorAll('button')].find(b=>b.innerText.trim()==='前往看樣子')?.disabled===false})" },
+    { "clickText": "前往看樣子" },
+    { "eval": "(async()=>{const t0=Date.now(); for(let i=0;i<80;i++){const t=document.body.innerText; if(!/正在畫/.test(t)&&/no-api-key/.test(t)) return {errorAfterMs:Date.now()-t0}; await new Promise(r=>setTimeout(r,250));} return 'timeout';})()" },
+    { "wait": 500 },
+    { "eval": "document.querySelector('h2')?.parentElement?.innerText.slice(0,900)" },
+    { "shot": "docs/e2e/milestone-rev6-p2-create/16-nokey-look-error.jpg" },
+    { "clickText": "不選圖片，繼續" },
+    { "wait": 1500 },
+    { "eval": "window.seed.createDrafts.list().then(async r=>{const d=await window.seed.createDrafts.read(r.value[0].draftId); return {step:d.value.step, look:d.value.look, storyStepShown: /4 · 故事/.test(document.body.innerText)};})" },
+    { "shot": "docs/e2e/milestone-rev6-p2-create/17-nokey-continued-to-story.jpg" }
+  ]
+}
