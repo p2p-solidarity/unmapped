@@ -2,9 +2,10 @@
 // is written back through IPC, debounced so a burst of choices costs one write.
 
 import { samplePlayer } from "@renderer/engine/playerProbe";
+import { errorLine, translate } from "@renderer/i18n";
 import { useLandStore, useSessionStore, useWorldStore, type WorldState } from "@renderer/state";
 import type { SavedPosition } from "@shared/cartridge";
-import { ok, type Result } from "@shared/result";
+import { type AppError, ok, type Result } from "@shared/result";
 import type { Inventory, KarmaEntry, WorldMeta } from "@shared/world";
 import { WORLD_FILES } from "@shared/world";
 import { useEffect } from "react";
@@ -41,8 +42,10 @@ export function persistPlan(state: PersistSlice, previous: PersistSlice): Persis
   };
 }
 
-function toastError(file: string, message: string): void {
-  useSessionStore.getState().toast("danger", `${file} could not be saved: ${message}`);
+function toastError(file: string, error: AppError): void {
+  useSessionStore
+    .getState()
+    .toast("danger", translate("title.fileNotSaved", { file, reason: errorLine(error) }));
 }
 
 async function writeKarma(worldId: string, karma: KarmaEntry[]): Promise<void> {
@@ -51,7 +54,7 @@ async function writeKarma(worldId: string, karma: KarmaEntry[]): Promise<void> {
     WORLD_FILES.karma,
     serializeKarmaJsonl(karma),
   );
-  if (!result.ok) toastError("karma.jsonl", result.error.message);
+  if (!result.ok) toastError("karma.jsonl", result.error);
 }
 
 async function writeInventory(worldId: string, inventory: Inventory): Promise<void> {
@@ -60,13 +63,13 @@ async function writeInventory(worldId: string, inventory: Inventory): Promise<vo
     WORLD_FILES.inventory,
     serializeInventory(inventory),
   );
-  if (!result.ok) toastError("inventory.json", result.error.message);
+  if (!result.ok) toastError("inventory.json", result.error);
 }
 
 async function writeMeta(meta: WorldMeta, floor: number): Promise<void> {
   const next: WorldMeta = { ...meta, floor, updatedAt: new Date().toISOString() };
   const result = await window.seed.worlds.write(meta.id, WORLD_FILES.meta, serializeMeta(next));
-  if (!result.ok) toastError("meta.json", result.error.message);
+  if (!result.ok) toastError("meta.json", result.error);
 }
 
 /** The player's open-land position, only while it belongs to the scene this save is in. */
@@ -132,7 +135,7 @@ export function usePersistWorld(): void {
       if (state.instanceId !== previous.instanceId) return;
       debouncer.schedule("land", WRITE_DEBOUNCE_MS, () => {
         void checkpointCurrentInstance().then((result) => {
-          if (!result.ok) toastError("save.json", result.error.message);
+          if (!result.ok) toastError("save.json", result.error);
         });
       });
     });
@@ -148,7 +151,7 @@ export function usePersistWorld(): void {
         if (sameInstance && progressChanged && !state.hydrating) {
           debouncer.schedule("instance", WRITE_DEBOUNCE_MS, () => {
             void checkpointCurrentInstance().then((result) => {
-              if (!result.ok) toastError("save.json", result.error.message);
+              if (!result.ok) toastError("save.json", result.error);
             });
           });
         }

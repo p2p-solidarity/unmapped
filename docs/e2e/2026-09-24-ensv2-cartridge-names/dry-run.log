@@ -1,0 +1,20 @@
+$ bun scripts/ens-setup.ts "unwritten-e2e-20260924" --dry-run
+Dry run unwritten-e2e-20260924.eth on Sepolia ENSv2 as 0xc0bAb141c33e2a601A9772f708e916C283BdF9d4
+  ✓ deploy Permissioned Resolver  (simulated)
+  ✓ deploy User Registry for unwritten-e2e-20260924.eth  (simulated)
+  price 8.000021 MockUSDC for 365 days
+  ✓ mint MockUSDC  (simulated)
+  ✓ approve registrar  (simulated)
+  ✓ commit  (simulated)
+  waiting 62 s for the commitment to age…
+  ✓ register unwritten-e2e-20260924.eth  (simulated)
+  ✓ set registry parent  (simulated)
+  ✓ register dry-run-cartridge.unwritten-e2e-20260924.eth  (simulated)
+  ✓ write cartridge records  (simulated)
+  registry: dry-run-cartridge status 2 owner 0xc0bAb141c33e2a601A9772f708e916C283BdF9d4; resolver: unwritten.cartridge = dry-run-cartridge
+  Universal Resolver: dry-run-cartridge.unwritten-e2e-20260924.eth unwritten.hash = sha256:abababababababababababababababababababababababababababababababab (resolver 0xa62F4061BAD21e1dDe43697fAeD7bc97e0Dd1144)
+
+# would be:
+UNWRITTEN_ENS_PARENT=unwritten-e2e-20260924.eth
+UNWRITTEN_ENS_REGISTRY=0x6755B66a5e29C1F5070F1912CcEf95EC32Efa45D
+UNWRITTEN_ENS_RESOLVER=0xa62F4061BAD21e1dDe43697fAeD7bc97e0Dd1144

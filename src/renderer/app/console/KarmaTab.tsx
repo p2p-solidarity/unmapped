@@ -1,22 +1,22 @@
 // The ledger, newest first. This is exactly what karma.jsonl holds — the same lines the model is
 // given as memory on the next generation.
 
+import { formatTime, useT } from "@renderer/i18n";
 import { useWorldStore } from "@renderer/state";
 import { colors, Surface, space, Text } from "@renderer/ui";
 import type { KarmaEntry } from "@shared/world";
 
-function shortTime(iso: string): string {
-  const date = new Date(iso);
-  return Number.isNaN(date.getTime()) ? iso : date.toLocaleTimeString();
-}
-
 function Entry({ entry }: { entry: KarmaEntry }) {
+  const t = useT();
+  const meta = t("console.karmaMeta", {
+    time: formatTime(entry.at),
+    floor: entry.floor,
+    action: entry.action,
+  });
   return (
     <Surface variant="inset" padding="md" style={{ gap: space.xs }}>
       <Text variant="caption" mono tone="dim">
-        {`${shortTime(entry.at)} · floor ${entry.floor} · ${entry.action}${
-          entry.npcId === null ? "" : ` · ${entry.npcId}`
-        }`}
+        {entry.npcId === null ? meta : `${meta} · ${entry.npcId}`}
       </Text>
       <Text variant="body">{entry.choice}</Text>
       {entry.effect.length > 0 ? (
@@ -38,6 +38,7 @@ function newestFirst(karma: readonly KarmaEntry[]): { key: string; entry: KarmaE
 export function KarmaTab() {
   const karma = useWorldStore((state) => state.karma);
   const rows = newestFirst(karma);
+  const t = useT();
 
   return (
     <>
@@ -46,12 +47,12 @@ export function KarmaTab() {
           karma.jsonl
         </Text>
         <Text variant="caption" tone="dim">
-          {`${karma.length} entr${karma.length === 1 ? "y" : "ies"}`}
+          {t("console.karmaCount", { n: karma.length })}
         </Text>
       </div>
       {karma.length === 0 ? (
         <Text variant="body" tone="dim">
-          Nothing recorded yet.
+          {t("console.karmaEmpty")}
         </Text>
       ) : (
         <div

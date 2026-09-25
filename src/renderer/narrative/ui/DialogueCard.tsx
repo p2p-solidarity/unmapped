@@ -10,6 +10,7 @@
 // only reads them, and a choice is bookkeeping alone — no model is asked anything (plan.md §1.4).
 
 import { ErrandActions } from "@renderer/app/land/ErrandActions";
+import { errorLine, useT } from "@renderer/i18n";
 import { startDialogue } from "@renderer/narrative/dialogue";
 import { persistProgress } from "@renderer/narrative/persist";
 import { resolveChoice } from "@renderer/narrative/resolve";
@@ -27,6 +28,7 @@ const HOTKEYS = ["1", "2", "3"] as const;
 export const MAX_CHOICES = HOTKEYS.length;
 
 export function DialogueCard() {
+  const t = useT();
   const dialogue = useSessionStore((state) => state.dialogue);
   const npcId = useSessionStore((state) => state.dialogueNpcId);
   const witnessed = useSessionStore((state) => state.dialogueWitnessed);
@@ -62,7 +64,7 @@ export function DialogueCard() {
       if (graph.mutation !== null && !witnessed) world.applyMutation(graph.mutation);
 
       const written = await persistProgress();
-      if (!written.ok) session.toast("danger", written.error.message);
+      if (!written.ok) session.toast("danger", errorLine(written.error));
       else if (choice.effect.trim().length > 0) session.toast("info", choice.effect);
 
       setFailure(null);
@@ -146,13 +148,13 @@ export function DialogueCard() {
 
         {dialogue.status === "loading" ? (
           <Text variant="body" tone="muted">
-            {`${name} is thinking…`}
+            {t("land.thinking", { name })}
           </Text>
         ) : null}
 
         {dialogue.status === "idle" ? (
           <Text variant="body" tone="dim">
-            No answer yet.
+            {t("land.noAnswer")}
           </Text>
         ) : null}
 
@@ -162,11 +164,11 @@ export function DialogueCard() {
             <div style={{ display: "flex", gap: space.md }}>
               {witnessed ? null : (
                 <Button variant="primary" onClick={() => void startDialogue(npcId)}>
-                  Retry
+                  {t("common.retry")}
                 </Button>
               )}
               <Button variant="ghost" onClick={() => useSessionStore.getState().closeDialogue()}>
-                Close
+                {t("common.close")}
               </Button>
             </div>
           </div>
@@ -179,7 +181,7 @@ export function DialogueCard() {
 
             {resolving !== null ? (
               <Text variant="body" tone="accent">
-                {`${name} is acting on "${resolving.label}"…`}
+                {t("land.acting", { name, choice: resolving.label })}
               </Text>
             ) : null}
 
@@ -188,10 +190,10 @@ export function DialogueCard() {
                 <ErrorBlock error={failure.error} />
                 <div style={{ display: "flex", gap: space.md }}>
                   <Button variant="primary" onClick={() => void choose(ready, failure.choice)}>
-                    Try that again
+                    {t("land.tryThatAgain")}
                   </Button>
                   <Button variant="secondary" onClick={() => void commit(ready, failure.choice)}>
-                    Take the choice anyway
+                    {t("land.takeAnyway")}
                   </Button>
                 </div>
               </div>
@@ -213,7 +215,7 @@ export function DialogueCard() {
               disabled={busy}
               onClick={() => useSessionStore.getState().closeDialogue()}
             >
-              Walk away
+              {t("land.walkAway")}
             </Button>
           </div>
         ) : null}

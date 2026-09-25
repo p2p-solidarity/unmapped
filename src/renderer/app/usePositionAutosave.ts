@@ -3,6 +3,7 @@
 // actually moved, once more when they leave Play, and when the window hides or is closed (so the
 // last few seconds before quitting are kept too; a killed process can still lose them).
 
+import { errorLine, translate } from "@renderer/i18n";
 import { useSessionStore } from "@renderer/state";
 import type { SavedPosition } from "@shared/cartridge";
 import { useEffect } from "react";
@@ -19,9 +20,10 @@ function travelled(from: SavedPosition, to: SavedPosition): boolean {
 function write(): void {
   void checkpointCurrentInstance().then((result) => {
     if (!result.ok) {
+      const reason = errorLine(result.error);
       useSessionStore
         .getState()
-        .toast("danger", `save.json could not be saved: ${result.error.message}`);
+        .toast("danger", translate("title.fileNotSaved", { file: "save.json", reason }));
     }
   });
 }

@@ -4,6 +4,7 @@
 
 import type { ChunkStatus } from "@renderer/state";
 import { CHUNK_SIZE, type ChunkCoord, chunkKey, groundAt } from "@shared/chunks";
+import type { TerritoryMap } from "@shared/continent";
 import type { LandNote, LandProgress } from "@shared/land";
 import type { LandPlace } from "@shared/places";
 import { episodeGate, nextEpisode } from "@shared/story";
@@ -22,7 +23,7 @@ import { LAND_2D_PALETTE } from "../engine/palette";
 import { MONSTER_SPRITES, MONSTER_WIDTH, ROLE_SPRITES, ROLE_WIDTH } from "../engine2d/actorSprites";
 import { cachedTerrain, landTileAt } from "../engine2d/landModel";
 import { placeMarkers } from "../engine2d/placeLayer";
-import { type StoryView, storyMarkers } from "../engine2d/storyLayer";
+import { type StoryMarker, type StoryView, storyMarkers } from "../engine2d/storyLayer";
 import type { Foe } from "../engine2d/useLandCombat";
 import { type Billboard, pickBoard, SUNKEN, TILE_HEIGHT } from "./assets";
 import type { BlockInstance, BoardInstance, MarkerInstance } from "./layers";
@@ -43,16 +44,21 @@ export interface LandSource {
   places?: readonly LandPlace[];
   /** The story chapter being played around its gate, in world tiles. */
   chapter?: SceneGraph | null;
+  /** On a continent: whose ground each chunk is (null or absent when not merged). */
+  land?: TerritoryMap | null;
+  /** Offset markers and doors of the continent's worlds. */
+  continent?: readonly StoryMarker[];
 }
 
 export function floorOf(source: Pick<LandSource, "origin">): FloorSpec {
   return source.origin?.floor ?? OPEN_FLOOR;
 }
 
-export function tileAtFor(source: Pick<LandSource, "origin" | "seed">) {
+export function tileAtFor(source: Pick<LandSource, "origin" | "seed" | "land">) {
   const { origin, seed } = source;
+  const land = source.land ?? null;
   return (x: number, z: number): Tile =>
-    origin === null ? groundAt(seed, x, z, OPEN_FLOOR.tile) : landTileAt(origin, seed, x, z);
+    origin === null ? groundAt(seed, x, z, OPEN_FLOOR.tile) : landTileAt(origin, seed, x, z, land);
 }
 
 /** Height of the ground under a world point, as the HD-2D view draws it (basins count as 0). */
@@ -89,7 +95,7 @@ export function collectContent(source: LandSource, coords: readonly ChunkCoord[]
   for (const coord of coords) {
     const ox = coord.cx * CHUNK_SIZE;
     const oz = coord.cz * CHUNK_SIZE;
-    for (const prop of cachedTerrain(source.seed, floor, coord).props) {
+    for (const prop of cachedTerrain(source.seed, floor, coord, source.land ?? null).props) {
       pushProp(content, height, prop, ox, oz);
     }
     const written = source.chunks[chunkKey(coord)];
@@ -212,6 +218,16 @@ function collectMarkers(source: LandSource, height: Height): MarkerInstance[] {
       beam: false,
     });
   }
+  (source.continent ?? []).forEach((marker, index) => {
+    markers.push({
+      key: `continent:${index}`,
+      ...at(marker.x, marker.z),
+      color: marker.color,
+      glyph: marker.glyph,
+      label: marker.label,
+      beam: false,
+    });
+  });
   placeMarkers(source.places ?? []).forEach((marker, index) => {
     markers.push({
       key: `place:${index}`,

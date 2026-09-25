@@ -8,6 +8,7 @@
 // Keep the two in sync if that layout ever changes.
 
 import { parseScene } from "@dsl/index";
+import { translate } from "@renderer/i18n";
 import type { SeedApi } from "@shared/ipc";
 import { err, ok, type Result } from "@shared/result";
 import {
@@ -246,7 +247,7 @@ export async function exportEncryptedSeed(
 
   const encrypted = await encryptBytes(key, packFiles(files.value));
   const saved = await api.value.app.saveFile({
-    title: "Export encrypted seed",
+    title: translate("identity.exportSeedDialog"),
     defaultName: `${fileBase(meta.value.name)}.seed.enc`,
     base64: toBase64(encrypted),
   });
@@ -315,7 +316,7 @@ export async function importEncryptedSeed(key: KeyLike): Promise<Result<WorldMet
   const api = seedApi();
   if (!api.ok) return api;
   const picked = await api.value.app.pickFile({
-    title: "Import encrypted seed",
+    title: translate("identity.importSeedDialog"),
     extensions: ["enc"],
   });
   if (!picked.ok) return picked;

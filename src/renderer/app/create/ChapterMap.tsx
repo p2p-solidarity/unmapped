@@ -2,6 +2,7 @@
 // the chunk the host gives it (`episodePlaces`), joined in the order they open. The same numbers
 // the game uses — nothing here is decorative.
 
+import { useT } from "@renderer/i18n";
 import { colors, font } from "@renderer/ui";
 import type { StoryEpisode } from "@shared/story";
 import type { JSX } from "react";
@@ -14,6 +15,7 @@ export function ChapterMap({
 }: {
   episodes: readonly Pick<StoryEpisode, "cx" | "cz" | "title">[];
 }): JSX.Element {
+  const t = useT();
   const points = [{ cx: 0, cz: 0 }, ...episodes];
   const reach = Math.max(1, ...points.map((p) => Math.max(Math.abs(p.cx), Math.abs(p.cz))));
   const scale = (SIZE / 2 - PAD) / reach;
@@ -28,7 +30,7 @@ export function ChapterMap({
       width="100%"
       style={{ maxWidth: SIZE, display: "block" }}
       role="img"
-      aria-label={`Home and ${episodes.length} chapter gates on the land`}
+      aria-label={t("create.mapLabel", { n: episodes.length })}
     >
       <rect
         x={0.5}
@@ -52,7 +54,7 @@ export function ChapterMap({
         fill={colors.surface}
         stroke={colors.text}
       >
-        <title>Home — where the world starts</title>
+        <title>{t("create.mapHome")}</title>
       </rect>
       {episodes.map((episode, index) => {
         const p = at(episode);

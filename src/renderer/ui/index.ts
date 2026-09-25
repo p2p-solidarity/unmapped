@@ -7,6 +7,7 @@ export {
   colors,
   cssVars,
   font,
+  fontStacks,
   HIT_TARGET,
   radius,
   shadow,

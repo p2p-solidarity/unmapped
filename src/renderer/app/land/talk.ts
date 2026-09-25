@@ -3,7 +3,13 @@
 // so honestly instead of improvising.
 
 import { parseDialogue } from "@dsl";
-import { useLandStore, useSessionStore, useWorldStore } from "@renderer/state";
+import {
+  foreignAt,
+  useContinentStore,
+  useLandStore,
+  useSessionStore,
+  useWorldStore,
+} from "@renderer/state";
 import { dialogueKey } from "@shared/cartridge";
 import { chunkKey } from "@shared/chunks";
 import { parseLandTarget } from "@shared/land";
@@ -15,10 +21,14 @@ const UNWRITTEN_HINT =
 /** Opens the stored dialogue of `npcId` (a witnessed resident or an authored one on open land). */
 export function talkOnLand(npcId: string): void {
   const session = useSessionStore.getState();
-  const { chunks } = useLandStore.getState();
   const target = parseLandTarget(npcId);
-  const key = chunkKey(target?.coord ?? { cx: 0, cz: 0 });
-  const chunk = chunks[key];
+  const coord = target?.coord ?? { cx: 0, cz: 0 };
+  const key = chunkKey(coord);
+  // On a continent, a resident of another world's land speaks the words its owner's world wrote.
+  const foreign = foreignAt(coord) !== null;
+  const chunk = (foreign ? useContinentStore.getState().chunks : useLandStore.getState().chunks)[
+    key
+  ];
   const id = target?.npcId ?? npcId;
   const scene = useWorldStore.getState().scene;
   const speaker =
@@ -31,7 +41,7 @@ export function talkOnLand(npcId: string): void {
   // Those come first: a resident of chunk (0, 0) is the author's, not the land's.
   const active = useSessionStore.getState().activeInstance;
   const baked =
-    active === null
+    active === null || foreign
       ? undefined
       : active.cartridge.dialogues[dialogueKey(active.instance.save.currentSceneId, id)];
   const source = baked ?? (chunk?.status === "written" ? chunk.dialogues[id] : undefined);

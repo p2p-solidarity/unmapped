@@ -1,6 +1,7 @@
 // The developer console (F12 / `). An overlay strip on the right third of the window: the world
 // source, the karma ledger, the provider settings and the multiplayer room all in one place.
 
+import { type StringKey, useT } from "@renderer/i18n";
 import { useSessionStore } from "@renderer/state";
 import { Button, colors, Surface, space, Text, zIndex } from "@renderer/ui";
 import { useState } from "react";
@@ -11,6 +12,13 @@ import { WorldTab } from "./console/WorldTab";
 
 const TABS = ["World", "Karma", "Inference", "Multiplayer"] as const;
 type ConsoleTab = (typeof TABS)[number];
+
+const TAB_LABEL: Record<ConsoleTab, StringKey> = {
+  World: "console.tabWorld",
+  Karma: "console.tabKarma",
+  Inference: "console.tabInference",
+  Multiplayer: "console.tabMultiplayer",
+};
 
 function TabBody({ tab }: { tab: ConsoleTab }) {
   switch (tab) {
@@ -28,6 +36,7 @@ function TabBody({ tab }: { tab: ConsoleTab }) {
 export function Console() {
   const [tab, setTab] = useState<ConsoleTab>("World");
   const toggleConsole = useSessionStore((state) => state.toggleConsole);
+  const t = useT();
 
   return (
     <div
@@ -65,10 +74,10 @@ export function Console() {
           }}
         >
           <Text variant="label" tone="muted">
-            CONSOLE
+            {t("console.title")}
           </Text>
           <Button variant="ghost" hotkey="Esc" onClick={() => toggleConsole(false)}>
-            Close
+            {t("common.close")}
           </Button>
         </div>
 
@@ -88,7 +97,7 @@ export function Console() {
               onClick={() => setTab(name)}
               style={{ paddingLeft: space.md, paddingRight: space.md }}
             >
-              {name}
+              {t(TAB_LABEL[name])}
             </Button>
           ))}
         </div>

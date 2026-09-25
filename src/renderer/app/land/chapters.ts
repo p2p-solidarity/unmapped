@@ -6,6 +6,7 @@
 
 import { type ChapterDraft, serializeScene } from "@dsl";
 import { readChapter } from "@renderer/engine2d/chapterLayer";
+import { contentLanguage, translate } from "@renderer/i18n";
 import { generateChapter } from "@renderer/narrative/chapter";
 import { generatePlace } from "@renderer/narrative/place";
 import { useLandStore, useSessionStore, useWorldStore } from "@renderer/state";
@@ -65,7 +66,7 @@ export async function writeChapter(
   const bible = active.cartridge.bible;
   const world = useWorldStore.getState();
   const combat = world.gameplayRules?.combat !== null && world.gameplayRules?.combat !== undefined;
-  const language = world.genesis?.language ?? bibleLanguage(bible) ?? navigator.language;
+  const language = world.genesis?.language ?? bibleLanguage(bible) ?? contentLanguage();
   const kind = chapterKind(episode.kind);
   const place = chapterPlaceKind(kind);
   let source: string;
@@ -146,7 +147,9 @@ export function clearChapter(episode: StoryEpisode, summary: string, earned: str
       chunk: { cx: episode.cx, cz: episode.cz },
     }),
   );
-  useSessionStore.getState().toast("success", `Chapter cleared: ${episode.title}`);
+  useSessionStore
+    .getState()
+    .toast("success", translate("land.chapterClearedToast", { title: episode.title }));
   void checkpointCurrentInstance();
 }
 
@@ -169,7 +172,7 @@ export function talkChapter(targetId: string): void {
   const found = chapterAt(targetId);
   const npc = found?.draft.npcs.find((one) => one.id === found.localId);
   if (found === null || npc === undefined) {
-    session.toast("danger", "That person is not part of a chapter here.");
+    session.toast("danger", translate("land.notChapterPerson"));
     return;
   }
   const dialogue = found.draft.dialogues.find((one) => one.npcId === npc.id);
@@ -192,7 +195,7 @@ export function openChapterTreasure(targetId: string): void {
   const found = chapterAt(targetId);
   const treasure = found?.draft.treasures.find((one) => one.id === found.localId);
   if (found === null || treasure === undefined) {
-    session.toast("danger", "That treasure is not part of a chapter here.");
+    session.toast("danger", translate("land.notChapterTreasure"));
     return;
   }
   if (stageOf(found.episodeId)?.found.includes(treasure.id)) return;
@@ -208,7 +211,9 @@ export function openChapterTreasure(targetId: string): void {
   );
   session.toast(
     treasure.loot.length > 0 ? "success" : "info",
-    treasure.loot.length > 0 ? `Found: ${treasure.loot.join(", ")}` : "It is empty.",
+    treasure.loot.length > 0
+      ? translate("land.found", { items: treasure.loot.join(", ") })
+      : translate("land.empty"),
   );
   mark(found.episodeId, "found", treasure.id);
 }

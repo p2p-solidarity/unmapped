@@ -3,10 +3,18 @@
 // playable version → save an immutable version. Every attempt, its summary, files touched, timing
 // and token use stay visible, and any earlier playable version can be restored.
 
+import { errorLine, formatNumber, type StringKey, type Translate, useT } from "@renderer/i18n";
 import { useInferenceStore } from "@renderer/state/inferenceStore";
 import { Button, colors, ErrorBlock, Surface, space, Text, TextField } from "@renderer/ui";
 import type { AppError } from "@shared/result";
-import { assetMapSchema, type Json, type WorkAssetMap, type WorkDraft } from "@shared/works";
+import {
+  assetMapSchema,
+  type CandidateKind,
+  type CandidateStatus,
+  type Json,
+  type WorkAssetMap,
+  type WorkDraft,
+} from "@shared/works";
 import { type JSX, useCallback, useEffect, useRef, useState } from "react";
 import { type AttemptReport, runAttempt } from "./author";
 import { useChecker } from "./useChecker";
@@ -18,25 +26,46 @@ interface Running {
   startedAt: number;
 }
 
+const KIND: Record<CandidateKind, StringKey> = {
+  generate: "works.kindGenerate",
+  edit: "works.kindEdit",
+  repair: "works.kindRepair",
+  asset: "works.kindAsset",
+  import: "works.kindImport",
+};
+
+const STATUS: Record<CandidateStatus, StringKey> = {
+  pending: "works.statusPending",
+  playable: "works.statusPlayable",
+  failed: "works.statusFailed",
+  stale: "works.statusStale",
+  cancelled: "works.statusCancelled",
+};
+
 function seconds(ms: number): string {
   return `${(ms / 1000).toFixed(1)} s`;
 }
 
 function tokens(value: number | null): string {
-  return value === null ? "?" : value.toLocaleString();
+  return value === null ? "?" : formatNumber(value);
 }
 
-function describeReport(report: AttemptReport): string {
+function describeReport(report: AttemptReport, t: Translate): string {
   const pass =
-    report.outcome === "playable" ? (report.firstPass ? "first try" : "after repair") : "";
+    report.outcome === "playable"
+      ? t(report.firstPass ? "works.firstTry" : "works.afterRepair")
+      : "";
   return [
-    report.kind,
-    report.outcome,
+    t(KIND[report.kind]),
+    t(STATUS[report.outcome]),
     pass,
     seconds(report.elapsedMs),
-    `model ${seconds(report.modelMs)}`,
-    `${tokens(report.promptTokens)} in / ${tokens(report.completionTokens)} out tokens`,
-    `${report.repairs} repair${report.repairs === 1 ? "" : "s"}`,
+    t("works.modelTime", { time: seconds(report.modelMs) }),
+    t("works.tokensInOut", {
+      in: tokens(report.promptTokens),
+      out: tokens(report.completionTokens),
+    }),
+    t("works.repairCount", { n: report.repairs }),
   ]
     .filter((part) => part !== "")
     .join(" · ");
@@ -51,6 +80,7 @@ export function WorkshopView({
   initialRequest: string | null;
   onExit: () => void;
 }): JSX.Element {
+  const t = useT();
   const model = useInferenceStore((state) => state.config?.model ?? null);
   const [draft, setDraft] = useState<WorkDraft | null>(null);
   const [error, setError] = useState<AppError | null>(null);
@@ -103,7 +133,7 @@ export function WorkshopView({
   const attempt = useCallback(
     async (kind: "generate" | "edit", words: string, base: WorkDraft) => {
       const controller = new AbortController();
-      setRunning({ controller, stage: "Starting…", startedAt: Date.now() });
+      setRunning({ controller, stage: t("works.stageStarting"), startedAt: Date.now() });
       setNotice(null);
       const result = await runAttempt(base, kind, words, {
         check: checkCandidate,
@@ -115,7 +145,7 @@ export function WorkshopView({
       setRunning(null);
       const fresh = await reload();
       if (!result.ok) {
-        setNotice(`${result.error.code}: ${result.error.message}`);
+        setNotice(errorLine(result.error));
         return;
       }
       const report = result.value;
@@ -126,17 +156,17 @@ export function WorkshopView({
         // A changed world may not understand the old preview save; it always starts over.
         previewState.current = null;
         setPreviewKey((key) => key + 1);
-        if (kind === "edit") setNotice("Preview restarted from the beginning for the new version.");
+        if (kind === "edit") setNotice(t("works.noticeRestarted"));
+      } else if (report.outcome === "cancelled") {
+        setNotice(t("works.noticeCancelled"));
       } else {
-        setNotice(
-          report.outcome === "cancelled"
-            ? "Cancelled. The playable version was not touched."
-            : `Not applied (${report.outcome}). The playable version was not touched.${report.problems.length > 0 ? `\n${report.problems.join("\n")}` : ""}`,
-        );
+        // The problems are the checker's own diagnostics (also the repair prompt's), kept as is.
+        const notApplied = t("works.noticeNotApplied", { outcome: t(STATUS[report.outcome]) });
+        setNotice([notApplied, ...report.problems].join("\n"));
       }
       if (fresh !== null) setDraft(fresh);
     },
-    [checkCandidate, draftId, model, reload],
+    [checkCandidate, draftId, model, reload, t],
   );
 
   useEffect(() => {
@@ -154,14 +184,17 @@ export function WorkshopView({
       setMissing(event.session.missingAssets);
       setPreviewStatus("");
     } else if (event.kind === "fault") {
-      setPreviewStatus(event.error.message);
+      setPreviewStatus(errorLine(event.error));
     } else if (event.kind === "message") {
       const message = event.message;
       if (message.type === "save") previewState.current = message.state;
       else if (message.type === "status") setPreviewStatus(message.text);
-      else if (message.type === "complete") setPreviewStatus(`Cleared: ${message.summary}`);
+      else if (message.type === "complete")
+        setPreviewStatus(t("works.previewCleared", { summary: message.summary }));
       else if (message.type === "error")
-        setPreviewStatus(`Error: ${message.message.split("\n")[0]}`);
+        setPreviewStatus(
+          t("works.previewError", { message: message.message.split("\n")[0] ?? "" }),
+        );
     }
   };
 
@@ -171,7 +204,8 @@ export function WorkshopView({
     const expectedHead = draft.head;
     const controller = new AbortController();
     if (how === "generate") {
-      setRunning({ controller, stage: `Drawing "${assetId}"…`, startedAt: Date.now() });
+      const stage = t("works.stageDrawing", { asset: assetId });
+      setRunning({ controller, stage, startedAt: Date.now() });
     }
     const written =
       how === "pick"
@@ -179,7 +213,7 @@ export function WorkshopView({
         : await window.seed.works.generateAsset(draftId, assetId);
     if (!written.ok) {
       setRunning(null);
-      setNotice(`${written.error.code}: ${written.error.message}`);
+      setNotice(errorLine(written.error));
       return;
     }
     if (written.value === null) {
@@ -187,7 +221,7 @@ export function WorkshopView({
       return;
     }
     const candidateId = written.value.candidate.id;
-    setRunning({ controller, stage: "Checking the new image…", startedAt: Date.now() });
+    setRunning({ controller, stage: t("works.stageCheckingImage"), startedAt: Date.now() });
     const outcome = await checkCandidate(candidateId);
     setRunning(null);
     const settled = await window.seed.works.settleCandidate({
@@ -197,28 +231,29 @@ export function WorkshopView({
       error: outcome.passed ? null : outcome.problems.map((problem) => problem.message).join("\n"),
       expectedHead,
     });
-    if (!settled.ok) setNotice(settled.error.message);
+    if (!settled.ok) setNotice(errorLine(settled.error));
     else setPreviewKey((key) => key + 1);
     await reload();
   };
 
   const publish = async (): Promise<void> => {
     const result = await window.seed.works.publishDraft(draftId);
-    if (!result.ok) setNotice(result.error.message);
+    if (!result.ok) setNotice(errorLine(result.error));
     else {
       setDraft(result.value.draft);
-      setNotice(`Saved ${result.value.manifest.title} v${result.value.manifest.version}.`);
+      const { title, version } = result.value.manifest;
+      setNotice(t("works.noticeSaved", { title, version }));
     }
   };
 
   const restore = async (candidateId: string): Promise<void> => {
     const result = await window.seed.works.revertDraft(draftId, candidateId);
-    if (!result.ok) setNotice(result.error.message);
+    if (!result.ok) setNotice(errorLine(result.error));
     else {
       setDraft(result.value);
       previewState.current = null;
       setPreviewKey((key) => key + 1);
-      setNotice(`Restored ${candidateId}.`);
+      setNotice(t("works.noticeRestored", { id: candidateId }));
     }
   };
 
@@ -226,14 +261,14 @@ export function WorkshopView({
     return (
       <div style={{ padding: space.xl, display: "flex", flexDirection: "column", gap: space.md }}>
         <ErrorBlock error={error} />
-        <Button onClick={onExit}>Back</Button>
+        <Button onClick={onExit}>{t("common.back")}</Button>
       </div>
     );
   }
   if (draft === null) {
     return (
       <div style={{ padding: space.xl }}>
-        <Text tone="muted">Opening draft…</Text>
+        <Text tone="muted">{t("works.openingDraft")}</Text>
       </div>
     );
   }
@@ -260,16 +295,20 @@ export function WorkshopView({
           }}
         >
           <Button variant="ghost" onClick={onExit} disabled={busy}>
-            ← Worlds
+            {t("works.backToWorlds")}
           </Button>
           <div style={{ flex: 1, minWidth: 0 }}>
             <Text>{draft.title}</Text>
             <Text variant="caption" tone="muted">
               {" "}
-              · {head === null ? "no playable version yet" : `playing ${head.id}`} ·{" "}
+              ·{" "}
+              {head === null
+                ? t("works.noPlayableVersion")
+                : t("works.playingVersion", { id: head.id })}{" "}
+              ·{" "}
               {draft.published.length > 0
-                ? `saved v${draft.published.at(-1)?.version}`
-                : "not saved"}
+                ? t("works.savedVersion", { version: draft.published.at(-1)?.version ?? "" })
+                : t("works.notSaved")}
             </Text>
           </div>
           <Text variant="caption" tone="muted">
@@ -282,19 +321,17 @@ export function WorkshopView({
               setPreviewKey((key) => key + 1);
             }}
           >
-            Restart
+            {t("works.restart")}
           </Button>
           <Button variant="primary" disabled={head === null || busy} onClick={() => void publish()}>
-            Save version
+            {t("works.saveVersion")}
           </Button>
         </div>
         <div style={{ position: "relative", flex: 1, minHeight: 0 }}>
           {head === null ? (
             <div style={{ display: "grid", placeItems: "center", height: "100%" }}>
               <Text tone="muted">
-                {busy
-                  ? "The first version appears here once it passes the check."
-                  : "Nothing playable yet."}
+                {busy ? t("works.firstVersionHere") : t("works.nothingPlayable")}
               </Text>
             </div>
           ) : (
@@ -333,22 +370,20 @@ export function WorkshopView({
           }}
         >
           <TextField
-            label={head === null ? "Describe the world" : "Change request"}
+            label={head === null ? t("works.describeWorld") : t("works.changeRequest")}
             value={request}
             maxLength={2000}
             disabled={busy}
-            placeholder={
-              head === null ? "One sentence" : "e.g. Enemies move twice as fast; make the sky dusk"
-            }
+            placeholder={head === null ? t("works.oneSentence") : t("works.changePlaceholder")}
             onChange={(event) => setRequest(event.target.value)}
           />
           <div style={{ display: "flex", gap: space.sm }}>
             <Button variant="primary" type="submit" disabled={busy || request.trim() === ""}>
-              {head === null ? "Generate" : "Apply change"}
+              {head === null ? t("works.generate") : t("works.applyChange")}
             </Button>
             {running === null ? null : (
               <Button variant="destructive" onClick={() => running.controller.abort()}>
-                Cancel
+                {t("common.cancel")}
               </Button>
             )}
           </div>
@@ -358,8 +393,7 @@ export function WorkshopView({
           <Surface variant="inset" padding="sm">
             <Text>{running.stage}</Text>
             <Text variant="caption" tone="muted">
-              {seconds(now - running.startedAt)} · the playable version stays as it is until this
-              passes
+              {t("works.runningNote", { elapsed: seconds(now - running.startedAt) })}
             </Text>
           </Surface>
         )}
@@ -373,14 +407,16 @@ export function WorkshopView({
 
         {Object.keys(assets).length === 0 ? null : (
           <Surface padding="sm">
-            <Text variant="label">Images</Text>
+            <Text variant="label">{t("works.images")}</Text>
             {Object.entries(assets).map(([id, entry]) => (
               <div key={id} style={{ display: "flex", alignItems: "center", gap: space.sm }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <Text variant="caption">
                     {id}{" "}
                     <Text variant="caption" tone={missing.includes(id) ? "danger" : "muted"}>
-                      {missing.includes(id) ? "missing" : (entry.src ?? "missing")}
+                      {missing.includes(id)
+                        ? t("works.missing")
+                        : (entry.src ?? t("works.missing"))}
                     </Text>
                   </Text>
                   <Text variant="caption" tone="dim">
@@ -393,10 +429,10 @@ export function WorkshopView({
                   disabled={busy}
                   onClick={() => void swapAsset(id, "generate")}
                 >
-                  Generate
+                  {t("works.generate")}
                 </Button>
                 <Button variant="chip" disabled={busy} onClick={() => void swapAsset(id, "pick")}>
-                  Replace…
+                  {t("works.replace")}
                 </Button>
               </div>
             ))}
@@ -405,25 +441,25 @@ export function WorkshopView({
 
         {reports.length === 0 ? null : (
           <Surface padding="sm">
-            <Text variant="label">This session</Text>
+            <Text variant="label">{t("works.thisSession")}</Text>
             {reports.map((report) => (
               <Text
                 key={`${report.kind}-${report.elapsedMs}-${report.candidates.join(".")}`}
                 variant="caption"
                 tone="muted"
               >
-                {describeReport(report)}
+                {describeReport(report, t)}
               </Text>
             ))}
           </Surface>
         )}
 
         <Surface padding="sm">
-          <Text variant="label">History</Text>
+          <Text variant="label">{t("works.history")}</Text>
           {[...draft.candidates].reverse().map((candidate) => (
             <Surface key={candidate.id} variant="inset" padding="sm">
               <Text variant="caption">
-                {candidate.id} · {candidate.kind} ·{" "}
+                {candidate.id} · {t(KIND[candidate.kind])} ·{" "}
                 <Text
                   variant="caption"
                   tone={
@@ -434,7 +470,7 @@ export function WorkshopView({
                         : "danger"
                   }
                 >
-                  {candidate.id === draft.head ? "current" : candidate.status}
+                  {candidate.id === draft.head ? t("works.current") : t(STATUS[candidate.status])}
                 </Text>
                 {candidate.changed.length > 0 ? ` · ${candidate.changed.join(", ")}` : ""}
               </Text>
@@ -444,8 +480,11 @@ export function WorkshopView({
               {candidate.summary === "" ? null : <Text variant="caption">{candidate.summary}</Text>}
               {candidate.metrics === null ? null : (
                 <Text variant="caption" tone="dim">
-                  {seconds(candidate.metrics.elapsedMs)} · {tokens(candidate.metrics.promptTokens)}{" "}
-                  in / {tokens(candidate.metrics.completionTokens)} out
+                  {t("works.metricsLine", {
+                    time: seconds(candidate.metrics.elapsedMs),
+                    in: tokens(candidate.metrics.promptTokens),
+                    out: tokens(candidate.metrics.completionTokens),
+                  })}
                 </Text>
               )}
               {candidate.error === null ? null : (
@@ -455,7 +494,7 @@ export function WorkshopView({
               )}
               {candidate.status === "playable" && candidate.id !== draft.head ? (
                 <Button variant="chip" disabled={busy} onClick={() => void restore(candidate.id)}>
-                  Restore this version
+                  {t("works.restoreVersion")}
                 </Button>
               ) : null}
             </Surface>

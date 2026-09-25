@@ -22,7 +22,8 @@
     "afm:build": "node scripts/build-afm-bridge.mjs debug",
     "dist": "node scripts/build-afm-bridge.mjs release && electron-vite build && electron-builder",
     "contracts:build": "node scripts/build-contracts.mjs",
-    "contracts:deploy": "node scripts/deploy-ledger.mjs"
+    "contracts:deploy": "node scripts/deploy-ledger.mjs",
+    "ens:setup": "bun scripts/ens-setup.ts"
   },
   "dependencies": {
     "@deepseek-ai/cordis": "^4.0.2",
@@ -86,5 +87,8 @@
       ],
       "category": "public.app-category.games"
     }
+  },
+  "patchedDependencies": {
+    "y-webrtc@10.3.0": "patches/y-webrtc@10.3.0.patch"
   }
 }

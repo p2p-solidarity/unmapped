@@ -1,10 +1,16 @@
-export { type AuthoringState, useAuthoringStore } from "./authoringStore";
 export {
   type CharacterState,
   COLOR_THEMES,
   type ColorTheme,
   useCharacterStore,
 } from "./characterStore";
+export {
+  type ContinentState,
+  type ContinentStatus,
+  type ForeignWorld,
+  foreignAt,
+  useContinentStore,
+} from "./continentStore";
 export {
   type EncounterCombatant,
   type EncounterState,

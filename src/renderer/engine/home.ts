@@ -26,3 +26,15 @@ export function shelfPosition(
   const [x, , z] = spawnPoint(origin);
   return [home.cx * CHUNK_SIZE + x - 2 + index * 1.2, home.cz * CHUNK_SIZE + z - 2];
 }
+
+const FOREIGN_DOOR = "door:";
+
+/** Interaction id of another world's door on the continent. */
+export function foreignDoorId(worldId: string): string {
+  return `${FOREIGN_DOOR}${worldId}`;
+}
+
+/** The world id of a foreign door's interaction id, or null for anything else (home's own door). */
+export function foreignDoorOf(targetId: string): string | null {
+  return targetId.startsWith(FOREIGN_DOOR) ? targetId.slice(FOREIGN_DOOR.length) : null;
+}

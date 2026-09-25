@@ -1,9 +1,12 @@
 // Cartridges sub-menu: saved runs, published cartridges and draft workspaces in one list.
-// ↑↓ picks, Enter plays / resumes / opens, R starts a remix of the selected cartridge.
+// ↑↓ picks, Enter plays / resumes / opens, R starts a remix of the selected cartridge. A cartridge
+// also shows its ENS name, and a name can be followed back to the revision it points at.
 
+import { errorLine, formatDateTime, type StringKey, type Translate, useT } from "@renderer/i18n";
 import { useSessionStore } from "@renderer/state";
 import { Button, StatePanel, Text, TextField } from "@renderer/ui";
 import {
+  type CartridgeLineage,
   type CartridgeManifest,
   compareCartridgeVersions,
   ENGINE_API_VERSION,
@@ -15,6 +18,7 @@ import type { Loadable } from "@shared/result";
 import { useState } from "react";
 import { cycle, useKeys } from "../shell/useKeys";
 import { hydrateInstance, openInstance } from "../useInstanceLoader";
+import { CartridgeNameLine, OpenByEnsName, useEnsNames } from "./CartridgeName";
 import type { LibraryData } from "./useLibrary";
 
 type Entry =
@@ -49,11 +53,22 @@ function entries(library: LibraryData): Entry[] {
   ];
 }
 
-const KIND_LABEL: Record<Entry["kind"], string> = {
-  save: "Save",
-  cartridge: "Cartridge",
-  draft: "Draft",
+const KIND_LABEL: Record<Entry["kind"], StringKey> = {
+  save: "title.kindSave",
+  cartridge: "title.kindCartridge",
+  draft: "title.kindDraft",
 };
+
+const LINEAGE_LABEL: Record<CartridgeLineage["kind"], StringKey> = {
+  revision: "title.lineageRevision",
+  remix: "title.lineageRemix",
+  "legacy-import": "title.lineageLegacyImport",
+};
+
+/** How a revision (or a workspace's mode) relates to its parent, in the UI language. */
+export function lineageLabel(kind: CartridgeLineage["kind"], t: Translate): string {
+  return t(LINEAGE_LABEL[kind]);
+}
 
 function entryTitle(entry: Entry): string {
   if (entry.kind === "save") return entry.instance.name;
@@ -61,14 +76,18 @@ function entryTitle(entry: Entry): string {
   return entry.workspace.name;
 }
 
-function compatibilityLabel(manifest: CartridgeManifest): string {
+function compatibilityLabel(manifest: CartridgeManifest, t: Translate): string {
   if (manifest.engineApiVersion > ENGINE_API_VERSION) {
-    return `incompatible · needs engine ${manifest.engineApiVersion}`;
+    return t("title.needsEngine", { version: manifest.engineApiVersion });
   }
   if (manifest.saveSchemaVersion !== SAVE_SCHEMA_VERSION) {
-    return `incompatible · needs save schema ${manifest.saveSchemaVersion}`;
+    return t("title.needsSaveSchema", { version: manifest.saveSchemaVersion });
   }
-  return `compatible · ${(manifest.formatVersion === 1 ? manifest.requiredKits : manifest.definition.capabilityProfile.contexts.map((context) => context.contextId)).join(", ")}`;
+  const kits =
+    manifest.formatVersion === 1
+      ? manifest.requiredKits
+      : manifest.definition.capabilityProfile.contexts.map((context) => context.contextId);
+  return t("title.compatible", { kits: kits.join(", ") });
 }
 
 function isCompatible(manifest: CartridgeManifest): boolean {
@@ -85,11 +104,13 @@ interface CartridgesPanelProps {
 }
 
 export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps) {
+  const t = useT();
   const toast = useSessionStore((state) => state.toast);
   const openWorkspace = useSessionStore((state) => state.openWorkspace);
   const [cursor, setCursor] = useState(0);
   const [remix, setRemix] = useState<RemixDraft | null>(null);
   const [busy, setBusy] = useState(false);
+  const ens = useEnsNames();
 
   const list = data.status === "ready" ? entries(data.value) : [];
   const selected = list[Math.min(cursor, list.length - 1)];
@@ -121,9 +142,9 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
         name: `${manifest.name} run`,
       });
       setBusy(false);
-      if (!result.ok) return toast("danger", result.error.message);
+      if (!result.ok) return toast("danger", errorLine(result.error));
       const hydrated = hydrateInstance(result.value);
-      if (!hydrated.ok) return toast("danger", hydrated.error.message);
+      if (!hydrated.ok) return toast("danger", errorLine(hydrated.error));
       useSessionStore.getState().setScreen("play");
     })();
   };
@@ -158,7 +179,7 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
         author: remix.author,
       });
       setBusy(false);
-      if (!result.ok) return toast("danger", result.error.message);
+      if (!result.ok) return toast("danger", errorLine(result.error));
       openWorkspace(result.value.meta.workspaceId);
     })();
   };
@@ -179,10 +200,10 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
       setBusy(false);
       if (result === null) return;
       if (!result.ok) {
-        if (result.error.code !== "cancelled") toast("danger", result.error.message);
+        if (result.error.code !== "cancelled") toast("danger", errorLine(result.error));
         return;
       }
-      toast("success", `Exported to ${result.value.path}`);
+      toast("success", t("title.exportedTo", { path: result.value.path }));
     })();
   };
 
@@ -191,10 +212,13 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
     void window.seed.cartridges.importPack().then(async (result) => {
       setBusy(false);
       if (!result.ok) {
-        if (result.error.code !== "cancelled") toast("danger", result.error.message);
+        if (result.error.code !== "cancelled") toast("danger", errorLine(result.error));
         return;
       }
-      toast("success", `Imported ${result.value.cartridgeId}@${result.value.version}`);
+      toast(
+        "success",
+        t("title.imported", { name: `${result.value.cartridgeId}@${result.value.version}` }),
+      );
       await refresh();
     });
   };
@@ -204,10 +228,10 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
     void window.seed.instances.importBackup().then(async (result) => {
       setBusy(false);
       if (!result.ok) {
-        if (result.error.code !== "cancelled") toast("danger", result.error.message);
+        if (result.error.code !== "cancelled") toast("danger", errorLine(result.error));
         return;
       }
-      toast("success", `Restored ${result.value.instance.meta.name}`);
+      toast("success", t("title.restored", { name: result.value.instance.meta.name }));
       await refresh();
     });
   };
@@ -219,8 +243,11 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
       .upgrade({ instanceId: selected.instance.instanceId, version: upgradeTarget.version })
       .then(async (result) => {
         setBusy(false);
-        if (!result.ok) return toast("danger", result.error.message);
-        toast("success", `Upgraded to ${result.value.instance.meta.cartridge.version}`);
+        if (!result.ok) return toast("danger", errorLine(result.error));
+        toast(
+          "success",
+          t("title.upgraded", { version: result.value.instance.meta.cartridge.version }),
+        );
         await refresh();
       });
   };
@@ -239,16 +266,19 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
 
   return (
     <>
-      <h2 className="g-heading">Cartridges</h2>
+      <h2 className="g-heading">{t("title.menuCartridges")}</h2>
       {library !== null && library.oldSaves.length > 0 ? (
         <Text variant="caption" tone="dim">
-          {`${library.oldSaves.length} saves from an older build can't be opened by this build and were left untouched: ${library.oldSaves.join(", ")}`}
+          {t("title.oldSaves", {
+            n: library.oldSaves.length,
+            names: library.oldSaves.join(", "),
+          })}
         </Text>
       ) : null}
-      <StatePanel state={data} loadingText="Reading cartridges…">
+      <StatePanel state={data} loadingText={t("title.readingCartridges")}>
         {() =>
           list.length === 0 ? (
-            <Text tone="dim">No cartridges yet.</Text>
+            <Text tone="dim">{t("title.noCartridges")}</Text>
           ) : (
             <div className="carts g-scroll">
               {list.map((entry, index) => (
@@ -261,7 +291,7 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
                   onClick={() => (entry.key === selected?.key ? confirm(entry) : setCursor(index))}
                 >
                   <strong>{entryTitle(entry)}</strong>
-                  <span className="g-meta">{KIND_LABEL[entry.kind]}</span>
+                  <span className="g-meta">{t(KIND_LABEL[entry.kind])}</span>
                 </Button>
               ))}
             </div>
@@ -289,28 +319,35 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
                 {selected.manifest.author} · {selected.manifest.cartridgeId}@
                 {selected.manifest.version}
               </span>
-              <span className="g-meta">{compatibilityLabel(selected.manifest)}</span>
+              <span className="g-meta">{compatibilityLabel(selected.manifest, t)}</span>
               <span className="g-meta">
                 {selected.manifest.lineage?.parent == null
-                  ? "original revision"
-                  : `${selected.manifest.lineage.kind} of ${selected.manifest.lineage.parent.cartridgeId}@${selected.manifest.lineage.parent.version}`}
+                  ? t("title.originalRevision")
+                  : t("title.lineageOf", {
+                      kind: lineageLabel(selected.manifest.lineage.kind, t),
+                      parent: `${selected.manifest.lineage.parent.cartridgeId}@${selected.manifest.lineage.parent.version}`,
+                    })}
               </span>
               <span className="g-meta">
                 {matchingRuns.length === 0
-                  ? "No runs for this exact revision"
-                  : `${matchingRuns.length} run${matchingRuns.length === 1 ? "" : "s"}: ${matchingRuns.map((run) => run.name).join(", ")}`}
+                  ? t("title.noRuns")
+                  : t("title.runs", {
+                      n: matchingRuns.length,
+                      names: matchingRuns.map((run) => run.name).join(", "),
+                    })}
               </span>
+              <CartridgeNameLine manifest={selected.manifest} config={ens} />
             </>
           ) : null}
           {selected.kind === "save" ? (
             <span className="g-meta">
               {selected.instance.cartridge.cartridgeId}@{selected.instance.cartridge.version} ·{" "}
-              {new Date(selected.instance.updatedAt).toLocaleString()}
+              {formatDateTime(selected.instance.updatedAt)}
             </span>
           ) : null}
           {selected.kind === "draft" ? (
             <span className="g-meta">
-              {selected.workspace.mode} → {selected.workspace.targetCartridgeId}
+              {lineageLabel(selected.workspace.mode, t)} → {selected.workspace.targetCartridgeId}
             </span>
           ) : null}
 
@@ -325,42 +362,44 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
                 onClick={() => confirm(selected)}
               >
                 {selected.kind === "save"
-                  ? "Resume"
+                  ? t("common.resume")
                   : selected.kind === "cartridge"
-                    ? "Play"
-                    : "Edit"}
+                    ? t("common.play")
+                    : t("title.edit")}
               </Button>
               {selected.kind === "cartridge" ? (
                 <Button disabled={busy} hotkey="R" onClick={() => startRemix(selected)}>
-                  Remix
+                  {t("title.remix")}
                 </Button>
               ) : null}
               {selected.kind !== "draft" ? (
                 <Button variant="ghost" disabled={busy} onClick={exportSelected}>
-                  {selected.kind === "cartridge" ? "Export .cartridge" : "Backup save"}
+                  {selected.kind === "cartridge"
+                    ? t("title.exportCartridge")
+                    : t("title.backupSave")}
                 </Button>
               ) : null}
               {selected.kind === "save" && upgradeTarget !== null ? (
                 <Button disabled={busy} onClick={upgrade}>
-                  Upgrade to {upgradeTarget.version}
+                  {t("title.upgradeTo", { version: upgradeTarget.version })}
                 </Button>
               ) : null}
             </div>
           ) : (
             <div className="form-grid">
               <TextField
-                label="New ID"
+                label={t("title.newId")}
                 mono
                 value={remix.targetCartridgeId}
                 onChange={(event) => setRemix({ ...remix, targetCartridgeId: event.target.value })}
               />
               <TextField
-                label="Title"
+                label={t("title.titleField")}
                 value={remix.name}
                 onChange={(event) => setRemix({ ...remix, name: event.target.value })}
               />
               <TextField
-                label="Author"
+                label={t("title.author")}
                 autoFocus
                 value={remix.author}
                 onChange={(event) => setRemix({ ...remix, author: event.target.value })}
@@ -371,10 +410,10 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
                   disabled={busy || remix.author.trim() === ""}
                   onClick={createRemix}
                 >
-                  Create
+                  {t("title.create")}
                 </Button>
                 <Button variant="ghost" onClick={() => setRemix(null)}>
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
               </div>
             </div>
@@ -383,12 +422,18 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
       )}
       <div className="row-actions">
         <Button variant="ghost" disabled={busy} onClick={importCartridge}>
-          Import .cartridge
+          {t("title.importCartridge")}
         </Button>
         <Button variant="ghost" disabled={busy} onClick={importBackup}>
-          Restore backup
+          {t("title.restoreBackup")}
         </Button>
       </div>
+      <OpenByEnsName
+        cartridges={library?.cartridges ?? []}
+        busy={busy}
+        onPlay={newRun}
+        onImport={importCartridge}
+      />
     </>
   );
 }

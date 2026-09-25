@@ -2,10 +2,17 @@
 // consequence. Everything it reports comes from the parsed scene — when the scene has no such
 // entity we say so instead of inventing loot or a line.
 
+import { foreignDoorOf } from "@renderer/engine/home";
 import { translate } from "@renderer/i18n";
 import { startDialogue } from "@renderer/narrative";
 import { sendRoomInteraction } from "@renderer/net/sync";
-import { useEncounterStore, useEngineStore, useSessionStore, useWorldStore } from "@renderer/state";
+import {
+  useContinentStore,
+  useEncounterStore,
+  useEngineStore,
+  useSessionStore,
+  useWorldStore,
+} from "@renderer/state";
 import { parseChapterTarget } from "@shared/chapter";
 import { endlessObjectiveOf } from "@shared/endless";
 import type { NearbyTarget } from "@shared/events";
@@ -44,7 +51,7 @@ function currentScene(): SceneGraph | null {
 function openTreasure(target: NearbyTarget, scene: SceneGraph | null): void {
   const treasure = scene?.treasures.find((item) => item.id === target.id);
   if (treasure === undefined) {
-    session().toast("danger", `Treasure "${target.id}" is not in the current scene.`);
+    session().toast("danger", translate("hud.treasureMissing", { id: target.id }));
     return;
   }
   const world = useWorldStore.getState();
@@ -62,7 +69,9 @@ function openTreasure(target: NearbyTarget, scene: SceneGraph | null): void {
   );
   session().toast(
     treasure.loot.length > 0 ? "success" : "info",
-    treasure.loot.length > 0 ? `Found: ${treasure.loot.join(", ")}` : "The chest is empty.",
+    treasure.loot.length > 0
+      ? translate("hud.found", { loot: treasure.loot.join(", ") })
+      : translate("hud.chestEmpty"),
   );
 }
 
@@ -72,15 +81,15 @@ function inspectMonster(target: NearbyTarget, scene: SceneGraph | null): void {
   session().toast(
     "info",
     weakness.length > 0
-      ? `Combat is not in this build yet — the model gave it weakness: ${weakness}`
-      : "Combat is not in this build yet.",
+      ? translate("hud.noCombatWeakness", { weakness })
+      : translate("hud.noCombat"),
   );
 }
 
 function pullTrigger(target: NearbyTarget, scene: SceneGraph | null): void {
   const trigger = scene?.triggers.find((item) => item.id === target.id);
   if (trigger === undefined) {
-    session().toast("danger", `Trigger "${target.id}" is not in the current scene.`);
+    session().toast("danger", translate("hud.triggerMissing", { id: target.id }));
     return;
   }
   const world = useWorldStore.getState();
@@ -121,7 +130,7 @@ function descend(target: NearbyTarget, scene: SceneGraph | null, handlers: Handl
   if (scene !== null && useSessionStore.getState().activeInstance?.instance.save.endless) {
     const left = objectiveLeft(scene);
     if (left > 0) {
-      session().toast("info", translate("objectiveUnmet", { left }));
+      session().toast("info", translate("depths.objectiveUnmet", { left }));
       return;
     }
     handlers.onDescend();
@@ -130,7 +139,7 @@ function descend(target: NearbyTarget, scene: SceneGraph | null, handlers: Handl
 
   const to = exit?.to ?? target.label.trim();
   if (to.length === 0) {
-    session().toast("danger", "This exit has no destination label.");
+    session().toast("danger", translate("hud.exitNoLabel"));
     return;
   }
   handlers.onAdvanceFloor(to, exit?.targetSceneId ?? null);
@@ -152,7 +161,7 @@ function dispatch(target: NearbyTarget, handlers: Handlers): void {
       }
       startDialogue(target.id).catch((error: unknown) => {
         const message = error instanceof Error ? error.message : String(error);
-        session().toast("danger", `Dialogue failed: ${message}`);
+        session().toast("danger", translate("hud.dialogueFailed", { reason: message }));
       });
       return;
     case "altar":
@@ -182,10 +191,14 @@ function dispatch(target: NearbyTarget, handlers: Handlers): void {
     case "search":
       searchAt(target.id);
       return;
-    case "door":
+    case "door": {
       if (document.pointerLockElement !== null) document.exitPointerLock();
-      session().openDoor();
+      // Another world's door on the continent opens its card; home's own door opens the dials.
+      const foreign = foreignDoorOf(target.id);
+      if (foreign !== null) useContinentStore.getState().openDoorCard(foreign);
+      else session().openDoor();
       return;
+    }
     case "episode": {
       const id = parseEpisodeTarget(target.id);
       if (id !== null) session().openEpisode(id);

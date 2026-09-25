@@ -1,6 +1,7 @@
 // Where notes were left: a small stake with a slip of paper on the tile, labelled with its author.
 // Only chunks near the player are drawn; the words themselves are read in the notes panel.
 
+import { useT } from "@renderer/i18n";
 import { useEngineStore, useLandStore } from "@renderer/state";
 import { CHUNK_SIZE, chunkDistance } from "@shared/chunks";
 import type { JSX } from "react";
@@ -14,6 +15,7 @@ const NEAR = 1;
 export function LandNotes(): JSX.Element | null {
   const notes = useLandStore((state) => state.notes);
   const chunk = useEngineStore((state) => state.chunk);
+  const t = useT();
   if (chunk === null) return null;
   const stake = standardMaterial(ENTITY_PALETTE.doorFrame, 0);
   const paper = standardMaterial(ENTITY_PALETTE.notePaper, 0.15);
@@ -40,7 +42,7 @@ export function LandNotes(): JSX.Element | null {
                 position={[0, 0.85, 0.05]}
                 scale={[0.32, 0.22, 0.02]}
               />
-              <Label text={`Note · ${note.author}`} y={1.3} />
+              <Label text={t("hud.noteBy", { author: note.author })} y={1.3} />
             </group>
           );
         })}

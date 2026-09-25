@@ -1,20 +1,27 @@
 // Writing a note (手記, plan.md §6). The text is exactly what the player typed — no model, no
-// translation — anchored to the tile underfoot and the place remembered there. Solo and host
-// worlds append it to the save's notes.jsonl; a visitor's note travels to the host through the
-// room (net/landSync.ts), which is the only place a visitor's words are kept.
+// translation — anchored to the tile underfoot and the place remembered there. A note left on this
+// world's own land is appended to the save's notes.jsonl. On a continent, a note left on another
+// world's land belongs to that world: it travels through the room in its owner's coordinates
+// (net/continentSync.ts) and its owner keeps it.
 
 import { samplePlayer } from "@renderer/engine/playerProbe";
 import { playerName } from "@renderer/net/room";
-import { useEngineStore, useLandStore, useSessionStore, useWorldStore } from "@renderer/state";
+import {
+  foreignAt,
+  useEngineStore,
+  useLandStore,
+  useSessionStore,
+  useWorldStore,
+} from "@renderer/state";
 import { CHUNK_SIZE } from "@shared/chunks";
 import { type LandNote, NOTE_MAX_CHARS } from "@shared/land";
 import { err, ok, type Result } from "@shared/result";
 import { makeKarmaEntry } from "../karmaFile";
 
-type Publisher = (note: LandNote) => void;
+type Publisher = (worldId: string, note: LandNote) => void;
 let publisher: Publisher | null = null;
 
-/** The room registers how a visitor's note reaches the host; null when not visiting. */
+/** The continent registers how a note reaches the world it was left on; null when not merged. */
 export function setNotePublisher(next: Publisher | null): void {
   publisher = next;
 }
@@ -49,6 +56,29 @@ export async function writeNote(text: string, contests: string | null): Promise<
     return err("note-nowhere", "Notes are left on open land.", "Walk out into the land first.");
   }
   const session = useSessionStore.getState();
+  const foreign = foreignAt(chunk);
+  if (foreign !== null) {
+    if (publisher === null) {
+      return err("note-no-room", "That world is not reachable.", "Rejoin the continent.");
+    }
+    // In its owner's coordinates; what they remember there is theirs, so no anchors are guessed.
+    const note: LandNote = {
+      id: crypto.randomUUID(),
+      author: session.playerProfile?.displayName ?? playerName(),
+      at: new Date().toISOString(),
+      coord: {
+        cx: chunk.cx - foreign.shift.cx,
+        cz: chunk.cz - foreign.shift.cz,
+        x: local(where.x, chunk.cx),
+        z: local(where.z, chunk.cz),
+      },
+      anchors: [],
+      text: words,
+      contests,
+    };
+    publisher(foreign.worldId, note);
+    return ok(note);
+  }
   const note: LandNote = {
     id: crypto.randomUUID(),
     author: session.playerProfile?.displayName ?? playerName(),
@@ -63,12 +93,11 @@ export async function writeNote(text: string, contests: string | null): Promise<
     contests,
   };
   if (session.networkRole === "peer") {
-    if (publisher === null) {
-      return err("note-no-room", "The host's world is not reachable.", "Rejoin the room.");
-    }
-    publisher(note);
-    useLandStore.getState().addNote(note);
-    return ok(note);
+    return err(
+      "note-no-room",
+      "A visitor's notes are not kept in a shared room.",
+      "Open land is shared as a continent: use the door at home.",
+    );
   }
   const stored = await window.seed.instances.appendNote({ instanceId: land.instanceId, note });
   if (!stored.ok) return stored;

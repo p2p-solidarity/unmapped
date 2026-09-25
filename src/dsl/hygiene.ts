@@ -5,6 +5,7 @@
 // runs; only a place named like an existing one still reaches the check below.)
 
 import type { OpenUIError } from "@openuidev/lang-core";
+import { slipsIntoSimplified } from "@shared/language";
 import type { LoreNode } from "@shared/lore";
 import type { DialogueGraph, NpcSpec } from "@shared/world";
 import { propError } from "./parse/program";
@@ -43,6 +44,16 @@ export function hygieneIssues(
   ctx: { lore: readonly LoreNode[]; language: string },
 ): OpenUIError[] {
   const issues: OpenUIError[] = [];
+  const simplified = texts(input).find(({ text }) => slipsIntoSimplified(ctx.language, text));
+  if (simplified !== undefined) {
+    issues.push(
+      propError(
+        "Chunk",
+        `${simplified.where} is written in Simplified Chinese; this world is ${ctx.language}.`,
+        "Rewrite every player-facing word with Traditional Chinese characters (們 這 說 時 個 來 …).",
+      ),
+    );
+  }
   for (const { where, text } of texts(input)) {
     if (ASSISTANT.test(text)) {
       issues.push(

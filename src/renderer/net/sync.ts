@@ -1,5 +1,7 @@
 import { hydrateInstance } from "@renderer/app/useInstanceLoader";
 import { checkpointCurrentInstance } from "@renderer/app/usePersistWorld";
+import { isOpenLand2D } from "@renderer/engine2d";
+import { errorLine } from "@renderer/i18n";
 import { useEngineStore, useSessionStore, useWorldStore } from "@renderer/state";
 import type { ResolvedInstance } from "@shared/cartridge";
 import type { NearbyTarget } from "@shared/events";
@@ -54,6 +56,27 @@ function resolvedFromSnapshot(room: Room, snapshot: RuntimeSnapshot): ResolvedIn
 
 type AppliedInput = "event" | "snapshot" | "transition";
 
+/**
+ * Open land is not played through this room: it is shared as a continent (continent.ts), where
+ * every world keeps its own save. A room opened on it is refused with a way to the door instead.
+ */
+function refuseOpenLand(): boolean {
+  const world = useWorldStore.getState();
+  if (world.scene.status !== "ready" || !isOpenLand2D(world.scene.value, world.gameplayRules)) {
+    return false;
+  }
+  useSessionStore.getState().toast(
+    "danger",
+    errorLine({
+      code: "room-open-land",
+      message: "Open land is shared as a continent, not through a room.",
+      hint: "Play the world, open the Door at home and choose “Open my door to friends”.",
+    }),
+  );
+  queueMicrotask(() => setActiveRoom(null));
+  return true;
+}
+
 async function applyHostInput(room: Room, input: SessionInput): Promise<Result<AppliedInput>> {
   if (!room.host) {
     return fail({ code: "session-authority-violation", message: "Only the host can apply input." });
@@ -81,6 +104,7 @@ async function applyHostInput(room: Room, input: SessionInput): Promise<Result<A
 export function useRoomSync(room: Room | null): void {
   useEffect(() => {
     if (room === null) return;
+    if (room.host && refuseOpenLand()) return;
     const session = useSessionStore.getState();
     let sequence = 0;
     let applyingRemote = false;
@@ -100,12 +124,12 @@ export function useRoomSync(room: Room | null): void {
       if (room.host) publish();
     });
     const offError = room.onError((error) => {
-      session.toast("danger", `${error.message}${error.hint ? ` — ${error.hint}` : ""}`);
+      session.toast("danger", errorLine(error));
     });
     const offInput = room.onInput((input) => {
       void applyHostInput(room, input).then((applied) => {
         if (!applied.ok) {
-          session.toast("danger", applied.error.message);
+          session.toast("danger", errorLine(applied.error));
           return;
         }
         if (applied.value === "event" && input.kind === "action") {
@@ -125,12 +149,18 @@ export function useRoomSync(room: Room | null): void {
       applyingRemote = true;
       const resolved = resolvedFromSnapshot(room, snapshot);
       const hydrated = hydrateInstance(resolved);
+      if (hydrated.ok && refuseOpenLand()) {
+        // Put this machine's own save back in place of the snapshot it just loaded.
+        hydrateInstance(room.instance);
+        applyingRemote = false;
+        return;
+      }
       if (hydrated.ok) {
         room.instance = resolved;
         useSessionStore.getState().setBusy(null);
         useSessionStore.getState().setScreen("play");
       } else {
-        session.toast("danger", hydrated.error.message);
+        session.toast("danger", errorLine(hydrated.error));
       }
       applyingRemote = false;
     });
@@ -171,7 +201,7 @@ export function requestRoomTransition(targetSceneId: string | null): boolean {
   const result = room.sendInput(
     targetSceneId === null ? { kind: "complete" } : { kind: "transition", targetSceneId },
   );
-  if (!result.ok) useSessionStore.getState().toast("danger", result.error.message);
+  if (!result.ok) useSessionStore.getState().toast("danger", errorLine(result.error));
   return true;
 }
 
@@ -179,7 +209,7 @@ export function sendRoomInteraction(target: NearbyTarget): boolean {
   const room = getActiveRoom();
   if (room === null || room.host) return false;
   const result = room.sendInput({ kind: "interact", target });
-  if (!result.ok) useSessionStore.getState().toast("danger", result.error.message);
+  if (!result.ok) useSessionStore.getState().toast("danger", errorLine(result.error));
   return true;
 }
 

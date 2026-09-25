@@ -1,6 +1,7 @@
 // Renderer client for the main-owned scene artifact pipeline. It subscribes before invoking so a
 // fast local model cannot emit progress into the void, and abort always crosses the IPC boundary.
 
+import { translate } from "@renderer/i18n";
 import { fail, type Result } from "@shared/result";
 import type {
   GenerationEvent,
@@ -53,19 +54,19 @@ export function generationEventLabel(event: GenerationEvent): string | null {
   switch (event.type) {
     case "started":
     case "provider-selected":
-      return "Choosing the local scene model…";
+      return translate("create.genChoosingModel");
     case "progress":
-      if (event.phase === "events") return "Planning what happens here…";
-      if (event.phase === "layout") return "Laying out the room…";
-      return event.message ?? `Generating scene · ${event.phase}`;
+      if (event.phase === "events") return translate("create.genPlanning");
+      if (event.phase === "layout") return translate("create.genLayout");
+      return event.message ?? translate("create.genPhase", { phase: event.phase });
     case "partial":
-      return "Checking the generated scene…";
+      return translate("create.genChecking");
     case "provider-fallback":
-      return `Trying ${event.to}…`;
+      return translate("create.genTrying", { name: event.to });
     case "completed":
-      return "Scene ready.";
+      return translate("create.genReady");
     case "cancelled":
-      return "Generation cancelled.";
+      return translate("create.genCancelled");
     case "error":
       return null;
   }

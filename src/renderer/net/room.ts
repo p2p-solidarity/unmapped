@@ -109,6 +109,30 @@ function connections(provider: WebrtcProvider): SignalingConnLike[] {
   return provider.signalingConns as SignalingConnLike[];
 }
 
+/** Each signaling server of a provider and whether it is reachable right now. */
+export function signalingStatusOf(provider: WebrtcProvider): SignalingStatus[] {
+  return connections(provider).map((connection) => ({
+    url: connection.url,
+    connected: connection.connected,
+    unsuccessfulReconnects: connection.unsuccessfulReconnects,
+  }));
+}
+
+/** Calls `listener` whenever a signaling server of `provider` connects or drops. */
+export function onSignalingChange(provider: WebrtcProvider, listener: () => void): () => void {
+  const conns = connections(provider);
+  for (const connection of conns) {
+    connection.on("connect", listener);
+    connection.on("disconnect", listener);
+  }
+  return () => {
+    for (const connection of conns) {
+      connection.off("connect", listener);
+      connection.off("disconnect", listener);
+    }
+  };
+}
+
 function open(
   code: string,
   host: boolean,
@@ -205,12 +229,7 @@ function open(
   });
   const offPeer = channel.onPeer(attach);
   const peers = (): PeerInfo[] => toPeerInfo(awareness.getStates(), awareness.clientID);
-  const signalingStatus = (): SignalingStatus[] =>
-    connections(provider).map((connection) => ({
-      url: connection.url,
-      connected: connection.connected,
-      unsuccessfulReconnects: connection.unsuccessfulReconnects,
-    }));
+  const signalingStatus = (): SignalingStatus[] => signalingStatusOf(provider);
   let left = false;
 
   const sendToVerified = (send: (peer: SessionPeer) => Result<void>): void => {
@@ -238,18 +257,7 @@ function open(
     },
     signalingStatus,
     onStatus(listener) {
-      const handler = () => listener(signalingStatus());
-      const conns = connections(provider);
-      for (const connection of conns) {
-        connection.on("connect", handler);
-        connection.on("disconnect", handler);
-      }
-      return () => {
-        for (const connection of conns) {
-          connection.off("connect", handler);
-          connection.off("disconnect", handler);
-        }
-      };
+      return onSignalingChange(provider, () => listener(signalingStatus()));
     },
     verifiedPeerCount: () => verified.size,
     onVerified(listener) {

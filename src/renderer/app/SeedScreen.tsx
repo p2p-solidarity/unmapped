@@ -2,6 +2,7 @@
 // a friend's — and walk into that land. Nothing here needs a model: the land is generated from the
 // seed, and whoever lives on it is witnessed later, when a model is reachable.
 
+import { useT } from "@renderer/i18n";
 import { useSessionStore } from "@renderer/state";
 import { Button, ErrorBlock, StatePanel, Surface, space, Text, TextField } from "@renderer/ui";
 import type { CartridgeManifest } from "@shared/cartridge";
@@ -19,6 +20,7 @@ import { GameShell } from "./shell/GameShell";
 import { openInstance } from "./useInstanceLoader";
 
 export function SeedScreen(): JSX.Element {
+  const t = useT();
   const setScreen = useSessionStore((state) => state.setScreen);
   const [game, setGame] = useState<Loadable<CartridgeManifest>>(loading());
   const [seed, setSeed] = useState(randomSeedCode);
@@ -55,26 +57,29 @@ export function SeedScreen(): JSX.Element {
   return (
     <GameShell
       hints={[
-        { keys: ["Esc"], label: "Back", onPress: busy ? undefined : () => setScreen("worlds") },
+        {
+          keys: ["Esc"],
+          label: t("common.back"),
+          onPress: busy ? undefined : () => setScreen("worlds"),
+        },
       ]}
     >
       <div
         style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}
       >
         <Surface variant="card" padding="xl" style={{ width: "min(560px, 92%)", gap: space.md }}>
-          <StatePanel state={game} loadingText="Preparing the land…">
+          <StatePanel state={game} loadingText={t("title.preparingLand")}>
             {(manifest) => (
               <>
                 <Text variant="title" as="h2">
-                  {`${manifest.name} · New Game`}
+                  {t("title.newGameHeading", { name: manifest.name })}
                 </Text>
                 <Text variant="body" tone="muted">
-                  Every seed is a different land of the same game. The same seed is the same land
-                  for anyone who types it.
+                  {t("title.seedIntro")}
                 </Text>
                 <div style={{ display: "flex", gap: space.sm, alignItems: "flex-end" }}>
                   <TextField
-                    label="Seed"
+                    label={t("title.seedLabel")}
                     value={formatSeedCode(seed)}
                     maxLength={SEED_LENGTH + 1}
                     mono
@@ -90,12 +95,12 @@ export function SeedScreen(): JSX.Element {
                     disabled={busy}
                     onClick={() => setSeed(randomSeedCode())}
                   >
-                    Roll
+                    {t("title.roll")}
                   </Button>
                 </div>
                 {valid ? null : (
                   <Text variant="caption" tone="danger">
-                    {`A seed is ${SEED_LENGTH} letters and digits (no I, O, 0 or 1).`}
+                    {t("title.seedInvalid", { n: SEED_LENGTH })}
                   </Text>
                 )}
                 {error === null ? null : <ErrorBlock error={error} />}
@@ -105,13 +110,13 @@ export function SeedScreen(): JSX.Element {
                   disabled={!valid || busy}
                   onClick={() => start(manifest)}
                 >
-                  {busy ? "Opening the land…" : "Start"}
+                  {busy ? t("title.openingLand") : t("title.start")}
                 </Button>
               </>
             )}
           </StatePanel>
           <Button variant="ghost" disabled={busy} onClick={() => setScreen("create")}>
-            Or create your own game from a story
+            {t("title.createFromStory")}
           </Button>
         </Surface>
       </div>

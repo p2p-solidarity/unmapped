@@ -7,6 +7,7 @@
 
 import type { ToolExecutionResult } from "@harness";
 import { useWorldStore } from "@renderer/state/worldStore";
+import { languageName } from "@shared/language";
 import { err, fail, ok, type Result } from "@shared/result";
 import type { DialogueChoice, NpcSpec } from "@shared/world";
 import { runNarrativeTurn } from "./turn";
@@ -39,7 +40,7 @@ export async function resolveChoice(
     `You are speaking as ${npc.name} (${npc.id}).`,
     `The player chose: ${choice.label}.`,
     `Intended effect: ${choice.effect}.`,
-    `Enact it with tools only if the world must change; then answer with one in-world line in ${genesis.language}.`,
+    `Enact it with tools only if the world must change; then answer with one in-world line in ${languageName(genesis.language)}.`,
   ].join(" ");
 
   const turn = await runNarrativeTurn({

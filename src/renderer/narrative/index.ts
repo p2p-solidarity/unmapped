@@ -16,6 +16,5 @@ export {
   type TurnSection,
 } from "./turn";
 export { AltarPanel } from "./ui/AltarPanel";
-export { CreateScreen, type CreateScreenProps } from "./ui/CreateScreen";
 export { DialogueCard } from "./ui/DialogueCard";
 export { generateChunk, type WitnessInput } from "./witness";

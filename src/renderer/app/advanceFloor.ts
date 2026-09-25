@@ -3,7 +3,7 @@
 // (Rule 2 / Rule 7). The transition lives in the session store (`busy` + `floorFailure`) so the
 // input lock and the overlay read the same value instead of each re-deriving it.
 
-import { translate } from "@renderer/i18n";
+import { errorLine, translate } from "@renderer/i18n";
 import { generateSceneArtifact, generationEventLabel } from "@renderer/narrative";
 import { requestRoomTransition } from "@renderer/net/sync";
 import { useEngineStore, useRunStore, useSessionStore, useWorldStore } from "@renderer/state";
@@ -32,7 +32,7 @@ export interface FloorAdvanceApi {
 let activeFloorGeneration: AbortController | null = null;
 
 export function busyLabel(floor: number): string {
-  return `Weaving floor ${floor}…`;
+  return translate("hud.weavingFloor", { floor });
 }
 
 /**
@@ -42,17 +42,19 @@ export function busyLabel(floor: number): string {
 function advanceInstance(instanceId: string, to: string, targetSceneId: string | null): void {
   const session = useSessionStore.getState();
   if (session.networkRole === "peer" && requestRoomTransition(targetSceneId)) {
-    session.setBusy(targetSceneId === null ? "Waiting for host…" : "Host is loading next scene…");
+    session.setBusy(translate(targetSceneId === null ? "hud.waitingHost" : "hud.hostLoading"));
     return;
   }
   session.setFloorFailure(null);
-  session.setBusy(targetSceneId === null ? "Reaching the ending…" : "Loading next scene…");
+  session.setBusy(
+    translate(targetSceneId === null ? "hud.reachingEnding" : "hud.loadingNextScene"),
+  );
   void (async () => {
     const checkpoint = await checkpointCurrentInstance();
     if (!checkpoint.ok) {
       const active = useSessionStore.getState();
       active.setBusy(null);
-      active.toast("danger", checkpoint.error.message);
+      active.toast("danger", errorLine(checkpoint.error));
       return;
     }
     const result =
@@ -62,15 +64,12 @@ function advanceInstance(instanceId: string, to: string, targetSceneId: string |
     const active = useSessionStore.getState();
     active.setBusy(null);
     if (!result.ok) {
-      active.toast(
-        "danger",
-        `${result.error.message}${result.error.hint ? ` — ${result.error.hint}` : ""}`,
-      );
+      active.toast("danger", errorLine(result.error));
       return;
     }
     const hydrated = hydrateInstance(result.value);
     if (!hydrated.ok) {
-      active.toast("danger", hydrated.error.message);
+      active.toast("danger", errorLine(hydrated.error));
       return;
     }
     if (targetSceneId === null) {
@@ -101,31 +100,28 @@ function descendInstance(): void {
   const world = useWorldStore.getState();
   if (session.busy !== null || world.origin?.kind !== "instance") return;
   if (session.networkRole === "peer") {
-    session.toast("info", "Only the host can take a room into the depths.");
+    session.toast("info", translate("hud.hostOnlyDepths"));
     return;
   }
   const { instanceId } = world.origin;
   const depth = (session.activeInstance?.instance.save.endless?.depth ?? 0) + 1;
   session.setEnding(null);
   session.setFloorFailure(null);
-  session.setBusy(translate("descending", { depth }));
+  session.setBusy(translate("depths.descending", { depth }));
   void (async () => {
     const checkpoint = await checkpointCurrentInstance();
     const result = checkpoint.ok ? await window.seed.instances.descend(instanceId) : checkpoint;
     const active = useSessionStore.getState();
     active.setBusy(null);
     if (!result.ok) {
-      active.toast(
-        "danger",
-        `${result.error.message}${result.error.hint ? ` — ${result.error.hint}` : ""}`,
-      );
+      active.toast("danger", errorLine(result.error));
       return;
     }
     // The run carries on: score, kills and level stay, and a cleared floor is running again.
     useRunStore.getState().descend();
     const hydrated = hydrateInstance(result.value);
     if (!hydrated.ok) {
-      active.toast("danger", hydrated.error.message);
+      active.toast("danger", errorLine(hydrated.error));
       return;
     }
     const store = useWorldStore.getState();
@@ -133,11 +129,11 @@ function descendInstance(): void {
       makeKarmaEntry({
         floor: store.floor,
         action: "floor",
-        choice: translate("reachedDepth", { depth }),
+        choice: translate("depths.reachedDepth", { depth }),
         effect: "endless depth",
       }),
     );
-    active.toast("success", translate("reachedDepth", { depth }));
+    active.toast("success", translate("depths.reachedDepth", { depth }));
   })();
 }
 
@@ -151,12 +147,12 @@ function start(to: string, targetSceneId: string | null): void {
   }
   const { meta, genesis } = world;
   if (meta === null || genesis === null || !("archetype" in genesis)) {
-    session.toast("danger", "No world is loaded.");
+    session.toast("danger", translate("hud.noWorld"));
     return;
   }
   const floor = world.floor + 1;
   if (world.scene.status !== "ready") {
-    session.toast("danger", "The current scene is not ready to expand.");
+    session.toast("danger", translate("hud.sceneNotReady"));
     return;
   }
   const currentScene = world.scene.value;
@@ -203,7 +199,7 @@ function start(to: string, targetSceneId: string | null): void {
     session2.setBusy(null);
     if (!result.ok) {
       if (result.error.code === "request-aborted") {
-        session2.toast("info", "Scene generation cancelled.");
+        session2.toast("info", translate("hud.generationCancelled"));
         return;
       }
       session2.setFloorFailure({ to, floor, error: result.error });
@@ -218,7 +214,10 @@ function start(to: string, targetSceneId: string | null): void {
     // meta.json follows from the floor change (usePersistWorld); world.oui is written here.
     const written = await window.seed.worlds.write(meta.id, WORLD_FILES.scene, source);
     if (!written.ok) {
-      session2.toast("danger", `world.oui could not be saved: ${written.error.message}`);
+      session2.toast(
+        "danger",
+        translate("hud.worldOuiNotSaved", { reason: errorLine(written.error) }),
+      );
     }
   })();
 }
@@ -242,7 +241,7 @@ export function useFloorAdvance(): FloorAdvanceApi {
   const cancel = useCallback(() => {
     const controller = activeFloorGeneration;
     if (controller === null) return;
-    useSessionStore.getState().setBusy("Cancelling scene generation…");
+    useSessionStore.getState().setBusy(translate("hud.cancellingGeneration"));
     controller.abort();
   }, []);
 

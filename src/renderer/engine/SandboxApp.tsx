@@ -1,5 +1,6 @@
 import { parseRules, parseScene } from "@dsl/index";
 import { Canvas } from "@react-three/fiber";
+import { errorLine, translate, useT } from "@renderer/i18n";
 import { useEncounterStore, useEngineStore, useWorldStore } from "@renderer/state";
 import { Button, colors, space, Text } from "@renderer/ui";
 import type { GameplayRules } from "@shared/gameplay";
@@ -15,6 +16,7 @@ export function SandboxApp() {
   const weapon = useEncounterStore((state) => state.weapon);
   const ammo = useEncounterStore((state) => state.ammo);
   const turn = useEncounterStore((state) => state.turn);
+  const t = useT();
   useEffect(() => {
     const receive = (event: MessageEvent) => {
       if (
@@ -30,14 +32,18 @@ export function SandboxApp() {
         sceneSource.length > 4 * 1024 * 1024 ||
         rulesSource.length > 4 * 1024 * 1024
       ) {
-        setError("Invalid playtest content.");
+        setError(translate("hud.playtestInvalid"));
         return;
       }
       const scene = parseScene(sceneSource);
       const rules = parseRules(rulesSource);
       if (!scene.ok || !rules.ok) {
         setError(
-          !scene.ok ? scene.error.message : !rules.ok ? rules.error.message : "Invalid content.",
+          !scene.ok
+            ? errorLine(scene.error)
+            : !rules.ok
+              ? errorLine(rules.error)
+              : translate("hud.invalidContent"),
         );
         return;
       }
@@ -77,7 +83,7 @@ export function SandboxApp() {
           </Suspense>
         </Canvas>
       ) : (
-        <Text>{error ?? "Loading playtest…"}</Text>
+        <Text>{error ?? t("hud.loadingPlaytest")}</Text>
       )}
       <div
         style={{
@@ -91,13 +97,10 @@ export function SandboxApp() {
           pointerEvents: "none",
         }}
       >
-        <Text variant="caption">
-          Playtest · WASD move · click to aim/fire · R end turn · Esc release cursor. No save is
-          written.
-        </Text>
+        <Text variant="caption">{t("hud.playtestHint")}</Text>
         <div style={{ pointerEvents: "auto" }}>
           <Button variant="secondary" onClick={() => setRun((value) => value + 1)}>
-            Reset
+            {t("hud.reset")}
           </Button>
         </div>
       </div>
@@ -105,7 +108,7 @@ export function SandboxApp() {
         style={{ position: "absolute", bottom: space.md, left: space.md, pointerEvents: "none" }}
       >
         <Text variant="caption">
-          {weapon ? `${weapon.name} · ${ammo ?? "∞"} ammo` : ""}{" "}
+          {weapon ? t("hud.ammo", { weapon: weapon.name, ammo: ammo ?? "∞" }) : ""}{" "}
           {turn ? `· ${turn.system} / ${turn.phase}` : ""}
         </Text>
       </div>

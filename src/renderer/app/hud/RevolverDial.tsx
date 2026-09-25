@@ -8,6 +8,7 @@
 // Rule 2: every chamber is a real entry in `turn.order`, coloured by that actor's real side, and
 // emptied only once that actor has actually acted. Nothing here is decoration over nothing.
 
+import { useT } from "@renderer/i18n";
 import { colors, radius, space, Text } from "@renderer/ui";
 import type { TurnState } from "@shared/timing";
 import type { JSX } from "react";
@@ -25,6 +26,7 @@ export interface RevolverDialProps {
 }
 
 export function RevolverDial({ turn, sideOf, labelOf }: RevolverDialProps): JSX.Element | null {
+  const t = useT();
   const chambers = turn.order.length;
   if (chambers === 0) return null;
 
@@ -120,7 +122,7 @@ export function RevolverDial({ turn, sideOf, labelOf }: RevolverDialProps): JSX.
           {`${chambers - turn.index} / ${chambers}`}
         </Text>
         <Text variant="caption" tone="dim">
-          {active === null ? "重新裝填…" : labelOf(active)}
+          {active === null ? t("hud.reloading") : labelOf(active)}
         </Text>
         <div
           style={{

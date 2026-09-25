@@ -5,6 +5,7 @@
 // Everything here is read from data. A scene with no monsters, or rules with no Combat statement,
 // produces no encounter at all rather than an empty health bar (Rule 2).
 
+import { translate } from "@renderer/i18n";
 import type { EncounterCombatant } from "@renderer/state/encounterStore";
 import type { Blocker, Combatant, WeaponSpec } from "@shared/combat";
 import { hitscan, isAlive, monsterHp } from "@shared/combat";
@@ -127,7 +128,7 @@ export function buildEncounter(
       const offset = (Math.floor(slot / 2) + 1) * ALLY_SPACING * (slot % 2 === 0 ? -1 : 1);
       combatants.push({
         id: `ally_${slot + 1}`,
-        label: `Ally ${slot + 1}`,
+        label: translate("hud.ally", { n: slot + 1 }),
         side: "party",
         hp: party.memberHp,
         maxHp: party.memberHp,

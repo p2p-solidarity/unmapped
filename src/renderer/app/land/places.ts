@@ -4,6 +4,7 @@
 // ground is rebuilt from its seed every time it is entered (`buildPlace`).
 
 import { parseScene, serializeScene } from "@dsl";
+import { contentLanguage, errorLine, translate } from "@renderer/i18n";
 import { generatePlace } from "@renderer/narrative/place";
 import {
   type ActivePlace,
@@ -86,7 +87,7 @@ export async function createPlace(kind: PlaceKind, wish: string): Promise<Result
   const bible = active.cartridge.bible;
   const rules = useWorldStore.getState().gameplayRules;
   const language =
-    useWorldStore.getState().genesis?.language ?? bibleLanguage(bible) ?? navigator.language;
+    useWorldStore.getState().genesis?.language ?? bibleLanguage(bible) ?? contentLanguage();
   const written = await generatePlace({
     kind,
     wish,
@@ -127,12 +128,12 @@ export function enterPlace(id: string): void {
   const session = useSessionStore.getState();
   const place = useLandStore.getState().progress?.places?.find((one) => one.id === id);
   if (place === undefined) {
-    session.toast("danger", "That place is not on this land.");
+    session.toast("danger", translate("land.placeMissing"));
     return;
   }
   const playable = playablePlace(place);
   if (!playable.ok) {
-    session.toast("danger", playable.error.message);
+    session.toast("danger", errorLine(playable.error));
     return;
   }
   void checkpointCurrentInstance();
@@ -165,7 +166,7 @@ export function leavePlace(finished: boolean): void {
         ...(stored === undefined ? {} : { chunk: { cx: stored.cx, cz: stored.cz } }),
       }),
     );
-    session.toast("success", `Crossed ${place.title}`);
+    session.toast("success", translate("land.crossed", { title: place.title }));
   }
   session.leavePlace();
 }

@@ -737,12 +737,12 @@
       <div class="drawer-head"><p class="drawer-title" id="drawer-title">新版規格</p><button class="ghost-button" type="button" id="menu-close">關閉</button></div>
       <nav class="drawer-nav" aria-label="規格文件分頁">
         <button class="doc-tab" type="button" aria-current="page" data-doc-page="core" data-page-target="entry"><span class="doc-tab-index">01</span><span class="doc-tab-copy">產品方向<small>AI 更好產 · 2D 優先 · 成本指標</small></span></button>
-        <button class="doc-tab" type="button" data-doc-page="game" data-page-target="game-entry"><span class="doc-tab-index">02</span><span class="doc-tab-copy">遊戲現況<small>Create a game · HD-2D 大地 · 章節 · 戰鬥 · 地點</small></span></button>
+        <button class="doc-tab" type="button" data-doc-page="game" data-page-target="game-entry"><span class="doc-tab-index">02</span><span class="doc-tab-copy">遊戲現況<small>Create a game · 大地 · 章節 · 戰鬥 · 地點 · AI Worlds</small></span></button>
         <button class="doc-tab" type="button" data-doc-page="progress" data-page-target="progress"><span class="doc-tab-index">03</span><span class="doc-tab-copy">開發計劃與 Prompt<small>已交付階段 · 實測數字 · 驗收</small></span></button>
         <button class="doc-tab" type="button" data-doc-page="technical" data-page-target="verdict"><span class="doc-tab-index">04</span><span class="doc-tab-copy">作品契約與現況<small>責任分工 · 執行邊界 · 無限章節</small></span></button>
-        <button class="doc-tab" type="button" data-doc-page="chain" data-page-target="chain-why"><span class="doc-tab-index">05</span><span class="doc-tab-copy">智能合約與流通<small>出處帳本 · 見證帳本 · 設定與現況</small></span></button>
+        <button class="doc-tab" type="button" data-doc-page="chain" data-page-target="chain-why"><span class="doc-tab-index">05</span><span class="doc-tab-copy">智能合約與流通<small>出處帳本 · 見證帳本 · ENSv2 卡帶名稱 · 現況</small></span></button>
       </nav>
-      <p class="drawer-note">這是現況規格：第 01 頁是方向，第 02 頁是遊戲現在的樣子（全是實機截圖），第 03–04 頁是已交付並實機驗收的設計，第 05 頁是選配的鏈上出處。五頁可獨立閱讀；列印時展開全文。</p>
+      <p class="drawer-note">這是現況規格：第 01 頁是方向，第 02 頁是遊戲現在的樣子（全是實機截圖），第 03–04 頁是已交付並實機驗收的設計，第 05 頁是選配的鏈上出處與 ENSv2 卡帶名稱。五頁可獨立閱讀；列印時展開全文。</p>
     </aside>
     <div class="hero" id="top" data-page-hero="core">
       <p class="eyebrow">Product direction · Revision 5 · 2026-09-23</p>
@@ -755,7 +755,7 @@
       <div class="page-intro" data-page-intro="game" hidden><div><p class="section-kicker">Page 02 · The game today</p><h2 data-page-title>現在的遊戲：一張無限的 HD-2D 大地</h2><p>標題、開新世界、章節、戰鬥、調整機制與地點。以下全是開發版的實機截圖，文字寫的是它們現在怎麼運作。</p></div><span class="status verified">實機截圖 · 2026-09-23</span></div>
       <div class="page-intro" data-page-intro="progress" hidden><div><p class="section-kicker">Page 03 · Delivery plan</p><h2 data-page-title>故事、戰鬥與地點都接上同一張地圖</h2><p>生成方式、隔離播放器、創作閉環、無限章節、HD-2D、大地戰鬥、地點、角色圖與 Create a game 都已實作並實機驗收；本頁只寫實際量到的數字。</p></div><span class="status verified">階段 1–11 已交付</span></div>
       <div class="page-intro" data-page-intro="technical" hidden><div><p class="section-kicker">Page 04 · Contract &amp; world</p><h2 data-page-title>固定服務介面，開放作品玩法</h2><p>作品契約、執行邊界、儲存責任與故事章節都已落地；本頁是現況，不是提案。</p></div><span class="status verified">契約已實作</span></div>
-      <div class="page-intro" data-page-intro="chain" hidden><div><p class="section-kicker">Page 05 · On-chain</p><h2 data-page-title>上鏈只記出處與見證</h2><p>內容永遠不上鏈；鏈上只有雜湊、作者、血緣與玩家留下的話。沒有設定鏈，整個遊戲照常運作。</p></div><span class="status unverified">合約已寫與測試 · 尚未部署</span></div>
+      <div class="page-intro" data-page-intro="chain" hidden><div><p class="section-kicker">Page 05 · On-chain</p><h2 data-page-title>上鏈只記出處、見證與名稱</h2><p>內容永遠不上鏈；鏈上只有雜湊、作者、血緣、玩家留下的話，以及指向卡帶版本的 ENSv2 名稱。沒有設定鏈，整個遊戲照常運作。</p></div><span class="status unverified">合約已測 · ENSv2 已模擬 · 尚未送出交易</span></div>
         <section id="entry" data-section data-page="core" data-open-default>
           <div class="section-head"><p class="section-kicker">01 · Core value</p><h2>框架以「AI 更好產」為第一優先</h2><p class="section-intro">同一個需求，選擇能讓模型用更少上下文、更少錯誤與更少修補，產出可玩結果的表示方式。</p></div>
 
@@ -821,10 +821,10 @@
             <article class="card"><h3>無限章節，在遊戲裡玩</h3><p>門的位置由宿主決定，依序開啟。背景寫好下一章：1–3 個人和他們的話、1–3 個寶物、2–5 隻怪（沒有戰鬥的世界就沒有怪），走到門口時它們已經站在門的周圍。卡帶的章節過完後，大地自己續寫，最多 99 章。</p></article>
           </div>
           <div class="screen-grid" style="margin-top:20px">
-            <figure class="screen-card"><img src="assets/unwritten-land-land-story.jpg" alt="第 6 章：五章已過" loading="lazy"><figcaption><span class="capture-label">HD-2D · 大地</span><strong>第 6 章：五章已過</strong>左上是這個存檔的真實狀態：已過 5 章，下一章「潮口燈點」在 75 格外，指南針指過去。打勾的門是過關過的章節。</figcaption></figure>
+            <figure class="screen-card"><img src="assets/unwritten-land-land-story.jpg" alt="潮間小鎮：第 1 章在門邊" loading="lazy"><figcaption><span class="capture-label">HD-2D · 大地章節</span><strong>潮間小鎮：第 1 章在門邊</strong>用 Create a game 建的新世界。光柱是第 1 章「退潮地址」的門；站務、老人和商人是這章的人，◇ 是要找的東西，Lv 2、Lv 3 是要打倒的怪。左上 HUD 寫著這章的目標和還剩多少（talk 3 · find 1 · defeat 2）。</figcaption></figure>
             <figure class="screen-card"><img src="assets/unwritten-land-chapter.jpg" alt="章節就在大地上" loading="lazy"><figcaption><span class="capture-label">HD-2D · 章節</span><strong>章節就在大地上：找回燈芯</strong>模型寫的人、寶物和怪物由宿主擺在門的周圍，用同一套角色圖、對話和戰鬥。跟每個人說過話、打開每個寶物、打倒每隻怪，這章就完成；拿到的東西帶去下一章。</figcaption></figure>
             <figure class="screen-card"><img src="assets/unwritten-land-chapter-card.jpg" alt="門口的章節卡" loading="lazy"><figcaption><span class="capture-label">Chapter card</span><strong>門口的章節卡</strong>在門口按 E，看這章在講什麼、目標是什麼、還剩什麼沒做。卡片只是說明，章節本身就在門的周圍玩；攀爬或迷宮類的章節則從這裡走進地點。</figcaption></figure>
-            <figure class="screen-card"><img src="assets/unwritten-land-land-16bit.jpg" alt="同一張地圖，像素外觀" loading="lazy"><figcaption><span class="capture-label">V · 16-bit</span><strong>同一張地圖，像素外觀</strong>按 V 關掉 HD-2D 後製、切成 16-bit 平面畫法；地圖、戰鬥、門與地點完全一樣，只是換一種畫。</figcaption></figure>
+            <figure class="screen-card"><img src="assets/unwritten-land-land-16bit.jpg" alt="同一張地圖，像素外觀" loading="lazy"><figcaption><span class="capture-label">V · 16-bit</span><strong>同一張地圖，像素外觀</strong>按 V 切成 16-bit 平面畫法：同一塊地、同一批居民（商人、小孩都是影像模型畫的角色圖），戰鬥、門與地點完全一樣，只是換一種畫。</figcaption></figure>
           </div>
         </section>
         <section id="game-fight" data-section data-page="game" data-open-default>
@@ -834,7 +834,7 @@
             <article class="card card-cyan"><h3>調整機制缺什麼補什麼</h3><p>需求 → 模型提出變更 → 先試玩 → 發布成新版本。卡帶沒有戰鬥時，「加一把槍」會連戰鬥模組一起補上（玩家 100 HP、怪物 30 HP + 每級 10），而不是回一個錯誤。</p></article>
           </div>
           <div class="screen-grid" style="margin-top:20px">
-            <figure class="screen-card"><img src="assets/unwritten-land-land-combat.jpg" alt="在大地上直接打" loading="lazy"><figcaption><span class="capture-label">HD-2D · 戰鬥</span><strong>在大地上直接打</strong>右上是戰鬥 HUD：回合、HP、彈匣、擊殺。Lv 2、Lv 4 標記是附近的野怪；Space、F 或點擊開火。</figcaption></figure>
+            <figure class="screen-card"><img src="assets/unwritten-land-land-combat.jpg" alt="在大地上直接打" loading="lazy"><figcaption><span class="capture-label">HD-2D · 戰鬥</span><strong>在大地上直接打</strong>白線是剛開的一槍，打向這章的影子怪；旁邊的幽火已經倒下（1 kill）。右上的戰鬥 HUD 顯示回合、HP、彈匣和擊殺，武器名「潮汐槍」是建世界時自己取的。</figcaption></figure>
             <figure class="screen-card"><img src="assets/unwritten-land-mod-revision.jpg" alt="「加一把槍，再在起點附近放三隻史萊姆」" loading="lazy"><figcaption><span class="capture-label">調整機制</span><strong>「加一把槍，再在起點附近放三隻史萊姆」</strong>提案列出新武器（6 傷害、18 射程、650 ms 冷卻）與三隻 Lv 1 史萊姆，並自動補上戰鬥模組；下方可以先試玩再發布。</figcaption></figure>
           </div>
         </section>
@@ -852,6 +852,14 @@
           </div>
           <div class="callout"><strong>關於這些圖：</strong>全部是 2026-09-23 在開發版實機截的（模型 gpt-5.4-mini，視窗 1440×868），沒有設計稿、沒有後製修圖。舊版文件的示範截圖已經移除。</div>
         </section>
+        <section id="game-ai" data-section data-page="game" data-open-default>
+          <div class="section-head"><p class="section-kicker">05 · AI Worlds</p><h2>一句話生成的小遊戲</h2><p class="section-intro">標題選單的 AI Worlds 是另一條路：一句話讓模型寫出一個 HTML／JavaScript 小遊戲，在 sandbox 裡跑（Rule 12），可以再用一句話修改、存成版本、串成旅程。它和故事章節分開：章節在大地上玩，AI Worlds 是獨立的小遊戲。</p></div>
+          <div class="screen-grid">
+            <figure class="screen-card screen-card--wide"><img src="assets/unwritten-land-ai-worlds.jpg" alt="AI Worlds 清單" loading="lazy"><figcaption><span class="capture-label">AI Worlds</span><strong>草稿、版本、旅程</strong>上面一句話生成；左邊是草稿（每次嘗試都留著），中間是存好的版本，右邊是旅程（一個或多個世界串起來，帶著攜帶物走）。</figcaption></figure>
+            <figure class="screen-card"><img src="assets/unwritten-land-ai-dice.jpg" alt="潮口猜點" loading="lazy"><figcaption><span class="capture-label">AI world · 擲骰</span><strong>潮口猜點</strong>模型寫的 canvas 小遊戲：跟老船工比潮位與點數，按空白鍵或點一下擲骰。這一擲是 6、潮位 4，它回「差得有點多。先等潮聲小下去。」</figcaption></figure>
+            <figure class="screen-card"><img src="assets/unwritten-land-ai-boat.jpg" alt="霧礁行舟" loading="lazy"><figcaption><span class="capture-label">AI world · 即時操船</span><strong>霧礁行舟</strong>方向鍵或 WASD 掌舵、Space 加速，在霧裡繞過暗礁找燈塔。這一版的船開局不久就會觸礁，是模型寫的這個世界本身的問題，用一句話修改就能讓它重寫。</figcaption></figure>
+          </div>
+        </section>
         <section id="progress" data-section data-page="progress" data-open-default>
           <div class="section-head"><p class="section-kicker">01 · Delivery scope</p><h2>最小閉環之後，接上了整張地圖</h2><p class="section-intro">以下狀態來自實機驗收，不是計劃。數字全部取自實際執行紀錄（模型：gpt-5.4-mini）。</p></div>
 <div class="table-wrap" role="region" aria-label="階段狀態" tabindex="0"><table><thead><tr><th scope="col">階段</th><th scope="col">產出</th><th scope="col">進入下一階段的條件</th><th scope="col">狀態</th></tr></thead><tbody>
@@ -865,7 +873,8 @@
 <tr><td>8 · 大地戰鬥與調整機制</td><td>一套戰鬥模型，大地上直接打；調整機制缺什麼補什麼（武器、怪物、隊伍），不再拒絕</td><td>沒有戰鬥的卡帶也能「加一把槍」並發布</td><td><span class="status verified">已完成</span></td></tr>
 <tr><td>9 · 地點</td><td>橫向捲軸與地城，從大地走進去、走出來；存檔自己的，不產生新版本</td><td>地形一定走得通；離開後回到入口旁、大地狀態不變</td><td><span class="status verified">已完成，兩種都實玩通過</span></td></tr>
 <tr><td>10 · 角色與怪物圖</td><td>9 種 NPC 職業、8 種怪物各一張，由影像模型畫一次（gpt-image-1-mini，18 張），兩種外觀都用</td><td>遊戲執行時不產圖；每張的 prompt 與用量有紀錄</td><td><span class="status verified">已完成</span></td></tr>
-<tr><td>11 · Create a game</td><td>三步：世界與玩法 → 可修改的計畫（聖經、章節、門的地圖）→ 建立並進入；舊的六步 Genre Matrix 流程已從選單移除</td><td>只有建立會發布；聖經會配合玩法（有戰鬥就不把怪物列為禁忌）</td><td><span class="status verified">已完成，實際建立並進入一個新世界</span></td></tr>
+<tr><td>11 · Create a game</td><td>三步：世界與玩法 → 可修改的計畫（聖經、章節、門的地圖）→ 建立並進入；舊的六步 Genre Matrix 流程連同它的 authoring workspace 與 IPC 已刪除</td><td>只有建立會發布；聖經會配合玩法（有戰鬥就不把怪物列為禁忌）</td><td><span class="status verified">已完成，實際建立並進入一個新世界</span></td></tr>
+<tr><td>13 · ENSv2 與卡帶名稱</td><td>ENS 讀取改走 ENSv2 Universal Resolver（預設 Sepolia，可切主網，支援 CCIP-Read 與 DNS 名稱）；每個發布的卡帶可在 Sepolia 認領 <code>&lt;cartridgeId&gt;.&lt;父名稱&gt;.eth</code>，紀錄只有 id、版本與 sha256。<code>bun run ens:setup</code> 做一次性設定，<code>--dry-run</code> 用 <code>eth_simulateV1</code> 跑完整條鏈上流程（見第 05 頁）</td><td>模擬中的子名稱能從 Universal Resolver 讀回；app 內 Sepolia／主網解析、卡帶名稱列與「用 ENS 名稱開啟」實機通過，renderer 0 個錯誤（E2E 38 秒）</td><td><span class="status verified">已完成 · 鏈上只以模擬驗證，尚未送出真實交易 · <a href="../e2e/2026-09-24-ensv2-cartridge-names/result.md">E2E 紀錄</a></span></td></tr>
 </tbody></table></div>
 <div class="table-wrap" role="region" aria-label="實測數字" tabindex="0"><table><thead><tr><th scope="col">量到的</th><th scope="col">結果</th></tr></thead><tbody>
 <tr><td>首次可玩（自動檢查通過）</td><td>四個玩法（RPG／ARPG／迷宮／瑪利歐式平台）3/4 第一次就過，全部在 1 次修補內可玩；故事章節（當時是 AI 網頁小遊戲）2/2 第一次就過</td></tr>
@@ -875,7 +884,7 @@
 <tr><td>素材生成</td><td>3 張 256px 透明 PNG，各約 16 秒、約 1,056 output tokens</td></tr>
 <tr><td>隔離</td><td>惡意作品拿不到 preload／Node／父頁面／儲存／eval／網路／彈窗／導頁；無窮迴圈只吃掉自己的行程（97% CPU），宿主往返仍 95–98 毫秒</td></tr>
 </tbody></table></div>
-<div class="callout"><strong>完成定義：</strong>有程式碼只代表已有實作。以上每一項都跑過專案檢查（846 測試）與實機操作；失敗、取消與重新開啟也各驗過一次。詳細紀錄與未量測項目見 <a href="../experiments/interactive-works-acceptance-2026-09-23.md">驗收文件</a>。</div>
+<div class="callout"><strong>完成定義：</strong>有程式碼只代表已有實作。以上每一項都跑過專案檢查（808 測試；刪掉舊流程時一併移除了它的 38 個測試）與實機操作；失敗、取消與重新開啟也各驗過一次。詳細紀錄與未量測項目見 <a href="../experiments/interactive-works-acceptance-2026-09-23.md">驗收文件</a>。</div>
         </section>
         <section id="stages" data-section data-page="progress" data-open-default>
           <div class="section-head"><p class="section-kicker">02 · Acceptance</p><h2>每階段只解決一個問題</h2><p class="section-intro">先證明生成方式，再固定執行契約；避免一開始把新的框架做成另一個龐大引擎。</p></div>
@@ -990,10 +999,10 @@
 <div class="table-wrap" role="region" aria-label="現有能力與新版差距" tabindex="0"><table><thead><tr><th scope="col">現有部分</th><th scope="col">新版處置</th><th scope="col">仍待完成</th></tr></thead><tbody>
 <tr><td>Cartridge／Instance／Workspace</td><td>保留發布內容、個人進度、草稿分開的責任</td><td>已完成：AI 作品另存 works／work-plays／work-drafts（Rule 12）</td></tr>
 <tr><td>Three.js／R3F／Rapier／Scene DSL</td><td>大地走 engine2d（2D canvas 或 three.js HD-2D 兩種畫法，自己的移動與碰撞）；地點（橫向捲軸、地城）走 R3F／Rapier 的 GameCanvas；故事章節在大地或地點裡玩</td><td>AI Worlds 的網頁作品與卡帶路由分開、各自存檔；攜帶物只在大地章節之間</td></tr>
-<tr><td>Genre Matrix／Capability Compiler／六步 Create</td><td>已從選單移除；Create a game 換成三步（世界與玩法 → 計畫 → 建立）</td><td>舊六步畫面的程式碼還在，未接到任何選單</td></tr>
+<tr><td>Genre Matrix／Capability Compiler／六步 Create</td><td>已刪除（約 5,000 行，含 authoring workspace 與 IPC）；Create a game 換成三步（世界與玩法 → 計畫 → 建立）</td><td>卡帶的發布管線（capabilities、forge）仍在，Create a game 與調整機制都用它</td></tr>
 <tr><td>Inference／AFM scene artifact</td><td>優先重用可用模型連線與取消機制；AFM 場景能力留給適用作品</td><td>已完成：@@ 行協議、錯誤帶 main.js:行:列、修補最多 2 次</td></tr>
 <tr><td>備份與版本</td><td>保留精確 revision 與 hash 的身份原則</td><td>目前 instance 備份未包含顯影 chunks、lore、notes；不宣稱現有世界備份完整</td></tr>
-<tr><td>多人／身份／ENS／鏈上發布</td><td>既有能力保留；不當新播放器的前置條件</td><td>待生成成本與核心閉環被驗證後，另定分享範圍</td></tr>
+<tr><td>多人／身份／ENS／鏈上發布</td><td>既有能力保留；不當新播放器的前置條件。ENS 讀取已改走 ENSv2，卡帶可認領子名稱（第 05 頁）</td><td>分享頁與跨機器下載驗證仍待另定範圍</td></tr>
 </tbody></table></div><div class="callout warn"><strong>規格銜接：</strong><code>plan.md</code> 的「見證人／無限地圖」現在就是主遊戲：大地、見證、章節、戰鬥與地點都在它上面。<code>CLAUDE.md</code> 的 data-only 規則仍管卡帶、Scene DSL 與 mod；只有標題選單的 AI Worlds 能寫程式，而且只在 sandbox 裡（Rule 12）；故事章節是資料（Chapter 語言），不是程式。舊遊戲沒有刪除。</div>
         </section>
         <section id="story" data-section data-page="technical" data-open-default>
@@ -1060,18 +1069,41 @@
 </tbody></table></div>
           <div class="callout"><strong>部署由人來做：</strong><code>bun run contracts:build</code> 編譯並更新已提交的 artifact，<code>bun run contracts:deploy</code> 用你自己的金鑰部署並印出位址。這一步會花 gas，所以不由代理代跑。</div>
         </section>
+        <section id="chain-ens" data-section data-page="chain" data-open-default>
+          <div class="section-head"><p class="section-kicker">04 · ENSv2 names</p><h2>卡帶有名字：<code>&lt;cartridgeId&gt;.&lt;父名稱&gt;.eth</code></h2><p class="section-intro">ENS 已改用 ENSv2。讀取一律經過 Universal Resolver；每個發布的卡帶可以在 Sepolia 上認領一個子名稱，名稱只指向「哪一個版本」，內容仍然不上鏈。</p></div>
+          <div class="grid-3">
+            <article class="card card-accent"><h3>讀取走 ENSv2</h3><p>viem 2.56 內建 Universal Resolver <code>0xeeee…eeee</code>，不寫死地址。ENSv2 目前只在 Sepolia（預覽版），所以預設查 Sepolia，可切回主網（主網在同一個入口後面仍是 ENSv1）。依 readiness 頁：接受 DNS 名稱、支援 CCIP-Read，位址與文字紀錄分開查。</p></article>
+            <article class="card card-cyan"><h3>卡帶子名稱</h3><p>名稱只帶三筆文字紀錄：<code>unwritten.cartridge</code>、<code>unwritten.version</code>、<code>unwritten.hash</code>（sha256）。畫面只說「幫這一版命名」；寫上鏈的雜湊由主行程從硬碟重讀，不信任畫面傳來的值。子名稱由 <code>.env</code> 的金鑰持有，玩家不需要錢包，也不會過期。</p></article>
+            <article class="card"><h3>一次性設定</h3><p><code>bun run ens:setup &lt;label&gt;</code>：部署這把金鑰的 Permissioned Resolver 與父名稱的 User Registry（Verifiable Factory proxy），再經 ETH Registrar 以 commit → 等 60 秒 → register 註冊 <code>&lt;label&gt;.eth</code>。費用是可免費 mint 的 MockUSDC；gas 由人來出，所以不由代理代跑。</p></article>
+          </div>
+<div class="table-wrap" role="region" aria-label="ENSv2 卡帶名稱流程" tabindex="0"><table><thead><tr><th scope="col">步驟</th><th scope="col">發生什麼</th><th scope="col">沒設定／沒金鑰時</th></tr></thead><tbody>
+<tr><td><code>ens:setup &lt;label&gt; --dry-run</code></td><td>用 <code>eth_simulateV1</code> 在 Sepolia 上重播每一步，最後建一個測試子名稱，從 Universal Resolver 讀回它的紀錄比對</td><td>不需要金鑰，不送出任何東西</td></tr>
+<tr><td><code>ens:setup &lt;label&gt;</code></td><td>真的註冊父名稱，印出 <code>UNWRITTEN_ENS_PARENT</code> / <code>_REGISTRY</code> / <code>_RESOLVER</code> 三行貼進 <code>.env</code></td><td>沒有 <code>UNWRITTEN_PRIVATE_KEY</code> 就停下並說明</td></tr>
+<tr><td>標題 → 卡帶：名稱列</td><td>即時顯示這一版的名稱：尚未認領／指向這個版本／指向其他版本；有金鑰時可「認領」或「把名稱指向這個版本」（兩筆交易，等收據）</td><td>顯示「這台機器還沒設定 ENS 名稱」，或名稱照讀、標示唯讀</td></tr>
+<tr><td>標題 → 卡帶：用 ENS 名稱開啟</td><td>名稱 → 它指向的確切版本；收藏裡有相同雜湊就直接「開始玩」，沒有就請你匯入 <code>.cartridge</code> 並寫出它必須符合的雜湊</td><td>任何機器都能讀，不需要金鑰</td></tr>
+</tbody></table></div>
+          <div class="callout"><strong>文件的部署表已經過時：</strong>ENS 文件列的 Sepolia 合約（root <code>0xc960…</code>）不是 Universal Resolver 現在走的那一套；照它註冊，名稱存在但查不到（<code>ResolverNotFound</code>）。實際在用的是 <code>ens_v2_sepolia_20260916</code>（contracts-v2 @ <code>366de741</code>，root <code>0x9703…</code>），這版 resolver 的 <code>setText</code> 改吃 DNS 編碼名稱、<code>initialize</code> 改吃授權清單。地址釘在 <code>src/main/chain/ensCalls.ts</code>；設定腳本先比對鏈上的 root，ENS 再重新部署就停下說明，不會寫出沒人查得到的名稱。</div>
+          <div class="screen-grid">
+            <figure class="screen-card"><img src="assets/unwritten-land-ens-cartridges.jpg" alt="卡帶的 ENS 名稱與用名稱開啟" loading="lazy"><figcaption><span class="capture-label">Cartridges · ENS</span><strong>卡帶的名稱，與用名稱開啟</strong>以測試用設定啟動（父名稱是 dry run 用的，鏈上還沒註冊、沒有金鑰）：名稱列即時從 Sepolia 讀回「尚未認領」並標示唯讀。下方輸入 <code>nick.eth</code> 查詢，它沒有卡帶紀錄，所以回報「沒有指向任何卡帶」。</figcaption></figure>
+            <figure class="screen-card"><img src="assets/unwritten-land-ens-lookup.jpg" alt="主控台：經 ENSv2 解析名稱" loading="lazy"><figcaption><span class="capture-label">F12 · ENSv2</span><strong>在 Sepolia 上經 ENSv2 解析</strong>主控台的「從 ENS 還原」預設切在 Sepolia · ENSv2，<code>nick.eth</code> 解析出位址，沒有 <code>aether.seed</code>。同一面板切到主網，<code>test.offchaindemo.eth</code> 回 <code>0x7799…cDb97</code>，和 readiness 頁的 CCIP-Read 測試值一致。</figcaption></figure>
+          </div>
+        </section>
         <section id="chain-status" data-section data-page="chain">
-          <div class="section-head"><p class="section-kicker">04 · Status &amp; limits</p><h2>做到哪裡，還沒驗到哪裡</h2><p class="section-intro">只寫實際跑過的；沒跑過的就說沒跑過。</p></div>
+          <div class="section-head"><p class="section-kicker">05 · Status &amp; limits</p><h2>做到哪裡，還沒驗到哪裡</h2><p class="section-intro">只寫實際跑過的；沒跑過的就說沒跑過。</p></div>
 <div class="table-wrap" role="region" aria-label="合約現況" tabindex="0"><table><thead><tr><th scope="col">項目</th><th scope="col">狀態</th></tr></thead><tbody>
 <tr><td>合約邏輯（重複發布、未知血緣、見證長度、只能掛已發布版本）</td><td><span class="status verified">在行程內 EVM 實跑通過</span></td></tr>
 <tr><td>編譯產物與原始碼一致</td><td><span class="status verified">測試會重編並比對 bytecode</span></td></tr>
 <tr><td>App 讀取與錯誤訊息（未設定、只讀、壞雜湊）</td><td><span class="status verified">以 stub RPC 測過</span></td></tr>
 <tr><td>部署到公開測試網、用真實交易寫入</td><td><span class="status unverified">尚未進行（需要你的金鑰與 gas）</span></td></tr>
-<tr><td>ENS 名稱、分享頁、跨機器下載驗證</td><td><span class="status unknown">設計已留位置，尚未實作</span></td></tr>
+<tr><td>ENSv2 讀取（Sepolia／主網切換、CCIP-Read、readiness 測試名稱）</td><td><span class="status verified">實機 app 內解析通過</span></td></tr>
+<tr><td>卡帶子名稱的完整鏈上流程（部署 proxy、註冊父名稱、建子名稱、寫紀錄、Universal Resolver 讀回）</td><td><span class="status verified"><code>eth_simulateV1</code> 模擬通過</span></td></tr>
+<tr><td>卡帶面板的名稱狀態（未設定、唯讀、尚未認領、用名稱開啟）</td><td><span class="status verified">實機截圖</span></td></tr>
+<tr><td>真實送出 <code>ens:setup</code> 與「認領」交易；「收藏裡有這一版 → 開始玩」</td><td><span class="status unverified">尚未進行（需要你的金鑰與 Sepolia ETH；鏈上還沒有卡帶名稱）</span></td></tr>
+<tr><td>分享頁、跨機器下載驗證</td><td><span class="status unknown">尚未實作</span></td></tr>
 </tbody></table></div>
         </section>
       <footer class="footer">
-        <p><strong>文件狀態：</strong>2026-09-23（Revision 5，已和程式逐項比對）。階段 1–11（生成方式、隔離播放器、創作閉環、故事章節、素材生成、無限章節、HD-2D、大地戰鬥與調整機制、地點、角色與怪物圖、Create a game）已實作並實機驗收；畫面見第 02 頁，數字見第 03 頁與 <a href="../experiments/interactive-works-acceptance-2026-09-23.md">驗收紀錄</a>；智能合約已寫、已測、尚未部署。本頁保留原檔名以維持入口，AFM／DSL 不再代表整體產品的必經架構。</p>
+        <p><strong>文件狀態：</strong>2026-09-24（Revision 6，已和程式逐項比對）。階段 1–11（生成方式、隔離播放器、創作閉環、故事章節、素材生成、無限章節、HD-2D、大地戰鬥與調整機制、地點、角色與怪物圖、Create a game）已實作並實機驗收；畫面見第 02 頁，數字見第 03 頁與 <a href="../experiments/interactive-works-acceptance-2026-09-23.md">驗收紀錄</a>；智能合約已寫、已測、尚未部署；ENS 已改用 ENSv2，卡帶子名稱的鏈上流程已模擬通過、尚未送出真實交易。本頁保留原檔名以維持入口，AFM／DSL 不再代表整體產品的必經架構。</p>
         <p><strong>實作參考：</strong><a href="../../CLAUDE.md">現有工程規範</a> · <a href="../../plan.md">既有遊戲計劃</a> · <a href="../../src/main/instances/backup.ts">目前備份邊界</a> · <a href="../research/afm3-architecture-source-audit.md">AFM 歷史研究</a>。這些是既有能力與研究參考，不代表新版執行作品已交付。</p>
       </footer>
     </main></div>

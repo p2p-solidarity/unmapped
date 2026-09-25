@@ -3,6 +3,7 @@
 // stop that frame's process — the rest of the app keeps running. In "check" mode the frame also
 // replays a few keys and a click, and reports whether the world started and stayed error-free.
 
+import { useT } from "@renderer/i18n";
 import { colors, ErrorBlock, Text } from "@renderer/ui";
 import { type AppError, errored, type Loadable, loading, ready } from "@shared/result";
 import {
@@ -51,6 +52,7 @@ export function WorkFrame({
   onEvent: (event: FrameEvent) => void;
   style?: CSSProperties;
 }): JSX.Element {
+  const t = useT();
   const [session, setSession] = useState<Loadable<WorkSession>>(loading());
   const frameRef = useRef<HTMLIFrameElement>(null);
   const onEventRef = useRef(onEvent);
@@ -228,7 +230,7 @@ export function WorkFrame({
   if (session.status !== "ready") {
     return (
       <div style={{ ...box, display: "grid", placeItems: "center" }}>
-        <Text tone="muted">Starting world…</Text>
+        <Text tone="muted">{t("works.startingWorld")}</Text>
       </div>
     );
   }

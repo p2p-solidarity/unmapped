@@ -1,5 +1,6 @@
+import { translate } from "@renderer/i18n";
 import {
-  type ChunkStatus,
+  useContinentStore,
   useEncounterStore,
   useEngineStore,
   useLandStore,
@@ -7,31 +8,37 @@ import {
   useSessionStore,
 } from "@renderer/state";
 import { colors } from "@renderer/ui";
-import { CHUNK_SIZE, chunkKey, chunkOf } from "@shared/chunks";
+import { chunkKey, chunkOf } from "@shared/chunks";
 import { seedFromText } from "@shared/endless";
 import type { GameplayKitRules, GameplayRules } from "@shared/gameplay";
 import { landSeedOf } from "@shared/land";
 import { nextEpisode, storyEpisodes } from "@shared/story";
 import type { SceneGraph } from "@shared/world";
 import { type JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { isWallTile, spawnPoint, TILE_TOP } from "../engine/colliders";
+import { spawnPoint, TILE_TOP } from "../engine/colliders";
 import { sceneForRun } from "../engine/combat/encounter";
 import { behaviorForKit, LEGACY_TPS_KIT, resolveSceneKit } from "../engine/kits/registry";
 import { landTargets } from "../engine/landTargets";
 import { registerPlayerProbe } from "../engine/playerProbe";
+import { getRemotePlayers } from "../engine/remoteRoster";
 import { nearestTarget, sceneTargets, triggersWithin, triggerTarget } from "../engine/targets";
 import { isSprinting, matchesAction, moveAxis, useKeys } from "../engine/useKeys";
 import { loadAtlases } from "./atlases";
 import type { SpriteAtlases } from "./canvasRenderer";
 import { chapterScene, readChapter } from "./chapterLayer";
-import { blockedByProps, cachedTerrain, walkableAt } from "./landModel";
+import { continentMarkers, continentTargets, mergeChunks, mergeNotes } from "./continentLayer";
+import { canStandAt } from "./landModel";
 import { hd2dSurface, type LandSurface, pixelSurface } from "./landSurface";
 import { placeTargets } from "./placeLayer";
 import { type StoryView, storyTargets } from "./storyLayer";
 import { useLandCombat } from "./useLandCombat";
+import { findPath, type Point, type Route, STUCK_SECONDS, steer } from "./walkTo";
 
-const PLAYER_RADIUS = 0.22;
 const MAX_DELTA = 0.05;
+/** How close (tiles) a click must land to a person, a door or a foe to mean it. */
+const CLICK_REACH = 0.75;
+/** Heights (tiles) a click is tested at: figures stand up, so their bodies cover ground behind. */
+const CLICK_HEIGHTS = [0, 0.6, 1.2] as const;
 const FPS_INTERVAL = 0.5;
 const INTERACT_KEYS = ["KeyE"] as const;
 /**
@@ -97,9 +104,28 @@ export function LandView2D({
     const save = state.activeInstance?.instance.save;
     return save === undefined ? seedFromText(rawGraph.name) : landSeedOf(save);
   });
-  const chunks = useLandStore((state) => state.chunks);
+  const ownChunks = useLandStore((state) => state.chunks);
   const progress = useLandStore((state) => state.progress);
-  const notes = useLandStore((state) => state.notes);
+  const ownNotes = useLandStore((state) => state.notes);
+  // On a continent, other worlds' land stands beside this one, already in its coordinates.
+  const land = useContinentStore((state) => state.territory);
+  const foreignChunks = useContinentStore((state) => state.chunks);
+  const foreignNotes = useContinentStore((state) => state.notes);
+  const worlds = useContinentStore((state) => state.worlds);
+  const anchor = useContinentStore((state) => state.anchor);
+  const self = useSessionStore((state) => state.playerProfile?.displayName ?? "");
+  const chunks = useMemo(
+    () => mergeChunks(ownChunks, foreignChunks, land),
+    [ownChunks, foreignChunks, land],
+  );
+  const notes = useMemo(
+    () => mergeNotes(ownNotes, foreignNotes, land),
+    [ownNotes, foreignNotes, land],
+  );
+  const continent = useMemo(
+    () => continentMarkers({ anchor, self, worlds }),
+    [anchor, self, worlds],
+  );
   const opened = useEngineStore((state) => state.openedTreasures);
   const teleport = useEngineStore((state) => state.teleport);
   const [atlases, setAtlases] = useState<SpriteAtlases | null>(null);
@@ -111,6 +137,7 @@ export function LandView2D({
   const [start] = useState(() => initialPlayer(graph));
   const player = useRef<PlayerState>(start);
   const fired = useRef<Set<string>>(new Set());
+  const route = useRef<Route | null>(null);
 
   const kit: GameplayKitRules = useMemo(() => {
     if (gameplayRules === null) return LEGACY_TPS_KIT;
@@ -136,18 +163,19 @@ export function LandView2D({
     const draft = stage?.kind === "land" ? readChapter(stage.source) : null;
     if (next === null || stage === null || draft === null) return null;
     return chapterScene(next, stage, draft, (x, z) =>
-      canStand(graph, landSeed, chunks, x + 0.5, z + 0.5),
+      canStandAt(graph, landSeed, chunks, x + 0.5, z + 0.5, land),
     );
-  }, [story, graph, landSeed, chunks]);
+  }, [story, graph, landSeed, chunks, land]);
   const extraTargets = useMemo(
     () => [
       ...landTargets(chunks, progress, graph),
       ...(story === null ? [] : storyTargets(story)),
       ...placeTargets(places),
+      ...continentTargets(worlds),
       // Its foes are fought, not talked to: only its people and treasures are targets.
       ...(chapter === null ? [] : sceneTargets({ ...chapter, monsters: [] })),
     ],
-    [chunks, progress, graph, story, places, chapter],
+    [chunks, progress, graph, story, places, chapter, worlds],
   );
   const targets = useMemo(
     () => [...sceneTargets(graph, opened), ...extraTargets],
@@ -162,6 +190,7 @@ export function LandView2D({
     graph,
     rules: gameplayRules,
     seed: landSeed,
+    land,
     player,
     extra,
     ...(onFelled === undefined ? {} : { onFelled }),
@@ -250,9 +279,11 @@ export function LandView2D({
   const live = useRef({
     chapter,
     chunks,
+    continent,
     gameplayRules,
     graph,
     kit,
+    land,
     landSeed,
     notes,
     places,
@@ -263,9 +294,11 @@ export function LandView2D({
   live.current = {
     chapter,
     chunks,
+    continent,
     gameplayRules,
     graph,
     kit,
+    land,
     landSeed,
     notes,
     places,
@@ -286,7 +319,7 @@ export function LandView2D({
     } catch (error) {
       // No WebGL here: say so and keep playing on the 16-bit canvas instead of a blank screen.
       const reason = error instanceof Error ? error.message : String(error);
-      useSessionStore.getState().toast("danger", `HD-2D is unavailable (${reason}); using 16-bit.`);
+      useSessionStore.getState().toast("danger", translate("land.hd2dUnavailable", { reason }));
       useEngineStore.getState().setLandLook("pixel");
       return;
     }
@@ -306,13 +339,44 @@ export function LandView2D({
     const observer = new ResizeObserver(resize);
     observer.observe(canvas);
     resize();
-    // A click on the land is the trigger (the keys go through useKeys).
+    // A click on the land: a foe under it is shot (when armed); anything else is walked to — a
+    // person, a treasure, a gate or a door is used on arrival, plain ground is just reached.
     const onPointerDown = (event: PointerEvent): void => {
       if (event.button !== 0 || useEngineStore.getState().inputLocked) return;
+      const rect = canvas.getBoundingClientRect();
+      const sx = event.clientX - rect.left;
+      const sy = event.clientY - rect.top;
+      const ground = draw.pick(sx, sy);
+      if (ground === null) return;
+      const under = <T extends Point>(items: readonly T[]): T | null =>
+        closest(
+          items,
+          CLICK_HEIGHTS.map((height) => draw.pick(sx, sy, height) ?? ground),
+        );
+      const state = live.current;
       const fight = combatRef.current;
-      if (!fight.armed()) return;
-      if (!firesOnLand("MouseLeft", live.current.gameplayRules?.bindings)) return;
-      fight.fire(performance.now());
+      if (fight.armed() && firesOnLand("MouseLeft", state.gameplayRules?.bindings)) {
+        const foe = under(fight.foes() ?? []);
+        if (foe !== null) {
+          route.current = null;
+          face(player.current, foe.x - player.current.x, foe.z - player.current.z);
+          fight.fire(performance.now());
+          return;
+        }
+      }
+      const target = under(state.targets);
+      const points = findPath(player.current, target ?? ground, (x, z) =>
+        canStandAt(state.graph, state.landSeed, state.chunks, x, z, state.land),
+      );
+      route.current =
+        points === null
+          ? null
+          : {
+              points,
+              target: target?.id ?? null,
+              stopWithin: target === null ? 0 : Math.max(0.3, state.kit.interactDistance - 0.5),
+              stuck: 0,
+            };
     };
     canvas.addEventListener("pointerdown", onPointerDown);
 
@@ -320,21 +384,51 @@ export function LandView2D({
       const state = live.current;
       const delta = Math.min(MAX_DELTA, Math.max(0, (now - previous) / 1000));
       previous = now;
-      updatePlayer(player.current, held.current, delta, state.kit, state.gameplayRules, (x, z) =>
-        canStand(state.graph, state.landSeed, state.chunks, x, z),
+      const bindings = state.gameplayRules?.bindings;
+      const keys = moveAxis(held.current, bindings);
+      const speed = isSprinting(held.current, bindings)
+        ? state.kit.sprintSpeed
+        : state.kit.moveSpeed;
+      // The keys, or anything that takes the controls away (a dialogue, a panel), end a walk.
+      if (keys.strafe !== 0 || keys.forward !== 0 || useEngineStore.getState().inputLocked) {
+        route.current = null;
+      }
+      const walk = route.current;
+      let axis = keys;
+      let arrived: string | null = null;
+      if (walk !== null) {
+        const next = steer(walk, player.current, speed * delta);
+        if (next === null) {
+          route.current = null;
+          arrived = walk.target;
+        } else axis = next;
+      }
+      const before = { x: player.current.x, z: player.current.z };
+      updatePlayer(player.current, axis, speed, delta, (x, z) =>
+        canStandAt(state.graph, state.landSeed, state.chunks, x, z, state.land),
       );
       const position = player.current;
+      // A walk that stops getting anywhere (something moved into the way) is given up.
+      if (walk !== null && route.current === walk) {
+        const moved = Math.hypot(position.x - before.x, position.z - before.z);
+        walk.stuck = moved < speed * delta * 0.25 ? walk.stuck + delta : 0;
+        if (walk.stuck > STUCK_SECONDS) route.current = null;
+      }
       const coord = chunkOf(position.x, position.z);
       const key = chunkKey(coord);
       if (key !== lastChunk) {
         lastChunk = key;
         useEngineStore.getState().setChunk(coord);
       }
-      useEngineStore
-        .getState()
-        .setNearby(
-          nearestTarget(state.targets, position.x, position.z, state.kit.interactDistance),
-        );
+      const nearby = nearestTarget(
+        state.targets,
+        position.x,
+        position.z,
+        state.kit.interactDistance,
+      );
+      useEngineStore.getState().setNearby(nearby);
+      // Walked up to what was clicked: use it, as E would.
+      if (arrived !== null && nearby?.id === arrived) useEngineStore.getState().interact(nearby);
       for (const trigger of triggersWithin(state.graph.triggers, position.x, position.z)) {
         if (fired.current.has(trigger.id)) continue;
         fired.current.add(trigger.id);
@@ -357,6 +451,10 @@ export function LandView2D({
         shot: combatRef.current.shot.current,
         places: state.places,
         chapter: state.chapter,
+        goal: route.current?.points.at(-1) ?? null,
+        land: state.land,
+        others: getRemotePlayers(),
+        continent: state.continent,
         now,
       });
 
@@ -387,7 +485,7 @@ export function LandView2D({
         key={look}
         ref={canvasRef}
         style={canvasStyle}
-        aria-label={look === "hd2d" ? "Unwritten Land, HD-2D view" : "Unwritten Land, 16-bit view"}
+        aria-label={translate(look === "hd2d" ? "land.viewHd2d" : "land.viewPixel")}
       />
       {look === "hd2d" ? <canvas ref={overlayRef} style={overlayStyle} /> : null}
       {assetError === null ? null : (
@@ -404,7 +502,7 @@ export function LandView2D({
             border: `1px solid ${colors.danger}`,
           }}
         >
-          {`CC0 2D assets failed to load: ${assetError}`}
+          {translate("land.assetsFailed", { reason: assetError })}
         </div>
       )}
     </>
@@ -424,55 +522,43 @@ function initialPlayer(scene: SceneGraph): PlayerState {
   return { x, z, yaw: 0, facing: "south", moving: false };
 }
 
+/** The item of `items` nearest any of the `points`, if one lies within CLICK_REACH. */
+function closest<T extends Point>(items: readonly T[], points: readonly Point[]): T | null {
+  let best: { item: T; distance: number } | null = null;
+  for (const item of items) {
+    for (const point of points) {
+      const distance = Math.hypot(item.x - point.x, item.z - point.z);
+      if (distance <= CLICK_REACH && (best === null || distance < best.distance)) {
+        best = { item, distance };
+      }
+    }
+  }
+  return best?.item ?? null;
+}
+
+/** Turns the walker to face along (dx, dz), as walking that way would. */
+function face(player: PlayerState, dx: number, dz: number): void {
+  if (dx === 0 && dz === 0) return;
+  if (Math.abs(dx) > Math.abs(dz)) player.facing = dx > 0 ? "east" : "west";
+  else player.facing = dz > 0 ? "south" : "north";
+  player.yaw = Math.atan2(dx, dz);
+}
+
 function updatePlayer(
   player: PlayerState,
-  held: ReadonlySet<string>,
+  axis: { strafe: number; forward: number },
+  speed: number,
   delta: number,
-  kit: GameplayKitRules,
-  rules: GameplayRules | null,
   canMove: (x: number, z: number) => boolean,
 ): void {
-  const axis = moveAxis(held, rules?.bindings);
-  const speed = isSprinting(held, rules?.bindings) ? kit.sprintSpeed : kit.moveSpeed;
   const dx = axis.strafe * speed * delta;
   const dz = -axis.forward * speed * delta;
   player.moving = dx !== 0 || dz !== 0;
   if (!player.moving) return;
-  if (Math.abs(dx) > Math.abs(dz)) player.facing = dx > 0 ? "east" : "west";
-  else player.facing = dz > 0 ? "south" : "north";
-  player.yaw = Math.atan2(dx, dz);
+  face(player, dx, dz);
   // Someone already standing inside a collider (a prop that appeared under them, a restored
   // position) must be able to walk out, or every direction is refused forever.
   const trapped = !canMove(player.x, player.z);
   if (trapped || canMove(player.x + dx, player.z)) player.x += dx;
   if (trapped || canMove(player.x, player.z + dz)) player.z += dz;
-}
-
-function canStand(
-  origin: SceneGraph,
-  seed: number,
-  chunks: Readonly<Record<string, ChunkStatus>>,
-  x: number,
-  z: number,
-): boolean {
-  const corners = [
-    [x - PLAYER_RADIUS, z - PLAYER_RADIUS],
-    [x + PLAYER_RADIUS, z - PLAYER_RADIUS],
-    [x - PLAYER_RADIUS, z + PLAYER_RADIUS],
-    [x + PLAYER_RADIUS, z + PLAYER_RADIUS],
-  ] as const;
-  for (const [px, pz] of corners) {
-    if (!walkableAt(origin, seed, px, pz)) return false;
-    if (blockedByProps(origin.props, 0, 0, px, pz)) return false;
-    const coord = chunkOf(px, pz);
-    const ox = coord.cx * CHUNK_SIZE;
-    const oz = coord.cz * CHUNK_SIZE;
-    const terrain = cachedTerrain(seed, origin.floor, coord);
-    if (blockedByProps(terrain.props, ox, oz, px, pz)) return false;
-    const written = chunks[chunkKey(coord)];
-    if (written?.status !== "written") continue;
-    if (isWallTile(written.scene.walls, Math.floor(px) - ox, Math.floor(pz) - oz)) return false;
-    if (blockedByProps(written.scene.props, ox, oz, px, pz)) return false;
-  }
-  return true;
 }

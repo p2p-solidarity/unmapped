@@ -1,6 +1,7 @@
 // Create a game, page 1: what the world is and how it is played. Everything here is the player's
 // own words or a choice between things the game can really do; nothing is generated yet.
 
+import { contentLanguage, languageLabel, type StringKey, useT } from "@renderer/i18n";
 import type { PlayStyle } from "@renderer/narrative/openLandCartridge";
 import { Button, space, Text, TextField } from "@renderer/ui";
 import type { JSX } from "react";
@@ -14,26 +15,13 @@ export interface Idea {
 }
 
 export function languages(): string[] {
-  return [...new Set([navigator.language, "zh-TW", "ja-JP", "en-US"])];
+  return [...new Set([contentLanguage(), navigator.language, "zh-TW", "ja-JP", "en-US"])];
 }
 
-const STYLES: Array<{ fights: PlayStyle["fights"]; label: string; detail: string }> = [
-  {
-    fights: "none",
-    label: "Explore",
-    detail:
-      "Walk, meet people, find things. Nobody fights; chapters are meetings, searches, climbs and mazes.",
-  },
-  {
-    fights: "gun",
-    label: "Adventure · gun",
-    detail: "Monsters on the land and in chapters; you shoot the way you face.",
-  },
-  {
-    fights: "blade",
-    label: "Adventure · blade",
-    detail: "Monsters on the land and in chapters; you fight up close.",
-  },
+const STYLES: Array<{ fights: PlayStyle["fights"]; label: StringKey; detail: StringKey }> = [
+  { fights: "none", label: "create.styleExplore", detail: "create.styleExploreDetail" },
+  { fights: "gun", label: "create.styleGun", detail: "create.styleGunDetail" },
+  { fights: "blade", label: "create.styleBlade", detail: "create.styleBladeDetail" },
 ];
 
 export function IdeaStep({
@@ -45,13 +33,14 @@ export function IdeaStep({
   onChange(next: Idea): void;
   busy: boolean;
 }): JSX.Element {
+  const t = useT();
   const set = <K extends keyof Idea>(key: K, value: Idea[K]): void =>
     onChange({ ...idea, [key]: value });
   const play = idea.play;
   return (
     <>
       <TextField
-        label="World name"
+        label={t("create.worldName")}
         value={idea.name}
         maxLength={60}
         disabled={busy}
@@ -59,14 +48,14 @@ export function IdeaStep({
         onChange={(event) => set("name", event.target.value)}
       />
       <TextField
-        label="In one sentence, what is this land?"
+        label={t("create.intent")}
         value={idea.intent}
         maxLength={400}
         disabled={busy}
         onChange={(event) => set("intent", event.target.value)}
       />
       <TextField
-        label="Your story (optional): who you are, what happens, how it ends — it becomes chapters on the map"
+        label={t("create.story")}
         value={idea.story}
         rows={5}
         maxLength={4_000}
@@ -74,7 +63,7 @@ export function IdeaStep({
         onChange={(event) => set("story", event.target.value)}
       />
       <Text variant="caption" tone="dim">
-        How is it played?
+        {t("create.howPlayed")}
       </Text>
       <div style={{ display: "flex", gap: space.sm, flexWrap: "wrap" }}>
         {STYLES.map((style) => (
@@ -87,9 +76,9 @@ export function IdeaStep({
             style={{ flex: "1 1 180px" }}
           >
             <span style={{ display: "flex", flexDirection: "column", gap: space.xs }}>
-              <Text variant="label">{style.label}</Text>
+              <Text variant="label">{t(style.label)}</Text>
               <Text variant="caption" tone="muted">
-                {style.detail}
+                {t(style.detail)}
               </Text>
             </span>
           </Button>
@@ -97,7 +86,7 @@ export function IdeaStep({
       </div>
       {play.fights === "none" ? null : (
         <TextField
-          label="Your weapon's name (optional)"
+          label={t("create.weaponName")}
           value={play.weapon}
           maxLength={40}
           disabled={busy}
@@ -105,7 +94,7 @@ export function IdeaStep({
         />
       )}
       <Text variant="caption" tone="dim">
-        Language — everything the world says is written in it
+        {t("create.languageCaption")}
       </Text>
       <div style={{ display: "flex", flexWrap: "wrap", gap: space.xs }}>
         {languages().map((tag) => (
@@ -116,7 +105,7 @@ export function IdeaStep({
             disabled={busy}
             onClick={() => set("language", tag)}
           >
-            {tag}
+            {`${languageLabel(tag)} · ${tag}`}
           </Button>
         ))}
       </div>

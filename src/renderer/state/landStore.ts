@@ -51,13 +51,6 @@ export interface LandState {
     notes: LandNote[],
   ): void;
   loadFailed(instanceId: string, error: AppError): void;
-  /** A visitor's view of the host's land, replaced whole from the room document. */
-  mirror(
-    instanceId: string,
-    chunks: Record<string, ChunkStatus>,
-    lore: LoreNode[],
-    notes: LandNote[],
-  ): void;
   setChunk(key: string, status: ChunkStatus): void;
   /** Clears a failure so the chunk can be witnessed again. */
   forget(key: string): void;
@@ -126,14 +119,6 @@ export const useLandStore = create<LandState>()((set) => ({
     set((state) =>
       state.instanceId === instanceId ? { load: { status: "error", error } } : state,
     ),
-  mirror: (instanceId, chunks, lore, notes) =>
-    set({
-      instanceId,
-      load: { status: "ready", value: true },
-      chunks: standingAll(chunks),
-      lore,
-      notes,
-    }),
   setChunk: (key, status) =>
     set((state) => ({ chunks: { ...state.chunks, [key]: standing(key, status) } })),
   forget: (key) =>

@@ -1,16 +1,58 @@
 import { SandboxPreview } from "@renderer/engine/SandboxPreview";
 import { ScenePreviewCanvas } from "@renderer/engine/ScenePreviewCanvas";
+import { type Translate, useT } from "@renderer/i18n";
 import { generateModProposal } from "@renderer/narrative/modProposal";
 import { useLandStore, useSessionStore, useWorldStore } from "@renderer/state";
 import { Button, colors, StatePanel, Surface, space, Text, TextField, zIndex } from "@renderer/ui";
 import type { CartridgeManifest } from "@shared/cartridge";
-import type { ModProposalPreview } from "@shared/mods";
+import type { ModOperation, ModProposalPreview } from "@shared/mods";
 import { errored, idle, type Loadable, loading } from "@shared/result";
 import { type JSX, useEffect, useState } from "react";
 import { PlaceMaker } from "./PlaceMaker";
 import { openInstance } from "./useInstanceLoader";
 
+/** One line per proposed operation; ids, kinds and numbers stay as the proposal wrote them. */
+function operationLine(op: ModOperation, t: Translate): string {
+  switch (op.type) {
+    case "add_weapon":
+      return t("hud.opWeapon", {
+        name: op.weapon.name,
+        damage: op.weapon.damage,
+        range: op.weapon.range,
+        cooldown: op.weapon.cooldownMs,
+      });
+    case "change_timing":
+      return t("hud.opTiming", {
+        from: op.change.from,
+        to: op.change.to,
+        resolution: op.change.resolution,
+      });
+    case "add_capability_module":
+      return t("hud.opModule", { id: op.moduleId });
+    case "scene_patch":
+      return t("hud.opScene", {
+        id: op.sceneId,
+        changes: op.patch.operations
+          .map((one) =>
+            one.type === "add_monster"
+              ? t("hud.opMonster", { kind: one.kind, level: one.level, x: one.x, z: one.z })
+              : one.type.replace("_", " "),
+          )
+          .join(" · "),
+      });
+    case "asset_patch":
+      return t("hud.opScene", { id: op.sceneId, changes: op.type });
+  }
+}
+
+const IMPACT = {
+  none: "hud.none",
+  migration: "hud.impactMigration",
+  new_instance: "hud.impactNewInstance",
+} as const;
+
 export function TweakPanel(): JSX.Element | null {
+  const t = useT();
   const open = useSessionStore((state) => state.tweakOpen);
   const close = useSessionStore((state) => state.closeTweak);
   const origin = useWorldStore((state) => state.origin);
@@ -104,45 +146,43 @@ export function TweakPanel(): JSX.Element | null {
             variant={mode === "rules" ? "primary" : "secondary"}
             onClick={() => setMode("rules")}
           >
-            Change the rules
+            {t("hud.tweakRules")}
           </Button>
           <Button
             variant={mode === "place" ? "primary" : "secondary"}
             onClick={() => setMode("place")}
           >
-            Add a place
+            {t("hud.tweakPlace")}
           </Button>
         </div>
         <Text variant="title" as="h2">
-          {mode === "rules" ? "Create a mod revision" : "Add a place to this land"}
+          {t(mode === "rules" ? "hud.tweakRulesTitle" : "hud.tweakPlaceTitle")}
         </Text>
         <Text variant="caption" tone="dim">
-          {mode === "rules"
-            ? "Describe a weapon, monsters, pacing, a squad or a scene change. Anything the cartridge lacks for it is added for you. Review the proposal, then publish a new cartridge version; your current run stays on its original version."
-            : "A side-scrolling course or a grid dungeon, written into this save now. You walk into it from its entrance on the land and come back out where you went in, with what you found."}
+          {t(mode === "rules" ? "hud.tweakRulesNote" : "hud.tweakPlaceNote")}
         </Text>
         {mode === "place" ? (
           <PlaceMaker canUse={openLand} />
         ) : origin?.kind !== "instance" ? (
-          <Text variant="body">Open a published v2 cartridge to create a mod revision.</Text>
+          <Text variant="body">{t("hud.tweakNeedsCartridge")}</Text>
         ) : (
           <>
             <TextField
-              label="Requested change"
+              label={t("hud.requestedChange")}
               value={wish}
               maxLength={2000}
-              placeholder="Add a gun and three slimes / make fights turn-based"
+              placeholder={t("hud.requestedPlaceholder")}
               onChange={(event) => setWish(event.target.value)}
             />
             <StatePanel
               state={preview}
-              idleText="No proposal yet."
-              loadingText="Preparing and checking the proposal…"
+              idleText={t("hud.noProposal")}
+              loadingText={t("hud.preparingProposal")}
             >
               {(value) => (
                 <>
                   <TextField
-                    label="New version"
+                    label={t("hud.newVersion")}
                     value={value.proposal.targetVersion ?? value.revision.manifest.version}
                     onChange={(event) =>
                       setPreview({
@@ -157,21 +197,7 @@ export function TweakPanel(): JSX.Element | null {
                   <Surface variant="inset" padding="md" style={{ gap: space.xs }}>
                     {value.proposal.operations.map((op) => (
                       <Text key={JSON.stringify(op)} variant="body">
-                        {op.type === "add_weapon"
-                          ? `Add ${op.weapon.name} · ${op.weapon.damage} damage · ${op.weapon.range} range · ${op.weapon.cooldownMs} ms cooldown`
-                          : op.type === "change_timing"
-                            ? `Timing: ${op.change.from} → ${op.change.to} · ${op.change.resolution}`
-                            : op.type === "add_capability_module"
-                              ? `Module: ${op.moduleId}`
-                              : op.type === "scene_patch"
-                                ? `Scene ${op.sceneId}: ${op.patch.operations
-                                    .map((one) =>
-                                      one.type === "add_monster"
-                                        ? `${one.kind} (level ${one.level}) at ${one.x}, ${one.z}`
-                                        : one.type.replace("_", " "),
-                                    )
-                                    .join(" · ")}`
-                                : `Scene ${op.sceneId}: ${op.type}`}
+                        {operationLine(op, t)}
                       </Text>
                     ))}
                     {value.compatibility.reasons.map((reason) => (
@@ -180,9 +206,10 @@ export function TweakPanel(): JSX.Element | null {
                       </Text>
                     ))}
                     <Text variant="caption">
-                      Save: {value.compatibility.saveImpact}. Network: new matching version
-                      required. Affected scenes:{" "}
-                      {value.compatibility.affectedScenes.join(", ") || "none"}.
+                      {t("hud.compatSummary", {
+                        impact: t(IMPACT[value.compatibility.saveImpact]),
+                        scenes: value.compatibility.affectedScenes.join(", ") || t("hud.none"),
+                      })}
                     </Text>
                   </Surface>
                   <div style={{ display: "flex", gap: space.xs, flexWrap: "wrap" }}>
@@ -197,7 +224,7 @@ export function TweakPanel(): JSX.Element | null {
                     ))}
                   </div>
                   <Button variant="secondary" onClick={() => setPlaytest((value) => !value)}>
-                    {playtest ? "Orbit preview" : "Playtest changes"}
+                    {t(playtest ? "hud.orbitPreview" : "hud.playtestChanges")}
                   </Button>
                   <div style={{ height: 320, minHeight: 320 }}>
                     {playtest ? (
@@ -217,8 +244,7 @@ export function TweakPanel(): JSX.Element | null {
             </StatePanel>
             {published ? (
               <Text variant="body" tone="accent">
-                Published {published.name} {published.version}. The original cartridge and save are
-                unchanged.
+                {t("hud.publishedNote", { name: published.name, version: published.version })}
               </Text>
             ) : null}
           </>
@@ -231,24 +257,24 @@ export function TweakPanel(): JSX.Element | null {
                 disabled={busy || !wish.trim() || origin?.kind !== "instance"}
                 onClick={() => void ask()}
               >
-                Generate proposal
+                {t("hud.generateProposal")}
               </Button>
               <Button
                 variant="primary"
                 disabled={busy || preview.status !== "ready" || published !== null}
                 onClick={() => void approve()}
               >
-                Approve & publish revision
+                {t("hud.approvePublish")}
               </Button>
               {published ? (
                 <Button variant="primary" disabled={busy} onClick={() => void playRevision()}>
-                  Play new version
+                  {t("hud.playNewVersion")}
                 </Button>
               ) : null}
             </>
           )}
           <Button variant="ghost" disabled={busy} onClick={close}>
-            Close
+            {t("common.close")}
           </Button>
         </div>
       </Surface>

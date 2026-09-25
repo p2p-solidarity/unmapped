@@ -3,6 +3,7 @@
 // touches `head` directly: main only moves it for a checked candidate whose base is still head,
 // so a cancelled, failed or late attempt leaves the last playable version exactly as it was.
 
+import { translate } from "@renderer/i18n";
 import { chat } from "@renderer/llm";
 import type { ChatMessage } from "@shared/llm";
 import { err, ok, type Result } from "@shared/result";
@@ -122,10 +123,8 @@ export async function runAttempt(
   for (;;) {
     deps.onStage(
       report.repairs === 0
-        ? kind === "generate"
-          ? "Writing the world…"
-          : "Applying the change…"
-        : `Repairing (${report.repairs}/${WORK_REPAIR_LIMIT})…`,
+        ? translate(kind === "generate" ? "works.stageWriting" : "works.stageApplying")
+        : translate("works.stageRepairing", { n: report.repairs, max: WORK_REPAIR_LIMIT }),
     );
     const callStart = performance.now();
     const reply = await chat(
@@ -200,7 +199,7 @@ export async function runAttempt(
 
     const candidateId = written.value.candidate.id;
     report.candidates.push(candidateId);
-    deps.onStage("Checking in the player…");
+    deps.onStage(translate("works.stageChecking"));
     const outcome = await deps.check(candidateId);
     if (deps.signal.aborted) {
       await settle(draft.draftId, candidateId, "cancelled", null, expectedHead);

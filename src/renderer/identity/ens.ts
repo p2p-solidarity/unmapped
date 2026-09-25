@@ -1,10 +1,13 @@
 // ENS: the name points at the seed. `aether.seed` is a text record holding an https URL to a
-// `.seed.enc` blob; the address is what proves the name resolves at all. Read-only, mainnet,
-// public RPC — no wallet, no signing, no key material anywhere near this file.
+// `.seed.enc` blob. Read-only, public RPC — no wallet, no signing, no key material near this file.
+//
+// ENSv2: every lookup goes through the Universal Resolver (viem ships its address per chain; never
+// hard-code it), which also drives CCIP-Read gateways. ENSv2 is live as a preview on Sepolia; mainnet
+// still resolves ENSv1 through the same entry point, so the network is the only switch.
 
 import { err, ok, type Result, toError } from "@shared/result";
-import { createPublicClient, http } from "viem";
-import { mainnet } from "viem/chains";
+import { createPublicClient, fallback, http } from "viem";
+import { mainnet, sepolia } from "viem/chains";
 import { normalize } from "viem/ens";
 import type { Bytes } from "./bytes";
 
@@ -13,31 +16,63 @@ export const ENS_SEED_KEY = "aether.seed";
 export const MAX_SEED_BYTES = 20 * 1024 * 1024;
 export const SEED_FETCH_TIMEOUT_MS = 10_000;
 
-const OFFLINE_HINT =
-  "Mainnet could not be reached. Check your network connection (or your RPC), then retry.";
+export const ENS_NETWORKS = ["sepolia", "mainnet"] as const;
+export type EnsNetwork = (typeof ENS_NETWORKS)[number];
+/** Where ENSv2 is deployed today. */
+export const DEFAULT_ENS_NETWORK: EnsNetwork = "sepolia";
+
+const CHAINS = { sepolia, mainnet } as const;
+const RPC_URLS: Record<EnsNetwork, string> = {
+  sepolia: "https://ethereum-sepolia-rpc.publicnode.com",
+  mainnet: "https://ethereum-rpc.publicnode.com",
+};
+
+const OFFLINE_HINT = "Check your network connection (or your RPC), then try again.";
 const TOO_LARGE_HINT = `Seeds are capped at ${MAX_SEED_BYTES / (1024 * 1024)} MB.`;
 
 export interface EnsSeed {
-  address: string;
+  network: EnsNetwork;
+  /** ETH address record; null when the name has none (registering a name sets no records). */
+  address: string | null;
   /** The `aether.seed` text record, or null when the name has no such record. */
   seedUrl: string | null;
 }
 
-let client: ReturnType<typeof createClient> | null = null;
-
-function createClient() {
-  return createPublicClient({ chain: mainnet, transport: http() });
+function createClient(network: EnsNetwork) {
+  // The chain's own RPC is the fallback when the public node is down.
+  return createPublicClient({
+    chain: CHAINS[network],
+    transport: fallback([http(RPC_URLS[network]), http()]),
+  });
 }
 
-function publicClient(): ReturnType<typeof createClient> {
-  if (client === null) client = createClient();
+const clients = new Map<EnsNetwork, ReturnType<typeof createClient>>();
+
+export function ensClient(network: EnsNetwork): ReturnType<typeof createClient> {
+  let client = clients.get(network);
+  if (client === undefined) {
+    client = createClient(network);
+    clients.set(network, client);
+  }
   return client;
 }
 
-export async function resolveEnsSeed(name: string): Promise<Result<EnsSeed>> {
+/** Any dot-separated name may be ENS: `.eth`, DNS names imported into ENS, subnames. */
+export function looksLikeEnsName(name: string): boolean {
+  return name.includes(".") && name.length > 2;
+}
+
+export async function resolveEnsSeed(
+  name: string,
+  network: EnsNetwork = DEFAULT_ENS_NETWORK,
+): Promise<Result<EnsSeed>> {
   const trimmed = name.trim();
-  if (trimmed.length === 0) {
-    return err("ens-invalid-name", "No ENS name given.", "Type a name ending in .eth.");
+  if (!looksLikeEnsName(trimmed)) {
+    return err(
+      "ens-invalid-name",
+      `${trimmed.length === 0 ? "No ENS name given" : `${trimmed} has no dot`}.`,
+      "Type a full name such as a .eth name or a DNS name imported into ENS.",
+    );
   }
   let normalized: string;
   try {
@@ -46,21 +81,24 @@ export async function resolveEnsSeed(name: string): Promise<Result<EnsSeed>> {
     return err(
       "ens-invalid-name",
       toError(cause, "ens-invalid-name").message,
-      "ENS names must be UTS-46 normalisable.",
+      "ENS names must normalise under ENSIP-15.",
     );
   }
 
   try {
-    const address = await publicClient().getEnsAddress({ name: normalized });
-    if (address === null) {
+    const client = ensClient(network);
+    const [address, seedUrl] = await Promise.all([
+      client.getEnsAddress({ name: normalized }),
+      client.getEnsText({ name: normalized, key: ENS_SEED_KEY }),
+    ]);
+    if (address === null && seedUrl === null) {
       return err(
         "ens-not-found",
-        `${normalized} does not resolve to an address.`,
-        "Check the spelling, or set an address record on the name.",
+        `${normalized} has no address or ${ENS_SEED_KEY} record on ${network}.`,
+        "Check the spelling and the network, and that records were set on the name.",
       );
     }
-    const seedUrl = await publicClient().getEnsText({ name: normalized, key: ENS_SEED_KEY });
-    return ok({ address, seedUrl });
+    return ok({ network, address, seedUrl });
   } catch (cause) {
     return err("ens-unreachable", toError(cause, "ens-unreachable").message, OFFLINE_HINT);
   }

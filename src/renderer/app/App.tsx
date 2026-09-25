@@ -2,11 +2,13 @@
 // (inference sync, input lock, world hot-reload, world persistence).
 
 import { TitleDiorama } from "@renderer/hd2d";
+import { errorLine, translate } from "@renderer/i18n";
 import { useInferenceSync } from "@renderer/narrative";
-import { useLandSync } from "@renderer/net/landSync";
+import { setActiveContinent, useActiveContinent } from "@renderer/net/continent";
+import { useContinentSync } from "@renderer/net/continentSync";
 import { useActiveRoom } from "@renderer/net/lifecycle";
 import { leaveActiveRoom, useRoomSync } from "@renderer/net/sync";
-import { useSessionStore } from "@renderer/state";
+import { useContinentStore, useSessionStore } from "@renderer/state";
 import { WorksScreen } from "@renderer/works";
 import { useEffect, useMemo, useRef } from "react";
 import { CreateGameScreen } from "./create/CreateGameScreen";
@@ -29,7 +31,11 @@ function useGlobalKeys(): void {
         screen: state.screen,
         consoleOpen: state.consoleOpen,
         altarOpen:
-          state.altarOpen || state.doorOpen || state.notesOpen || state.episodeOpen !== null,
+          state.altarOpen ||
+          state.doorOpen ||
+          state.notesOpen ||
+          state.episodeOpen !== null ||
+          useContinentStore.getState().doorCard !== null,
         dialogueOpen: state.dialogue !== null,
         typing: isTypingTarget(event.target),
       });
@@ -45,6 +51,7 @@ function useGlobalKeys(): void {
         case "close-altar":
           state.closeAltar();
           state.closeDoor();
+          useContinentStore.getState().openDoorCard(null);
           state.toggleNotes(false);
           state.closeEpisode();
           return;
@@ -101,10 +108,15 @@ function useLeaveRoomAfterPlay(): void {
     const wasPlaying = previous.current === "play";
     previous.current = screen;
     if (!wasPlaying || screen === "play") return;
+    // The world goes back to the shelf, so it leaves the continent it was merged into.
+    setActiveContinent(null);
     void leaveActiveRoom().then((result) => {
       if (result.ok) return;
       const session = useSessionStore.getState();
-      session.toast("danger", `Could not leave the hosted room: ${result.error.message}`);
+      session.toast(
+        "danger",
+        translate("title.leaveRoomFailed", { reason: errorLine(result.error) }),
+      );
       session.setScreen("play");
     });
   }, [screen]);
@@ -113,6 +125,7 @@ function useLeaveRoomAfterPlay(): void {
 export function App() {
   const sync = useInferenceSync();
   const activeRoom = useActiveRoom();
+  const activeContinent = useActiveContinent();
   const syncRef = useRef(sync);
   useEffect(() => {
     syncRef.current = sync;
@@ -132,7 +145,7 @@ export function App() {
   useWorldSync();
   usePersistWorld();
   useRoomSync(activeRoom);
-  useLandSync(activeRoom);
+  useContinentSync(activeContinent);
   useLeaveRoomAfterPlay();
 
   return (

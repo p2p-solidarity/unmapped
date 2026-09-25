@@ -9,6 +9,7 @@ export {
   MAX_SEED_BYTES,
   resolveEnsSeed,
 } from "./ens";
+export { lookupCartridgeName } from "./ensNames";
 export {
   addPasskeyWrapping,
   currentKey,

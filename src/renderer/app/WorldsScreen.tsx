@@ -1,6 +1,7 @@
 // Title screen: the logo and one vertical menu over the live HD-2D land (App's MenuBackdrop).
 // Picking CARTRIDGES / SYSTEM / ARCHIVE slides a panel in on the right; Esc closes it back.
 
+import { useT } from "@renderer/i18n";
 import { RoomPanel } from "@renderer/net";
 import { useSessionStore } from "@renderer/state";
 import { Button } from "@renderer/ui";
@@ -22,6 +23,7 @@ interface MenuItem {
 }
 
 export function WorldsScreen() {
+  const t = useT();
   const setScreen = useSessionStore((state) => state.setScreen);
   const { data, refresh } = useLibrary();
   const [cursor, setCursor] = useState(0);
@@ -31,16 +33,16 @@ export function WorldsScreen() {
   const latest = library?.instances[0] ?? null;
 
   const items: MenuItem[] = [
-    { id: "continue", label: "Continue", disabled: latest === null },
-    { id: "new", label: "New Game", disabled: false },
-    { id: "create", label: "Create a game", disabled: false },
-    { id: "worlds", label: "AI Worlds", disabled: false },
-    { id: "join", label: "Join", disabled: false },
-    { id: "cartridges", label: "Cartridges", disabled: false },
-    { id: "system", label: "System", disabled: false },
+    { id: "continue", label: t("title.menuContinue"), disabled: latest === null },
+    { id: "new", label: t("title.menuNewGame"), disabled: false },
+    { id: "create", label: t("title.menuCreate"), disabled: false },
+    { id: "worlds", label: t("title.menuWorlds"), disabled: false },
+    { id: "join", label: t("title.menuJoin"), disabled: false },
+    { id: "cartridges", label: t("title.menuCartridges"), disabled: false },
+    { id: "system", label: t("title.menuSystem"), disabled: false },
   ];
   if (library !== null && library.legacy.length > 0) {
-    items.push({ id: "archive", label: "Archive", disabled: false });
+    items.push({ id: "archive", label: t("title.menuArchive"), disabled: false });
   }
 
   // Never rest on a disabled row (e.g. Continue before the first save exists).
@@ -89,10 +91,14 @@ export function WorldsScreen() {
       hints={
         panel === null
           ? [
-              { keys: ["↑", "↓"], label: "Select" },
-              { keys: ["Enter"], label: "Confirm", onPress: () => activate(items[current]) },
+              { keys: ["↑", "↓"], label: t("title.hintSelect") },
+              {
+                keys: ["Enter"],
+                label: t("title.hintConfirm"),
+                onPress: () => activate(items[current]),
+              },
             ]
-          : [{ keys: ["Esc"], label: "Back", onPress: closePanel }]
+          : [{ keys: ["Esc"], label: t("common.back"), onPress: closePanel }]
       }
     >
       <div className="title">
@@ -106,7 +112,7 @@ export function WorldsScreen() {
             <div className="title__rule" aria-hidden="true" />
             <p className="title__sub">未記之地</p>
           </div>
-          <nav className="title__menu" aria-label="Main menu">
+          <nav className="title__menu" aria-label={t("title.mainMenu")}>
             {items.map((item, index) => (
               <Button
                 key={item.id}

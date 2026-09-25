@@ -3,6 +3,7 @@
 // Every value comes from a store; nothing here is decorative.
 
 import { ASSETS } from "@renderer/assets";
+import { type StringKey, useT } from "@renderer/i18n";
 import { useEngineStore } from "@renderer/state";
 import { colors, radius, Surface, space, Text } from "@renderer/ui";
 import type { JSX } from "react";
@@ -17,13 +18,13 @@ const DOT: Record<ProviderState, string> = {
   error: colors.danger,
 };
 
-const STATE_LABEL: Record<ProviderState, string> = {
-  unconfigured: "NO PROVIDER",
-  unprobed: "NOT PROBED",
-  probing: "PROBING…",
-  online: "ONLINE",
-  offline: "UNREACHABLE",
-  error: "PROBE FAILED",
+const STATE_LABEL: Record<ProviderState, StringKey> = {
+  unconfigured: "hud.stateUnconfigured",
+  unprobed: "hud.stateUnprobed",
+  probing: "hud.stateProbing",
+  online: "hud.stateOnline",
+  offline: "hud.stateOffline",
+  error: "hud.stateError",
 };
 
 function Dot({ color }: { color: string }): JSX.Element {
@@ -50,6 +51,7 @@ function FpsCaption(): JSX.Element {
 }
 
 function ThinkingBadge({ thinking }: { thinking: number }): JSX.Element | null {
+  const t = useT();
   if (thinking === 0) return null;
   return (
     <div
@@ -65,7 +67,7 @@ function ThinkingBadge({ thinking }: { thinking: number }): JSX.Element | null {
     >
       <Dot color={colors.accent} />
       <Text variant="caption" tone="accent">
-        {thinking === 1 ? "Neural Inference…" : `Neural Stream (${thinking})`}
+        {thinking === 1 ? t("hud.thinkingOne") : t("hud.thinkingMany", { n: thinking })}
       </Text>
     </div>
   );
@@ -74,17 +76,18 @@ function ThinkingBadge({ thinking }: { thinking: number }): JSX.Element | null {
 function ProviderLine({ inference }: { inference: InferenceSummary }): JSX.Element {
   const model = inference.model;
   const provider = inference.provider;
+  const t = useT();
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 1 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
         <Dot color={DOT[inference.state]} />
         <Text variant="caption" tone="accent" mono style={{ letterSpacing: 0.5 }}>
-          {STATE_LABEL[inference.state]}
+          {t(STATE_LABEL[inference.state])}
         </Text>
       </div>
       <Text variant="caption" tone="muted" mono>
         {provider === null
-          ? "no inference config"
+          ? t("hud.noInferenceConfig")
           : `${provider}${model === null ? "" : ` · ${model}`}`}
       </Text>
       {inference.detail === null ? null : (
@@ -97,6 +100,7 @@ function ProviderLine({ inference }: { inference: InferenceSummary }): JSX.Eleme
 }
 
 export function SystemPanel({ summary }: { summary: HudSummary }): JSX.Element {
+  const t = useT();
   return (
     <Surface
       variant="overlay"
@@ -112,7 +116,7 @@ export function SystemPanel({ summary }: { summary: HudSummary }): JSX.Element {
         <ProviderLine inference={summary.inference} />
         <img
           src={ASSETS.seedCore}
-          alt="Seed Core"
+          alt={t("hud.seedCore")}
           style={{
             width: 38,
             height: 38,
@@ -127,7 +131,7 @@ export function SystemPanel({ summary }: { summary: HudSummary }): JSX.Element {
         <ThinkingBadge thinking={summary.inference.thinking} />
         {summary.peers === null ? null : (
           <Text variant="caption" tone="muted" mono>
-            {`${summary.peers} peer${summary.peers === 1 ? "" : "s"}`}
+            {t("hud.peers", { n: summary.peers })}
           </Text>
         )}
         <FpsCaption />

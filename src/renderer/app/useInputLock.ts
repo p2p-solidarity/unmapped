@@ -4,6 +4,7 @@
 
 import {
   type Screen,
+  useContinentStore,
   useEncounterStore,
   useEngineStore,
   useRunStore,
@@ -67,9 +68,12 @@ export function useInputLock(): void {
   const consoleOpen = useSessionStore((state) => state.consoleOpen);
   const dialogueOpen = useSessionStore((state) => state.dialogue !== null);
   // The door at home is a modal like the altar: it owns the keys while it is open.
-  const altarOpen = useSessionStore(
+  const homeModal = useSessionStore(
     (state) => state.altarOpen || state.doorOpen || state.notesOpen || state.episodeOpen !== null,
   );
+  // So is another world's door on a continent.
+  const doorCard = useContinentStore((state) => state.doorCard !== null);
+  const altarOpen = homeModal || doorCard;
   const busy = useSessionStore((state) => state.busy);
   const floorFailed = useSessionStore((state) => state.floorFailure !== null);
   const endingOpen = useSessionStore((state) => state.ending !== null);

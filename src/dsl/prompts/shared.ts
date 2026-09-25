@@ -2,8 +2,11 @@
 // bounded here: a 4B local model has to read the whole system prompt on every generation, so the
 // covenant, the karma trail and the inventory can never grow it without limit.
 
+import { languageName } from "@shared/language";
 import type { Genesis, NarrativeContext } from "@shared/world";
 import { clampText, truncate } from "../limits";
+
+export { languageName };
 
 export const ROLE =
   "You are the world-generator of the Babel tower in Unwritten Land. Write ONLY an OpenUI Lang program using the components below: no prose, no markdown, no code fences, no comments. The first line is the root statement.";
@@ -18,16 +21,6 @@ export function bullets(lines: readonly string[], empty: string): string {
 export function recent(lines: readonly string[], max: number, width: number): string[] {
   const clean = lines.map((line) => clampText(line, width)).filter((line) => line !== "");
   return truncate(clean.slice(-max), max);
-}
-
-/** "Japanese (ja-JP)" when the runtime knows the tag, otherwise the raw BCP-47 tag. */
-export function languageName(tag: string): string {
-  try {
-    const name = new Intl.DisplayNames(["en"], { type: "language" }).of(tag);
-    return name === undefined || name === tag ? tag : `${name} (${tag})`;
-  } catch {
-    return tag;
-  }
 }
 
 export function languageRule(genesis: Genesis | NarrativeContext): string {

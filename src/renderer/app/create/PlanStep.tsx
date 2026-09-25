@@ -3,6 +3,7 @@
 // player's own words, and the map shows where each gate will stand (placed by the host, never
 // by the model). Building is the only step that publishes.
 
+import { type StringKey, type Translate, useT } from "@renderer/i18n";
 import type { WorldPlan } from "@renderer/narrative/newWorld";
 import type { PlayStyle } from "@renderer/narrative/openLandCartridge";
 import { Button, Surface, space, Text, TextField } from "@renderer/ui";
@@ -11,12 +12,20 @@ import { episodePlaces, STORY_LIMITS, type StoryEpisode, type StoryPlan } from "
 import type { JSX } from "react";
 import { ChapterMap } from "./ChapterMap";
 
-const KIND_HINT: Record<PlayKind, string> = {
-  meet: "people to talk to, on the land",
-  search: "things to find, on the land",
-  fight: "foes to beat, on the land",
-  climb: "a side-scrolling course",
-  maze: "a dungeon",
+const KIND_LABEL: Record<PlayKind, StringKey> = {
+  meet: "create.kindMeet",
+  search: "create.kindSearch",
+  fight: "create.kindFight",
+  climb: "create.kindClimb",
+  maze: "create.kindMaze",
+};
+
+const KIND_HINT: Record<PlayKind, StringKey> = {
+  meet: "create.kindHintMeet",
+  search: "create.kindHintSearch",
+  fight: "create.kindHintFight",
+  climb: "create.kindHintClimb",
+  maze: "create.kindHintMaze",
 };
 
 /** Ids and gates follow the order: renumbered and re-placed after every add or remove. */
@@ -31,11 +40,11 @@ export function renumber(
   }));
 }
 
-function rulesLine(play: PlayStyle): string {
-  if (play.fights === "none")
-    return "No fighting: chapters are meetings, searches, climbs and mazes.";
-  const weapon = play.weapon.trim() || (play.fights === "gun" ? "a gun" : "a blade");
-  return `Fighting on: you start with ${weapon}; you 100 HP, monsters 30 HP + 10 per level.`;
+function rulesLine(play: PlayStyle, t: Translate): string {
+  if (play.fights === "none") return t("create.rulesPeaceful");
+  const weapon =
+    play.weapon.trim() || t(play.fights === "gun" ? "create.defaultGun" : "create.defaultBlade");
+  return t("create.rulesFighting", { weapon });
 }
 
 export function PlanStep({
@@ -51,6 +60,7 @@ export function PlanStep({
   onStory(story: StoryPlan): void;
   busy: boolean;
 }): JSX.Element {
+  const t = useT();
   const story = plan.story;
   const kinds = PLAY_KINDS.filter((kind) => play.fights !== "none" || kind !== "fight");
   const edit = (index: number, patch: Partial<StoryEpisode>): void => {
@@ -71,10 +81,7 @@ export function PlanStep({
           {name}
         </Text>
         {story === null ? (
-          <Text tone="muted">
-            No story was given, so this world has no chapters: it is open land to walk. Go back and
-            write a story to get chapters on the map.
-          </Text>
+          <Text tone="muted">{t("create.noStory")}</Text>
         ) : (
           <>
             <Text tone="accent">{story.logline}</Text>
@@ -82,7 +89,7 @@ export function PlanStep({
               <Surface key={episode.id} variant="inset" padding="md" style={{ gap: space.xs }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: space.sm }}>
                   <Text variant="caption" tone="dim">
-                    {`Chapter ${index + 1}`}
+                    {t("create.chapterN", { n: index + 1 })}
                   </Text>
                   {story.episodes.length > STORY_LIMITS.minEpisodes ? (
                     <Button
@@ -90,19 +97,19 @@ export function PlanStep({
                       disabled={busy}
                       onClick={() => setEpisodes(story.episodes.filter((_, at) => at !== index))}
                     >
-                      Remove
+                      {t("common.remove")}
                     </Button>
                   ) : null}
                 </div>
                 <TextField
-                  label="Title"
+                  label={t("create.chapterTitle")}
                   value={episode.title}
                   maxLength={STORY_LIMITS.titleChars}
                   disabled={busy}
                   onChange={(event) => edit(index, { title: event.target.value })}
                 />
                 <TextField
-                  label="Where"
+                  label={t("create.chapterWhere")}
                   value={episode.place}
                   maxLength={STORY_LIMITS.placeChars}
                   disabled={busy}
@@ -117,17 +124,17 @@ export function PlanStep({
                       disabled={busy}
                       onClick={() => edit(index, { kind })}
                     >
-                      {kind}
+                      {t(KIND_LABEL[kind])}
                     </Button>
                   ))}
                 </div>
                 <Text variant="caption" tone="dim">
                   {(PLAY_KINDS as readonly string[]).includes(episode.kind)
-                    ? KIND_HINT[episode.kind as PlayKind]
-                    : `“${episode.kind}” — played on the land unless it reads as a climb or a maze`}
+                    ? t(KIND_HINT[episode.kind as PlayKind])
+                    : t("create.kindHintOther", { kind: episode.kind })}
                 </Text>
                 <TextField
-                  label="What happens"
+                  label={t("create.chapterBrief")}
                   value={episode.brief}
                   rows={3}
                   maxLength={STORY_LIMITS.briefChars}
@@ -147,7 +154,7 @@ export function PlanStep({
                   ])
                 }
               >
-                Add a chapter you write yourself
+                {t("create.addChapter")}
               </Button>
             ) : null}
           </>
@@ -157,17 +164,17 @@ export function PlanStep({
         {story === null ? null : (
           <>
             <Text variant="caption" tone="dim">
-              Where the gates stand
+              {t("create.gatesCaption")}
             </Text>
             <ChapterMap episodes={story.episodes} />
           </>
         )}
         <Text variant="caption" tone="dim">
-          Rules
+          {t("create.rules")}
         </Text>
-        <Text variant="caption">{rulesLine(play)}</Text>
+        <Text variant="caption">{rulesLine(play, t)}</Text>
         <Text variant="caption" tone="dim">
-          The world, as the model wrote it
+          {t("create.bibleCaption")}
         </Text>
         <Surface variant="inset" padding="md" style={{ gap: space.sm }}>
           <Text variant="caption" style={{ whiteSpace: "pre-wrap" }}>

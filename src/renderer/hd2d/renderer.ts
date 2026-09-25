@@ -5,7 +5,8 @@
 
 import { chunkKey } from "@shared/chunks";
 import * as THREE from "three";
-import { HD2D_PALETTE } from "../engine/palette";
+import { HD2D_PALETTE, LAND_2D_PALETTE } from "../engine/palette";
+import type { RemotePlayer } from "../engine/remoteRoster";
 import { type Player2D, SHOT_TRACE_MS, type SpriteAtlases } from "../engine2d/canvasRenderer";
 import type { ShotTrace } from "../engine2d/useLandCombat";
 import { ACTOR_COLUMN, ACTOR_FRAME, WALK_FRAMES } from "./assets";
@@ -32,6 +33,10 @@ export interface Hd2dFrame extends LandSource {
   player: Player2D | null;
   /** The last shot, drawn as a brief streak of light. */
   shot?: ShotTrace | null;
+  /** Where a click sent the walker, or null. */
+  goal?: { x: number; z: number } | null;
+  /** Other players on the continent, in this world's tiles. */
+  others?: readonly RemotePlayer[];
   now: number;
 }
 
@@ -48,6 +53,8 @@ export const PLAY_VIEW: Hd2dView = { pitch: 37, fov: 30, distance: 27, blur: 7 }
 
 export interface Hd2dRenderer {
   render(frame: Hd2dFrame): void;
+  /** The point under canvas position (x, y) in CSS pixels, `height` tiles up, as last rendered. */
+  pick(x: number, y: number, height?: number): { x: number; z: number } | null;
   dispose(): void;
 }
 
@@ -109,6 +116,8 @@ export function createHd2dRenderer(
   const markers = new MarkerLayer(standing);
   const player = playerMesh(textures.ninja);
   scene.add(player.mesh, player.shadow);
+  // Other players on a continent: the same walker, one mesh each, grown as people arrive.
+  const crowd: PlayerMesh[] = [];
   const motes = moteField();
   scene.add(motes.points);
   const streak = shotStreak();
@@ -122,6 +131,10 @@ export function createHd2dRenderer(
   const target = new THREE.Vector3();
   let lastNow: number | null = null;
   let size = { width: 0, height: 0, ratio: 0 };
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+  const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+  const hit = new THREE.Vector3();
 
   const resize = (width: number, height: number): void => {
     const ratio = Math.min(window.devicePixelRatio || 1, 2);
@@ -140,7 +153,7 @@ export function createHd2dRenderer(
   };
 
   const syncGround = (frame: Hd2dFrame, coords: ReturnType<typeof chunksAround>): void => {
-    const identity = `${frame.seed}:${frame.origin?.name ?? "open"}:${frame.origin?.floor.tile ?? ""}`;
+    const identity = `${frame.seed}:${frame.origin?.name ?? "open"}:${frame.origin?.floor.tile ?? ""}:${frame.land?.key ?? ""}`;
     if (identity !== groundSeed) {
       for (const chunk of ground.values()) {
         scene.remove(chunk.group);
@@ -184,6 +197,8 @@ export function createHd2dRenderer(
       frame.seed,
       frame.places,
       frame.chapter,
+      frame.land,
+      frame.continent,
     ];
     if (key === contentKey && refs.every((ref, index) => ref === contentRefs[index])) return;
     contentKey = key;
@@ -230,6 +245,27 @@ export function createHd2dRenderer(
         frame.player === null ? 0 : standHeight(tileAt, frame.player.x, frame.player.z),
         delta,
       );
+      const others = frame.others ?? [];
+      while (crowd.length < others.length) {
+        const mesh = playerMesh(textures.ninja);
+        scene.add(mesh.mesh, mesh.shadow);
+        crowd.push(mesh);
+      }
+      crowd.forEach((mesh, index) => {
+        const other = others[index];
+        const standing =
+          other === undefined
+            ? null
+            : { x: other.x, z: other.z, facing: "south" as const, moving: false };
+        const ground = standing === null ? 0 : standHeight(tileAt, standing.x, standing.z);
+        mesh.place(standing, frame.now, ground, delta);
+      });
+      const names = others.map((other) => ({
+        x: other.x,
+        z: other.z,
+        text: other.name,
+        color: LAND_2D_PALETTE.remote,
+      }));
       markers.animate(seconds);
       clouds.time.value = seconds;
       motes.drift(target, seconds);
@@ -250,11 +286,24 @@ export function createHd2dRenderer(
           overlay,
           camera,
           size,
-          labels,
+          names.length === 0 ? labels : [...labels, ...names],
           compass === null ? null : { ...compass, label: `${compass.label} · ${distance}` },
           frame.foes ?? [],
+          frame.goal ?? null,
+          seconds,
         );
       }
+    },
+    // A ray from the camera through the click, onto the ground plane (plateaus and basins are
+    // under a tile high, close enough to pick the tile the player meant).
+    pick(x, y, height = 0) {
+      if (size.width === 0 || size.height === 0) return null;
+      pointer.set((x / size.width) * 2 - 1, -(y / size.height) * 2 + 1);
+      raycaster.setFromCamera(pointer, camera);
+      groundPlane.constant = -height;
+      return raycaster.ray.intersectPlane(groundPlane, hit) === null
+        ? null
+        : { x: hit.x, z: hit.z };
     },
     dispose() {
       for (const chunk of ground.values()) chunk.dispose();
@@ -264,6 +313,7 @@ export function createHd2dRenderer(
       walls.dispose();
       markers.dispose();
       player.dispose();
+      for (const mesh of crowd) mesh.dispose();
       motes.dispose();
       streak.dispose();
       for (const material of Object.values(materials.sunken)) material.dispose();

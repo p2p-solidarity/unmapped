@@ -2,6 +2,7 @@
 // behalf: an empty list is a real, finished state, not a prompt to seed examples (Rule 2). The
 // example mod in `mods-examples/` is repo sample content and is never auto-installed.
 
+import { useT } from "@renderer/i18n";
 import { useWorldStore } from "@renderer/state/worldStore";
 import { Button, ErrorBlock, StatePanel, Surface, space, Text } from "@renderer/ui";
 import type { ModSummary } from "@shared/mods";
@@ -20,6 +21,7 @@ export function ModsPanel() {
   const meta = useWorldStore((state) => state.meta);
   const pinned = useWorldStore((state) => state.origin?.kind === "instance");
   const enabled = meta?.mods ?? [];
+  const t = useT();
 
   const refresh = useCallback(async () => {
     const listed = await window.seed.mods.list();
@@ -76,29 +78,27 @@ export function ModsPanel() {
   return (
     <Surface variant="card" padding="lg">
       <Text variant="title" as="h2">
-        Mods
+        {t("console.modsTitle")}
       </Text>
       <Text variant="caption" tone="muted">
-        A mod is prompt text, skills and declarative tools — never code. Enabled mods mount into the
-        open world.
+        {t("console.modsIntro")}
       </Text>
 
       {pinned ? (
         <Text variant="caption" tone="dim">
-          This run uses its cartridge’s locked rules. Use Create a mod revision to review and
-          publish gameplay changes.
+          {t("console.modsPinned")}
         </Text>
       ) : null}
       <div style={columnStyle}>
         <StatePanel
           state={mods}
-          loadingText="Reading the mods folder…"
-          idleText="No mods folder yet."
+          loadingText={t("console.modsLoading")}
+          idleText={t("console.modsIdle")}
         >
           {(installed) =>
             installed.length === 0 ? (
               <Text variant="body" tone="dim">
-                No mods installed. Install a .mod file or a mod folder to add one.
+                {t("console.modsEmpty")}
               </Text>
             ) : (
               <div style={columnStyle}>
@@ -123,19 +123,19 @@ export function ModsPanel() {
 
         {mods.status === "error" ? (
           <Button variant="secondary" onClick={() => void refresh()}>
-            Try again
+            {t("common.retry")}
           </Button>
         ) : null}
 
         <div style={actionsStyle}>
           <Button variant="primary" disabled={busy} onClick={() => void install()}>
-            Install…
+            {t("console.modsInstall")}
           </Button>
         </div>
 
         {meta === null ? (
           <Text variant="caption" tone="dim">
-            Open a world to choose which mods it runs.
+            {t("console.modsOpenWorld")}
           </Text>
         ) : null}
       </div>
@@ -166,6 +166,7 @@ function ModRow({
   onConfirmRemove,
   onCancelRemove,
 }: ModRowProps) {
+  const t = useT();
   return (
     <Surface variant="inset" padding="md">
       <div style={rowStyle}>
@@ -174,11 +175,12 @@ function ModRow({
         </Text>
         <Text variant="body">{mod.description}</Text>
         <Text variant="caption" tone="muted">
-          {`${mod.author} · ${mod.sectionCount} prompt ${
-            mod.sectionCount === 1 ? "section" : "sections"
-          } · ${mod.toolCount} ${mod.toolCount === 1 ? "tool" : "tools"} · ${mod.skillCount} ${
-            mod.skillCount === 1 ? "skill" : "skills"
-          }`}
+          {t("console.modMeta", {
+            author: mod.author,
+            sections: mod.sectionCount,
+            tools: mod.toolCount,
+            skills: mod.skillCount,
+          })}
         </Text>
 
         {confirming ? (
@@ -186,16 +188,16 @@ function ModRow({
             <ErrorBlock
               error={{
                 code: "remove-mod",
-                message: `Delete ${mod.name} from your mods folder?`,
-                hint: "This removes the files. Worlds that list it will report it missing.",
+                message: t("console.modDeleteConfirm", { name: mod.name }),
+                hint: t("console.modDeleteHint"),
               }}
             />
             <div style={actionsStyle}>
               <Button variant="destructive" disabled={busy} onClick={onConfirmRemove}>
-                Delete it
+                {t("console.modDeleteIt")}
               </Button>
               <Button variant="ghost" onClick={onCancelRemove}>
-                Keep it
+                {t("console.modKeepIt")}
               </Button>
             </div>
           </div>
@@ -206,10 +208,10 @@ function ModRow({
               disabled={busy || !canToggle}
               onClick={onToggle}
             >
-              {enabled ? "Enabled for this world" : "Enable for this world"}
+              {enabled ? t("console.modEnabled") : t("console.modEnable")}
             </Button>
             <Button variant="ghost" disabled={busy} onClick={onRemove}>
-              Remove
+              {t("common.remove")}
             </Button>
           </div>
         )}

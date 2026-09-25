@@ -1,16 +1,12 @@
 // Boot-time unlock. Two honest paths, no silent magic: a passkey (same key on every device that
 // passkey reaches) or the OS keychain (this machine only). Errors surface with their hint.
 
+import { useT } from "@renderer/i18n";
 import { Button, ErrorBlock, Surface, space, Text } from "@renderer/ui";
 import { errored, idle, type Loadable, loading, type Result, ready } from "@shared/result";
 import { useCallback, useState } from "react";
 import { addPasskeyWrapping, type UnlockedKey, unlock, unlockWithKeychain } from "./keys";
 import { prfAvailability } from "./prf";
-
-const PASSKEY_CAPTION =
-  "Passkey PRF: when this runtime supports WebAuthn PRF, the key is derived from the passkey itself.";
-const KEYCHAIN_CAPTION =
-  "OS keychain: the key is stored by this operating system and never leaves this machine.";
 
 function maskCredential(credentialId: string): string {
   if (credentialId.length <= 12) return credentialId;
@@ -21,6 +17,7 @@ export function UnlockPanel({ onUnlocked }: { onUnlocked(): void }) {
   const [state, setState] = useState<Loadable<UnlockedKey>>(idle());
   const [linkState, setLinkState] = useState<Loadable<string>>(idle());
   const passkeyAvailable = prfAvailability() === null;
+  const t = useT();
 
   const run = useCallback(async (attempt: () => Promise<Result<UnlockedKey>>) => {
     setState(loading());
@@ -40,9 +37,9 @@ export function UnlockPanel({ onUnlocked }: { onUnlocked(): void }) {
   if (state.status === "loading") {
     return (
       <Surface padding="xl">
-        <Text variant="title">Unlocking</Text>
+        <Text variant="title">{t("identity.unlocking")}</Text>
         <Text variant="body" tone="muted">
-          Waiting for the authenticator…
+          {t("identity.waitingAuthenticator")}
         </Text>
       </Surface>
     );
@@ -52,7 +49,7 @@ export function UnlockPanel({ onUnlocked }: { onUnlocked(): void }) {
     const keychainFirst = state.error.code === "prf-unsupported";
     return (
       <Surface padding="xl">
-        <Text variant="title">Unlock failed</Text>
+        <Text variant="title">{t("identity.unlockFailed")}</Text>
         <ErrorBlock error={state.error} />
         <div style={{ display: "flex", flexDirection: "column", gap: space.sm }}>
           <Button
@@ -60,11 +57,11 @@ export function UnlockPanel({ onUnlocked }: { onUnlocked(): void }) {
             fullWidth
             onClick={withKeychain}
           >
-            Use OS keychain instead
+            {t("identity.useKeychain")}
           </Button>
           {passkeyAvailable ? (
             <Button variant={keychainFirst ? "ghost" : "primary"} fullWidth onClick={withPasskey}>
-              Try the passkey again
+              {t("identity.retryPasskey")}
             </Button>
           ) : null}
         </div>
@@ -76,17 +73,17 @@ export function UnlockPanel({ onUnlocked }: { onUnlocked(): void }) {
     const { method, credentialId } = state.value;
     return (
       <Surface padding="xl">
-        <Text variant="title">Saves unlocked</Text>
+        <Text variant="title">{t("identity.unlocked")}</Text>
         <Text variant="body" tone="muted">
-          {method === "prf" ? "Passkey (WebAuthn PRF)" : "OS keychain"}
+          {method === "prf" ? t("identity.methodPrf") : t("identity.methodKeychain")}
         </Text>
         {credentialId === null ? (
           <Text variant="caption" tone="dim">
-            {KEYCHAIN_CAPTION}
+            {t("identity.keychainCaption")}
           </Text>
         ) : (
           <Text variant="caption" tone="dim" mono>
-            credential {maskCredential(credentialId)}
+            {t("identity.credential", { id: maskCredential(credentialId) })}
           </Text>
         )}
         {passkeyAvailable ? (
@@ -96,18 +93,20 @@ export function UnlockPanel({ onUnlocked }: { onUnlocked(): void }) {
             disabled={linkState.status === "loading"}
             onClick={addPasskey}
           >
-            {linkState.status === "loading" ? "Waiting for passkey…" : "Add another passkey"}
+            {linkState.status === "loading"
+              ? t("identity.waitingPasskey")
+              : t("identity.addPasskey")}
           </Button>
         ) : null}
         {linkState.status === "ready" ? (
           <Text variant="caption" tone="muted" mono>
-            Added credential {maskCredential(linkState.value)}
+            {t("identity.addedCredential", { id: maskCredential(linkState.value) })}
           </Text>
         ) : linkState.status === "error" ? (
           <ErrorBlock error={linkState.error} />
         ) : null}
         <Button variant="primary" fullWidth onClick={onUnlocked} hotkey="↵">
-          Continue
+          {t("identity.continue")}
         </Button>
       </Surface>
     );
@@ -115,23 +114,23 @@ export function UnlockPanel({ onUnlocked }: { onUnlocked(): void }) {
 
   return (
     <Surface padding="xl">
-      <Text variant="title">Unlock your saves</Text>
+      <Text variant="title">{t("identity.unlockTitle")}</Text>
       {passkeyAvailable ? (
         <Text variant="caption" tone="muted">
-          {PASSKEY_CAPTION}
+          {t("identity.passkeyCaption")}
         </Text>
       ) : null}
       <Text variant="caption" tone="muted">
-        {KEYCHAIN_CAPTION}
+        {t("identity.keychainCaption")}
       </Text>
       <div style={{ display: "flex", flexDirection: "column", gap: space.sm }}>
         {passkeyAvailable ? (
           <Button variant="primary" fullWidth onClick={withPasskey}>
-            Unlock with passkey
+            {t("identity.unlockPasskey")}
           </Button>
         ) : null}
         <Button variant="secondary" fullWidth onClick={withKeychain}>
-          Use OS keychain instead
+          {t("identity.useKeychain")}
         </Button>
       </div>
     </Surface>

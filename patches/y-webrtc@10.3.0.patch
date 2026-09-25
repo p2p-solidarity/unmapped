@@ -1,0 +1,50 @@
+diff --git a/dist/y-webrtc.cjs b/dist/y-webrtc.cjs
+index 71d0ec4c0ec5bf016c9e4e5907889ebf230e5c4b..917bde69b5b7d7319544c86a326ab70fbc952bf7 100644
+--- a/dist/y-webrtc.cjs
++++ b/dist/y-webrtc.cjs
+@@ -625,9 +625,17 @@ class SignalingConn extends ws.WebsocketClient {
+                 }]);
+             switch (data.type) {
+               case 'announce':
+-                if (webrtcConns.size < room.provider.maxConns) {
+-                  map.setIfUndefined(webrtcConns, data.from, () => new WebrtcConn(this, true, data.from, room));
+-                  emitPeerChange();
++                // Unwritten Land patch: exactly one side of a pair initiates (the lower peer id).
++                // Upstream lets both sides answer each other's announce with an offer; when two
++                // peers announce at once (glare) each keeps a one-way data channel and messages
++                // are silently dropped. The higher id announces back so the lower id offers.
++                if (webrtcConns.size < room.provider.maxConns && !webrtcConns.has(data.from)) {
++                  if (peerId < data.from) {
++                    webrtcConns.set(data.from, new WebrtcConn(this, true, data.from, room));
++                    emitPeerChange();
++                  } else {
++                    publishSignalingMessage(this, room, { type: 'announce', from: peerId });
++                  }
+                 }
+                 break
+               case 'signal':
+diff --git a/src/y-webrtc.js b/src/y-webrtc.js
+index 609328a25583f5000571bdec8b3e5ff53b322315..62f77fbacf5d75304d75e97e3e4ba88e4b180689 100644
+--- a/src/y-webrtc.js
++++ b/src/y-webrtc.js
+@@ -514,9 +514,17 @@ export class SignalingConn extends ws.WebsocketClient {
+                 }])
+             switch (data.type) {
+               case 'announce':
+-                if (webrtcConns.size < room.provider.maxConns) {
+-                  map.setIfUndefined(webrtcConns, data.from, () => new WebrtcConn(this, true, data.from, room))
+-                  emitPeerChange()
++                // Unwritten Land patch: exactly one side of a pair initiates (the lower peer id).
++                // Upstream lets both sides answer each other's announce with an offer; when two
++                // peers announce at once (glare) each keeps a one-way data channel and messages
++                // are silently dropped. The higher id announces back so the lower id offers.
++                if (webrtcConns.size < room.provider.maxConns && !webrtcConns.has(data.from)) {
++                  if (peerId < data.from) {
++                    webrtcConns.set(data.from, new WebrtcConn(this, true, data.from, room))
++                    emitPeerChange()
++                  } else {
++                    publishSignalingMessage(this, room, { type: 'announce', from: peerId })
++                  }
+                 }
+                 break
+               case 'signal':

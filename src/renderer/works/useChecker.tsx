@@ -3,6 +3,7 @@
 // Shared by the workshop and story episodes; the returned element must be on screen while a check
 // runs (hidden frames get no animation frames).
 
+import { useT } from "@renderer/i18n";
 import { Surface, Text } from "@renderer/ui";
 import type { Json } from "@shared/works";
 import { type JSX, useCallback, useState } from "react";
@@ -25,6 +26,7 @@ export interface Checker {
 }
 
 export function useChecker(height = 220): Checker {
+  const t = useT();
   const [check, setCheck] = useState<PendingCheck | null>(null);
 
   const runCheck = useCallback(
@@ -66,8 +68,9 @@ export function useChecker(height = 220): Checker {
     check === null ? null : (
       <Surface variant="outlined" padding="sm">
         <Text variant="caption" tone="muted">
-          Checking {check.candidateId} in a separate sandbox (
-          {check.state === null ? "fresh start, keys + click replayed" : "resuming from its save"})
+          {t(check.state === null ? "works.checkingFresh" : "works.checkingResume", {
+            id: check.candidateId,
+          })}
         </Text>
         <div style={{ height }}>
           <WorkFrame

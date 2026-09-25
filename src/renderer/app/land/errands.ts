@@ -2,7 +2,14 @@
 // reach the goal (search the tile, or walk into the named place), report back, receive the
 // keepsake. Every step is a ledger entry on the chunk it happened on.
 
-import { useEngineStore, useLandStore, useSessionStore, useWorldStore } from "@renderer/state";
+import { type StringKey, translate } from "@renderer/i18n";
+import {
+  foreignAt,
+  useEngineStore,
+  useLandStore,
+  useSessionStore,
+  useWorldStore,
+} from "@renderer/state";
 import { type ChunkCoord, chunkKey } from "@shared/chunks";
 import {
   type ErrandSpec,
@@ -24,27 +31,28 @@ export interface ErrandView {
   stage: ErrandStage | null;
   /** Name of the place a deliver/guide errand points at, when it is witnessed. */
   placeName: string | null;
-  /** Where a lost thing lies, from the giver's own tile: "about 12 tiles north-west". */
+  /** Where a lost thing lies, from the giver's own tile, in UI words: "about 12 tiles north-west". */
   bearing: string | null;
 }
 
-const COMPASS = [
-  "east",
-  "south-east",
-  "south",
-  "south-west",
-  "west",
-  "north-west",
-  "north",
-  "north-east",
+const COMPASS: readonly StringKey[] = [
+  "land.dirEast",
+  "land.dirSouthEast",
+  "land.dirSouth",
+  "land.dirSouthWest",
+  "land.dirWest",
+  "land.dirNorthWest",
+  "land.dirNorth",
+  "land.dirNorthEast",
 ];
 
-/** Compass words for a step on the map (−z is north). */
+/** Compass words for a step on the map (−z is north), in the UI language. */
 export function bearingOf(dx: number, dz: number): string {
   const distance = Math.round(Math.hypot(dx, dz));
-  if (distance === 0) return "right where they stand";
+  if (distance === 0) return translate("land.bearingHere");
   const octant = Math.round(Math.atan2(dz, dx) / (Math.PI / 4));
-  return `about ${distance} tiles ${COMPASS[(octant + 8) % 8]}`;
+  const dir = translate(COMPASS[(octant + 8) % 8] ?? "land.dirEast");
+  return translate("land.bearing", { n: distance, dir });
 }
 
 function placeName(place: string | null): string | null {
@@ -59,6 +67,8 @@ export function errandOf(npcId: string): ErrandView | null {
   const target = parseLandTarget(npcId);
   const coord = target?.coord ?? { cx: 0, cz: 0 };
   const giver = target?.npcId ?? npcId;
+  // Another world's residents on a continent: their errands are their owner's game, not this one.
+  if (foreignAt(coord) !== null) return null;
   const { chunks, progress } = useLandStore.getState();
   const chunk = chunks[chunkKey(coord)];
   if (chunk?.status !== "written" || chunk.errands === null || progress === null) return null;
@@ -122,7 +132,7 @@ export function searchAt(targetId: string): void {
   if (progress?.errands[key] !== "accepted") return;
   useLandStore.getState().setErrand(key, "reached");
   record({ cx, cz }, "request", `found for ${errandId}`, "", null);
-  useSessionStore.getState().toast("success", "Found it. Take it back to whoever asked.");
+  useSessionStore.getState().toast("success", translate("land.searchFound"));
 }
 
 /** Walking into the named place settles deliver and guide errands. */
@@ -146,9 +156,7 @@ export function useErrandArrivals(): void {
           const [cx = 0, cz = 0] = coordText.split(",").map(Number);
           useLandStore.getState().setErrand(key, "reached");
           record(here, "request", `arrived for ${errandId}`, errand?.ask ?? "", null);
-          useSessionStore
-            .getState()
-            .toast("success", `Arrived. Go back to the one who asked (${cx}, ${cz}).`);
+          useSessionStore.getState().toast("success", translate("land.errandArrived", { cx, cz }));
         }
       }),
     [],

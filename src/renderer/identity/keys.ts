@@ -4,10 +4,11 @@
 // secret from the key used for saves, so the same secret can later derive other keys with a
 // different info string without reusing key material. Key bytes are never logged or persisted.
 
+import { errorLine, translate } from "@renderer/i18n";
 import { useSessionStore } from "@renderer/state";
 import type { DataKeyWrappingRecord } from "@shared/identity";
 import type { SeedApi } from "@shared/ipc";
-import { err, ok, type Result } from "@shared/result";
+import { type AppError, err, ok, type Result } from "@shared/result";
 import { seedApi } from "./api";
 import { type Bytes, fromBase64 } from "./bytes";
 import { generateDataKey, unwrapDataKey, wrapDataKey } from "./dataKey";
@@ -153,10 +154,10 @@ async function addKeychainRecovery(
   );
 }
 
-function reportRecoveryFailure(error: { message: string }): void {
+function reportRecoveryFailure(error: AppError): void {
   useSessionStore
     .getState()
-    .toast("danger", `Saves unlocked, but keychain recovery was not added: ${error.message}`);
+    .toast("danger", translate("identity.recoveryFailed", { reason: errorLine(error) }));
 }
 
 /**
@@ -174,12 +175,7 @@ async function enrolKeychainRecovery(
   if (recovery.value === null) return;
   const saved = await api.vault.putWrappingRecord(recovery.value);
   if (!saved.ok) return reportRecoveryFailure(saved.error);
-  useSessionStore
-    .getState()
-    .toast(
-      "info",
-      "Keychain recovery added: saves on this machine also unlock through the OS keychain.",
-    );
+  useSessionStore.getState().toast("info", translate("identity.recoveryAdded"));
 }
 
 async function unlockDataKey(

@@ -100,8 +100,20 @@ Data Key; PRF/keychain-derived keys only wrap that Data Key, with one validated 
 credential. Installed mods remain outside saves in `<userData>/mods/<name>/` (docs/harness.md).
 
 ### Rule 10. Language is the player's (Babel)
-UI chrome is English. Everything the model says (NPC lines, choices, item names) is generated in
-`genesis.language` (the OS locale on first run). Never translate model output client-side.
+- UI chrome is translated (en / zh-TW / ja) and every player-visible word goes through
+  `t("ns.key")` / `translate()` from `src/renderer/i18n`. Each screen owns one table in
+  `i18n/strings/<ns>.ts`, and every key must have all three languages (the type enforces it; a
+  test checks placeholders and keeps Simplified characters out of zh-TW). Dates and numbers go
+  through `formatDateTime` / `formatNumber`. The UI language is a device preference (System menu)
+  that also sets `<html lang>` and orders the CJK font faces.
+- AppError `message` / `hint` stay English at their source (the model reads them in repairs).
+  The screen shows them through `ErrorBlock` / `errorLine()`, which translate known codes from
+  `i18n/strings/errors.ts`.
+- Everything the model says (NPC lines, choices, item names) is generated in `genesis.language`.
+  A new world defaults to the UI language (`contentLanguage()`), and the player can pick another in
+  Create. Prompts name it with `languageName()` (`@shared/language`), which spells out Traditional
+  or Simplified Chinese. Never translate model output client-side, and never translate prompts,
+  ids or text persisted into saves.
 
 ## Layout & ownership
 
@@ -307,9 +319,9 @@ export function TitleDiorama({ seedText }): JSX.Element;   // App's MenuBackdrop
   it never forbids the monsters the game will field) → the player edits the chapters (ids and gates
   re-derived by `episodePlaces`) → `buildWorld` (origin scene, `openLandCartridge` with the play
   style as capability requirements, publish, new save). Only building publishes.
-- The legacy six-step `CreateScreen` (scene bases, Genre Matrix, capability report) is unlinked;
-  do not route a menu to it again. Offer no option the land cannot play (companions exist in the
-  rules but are not drawn or followed on the land yet).
+- The legacy six-step Create (scene bases, Genre Matrix, capability report, its authoring
+  workspaces and IPC) was deleted; do not bring it back. Offer no option the land cannot play
+  (companions exist in the rules but are not drawn or followed on the land yet).
 
 ### `src/renderer/identity`
 ```ts
@@ -317,7 +329,7 @@ export function unlock(): Promise<Result<UnlockedKey>>;   // PRF/keychain derive
 export function wrapDataKey(wrappingKey, dataKey, identity): Promise<DataKeyWrappingRecord>;
 export function encryptBytes(key: UnlockedKey, bytes: Uint8Array): Promise<Uint8Array>;   // AES-GCM with the unwrapped Data Key, 12-byte IV prefix, versioned header
 export function decryptBytes(key: UnlockedKey, bytes: Uint8Array): Promise<Result<Uint8Array>>;
-export function resolveEnsSeed(name: string): Promise<Result<{ address: string; seedUrl: string | null }>>;   // viem mainnet public client, text record "aether.seed"
+export function resolveEnsSeed(name: string, network?: EnsNetwork): Promise<Result<{ network; address: string | null; seedUrl: string | null }>>;   // ENSv2: viem Universal Resolver (never hard-code its address), "sepolia" (ENSv2 preview, default) | "mainnet"; text record "aether.seed"
 ```
 - Wrapping records are written one at a time (`vault.putWrappingRecord`, upsert by id); nothing
   can replace the whole list. A passkey unlock also enrols this machine's OS keychain as a
@@ -350,12 +362,44 @@ export function witnessOnChain(input, clients?): Promise<Result<{ txHash: string
 // `bun run contracts:deploy` is run by a person — it spends gas.
 ```
 
-### `src/renderer/net`
+### Cartridge ENS names (`src/shared/ensNames.ts`, `src/main/chain/ens*.ts`, Sepolia ENSv2)
 ```ts
-export function createRoom(worldId: string): Result<Room>;   // y-webrtc room "aether-spire:<code>" with a 6-char join code; mirrors world.oui + karma into a Y.Doc
-export function joinRoom(code: string): Result<Room>;
-export interface Room { code: string; doc: Y.Doc; peers(): PeerInfo[]; onPeers(cb): () => void; leave(): void }
+export function ensNamesConfig(env?): EnsNamesConfig;      // { parent: "x.eth" | null, writable }
+export function claimCartridgeName(pointer, env?): Promise<Result<{ name; txHashes }>>;   // main only
+export function lookupCartridgeName(name): Promise<Result<CartridgePointer | null>>;      // renderer, via the Universal Resolver
+window.seed.chain.claimName(cartridgeId, version)   // main re-reads the revision; the renderer never supplies the hash
 ```
+- A published revision is named `<cartridgeLabel(cartridgeId)>.<parent>`; its text records are only
+  `unwritten.cartridge` / `unwritten.version` / `unwritten.hash` (frozen keys). Content never goes on chain.
+- `bun run ens:setup <label> [--dry-run]` is run by a person (Sepolia gas; MockUSDC is free): it deploys
+  the key's Permissioned Resolver + the parent's User Registry and registers `<label>.eth`, then prints
+  `UNWRITTEN_ENS_*`. `--dry-run` replays every step through `eth_simulateV1` and resolves a test subname.
+- `ENSV2_SEPOLIA` (`ensCalls.ts`) is the deployment the Universal Resolver walks today
+  (`ens_v2_sepolia_20260916`), not the older table in the ENS docs; this build's resolver takes
+  DNS-encoded names. The setup script refuses to run if the live root no longer matches.
+- Title → Cartridges shows each cartridge's name live (unclaimed / this version / another version,
+  claim on a keyed machine) and "Open by ENS name" follows a name back to a revision in the library.
+
+### `src/renderer/net` + `src/shared/continent.ts` (open land is shared as a continent)
+```ts
+export function openContinent({ code, worldId, name }): Result<Continent>;   // y-webrtc room per continent; no host
+export function openMyDoor(): Result<string>;  joinContinentByCode(code): Result<string>;  leaveContinent(): void
+export function plateOf(worldId): string;      // a world's stable door number (門牌) = the continent code it opens
+export function useContinentSync(continent): void;   // publish own world, read the others into useContinentStore
+// shared: resolveAnchors(claims) (earlier claim keeps a slot), ownerOf (nearest anchor), territoryMap → at(coord): Territory | null
+```
+- Every world keeps its own origin, seed and save. Joining gives it an **anchor** (offset in chunks,
+  spiral slots `CONTINENT_SPACING` apart); territory = nearest anchor. Only a territory's owner
+  witnesses there; a note left on someone's land goes to *their* notes.jsonl. Other worlds are
+  shifted into this world's coordinates, so chunk keys, targets and tiles stay local everywhere.
+- Y.Doc maps `worlds` / `chunks` / `notes`, keys prefixed `worldId|`; chunks and notes are set once.
+  Everything read from it is zod-checked and re-parsed by the DSL. Cartridge bytes, rules, story,
+  errands and foes never cross; worlds from different cartridges can merge. Positions ride awareness
+  in continent tiles. `landModel`/renderers take an optional `TerritoryMap` so each territory is
+  drawn and collided with its owner's seed. Offset markers + foreign doors: `engine2d/continentLayer.ts`.
+- The old same-cartridge session room (`room.ts`/`sync.ts`/`RoomPanel`) is only for bounded scenes and
+  refuses open land (`room-open-land`). `patches/y-webrtc@10.3.0.patch`: the lower peer id alone
+  initiates (upstream glare left one-way data channels).
 
 ## Verify before claiming done
 `bun run check` must pass. For UI/engine work also run `bun run dev` and exercise the flow you

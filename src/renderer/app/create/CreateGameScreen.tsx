@@ -3,6 +3,7 @@
 // back or asking again costs nothing but the model call. Without a model it says why and offers
 // nothing prebuilt (Rule 2).
 
+import { contentLanguage, type StringKey, type Translate, useT } from "@renderer/i18n";
 import {
   buildWorld,
   type NewWorldStage,
@@ -22,29 +23,38 @@ import { openInstance } from "../useInstanceLoader";
 import { type Idea, IdeaStep } from "./IdeaStep";
 import { PlanStep } from "./PlanStep";
 
-const STAGES: Record<NewWorldStage, string> = {
-  bible: "Writing the world bible…",
-  story: "Turning your story into chapters on the map…",
-  origin: "Writing the place you wake in…",
-  publish: "Publishing the world…",
+const STAGES: Record<NewWorldStage, StringKey> = {
+  bible: "create.stageBible",
+  story: "create.stageStory",
+  origin: "create.stageOrigin",
+  publish: "create.stagePublish",
 };
 
-const STEPS = ["The world", "The plan", "Play"] as const;
+const STEPS: readonly StringKey[] = ["create.stepWorld", "create.stepPlan", "create.stepPlay"];
+
+/** The chapter fields a player edits, as the validation line names them. */
+const FIELDS: Record<string, StringKey> = {
+  title: "create.fieldTitle",
+  place: "create.fieldPlace",
+  kind: "create.fieldKind",
+  brief: "create.fieldBrief",
+};
 
 /** Why the chapters as edited cannot be published yet, in words; null when they can. */
-function storyProblem(plan: WorldPlan): string | null {
+function storyProblem(plan: WorldPlan, t: Translate): string | null {
   if (plan.story === null) return null;
   const checked = storyPlanSchema.safeParse(plan.story);
   if (checked.success) return null;
   const issue = checked.error.issues[0];
   const index = typeof issue?.path[1] === "number" ? issue.path[1] + 1 : null;
-  const field = issue?.path[2];
+  const field = FIELDS[String(issue?.path[2])] ?? "create.fieldText";
   return index === null
-    ? "The chapters are incomplete."
-    : `Chapter ${index} needs its ${field === "brief" ? "“what happens”" : String(field ?? "text")}.`;
+    ? t("create.chaptersIncomplete")
+    : t("create.chapterNeeds", { n: index, field: t(field) });
 }
 
 export function CreateGameScreen(): JSX.Element {
+  const t = useT();
   const setScreen = useSessionStore((state) => state.setScreen);
   const probe = useInferenceStore((state) => state.probe);
   const refreshProbe = useRefreshProbe();
@@ -52,7 +62,7 @@ export function CreateGameScreen(): JSX.Element {
     name: "",
     intent: "",
     story: "",
-    language: navigator.language,
+    language: contentLanguage(),
     play: PEACEFUL,
   });
   const [plan, setPlan] = useState<WorldPlan | null>(null);
@@ -71,14 +81,13 @@ export function CreateGameScreen(): JSX.Element {
     probe.status === "error" || (probe.status === "ready" && !probe.value.reachable)
       ? {
           code: "new-world-no-model",
-          message:
-            "A new world is written by the model, and the model did not answer the last check.",
-          hint: "Start a model or configure a provider in System → Inference. You can still try: a real failure says what went wrong.",
+          message: t("create.offlineMessage"),
+          hint: t("create.offlineHint"),
         }
       : null;
   const busy = stage !== null;
   const ideaReady = idea.name.trim() !== "" && idea.intent.trim() !== "";
-  const problem = plan === null ? null : storyProblem(plan);
+  const problem = plan === null ? null : storyProblem(plan, t);
 
   const run = async <T,>(work: (signal: AbortSignal) => Promise<T>): Promise<T> => {
     setError(null);
@@ -115,7 +124,9 @@ export function CreateGameScreen(): JSX.Element {
   };
 
   return (
-    <GameShell hints={[{ keys: ["Esc"], label: "Back", onPress: busy ? undefined : back }]}>
+    <GameShell
+      hints={[{ keys: ["Esc"], label: t("common.back"), onPress: busy ? undefined : back }]}
+    >
       <div
         className="g-scroll"
         style={{
@@ -134,11 +145,11 @@ export function CreateGameScreen(): JSX.Element {
         >
           <div style={{ display: "flex", gap: space.lg, alignItems: "baseline", flexWrap: "wrap" }}>
             <Text variant="title" as="h1">
-              Create a game
+              {t("create.title")}
             </Text>
             {STEPS.map((label, index) => (
               <Text key={label} variant="caption" tone={index === step ? "accent" : "dim"}>
-                {`${index + 1} · ${label}`}
+                {`${index + 1} · ${t(label)}`}
               </Text>
             ))}
           </div>
@@ -156,11 +167,11 @@ export function CreateGameScreen(): JSX.Element {
           {offline === null ? null : <ErrorBlock error={offline} />}
           {error === null ? null : <ErrorBlock error={error} />}
           {step === 1 && problem !== null ? <Text tone="danger">{problem}</Text> : null}
-          {stage === null ? null : <Text tone="accent">{progress ?? STAGES[stage]}</Text>}
+          {stage === null ? null : <Text tone="accent">{progress ?? t(STAGES[stage])}</Text>}
           <div style={{ display: "flex", gap: space.sm, flexWrap: "wrap" }}>
             {busy ? (
               <Button variant="destructive" onClick={() => controller.current?.abort()}>
-                Cancel
+                {t("common.cancel")}
               </Button>
             ) : null}
             {step === 0 ? (
@@ -170,11 +181,11 @@ export function CreateGameScreen(): JSX.Element {
                   disabled={!ideaReady || busy}
                   onClick={() => void makePlan()}
                 >
-                  {plan === null ? "Plan this world" : "Plan it again"}
+                  {plan === null ? t("create.planWorld") : t("create.planAgain")}
                 </Button>
                 {plan !== null && !busy ? (
                   <Button variant="secondary" onClick={() => setStep(1)}>
-                    Back to the plan
+                    {t("create.backToPlan")}
                   </Button>
                 ) : null}
               </>
@@ -185,20 +196,20 @@ export function CreateGameScreen(): JSX.Element {
                   disabled={busy || problem !== null}
                   onClick={() => void build()}
                 >
-                  Build and play
+                  {t("create.buildAndPlay")}
                 </Button>
                 <Button variant="secondary" disabled={busy} onClick={() => void makePlan()}>
-                  Ask for another plan
+                  {t("create.anotherPlan")}
                 </Button>
               </>
             )}
             <Button variant="ghost" disabled={busy} onClick={back}>
-              {step === 1 ? "Back to the world" : "Back to the title"}
+              {step === 1 ? t("create.backToWorld") : t("create.backToTitle")}
             </Button>
           </div>
           {offline === null ? null : (
             <Button variant="ghost" disabled={busy} onClick={refreshProbe}>
-              Check the model again
+              {t("create.checkModel")}
             </Button>
           )}
         </Surface>

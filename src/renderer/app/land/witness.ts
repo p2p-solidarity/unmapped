@@ -5,6 +5,7 @@
 import { serializeDialogue, serializeErrands, serializeScene } from "@dsl";
 import { generateChunk } from "@renderer/narrative";
 import {
+  foreignAt,
   useEngineStore,
   useInferenceStore,
   useLandStore,
@@ -83,6 +84,8 @@ async function witness(coord: ChunkCoord): Promise<void> {
   const key = chunkKey(coord);
   const land = useLandStore.getState();
   if (witnessBlocker() !== null || land.chunks[key] !== undefined) return;
+  // On a continent, another world's territory is witnessed by its own owner, never from here.
+  if (foreignAt(coord) !== null) return;
   if (Object.values(land.chunks).some((chunk) => chunk.status === "writing")) return;
   const world = useWorldStore.getState();
   const active = useSessionStore.getState().activeInstance;

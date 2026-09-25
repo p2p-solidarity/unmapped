@@ -1,3 +1,4 @@
+import { useT } from "@renderer/i18n";
 import { useEffect, useRef } from "react";
 
 /** A separate renderer realm owns every playtest store; it never loads persistence hooks. */
@@ -9,6 +10,7 @@ export function SandboxPreview({
   rulesSource: string;
 }) {
   const frame = useRef<HTMLIFrameElement>(null);
+  const t = useT();
   const url = new URL(window.location.href);
   url.searchParams.set("sandbox", "1");
   useEffect(() => {
@@ -32,7 +34,7 @@ export function SandboxPreview({
     <iframe
       ref={frame}
       src={url.href}
-      title="Isolated scene playtest"
+      title={t("hud.playtestFrame")}
       sandbox="allow-scripts allow-same-origin allow-pointer-lock"
       style={{ width: "100%", height: "100%", border: 0 }}
     />

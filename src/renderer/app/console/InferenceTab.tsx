@@ -1,6 +1,7 @@
 // Provider settings. The renderer never sees a key — only the *name* of the env var the main
 // process should read (Rule 6). Everything shown about the endpoint comes from a real probe.
 
+import { errorLine, type StringKey, useT } from "@renderer/i18n";
 import { useInferenceStore, useSessionStore } from "@renderer/state";
 import {
   Button,
@@ -18,6 +19,7 @@ import {
   type InferenceConfig,
   PROVIDER_KINDS,
   type SidecarConfig,
+  type SidecarState,
   type SidecarStatus,
 } from "@shared/llm";
 import { idle, type Loadable, loading, ready } from "@shared/result";
@@ -41,6 +43,13 @@ const inputStyle = {
   fontFamily: font.mono,
   fontSize: font.size.caption,
 } as const;
+
+const SIDECAR_STATE: Record<SidecarState, StringKey> = {
+  stopped: "console.sidecarStopped",
+  starting: "console.sidecarStarting",
+  ready: "console.sidecarReady",
+  error: "console.sidecarError",
+};
 
 function Field({
   label,
@@ -68,32 +77,31 @@ function SidecarFields({
   sidecar: SidecarConfig;
   onChange(next: SidecarConfig): void;
 }) {
+  const t = useT();
   return (
     <>
       <Field
-        label="binaryPath"
+        label={t("console.fieldBinaryPath")}
         value={sidecar.binaryPath}
         onChange={(binaryPath) => onChange({ ...sidecar, binaryPath })}
       />
       <Field
-        label="modelPath (.gguf)"
+        label={t("console.fieldModelPath")}
         value={sidecar.modelPath}
         onChange={(modelPath) => onChange({ ...sidecar, modelPath })}
       />
       <Field
-        label="port"
+        label={t("console.fieldPort")}
         value={String(sidecar.port)}
         onChange={(port) => onChange({ ...sidecar, port: numberFromInput(port, sidecar.port) })}
       />
       <Field
-        label="ctxSize"
+        label={t("console.fieldCtxSize")}
         value={String(sidecar.ctxSize)}
         onChange={(ctx) => onChange({ ...sidecar, ctxSize: numberFromInput(ctx, sidecar.ctxSize) })}
       />
       <Text variant="caption" tone="dim">
-        {sidecar.binaryPath === APPLE_FM_BINARY
-          ? "Apple's on-device model needs no model file. Accept its terms once with `sudo fm license` in Terminal."
-          : "`brew install llama.cpp` puts llama-server in your Homebrew bin directory; the model path is any .gguf file you downloaded."}
+        {sidecar.binaryPath === APPLE_FM_BINARY ? t("console.appleFmHint") : t("console.llamaHint")}
       </Text>
     </>
   );
@@ -104,6 +112,7 @@ function ProviderForm({ config }: { config: InferenceConfig }) {
   const [saving, setSaving] = useState(false);
   const setConfig = useInferenceStore((state) => state.setConfig);
   const toast = useSessionStore((state) => state.toast);
+  const t = useT();
 
   useEffect(() => setDraft(config), [config]);
 
@@ -113,22 +122,19 @@ function ProviderForm({ config }: { config: InferenceConfig }) {
       const result = await window.seed.inference.setConfig(draft);
       setSaving(false);
       if (!result.ok) {
-        toast(
-          "danger",
-          `${result.error.message}${result.error.hint ? ` — ${result.error.hint}` : ""}`,
-        );
+        toast("danger", errorLine(result.error));
         return;
       }
       setConfig(result.value);
-      toast("success", "inference.json saved");
+      toast("success", t("console.configSaved"));
     })();
-  }, [draft, setConfig, toast]);
+  }, [draft, setConfig, t, toast]);
 
   return (
     <>
       <label style={{ display: "flex", flexDirection: "column", gap: space.xs }}>
         <Text variant="caption" tone="dim">
-          kind
+          {t("console.fieldKind")}
         </Text>
         <select
           value={draft.kind}
@@ -152,19 +158,19 @@ function ProviderForm({ config }: { config: InferenceConfig }) {
         onChange={(baseUrl) => setDraft({ ...draft, baseUrl })}
       />
       <Field
-        label="model"
+        label={t("console.fieldModel")}
         value={draft.model}
         onChange={(model) => setDraft({ ...draft, model })}
       />
       <Field
-        label="apiKeyEnv (empty = no auth)"
+        label={t("console.fieldApiKeyEnv")}
         value={draft.apiKeyEnv ?? ""}
         onChange={(value) => setDraft({ ...draft, apiKeyEnv: apiKeyEnvFromInput(value) })}
       />
 
       {draft.sidecar === null ? (
         <Button variant="ghost" onClick={() => setDraft({ ...draft, sidecar: EMPTY_SIDECAR })}>
-          Configure llama-server sidecar
+          {t("console.configureSidecar")}
         </Button>
       ) : (
         <>
@@ -173,13 +179,13 @@ function ProviderForm({ config }: { config: InferenceConfig }) {
             onChange={(sidecar) => setDraft({ ...draft, sidecar })}
           />
           <Button variant="ghost" onClick={() => setDraft({ ...draft, sidecar: null })}>
-            Remove sidecar config
+            {t("console.removeSidecar")}
           </Button>
         </>
       )}
 
       <Button variant="primary" onClick={save} disabled={saving}>
-        {saving ? "Saving…" : "Save"}
+        {saving ? t("console.saving") : t("common.save")}
       </Button>
     </>
   );
@@ -188,28 +194,33 @@ function ProviderForm({ config }: { config: InferenceConfig }) {
 function ProbeSection() {
   const probe = useInferenceStore((state) => state.probe);
   const refreshProbe = useRefreshProbe();
+  const t = useT();
 
   return (
     <Surface variant="inset" padding="md">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Text variant="label" tone="muted">
-          PROBE
+          {t("console.probeLabel")}
         </Text>
         <Button variant="ghost" onClick={refreshProbe}>
-          Probe
+          {t("console.probe")}
         </Button>
       </div>
-      <StatePanel state={probe} idleText="Not probed yet." loadingText="Calling /v1/models…">
+      <StatePanel
+        state={probe}
+        idleText={t("common.notProbed")}
+        loadingText={t("console.probeLoading")}
+      >
         {(value) => (
           <>
             <Text variant="caption" tone={value.reachable ? "success" : "danger"}>
-              {`${value.reachable ? "reachable" : "not reachable"} · ${value.latencyMs} ms${
-                value.serverName === null ? "" : ` · ${value.serverName}`
-              }`}
+              {`${value.reachable ? t("console.reachable") : t("console.unreachable")} · ${
+                value.latencyMs
+              } ms${value.serverName === null ? "" : ` · ${value.serverName}`}`}
             </Text>
             {value.models.length === 0 ? (
               <Text variant="caption" tone="dim">
-                The server listed no models.
+                {t("console.noModels")}
               </Text>
             ) : (
               value.models.map((model) => (
@@ -231,6 +242,7 @@ function SidecarSection() {
   const toast = useSessionStore((state) => state.toast);
   const [busy, setBusy] = useState(false);
   const state: Loadable<SidecarStatus> = sidecar === null ? idle() : ready(sidecar);
+  const t = useT();
 
   const run = useCallback(
     (action: "start" | "stop") => {
@@ -240,12 +252,7 @@ function SidecarSection() {
           action === "start"
             ? await window.seed.inference.sidecarStart()
             : await window.seed.inference.sidecarStop();
-        if (!result.ok) {
-          toast(
-            "danger",
-            `${result.error.message}${result.error.hint ? ` — ${result.error.hint}` : ""}`,
-          );
-        }
+        if (!result.ok) toast("danger", errorLine(result.error));
         setSidecar(await window.seed.inference.sidecarStatus());
         setBusy(false);
       })();
@@ -256,13 +263,13 @@ function SidecarSection() {
   return (
     <Surface variant="inset" padding="md">
       <Text variant="label" tone="muted">
-        SIDECAR
+        {t("console.sidecarLabel")}
       </Text>
-      <StatePanel state={state} idleText="No sidecar status reported yet.">
+      <StatePanel state={state} idleText={t("console.sidecarIdle")}>
         {(value) => (
           <>
             <Text variant="caption" tone={value.state === "ready" ? "success" : "muted"}>
-              {`${value.state}${value.pid === null ? "" : ` · pid ${value.pid}`}${
+              {`${t(SIDECAR_STATE[value.state])}${value.pid === null ? "" : ` · pid ${value.pid}`}${
                 value.port === null ? "" : ` · :${value.port}`
               }`}
             </Text>
@@ -276,10 +283,10 @@ function SidecarSection() {
       </StatePanel>
       <div style={{ display: "flex", gap: space.sm }}>
         <Button onClick={() => run("start")} disabled={busy}>
-          Start
+          {t("console.start")}
         </Button>
         <Button variant="ghost" onClick={() => run("stop")} disabled={busy}>
-          Stop
+          {t("common.stop")}
         </Button>
       </div>
     </Surface>
@@ -289,13 +296,14 @@ function SidecarSection() {
 export function InferenceTab() {
   const config = useInferenceStore((state) => state.config);
   const state: Loadable<InferenceConfig> = config === null ? loading() : ready(config);
+  const t = useT();
 
   return (
     <>
       <Text variant="label" tone="muted">
-        PROVIDER
+        {t("console.provider")}
       </Text>
-      <StatePanel state={state} loadingText="Reading inference.json…">
+      <StatePanel state={state} loadingText={t("console.readingConfig")}>
         {(value) => <ProviderForm config={value} />}
       </StatePanel>
       <ProbeSection />

@@ -6,6 +6,7 @@
 // PlayerProfile once the capability modules say a game needs one (plan.md §0.4).
 
 import { readChapter } from "@renderer/engine2d/chapterLayer";
+import { useT } from "@renderer/i18n";
 import {
   useEngineStore,
   useLandStore,
@@ -30,35 +31,35 @@ function StoryLine(): JSX.Element | null {
   const plan = useSessionStore((state) => state.activeInstance?.cartridge.story ?? null);
   const episodes = useLandStore((state) => state.progress?.episodes ?? null);
   const more = useLandStore((state) => state.progress?.storyMore);
+  const t = useT();
   if (plan === null) return null;
   const all = storyEpisodes(plan, more);
   const done = all.filter((episode) => episodes?.[episode.id]?.cleared === true).length;
   const next = nextEpisode(all, episodes ?? {});
   const count =
     all.length === plan.episodes.length
-      ? `Story ${done}/${all.length}`
-      : `Chapter ${Math.min(done + 1, all.length)} · ${done} cleared`;
+      ? t("hud.storyCount", { done, total: all.length })
+      : t("hud.chapterCount", { n: Math.min(done + 1, all.length), done });
   const tail =
     next !== null
-      ? ` · next: ${next.title} (${next.place})`
+      ? t("hud.storyNext", { title: next.title, place: next.place })
       : all.length >= STORY_CAP
-        ? " · the story has reached its last chapter"
-        : " · the next chapter is not written yet";
+        ? t("hud.storyLast")
+        : t("hud.storyUnwritten");
   const stage = next === null ? null : (episodes?.[next.id]?.stage ?? null);
   const draft = stage?.kind === "land" ? readChapter(stage.source) : null;
   const left = draft === null || stage === null ? null : chapterLeft(chapterParts(draft), stage);
   return (
     <>
       <Text variant="caption" tone="accent">
-        {count}
-        {tail}
+        {`${count} · ${tail}`}
       </Text>
       {/* The chapter being played around its gate: its goal and what it still asks for. */}
       {draft === null || left === null ? null : (
         <Text variant="caption" tone="muted">
           {draft.goal}
-          {` · talk ${left.talk} · find ${left.find}`}
-          {draft.monsters.length > 0 ? ` · defeat ${left.defeat}` : ""}
+          {` · ${t("hud.chapterLeft", { talk: left.talk, find: left.find })}`}
+          {draft.monsters.length > 0 ? ` · ${t("hud.chapterDefeat", { defeat: left.defeat })}` : ""}
         </Text>
       )}
     </>
@@ -67,12 +68,13 @@ function StoryLine(): JSX.Element | null {
 
 function QuestList(): JSX.Element {
   const scene = useWorldStore((state) => state.scene);
+  const t = useT();
   return (
-    <StatePanel state={scene} idleText="No floor loaded." loadingText="Writing this floor…">
+    <StatePanel state={scene} idleText={t("hud.noFloorLoaded")} loadingText={t("hud.writingFloor")}>
       {(graph) =>
         graph.quests.length === 0 ? (
           <Text variant="caption" tone="dim">
-            No active quests on this floor.
+            {t("hud.noQuests")}
           </Text>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: space.xs, marginTop: 4 }}>
@@ -127,6 +129,7 @@ export function PlayerCard({ summary }: { summary: HudSummary }): JSX.Element {
   const chunk = useEngineStore((state) => state.chunk);
   // Which land of the one game this is; shared with a friend, it is the same land for them.
   const seed = useSessionStore((state) => state.activeInstance?.instance.save.seed);
+  const t = useT();
 
   return (
     <Surface
@@ -143,7 +146,7 @@ export function PlayerCard({ summary }: { summary: HudSummary }): JSX.Element {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 3 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Text variant="label" tone="accent" style={{ fontWeight: font.weight.bold }}>
-            {summary.worldName ?? "No world loaded"}
+            {summary.worldName ?? t("hud.noWorldLoaded")}
           </Text>
           {/* Open land has no tower and no floors: where you are is the LAND readout below. */}
           {chunk !== null ? null : (
@@ -156,23 +159,32 @@ export function PlayerCard({ summary }: { summary: HudSummary }): JSX.Element {
               }}
             >
               <Text variant="caption" tone="accent" mono>
-                {`FLOOR ${floor}`}
+                {t("hud.floorBadge", { floor })}
               </Text>
             </div>
           )}
         </div>
         {chunk === null || seed === undefined ? null : (
-          <Readout label="SEED" value={formatSeedCode(seed)} accent />
+          <Readout label={t("hud.readSeed")} value={formatSeedCode(seed)} accent />
         )}
-        {chunk === null ? null : <Readout label="LAND" value={`${chunk.cx} · ${chunk.cz}`} />}
+        {chunk === null ? null : (
+          <Readout label={t("hud.readLand")} value={`${chunk.cx} · ${chunk.cz}`} />
+        )}
         <LandStatus />
-        <Readout label="KARMA" value={`${summary.karmaCount} entries`} accent />
-        <Readout label="CARRIED" value={`${summary.items} items · ${summary.materials} mats`} />
+        <Readout
+          label={t("hud.readKarma")}
+          value={t("hud.karmaEntries", { n: summary.karmaCount })}
+          accent
+        />
+        <Readout
+          label={t("hud.readCarried")}
+          value={t("hud.carried", { items: summary.items, mats: summary.materials })}
+        />
       </div>
 
       {summary.lastChoice === null ? null : (
         <Text variant="caption" tone="dim" style={{ marginTop: 2 }}>
-          {`Last choice: ${summary.lastChoice}`}
+          {t("hud.lastChoice", { choice: summary.lastChoice })}
         </Text>
       )}
 
@@ -187,7 +199,7 @@ export function PlayerCard({ summary }: { summary: HudSummary }): JSX.Element {
         }}
       >
         <Text variant="caption" tone="muted">
-          {summary.biome === null ? "Scene not parsed" : "Biome"}
+          {t(summary.biome === null ? "hud.sceneNotParsed" : "hud.biome")}
         </Text>
         {summary.biome === null ? null : (
           <Text variant="caption" tone="accent" mono>

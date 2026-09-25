@@ -43,6 +43,8 @@ export const HD2D_PALETTE = {
   labelShadow: "rgba(20, 12, 4, 0.85)",
   compassSurface: "rgba(22, 16, 8, 0.72)",
   compassEdge: "#d4a85a",
+  /** Where a click sent the walker. */
+  goal: "#fff6e2",
 } as const;
 
 /** Colour grade applied after tone mapping (linear 0–1 multipliers). */

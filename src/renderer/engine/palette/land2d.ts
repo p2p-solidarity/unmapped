@@ -21,4 +21,9 @@ export const LAND_2D_PALETTE = {
   /** A shot's streak: warm when it connects, pale when it flies wide. */
   shotHit: "#ffd27a",
   shotMiss: "#d9e4ea",
+  /** Where a click sent the walker. */
+  goal: "#f4ecd8",
+  /** A world's offset marker on a continent, and the names over other players' heads. */
+  continent: "#9fd8c8",
+  remote: "#ffe29a",
 } as const;

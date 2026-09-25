@@ -4,6 +4,7 @@
 // model call); without a model the card says why instead of inventing anything.
 
 import { readChapter } from "@renderer/engine2d/chapterLayer";
+import { type Translate, useT } from "@renderer/i18n";
 import { useLandStore, useSessionStore } from "@renderer/state";
 import { Button, ErrorBlock, Surface, space, Text } from "@renderer/ui";
 import { chapterLeft } from "@shared/chapter";
@@ -12,16 +13,17 @@ import { episodeUnlocked, storyEpisodes } from "@shared/story";
 import { type JSX, useEffect, useRef, useState } from "react";
 import { CHAPTER_CANCELLED, chapterParts, enterChapterPlace, writeChapter } from "./chapters";
 
-function todo(left: { talk: number; find: number; defeat: number }): string {
+function todo(t: Translate, left: { talk: number; find: number; defeat: number }): string {
   const parts = [
-    left.talk > 0 ? `talk to ${left.talk} more` : null,
-    left.find > 0 ? `open ${left.find} more` : null,
-    left.defeat > 0 ? `defeat ${left.defeat} more` : null,
+    left.talk > 0 ? t("land.todoTalk", { n: left.talk }) : null,
+    left.find > 0 ? t("land.todoFind", { n: left.find }) : null,
+    left.defeat > 0 ? t("land.todoDefeat", { n: left.defeat }) : null,
   ].filter((part) => part !== null);
-  return parts.length === 0 ? "Everything here is done." : `Still to do: ${parts.join(" · ")}`;
+  return parts.length === 0 ? t("land.todoNone") : t("land.todoLeft", { list: parts.join(" · ") });
 }
 
 export function ChapterPanel(): JSX.Element | null {
+  const t = useT();
   const episodeId = useSessionStore((state) => state.episodeOpen);
   const close = useSessionStore((state) => state.closeEpisode);
   const plan = useSessionStore((state) => state.activeInstance?.cartridge.story ?? null);
@@ -48,7 +50,7 @@ export function ChapterPanel(): JSX.Element | null {
         <ErrorBlock
           error={{ code: "chapter-missing", message: "This world has no such chapter." }}
         />
-        <Button onClick={close}>Back to the land</Button>
+        <Button onClick={close}>{t("land.backToLand")}</Button>
       </Card>
     );
   }
@@ -78,61 +80,62 @@ export function ChapterPanel(): JSX.Element | null {
     <Card>
       <Text variant="caption" tone="muted">
         {index < plan.episodes.length
-          ? `Chapter ${index + 1} of ${plan.episodes.length}`
-          : `Chapter ${index + 1} · written by the land`}{" "}
+          ? t("land.chapterOf", { n: index + 1, total: plan.episodes.length })
+          : t("land.chapterByLand", { n: index + 1 })}{" "}
         · {episode.place}
       </Text>
       <Text variant="title" as="h2">
         {episode.title}
       </Text>
       <Text>{episode.brief}</Text>
-      {cleared ? <Text tone="success">Cleared — {record?.summary ?? ""}</Text> : null}
+      {cleared ? (
+        <Text tone="success">{t("land.cleared", { summary: record?.summary ?? "" })}</Text>
+      ) : null}
       {!unlocked ? (
         <Text tone="accent">
-          This gate opens after “{episodes[index - 1]?.title ?? "the chapter before"}” is cleared.
+          {t("land.gateLocked", {
+            title: episodes[index - 1]?.title ?? t("land.chapterBefore"),
+          })}
         </Text>
       ) : null}
       {draft !== null && !cleared && stage !== null ? (
         <>
           <Text tone="accent">{draft.goal}</Text>
           <Text variant="caption" tone="muted">
-            {todo(chapterLeft(chapterParts(draft), stage))} — everyone and everything of this
-            chapter is around this gate.
+            {t("land.chapterAround", { todo: todo(t, chapterLeft(chapterParts(draft), stage)) })}
           </Text>
         </>
       ) : null}
       {stage !== null && stage.kind !== "land" && !cleared ? (
         <Text variant="caption" tone="muted">
-          {stage.kind === "side"
-            ? "A side-scrolling course: reach its far end to clear the chapter."
-            : "A dungeon: find its far end to clear the chapter."}
+          {stage.kind === "side" ? t("land.chapterSide") : t("land.chapterDungeon")}
         </Text>
       ) : null}
-      {writing ? <Text tone="accent">Writing this chapter…</Text> : null}
+      {writing ? <Text tone="accent">{t("land.chapterWriting")}</Text> : null}
       {error === null ? null : <ErrorBlock error={error} />}
       <div style={{ display: "flex", gap: space.sm, flexWrap: "wrap" }}>
         {unlocked && !cleared && stage === null && !writing ? (
           <Button variant="primary" onClick={() => void write()}>
-            Write this chapter now
+            {t("land.chapterWrite")}
           </Button>
         ) : null}
         {writing ? (
           <Button variant="destructive" onClick={() => (stopped.current = true)}>
-            Cancel
+            {t("common.cancel")}
           </Button>
         ) : null}
         {unlocked && !cleared && stage?.kind === "land" ? (
           <Button variant="primary" onClick={close}>
-            Begin
+            {t("land.begin")}
           </Button>
         ) : null}
         {unlocked && stage !== null && stage.kind !== "land" ? (
           <Button variant="primary" onClick={enter}>
-            {cleared ? "Play again" : "Enter"}
+            {cleared ? t("land.playAgain") : t("land.enter")}
           </Button>
         ) : null}
         <Button variant="ghost" onClick={close}>
-          Back to the land
+          {t("land.backToLand")}
         </Button>
       </div>
     </Card>

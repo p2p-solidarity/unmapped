@@ -1,6 +1,7 @@
 // Heads-up display: The Seed VRMMO aesthetic, but every readout is a store value (Rule 2).
 // Layout only — the three cards live in ./hud, the numbers in ./hud/summary.ts.
 
+import { useT } from "@renderer/i18n";
 import {
   useEncounterStore,
   useEngineStore,
@@ -45,21 +46,24 @@ export function Hud(): JSX.Element {
   const cameraMode = useEngineStore((state) => state.cameraMode);
   const armed = useEncounterStore((state) => state.weapon !== null);
   const openLand = useEngineStore((state) => state.chunk !== null);
-  const controls = openLand
-    ? cameraMode === "topdown"
-      ? armed
-        ? "WASD Move · Shift Sprint · Space/F/Click Fire · E Interact · N Notes · V Look"
-        : "WASD Move · Shift Sprint · E Interact · N Notes · V Look"
-      : "WASD Move · Shift Sprint · Space Jump · E Interact · N Notes · V Camera"
-    : cameraMode === "fps"
-      ? armed
-        ? "WASD Move · LMB Fire · R End turn · F Flashlight · E Interact"
-        : "WASD Move · F Flashlight · E Interact"
-      : cameraMode === "side"
-        ? "A/D Move · Space Jump · E Interact"
-        : cameraMode === "topdown"
-          ? "WASD Move · E Interact"
-          : "WASD Move · Shift Sprint · Space Jump · E Interact";
+  const t = useT();
+  const controls = t(
+    openLand
+      ? cameraMode === "topdown"
+        ? armed
+          ? "hud.controlsLandArmed"
+          : "hud.controlsLand"
+        : "hud.controlsLand3d"
+      : cameraMode === "fps"
+        ? armed
+          ? "hud.controlsFpsArmed"
+          : "hud.controlsFps"
+        : cameraMode === "side"
+          ? "hud.controlsSide"
+          : cameraMode === "topdown"
+            ? "hud.controlsTopdown"
+            : "hud.controlsTps",
+  );
 
   return (
     <div

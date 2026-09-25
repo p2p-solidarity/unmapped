@@ -1,15 +1,17 @@
 // The door at home (plan.md §7): four dials, each pinned to a place the player has witnessed or to a
-// friend's door code. Turning to a place walks through to it; turning to a code joins that friend's
-// world (their room code is their door number). Keepsakes carried home are set on the shelf here.
+// friend's door number. Turning to a place walks through to it; turning to a number brings this world
+// onto the continent behind that friend's door (plan.md §8). Keepsakes carried home are set on the
+// shelf here.
 
+import { useT } from "@renderer/i18n";
 import { normalizeRoomCode, ROOM_CODE_LENGTH } from "@renderer/net/codes";
-import { setActiveRoom, useActiveRoom } from "@renderer/net/lifecycle";
-import { joinRoom, playerName } from "@renderer/net/room";
+import { joinContinentByCode } from "@renderer/net/continentActions";
 import { useEngineStore, useLandStore, useSessionStore, useWorldStore } from "@renderer/state";
 import { Button, Surface, space, Text, TextField, zIndex } from "@renderer/ui";
 import { CHUNK_SIZE, type ChunkCoord, chunkKey } from "@shared/chunks";
 import type { DoorSlot } from "@shared/land";
 import { type JSX, useState } from "react";
+import { ContinentSection, continentOk } from "./ContinentSection";
 
 /** A walkable spot in a witnessed place: beside its first resident, else the chunk centre. */
 function arrival(coord: ChunkCoord): [number, number] {
@@ -19,47 +21,9 @@ function arrival(coord: ChunkCoord): [number, number] {
   return [coord.cx * CHUNK_SIZE + (local[0] ?? 0), coord.cz * CHUNK_SIZE + (local[1] ?? 0)];
 }
 
-/** A friend's door: join their room with this save, which must be the same cartridge revision. */
-async function visit(code: string): Promise<void> {
-  const session = useSessionStore.getState();
-  const instance = session.activeInstance;
-  if (instance === null) {
-    session.toast("danger", "Open a saved game of this cartridge before visiting a friend.");
-    return;
-  }
-  let profile = session.playerProfile;
-  if (profile === null) {
-    const listed = await window.seed.profiles.list();
-    const existing = listed.ok ? listed.value[0] : undefined;
-    const made =
-      existing === undefined
-        ? await window.seed.profiles.upsert({
-            displayName: playerName(),
-            appearance: {},
-            controlPreferences: {},
-          })
-        : null;
-    profile = existing ?? (made?.ok ? made.value : null);
-  }
-  if (profile === null) {
-    session.toast("danger", "No player profile could be made for the visit.");
-    return;
-  }
-  const opened = joinRoom(code, { instance, profile });
-  if (!opened.ok) {
-    session.toast(
-      "danger",
-      `${opened.error.message}${opened.error.hint ? ` — ${opened.error.hint}` : ""}`,
-    );
-    return;
-  }
-  session.closeDoor();
-  setActiveRoom(opened.value);
-}
-
 function travel(slot: DoorSlot): void {
   if (slot.kind === "room") {
-    void visit(slot.code);
+    if (continentOk(joinContinentByCode(slot.code))) useSessionStore.getState().closeDoor();
     return;
   }
   const [x, z] = arrival(slot);
@@ -68,13 +32,13 @@ function travel(slot: DoorSlot): void {
 }
 
 export function DoorPanel(): JSX.Element | null {
+  const t = useT();
   const open = useSessionStore((state) => state.doorOpen);
   const progress = useLandStore((state) => state.progress);
   const chunks = useLandStore((state) => state.chunks);
   const items = useWorldStore((state) => state.inventory.items);
   const [dial, setDial] = useState(0);
   const [code, setCode] = useState("");
-  const room = useActiveRoom();
   if (!open || progress === null) return null;
 
   const places = Object.entries(chunks).flatMap(([key, chunk]) => {
@@ -113,7 +77,7 @@ export function DoorPanel(): JSX.Element | null {
         }}
       >
         <Text variant="title" as="h2">
-          Door
+          {t("land.door")}
         </Text>
         <div style={{ display: "flex", flexDirection: "column", gap: space.xs }}>
           {progress.door.map((slot, index) => (
@@ -123,23 +87,25 @@ export function DoorPanel(): JSX.Element | null {
               style={{ display: "flex", alignItems: "center", gap: space.sm }}
             >
               <Button variant={dial === index ? "primary" : "ghost"} onClick={() => setDial(index)}>
-                {`Dial ${index + 1}`}
+                {t("land.dial", { n: index + 1 })}
               </Button>
               <Text variant="body" style={{ flex: 1 }}>
                 {slot === null
-                  ? "— empty —"
-                  : `${slot.label} (${slot.kind === "place" ? `${slot.cx} · ${slot.cz}` : slot.code})`}
+                  ? t("land.dialEmpty")
+                  : slot.kind === "place"
+                    ? `${slot.label} (${slot.cx} · ${slot.cz})`
+                    : `${t("land.doorOf", { code: slot.code })} (${slot.code})`}
               </Text>
               {slot !== null ? (
                 <>
                   <Button variant="secondary" onClick={() => travel(slot)}>
-                    Go
+                    {t("land.go")}
                   </Button>
                   <Button
                     variant="ghost"
                     onClick={() => useLandStore.getState().setDoorSlot(index, null)}
                   >
-                    Clear
+                    {t("land.clear")}
                   </Button>
                 </>
               ) : null}
@@ -148,11 +114,11 @@ export function DoorPanel(): JSX.Element | null {
         </div>
 
         <Text variant="label" tone="muted">
-          {`Pin a witnessed place to dial ${dial + 1}`}
+          {t("land.pinPlace", { n: dial + 1 })}
         </Text>
         {places.length === 0 ? (
           <Text variant="caption" tone="dim">
-            No other place has been witnessed yet. Walk out and see somewhere first.
+            {t("land.noPlacesWitnessed")}
           </Text>
         ) : (
           <div style={{ display: "flex", flexWrap: "wrap", gap: space.xs }}>
@@ -168,23 +134,10 @@ export function DoorPanel(): JSX.Element | null {
           </div>
         )}
 
-        <Text variant="label" tone="muted">
-          Door codes
-        </Text>
-        {room === null ? (
-          <Text variant="caption" tone="dim">
-            Host this game from the room panel and its code becomes your door number.
-          </Text>
-        ) : (
-          <Text variant="body">
-            {room.host
-              ? `Your door number: ${room.code} — friends pin it to a dial to visit.`
-              : `Visiting through door ${room.code}.`}
-          </Text>
-        )}
-        <div style={{ display: "flex", gap: space.sm, alignItems: "flex-end" }}>
+        <ContinentSection />
+        <div style={{ display: "flex", flexWrap: "wrap", gap: space.sm, alignItems: "flex-end" }}>
           <TextField
-            label="a friend's door code"
+            label={t("land.friendDoorCode")}
             value={code}
             maxLength={ROOM_CODE_LENGTH}
             mono
@@ -199,16 +152,25 @@ export function DoorPanel(): JSX.Element | null {
                 .setDoorSlot(dial, { kind: "room", code, label: `Door ${code}` })
             }
           >
-            {`Pin to dial ${dial + 1}`}
+            {t("land.pinToDial", { n: dial + 1 })}
+          </Button>
+          <Button
+            variant="primary"
+            disabled={code.length !== ROOM_CODE_LENGTH}
+            onClick={() => {
+              if (continentOk(joinContinentByCode(code))) setCode("");
+            }}
+          >
+            {t("continent.walkThrough")}
           </Button>
         </div>
 
         <Text variant="label" tone="muted">
-          Keepsakes you carry
+          {t("land.keepsakes")}
         </Text>
         {carried.length === 0 ? (
           <Text variant="caption" tone="dim">
-            Nothing to set on the shelf. Residents hand keepsakes over when an errand is done.
+            {t("land.noKeepsakes")}
           </Text>
         ) : (
           carried.map((item, index) => (
@@ -225,12 +187,12 @@ export function DoorPanel(): JSX.Element | null {
                 useLandStore.getState().placeKeepsake(item);
               }}
             >
-              {`Set ${item.name} on the shelf`}
+              {t("land.setOnShelf", { name: item.name })}
             </Button>
           ))
         )}
         <Button variant="ghost" onClick={() => useSessionStore.getState().closeDoor()}>
-          Close
+          {t("common.close")}
         </Button>
       </Surface>
     </div>

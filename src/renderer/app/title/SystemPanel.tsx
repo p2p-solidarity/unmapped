@@ -46,11 +46,11 @@ export function SystemPanel({ onClose }: { onClose(): void }) {
 
   return (
     <div className="g-scroll" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      <h2 className="g-heading">System</h2>
+      <h2 className="g-heading">{t("title.menuSystem")}</h2>
 
       <section style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <h3 className="g-heading" style={{ fontSize: 13 }}>
-          {t("language")}
+          {t("common.language")}
         </h3>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {UI_LANGUAGES.map((option) => (
@@ -65,42 +65,46 @@ export function SystemPanel({ onClose }: { onClose(): void }) {
             </Button>
           ))}
         </div>
-        <span className="g-meta">{t("languageNote")}</span>
+        <span className="g-meta">{t("common.languageNote")}</span>
       </section>
 
-      <StatePanel state={info} loadingText="Reading build…">
+      <StatePanel state={info} loadingText={t("title.readingBuild")}>
         {(value) => (
           <dl className="info-list">
-            <dt>Version</dt>
+            <dt>{t("title.version")}</dt>
             <dd>{value.version}</dd>
-            <dt>Platform</dt>
+            <dt>{t("title.platform")}</dt>
             <dd>{`${value.platform} · electron ${value.electron}`}</dd>
-            <dt>Worlds</dt>
+            <dt>{t("title.worldsFolder")}</dt>
             <dd>{value.worldsDir}</dd>
           </dl>
         )}
       </StatePanel>
 
       <dl className="info-list">
-        <dt>Model</dt>
+        <dt>{t("common.model")}</dt>
         <dd>{config === null ? "…" : `${config.kind} · ${config.model}`}</dd>
-        <dt>Endpoint</dt>
+        <dt>{t("common.endpoint")}</dt>
         <dd>{config === null ? "…" : config.baseUrl}</dd>
-        <dt>Status</dt>
+        <dt>{t("common.status")}</dt>
         <dd>
-          <StatePanel state={probe} idleText="Not probed." loadingText="Probing…">
+          <StatePanel
+            state={probe}
+            idleText={t("common.notProbed")}
+            loadingText={t("common.probing")}
+          >
             {(value) =>
               value.reachable ? (
                 <Text variant="caption" tone="success" mono>
-                  {`online · ${value.latencyMs} ms · ${value.models.length} model(s)`}
+                  {t("title.probeOnline", { ms: value.latencyMs, n: value.models.length })}
                 </Text>
               ) : (
                 <Text variant="caption" tone="danger" mono>
                   {sidecar?.state === "error" && sidecar.message !== null
-                    ? `offline — ${sidecar.message}`
+                    ? t("title.offlineBecause", { reason: sidecar.message })
                     : config?.kind === "apple-fm"
-                      ? "offline — run `sudo fm license` in Terminal once, then Probe again"
-                      : "offline — start llama-server / ollama, or change provider in F12 → Inference"}
+                      ? t("title.offlineAppleFm")
+                      : t("title.offlineLocal")}
                 </Text>
               )
             }
@@ -108,7 +112,7 @@ export function SystemPanel({ onClose }: { onClose(): void }) {
         </dd>
       </dl>
       <div className="row-actions">
-        <Button onClick={refreshProbe}>Probe again</Button>
+        <Button onClick={refreshProbe}>{t("common.probeAgain")}</Button>
       </div>
 
       <UnlockPanel onUnlocked={onClose} />

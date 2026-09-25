@@ -1,6 +1,7 @@
 // The wish altar. Pick what you are willing to spend, say what you want, and the model decides
 // what comes out — including whether it is cursed. Nothing is pre-written here.
 
+import { errorLine, translate, useT } from "@renderer/i18n";
 import { generateItem } from "@renderer/narrative/item";
 import { persistProgress } from "@renderer/narrative/persist";
 import { useSessionStore } from "@renderer/state/sessionStore";
@@ -30,6 +31,7 @@ function materialSlots(materials: string[]): MaterialSlot[] {
 }
 
 export function AltarPanel() {
+  const t = useT();
   const open = useSessionStore((state) => state.altarOpen);
   const result = useSessionStore((state) => state.altarResult);
   const materials = useWorldStore((state) => state.inventory.materials);
@@ -88,8 +90,15 @@ export function AltarPanel() {
       world.appendKarma(entry);
 
       const written = await persistProgress();
-      if (!written.ok) session.toast("danger", written.error.message);
-      else session.toast(item.curse === null ? "success" : "danger", entry.effect);
+      if (!written.ok) session.toast("danger", errorLine(written.error));
+      else {
+        session.toast(
+          item.curse === null ? "success" : "danger",
+          translate(item.curse === null ? "land.altarReceived" : "land.altarReceivedCursed", {
+            name: item.name,
+          }),
+        );
+      }
 
       setSelected([]);
       setWish("");
@@ -117,16 +126,16 @@ export function AltarPanel() {
     >
       <Surface variant="overlay" padding="xl" style={{ width: "min(560px, 100%)" }}>
         <Text variant="titleLarge" as="h2">
-          The Altar
+          {t("land.altarTitle")}
         </Text>
 
         <div style={columnStyle}>
           <Text variant="label" tone="muted">
-            {`Materials to offer (${chosen.length} selected)`}
+            {t("land.altarMaterials", { n: chosen.length })}
           </Text>
           {materials.length === 0 ? (
             <Text variant="caption" tone="dim">
-              You carry nothing to offer. A wish made with empty hands tends to come back cursed.
+              {t("land.altarEmpty")}
             </Text>
           ) : (
             materialSlots(materials).map((slot) => (
@@ -151,12 +160,13 @@ export function AltarPanel() {
 
         <div style={columnStyle}>
           <Text variant="label" tone="muted">
-            Your wish
+            {t("land.altarWish")}
           </Text>
           <textarea
             value={wish}
             disabled={busy}
             maxLength={WISH_MAX}
+            aria-label={t("land.altarWish")}
             onChange={(event) => setWish(event.target.value.slice(0, WISH_MAX))}
             style={textareaStyle}
           />
@@ -164,7 +174,7 @@ export function AltarPanel() {
 
         {busy ? (
           <Text variant="body" tone="accent">
-            The altar is deciding…
+            {t("land.altarDeciding")}
           </Text>
         ) : null}
 
@@ -172,7 +182,7 @@ export function AltarPanel() {
           <div style={columnStyle}>
             <ErrorBlock error={result.error} />
             <Button variant="primary" onClick={() => void submit()}>
-              Retry
+              {t("common.retry")}
             </Button>
           </div>
         ) : null}
@@ -186,18 +196,18 @@ export function AltarPanel() {
               disabled={busy || wish.trim().length === 0}
               onClick={() => void submit()}
             >
-              Wish
+              {t("land.wish")}
             </Button>
           ) : (
             <>
               <Button variant="primary" onClick={() => void accept(item)}>
-                Accept
+                {t("land.accept")}
               </Button>
               <Button
                 variant="destructive"
                 onClick={() => useSessionStore.getState().setAltarResult(idle())}
               >
-                Discard
+                {t("common.discard")}
               </Button>
             </>
           )}
@@ -206,7 +216,7 @@ export function AltarPanel() {
             disabled={busy}
             onClick={() => useSessionStore.getState().closeAltar()}
           >
-            Close
+            {t("common.close")}
           </Button>
         </div>
       </Surface>
@@ -215,11 +225,12 @@ export function AltarPanel() {
 }
 
 function ItemCard({ item }: { item: ItemSpec }) {
+  const t = useT();
   return (
     <Surface variant="inset" padding="md">
       <Text variant="title">{item.name}</Text>
       <Text variant="caption" tone="muted">
-        {`${item.kind} · power ${item.power}`}
+        {`${t(`land.kind_${item.kind}`)} · ${t("land.power", { n: item.power })}`}
       </Text>
       <Text variant="body">{item.perk}</Text>
       {item.curse !== null ? (

@@ -2,6 +2,7 @@
 // writes the file, or shows exactly what the DSL rejected (Rule 7 — no partial application).
 
 import { type DslError, parseScene, serializeScene } from "@dsl/index";
+import { errorLine, useT } from "@renderer/i18n";
 import {
   currentKey,
   EnsLookup,
@@ -40,6 +41,7 @@ function toIssue(raw: unknown): Issue {
 }
 
 function IssueList({ error }: { error: DslError }) {
+  const t = useT();
   const issues = error.errors.map((raw, position) => {
     const issue = toIssue(raw);
     return { ...issue, key: `${issue.statementId ?? "stmt"}-${position}` };
@@ -47,12 +49,12 @@ function IssueList({ error }: { error: DslError }) {
   return (
     <Surface variant="inset" padding="md">
       <Text variant="label" tone="danger">
-        {`${error.code} · ${issues.length} error(s)`}
+        {t("console.issueCount", { code: error.code, n: issues.length })}
       </Text>
       {issues.map((issue) => (
         <div key={issue.key} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <Text variant="caption" mono tone="accent">
-            {issue.statementId ?? "(no statement id)"}
+            {issue.statementId ?? t("console.noStatementId")}
           </Text>
           <Text variant="caption">{issue.message}</Text>
           {issue.hint === null ? null : (
@@ -64,12 +66,12 @@ function IssueList({ error }: { error: DslError }) {
       ))}
       {error.unresolved.length > 0 ? (
         <Text variant="caption" tone="muted">
-          {`unresolved: ${error.unresolved.join(", ")}`}
+          {t("console.unresolved", { list: error.unresolved.join(", ") })}
         </Text>
       ) : null}
       {error.orphaned.length > 0 ? (
         <Text variant="caption" tone="muted">
-          {`orphaned: ${error.orphaned.join(", ")}`}
+          {t("console.orphaned", { list: error.orphaned.join(", ") })}
         </Text>
       ) : null}
     </Surface>
@@ -86,6 +88,7 @@ export function WorldTab() {
   const immutable = useWorldStore((state) => state.origin?.kind === "instance");
   const toast = useSessionStore((state) => state.toast);
   const unlock = useSessionStore((state) => state.unlock);
+  const t = useT();
 
   const [draft, setDraft] = useState(sceneSource);
   const [issues, setIssues] = useState<DslError | null>(null);
@@ -102,7 +105,7 @@ export function WorldTab() {
 
   const apply = useCallback(() => {
     if (immutable) {
-      toast("danger", "This scene is a published cartridge revision. Remix it to edit.");
+      toast("danger", t("console.sceneImmutable"));
       return;
     }
     const parsed = parseScene(draft);
@@ -114,17 +117,15 @@ export function WorldTab() {
     applied.current = draft;
     setScene(draft, ready(parsed.value));
     if (worldId === null) {
-      toast("danger", "No world is loaded, so world.oui was not written.");
+      toast("danger", t("console.noWorldLoaded"));
       return;
     }
     void (async () => {
       const written = await window.seed.worlds.write(worldId, WORLD_FILES.scene, draft);
-      toast(
-        written.ok ? "success" : "danger",
-        written.ok ? "world.oui applied and saved" : written.error.message,
-      );
+      if (written.ok) toast("success", t("console.sceneApplied"));
+      else toast("danger", errorLine(written.error));
     })();
-  }, [draft, immutable, setScene, toast, worldId]);
+  }, [draft, immutable, setScene, t, toast, worldId]);
 
   // Normalises hand edits through the same writer the platform editor bakes with, so a file the
   // player typed and a file the editor produced are byte-identical for the same program.
@@ -143,7 +144,7 @@ export function WorldTab() {
     void (async () => {
       const result = await window.seed.worlds.read(worldId, WORLD_FILES.scene);
       if (!result.ok) {
-        toast("danger", result.error.message);
+        toast("danger", errorLine(result.error));
         return;
       }
       applied.current = result.value;
@@ -159,47 +160,47 @@ export function WorldTab() {
     void (async () => {
       const result = await window.seed.worlds.exportSeed(worldId);
       if (!result.ok) {
-        if (result.error.code !== "cancelled") toast("danger", result.error.message);
+        if (result.error.code !== "cancelled") toast("danger", errorLine(result.error));
         return;
       }
-      toast("success", `Exported to ${result.value.path}`);
+      toast("success", t("console.exportedTo", { path: result.value.path }));
     })();
-  }, [toast, worldId]);
+  }, [t, toast, worldId]);
 
   const exportEncrypted = useCallback(() => {
     const key = currentKey();
     if (worldId === null || key === null) {
-      toast("danger", "Unlock saves before exporting an encrypted seed.");
+      toast("danger", t("console.unlockBeforeExport"));
       return;
     }
     void (async () => {
       const result = await exportEncryptedSeed(worldId, key);
       if (!result.ok) {
-        if (result.error.code !== "cancelled") toast("danger", result.error.message);
+        if (result.error.code !== "cancelled") toast("danger", errorLine(result.error));
         return;
       }
       if (result.value !== null)
-        toast("success", `Encrypted seed exported to ${result.value.path}`);
+        toast("success", t("console.encryptedExportedTo", { path: result.value.path }));
     })();
-  }, [toast, worldId]);
+  }, [t, toast, worldId]);
 
   const importEncrypted = useCallback(() => {
     const key = currentKey();
     if (key === null) {
-      toast("danger", "Unlock saves before importing an encrypted seed.");
+      toast("danger", t("console.unlockBeforeImport"));
       return;
     }
     void (async () => {
       const result = await importEncryptedSeed(key);
       if (!result.ok) {
-        if (result.error.code !== "cancelled") toast("danger", result.error.message);
+        if (result.error.code !== "cancelled") toast("danger", errorLine(result.error));
         return;
       }
       if (result.value === null) return;
-      toast("success", `Restored ${result.value.name}`);
+      toast("success", t("identity.restored", { name: result.value.name }));
       await openWorld(result.value.id);
     })();
-  }, [toast]);
+  }, [t, toast]);
 
   const dirty = draft !== sceneSource;
 
@@ -207,17 +208,20 @@ export function WorldTab() {
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Text variant="label" tone="muted">
-          {immutable ? "scene (published cartridge)" : "world.oui"}
+          {immutable ? t("console.publishedScene") : "world.oui"}
         </Text>
         <Text variant="caption" tone={immutable ? "dim" : dirty ? "accent" : "dim"}>
-          {immutable ? "read-only" : dirty ? "unsaved edits" : "in sync with disk"}
+          {immutable
+            ? t("console.readOnly")
+            : dirty
+              ? t("console.unsavedEdits")
+              : t("console.inSync")}
         </Text>
       </div>
 
       {immutable ? (
         <Text variant="caption" tone="muted">
-          A cartridge revision never changes during play. Use REMIX in the library to edit its
-          scenes; the checkpoint (flags, inventory, karma) is saved to the instance.
+          {t("console.immutableNote")}
         </Text>
       ) : null}
 
@@ -242,31 +246,31 @@ export function WorldTab() {
 
       <div style={{ display: "flex", gap: space.sm, flexWrap: "wrap" }}>
         <Button variant="primary" onClick={apply} disabled={immutable}>
-          Apply
+          {t("common.apply")}
         </Button>
-        <Button onClick={format}>Format</Button>
+        <Button onClick={format}>{t("console.format")}</Button>
         <Button onClick={reload} disabled={worldId === null}>
-          Reload from disk
+          {t("console.reloadFromDisk")}
         </Button>
         <Button variant="ghost" onClick={exportSeed} disabled={worldId === null}>
-          Export .seed
+          {t("console.exportSeed")}
         </Button>
         <Button
           variant="ghost"
           onClick={exportEncrypted}
           disabled={worldId === null || unlock === null}
         >
-          Export .seed.enc
+          {t("console.exportSeedEnc")}
         </Button>
         <Button variant="ghost" onClick={importEncrypted} disabled={unlock === null}>
-          Import .seed.enc
+          {t("console.importSeedEnc")}
         </Button>
       </div>
 
       <Text variant="caption" tone="dim">
         {unlock?.method === "keychain"
-          ? "Encrypted seeds use this machine's OS keychain key; they do not unlock on another device."
-          : "Encrypted seeds use passkey PRF only when this runtime reports WebAuthn PRF support."}
+          ? t("console.seedKeychainNote")
+          : t("console.seedPasskeyNote")}
       </Text>
 
       {issues === null ? null : <IssueList error={issues} />}

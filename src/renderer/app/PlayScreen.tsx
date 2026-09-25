@@ -17,6 +17,7 @@ import { ChapterPanel } from "./land/ChapterPanel";
 import { chapterFelled } from "./land/chapters";
 import { DoorPanel } from "./land/DoorPanel";
 import { useErrandArrivals } from "./land/errands";
+import { ForeignDoorCard } from "./land/ForeignDoorCard";
 import { NotePanel } from "./land/NotePanel";
 import { useWitness } from "./land/witness";
 import { TweakPanel } from "./TweakPanel";
@@ -118,6 +119,7 @@ export function PlayScreen() {
       <AltarPanel />
       <ChangeProposalPanel />
       <DoorPanel />
+      <ForeignDoorCard />
       <ChapterPanel />
       {hasStory ? <EpisodePrefetch /> : null}
       <NotePanel />
@@ -129,18 +131,18 @@ export function PlayScreen() {
           {scene.status === "error" ? (
             <>
               <Text variant="title" as="h2">
-                world.oui did not parse
+                {t("hud.sceneDidNotParse")}
               </Text>
               <ErrorBlock error={scene.error} />
               <Button variant="primary" onClick={() => toggleConsole(true)} hotkey="F12">
-                Open console
+                {t("hud.openConsole")}
               </Button>
             </>
           ) : (
             <StatePanel
               state={scene}
-              idleText="No world is loaded."
-              loadingText="Loading this floor…"
+              idleText={t("hud.noWorld")}
+              loadingText={t("hud.loadingFloor")}
             >
               {() => null}
             </StatePanel>
@@ -156,10 +158,10 @@ export function PlayScreen() {
           {legacy ? (
             <>
               <Text variant="body" tone="muted">
-                The main process is generating and validating this scene before it appears.
+                {t("hud.generatingNote")}
               </Text>
               <Button variant="ghost" onClick={cancel}>
-                Cancel generation
+                {t("hud.cancelGeneration")}
               </Button>
             </>
           ) : null}
@@ -171,12 +173,12 @@ export function PlayScreen() {
       busy !== null ? null : (
         <OverlayCard>
           <Text variant="label" tone={runOutcome === "cleared" ? "accent" : "danger"}>
-            {runOutcome === "cleared" ? "RUN CLEARED" : "RUN OVER"}
+            {t(runOutcome === "cleared" ? "hud.runCleared" : "hud.runOver")}
           </Text>
           <Text variant="title" as="h2">
-            {runOutcome === "cleared" ? "這一局清乾淨了" : "你倒下了"}
+            {t(runOutcome === "cleared" ? "hud.runClearedTitle" : "hud.runOverTitle")}
           </Text>
-          <Text variant="body">{`${runKills} kills · score ${runScore}`}</Text>
+          <Text variant="body">{t("hud.runStats", { kills: runKills, score: runScore })}</Text>
           <div style={{ display: "flex", gap: space.sm }}>
             <Button
               variant="primary"
@@ -185,15 +187,15 @@ export function PlayScreen() {
                 setScreen("worlds");
               }}
             >
-              Back to library
+              {t("hud.backToLibrary")}
             </Button>
             {inDepths ? (
               <Button variant="ghost" onClick={retryFloor}>
-                {t("retryFloor")}
+                {t("depths.retryFloor")}
               </Button>
             ) : (
               <Button variant="ghost" onClick={resetRun}>
-                Keep looking around
+                {t("hud.keepLooking")}
               </Button>
             )}
           </div>
@@ -203,7 +205,7 @@ export function PlayScreen() {
       {ending === null || busy !== null ? null : (
         <OverlayCard>
           <Text variant="label" tone="accent">
-            CARTRIDGE COMPLETE
+            {t("hud.cartridgeComplete")}
           </Text>
           <Text variant="title" as="h2">
             {ending.name}
@@ -211,13 +213,13 @@ export function PlayScreen() {
           <Text variant="body">{ending.finale}</Text>
           {ending.depths ? (
             <Text variant="caption" tone="muted">
-              {t("depthsNote")}
+              {t("depths.depthsNote")}
             </Text>
           ) : null}
           <div style={{ display: "flex", gap: space.sm }}>
             {ending.depths ? (
               <Button variant="primary" onClick={descend}>
-                {t("enterDepths")}
+                {t("depths.enterDepths")}
               </Button>
             ) : null}
             <Button
@@ -227,10 +229,10 @@ export function PlayScreen() {
                 setScreen("worlds");
               }}
             >
-              Back to library
+              {t("hud.backToLibrary")}
             </Button>
             <Button variant="ghost" onClick={() => setEnding(null)}>
-              Stay in the finale
+              {t("hud.stayFinale")}
             </Button>
           </div>
         </OverlayCard>
@@ -239,15 +241,15 @@ export function PlayScreen() {
       {failure === null || busy !== null ? null : (
         <OverlayCard>
           <Text variant="title" as="h2">
-            {`Floor ${failure.floor} was not written`}
+            {t("hud.floorNotWritten", { floor: failure.floor })}
           </Text>
           <ErrorBlock error={failure.error} />
           <div style={{ display: "flex", gap: space.sm }}>
             <Button variant="primary" onClick={retry}>
-              Retry
+              {t("common.retry")}
             </Button>
             <Button variant="ghost" onClick={stay}>
-              Stay on this floor
+              {t("hud.stayFloor")}
             </Button>
           </div>
         </OverlayCard>

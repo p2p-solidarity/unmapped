@@ -8,6 +8,7 @@
 
 import { useRefreshProbe } from "@renderer/app/inferenceSync";
 import { CHAPTER_CANCELLED, writeChapter } from "@renderer/app/land/chapters";
+import { contentLanguage, translate, useT } from "@renderer/i18n";
 import { useLandStore, useSessionStore, useWorldStore } from "@renderer/state";
 import { useInferenceStore } from "@renderer/state/inferenceStore";
 import { Button, ErrorBlock, Surface, space, Text, zIndex } from "@renderer/ui";
@@ -71,7 +72,7 @@ function modelProblem(
 }
 
 function languageOf(bible: WorldBible): string {
-  return useWorldStore.getState().genesis?.language ?? bibleLanguage(bible) ?? navigator.language;
+  return useWorldStore.getState().genesis?.language ?? bibleLanguage(bible) ?? contentLanguage();
 }
 
 const card: CSSProperties = {
@@ -85,6 +86,7 @@ const card: CSSProperties = {
 };
 
 export function EpisodePrefetch(): JSX.Element | null {
+  const t = useT();
   const active = useSessionStore((state) => state.activeInstance);
   const episodeOpen = useSessionStore((state) => state.episodeOpen);
   const peer = useSessionStore((state) => state.networkRole === "peer");
@@ -150,15 +152,16 @@ export function EpisodePrefetch(): JSX.Element | null {
     stopReason.current = null;
     const instanceId = land.instanceId;
     setJob({
-      label: next.kind === "prepare" ? next.episode.title : "the land's next chapter",
-      stage: "Asking the model…",
+      label: next.kind === "prepare" ? next.episode.title : translate("works.landNextChapter"),
+      stage: translate("works.askingModel"),
       stopping: false,
     });
     const toast = useSessionStore.getState().toast;
     let problem: AppError | null = null;
     if (next.kind === "prepare") {
       const written = await writeChapter(next.episode, () => abort.signal.aborted);
-      if (written.ok) toast("success", `“${next.episode.title}” is ready at its gate.`);
+      if (written.ok)
+        toast("success", translate("works.chapterReady", { title: next.episode.title }));
       else problem = written.error;
     } else {
       const written = await writeNextChapter({
@@ -174,10 +177,8 @@ export function EpisodePrefetch(): JSX.Element | null {
       const sameLand = useLandStore.getState().instanceId === instanceId;
       if (written.ok && sameLand && stopReason.current !== "cancel") {
         useLandStore.getState().addEpisode(written.value);
-        toast(
-          "success",
-          `A new chapter is on the map: ${written.value.title} (${written.value.place})`,
-        );
+        const { title, place } = written.value;
+        toast("success", translate("works.newChapterOnMap", { title, place }));
       } else if (!written.ok) problem = written.error;
     }
     running.current = false;
@@ -237,17 +238,17 @@ export function EpisodePrefetch(): JSX.Element | null {
     return (
       <Surface variant="overlay" padding="sm" style={card}>
         <Text variant="caption" tone="muted">
-          Writing the next chapter… · {job.label}
+          {t("works.writingAhead", { label: job.label })}
         </Text>
         <Text variant="caption" tone="accent">
-          {job.stopping ? "Stopping after the current step…" : job.stage}
+          {job.stopping ? t("works.stopping") : job.stage}
         </Text>
         <div style={{ display: "flex", gap: space.sm }}>
           <Button variant="secondary" disabled={job.stopping} onClick={() => setPause(true)}>
-            Pause
+            {t("works.pause")}
           </Button>
           <Button variant="ghost" disabled={job.stopping} onClick={() => stop("cancel")}>
-            Cancel
+            {t("common.cancel")}
           </Button>
         </div>
       </Surface>
@@ -260,10 +261,10 @@ export function EpisodePrefetch(): JSX.Element | null {
     return (
       <Surface variant="overlay" padding="sm" style={card}>
         <Text variant="caption" tone="muted">
-          Writing the next chapter ahead is paused.
+          {t("works.pausedNote")}
         </Text>
         <Button variant="secondary" onClick={() => setPause(false)}>
-          Resume
+          {t("common.resume")}
         </Button>
       </Surface>
     );
@@ -274,15 +275,15 @@ export function EpisodePrefetch(): JSX.Element | null {
   return (
     <Surface variant="overlay" padding="sm" style={card}>
       <Text variant="caption" tone="muted">
-        The next chapter is not written ahead.
+        {t("works.notWrittenAhead")}
       </Text>
       <ErrorBlock error={shown} />
       <div style={{ display: "flex", gap: space.sm }}>
         <Button variant="secondary" onClick={retry}>
-          Retry
+          {t("works.retry")}
         </Button>
         <Button variant="ghost" onClick={() => setPause(true)}>
-          Pause
+          {t("works.pause")}
         </Button>
       </div>
     </Surface>

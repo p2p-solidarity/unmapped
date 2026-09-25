@@ -15,7 +15,6 @@ import { parseStoryReply, type StoryPlan, storyMessages } from "@shared/story";
 import { openLandCartridge, type PlayStyle } from "./openLandCartridge";
 import { generateProgram } from "./pipeline";
 import { generateSceneArtifact } from "./sceneGeneration";
-import { cartridgeIdFor } from "./ui/createModel";
 
 export type NewWorldStage = "bible" | "story" | "origin" | "publish";
 
@@ -178,6 +177,18 @@ export async function buildWorld(
     name: published.value.name,
   });
   return created.ok ? ok(created.value.instance.meta) : created;
+}
+
+/** A new world's cartridge id: its name made ascii, plus a random tail so names may repeat. */
+function cartridgeIdFor(name: string): string {
+  const stem =
+    name
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 60) || "cartridge";
+  return `${stem}-${crypto.randomUUID().slice(0, 8)}`;
 }
 
 function sceneRequest(

@@ -7,6 +7,7 @@
 
 import { chat } from "@renderer/llm";
 import type { GameplayRules } from "@shared/gameplay";
+import { languageName } from "@shared/language";
 import { err, ok, type Result } from "@shared/result";
 import { TIMING_SYSTEMS, TURN_RESOLUTIONS } from "@shared/timing";
 import type { RulesTweak } from "@shared/tweak";
@@ -122,7 +123,7 @@ export async function generateTweak(input: {
           "Allowed ops and nothing else: change_timing, set_weapon, add_weapon, set_combat,",
           "set_party, set_generation. Omit any field you are not changing.",
           `Timing systems: ${TIMING_SYSTEMS.join(", ")}.`,
-          `Write summary in ${input.language}.`,
+          `Write summary in ${languageName(input.language)}.`,
           "Change only what was asked. Never invent a system that is not in the op list, and never",
           "reference a weapon id that is not in the facts.",
         ].join(" "),

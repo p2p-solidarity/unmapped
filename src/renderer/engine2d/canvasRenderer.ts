@@ -1,10 +1,12 @@
 import type { ChunkStatus } from "@renderer/state";
 import { CHUNK_SIZE, chunkKey } from "@shared/chunks";
+import type { TerritoryMap } from "@shared/continent";
 import type { LandNote, LandProgress } from "@shared/land";
 import type { LandPlace } from "@shared/places";
 import type { PropSpec, SceneGraph } from "@shared/world";
 import { doorPosition } from "../engine/home";
 import { LAND_2D_PALETTE, MONSTER_LOOK } from "../engine/palette";
+import type { RemotePlayer } from "../engine/remoteRoster";
 import { MONSTER_SPRITES, MONSTER_WIDTH, ROLE_SPRITES, ROLE_WIDTH } from "./actorSprites";
 import {
   ACTOR_ASSETS,
@@ -15,7 +17,7 @@ import {
 } from "./assetCatalog";
 import { cachedTerrain, landTileAt } from "./landModel";
 import { placeMarkers } from "./placeLayer";
-import { drawStoryCompass, type StoryView, storyMarkers } from "./storyLayer";
+import { drawStoryCompass, type StoryMarker, type StoryView, storyMarkers } from "./storyLayer";
 import type { Foe, ShotTrace } from "./useLandCombat";
 
 export type SpriteAtlases = Record<AtlasId, HTMLImageElement>;
@@ -48,6 +50,14 @@ export interface LandFrame {
   places?: readonly LandPlace[];
   /** The story chapter being played around its gate, in world tiles. */
   chapter?: SceneGraph | null;
+  /** Where a click sent the walker, or null. */
+  goal?: { x: number; z: number } | null;
+  /** On a continent: whose ground each chunk is (null or absent when not merged). */
+  land?: TerritoryMap | null;
+  /** Other players on the continent, in this world's tiles. */
+  others?: readonly RemotePlayer[];
+  /** Offset markers and doors of the continent's worlds. */
+  continent?: readonly StoryMarker[];
   now: number;
 }
 
@@ -82,6 +92,7 @@ export function renderLandFrame(frame: LandFrame): void {
     height,
   };
   drawGround(frame, transform);
+  drawGoal(frame, transform);
   const items = collectScenery(frame, transform);
   items.push({ z: player.z, draw: () => drawPlayer(frame, transform) });
   items.sort((a, b) => a.z - b.z);
@@ -99,7 +110,7 @@ function drawGround(frame: LandFrame, transform: ScreenTransform): void {
   const z1 = Math.ceil(transform.top + transform.height / transform.tileSize) + 1;
   for (let z = z0; z <= z1; z += 1) {
     for (let x = x0; x <= x1; x += 1) {
-      const tile = landTileAt(scene, seed, x, z);
+      const tile = landTileAt(scene, seed, x, z, frame.land ?? null);
       const asset = GROUND_ASSETS[tile];
       const [dx, dy] = toScreen(transform, x, z);
       drawSprite(ctx, atlases, asset, dx, dy, transform.tileSize, transform.tileSize);
@@ -120,7 +131,7 @@ function collectScenery(frame: LandFrame, transform: ScreenTransform): DrawItem[
 
   for (let cz = cz0; cz <= cz1; cz += 1) {
     for (let cx = cx0; cx <= cx1; cx += 1) {
-      const terrain = cachedTerrain(frame.seed, frame.scene.floor, { cx, cz });
+      const terrain = cachedTerrain(frame.seed, frame.scene.floor, { cx, cz }, frame.land ?? null);
       for (const prop of terrain.props) {
         pushProp(items, frame, transform, prop, cx * CHUNK_SIZE, cz * CHUNK_SIZE);
       }
@@ -256,7 +267,16 @@ function collectScenery(frame: LandFrame, transform: ScreenTransform): DrawItem[
   const marks = [
     ...(frame.story === null ? [] : storyMarkers(frame.story)),
     ...placeMarkers(frame.places ?? []),
+    ...(frame.continent ?? []),
   ];
+  // Other players on the continent: the same walker figure, standing, with their name over it.
+  const standing: SpriteAsset = { ...ACTOR_ASSETS.player, sx: 0, sy: 0 };
+  for (const other of frame.others ?? []) {
+    pushActor(items, frame, transform, other.x, other.z, standing, 1, {
+      text: other.name,
+      color: LAND_2D_PALETTE.remote,
+    });
+  }
   for (const marker of marks) {
     pushMarker(
       items,
@@ -395,6 +415,27 @@ function pushMarker(
       }
     },
   });
+}
+
+/** A small ring on the ground where a click sent the walker. */
+function drawGoal(frame: LandFrame, transform: ScreenTransform): void {
+  const goal = frame.goal;
+  if (goal === null || goal === undefined) return;
+  const [x, y] = toScreen(transform, goal.x, goal.z);
+  const pulse = 0.8 + 0.2 * Math.sin(frame.now / 160);
+  frame.ctx.strokeStyle = LAND_2D_PALETTE.goal;
+  frame.ctx.lineWidth = Math.max(1, transform.tileSize / 20);
+  frame.ctx.beginPath();
+  frame.ctx.ellipse(
+    x,
+    y,
+    transform.tileSize * 0.32 * pulse,
+    transform.tileSize * 0.2 * pulse,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  frame.ctx.stroke();
 }
 
 function drawPlayer(frame: LandFrame, transform: ScreenTransform): void {

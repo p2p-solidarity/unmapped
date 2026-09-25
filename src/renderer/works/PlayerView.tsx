@@ -3,6 +3,7 @@
 // clears only this world's state; Reload opens a fresh session with the saved state (after a
 // fault); Exit leaves progress exactly where the last save put it.
 
+import { useT } from "@renderer/i18n";
 import { Button, colors, ErrorBlock, space, Text } from "@renderer/ui";
 import type { AppError } from "@shared/result";
 import type { Json, WorkPlay } from "@shared/works";
@@ -23,6 +24,7 @@ export function PlayerView({
   /** Called once a world reports completion, with the carry it handed on. */
   onComplete?: (summary: string, carry: Json) => void;
 }): JSX.Element {
+  const t = useT();
   const [play, setPlay] = useState<WorkPlay | null>(null);
   const [error, setError] = useState<AppError | null>(null);
   const [runKey, setRunKey] = useState(0);
@@ -68,7 +70,8 @@ export function PlayerView({
     if (owner === null) return;
     if (message.type === "save") void change({ kind: "save", world: owner, state: message.state });
     else if (message.type === "status") setStatus(message.text);
-    else if (message.type === "error") setStatus(`World error: ${message.message.split("\n")[0]}`);
+    else if (message.type === "error")
+      setStatus(t("works.worldError", { message: message.message.split("\n")[0] ?? "" }));
     else if (message.type === "complete") {
       void change({
         kind: "complete",
@@ -102,14 +105,14 @@ export function PlayerView({
     return (
       <div style={{ padding: space.xl, display: "flex", flexDirection: "column", gap: space.md }}>
         <ErrorBlock error={error} />
-        <Button onClick={onExit}>Back</Button>
+        <Button onClick={onExit}>{t("common.back")}</Button>
       </div>
     );
   }
   if (play === null) {
     return (
       <div style={{ padding: space.xl }}>
-        <Text tone="muted">Opening journey…</Text>
+        <Text tone="muted">{t("works.openingJourney")}</Text>
       </div>
     );
   }
@@ -132,14 +135,19 @@ export function PlayerView({
         }}
       >
         <Button variant="ghost" onClick={onExit}>
-          Exit
+          {t("works.exit")}
         </Button>
         <div style={{ flex: 1, minWidth: 0 }}>
           <Text>{play.title}</Text>
           <Text variant="caption" tone="muted">
             {" "}
-            · world {world + 1}/{play.worlds.length} · {ref?.workId}@{ref?.version} · carry{" "}
-            {JSON.stringify(play.carry) ?? "null"}
+            ·{" "}
+            {t("works.playerLine", {
+              current: world + 1,
+              total: play.worlds.length,
+              ref: `${ref?.workId}@${ref?.version}`,
+              carry: JSON.stringify(play.carry) ?? "null",
+            })}
           </Text>
         </div>
         <Text variant="caption" tone="muted">
@@ -147,11 +155,11 @@ export function PlayerView({
         </Text>
         {clearedBefore && !last && completed === null ? (
           <Button variant="primary" onClick={() => void next()}>
-            Next world →
+            {t("works.nextWorld")}
           </Button>
         ) : null}
-        <Button onClick={() => void restart()}>Restart world</Button>
-        <Button onClick={() => setRunKey((key) => key + 1)}>Reload</Button>
+        <Button onClick={() => void restart()}>{t("works.restartWorld")}</Button>
+        <Button onClick={() => setRunKey((key) => key + 1)}>{t("common.reload")}</Button>
       </div>
       <div style={{ position: "relative", flex: 1, minHeight: 0 }}>
         <WorkFrame
@@ -163,7 +171,7 @@ export function PlayerView({
         {fault === null ? null : (
           <div style={{ position: "absolute", left: space.lg, bottom: space.lg, maxWidth: 520 }}>
             <Button variant="primary" onClick={() => setRunKey((key) => key + 1)}>
-              Reload world
+              {t("works.reloadWorld")}
             </Button>
           </div>
         )}
@@ -183,16 +191,16 @@ export function PlayerView({
               maxWidth: 560,
             }}
           >
-            <Text tone="accent">World cleared</Text>
-            <Text>{completed.summary || "No summary."}</Text>
+            <Text tone="accent">{t("works.worldCleared")}</Text>
+            <Text>{completed.summary || t("works.noSummary")}</Text>
             <Text variant="caption" tone="muted">
-              Carried forward: {JSON.stringify(play.carry) ?? "null"}
+              {t("works.carriedForward", { carry: JSON.stringify(play.carry) ?? "null" })}
             </Text>
             {last ? (
-              <Text tone="success">Journey complete.</Text>
+              <Text tone="success">{t("works.journeyComplete")}</Text>
             ) : (
               <Button variant="primary" onClick={() => void next()}>
-                Next world →
+                {t("works.nextWorld")}
               </Button>
             )}
           </div>

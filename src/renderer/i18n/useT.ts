@@ -1,22 +1,35 @@
-// `t("key", { name: value })` — the only way UI chrome gets its words.
+// `t("namespace.key", { name: value })` — the only way UI chrome gets its words.
 
-import { useLanguageStore } from "./store";
-import { STRINGS, type StringKey } from "./strings";
+import { useCallback } from "react";
+import { type UiLanguage, useLanguageStore } from "./store";
+import { phrase, type StringKey } from "./strings";
 
-export type Translate = (key: StringKey, vars?: Record<string, string | number>) => string;
+export type Vars = Record<string, string | number>;
+export type Translate = (key: StringKey, vars?: Vars) => string;
 
-function fill(text: string, vars?: Record<string, string | number>): string {
+/** `{name}` inserts a value; `{n|one|other}` picks by count (English plurals). */
+export function fill(text: string, vars?: Vars): string {
   if (vars === undefined) return text;
-  return text.replace(/\{(\w+)\}/g, (whole, name: string) =>
-    name in vars ? String(vars[name]) : whole,
+  return text.replace(
+    /\{(\w+)(?:\|([^|{}]*)\|([^|{}]*))?\}/g,
+    (whole, name: string, one?: string, other?: string) => {
+      if (!(name in vars)) return whole;
+      if (one === undefined || other === undefined) return String(vars[name]);
+      return Number(vars[name]) === 1 ? one : other;
+    },
   );
 }
 
-/** The same lookup outside React, for text built while loading a floor. */
-export const translate: Translate = (key, vars) =>
-  fill(STRINGS[key][useLanguageStore.getState().language], vars);
+export function translateIn(language: UiLanguage, key: StringKey, vars?: Vars): string {
+  return fill(phrase(key)[language], vars);
+}
 
+/** The same lookup outside React (toasts, busy lines, text built while loading a floor). */
+export const translate: Translate = (key, vars) =>
+  translateIn(useLanguageStore.getState().language, key, vars);
+
+/** Stable per language, so it is safe in effect and callback dependency lists. */
 export function useT(): Translate {
   const language = useLanguageStore((state) => state.language);
-  return (key, vars) => fill(STRINGS[key][language], vars);
+  return useCallback<Translate>((key, vars) => translateIn(language, key, vars), [language]);
 }

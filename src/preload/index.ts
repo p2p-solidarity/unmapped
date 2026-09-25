@@ -1,6 +1,5 @@
 import type { ModProposalPreview } from "@shared/mods";
 import type { PlayerProfile } from "@shared/player";
-import type { AuthoringSnapshot } from "@shared/scene-gallery";
 // The only bridge between the renderer and main (Rule 6). `window.seed` is typed as `SeedApi`, so
 // a missing or mistyped method is a compile error here rather than a runtime surprise in the UI.
 
@@ -22,6 +21,7 @@ import type {
   PublishOnChainInput,
   WitnessOnChainInput,
 } from "@shared/chain";
+import type { ClaimNameResult, EnsNamesConfig } from "@shared/ensNames";
 import type { DataKeyWrappingRecord } from "@shared/identity";
 import type {
   AppInfo,
@@ -154,11 +154,6 @@ const api: SeedApi = {
     remove: (id) => invoke<Result<void>>(IPC.profiles.remove, id),
   },
   workspaces: {
-    createAuthoring: (input) =>
-      invoke<Result<AuthoringSnapshot>>(IPC.workspaces.createAuthoring, input),
-    readAuthoring: (id) => invoke<Result<AuthoringSnapshot>>(IPC.workspaces.readAuthoring, id),
-    writeAuthoring: (snapshot) =>
-      invoke<Result<AuthoringSnapshot>>(IPC.workspaces.writeAuthoring, snapshot),
     list: () => invoke<Result<WorkspaceMeta[]>>(IPC.workspaces.list),
     create: (input: CreateWorkspaceInput) =>
       invoke<Result<WorkspaceRecord>>(IPC.workspaces.create, input),
@@ -253,6 +248,9 @@ const api: SeedApi = {
       invoke<Result<{ txHash: string }>>(IPC.chain.publish, input),
     witness: (input: WitnessOnChainInput) =>
       invoke<Result<{ txHash: string }>>(IPC.chain.witness, input),
+    ensConfig: () => invoke<EnsNamesConfig>(IPC.chain.ensConfig),
+    claimName: (cartridgeId: string, version: string) =>
+      invoke<Result<ClaimNameResult>>(IPC.chain.claimName, cartridgeId, version),
   },
   app: {
     info: () => invoke<AppInfo>(IPC.app.info),

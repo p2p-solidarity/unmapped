@@ -54,11 +54,6 @@ export { parseItem, toItem } from "./parse/item";
 export { parseRules } from "./parse/rules";
 export { parseScene, toSceneGraph } from "./parse/scene";
 export { ARCHETYPE_GUIDE } from "./prompts/archetypes";
-export {
-  type CandidateSceneContext,
-  candidateIssues,
-  candidateScenePrompt,
-} from "./prompts/candidate";
 export { CHAPTER_EXAMPLE, type ChapterPromptContext, chapterPrompt } from "./prompts/chapter";
 export {
   authoredSection,

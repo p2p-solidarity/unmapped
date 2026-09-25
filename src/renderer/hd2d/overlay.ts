@@ -1,6 +1,8 @@
 // Words over the HD-2D land, drawn crisp on a 2D canvas above the lens (a blurred label is
 // unreadable): names over story gates and a compass at the screen edge toward the next gate.
 
+import { useLanguageStore } from "@renderer/i18n";
+import { fontStacks } from "@renderer/ui";
 import type * as THREE from "three";
 import { Vector3 } from "three";
 import { HD2D_PALETTE } from "../engine/palette";
@@ -13,7 +15,8 @@ export interface OverlayLabel {
   color: string;
 }
 
-const SERIF = "'Iowan Old Style', 'Palatino', 'Hiragino Mincho ProN', 'Songti TC', Georgia, serif";
+// The UI's serif, with its CJK faces ordered for the UI language (Songti before Mincho in Chinese).
+const serif = (): string => fontStacks(useLanguageStore.getState().language).family;
 const point = new Vector3();
 
 function project(camera: THREE.Camera, x: number, y: number, z: number) {
@@ -28,6 +31,8 @@ export function drawOverlay(
   labels: readonly OverlayLabel[],
   compass: { x: number; z: number; label: string } | null,
   foes: readonly Foe[] = [],
+  goal: { x: number; z: number } | null = null,
+  seconds = 0,
 ): void {
   const ctx = canvas.getContext("2d");
   if (ctx === null) return;
@@ -40,12 +45,36 @@ export function drawOverlay(
   for (const label of labels) {
     const at = project(camera, label.x, 2.3, label.z);
     if (at.behind || at.x < -0.1 || at.x > 1.1 || at.y < -0.1 || at.y > 1.1) continue;
-    ctx.font = `600 15px ${SERIF}`;
+    ctx.font = `600 15px ${serif()}`;
     ctx.shadowColor = HD2D_PALETTE.labelShadow;
     ctx.shadowBlur = 6;
     ctx.fillStyle = HD2D_PALETTE.label;
     ctx.fillText(label.text, at.x * width, at.y * height);
     ctx.shadowBlur = 0;
+  }
+
+  // Where a click sent the walker: a ring lying on the ground.
+  if (goal !== null) {
+    const pulse = 0.85 + 0.15 * Math.sin(seconds * 6);
+    const ring: { x: number; y: number }[] = [];
+    for (let i = 0; i <= 24; i += 1) {
+      const angle = (i / 24) * Math.PI * 2;
+      const at = project(
+        camera,
+        goal.x + Math.cos(angle) * 0.35 * pulse,
+        0.05,
+        goal.z + Math.sin(angle) * 0.35 * pulse,
+      );
+      ring.push({ x: at.x * width, y: at.y * height });
+    }
+    ctx.strokeStyle = HD2D_PALETTE.goal;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ring.forEach((p, i) => {
+      if (i === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    });
+    ctx.stroke();
   }
 
   // A foe's level, and its health once it has been hurt.
@@ -54,7 +83,7 @@ export function drawOverlay(
     if (at.behind || at.x < -0.05 || at.x > 1.05 || at.y < -0.05 || at.y > 1.05) continue;
     const x = at.x * width;
     const y = at.y * height;
-    ctx.font = `600 12px ${SERIF}`;
+    ctx.font = `600 12px ${serif()}`;
     ctx.shadowColor = HD2D_PALETTE.labelShadow;
     ctx.shadowBlur = 4;
     ctx.fillStyle = HD2D_PALETTE.label;
@@ -87,7 +116,7 @@ export function drawOverlay(
   );
   const cx = width / 2 + Math.cos(angle) * reach;
   const cy = height / 2 + Math.sin(angle) * reach;
-  ctx.font = `600 14px ${SERIF}`;
+  ctx.font = `600 14px ${serif()}`;
   const textWidth = ctx.measureText(compass.label).width;
   ctx.fillStyle = HD2D_PALETTE.compassSurface;
   ctx.strokeStyle = HD2D_PALETTE.compassEdge;

@@ -9,6 +9,7 @@
 import { z } from "zod";
 import type { ChapterStage } from "./chapter";
 import { CHUNK_SIZE, type ChunkCoord } from "./chunks";
+import { languageName } from "./language";
 import type { ChatMessage } from "./llm";
 import { err, ok, type Result } from "./result";
 import type { Json, WorkRef } from "./works";
@@ -363,7 +364,7 @@ export function storyMessages(input: StoryPromptInput): ChatMessage[] {
       role: "system",
       content: `You turn a player's story into a short chain of playable episodes for an open-world RPG.
 Each episode is one chapter played in the game itself at a place on the map. ${kindsOfPlay(input.combat ?? true)} Vary the kind between episodes and let the stakes rise toward the end.
-Write every text in ${input.language}. Keep the world's rules and tone:
+Write every text in ${languageName(input.language)}. Keep the world's rules and tone:
 CORE: ${input.core.slice(0, 1_500)}
 STYLE: ${input.style.slice(0, 600)}
 
@@ -452,7 +453,7 @@ export function continueStoryMessages(input: ContinueStoryInput): ChatMessage[] 
       role: "system",
       content: `You continue an open-world RPG story whose episodes so far have all been played.
 Write exactly ONE next episode: one chapter played in the game itself at a new place on the map, following from what happened. ${kindsOfPlay(input.combat ?? true)} Use a different kind from the last episode.
-Write every text in ${input.language}. Keep the world's rules and tone:
+Write every text in ${languageName(input.language)}. Keep the world's rules and tone:
 CORE: ${input.core.slice(0, 1_000)}
 STYLE: ${input.style.slice(0, 400)}
 

@@ -56,9 +56,9 @@ export function endlessScene(
     depth: endless.depth,
     combat: rules.combat !== null,
     objectiveText: {
-      clear: translate("objectiveClear"),
-      loot: translate("objectiveLoot"),
-      reach: translate("objectiveReach"),
+      clear: translate("depths.objectiveClear"),
+      loot: translate("depths.objectiveLoot"),
+      reach: translate("depths.objectiveReach"),
     },
   });
   if (floor === null) {

@@ -1,17 +1,18 @@
 import { parseRules, parseScene } from "@dsl/index";
 import { behaviorForKit, resolveSceneKit } from "@renderer/engine/kits/registry";
 import { clearPlayerSample } from "@renderer/engine/playerProbe";
+import { contentLanguage, errorLine } from "@renderer/i18n";
 import { useEngineStore, useLandStore, useSessionStore, useWorldStore } from "@renderer/state";
 import { emptyProgress } from "@renderer/state/landStore";
 import { bibleLanguage, type InstanceMeta, type ResolvedInstance } from "@shared/cartridge";
-import { err, ok, type Result, ready } from "@shared/result";
+import { type AppError, err, ok, type Result, ready } from "@shared/result";
 import { rulesForSceneContext } from "@shared/runtime-context";
 import type { WorldMeta } from "@shared/world";
 import { endlessScene } from "./endlessScene";
 import { loadLand } from "./land/loadLand";
 
-function toastError(message: string, hint?: string): void {
-  useSessionStore.getState().toast("danger", `${message}${hint ? ` — ${hint}` : ""}`);
+function toastError(error: AppError): void {
+  useSessionStore.getState().toast("danger", errorLine(error));
 }
 
 export function hydrateInstance(resolved: ResolvedInstance): Result<InstanceMeta> {
@@ -71,7 +72,7 @@ export function hydrateInstance(resolved: ResolvedInstance): Result<InstanceMeta
       cartridge.manifest.formatVersion === 1
         ? cartridge.manifest.genesis
         : {
-            language: bibleLanguage(cartridge.bible) ?? navigator.language,
+            language: bibleLanguage(cartridge.bible) ?? contentLanguage(),
             intent:
               cartridge.manifest.definition.narrative.premise || cartridge.manifest.description,
           },
@@ -97,12 +98,12 @@ export function hydrateInstance(resolved: ResolvedInstance): Result<InstanceMeta
 export async function openInstance(instanceId: string): Promise<void> {
   const resolved = await window.seed.instances.resolve(instanceId);
   if (!resolved.ok) {
-    toastError(resolved.error.message, resolved.error.hint);
+    toastError(resolved.error);
     return;
   }
   const hydrated = hydrateInstance(resolved.value);
   if (!hydrated.ok) {
-    toastError(hydrated.error.message, hydrated.error.hint);
+    toastError(hydrated.error);
     return;
   }
   useSessionStore.getState().setScreen("play");

@@ -3,8 +3,9 @@
 // world.oui becomes an `error` scene the console can show (Rule 2 / Rule 5).
 
 import { parseScene } from "@dsl/index";
+import { errorLine, translate } from "@renderer/i18n";
 import { useLandStore, useSessionStore, useWorldStore } from "@renderer/state";
-import { errored, type Loadable, ok, type Result, ready } from "@shared/result";
+import { type AppError, errored, type Loadable, ok, type Result, ready } from "@shared/result";
 import {
   type Inventory,
   type KarmaEntry,
@@ -35,6 +36,10 @@ function toast(tone: "info" | "success" | "danger", text: string): void {
   useSessionStore.getState().toast(tone, text);
 }
 
+function reReadFailed(file: WorldFile, error: AppError): string {
+  return translate("title.fileRereadFailed", { file, reason: errorLine(error) });
+}
+
 async function readKarma(worldId: string): Promise<Result<{ entries: KarmaEntry[] }>> {
   const result = await read(worldId, WORLD_FILES.karma);
   if (!result.ok) {
@@ -44,7 +49,7 @@ async function readKarma(worldId: string): Promise<Result<{ entries: KarmaEntry[
   const { entries, skipped } = parseKarmaJsonl(result.value);
   if (skipped > 0) {
     console.warn(`karma.jsonl: skipped ${skipped} unreadable line(s)`);
-    toast("info", `karma.jsonl: skipped ${skipped} unreadable line(s)`);
+    toast("info", translate("title.karmaSkipped", { n: skipped }));
   }
   return ok({ entries });
 }
@@ -96,7 +101,7 @@ export async function loadWorld(worldId: string): Promise<Result<WorldMeta>> {
   // The store is now a copy of the dotfiles; from here on, changes are edits worth saving.
   store.finishHydration();
   if (scene.status === "error") {
-    toast("danger", "world.oui did not parse — open the console (F12) to see the errors");
+    toast("danger", translate("title.sceneParseFailed"));
   }
   return ok(meta.value);
 }
@@ -110,7 +115,7 @@ function sceneFrom(source: string): Loadable<SceneGraph> {
 export async function openWorld(worldId: string): Promise<void> {
   const result = await loadWorld(worldId);
   if (!result.ok) {
-    toast("danger", `${result.error.message}${result.error.hint ? ` — ${result.error.hint}` : ""}`);
+    toast("danger", errorLine(result.error));
     useSessionStore.getState().setScreen("worlds");
     return;
   }
@@ -120,7 +125,7 @@ export async function openWorld(worldId: string): Promise<void> {
 async function reloadScene(worldId: string): Promise<void> {
   const result = await read(worldId, WORLD_FILES.scene);
   if (!result.ok) {
-    toast("danger", `world.oui could not be re-read: ${result.error.message}`);
+    toast("danger", reReadFailed(WORLD_FILES.scene, result.error));
     return;
   }
   const store = useWorldStore.getState();
@@ -128,31 +133,34 @@ async function reloadScene(worldId: string): Promise<void> {
   if (result.value === store.sceneSource) return;
   const scene = sceneFrom(result.value);
   store.setScene(result.value, scene);
-  toast(scene.status === "error" ? "danger" : "success", "world.oui reloaded");
+  toast(
+    scene.status === "error" ? "danger" : "success",
+    translate("title.fileReloaded", { file: WORLD_FILES.scene }),
+  );
 }
 
 async function reloadKarma(worldId: string): Promise<void> {
   const karma = await readKarma(worldId);
   if (!karma.ok) {
-    toast("danger", `karma.jsonl could not be re-read: ${karma.error.message}`);
+    toast("danger", reReadFailed(WORLD_FILES.karma, karma.error));
     return;
   }
   const store = useWorldStore.getState();
   if (serializeKarmaJsonl(karma.value.entries) === serializeKarmaJsonl(store.karma)) return;
   store.setKarma(karma.value.entries);
-  toast("info", "karma.jsonl reloaded");
+  toast("info", translate("title.fileReloaded", { file: WORLD_FILES.karma }));
 }
 
 async function reloadInventory(worldId: string): Promise<void> {
   const inventory = await readInventory(worldId);
   if (!inventory.ok) {
-    toast("danger", `inventory.json could not be re-read: ${inventory.error.message}`);
+    toast("danger", reReadFailed(WORLD_FILES.inventory, inventory.error));
     return;
   }
   const store = useWorldStore.getState();
   if (serializeInventory(inventory.value) === serializeInventory(store.inventory)) return;
   store.setInventory(inventory.value);
-  toast("info", "inventory.json reloaded");
+  toast("info", translate("title.fileReloaded", { file: WORLD_FILES.inventory }));
 }
 
 async function reloadMeta(worldId: string): Promise<void> {
@@ -160,7 +168,7 @@ async function reloadMeta(worldId: string): Promise<void> {
   if (!raw.ok) return;
   const meta = parseMeta(raw.value);
   if (!meta.ok) {
-    toast("danger", meta.error.message);
+    toast("danger", errorLine(meta.error));
     return;
   }
   const store = useWorldStore.getState();

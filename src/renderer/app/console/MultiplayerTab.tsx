@@ -1,18 +1,18 @@
 // Rooms are owned by src/renderer/net; this tab only frames the panel and says what is shared.
 
+import { useT } from "@renderer/i18n";
 import { RoomPanel } from "@renderer/net";
 import { Text } from "@renderer/ui";
 
 export function MultiplayerTab() {
+  const t = useT();
   return (
     <>
       <Text variant="label" tone="muted">
-        ROOM
+        {t("console.room")}
       </Text>
       <Text variant="caption" tone="dim">
-        A room compares the locally verified cartridge and runtime hashes before gameplay starts.
-        The host owns progress and scene transitions; published scene files never travel through the
-        room.
+        {t("console.roomNote")}
       </Text>
       <RoomPanel />
     </>

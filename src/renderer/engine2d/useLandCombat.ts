@@ -6,6 +6,7 @@
 
 import { useEncounterStore, useEngineStore, useRunStore } from "@renderer/state";
 import { chunkOf, wildMonsters } from "@shared/chunks";
+import type { TerritoryMap } from "@shared/continent";
 import type { GameplayRules } from "@shared/gameplay";
 import type { MonsterKind, MonsterSpec, SceneGraph } from "@shared/world";
 import { type RefObject, useCallback, useEffect, useMemo, useRef } from "react";
@@ -74,12 +75,15 @@ export function useLandCombat(input: {
   graph: SceneGraph;
   rules: GameplayRules | null;
   seed: number;
+  /** On a continent, other worlds' territory; their wild monsters are theirs to meet, not ours. */
+  land?: TerritoryMap | null;
   player: RefObject<{ x: number; z: number; yaw: number }>;
   /** Monsters standing on the land beyond the origin's and the wild ones (a story chapter's). */
   extra?: readonly MonsterSpec[];
   onFelled?: (id: string) => void;
 }): LandCombat {
   const { graph, rules, seed, player, extra, onFelled } = input;
+  const land = input.land ?? null;
   const chunk = useEngineStore((state) => state.chunk);
   const clock = useRef(newCombatClock());
   const shot = useRef<ShotTrace | null>(null);
@@ -104,7 +108,9 @@ export function useLandCombat(input: {
     const wild: MonsterSpec[] = [];
     for (let dz = -1; dz <= 1; dz += 1) {
       for (let dx = -1; dx <= 1; dx += 1) {
-        wild.push(...wildMonsters(seed, { cx: cx + dx, cz: cz + dz }, graph));
+        const near = { cx: cx + dx, cz: cz + dz };
+        if ((land?.at(near) ?? null) !== null) continue;
+        wild.push(...wildMonsters(seed, near, graph));
       }
     }
     const monsters = [...graph.monsters, ...(extra ?? []), ...wild].filter(
@@ -120,7 +126,7 @@ export function useLandCombat(input: {
       one.id === PLAYER_ID && wounds !== null ? { ...one, hp: Math.min(one.maxHp, wounds) } : one,
     );
     store.begin({ ...built, combatants });
-  }, [graph, rules, seed, cx, cz, extra]);
+  }, [graph, rules, seed, cx, cz, extra, land]);
 
   useEffect(rebuild, [rebuild]);
 

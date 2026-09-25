@@ -1,6 +1,7 @@
 // Home on open land: the door with four dials, and a pedestal for every keepsake brought back.
 // Both are drawn only from the save's home state — an empty shelf shows no pedestals.
 
+import { useT } from "@renderer/i18n";
 import { useLandStore } from "@renderer/state";
 import type { SceneGraph } from "@shared/world";
 import type { JSX } from "react";
@@ -12,6 +13,7 @@ import { ENTITY_PALETTE } from "./palette";
 
 export function HomeYard({ origin }: { origin: SceneGraph }): JSX.Element | null {
   const progress = useLandStore((state) => state.progress);
+  const t = useT();
   if (progress === null) return null;
   const [dx, dz] = doorPosition(origin, progress.home);
   const frame = standardMaterial(ENTITY_PALETTE.doorFrame, 0);
@@ -47,7 +49,7 @@ export function HomeYard({ origin }: { origin: SceneGraph }): JSX.Element | null
           scale={[1.05, 2.1, 0.08]}
           castShadow
         />
-        <Label text="Door" y={2.7} />
+        <Label text={t("hud.door")} y={2.7} />
       </group>
       {progress.home.keepsakes.map((item, index) => {
         const [x, z] = shelfPosition(origin, progress.home, index);

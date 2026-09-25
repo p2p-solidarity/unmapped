@@ -5,6 +5,7 @@
 // gauges are backed by state — and the whole panel disappears for a cartridge with no combat,
 // rather than showing an empty frame.
 
+import { type StringKey, useT } from "@renderer/i18n";
 import { useEncounterStore, useRunStore } from "@renderer/state";
 import { colors, font, radius, Surface, space, Text } from "@renderer/ui";
 import { hasKind } from "@shared/progression";
@@ -14,15 +15,15 @@ import { RevolverDial } from "./RevolverDial";
 
 const PLAYER_ID = "player";
 
-const SYSTEM_LABEL: Record<TimingSystemId, string> = {
-  realtime: "即時",
-  real_time_with_pause: "即時暫停",
-  tick: "滴答回合",
-  turn_based: "回合制",
-  turn_bar: "行動槽",
-  initiative: "先攻序",
-  phase_based: "階段制",
-  revolver: "左輪輪替",
+const SYSTEM_LABEL: Record<TimingSystemId, StringKey> = {
+  realtime: "hud.sysRealtime",
+  real_time_with_pause: "hud.sysPause",
+  tick: "hud.sysTick",
+  turn_based: "hud.sysTurnBased",
+  turn_bar: "hud.sysTurnBar",
+  initiative: "hud.sysInitiative",
+  phase_based: "hud.sysPhase",
+  revolver: "hud.sysRevolver",
 };
 
 function Meter({ value, max, tone }: { value: number; max: number; tone: string }): JSX.Element {
@@ -47,6 +48,7 @@ export function TurnPanel(): JSX.Element | null {
   const weapon = useEncounterStore((state) => state.weapon);
   const ammo = useEncounterStore((state) => state.ammo);
   const run = useRunStore((state) => state);
+  const t = useT();
 
   if (turn === null) return null;
 
@@ -70,22 +72,24 @@ export function TurnPanel(): JSX.Element | null {
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Text variant="label" tone="accent" style={{ fontWeight: font.weight.bold }}>
-          {SYSTEM_LABEL[turn.system]}
+          {t(SYSTEM_LABEL[turn.system])}
         </Text>
         <Text variant="caption" tone="muted" mono>
-          {`ROUND ${turn.round}`}
+          {t("hud.round", { n: turn.round })}
         </Text>
       </div>
 
       {turn.system === "realtime" ? null : (
         <Text variant="caption" tone={yourTurn ? "accent" : "dim"}>
           {active === null
-            ? "行動槽填充中…"
+            ? t("hud.barFilling")
             : yourTurn
               ? turn.phase === "planning"
-                ? "你的回合 · 左鍵開火，R 跳過"
-                : "結算中…"
-              : `${combatants.find((one) => one.id === active)?.label ?? active} 行動中`}
+                ? t("hud.yourTurn")
+                : t("hud.resolving")
+              : t("hud.actorActing", {
+                  name: combatants.find((one) => one.id === active)?.label ?? active,
+                })}
         </Text>
       )}
 
@@ -142,13 +146,13 @@ export function TurnPanel(): JSX.Element | null {
       )}
 
       <Text variant="caption" tone="dim">
-        {`敵人 ${standing} / ${hostiles.length}`}
+        {t("hud.foesLeft", { standing, total: hostiles.length })}
       </Text>
 
       {hasKind(run.rules, "score_run") ? (
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <Text variant="caption" tone="dim" mono>
-            SCORE
+            {t("hud.score")}
           </Text>
           <Text variant="caption" tone="muted" mono>
             {String(run.score)}
@@ -162,7 +166,7 @@ export function TurnPanel(): JSX.Element | null {
             {`LV ${run.level}`}
           </Text>
           <Text variant="caption" tone="muted" mono>
-            {`${run.xp} xp · ${run.kills} kills`}
+            {t("hud.xpKills", { xp: run.xp, kills: run.kills })}
           </Text>
         </div>
       ) : null}

@@ -1,4 +1,5 @@
 import { hydrateInstance } from "@renderer/app/useInstanceLoader";
+import { type StringKey, translate, useT } from "@renderer/i18n";
 import { useSessionStore } from "@renderer/state";
 import { Button, ErrorBlock, StatePanel, Surface, space, Text, TextField } from "@renderer/ui";
 import type { InstanceMeta, ResolvedInstance } from "@shared/cartridge";
@@ -13,20 +14,23 @@ import { leaveActiveRoom } from "./sync";
 
 const rowStyle: CSSProperties = { display: "flex", gap: space.sm, alignItems: "stretch" };
 
-function statusLabel(status: SignalingStatus): string {
-  if (status.connected) return "connected";
-  return status.unsuccessfulReconnects > 0 ? "unreachable" : "connecting…";
+function statusLabel(status: SignalingStatus): StringKey {
+  if (status.connected) return "identity.statusConnected";
+  return status.unsuccessfulReconnects > 0
+    ? "identity.statusUnreachable"
+    : "identity.statusConnecting";
 }
 
 function PeerList({ peers }: { peers: PeerInfo[] }) {
+  const t = useT();
   if (peers.length === 0) {
-    return <Text tone="dim">Waiting for a player with the same cartridge revision.</Text>;
+    return <Text tone="dim">{t("identity.waitingPeer")}</Text>;
   }
   return (
     <>
       {peers.map((peer) => (
         <Text key={peer.clientId}>
-          {peer.name} — scene {peer.floor}
+          {t("identity.peerLine", { name: peer.name, floor: peer.floor })}
         </Text>
       ))}
     </>
@@ -62,6 +66,7 @@ export function RoomPanel() {
   );
   const [selectedProfileId, setSelectedProfileId] = useState("");
   const [busy, setBusy] = useState(false);
+  const t = useT();
 
   useEffect(() => {
     if (active !== null) return;
@@ -170,10 +175,10 @@ export function RoomPanel() {
     if (active === null) return;
     void navigator.clipboard
       .writeText(active.code)
-      .then(() => useSessionStore.getState().toast("success", "Room code copied"))
+      .then(() => useSessionStore.getState().toast("success", translate("identity.codeCopied")))
       .catch((cause: unknown) => {
-        const message = cause instanceof Error ? cause.message : String(cause);
-        useSessionStore.getState().toast("danger", `Could not copy: ${message}`);
+        const reason = cause instanceof Error ? cause.message : String(cause);
+        useSessionStore.getState().toast("danger", translate("identity.copyFailed", { reason }));
       });
   }, [active]);
 
@@ -184,18 +189,19 @@ export function RoomPanel() {
     return (
       <Surface padding="lg">
         <Text variant="label" tone="muted">
-          room code
+          {t("identity.roomCode")}
         </Text>
         <Text variant="titleLarge" mono tone="accent">
           {active.code}
         </Text>
         <Text tone="dim">
-          {active.instance.cartridge.manifest.name} · {active.host ? "host" : "joined"} ·{" "}
+          {active.instance.cartridge.manifest.name} ·{" "}
+          {active.host ? t("identity.roleHost") : t("identity.roleJoined")} ·{" "}
           {active.profile.displayName}
         </Text>
         <div style={rowStyle}>
           <Button variant="secondary" onClick={copy}>
-            Copy code
+            {t("identity.copyCode")}
           </Button>
           <Button
             variant="destructive"
@@ -205,12 +211,12 @@ export function RoomPanel() {
               });
             }}
           >
-            Leave
+            {t("common.leave")}
           </Button>
         </div>
         {status.map((entry) => (
           <Text key={entry.url} variant="caption" tone="dim" mono>
-            {entry.url} — {statusLabel(entry)}
+            {entry.url} — {t(statusLabel(entry))}
           </Text>
         ))}
         {unreachable ? (
@@ -223,7 +229,7 @@ export function RoomPanel() {
           />
         ) : null}
         <Text variant="label" tone="muted">
-          players
+          {t("identity.players")}
         </Text>
         <PeerList peers={peers} />
         {localError.status === "error" ? <ErrorBlock error={localError.error} /> : null}
@@ -233,18 +239,20 @@ export function RoomPanel() {
 
   return (
     <Surface padding="lg">
-      <Text variant="title">Choose a game, then join</Text>
-      <Text tone="dim">
-        The room opens only after the local cartridge and runtime hashes are verified.
-      </Text>
-      <StatePanel state={data} idleText="Loading saved games…" loadingText="Loading saved games…">
+      <Text variant="title">{t("identity.chooseTitle")}</Text>
+      <Text tone="dim">{t("identity.chooseNote")}</Text>
+      <StatePanel
+        state={data}
+        idleText={t("identity.loadingGames")}
+        loadingText={t("identity.loadingGames")}
+      >
         {(value) => (
           <>
             <Text variant="label" tone="muted">
-              saved game
+              {t("identity.savedGame")}
             </Text>
             {value.instances.length === 0 ? (
-              <Text tone="dim">Create an instance from Cartridges first.</Text>
+              <Text tone="dim">{t("identity.noInstances")}</Text>
             ) : (
               value.instances.map((instance) => (
                 <Button
@@ -259,7 +267,7 @@ export function RoomPanel() {
               ))
             )}
             <Text variant="label" tone="muted">
-              player profile
+              {t("identity.playerProfile")}
             </Text>
             {value.profiles.map((profile) => (
               <Button
@@ -278,17 +286,23 @@ export function RoomPanel() {
           </>
         )}
       </StatePanel>
-      <TextField label="display name" value={name} onChange={onName} spellCheck={false} mono />
+      <TextField
+        label={t("identity.displayName")}
+        value={name}
+        onChange={onName}
+        spellCheck={false}
+        mono
+      />
       <Button
         variant="primary"
         fullWidth
         disabled={busy || selectedInstanceId === "" || name.trim() === ""}
         onClick={create}
       >
-        Host this game
+        {t("identity.hostGame")}
       </Button>
       <Text variant="label" tone="muted">
-        or join with a code
+        {t("identity.orJoin")}
       </Text>
       <div style={rowStyle}>
         <TextField
@@ -307,7 +321,7 @@ export function RoomPanel() {
           disabled={busy || code.length !== ROOM_CODE_LENGTH || selectedInstanceId === ""}
           onClick={join}
         >
-          Join
+          {t("identity.join")}
         </Button>
       </div>
       {localError.status === "error" ? <ErrorBlock error={localError.error} /> : null}

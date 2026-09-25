@@ -1,6 +1,7 @@
 // Renders a Loadable<T> honestly: idle / loading / error / ready. Use it for every data-driven
 // panel instead of hand-rolling placeholders (Rule 2: no fake data).
 
+import { describeError, useT } from "@renderer/i18n";
 import type { AppError, Loadable } from "@shared/result";
 import type { ReactNode } from "react";
 import { Surface } from "./Surface";
@@ -14,38 +15,42 @@ export interface StatePanelProps<T> {
 }
 
 export function ErrorBlock({ error }: { error: AppError }) {
+  const t = useT();
+  // `t` subscribes to the language, so the description below follows the picker too.
+  const { message, hint, detail } = describeError(error);
   return (
     <Surface variant="inset" padding="md">
       <Text variant="label" tone="danger">
-        {error.code}
+        {t("common.errorCode", { code: error.code })}
       </Text>
-      <Text variant="body">{error.message}</Text>
-      {error.hint ? (
-        <Text variant="caption" tone="muted">
-          {error.hint}
+      <Text variant="body">{message}</Text>
+      {detail === null ? null : (
+        <Text variant="caption" tone="dim" mono>
+          {detail}
         </Text>
-      ) : null}
+      )}
+      {hint === null ? null : (
+        <Text variant="caption" tone="muted">
+          {hint}
+        </Text>
+      )}
     </Surface>
   );
 }
 
-export function StatePanel<T>({
-  state,
-  idleText = "Nothing yet.",
-  loadingText = "Loading…",
-  children,
-}: StatePanelProps<T>) {
+export function StatePanel<T>({ state, idleText, loadingText, children }: StatePanelProps<T>) {
+  const t = useT();
   switch (state.status) {
     case "idle":
       return (
         <Text variant="body" tone="dim">
-          {idleText}
+          {idleText ?? t("common.nothingYet")}
         </Text>
       );
     case "loading":
       return (
         <Text variant="body" tone="muted">
-          {loadingText}
+          {loadingText ?? t("common.loading")}
         </Text>
       );
     case "error":

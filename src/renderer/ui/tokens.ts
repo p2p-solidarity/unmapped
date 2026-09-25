@@ -33,14 +33,47 @@ export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 40 } as const;
 
 export const radius = { sm: 2, md: 2, lg: 3, pill: 999 } as const;
 
-const MONO_STACK =
-  '"JetBrains Mono", "SF Mono", Menlo, "Noto Sans Mono CJK TC", "Noto Sans TC", "Zen Kaku Gothic New", monospace';
+// A Han character takes the first face in the stack that has it, so the CJK faces are ordered by
+// the UI language: Japanese Mincho ahead of Songti would draw Chinese text with Japanese forms.
 // Book faces that ship with the OS (nothing is downloaded); Mincho/Song faces carry CJK in the
 // same voice, so a Chinese or Japanese land reads like the English one.
-const SERIF_STACK =
-  '"Iowan Old Style", "Palatino Linotype", Palatino, "Hiragino Mincho ProN", "Yu Mincho", "Songti TC", "Noto Serif CJK TC", Georgia, serif';
-const DISPLAY_STACK =
-  '"Cinzel", "Trajan Pro", "Big Caslon", "Iowan Old Style", "Hiragino Mincho ProN", "Songti TC", Georgia, serif';
+const CJK = {
+  ja: {
+    serif: ['"Hiragino Mincho ProN"', '"Yu Mincho"', '"Songti TC"', '"Noto Serif CJK TC"'],
+    sans: ['"Hiragino Sans"', '"Zen Kaku Gothic New"', '"PingFang TC"', '"Noto Sans TC"'],
+  },
+  zh: {
+    serif: ['"Songti TC"', '"Noto Serif CJK TC"', '"Hiragino Mincho ProN"', '"Yu Mincho"'],
+    sans: ['"PingFang TC"', '"Noto Sans TC"', '"Hiragino Sans"', '"Zen Kaku Gothic New"'],
+  },
+} as const;
+
+/** The three type stacks with CJK fallbacks ordered for a UI language ("en", "zh-TW", "ja"). */
+export function fontStacks(language: string): { family: string; mono: string; display: string } {
+  const cjk = language.startsWith("zh") ? CJK.zh : CJK.ja;
+  return {
+    family: [
+      '"Iowan Old Style"',
+      '"Palatino Linotype"',
+      "Palatino",
+      ...cjk.serif,
+      "Georgia",
+      "serif",
+    ].join(", "),
+    mono: ['"JetBrains Mono"', '"SF Mono"', "Menlo", ...cjk.sans, "monospace"].join(", "),
+    display: [
+      '"Cinzel"',
+      '"Trajan Pro"',
+      '"Big Caslon"',
+      '"Iowan Old Style"',
+      ...cjk.serif,
+      "Georgia",
+      "serif",
+    ].join(", "),
+  };
+}
+
+const { family: SERIF_STACK, mono: MONO_STACK, display: DISPLAY_STACK } = fontStacks("en");
 
 export const font = {
   // Prose, menus and windows are set in a book serif; ids, hashes, coordinates and code keep the

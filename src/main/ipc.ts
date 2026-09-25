@@ -1,6 +1,5 @@
 import { registerModProposalIpc } from "./mods/proposal-ipc";
 import { registerProfilesIpc } from "./profiles/ipc";
-import { registerAuthoringIpc } from "./workspaces/authoring-ipc";
 // The single registration point for every channel in `@shared/ipc`. Called once from `index.ts`
 // after the app is ready and the worlds directory exists.
 //
@@ -29,7 +28,6 @@ export function registerIpc(ctx: MainContext): void {
   registerInstancesIpc(ctx);
   registerWorkspacesIpc(ctx);
   registerProfilesIpc(ctx);
-  registerAuthoringIpc(ctx);
   registerModProposalIpc(ctx);
   registerSeedIpc(ctx);
   registerVaultIpc(ctx);
@@ -37,5 +35,5 @@ export function registerIpc(ctx: MainContext): void {
   registerInferenceIpc(ctx);
   registerModsIpc(ctx);
   registerWorksIpc(ctx);
-  registerChainIpc();
+  registerChainIpc(ctx);
 }

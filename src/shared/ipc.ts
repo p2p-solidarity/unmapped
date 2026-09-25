@@ -1,6 +1,5 @@
 import type { ModProposalPreview, SeedModProposal } from "./mods";
 import type { PlayerProfile, PlayerProfileInput } from "./player";
-import type { AuthoringSnapshot } from "./scene-gallery";
 // The single IPC contract. Preload exposes `window.seed` implementing SeedApi; main registers
 // handlers for every channel in IPC. Never invent a channel outside this file.
 
@@ -23,6 +22,7 @@ import type {
   PublishOnChainInput,
   WitnessOnChainInput,
 } from "./chain";
+import type { ClaimNameResult, EnsNamesConfig } from "./ensNames";
 import type { DataKeyWrappingRecord } from "./identity";
 import type {
   AppendNoteInput,
@@ -101,9 +101,6 @@ export const IPC = {
     remove: "profiles:remove",
   },
   workspaces: {
-    createAuthoring: "workspaces:create-authoring",
-    readAuthoring: "workspaces:read-authoring",
-    writeAuthoring: "workspaces:write-authoring",
     list: "workspaces:list",
     create: "workspaces:create",
     read: "workspaces:read",
@@ -166,6 +163,8 @@ export const IPC = {
     lookup: "chain:lookup",
     publish: "chain:publish",
     witness: "chain:witness",
+    ensConfig: "chain:ens-config",
+    claimName: "chain:claim-name",
   },
   app: {
     info: "app:info",
@@ -347,9 +346,6 @@ export interface SeedApi {
     remove(profileId: string): Promise<Result<void>>;
   };
   workspaces: {
-    createAuthoring(input: { name: string; author: string }): Promise<Result<AuthoringSnapshot>>;
-    readAuthoring(workspaceId: string): Promise<Result<AuthoringSnapshot>>;
-    writeAuthoring(snapshot: AuthoringSnapshot): Promise<Result<AuthoringSnapshot>>;
     list(): Promise<Result<WorkspaceMeta[]>>;
     create(input: CreateWorkspaceInput): Promise<Result<WorkspaceRecord>>;
     read(workspaceId: string): Promise<Result<WorkspaceRecord>>;
@@ -430,6 +426,10 @@ export interface SeedApi {
     lookup(contentHash: string): Promise<Result<LedgerRevision | null>>;
     publish(input: PublishOnChainInput): Promise<Result<{ txHash: string }>>;
     witness(input: WitnessOnChainInput): Promise<Result<{ txHash: string }>>;
+    /** Cartridge ENS names (Sepolia ENSv2): the parent, and whether this machine can write. */
+    ensConfig(): Promise<EnsNamesConfig>;
+    /** Names a local revision `<cartridgeId>.<parent>` and points its records at it; waits for receipts. */
+    claimName(cartridgeId: string, version: string): Promise<Result<ClaimNameResult>>;
   };
   app: {
     info(): Promise<AppInfo>;

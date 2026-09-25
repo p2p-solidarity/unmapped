@@ -1,6 +1,7 @@
 // Bottom dock + the "press E" prompt. The prompt text is resolved by the engine (nearbyPrompt);
 // the dock is pure chrome — every button toggles state that already exists.
 
+import { useT } from "@renderer/i18n";
 import { useEngineStore, useSessionStore } from "@renderer/state";
 import { Button, colors, font, radius, space, Text } from "@renderer/ui";
 import type { JSX } from "react";
@@ -52,6 +53,7 @@ export function ActionDock(): JSX.Element {
   const look = useEngineStore((state) => state.landLook);
   // Open land has one camera but two looks; every other scene's kit holds its camera.
   const openLand = useEngineStore((state) => state.chunk !== null);
+  const t = useT();
 
   return (
     <div
@@ -74,13 +76,13 @@ export function ActionDock(): JSX.Element {
         }}
         style={dockButton}
       >
-        ← 主頁
+        {t("hud.dockHome")}
       </Button>
       <Button variant="secondary" onClick={() => toggleTweak()} style={dockButton}>
-        調整機制
+        {t("hud.dockTweak")}
       </Button>
       <Button variant="secondary" onClick={() => toggleConsole()} hotkey="F12" style={dockButton}>
-        Console / 終端
+        {t("hud.dockConsole")}
       </Button>
       {openLand ? (
         <Button
@@ -92,7 +94,7 @@ export function ActionDock(): JSX.Element {
           }}
           style={dockButton}
         >
-          手記 Notes
+          {t("hud.dockNotes")}
         </Button>
       ) : null}
       {openLand ? (
@@ -105,11 +107,11 @@ export function ActionDock(): JSX.Element {
           }}
           style={dockButton}
         >
-          {`Look: ${look === "hd2d" ? "HD-2D" : "16-bit"}`}
+          {t("hud.dockLook", { look: look === "hd2d" ? "HD-2D" : "16-bit" })}
         </Button>
       ) : (
         <Button variant="secondary" disabled style={dockButton}>
-          {`Cam: ${cameraMode.toUpperCase()} · scene locked`}
+          {t("hud.dockCamLocked", { mode: cameraMode.toUpperCase() })}
         </Button>
       )}
     </div>
