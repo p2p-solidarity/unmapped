@@ -5,6 +5,9 @@
 //   2. A fight formula changes (the same save hits and gets hit differently).
 //   3. Lore heat or dungeon generation changes (the same world prompts or plays differently).
 //   4. The version is bumped without recording what the new physics produces.
+//   5. The beat changes (rev 6 phase 3, D13, D14, D18): care points, the decay table, the fog
+//      thresholds, the season length or the rumor slot picker — every client and the world
+//      service would fold the same history differently.
 // When this fails on purpose: bump PHYSICS_VERSION, keep the old generators reachable for worlds
 // pinned to the old one (PHYSICS_SUPPORTED), and record the new fingerprint below.
 
@@ -13,6 +16,37 @@ import { chunkTerrain, groundAt, isFord, wildMonsters } from "@shared/chunks";
 import { applyDamage, monsterHp } from "@shared/combat";
 import { seedFromText } from "@shared/endless";
 import { foeDamage, foeSpeed } from "@shared/foes";
+import { BEAT_EVERY_MS, computeBeat } from "@shared/history/beat";
+import { HISTORY_LIMITS } from "@shared/history/bodies";
+import {
+  CARE_POINTS,
+  DECAY_PPM,
+  FADING_BELOW,
+  FOG_CARE_BELOW,
+  FOG_QUIET_DAYS,
+  FOG_SAFE_RINGS,
+  SEASON_DAYS,
+  SEASONS,
+} from "@shared/history/decay";
+import { applyEntry, emptyNow } from "@shared/history/fold";
+import { sha256Bytes } from "@shared/history/ids";
+import { type LogCursor, logStart, sequenceEvent } from "@shared/history/log";
+import {
+  RUMOR_KINDS,
+  RUMOR_NAME_MIN,
+  RUMOR_RINGS,
+  RUMOR_SHOW_BEATS,
+  RUMOR_WRITE_BEATS,
+} from "@shared/history/rumor";
+import { authorKeyFor, signatureVerdict, signEvent } from "@shared/history/sign";
+import type {
+  EventBodies,
+  EventKind,
+  GenesisEvent,
+  StoredEvent,
+  UnsignedEventOf,
+  WorldNow,
+} from "@shared/history/types";
 import { activate, type LoreNode, regionalTone } from "@shared/lore";
 import { generateMaze } from "@shared/maze";
 import { checkPhysics, PHYSICS_SUPPORTED, PHYSICS_VERSION } from "@shared/physics";
@@ -23,6 +57,15 @@ import { describe, expect, it } from "vitest";
 /** What each physics version produces. Never edit an entry; add one for a new version. */
 const RECORDED: Record<number, string> = {
   1: "sha256:3f8a852e7e03aac940620b07964a4e908353b66be0f71af69348ca359d1730f6",
+};
+
+/**
+ * What each physics version's beat produces: the constants, then care, fog, seasons and rumor
+ * slots over scripted histories. Recorded under version 1 when the beat was first defined (no
+ * earlier build folded a history). Never edit an entry; add one for a new version (D18).
+ */
+const BEAT_RECORDED: Record<number, string> = {
+  1: "sha256:4fe10b1f0780096109ab86ee9177bdee4788b40504768ae646fdd5affb1c41d4",
 };
 
 const SEEDS = [0, 1, 12_345, seedFromText("aether-land"), seedFromText("K7QM-2PXD")];
@@ -110,13 +153,161 @@ function fingerprint(): string {
   return `sha256:${createHash("sha256").update(text).digest("hex")}`;
 }
 
+const BEATER = sha256Bytes("physics:beater");
+const dayAt = (day: number) => new Date(Date.UTC(2026, 0, 1) + day * 86_400_000).toISOString();
+
+/** One owner writes a small land over five months and beats along the way. */
+function beatHistory(seed: number): unknown[] {
+  const author = authorKeyFor(BEATER);
+  const hash = `sha256:${"ef".repeat(32)}` as const;
+  const genesis: GenesisEvent = signEvent(
+    {
+      v: 1,
+      world: "",
+      kind: "genesis",
+      author,
+      at: dayAt(0),
+      seen: 0,
+      body: {
+        name: "Fingerprint",
+        cartridge: { cartridgeId: "fingerprint", version: "1.0.0", contentHash: hash },
+        seed: `seed-${seed}`,
+        language: "en",
+        physicsVersion: 1,
+        createdAt: dayAt(0),
+        access: "friends",
+        gates: [
+          { id: "e1", cx: 4, cz: 0 },
+          { id: "e2", cx: -3, cz: 3 },
+        ],
+        from: { instanceId: `fingerprint-${seed}` },
+      },
+    },
+    BEATER,
+  );
+  let now: WorldNow = emptyNow(genesis);
+  let cursor: LogCursor = logStart(genesis.id);
+  const append = (event: StoredEvent, day: number) => {
+    const entry = sequenceEvent(cursor, event, dayAt(day), null);
+    cursor = { n: entry.n, chain: entry.chain, rt: entry.rt };
+    now = applyEntry(now, entry, signatureVerdict(event));
+  };
+  const put = <K extends EventKind>(kind: K, body: EventBodies[K], day: number) => {
+    const unsigned = {
+      v: 1,
+      world: genesis.id,
+      kind,
+      author,
+      at: dayAt(day),
+      seen: now.head.n,
+      body,
+    };
+    const event = signEvent(unsigned as UnsignedEventOf<K>, BEATER);
+    append(event, day);
+    return event;
+  };
+  const out: unknown[] = [];
+  const beat = (day: number) => {
+    const computed = computeBeat(now, dayAt(day));
+    out.push(computed.ok ? computed.value : computed.error.code);
+    if (computed.ok) put("beat", computed.value.body, day);
+  };
+  append(genesis, 0);
+  let state = seed >>> 0;
+  const next = (range: number) => {
+    state = (Math.imul(state, 1_103_515_245) + 12_345) >>> 0;
+    return (state >>> 8) % range;
+  };
+  const chunks: { cx: number; cz: number }[] = [];
+  for (let index = 0; index < 8; index += 1) {
+    const coord = { cx: next(13) - 6, cz: next(13) - 6 };
+    chunks.push(coord);
+    const npcs = ["ada", "bo", "cy"].slice(0, 1 + next(3));
+    put(
+      "witness",
+      {
+        ...coord,
+        scene: "S",
+        dialogues: Object.fromEntries(npcs.map((id) => [id, "D"])),
+        lore: [],
+        index: {
+          name: `W${index}`,
+          npcs: npcs.map((id) => ({ id, name: id, role: "elder" })),
+          errands: [],
+          keepsakes: [],
+        },
+      },
+      index * 3,
+    );
+  }
+  beat(22);
+  for (let index = 0; index < 3; index += 1) {
+    const at = { cx: next(13) - 6, cz: next(13) - 6 };
+    put("place", { kind: "side", title: `P${index}`, at, seed: index, source: "S" }, 25);
+  }
+  const lantern = put(
+    "chapter",
+    { episodeId: "e1", title: "C", more: null, kind: "land", source: "S", seed: 1 },
+    26,
+  );
+  put("deed", { what: "chapter.cleared", ref: lantern.id }, 27);
+  const item = {
+    id: "i",
+    name: "Lamp",
+    kind: "charm" as const,
+    power: 1,
+    perk: "",
+    curse: null,
+    meshDna: [],
+    archetype: [],
+    flavor: "",
+  };
+  put("gift", { coord: { cx: 1, cz: 1, x: 0, z: 0 }, item, for: null, words: "" }, 28);
+  for (const day of [30, 37, 44, 51]) put("visit", { chunks: chunks.slice(0, 2) }, day);
+  for (const day of [52, 75, 100, 140, 230]) beat(day);
+  out.push(now.season, now.touches, now.lastTouch);
+  return out;
+}
+
+function beatFingerprintOfPhysics(): string {
+  const constants = {
+    CARE_POINTS,
+    DECAY_PPM,
+    FOG_CARE_BELOW,
+    FOG_QUIET_DAYS,
+    FOG_SAFE_RINGS,
+    FADING_BELOW,
+    SEASON_DAYS,
+    SEASONS,
+    BEAT_EVERY_MS,
+    RUMOR_KINDS,
+    RUMOR_RINGS,
+    RUMOR_WRITE_BEATS,
+    RUMOR_SHOW_BEATS,
+    RUMOR_NAME_MIN,
+    rumorSlots: HISTORY_LIMITS.rumorSlots,
+  };
+  const text = JSON.stringify({ constants, histories: [1, 2, 3, 4].map(beatHistory) });
+  return `sha256:${createHash("sha256").update(text).digest("hex")}`;
+}
+
 describe("physics version", () => {
   it("has recorded what the current physics produces (4)", () => {
     expect(
       RECORDED[PHYSICS_VERSION],
       `record the fingerprint of physics ${PHYSICS_VERSION}`,
     ).toMatch(/^sha256:[a-f0-9]{64}$/);
+    expect(BEAT_RECORDED[PHYSICS_VERSION], `record the beat of physics ${PHYSICS_VERSION}`).toMatch(
+      /^sha256:[a-f0-9]{64}$/,
+    );
     expect(PHYSICS_SUPPORTED).toContain(PHYSICS_VERSION);
+  });
+
+  it("produces exactly the recorded care, fog, seasons and rumor slots (5)", () => {
+    expect(
+      beatFingerprintOfPhysics(),
+      "the beat's constants or output changed: bump PHYSICS_VERSION and record it",
+    ).toBe(BEAT_RECORDED[PHYSICS_VERSION]);
   });
 
   it("produces exactly the recorded land, fights, lore and dungeons (1–3)", () => {

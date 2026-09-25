@@ -6,6 +6,8 @@
       "name": "aether-spire",
       "dependencies": {
         "@deepseek-ai/cordis": "^4.0.2",
+        "@noble/curves": "^2.4.0",
+        "@noble/hashes": "^2.4.0",
         "@openuidev/lang-core": "^0.3.0",
         "@openuidev/react-lang": "^0.3.0",
         "@react-three/drei": "^10.7.8",
