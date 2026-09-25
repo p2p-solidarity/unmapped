@@ -2,7 +2,6 @@
 // a friend's — and walk into that land. Nothing here needs a model: the land is generated from the
 // seed, and whoever lives on it is witnessed later, when a model is reachable.
 
-import worldForgeArt from "@renderer/assets/generated/world-forge.png";
 import { useSessionStore } from "@renderer/state";
 import { Button, ErrorBlock, StatePanel, Surface, space, Text, TextField } from "@renderer/ui";
 import type { CartridgeManifest } from "@shared/cartridge";
@@ -55,7 +54,6 @@ export function SeedScreen(): JSX.Element {
 
   return (
     <GameShell
-      art={worldForgeArt}
       hints={[
         { keys: ["Esc"], label: "Back", onPress: busy ? undefined : () => setScreen("worlds") },
       ]}

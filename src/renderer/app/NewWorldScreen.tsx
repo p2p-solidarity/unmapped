@@ -2,7 +2,6 @@
 // and walk into it. The model writes the bible and the place you wake in; without a model this
 // screen says so and offers nothing prebuilt (Rule 2). The full authoring flow lives behind Remix.
 
-import worldForgeArt from "@renderer/assets/generated/world-forge.png";
 import { makeWorld, type NewWorldStage } from "@renderer/narrative/newWorld";
 import { generationEventLabel } from "@renderer/narrative/sceneGeneration";
 import { useInferenceStore, useSessionStore } from "@renderer/state";
@@ -82,7 +81,6 @@ export function NewWorldScreen(): JSX.Element {
 
   return (
     <GameShell
-      art={worldForgeArt}
       hints={[
         { keys: ["Esc"], label: "Back", onPress: busy ? undefined : () => setScreen("worlds") },
       ]}

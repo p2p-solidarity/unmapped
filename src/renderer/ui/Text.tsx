@@ -13,8 +13,20 @@ export type TextVariant =
 export type TextTone = "default" | "muted" | "dim" | "accent" | "danger" | "success";
 
 const variantStyle: Record<TextVariant, CSSProperties> = {
-  headline: { fontSize: font.size.headline, fontWeight: font.weight.bold, lineHeight: 1.15 },
-  titleLarge: { fontSize: font.size.titleLarge, fontWeight: font.weight.bold, lineHeight: 1.2 },
+  headline: {
+    fontFamily: font.display,
+    fontSize: font.size.headline,
+    fontWeight: font.weight.bold,
+    lineHeight: 1.15,
+    letterSpacing: 1.5,
+  },
+  titleLarge: {
+    fontFamily: font.display,
+    fontSize: font.size.titleLarge,
+    fontWeight: font.weight.bold,
+    lineHeight: 1.2,
+    letterSpacing: 1,
+  },
   title: { fontSize: font.size.title, fontWeight: font.weight.medium, lineHeight: 1.3 },
   bodyLarge: { fontSize: font.size.bodyLarge, fontWeight: font.weight.regular, lineHeight: 1.5 },
   body: { fontSize: font.size.body, fontWeight: font.weight.regular, lineHeight: 1.5 },
@@ -57,9 +69,9 @@ export function Text({
     <Tag
       style={{
         margin: 0,
-        fontFamily: mono ? font.mono : font.family,
         color: toneColor[tone],
         ...variantStyle[variant],
+        fontFamily: mono ? font.mono : (variantStyle[variant].fontFamily ?? font.family),
         ...style,
       }}
     >

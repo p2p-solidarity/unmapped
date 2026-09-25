@@ -112,13 +112,71 @@ const ROCK_LEVEL = 0.7;
 /** Ground that is already liquid or empty has no lakes cut into it. */
 const LAKELESS: ReadonlySet<Tile> = new Set<Tile>(["water", "lava", "void"]);
 
+/** Half-width of the ford along each chunk's centre row and column (3 tiles across). */
+const FORD_REACH = 1;
+
+function mod(value: number, size: number): number {
+  return ((value % size) + size) % size;
+}
+
+/**
+ * Every chunk's centre row and column is a ford: water there is shallow sand and nothing grows on
+ * it. Story gates stand at chunk centres, so with the origin chunk kept dry, the spawn and every
+ * gate are joined by land on every seed — a lake can no longer wall anyone in.
+ */
+export function isFord(wx: number, wz: number): boolean {
+  const middle = CHUNK_SIZE / 2;
+  return (
+    Math.abs(mod(wx, CHUNK_SIZE) - middle) <= FORD_REACH ||
+    Math.abs(mod(wz, CHUNK_SIZE) - middle) <= FORD_REACH
+  );
+}
+
+/**
+ * A written chunk as the host lets it stand: whatever the model placed on a ford (a prop, a run of
+ * wall) is left out, so no witnessed place can close the way between the spawn and a story gate.
+ * The stored program is untouched — this is how it stands on the land, not what was written.
+ */
+export function clearFords(scene: SceneGraph, coord: ChunkCoord): SceneGraph {
+  const ox = coord.cx * CHUNK_SIZE;
+  const oz = coord.cz * CHUNK_SIZE;
+  const onFord = (x: number, z: number): boolean => isFord(ox + Math.floor(x), oz + Math.floor(z));
+  let changed = false;
+  const props = scene.props.filter((prop) => {
+    const keep = !onFord(prop.x, prop.z);
+    changed ||= !keep;
+    return keep;
+  });
+  const walls = scene.walls.flatMap((wall) => {
+    const width = Math.max(1, Math.round(wall.width));
+    const pieces: SceneGraph["walls"] = [];
+    let start: number | null = null;
+    for (let offset = 0; offset <= width; offset += 1) {
+      const standing = offset < width && !onFord(wall.x + offset, wall.z);
+      if (standing && start === null) start = offset;
+      if (!standing && start !== null) {
+        pieces.push({ ...wall, x: wall.x + start, width: offset - start });
+        start = null;
+      }
+    }
+    const whole = pieces.length === 1 && pieces[0]?.width === width;
+    changed ||= !whole;
+    return whole ? [wall] : pieces;
+  });
+  return changed ? { ...scene, props, walls } : scene;
+}
+
+function inOriginChunk(wx: number, wz: number): boolean {
+  return wx >= 0 && wz >= 0 && wx < CHUNK_SIZE && wz < CHUNK_SIZE;
+}
+
 /** The tile at world tile (wx, wz). Depends on the seed and the position only, never on the chunk. */
 export function groundAt(seed: number, wx: number, wz: number, base: Tile): Tile {
-  if (!LAKELESS.has(base)) {
+  if (!LAKELESS.has(base) && !inOriginChunk(wx, wz)) {
     const wet =
       (valueNoise(seed ^ WET_SEED, wx, wz, 44) + 0.35 * valueNoise(seed ^ WET_SEED, wx, wz, 11)) /
       1.35;
-    if (wet < WATER_LEVEL) return "water";
+    if (wet < WATER_LEVEL) return isFord(wx, wz) ? "sand" : "water";
     if (wet < SHORE_LEVEL) return "sand";
   }
   if (base !== "stone" && valueNoise(seed ^ ROCK_SEED, wx, wz, 26) > ROCK_LEVEL) return "stone";
@@ -160,7 +218,7 @@ function propAt(
   tile: Tile,
 ): Omit<PropSpec, "x" | "z"> | null {
   const table = SCATTER[tile];
-  if (table === undefined || table.length === 0) return null;
+  if (table === undefined || table.length === 0 || isFord(wx, wz)) return null;
   const grove = valueNoise(seed ^ GROVE_SEED, wx, wz, 22) > GROVE_LEVEL;
   let roll = unit(seed ^ ROLL_SEED, wx, wz);
   for (const entry of table) {

@@ -7,13 +7,14 @@ import {
   episodeTarget,
   episodeUnlocked,
   nextEpisode,
-  type StoryPlan,
+  type StoryEpisode,
 } from "@shared/story";
 import { LAND_2D_PALETTE } from "../engine/palette";
 import type { TargetPoint } from "../engine/targets";
 
 export interface StoryView {
-  plan: StoryPlan;
+  /** The whole story as it stands (`storyEpisodes`): authored episodes, then the land's chapters. */
+  episodes: readonly StoryEpisode[];
   progress: Readonly<Record<string, EpisodeProgress>>;
 }
 
@@ -26,10 +27,10 @@ export interface StoryMarker {
 }
 
 export function storyMarkers(story: StoryView): StoryMarker[] {
-  return story.plan.episodes.map((episode, index) => {
+  return story.episodes.map((episode, index) => {
     const { x, z } = episodeGate(episode);
     const cleared = story.progress[episode.id]?.cleared === true;
-    const open = episodeUnlocked(story.plan, story.progress, episode.id);
+    const open = episodeUnlocked(story.episodes, story.progress, episode.id);
     return {
       x,
       z,
@@ -46,7 +47,7 @@ export function storyMarkers(story: StoryView): StoryMarker[] {
 
 /** Every gate can be approached; a locked one explains itself when opened. */
 export function storyTargets(story: StoryView): TargetPoint[] {
-  return story.plan.episodes.map((episode) => {
+  return story.episodes.map((episode) => {
     const { x, z } = episodeGate(episode);
     return {
       kind: "episode",
@@ -68,7 +69,7 @@ export function drawStoryCompass(
   player: { x: number; z: number },
   story: StoryView,
 ): void {
-  const next = nextEpisode(story.plan, story.progress);
+  const next = nextEpisode(story.episodes, story.progress);
   if (next === null) return;
   const gate = episodeGate(next);
   const dx = (gate.x - player.x) * tileSize;

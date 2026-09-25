@@ -10,6 +10,7 @@ import { CHUNK_SIZE, chunkKey, chunkOf } from "@shared/chunks";
 import { seedFromText } from "@shared/endless";
 import type { GameplayKitRules, GameplayRules } from "@shared/gameplay";
 import { landSeedOf } from "@shared/land";
+import { storyEpisodes } from "@shared/story";
 import type { SceneGraph } from "@shared/world";
 import { type JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { isWallTile, spawnPoint, TILE_TOP } from "../engine/colliders";
@@ -97,7 +98,13 @@ export function LandView2D({
   }, [gameplayRules, graph]);
   const plan = useSessionStore((state) => state.activeInstance?.cartridge.story ?? null);
   const story: StoryView | null = useMemo(
-    () => (plan === null ? null : { plan, progress: progress?.episodes ?? {} }),
+    () =>
+      plan === null
+        ? null
+        : {
+            episodes: storyEpisodes(plan, progress?.storyMore),
+            progress: progress?.episodes ?? {},
+          },
     [plan, progress],
   );
   const extraTargets = useMemo(

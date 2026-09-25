@@ -1,4 +1,3 @@
-import worldForgeArt from "@renderer/assets/generated/world-forge.png";
 import { ScenePreviewCanvas } from "@renderer/engine";
 import { useSessionStore } from "@renderer/state";
 import { Button, StatePanel, Text, TextField } from "@renderer/ui";
@@ -101,10 +100,7 @@ export function WorkspaceScreen() {
   useKeys({ Escape: () => setScreen("worlds") }, !busy);
 
   return (
-    <GameShell
-      art={worldForgeArt}
-      hints={[{ keys: ["Esc"], label: "Back", onPress: () => setScreen("worlds") }]}
-    >
+    <GameShell hints={[{ keys: ["Esc"], label: "Back", onPress: () => setScreen("worlds") }]}>
       <StatePanel state={workspace} loadingText="Opening workspace…">
         {(record) => (
           <div className="ws">

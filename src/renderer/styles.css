@@ -13,12 +13,13 @@ body,
   height: 100%;
 }
 
-/* One monospaced stack for the whole interface, inherited by everything that does not set its
-   own. CJK mono faces are listed so Chinese and Japanese chrome stays fixed-advance too. */
+/* Fallback type stacks until main.tsx applies tokens.cssVars (the same stacks): a book serif for
+   the interface, a monospace for ids and code. */
 :root {
   --ui-font:
-    "JetBrains Mono", "SF Mono", Menlo, "Noto Sans Mono CJK TC", "Noto Sans TC",
-    "Zen Kaku Gothic New", monospace;
+    "Iowan Old Style", "Palatino Linotype", Palatino, "Hiragino Mincho ProN", "Songti TC", Georgia,
+    serif;
+  --ui-mono: "JetBrains Mono", "SF Mono", Menlo, "Noto Sans Mono CJK TC", "Noto Sans TC", monospace;
 }
 
 body {
@@ -83,20 +84,37 @@ select {
 .ui-btn[data-variant="menu"]::before {
   content: "";
   position: absolute;
-  left: 14px;
+  left: 16px;
   top: 50%;
-  border-block: 6px solid transparent;
-  border-left: 9px solid var(--g-text);
-  transform: translate(-6px, -50%);
+  width: 9px;
+  height: 9px;
+  background: var(--g-gold);
+  box-shadow: 0 0 10px var(--g-gold);
+  transform: translate(-8px, -50%) rotate(45deg);
   opacity: 0;
   transition:
-    transform 160ms ease,
-    opacity 160ms ease;
+    transform 180ms ease,
+    opacity 180ms ease;
+}
+
+/* A soft band of light behind the chosen row, fading out to the right. */
+.ui-btn[data-variant="menu"]::after {
+  content: "";
+  position: absolute;
+  inset: 4px 0 4px 6px;
+  background: linear-gradient(90deg, var(--g-gold-soft), transparent 85%);
+  opacity: 0;
+  transition: opacity 180ms ease;
+  pointer-events: none;
 }
 
 .ui-btn[data-variant="menu"][data-active="true"]::before {
   opacity: 1;
-  transform: translate(0, -50%);
+  transform: translate(0, -50%) rotate(45deg);
+}
+
+.ui-btn[data-variant="menu"][data-active="true"]::after {
+  opacity: 1;
 }
 
 .ui-key {
@@ -108,7 +126,7 @@ select {
   padding: 0 5px;
   border: 1px solid currentColor;
   border-radius: 3px;
-  font-family: var(--ui-font);
+  font-family: var(--ui-mono);
   font-size: 10px;
   line-height: 1;
   opacity: 0.7;

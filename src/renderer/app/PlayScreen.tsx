@@ -7,7 +7,7 @@ import { useT } from "@renderer/i18n";
 import { AltarPanel, DialogueCard } from "@renderer/narrative";
 import { useRunStore, useSessionStore, useWorldStore } from "@renderer/state";
 import { Button, colors, ErrorBlock, StatePanel, Surface, space, Text, zIndex } from "@renderer/ui";
-import { EpisodePanel } from "@renderer/works";
+import { EpisodePanel, EpisodePrefetch } from "@renderer/works";
 import type { ReactNode } from "react";
 import { useFloorAdvance } from "./advanceFloor";
 import { ChangeProposalPanel } from "./ChangeProposalPanel";
@@ -72,6 +72,9 @@ export function PlayScreen() {
     (state) => state.activeInstance?.instance.save.endless !== undefined,
   );
   const legacy = useWorldStore((state) => state.origin?.kind === "legacy");
+  const hasStory = useSessionStore(
+    (state) => (state.activeInstance?.cartridge.story ?? null) !== null,
+  );
   const use2DLand = scene.status === "ready" && isOpenLand2D(scene.value, gameplayRules);
 
   useInteractions({ onAdvanceFloor: advance, onDescend: descend });
@@ -103,6 +106,7 @@ export function PlayScreen() {
       <ChangeProposalPanel />
       <DoorPanel />
       <EpisodePanel />
+      {hasStory ? <EpisodePrefetch /> : null}
       <NotePanel />
       <TweakPanel />
       {consoleOpen ? <Console /> : null}

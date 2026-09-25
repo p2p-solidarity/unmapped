@@ -1,7 +1,6 @@
-// Title screen: moving key art, the logo and one vertical menu. Picking CARTRIDGES / SYSTEM /
-// ARCHIVE slides a panel in on the right; Esc closes it back to the menu.
+// Title screen: the logo and one vertical menu over the live HD-2D land (App's MenuBackdrop).
+// Picking CARTRIDGES / SYSTEM / ARCHIVE slides a panel in on the right; Esc closes it back.
 
-import worldForgeArt from "@renderer/assets/generated/world-forge.png";
 import { RoomPanel } from "@renderer/net";
 import { useSessionStore } from "@renderer/state";
 import { Button } from "@renderer/ui";
@@ -87,7 +86,6 @@ export function WorldsScreen() {
 
   return (
     <GameShell
-      art={worldForgeArt}
       hints={
         panel === null
           ? [
@@ -99,11 +97,15 @@ export function WorldsScreen() {
     >
       <div className="title">
         <div className="title__left">
-          <h1 className="title__logo">
-            Unwritten
-            <br />
-            Land
-          </h1>
+          <div className="title__crest">
+            <h1 className="title__logo">
+              Unwritten
+              <br />
+              Land
+            </h1>
+            <div className="title__rule" aria-hidden="true" />
+            <p className="title__sub">未記之地</p>
+          </div>
           <nav className="title__menu" aria-label="Main menu">
             {items.map((item, index) => (
               <Button

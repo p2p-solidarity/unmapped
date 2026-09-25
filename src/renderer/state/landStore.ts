@@ -2,6 +2,7 @@
 // lore graph they added. Loaded from the active save when an instance opens; written through
 // `instances.witness` and then mirrored here. A chunk absent from `chunks` is unwritten (未記).
 
+import { clearFords } from "@shared/chunks";
 import {
   DOOR_SLOTS,
   type DoorSlot,
@@ -13,7 +14,7 @@ import {
 import type { LoreNode } from "@shared/lore";
 import type { AppError, Loadable } from "@shared/result";
 import { idle } from "@shared/result";
-import type { EpisodeProgress } from "@shared/story";
+import type { EpisodeProgress, StoryEpisode } from "@shared/story";
 import type { Json } from "@shared/works";
 import type { SceneGraph } from "@shared/world";
 import { create } from "zustand";
@@ -70,7 +71,26 @@ export interface LandState {
   /** Updates one story episode's progress (created on first use). */
   setEpisode(id: string, patch: Partial<EpisodeProgress>): void;
   setStoryCarry(carry: Json | null): void;
+  /** Appends a chapter the land wrote (save-owned); an id already present is left as it is. */
+  addEpisode(episode: StoryEpisode): void;
   reset(): void;
+}
+
+/** How a written chunk stands on the land: the host keeps its fords clear (`clearFords`). */
+function standing(key: string, status: ChunkStatus): ChunkStatus {
+  if (status.status !== "written") return status;
+  const [cx, cz] = key.split(",").map(Number);
+  if (cx === undefined || cz === undefined || !Number.isFinite(cx) || !Number.isFinite(cz)) {
+    return status;
+  }
+  const scene = clearFords(status.scene, { cx, cz });
+  return scene === status.scene ? status : { ...status, scene };
+}
+
+function standingAll(chunks: Record<string, ChunkStatus>): Record<string, ChunkStatus> {
+  return Object.fromEntries(
+    Object.entries(chunks).map(([key, status]) => [key, standing(key, status)]),
+  );
 }
 
 /** A save that has not done anything on open land yet: home is the origin, the door is blank. */
@@ -95,7 +115,7 @@ export const useLandStore = create<LandState>()((set) => ({
   loaded: (instanceId, chunks, lore, notes) =>
     set((state) =>
       state.instanceId === instanceId
-        ? { load: { status: "ready", value: true }, chunks, lore, notes }
+        ? { load: { status: "ready", value: true }, chunks: standingAll(chunks), lore, notes }
         : state,
     ),
   loadFailed: (instanceId, error) =>
@@ -103,8 +123,15 @@ export const useLandStore = create<LandState>()((set) => ({
       state.instanceId === instanceId ? { load: { status: "error", error } } : state,
     ),
   mirror: (instanceId, chunks, lore, notes) =>
-    set({ instanceId, load: { status: "ready", value: true }, chunks, lore, notes }),
-  setChunk: (key, status) => set((state) => ({ chunks: { ...state.chunks, [key]: status } })),
+    set({
+      instanceId,
+      load: { status: "ready", value: true },
+      chunks: standingAll(chunks),
+      lore,
+      notes,
+    }),
+  setChunk: (key, status) =>
+    set((state) => ({ chunks: { ...state.chunks, [key]: standing(key, status) } })),
   forget: (key) =>
     set((state) => {
       const { [key]: _gone, ...rest } = state.chunks;
@@ -157,6 +184,13 @@ export const useLandStore = create<LandState>()((set) => ({
     set((state) =>
       state.progress === null ? state : { progress: { ...state.progress, storyCarry: carry } },
     ),
+  addEpisode: (episode) =>
+    set((state) => {
+      if (state.progress === null) return state;
+      const more = state.progress.storyMore ?? [];
+      if (more.some((one) => one.id === episode.id)) return state;
+      return { progress: { ...state.progress, storyMore: [...more, episode] } };
+    }),
   reset: () =>
     set({ instanceId: null, load: idle(), chunks: {}, lore: [], notes: [], progress: null }),
 }));

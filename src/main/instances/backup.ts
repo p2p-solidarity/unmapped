@@ -34,11 +34,13 @@ function sameRef(a: CartridgeRef, b: CartridgeRef): boolean {
   );
 }
 
+/** A save from an older build is packed in the current format when `cartridgesDir` is given. */
 export async function packInstanceBackup(
   instancesDir: string,
   instanceId: string,
+  cartridgesDir?: string,
 ): Promise<Result<Uint8Array>> {
-  const instance = await readInstance(instancesDir, instanceId);
+  const instance = await readInstance(instancesDir, instanceId, cartridgesDir);
   if (!instance.ok) return instance;
   const { meta, save, karma } = instance.value;
   const base = `saves/${meta.activeSaveId}`;

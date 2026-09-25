@@ -3,7 +3,9 @@ import {
   chunkOf,
   chunksAround,
   chunkTerrain,
+  clearFords,
   groundAt,
+  isFord,
   MAX_CHUNK_PROPS,
 } from "@shared/chunks";
 import { describe, expect, it } from "vitest";
@@ -51,5 +53,73 @@ describe("chunks", () => {
     const inside = (x: number, z: number): boolean => x < 20 && z < 16;
     expect(home.props.some((prop) => inside(prop.x, prop.z))).toBe(false);
     expect(home.patches.some((patch) => inside(patch.x, patch.z))).toBe(false);
+  });
+
+  it("joins the spawn to every chunk centre by land on any seed", () => {
+    const blocked = (seed: number, x: number, z: number): boolean => {
+      const tile = groundAt(seed, x, z, "grass");
+      return tile === "water" || tile === "lava" || tile === "void";
+    };
+    for (const seed of [1, 7, 42, 1234, 0xdeadbeef]) {
+      const reach = 70;
+      const seen = new Set<string>(["4,4"]);
+      const queue: Array<[number, number]> = [[4, 4]];
+      while (queue.length > 0) {
+        const [x, z] = queue.pop() ?? [0, 0];
+        for (const [dx, dz] of [
+          [1, 0],
+          [-1, 0],
+          [0, 1],
+          [0, -1],
+        ] as const) {
+          const nx = x + dx;
+          const nz = z + dz;
+          const key = `${nx},${nz}`;
+          if (Math.abs(nx) > reach || Math.abs(nz) > reach || seen.has(key)) continue;
+          if (blocked(seed, nx, nz)) continue;
+          seen.add(key);
+          queue.push([nx, nz]);
+        }
+      }
+      for (const cx of [-1, 0, 1]) {
+        for (const cz of [-1, 0, 1]) expect(seen.has(`${cx * 32 + 16},${cz * 32 + 16}`)).toBe(true);
+      }
+    }
+    expect(isFord(16, 3)).toBe(true);
+    expect(isFord(-16, 3)).toBe(true);
+    expect(isFord(3, 3)).toBe(false);
+  });
+
+  it("keeps whatever a witnessed chunk wrote off its fords", () => {
+    const scene = {
+      name: "place",
+      biome: "countryside",
+      contract: null,
+      floor: { width: 32, depth: 32, tile: "grass" },
+      patches: [],
+      platforms: [],
+      walls: [{ x: 10, z: 3, width: 12, height: 2, material: "stone" }],
+      props: [
+        { kind: "tree", x: 16, z: 4, scale: 1, tint: null, dynamic: false },
+        { kind: "tree", x: 4, z: 4, scale: 1, tint: null, dynamic: false },
+      ],
+      npcs: [],
+      monsters: [],
+      treasures: [],
+      exits: [],
+      lights: [],
+      sky: null,
+      triggers: [],
+      quests: [],
+    } as unknown as Parameters<typeof clearFords>[0];
+    const cleared = clearFords(scene, { cx: 2, cz: -1 });
+    expect(cleared.props.map((prop) => prop.x)).toEqual([4]);
+    // Columns 15–17 are the ford: the wall from 10 to 21 splits around it.
+    expect(cleared.walls.map((wall) => [wall.x, wall.width])).toEqual([
+      [10, 5],
+      [18, 4],
+    ]);
+    const untouched = { ...scene, walls: [], props: [scene.props[1]] } as typeof scene;
+    expect(clearFords(untouched, { cx: 0, cz: 0 })).toBe(untouched);
   });
 });

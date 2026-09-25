@@ -18,11 +18,15 @@ import { EMPTY_INVENTORY, type SceneGraph } from "@shared/world";
 import { deriveRuntimePin, verifyRuntimePin } from "../cartridges/integrity";
 import { cartridgeCompatibility, readCartridgeRevision } from "../cartridges/store";
 import { parseKarmaText } from "../worlds/schemas";
+import { legacyInstanceMetaSchema, upgradeLegacyInstance } from "./legacy";
 import { instanceDir, isInstanceId, isSaveId, saveDir } from "./paths";
 import { instanceMetaSchema, saveStateSchema } from "./schemas";
 
 const DEFAULT_SAVE_ID = "default";
-/** A save written by an older build (instance format 1). Listed separately, never modified. */
+/**
+ * A save written by an older build (instance format 1) that cannot be upgraded on read — its exact
+ * cartridge revision is not installed, or it is damaged. Listed separately, never modified.
+ */
 export const LEGACY_INSTANCE_CODE = "instance-legacy-format";
 
 function slug(value: string): string {
@@ -137,41 +141,94 @@ function sameRef(a: CartridgeRef, b: CartridgeRef): boolean {
   );
 }
 
+/**
+ * A format 1 instance read as the current format (legacy.ts), when `cartridgesDir` holds the exact
+ * revision it names. Anything else keeps it in the "older build" bucket, untouched on disk.
+ */
+async function readLegacyInstance(
+  instancesDir: string,
+  instanceId: string,
+  rawMeta: unknown,
+  cartridgesDir: string | undefined,
+): Promise<Result<{ meta: InstanceMeta; save: SaveState }>> {
+  const legacy = (why: string, hint: string): Result<never> =>
+    err(
+      LEGACY_INSTANCE_CODE,
+      `Save ${instanceId} was written by an older build (instance format 1)${why}`,
+      `${hint} It is left untouched on disk.`,
+    );
+  if (cartridgesDir === undefined) return legacy(".", "Open it from the library.");
+  const meta = legacyInstanceMetaSchema.safeParse(rawMeta);
+  if (!meta.success || meta.data.instanceId !== instanceId || !isSaveId(meta.data.activeSaveId)) {
+    return legacy(" and its instance.json is damaged.", "Restore it from a backup.");
+  }
+  const ref = meta.data.cartridge;
+  const cartridge = await readCartridgeRevision(cartridgesDir, ref.cartridgeId, ref.version);
+  if (!cartridge.ok || cartridge.value.manifest.contentHash !== ref.contentHash) {
+    return legacy(
+      ` and its cartridge ${ref.cartridgeId}@${ref.version} is not installed with the same content.`,
+      "Import that exact cartridge revision to open it.",
+    );
+  }
+  let rawSave: unknown;
+  try {
+    const path = join(saveDir(instancesDir, instanceId, meta.data.activeSaveId), "save.json");
+    rawSave = JSON.parse(await readFile(path, "utf8"));
+  } catch {
+    return legacy(" and its save.json cannot be read.", "Restore it from a backup.");
+  }
+  const upgraded = upgradeLegacyInstance(rawMeta, rawSave, cartridge.value.manifest);
+  return upgraded.ok
+    ? upgraded
+    : legacy(`: ${upgraded.error.message}`, "Restore it from a backup.");
+}
+
+/**
+ * Reads an instance and its active save. Saves from an older build (format 1) are upgraded in
+ * memory when `cartridgesDir` is given; without it they report `LEGACY_INSTANCE_CODE`.
+ */
 export async function readInstance(
   instancesDir: string,
   instanceId: string,
+  cartridgesDir?: string,
 ): Promise<Result<InstanceRecord>> {
   if (!isInstanceId(instanceId))
     return err("instance-id-invalid", `Invalid instance id: ${instanceId}`);
   try {
     const dir = instanceDir(instancesDir, instanceId);
     const rawMeta: unknown = JSON.parse(await readFile(join(dir, "instance.json"), "utf8"));
+    let meta: InstanceMeta;
+    let save: SaveState;
     if ((rawMeta as { formatVersion?: unknown } | null)?.formatVersion === 1) {
-      return err(
-        LEGACY_INSTANCE_CODE,
-        `Save ${instanceId} was written by an older build (instance format 1).`,
-        "It is left untouched on disk; this build cannot open format 1 saves yet.",
+      const upgraded = await readLegacyInstance(instancesDir, instanceId, rawMeta, cartridgesDir);
+      if (!upgraded.ok) return upgraded;
+      ({ meta, save } = upgraded.value);
+    } else {
+      const parsedMeta = instanceMetaSchema.safeParse(rawMeta);
+      if (!parsedMeta.success)
+        return err(
+          "instance-invalid",
+          parsedMeta.error.issues[0]?.message ?? "Invalid instance.json",
+        );
+      meta = parsedMeta.data;
+      if (meta.instanceId !== instanceId || !isSaveId(meta.activeSaveId)) {
+        return err(
+          "instance-identity-mismatch",
+          "The instance identity does not match its directory.",
+        );
+      }
+      const rawSave: unknown = JSON.parse(
+        await readFile(
+          join(saveDir(instancesDir, instanceId, meta.activeSaveId), "save.json"),
+          "utf8",
+        ),
       );
-    }
-    const parsedMeta = instanceMetaSchema.safeParse(rawMeta);
-    if (!parsedMeta.success)
-      return err(
-        "instance-invalid",
-        parsedMeta.error.issues[0]?.message ?? "Invalid instance.json",
-      );
-    const meta = parsedMeta.data;
-    if (meta.instanceId !== instanceId || !isSaveId(meta.activeSaveId)) {
-      return err(
-        "instance-identity-mismatch",
-        "The instance identity does not match its directory.",
-      );
+      const parsedSave = saveStateSchema.safeParse(rawSave);
+      if (!parsedSave.success)
+        return err("save-invalid", parsedSave.error.issues[0]?.message ?? "Invalid save.json");
+      save = parsedSave.data;
     }
     const currentSaveDir = saveDir(instancesDir, instanceId, meta.activeSaveId);
-    const rawSave: unknown = JSON.parse(await readFile(join(currentSaveDir, "save.json"), "utf8"));
-    const parsedSave = saveStateSchema.safeParse(rawSave);
-    if (!parsedSave.success)
-      return err("save-invalid", parsedSave.error.issues[0]?.message ?? "Invalid save.json");
-    const save = parsedSave.data;
     if (
       save.instanceId !== instanceId ||
       !sameRef(meta.cartridge, save.cartridge) ||
@@ -197,7 +254,7 @@ export async function resolveInstance(
   instancesDir: string,
   instanceId: string,
 ): Promise<Result<ResolvedInstance>> {
-  const instance = await readInstance(instancesDir, instanceId);
+  const instance = await readInstance(instancesDir, instanceId, cartridgesDir);
   if (!instance.ok) return instance;
   const ref = instance.value.meta.cartridge;
   const cartridge = await readCartridgeRevision(cartridgesDir, ref.cartridgeId, ref.version);
@@ -358,12 +415,14 @@ export async function completeInstance(
   return writeInstanceSave(instancesDir, resolved.value, completed.value);
 }
 
+/** `cartridgesDir` lets a save from an older build be checkpointed — in the current format. */
 export async function checkpointInstance(
   instancesDir: string,
   input: InstanceProgressInput,
   now: Date = new Date(),
+  cartridgesDir?: string,
 ): Promise<Result<InstanceMeta>> {
-  const current = await readInstance(instancesDir, input.instanceId);
+  const current = await readInstance(instancesDir, input.instanceId, cartridgesDir);
   if (!current.ok) return current;
   if (current.value.meta.updatedAt !== input.expectedUpdatedAt) {
     return err(
@@ -411,14 +470,18 @@ function serializeKarma(entries: InstanceRecord["karma"]): string {
     : `${entries.map((entry) => JSON.stringify(entry)).join("\n")}\n`;
 }
 
-export async function listInstances(instancesDir: string): Promise<Result<InstanceMeta[]>> {
+/** With `cartridgesDir`, saves from an older build whose cartridge is installed are listed too. */
+export async function listInstances(
+  instancesDir: string,
+  cartridgesDir?: string,
+): Promise<Result<InstanceMeta[]>> {
   if (!(await exists(instancesDir))) return ok([]);
   try {
     const metas: InstanceMeta[] = [];
     const entries = await readdir(instancesDir, { withFileTypes: true });
     for (const entry of entries) {
       if (!entry.isDirectory() || !isInstanceId(entry.name)) continue;
-      const instance = await readInstance(instancesDir, entry.name);
+      const instance = await readInstance(instancesDir, entry.name, cartridgesDir);
       // One old save must not hide every other save: format 1 saves are listed by listLegacyInstances.
       if (!instance.ok && instance.error.code === LEGACY_INSTANCE_CODE) continue;
       if (!instance.ok) return instance;
@@ -431,14 +494,17 @@ export async function listInstances(instancesDir: string): Promise<Result<Instan
   }
 }
 
-/** Ids of saves this build cannot open because an older build wrote them. */
-export async function listLegacyInstances(instancesDir: string): Promise<Result<string[]>> {
+/** Ids of saves an older build wrote that this build cannot open (see `LEGACY_INSTANCE_CODE`). */
+export async function listLegacyInstances(
+  instancesDir: string,
+  cartridgesDir?: string,
+): Promise<Result<string[]>> {
   if (!(await exists(instancesDir))) return ok([]);
   try {
     const ids: string[] = [];
     for (const entry of await readdir(instancesDir, { withFileTypes: true })) {
       if (!entry.isDirectory() || !isInstanceId(entry.name)) continue;
-      const instance = await readInstance(instancesDir, entry.name);
+      const instance = await readInstance(instancesDir, entry.name, cartridgesDir);
       if (!instance.ok && instance.error.code === LEGACY_INSTANCE_CODE) ids.push(entry.name);
     }
     return ok(ids.sort());

@@ -1,5 +1,5 @@
 import type { CSSProperties, MouseEventHandler, ReactNode } from "react";
-import { colors, font, HIT_TARGET, space } from "./tokens";
+import { colors, font, HIT_TARGET, shadow, space, surfaces } from "./tokens";
 
 /**
  * primary/secondary/ghost/destructive — actions.
@@ -35,13 +35,14 @@ export interface ButtonProps {
 
 const variantStyle: Record<ButtonVariant, CSSProperties> = {
   primary: {
-    background: colors.accent,
-    color: colors.accentInk,
-    borderColor: colors.accent,
+    background: surfaces.goldButton,
+    color: colors.goldInk,
+    borderColor: colors.gold,
     fontWeight: font.weight.bold,
+    letterSpacing: 0.6,
   },
   secondary: {
-    background: colors.bgOverlay,
+    background: surfaces.window,
     color: colors.text,
     borderColor: colors.surfaceBorder,
   },
@@ -49,11 +50,12 @@ const variantStyle: Record<ButtonVariant, CSSProperties> = {
   destructive: { background: colors.dangerSoft, color: colors.danger, borderColor: colors.danger },
   menu: {
     background: "transparent",
-    color: colors.textDim,
+    color: colors.textMuted,
     borderColor: "transparent",
-    fontSize: font.size.titleLarge,
+    fontFamily: font.display,
+    fontSize: font.size.title + 2,
     fontWeight: font.weight.medium,
-    letterSpacing: 2,
+    letterSpacing: 3,
     padding: `${space.sm}px ${space.lg}px ${space.sm}px ${space.xxl}px`,
   },
   tile: {
@@ -75,7 +77,7 @@ const variantStyle: Record<ButtonVariant, CSSProperties> = {
 };
 
 const activeStyle: Partial<Record<ButtonVariant, CSSProperties>> = {
-  menu: { color: colors.text },
+  menu: { color: colors.accent, textShadow: shadow.textGlow },
   tile: { color: colors.text, borderColor: colors.accent, background: colors.surface },
   chip: { color: colors.accentInk, background: colors.accent, borderColor: colors.accent },
 };
@@ -112,7 +114,7 @@ export function Button({
         gap: space.md,
         minHeight: HIT_TARGET,
         padding: `${space.sm}px ${space.lg}px`,
-        borderRadius: 0,
+        borderRadius: 2,
         borderWidth: 1,
         borderStyle: "solid",
         fontFamily: font.family,

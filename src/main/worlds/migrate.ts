@@ -64,7 +64,11 @@ async function existingReceipt(
     await stat(path);
     const parsed = receiptSchema.safeParse(JSON.parse(await readFile(path, "utf8")));
     if (!parsed.success || parsed.data.worldId !== worldId) return null;
-    const instance = await readInstance(dirs.instancesDir, parsed.data.instanceId);
+    const instance = await readInstance(
+      dirs.instancesDir,
+      parsed.data.instanceId,
+      dirs.cartridgesDir,
+    );
     if (!instance.ok) return null;
     const pinned = instance.value.meta.cartridge;
     return pinned.cartridgeId === parsed.data.cartridge.cartridgeId &&

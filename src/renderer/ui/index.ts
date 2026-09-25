@@ -11,5 +11,6 @@ export {
   radius,
   shadow,
   space,
+  surfaces,
   zIndex,
 } from "./tokens";

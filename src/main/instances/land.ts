@@ -97,8 +97,12 @@ async function exists(path: string): Promise<boolean> {
   }
 }
 
-async function activeSave(instancesDir: string, instanceId: string): Promise<Result<string>> {
-  const instance = await readInstance(instancesDir, instanceId);
+async function activeSave(
+  instancesDir: string,
+  instanceId: string,
+  cartridgesDir: string | undefined,
+): Promise<Result<string>> {
+  const instance = await readInstance(instancesDir, instanceId, cartridgesDir);
   if (!instance.ok) return instance;
   return ok(saveDir(instancesDir, instanceId, instance.value.meta.activeSaveId));
 }
@@ -156,8 +160,9 @@ async function readChunk(dir: string, cx: number, cz: number): Promise<Witnessed
 export async function readLand(
   instancesDir: string,
   instanceId: string,
+  cartridgesDir?: string,
 ): Promise<Result<LandRecord>> {
-  const save = await activeSave(instancesDir, instanceId);
+  const save = await activeSave(instancesDir, instanceId, cartridgesDir);
   if (!save.ok) return save;
   try {
     const lore = await readLore(save.value);
@@ -258,8 +263,9 @@ export function validateWitness(
 export async function witnessChunk(
   instancesDir: string,
   input: WitnessChunkInput,
+  cartridgesDir?: string,
 ): Promise<Result<WitnessedChunk>> {
-  const save = await activeSave(instancesDir, input.instanceId);
+  const save = await activeSave(instancesDir, input.instanceId, cartridgesDir);
   if (!save.ok) return save;
   const chunksDir = join(save.value, "chunks");
   const destination = join(chunksDir, `${input.cx}_${input.cz}`);
@@ -309,8 +315,9 @@ export async function witnessChunk(
 export async function appendNote(
   instancesDir: string,
   input: AppendNoteInput,
+  cartridgesDir?: string,
 ): Promise<Result<LandNote>> {
-  const save = await activeSave(instancesDir, input.instanceId);
+  const save = await activeSave(instancesDir, input.instanceId, cartridgesDir);
   if (!save.ok) return save;
   try {
     const notes = await readJsonl(save.value, NOTES_FILE, landNoteSchema);

@@ -1,6 +1,7 @@
 // Root of the renderer: screen routing, the global keyboard, and the four cross-cutting hooks
 // (inference sync, input lock, world hot-reload, world persistence).
 
+import { TitleDiorama } from "@renderer/hd2d";
 import { CreateScreen, useInferenceSync } from "@renderer/narrative";
 import { useLandSync } from "@renderer/net/landSync";
 import { useActiveRoom } from "@renderer/net/lifecycle";
@@ -91,6 +92,25 @@ function Screens() {
   }
 }
 
+/** Menus stand over one living land, kept across menu changes so its drift never restarts. */
+const LIVE_BACKDROP: ReadonlySet<string> = new Set([
+  "worlds",
+  "seed",
+  "create",
+  "remix",
+  "workspace",
+]);
+
+function MenuBackdrop() {
+  const screen = useSessionStore((state) => state.screen);
+  if (!LIVE_BACKDROP.has(screen)) return null;
+  return (
+    <div className="g-backdrop" aria-hidden="true">
+      <TitleDiorama seedText="unwritten-land:title:318" />
+    </div>
+  );
+}
+
 function useLeaveRoomAfterPlay(): void {
   const screen = useSessionStore((state) => state.screen);
   const previous = useRef(screen);
@@ -135,6 +155,7 @@ export function App() {
   return (
     <InferenceSyncContext.Provider value={syncValue}>
       <div style={{ position: "relative", flex: 1, minHeight: 0 }}>
+        <MenuBackdrop />
         <Screens />
       </div>
       <Toasts />

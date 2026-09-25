@@ -1,6 +1,13 @@
 /* Out-of-world screens: title menu, sub-panels, forge, workspace. Palette comes from the --g-*
-   variables (ui/tokens.ts cssVars) — no hex literals here (Rule 3). Deliberately quiet: one moving
-   key art, a menu, no glow. */
+   variables (ui/tokens.ts cssVars) — no hex literals here (Rule 3). The menus stand over the live
+   HD-2D land (App's MenuBackdrop); windows are ink-blue with a thin double brass frame. */
+
+.g-backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--g-bg);
+}
 
 .g-shell {
   position: absolute;
@@ -8,6 +15,10 @@
   overflow: hidden;
   background: var(--g-bg);
   color: var(--g-text);
+}
+
+.g-shell--live {
+  background: transparent;
 }
 
 .g-shell__art {
@@ -22,8 +33,9 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(8, 8, 10, 0.88) 0%, rgba(8, 8, 10, 0.45) 38%, transparent 70%),
-    linear-gradient(0deg, rgba(8, 8, 10, 0.8) 0%, transparent 35%);
+    linear-gradient(90deg, rgba(6, 8, 18, 0.78) 0%, rgba(6, 8, 18, 0.34) 34%, transparent 62%),
+    linear-gradient(0deg, rgba(6, 8, 18, 0.62) 0%, transparent 28%),
+    linear-gradient(180deg, rgba(6, 8, 18, 0.45) 0%, transparent 18%);
 }
 
 .g-stage {
@@ -88,7 +100,7 @@
 }
 
 .g-meta {
-  font-family: var(--ui-font);
+  font-family: var(--ui-mono);
   font-size: 11px;
   color: var(--g-dim);
   overflow-wrap: anywhere;
@@ -110,15 +122,60 @@
   min-height: 0;
 }
 
+.title__crest {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .title__logo {
   margin: 0;
-  font-size: clamp(38px, 4.6vw, 64px);
-  font-weight: 700;
-  line-height: 0.95;
-  letter-spacing: 0.08em;
+  font-family: var(--ui-display);
+  font-size: clamp(40px, 4.8vw, 70px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--g-text);
-  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.7);
+  text-shadow:
+    0 0 28px rgba(236, 212, 154, 0.35),
+    0 3px 2px rgba(0, 0, 0, 0.75);
+}
+
+/* A thin gold rule with a diamond in the middle, under the logo. */
+.title__rule {
+  position: relative;
+  width: min(360px, 90%);
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--g-gold) 18%,
+    var(--g-gold) 82%,
+    transparent
+  );
+  opacity: 0.8;
+}
+
+.title__rule::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  background: var(--g-gold);
+  box-shadow: 0 0 8px var(--g-gold);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.title__sub {
+  margin: 0;
+  font-family: var(--ui-font);
+  font-size: 17px;
+  letter-spacing: 0.5em;
+  color: var(--g-muted);
+  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.8);
 }
 
 .title__menu {
@@ -138,7 +195,12 @@
   width: min(720px, 100%);
   justify-self: end;
   padding: 24px 28px;
-  background: rgba(8, 8, 10, 0.78);
+  border: 1px solid var(--g-border);
+  border-radius: 3px;
+  background: var(--g-window);
+  box-shadow:
+    var(--g-frame),
+    0 18px 50px rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(10px);
 }
 
@@ -212,7 +274,7 @@
 .info-list dd {
   margin: 0;
   color: var(--g-muted);
-  font-family: var(--ui-font);
+  font-family: var(--ui-mono);
   font-size: 12px;
   overflow-wrap: anywhere;
 }
@@ -360,7 +422,7 @@
   border: 1px solid var(--g-border);
   background: rgba(8, 8, 10, 0.86);
   color: var(--g-text);
-  font-family: var(--ui-font);
+  font-family: var(--ui-mono);
   font-size: 13px;
   line-height: 1.55;
   tab-size: 2;

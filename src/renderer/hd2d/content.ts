@@ -204,7 +204,7 @@ export function compassTarget(
   story: StoryView | null,
 ): { x: number; z: number; label: string } | null {
   if (story === null) return null;
-  const next = nextEpisode(story.plan, story.progress);
+  const next = nextEpisode(story.episodes, story.progress);
   if (next === null) return null;
   return { ...episodeGate(next), label: next.title };
 }

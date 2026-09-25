@@ -7,6 +7,7 @@ import {
 } from "@shared/cartridge";
 import { DOOR_SLOTS } from "@shared/land";
 import { SEED_PATTERN } from "@shared/seedCode";
+import { STORY_CAP, storyEpisodeSchema } from "@shared/story";
 import { DRAFT_ID, jsonBytes, jsonSchema, PLAY_ID, WORK_ID, WORK_LIMITS } from "@shared/works";
 import { BIOMES } from "@shared/world";
 import { z } from "zod";
@@ -126,6 +127,7 @@ export const landProgressSchema = z
         "carry too large",
       )
       .optional(),
+    storyMore: z.array(storyEpisodeSchema).max(STORY_CAP).optional(),
   })
   .strict();
 

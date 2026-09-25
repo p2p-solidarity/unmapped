@@ -1,23 +1,24 @@
 // Single source of truth for colour, spacing and type. Hex literals are allowed ONLY here.
-// Muted, warm, low-saturation: charcoal ground, parchment text, one brass accent. No neon glows.
+// HD-2D storybook chrome: deep ink-blue windows with a thin double brass frame, parchment serif
+// text, one gold accent — the frame around a lit diorama, never louder than the land itself.
 
 export const colors = {
-  bg: "#0b0b0e",
-  bgRaised: "#141418",
-  bgOverlay: "rgba(8, 8, 10, 0.82)",
-  surface: "#17171c",
-  surfaceBorder: "#34343c",
-  surfaceBorderBright: "#e9dfc7",
-  text: "#f2eee6",
-  textMuted: "#aaa59b",
-  textDim: "#6e6a63",
-  accent: "#e9dfc7",
-  accentInk: "#141210",
-  accentSoft: "rgba(233, 223, 199, 0.12)",
-  gold: "#d4a85a",
-  goldDeep: "#a97c35",
+  bg: "#0a0b13",
+  bgRaised: "#121523",
+  bgOverlay: "rgba(10, 12, 24, 0.80)",
+  surface: "#161a2c",
+  surfaceBorder: "#51462f",
+  surfaceBorderBright: "#e6c98a",
+  text: "#f4ecd8",
+  textMuted: "#bdb095",
+  textDim: "#81786a",
+  accent: "#ecd49a",
+  accentInk: "#1a1307",
+  accentSoft: "rgba(236, 212, 154, 0.13)",
+  gold: "#d9ae5f",
+  goldDeep: "#9c7231",
   goldInk: "#1d1408",
-  goldSoft: "rgba(212, 168, 90, 0.14)",
+  goldSoft: "rgba(217, 174, 95, 0.15)",
   hp: "#8cc08f",
   mp: "#7fa6c2",
   purple: "#9c86c9",
@@ -31,6 +32,55 @@ export const colors = {
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 40 } as const;
 
 export const radius = { sm: 2, md: 2, lg: 3, pill: 999 } as const;
+
+const MONO_STACK =
+  '"JetBrains Mono", "SF Mono", Menlo, "Noto Sans Mono CJK TC", "Noto Sans TC", "Zen Kaku Gothic New", monospace';
+// Book faces that ship with the OS (nothing is downloaded); Mincho/Song faces carry CJK in the
+// same voice, so a Chinese or Japanese land reads like the English one.
+const SERIF_STACK =
+  '"Iowan Old Style", "Palatino Linotype", Palatino, "Hiragino Mincho ProN", "Yu Mincho", "Songti TC", "Noto Serif CJK TC", Georgia, serif';
+const DISPLAY_STACK =
+  '"Cinzel", "Trajan Pro", "Big Caslon", "Iowan Old Style", "Hiragino Mincho ProN", "Songti TC", Georgia, serif';
+
+export const font = {
+  // Prose, menus and windows are set in a book serif; ids, hashes, coordinates and code keep the
+  // monospace (`mono`) so they stay aligned. `display` is for the logo and screen titles only.
+  family: SERIF_STACK,
+  mono: MONO_STACK,
+  display: DISPLAY_STACK,
+  size: {
+    caption: 12,
+    label: 13,
+    body: 15,
+    bodyLarge: 17,
+    title: 20,
+    titleLarge: 26,
+    headline: 34,
+  },
+  weight: { regular: 400, medium: 500, bold: 700 },
+} as const;
+
+/** Window fill: a faint ink-blue fall from top to bottom, like the menus of a storybook RPG. */
+export const surfaces = {
+  window: "linear-gradient(180deg, rgba(26, 32, 58, 0.90) 0%, rgba(11, 13, 26, 0.92) 100%)",
+  windowSoft: "linear-gradient(180deg, rgba(26, 32, 58, 0.66) 0%, rgba(11, 13, 26, 0.74) 100%)",
+  goldButton: "linear-gradient(180deg, #ecca7e 0%, #c3924a 100%)",
+} as const;
+
+export const shadow = {
+  /** Thin inner second frame inside a window's border. */
+  frame: "inset 0 0 0 3px rgba(4, 5, 12, 0.55), inset 0 0 0 4px rgba(217, 174, 95, 0.28)",
+  textGlow: "0 0 18px rgba(236, 212, 154, 0.45), 0 2px 3px rgba(0, 0, 0, 0.8)",
+  card: "0 12px 40px rgba(0, 0, 0, 0.55)",
+  glow: "0 0 0 1px rgba(233, 223, 199, 0.25)",
+  glowCyan: "0 0 0 1px rgba(233, 223, 199, 0.25)",
+  glowGold: "0 0 0 1px rgba(212, 168, 90, 0.35)",
+} as const;
+
+export const zIndex = { scene: 0, hud: 10, overlay: 20, console: 30, toast: 40 } as const;
+
+/** Minimum interactive target size (px). */
+export const HIT_TARGET = 44;
 
 /** CSS custom properties so stylesheet rules can read the palette without colour literals. */
 export const cssVars = {
@@ -47,38 +97,11 @@ export const cssVars = {
   "--g-border": colors.surfaceBorder,
   "--g-danger": colors.danger,
   "--g-success": colors.success,
+  "--g-window": surfaces.window,
+  "--g-window-soft": surfaces.windowSoft,
+  "--g-frame": shadow.frame,
+  "--g-glow": shadow.textGlow,
+  "--ui-font": font.family,
+  "--ui-mono": font.mono,
+  "--ui-display": font.display,
 } as const;
-
-const MONO_STACK =
-  '"JetBrains Mono", "SF Mono", Menlo, "Noto Sans Mono CJK TC", "Noto Sans TC", "Zen Kaku Gothic New", monospace';
-
-export const font = {
-  // The whole interface is monospaced: this is a console for building games, and a fixed advance
-  // keeps ids, hashes, coordinates and the capability report aligned with the prose around them.
-  // CJK faces are in the stack because a mono list without them falls back to a proportional face
-  // exactly where the UI is most likely to be Chinese or Japanese.
-  family: MONO_STACK,
-  mono: MONO_STACK,
-  size: {
-    caption: 12,
-    label: 13,
-    body: 15,
-    bodyLarge: 17,
-    title: 20,
-    titleLarge: 26,
-    headline: 34,
-  },
-  weight: { regular: 400, medium: 500, bold: 700 },
-} as const;
-
-export const shadow = {
-  card: "0 12px 40px rgba(0, 0, 0, 0.55)",
-  glow: "0 0 0 1px rgba(233, 223, 199, 0.25)",
-  glowCyan: "0 0 0 1px rgba(233, 223, 199, 0.25)",
-  glowGold: "0 0 0 1px rgba(212, 168, 90, 0.35)",
-} as const;
-
-export const zIndex = { scene: 0, hud: 10, overlay: 20, console: 30, toast: 40 } as const;
-
-/** Minimum interactive target size (px). */
-export const HIT_TARGET = 44;

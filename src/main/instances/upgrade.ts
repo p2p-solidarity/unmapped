@@ -28,7 +28,7 @@ export async function upgradeInstance(
   version: string,
   now: Date = new Date(),
 ): Promise<Result<ResolvedInstance>> {
-  const instance = await readInstance(instancesDir, instanceId);
+  const instance = await readInstance(instancesDir, instanceId, cartridgesDir);
   if (!instance.ok) return instance;
   const { meta, save } = instance.value;
   const current = meta.cartridge;

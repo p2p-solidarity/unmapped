@@ -1,5 +1,4 @@
 import { GameShell } from "@renderer/app/shell/GameShell";
-import worldForgeArt from "@renderer/assets/generated/world-forge.png";
 import { useAuthoringStore } from "@renderer/state";
 import { Button, ErrorBlock, StatePanel, space, Text, TextField } from "@renderer/ui";
 import { type CapabilitySpec, SUBSTITUTIONS } from "@shared/capabilities";
@@ -84,7 +83,7 @@ export function CreateScreen({ onCancel, onCreated }: CreateScreenProps): JSX.El
   if (authoring.status === "loading" || authoring.status === "idle" || snapshot === null) {
     const failed = authoring.status === "error" || (authoring.status === "ready" && !snapshot);
     return (
-      <GameShell art={worldForgeArt} hints={[{ keys: ["Esc"], label: "Back", onPress: onCancel }]}>
+      <GameShell hints={[{ keys: ["Esc"], label: "Back", onPress: onCancel }]}>
         <div className="forge" style={{ gap: space.md }}>
           <StatePanel
             state={
@@ -244,7 +243,6 @@ export function CreateScreen({ onCancel, onCreated }: CreateScreenProps): JSX.El
 
   return (
     <GameShell
-      art={worldForgeArt}
       hints={[
         { keys: ["Esc"], label: "Back", onPress: step === 0 ? onCancel : () => setStep(step - 1) },
       ]}

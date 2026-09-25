@@ -14,22 +14,37 @@ import {
 } from "@renderer/state";
 import { colors, font, radius, StatePanel, Surface, space, Text } from "@renderer/ui";
 import { formatSeedCode } from "@shared/seedCode";
-import { nextEpisode } from "@shared/story";
+import { nextEpisode, STORY_CAP, storyEpisodes } from "@shared/story";
 import type { JSX } from "react";
 import { LandStatus } from "./LandStatus";
 import type { HudSummary } from "./summary";
 
-/** The story this world was made from: how far along it is and which gate is next. */
+/**
+ * The story this world was made from: how far along it is and which gate is next. Once the land
+ * has written chapters past the authored episodes, the count is of chapters, not of a fixed plan.
+ */
 function StoryLine(): JSX.Element | null {
   const plan = useSessionStore((state) => state.activeInstance?.cartridge.story ?? null);
   const episodes = useLandStore((state) => state.progress?.episodes ?? null);
+  const more = useLandStore((state) => state.progress?.storyMore);
   if (plan === null) return null;
-  const done = plan.episodes.filter((episode) => episodes?.[episode.id]?.cleared === true).length;
-  const next = nextEpisode(plan, episodes ?? {});
+  const all = storyEpisodes(plan, more);
+  const done = all.filter((episode) => episodes?.[episode.id]?.cleared === true).length;
+  const next = nextEpisode(all, episodes ?? {});
+  const count =
+    all.length === plan.episodes.length
+      ? `Story ${done}/${all.length}`
+      : `Chapter ${Math.min(done + 1, all.length)} · ${done} cleared`;
+  const tail =
+    next !== null
+      ? ` · next: ${next.title} (${next.place})`
+      : all.length >= STORY_CAP
+        ? " · the story has reached its last chapter"
+        : " · the next chapter is not written yet";
   return (
     <Text variant="caption" tone="accent">
-      Story {done}/{plan.episodes.length}
-      {next === null ? " · complete" : ` · next: ${next.title} (${next.place})`}
+      {count}
+      {tail}
     </Text>
   );
 }
