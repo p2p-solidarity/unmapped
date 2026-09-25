@@ -18,7 +18,7 @@ import {
 import type { DayLight, Rgb } from "./dayClock";
 import { keepsakeItems } from "./keepsakes";
 import { cachedTerrain, landTileAt } from "./landModel";
-import { placeMarkers } from "./placeLayer";
+import { drawRift, placeMarkers } from "./placeLayer";
 import { drawStoryCompass, type StoryMarker, type StoryView, storyMarkers } from "./storyLayer";
 import type { Foe, ShotTrace } from "./useLandCombat";
 
@@ -278,9 +278,19 @@ function collectScenery(frame: LandFrame, transform: ScreenTransform): DrawItem[
     pushMarker(items, frame, transform, x, z, LAND_2D_PALETTE.door, "門");
   }
   items.push(...keepsakeItems(frame, transform));
+  const places = placeMarkers(frame.places ?? []);
+  // An otherworld's rift lies on the ground: under its crest and anyone standing on it.
+  for (const rift of places) {
+    if (!rift.portal || !visible(transform, rift.x, rift.z, 2)) continue;
+    const [rx, ry] = toScreen(transform, rift.x, rift.z);
+    items.push({
+      z: rift.z - 0.5,
+      draw: () => drawRift(frame.ctx, rx, ry, transform.tileSize, frame.now),
+    });
+  }
   const marks = [
     ...(frame.story === null ? [] : storyMarkers(frame.story)),
-    ...placeMarkers(frame.places ?? []),
+    ...places,
     ...(frame.continent ?? []),
   ];
   // Other players on the continent: the same walker figure, facing and stepping the way they do,

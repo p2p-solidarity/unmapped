@@ -17,10 +17,13 @@ interface Completed {
 export function PlayerView({
   playId,
   onExit,
+  exitLabel,
   onComplete,
 }: {
   playId: string;
   onExit: () => void;
+  /** The exit button's words; "Exit" by default. */
+  exitLabel?: string;
   /** Called once a world reports completion, with the carry it handed on. */
   onComplete?: (summary: string, carry: Json) => void;
 }): JSX.Element {
@@ -135,7 +138,7 @@ export function PlayerView({
         }}
       >
         <Button variant="ghost" onClick={onExit}>
-          {t("works.exit")}
+          {exitLabel ?? t("works.exit")}
         </Button>
         <div style={{ flex: 1, minWidth: 0 }}>
           <Text>{play.title}</Text>

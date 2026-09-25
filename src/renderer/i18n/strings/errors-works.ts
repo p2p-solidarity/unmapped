@@ -18,6 +18,11 @@ export const WORKS_ERRORS: Record<string, ErrorText> = {
       "zh-TW": "這個世界沒有安裝。",
       ja: "このワールドはインストールされていません。",
     },
+    hint: {
+      en: "Otherworlds stay in the AI worlds of the device that placed them; import or publish that world here.",
+      "zh-TW": "異界留在放置它的那台裝置的 AI 世界裡；請在這台裝置匯入或發布那個世界。",
+      ja: "異界は置いた端末の AI ワールドに残ります。この端末でそのワールドを取り込むか公開してください。",
+    },
   },
   "work-tampered": {
     message: {

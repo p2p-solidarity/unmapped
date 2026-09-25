@@ -18,6 +18,9 @@ export const LAND_2D_PALETTE = {
   /** Entrances of places: a course (side-scroller) and a dungeon. */
   placeSide: "#7fd1ff",
   placeDungeon: "#c49bff",
+  /** An otherworld's entrance (異界): its crest, and the rift swirling on the ground under it. */
+  placeOtherworld: "#ff7ad9",
+  otherworldGlow: "rgba(255, 122, 217, 0.22)",
   /** A shot's streak: warm when it connects, pale when it flies wide. */
   shotHit: "#ffd27a",
   shotMiss: "#d9e4ea",

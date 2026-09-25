@@ -4,10 +4,10 @@ import type { Phrase } from "./phrase";
 
 export const WORKS = {
   localContextWarning: {
-    en: "This local model has a {n} token context. AI Worlds may not fit; a task that cannot fit is stopped before it reaches the model. Choose a larger context or Cloud API in System → Model.",
+    en: "This local model has a {n} token context. AI Worlds may not fit; a task that cannot fit is stopped before it reaches the model. Choose a larger context or Cloud API in Settings → Model.",
     "zh-TW":
-      "這個本地模型的上下文只有 {n} token，可能裝不下 AI Worlds。空間不足的任務會在送出前停止。請到「系統 → 模型」加大上下文或改用雲端 API。",
-    ja: "このローカルモデルのコンテキストは {n} トークンです。AI Worlds が収まらない場合、送信前に停止します。「システム → モデル」でコンテキストを増やすかクラウド API に切り替えてください。",
+      "這個本地模型的上下文只有 {n} token，可能裝不下 AI Worlds。空間不足的任務會在送出前停止。請到「設定 → 模型」加大上下文或改用雲端 API。",
+    ja: "このローカルモデルのコンテキストは {n} トークンです。AI Worlds が収まらない場合、送信前に停止します。「設定 → モデル」でコンテキストを増やすかクラウド API に切り替えてください。",
   },
   // ── Library (WorksScreen) ──────────────────────────────────────────────────────────────────
   backToTitle: { en: "← Title", "zh-TW": "← 標題畫面", ja: "← タイトル" },
@@ -297,4 +297,38 @@ export const WORKS = {
   },
   // "Retry", not common.retry ("Try again"): the model-offline hint tells the player to press Retry.
   retry: { en: "Retry", "zh-TW": "重試", ja: "リトライ" },
+
+  // ── Otherworlds in the place maker (異界) ──────────────────────────────────────────────────
+  otherworldSaved: {
+    en: "AI worlds saved on this device",
+    "zh-TW": "這台裝置上儲存的 AI 世界",
+    ja: "この端末に保存した AI ワールド",
+  },
+  otherworldNone: {
+    en: "No AI world is saved on this device yet. Write a new one below.",
+    "zh-TW": "這台裝置上還沒有儲存任何 AI 世界。在下面寫一個新的吧。",
+    ja: "この端末にはまだ AI ワールドが保存されていません。下で新しく書きましょう。",
+  },
+  otherworldPlace: { en: "Place its entrance", "zh-TW": "放置入口", ja: "入口を置く" },
+  otherworldFree: {
+    en: "Placing a saved world asks no model; its entrance appears a short walk away.",
+    "zh-TW": "放置已儲存的世界不會呼叫模型；入口會出現在走幾步就到的地方。",
+    ja: "保存したワールドを置くときはモデルを使いません。入口は少し歩いた先に現れます。",
+  },
+  otherworldWrite: {
+    en: "Write a new otherworld",
+    "zh-TW": "寫一個新的異界",
+    ja: "新しい異界を書く",
+  },
+  otherworldWriteNote: {
+    en: "Describe it in the box above. The workshop opens over the land, writes and checks it; the entrance appears once you save a version.",
+    "zh-TW":
+      "在上面的欄位描述它。工作坊會在大地上打開，寫好並檢查；你儲存一個版本後，入口就會出現。",
+    ja: "上の欄に書いてください。大地の上に工房が開き、書いて確かめます。バージョンを保存すると入口が現れます。",
+  },
+  otherworldLibrary: {
+    en: "All AI worlds and journeys (leaves the land)",
+    "zh-TW": "所有 AI 世界與旅程（會離開大地）",
+    ja: "すべての AI ワールドと旅路（大地を離れます）",
+  },
 } as const satisfies Record<string, Phrase>;

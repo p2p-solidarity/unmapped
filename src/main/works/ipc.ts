@@ -18,10 +18,13 @@ import {
   WORK_ID,
   WORK_LIMITS,
   WORK_SCHEME,
+  type WorkLookSource,
   type WorkText,
 } from "@shared/works";
 import { app, BrowserWindow, dialog, protocol, webFrameMain } from "electron";
 import { z } from "zod";
+import { readLookPicture } from "../cartridges/look";
+import { isCartridgeId, isCartridgeVersion } from "../cartridges/paths";
 import type { MainContext } from "../context";
 import { handle } from "../handle";
 import { recordUsage } from "../usage/ipc";
@@ -92,6 +95,39 @@ const sourceSchema = z.discriminatedUnion("kind", [
 ]);
 
 const IMAGE_TYPES = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif"]);
+
+/** The world an otherworld is written in: ids only, checked before anything touches a path. */
+const lookSourceSchema = z
+  .object({
+    cartridgeId: z.string().refine(isCartridgeId, "bad cartridge id"),
+    version: z.string().refine(isCartridgeVersion, "bad cartridge version"),
+  })
+  .strict();
+
+/**
+ * That world's look picture as the reference for a picture drawn while writing an otherworld in
+ * it (rev 6 D2). A world without one draws without; one whose picture cannot be read draws
+ * without too, and the candidate's summary says why (the failure is never hidden).
+ */
+async function lookOf(
+  from: WorkLookSource | null,
+): Promise<{ reference?: Uint8Array; note: string }> {
+  if (from === null) return { note: "" };
+  const picture = await readLookPicture(from.cartridgeId, from.version);
+  if (!picture.ok) {
+    process.stdout.write(
+      `[image] look ${from.cartridgeId}@${from.version} · ${picture.error.code}\n`,
+    );
+    return {
+      note: ` without the look of ${from.cartridgeId}@${from.version} (${picture.error.code})`,
+    };
+  }
+  if (picture.value === null) return { note: "" };
+  return {
+    reference: picture.value,
+    note: ` over the look of ${from.cartridgeId}@${from.version}`,
+  };
+}
 
 /** Renderer pids of our own windows: never a valid kill target. */
 function hostPids(): Set<number> {
@@ -275,8 +311,13 @@ export function registerWorksIpc(ctx: MainContext): void {
   );
   handle(
     IPC.works.generateAsset,
-    z.tuple([z.string().regex(DRAFT_ID), z.string().regex(ASSET_ID), z.string().regex(REQUEST_ID)]),
-    async ([draftId, assetId, requestId]) => {
+    z.tuple([
+      z.string().regex(DRAFT_ID),
+      z.string().regex(ASSET_ID),
+      z.string().regex(REQUEST_ID),
+      lookSourceSchema.nullable().optional(),
+    ]),
+    async ([draftId, assetId, requestId, from]) => {
       if (imageInflight.has(requestId)) {
         return err("duplicate-request", `Picture request ${requestId} is already running.`);
       }
@@ -290,20 +331,28 @@ export function registerWorksIpc(ctx: MainContext): void {
       const entry = assets[assetId];
       if (entry === undefined) return err("asset-unknown", `This world has no asset "${assetId}".`);
       const first = draft.value.candidates.find((candidate) => candidate.kind === "generate");
+      const look = await lookOf(from ?? null);
       const prompt = assetPrompt({
         note: entry.note,
         assetId,
         world: draft.value.title,
         description: first?.request ?? null,
         usesLibrary: Object.values(assets).some((one) => one.src?.startsWith("library/") === true),
+        reference: look.reference !== undefined,
       });
       const controller = new AbortController();
       imageInflight.set(requestId, controller);
       const provider = imageProvider();
       const started = Date.now();
-      const image = await provider.generate(prompt, controller.signal).finally(() => {
-        imageInflight.delete(requestId);
-      });
+      const image = await provider
+        .generate(
+          prompt,
+          controller.signal,
+          look.reference === undefined ? {} : { reference: look.reference },
+        )
+        .finally(() => {
+          imageInflight.delete(requestId);
+        });
       await recordUsage(ctx, {
         tag: { purpose: "image", scope: { kind: "work", id: draftId } },
         provider: provider.id,
@@ -314,8 +363,12 @@ export function registerWorksIpc(ctx: MainContext): void {
         ms: Date.now() - started,
         outcome: image.ok ? "done" : image.error.code === "cancelled" ? "aborted" : "failed",
       });
+      // Which request drew it and over which look (rev 6 D2), so the log shows the reference.
+      const how = image.ok
+        ? ` · ${image.value.model}${image.value.call === undefined ? "" : ` · ${image.value.call}`}${look.note}`
+        : "";
       process.stdout.write(
-        `[image] ${image.ok ? "done" : "fail"} ${requestId} · ${provider.id} · ${Date.now() - started} ms${image.ok ? "" : ` · ${image.error.code}`}\n`,
+        `[image] ${image.ok ? "done" : "fail"} ${requestId} · ${provider.id}${how} · ${Date.now() - started} ms${image.ok ? "" : ` · ${image.error.code}`}\n`,
       );
       if (!image.ok) return image;
       // A cancel that raced the last byte: the picture arrived, but the player said no.
@@ -329,7 +382,7 @@ export function registerWorksIpc(ctx: MainContext): void {
         parent: head,
         kind: "asset",
         request: `Generate image "${assetId}": ${prompt}`,
-        summary: `Image "${assetId}" was generated by ${image.value.model}.`,
+        summary: `Image "${assetId}" was generated by ${image.value.model}${look.note}.`,
         text: { ...content.value.text, assets: `${JSON.stringify(nextAssets, null, 2)}\n` },
         changed: ["assets.json"],
         metrics: {

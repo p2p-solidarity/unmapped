@@ -9,7 +9,7 @@ import { CHAPTER_KINDS, CHAPTER_LIMITS } from "@shared/chapter";
 import { FELLED_LIMITS } from "@shared/foes";
 import { DOOR_SLOTS } from "@shared/land";
 import { LANGUAGE_TAG_PATTERN } from "@shared/language";
-import { PLACE_KINDS, PLACE_LIMITS } from "@shared/places";
+import { landPlaceSchema, PLACE_LIMITS } from "@shared/places";
 import { SEED_PATTERN } from "@shared/seedCode";
 import { STORY_CAP, storyEpisodeSchema } from "@shared/story";
 import { DRAFT_ID, jsonBytes, jsonSchema, PLAY_ID, WORK_ID, WORK_LIMITS } from "@shared/works";
@@ -168,24 +168,9 @@ export const landProgressSchema = z
       )
       .optional(),
     storyMore: z.array(storyEpisodeSchema).max(STORY_CAP).optional(),
-    places: z
-      .array(
-        z
-          .object({
-            id: z.string().regex(/^p[0-9]{1,3}$/),
-            kind: z.enum(PLACE_KINDS),
-            title: z.string().min(1).max(PLACE_LIMITS.titleChars),
-            cx: z.number().int().min(-64).max(64),
-            cz: z.number().int().min(-64).max(64),
-            seed: z.number().int().min(0).max(0xffffffff),
-            source: z.string().min(1).max(PLACE_LIMITS.sourceChars),
-            dialogues: residentWords,
-            cleared: z.boolean(),
-          })
-          .strict(),
-      )
-      .max(PLACE_LIMITS.max)
-      .optional(),
+    // Courses, dungeons and otherworlds: one shared schema (@shared/places), so a save written
+    // before otherworlds existed parses exactly as it did.
+    places: z.array(landPlaceSchema).max(PLACE_LIMITS.max).optional(),
     felled: felledLedgerSchema.optional(),
   })
   .strict();

@@ -5,7 +5,7 @@
 // or a grid dungeon) entered from the gate. What was written, and how far the player got, belongs
 // to the save (`EpisodeProgress.stage`); the host decides when a chapter is done.
 
-import type { PlaceKind } from "./places";
+import type { WrittenPlaceKind } from "./places";
 
 /** The kinds of play a story asks for (the `kind` a chapter is written with). */
 export const PLAY_KINDS = ["meet", "search", "fight", "climb", "maze"] as const;
@@ -47,7 +47,7 @@ export function chapterKind(kind: string): ChapterKind {
   return "land";
 }
 
-export function chapterPlaceKind(kind: ChapterKind): PlaceKind | null {
+export function chapterPlaceKind(kind: ChapterKind): WrittenPlaceKind | null {
   return kind === "land" ? null : kind;
 }
 

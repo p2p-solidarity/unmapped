@@ -59,6 +59,7 @@ import type {
   PlayChange,
   WorkCodeFile,
   WorkDraft,
+  WorkLookSource,
   WorkManifest,
   WorkPlay,
   WorkRef,
@@ -136,7 +137,7 @@ export const IPC = {
     sidecarStop: "inference:sidecar-stop",
     sidecarStatus: "inference:sidecar-status",
     sidecarEvent: "inference:sidecar-event",
-    // System → Model: write-only keys and what runs on this computer.
+    // Settings → Model: write-only keys and what runs on this computer.
     keyStatus: "inference:key-status",
     setApiKey: "inference:set-api-key",
     clearApiKey: "inference:clear-api-key",
@@ -459,12 +460,15 @@ export interface SeedApi {
     replaceAsset(draftId: string, assetId: string): Promise<Result<WrittenCandidate | null>>;
     /**
      * Asks the image model for one asset of head (main-side key); the result is a pending
-     * candidate. `requestId` names the call so `cancelAsset` can abort it in flight.
+     * candidate. `requestId` names the call so `cancelAsset` can abort it in flight. `from` names
+     * the world an otherworld is being written in: main reads that world's look picture and draws
+     * with it as the reference (only ids cross; never picture bytes or paths).
      */
     generateAsset(
       draftId: string,
       assetId: string,
       requestId: string,
+      from?: WorkLookSource | null,
     ): Promise<Result<WrittenCandidate>>;
     /** Aborts an image request; its picture, if any arrives, is never stored. */
     cancelAsset(requestId: string): Promise<Result<void>>;

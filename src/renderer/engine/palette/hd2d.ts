@@ -38,6 +38,8 @@ export const HD2D_PALETTE = {
   foeHealthBack: "rgba(20, 12, 8, 0.75)",
   /** Beam over an open story gate. */
   gateBeam: "#ffd27a",
+  /** The rift ring turning on the ground under an otherworld's entrance (異界). */
+  otherworldRift: "#ff7ad9",
   /** Label text, its shadow and the compass surface drawn over the scene. */
   label: "#fff6e2",
   labelShadow: "rgba(20, 12, 4, 0.85)",

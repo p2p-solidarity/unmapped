@@ -318,4 +318,19 @@ export const LAND = {
     "zh-TW": "CC0 2D 素材載入失敗：{reason}",
     ja: "CC0 2D 素材を読み込めませんでした：{reason}",
   },
+
+  // ── Otherworlds (異界) ─────────────────────────────────────────────────────────────────────
+  otherworld: { en: "Otherworld", "zh-TW": "異界", ja: "異界" },
+  otherworldOpening: {
+    en: "Opening the otherworld…",
+    "zh-TW": "正在開啟異界…",
+    ja: "異界を開いています…",
+  },
+  otherworldLeave: { en: "Leave the otherworld", "zh-TW": "離開異界", ja: "異界を出る" },
+  otherworldBackToLand: { en: "Back to the land", "zh-TW": "回到大地", ja: "大地に戻る" },
+  otherworldPlaced: {
+    en: "The entrance to {title} stands on the land now (chunk {cx}, {cz}).",
+    "zh-TW": "{title} 的入口已經出現在大地上（區塊 {cx}, {cz}）。",
+    ja: "{title} の入口が大地に現れました（チャンク {cx}, {cz}）。",
+  },
 } as const satisfies Record<string, Phrase>;

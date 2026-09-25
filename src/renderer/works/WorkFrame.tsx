@@ -4,6 +4,7 @@
 // replays a few keys and a click, and reports whether the world started and stayed error-free.
 
 import { useT } from "@renderer/i18n";
+import { pressEscape } from "@renderer/input";
 import { colors, ErrorBlock, Text } from "@renderer/ui";
 import { type AppError, errored, type Loadable, loading, ready } from "@shared/result";
 import {
@@ -132,6 +133,12 @@ export function WorkFrame({
       lastBeat = Date.now();
       started = true;
       if (message.type === "heartbeat") return;
+      // Escape pressed inside a played world: the host's own Escape paths decide what it closes
+      // (an otherworld's layer leaves, as its Leave button does). A check never presses it.
+      if (message.type === "escape") {
+        if (mode === "play") pressEscape();
+        return;
+      }
       if (mode === "check") {
         if (message.type === "save") savedState = message.state;
         if (message.type === "error") {
@@ -236,11 +243,15 @@ export function WorkFrame({
   }
   return (
     <div style={box}>
+      {/* Played frames read a gamepad themselves (`allow` is a permissions policy, not a sandbox
+          token: the frame stays opaque-origin), and a pad user starts inside the world. */}
       <iframe
         ref={frameRef}
         key={session.value.token}
         src={session.value.url}
         sandbox="allow-scripts"
+        allow={mode === "play" ? "gamepad" : undefined}
+        data-autofocus={mode === "play" ? "" : undefined}
         referrerPolicy="no-referrer"
         title={session.value.title}
         style={{ border: 0, width: "100%", height: "100%", display: "block" }}

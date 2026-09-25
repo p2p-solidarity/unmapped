@@ -15,6 +15,8 @@ import {
   type Json,
   type WorkAssetMap,
   type WorkDraft,
+  type WorkLookSource,
+  type WorkManifest,
 } from "@shared/works";
 import { type JSX, useCallback, useEffect, useRef, useState } from "react";
 import { type AttemptReport, runAttempt } from "./author";
@@ -76,10 +78,22 @@ export function WorkshopView({
   draftId,
   initialRequest,
   onExit,
+  exitLabel,
+  from = null,
+  onPublished,
+  onBusyChange,
 }: {
   draftId: string;
   initialRequest: string | null;
   onExit: () => void;
+  /** The back button's words; the AI Worlds library's own by default. */
+  exitLabel?: string;
+  /** The world this is written in (an otherworld): its look is every drawn picture's reference. */
+  from?: WorkLookSource | null;
+  /** Called with each version saved here. */
+  onPublished?: (manifest: WorkManifest) => void;
+  /** True while an attempt or a picture is running (the view's own back button waits for it). */
+  onBusyChange?: (busy: boolean) => void;
 }): JSX.Element {
   const t = useT();
   const model = useInferenceStore((state) => state.config?.model ?? null);
@@ -131,6 +145,11 @@ export function WorkshopView({
     const timer = setInterval(() => setNow(Date.now()), 250);
     return () => clearInterval(timer);
   }, [running]);
+
+  const isRunning = running !== null;
+  useEffect(() => {
+    onBusyChange?.(isRunning);
+  }, [onBusyChange, isRunning]);
 
   const attempt = useCallback(
     async (kind: "generate" | "edit", words: string, base: WorkDraft) => {
@@ -218,7 +237,7 @@ export function WorkshopView({
     const written =
       how === "pick"
         ? await window.seed.works.replaceAsset(draftId, assetId)
-        : await window.seed.works.generateAsset(draftId, assetId, requestId);
+        : await window.seed.works.generateAsset(draftId, assetId, requestId, from);
     controller.signal.removeEventListener("abort", onAbort);
     if (!written.ok) {
       setRunning(null);
@@ -254,6 +273,7 @@ export function WorkshopView({
       setDraft(result.value.draft);
       const { title, version } = result.value.manifest;
       setNotice(t("works.noticeSaved", { title, version }));
+      onPublished?.(result.value.manifest);
     }
   };
 
@@ -306,7 +326,7 @@ export function WorkshopView({
           }}
         >
           <Button variant="ghost" onClick={onExit} disabled={busy}>
-            {t("works.backToWorlds")}
+            {exitLabel ?? t("works.backToWorlds")}
           </Button>
           <div style={{ flex: 1, minWidth: 0 }}>
             <Text>{draft.title}</Text>

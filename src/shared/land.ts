@@ -71,7 +71,10 @@ export interface LandProgress {
    * belong to this save, not the cartridge; ids and gates are chosen by the host (`STORY_CAP`).
    */
   storyMore?: StoryEpisode[];
-  /** Side-scrolling courses and grid dungeons added to this land, entered from their gates. */
+  /**
+   * Side-scrolling courses, grid dungeons and otherworlds (AI worlds) added to this land, entered
+   * from their gates. Validated by `landPlaceSchema` (@shared/places).
+   */
   places?: LandPlace[];
   /** Hostiles felled on the land and when, so they stay down until they respawn (`@shared/foes`). */
   felled?: FelledLedger;

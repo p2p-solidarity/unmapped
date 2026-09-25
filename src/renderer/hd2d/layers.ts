@@ -1,6 +1,6 @@
 // The things standing on HD-2D ground: pixel sprites upright on their feet (instanced per sprite,
 // casting real shadows through their alpha), carved blocks for props the sheets have no sprite
-// for, wall blocks, and glowing crests for the land's markers (door, notes, story gates).
+// for, wall blocks, and glowing crests for the land's markers (door, notes, story gates, places).
 
 import * as THREE from "three";
 import { HD2D_PALETTE } from "../engine/palette";
@@ -204,6 +204,8 @@ export interface MarkerInstance {
   label: string;
   /** Draw a light beam over it (an open story gate). */
   beam: boolean;
+  /** Turn a rift ring on the ground under it (an otherworld's entrance, 異界). */
+  portal?: boolean;
 }
 
 const BEAM_VERTEX = /* glsl */ `
@@ -223,10 +225,44 @@ void main() {
   gl_FragColor = vec4(color * 2.2, alpha);
 }`;
 
-/** Glowing crests over markers, plus a light beam over each open gate. */
+const RIFT_VERTEX = /* glsl */ `
+varying vec2 vPos;
+void main() {
+  vPos = position.xz;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}`;
+
+const RIFT_FRAGMENT = /* glsl */ `
+uniform vec3 color;
+uniform float time;
+varying vec2 vPos;
+void main() {
+  float radius = length(vPos);
+  float angle = atan(vPos.y, vPos.x);
+  float swirl = 0.5 + 0.5 * sin(angle * 5.0 - time * 3.0 + radius * 9.0);
+  float band = smoothstep(0.5, 0.6, radius) * (1.0 - smoothstep(0.76, 0.84, radius));
+  float core = (1.0 - smoothstep(0.0, 0.6, radius)) * 0.18;
+  gl_FragColor = vec4(color * 1.8, band * (0.3 + 0.55 * swirl) + core);
+}`;
+
+/** Glowing crests over markers, a light beam over each open gate, a rift under each otherworld. */
 export class MarkerLayer {
   private readonly sprites = new Map<string, THREE.Sprite>();
   private readonly beams = new Map<string, THREE.Mesh>();
+  private readonly rifts = new Map<string, THREE.Mesh>();
+  private readonly riftGeometry = new THREE.CircleGeometry(0.84, 48);
+  private readonly riftMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+      color: { value: new THREE.Color(HD2D_PALETTE.otherworldRift) },
+      time: { value: 0 },
+    },
+    vertexShader: RIFT_VERTEX,
+    fragmentShader: RIFT_FRAGMENT,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide,
+  });
   private readonly textures = new Map<string, THREE.CanvasTexture>();
   private readonly beamGeometry = new THREE.CylinderGeometry(0.28, 0.55, 7, 20, 1, true);
   private readonly beamMaterial = new THREE.ShaderMaterial({
@@ -244,6 +280,24 @@ export class MarkerLayer {
 
   constructor(private readonly root: THREE.Object3D) {
     this.beamGeometry.translate(0, 3.5, 0);
+    // Flat on the ground, a hair above it so it never fights the floor for depth.
+    this.riftGeometry.rotateX(-Math.PI / 2);
+    this.riftGeometry.translate(0, 0.04, 0);
+  }
+
+  private placeRift(marker: MarkerInstance): void {
+    const rift = this.rifts.get(marker.key);
+    if (marker.portal === true && rift === undefined) {
+      const mesh = new THREE.Mesh(this.riftGeometry, this.riftMaterial);
+      mesh.position.set(marker.x, marker.y, marker.z);
+      this.rifts.set(marker.key, mesh);
+      this.root.add(mesh);
+    } else if (marker.portal !== true && rift !== undefined) {
+      this.root.remove(rift);
+      this.rifts.delete(marker.key);
+    } else if (rift !== undefined) {
+      rift.position.set(marker.x, marker.y, marker.z);
+    }
   }
 
   set(markers: readonly MarkerInstance[]): void {
@@ -280,6 +334,7 @@ export class MarkerLayer {
       } else if (beam !== undefined) {
         beam.position.set(marker.x, marker.y, marker.z);
       }
+      this.placeRift(marker);
     }
     for (const [key, sprite] of this.sprites) {
       if (seen.has(key)) continue;
@@ -289,13 +344,18 @@ export class MarkerLayer {
       const beam = this.beams.get(key);
       if (beam !== undefined) this.root.remove(beam);
       this.beams.delete(key);
+      const rift = this.rifts.get(key);
+      if (rift !== undefined) this.root.remove(rift);
+      this.rifts.delete(key);
     }
   }
 
-  /** Crests bob gently; beams pulse. */
+  /** Crests bob gently; beams pulse; rifts turn. */
   animate(seconds: number): void {
     const time = this.beamMaterial.uniforms.time;
     if (time !== undefined) time.value = seconds;
+    const riftTime = this.riftMaterial.uniforms.time;
+    if (riftTime !== undefined) riftTime.value = seconds;
     let index = 0;
     for (const sprite of this.sprites.values()) {
       const base = (sprite.userData.baseY as number | undefined) ?? 1.25;
@@ -341,10 +401,14 @@ export class MarkerLayer {
       sprite.material.dispose();
     }
     for (const beam of this.beams.values()) this.root.remove(beam);
+    for (const rift of this.rifts.values()) this.root.remove(rift);
     for (const texture of this.textures.values()) texture.dispose();
     this.beamGeometry.dispose();
     this.beamMaterial.dispose();
+    this.riftGeometry.dispose();
+    this.riftMaterial.dispose();
     this.sprites.clear();
     this.beams.clear();
+    this.rifts.clear();
   }
 }

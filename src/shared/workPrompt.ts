@@ -27,7 +27,7 @@ Runtime (a sandboxed page; the global \`host\` is the only API):
 - host.loop(fn): calls fn(dt) every frame, dt in seconds (max 0.1); returns stop(). Use it instead of requestAnimationFrame.
 - host.carry: read-only JSON from the previous world, or null.
 - host.complete(summary, earned): call once when won or finished; the host merges the \`earned\` object into host.carry for the next world.
-- host.asset(id): data URL for an assets.json id or a library path; null if missing — then draw a labelled box "missing: <id>", never other art.
+- host.asset(id): data URL string for an assets.json id or a library path (an <img> src, or load it into new Image() before drawImage); null if missing — then draw a labelled box "missing: <id>", never other art.
 - host.status(text): short status line.
 - No network, storage, eval, workers, popups or parent page.
 - Keys: keydown/keyup on window (arrows, WASD, Space, Enter). Mouse: events in host.root.

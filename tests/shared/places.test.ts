@@ -1,6 +1,12 @@
 import { parseScene } from "@dsl";
 import { landProgressSchema } from "@main/instances/schemas";
-import { buildPlace, type LandPlace, placeSpot, wishedDirection } from "@shared/places";
+import {
+  buildPlace,
+  placeSpot,
+  type WrittenPlace,
+  type WrittenPlaceKind,
+  wishedDirection,
+} from "@shared/places";
 import type { SceneGraph } from "@shared/world";
 import { describe, expect, it } from "vitest";
 import { isWallTile, spawnTile } from "../../src/renderer/engine/colliders";
@@ -23,7 +29,7 @@ function written(): SceneGraph {
   return parsed.value;
 }
 
-function place(kind: LandPlace["kind"], seed: number): LandPlace {
+function place(kind: WrittenPlaceKind, seed: number): WrittenPlace {
   return {
     id: "p1",
     kind,

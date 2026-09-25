@@ -29,7 +29,9 @@ export function frameCsp(nonce: string): string {
  * every frame). It also carries the helpers for the mistakes models kept repeating: `load(fresh)`
  * fills whatever a save lacks, `save` keeps Sets and Maps, `loop` hands out dt in seconds. For the
  * draft checker it replays a few keys and a click so input handlers run once before a version is
- * accepted. Newlines become spaces when it is embedded, so it must not contain `//` comments.
+ * accepted. A real Escape press is forwarded to the host, which never sees keys while the frame has
+ * focus (Escape leaves an otherworld). Newlines become spaces when it is embedded, so it must not
+ * contain `//` comments.
  * Exported for tests only.
  */
 export const FRAME_RUNTIME = `(() => {
@@ -183,6 +185,9 @@ export const FRAME_RUNTIME = `(() => {
     };
     press();
   };
+  addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && event.isTrusted) post({ type: "escape" });
+  }, true);
   addEventListener("message", (event) => {
     if (event.source !== parent || !event.data || event.data.ulw !== ${WORK_PROTOCOL}) return;
     if (event.data.type === "probe") probe();

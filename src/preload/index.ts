@@ -73,6 +73,7 @@ import type { UsageRecord, UsageScope, UsageSummary } from "@shared/usage";
 import type {
   PlayChange,
   WorkDraft,
+  WorkLookSource,
   WorkManifest,
   WorkPlay,
   WorkSession,
@@ -241,8 +242,19 @@ const api: SeedApi = {
       invoke<Result<{ draft: WorkDraft; manifest: WorkManifest }>>(IPC.works.publishDraft, draftId),
     replaceAsset: (draftId: string, assetId: string) =>
       invoke<Result<WrittenCandidate | null>>(IPC.works.replaceAsset, draftId, assetId),
-    generateAsset: (draftId: string, assetId: string, requestId: string) =>
-      invoke<Result<WrittenCandidate>>(IPC.works.generateAsset, draftId, assetId, requestId),
+    generateAsset: (
+      draftId: string,
+      assetId: string,
+      requestId: string,
+      from?: WorkLookSource | null,
+    ) =>
+      invoke<Result<WrittenCandidate>>(
+        IPC.works.generateAsset,
+        draftId,
+        assetId,
+        requestId,
+        from ?? null,
+      ),
     cancelAsset: (requestId: string) => invoke<Result<void>>(IPC.works.cancelAsset, requestId),
     createPlay: (input: CreateWorkPlayInput) =>
       invoke<Result<WorkPlay>>(IPC.works.createPlay, input),

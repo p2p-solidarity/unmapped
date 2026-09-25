@@ -5,7 +5,7 @@
 // written now, with the place: talking inside it never asks the model (plan.md §1.4).
 
 import type { OpenUIError } from "@openuidev/lang-core";
-import type { PlaceKind } from "@shared/places";
+import type { WrittenPlaceKind } from "@shared/places";
 import type { SceneGraph } from "@shared/world";
 import { placeLibrary } from "../libraries";
 import { clampText, LIMITS } from "../limits";
@@ -14,7 +14,7 @@ import { propError } from "../parse/program";
 import { languageName } from "./shared";
 
 export interface PlacePromptContext {
-  kind: PlaceKind;
+  kind: WrittenPlaceKind;
   /** What the player asked for, in their own words (may be empty). */
   wish: string;
   /** True when the cartridge's rules declare combat; otherwise no Monster may appear. */
@@ -38,10 +38,10 @@ rat2 = Monster("rat_b", "slime", 1, 1, 3, "a sharp noise")
 jar = Treasure("oil_jar", 1, 1, ["lamp oil"])
 errand = Quest("fetch_oil", "Bring the lamp oil back up from the cellar.")`;
 
-const KIND_NOTE: Record<PlaceKind, string> = {
+const KIND_NOTE: Record<WrittenPlaceKind, string> = {
   side: "A side-scrolling course: the player runs and jumps left to right along one row. The host lays the platforms and the way out; you decide what waits along the way.",
   dungeon:
-    "A grid dungeon seen in first person, a maze of corridors. The host carves the maze and the way out; you decide who and what is down there.",
+    "A grid dungeon seen from above, a maze of corridors. The host carves the maze and the way out; you decide who and what is down there.",
 };
 
 function rules(ctx: PlacePromptContext): string[] {

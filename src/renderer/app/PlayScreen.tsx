@@ -21,6 +21,7 @@ import { DoorPanel } from "./land/DoorPanel";
 import { useErrandArrivals } from "./land/errands";
 import { ForeignDoorCard } from "./land/ForeignDoorCard";
 import { NotePanel } from "./land/NotePanel";
+import { OtherworldLayer } from "./land/OtherworldLayer";
 import { useWitness } from "./land/witness";
 import { TweakPanel } from "./TweakPanel";
 import { runBlocksPlay } from "./useInputLock";
@@ -139,6 +140,7 @@ export function PlayScreen() {
       {hasStory ? <EpisodePrefetch /> : null}
       <NotePanel />
       <TweakPanel />
+      <OtherworldLayer />
       {consoleOpen ? <Console /> : null}
 
       {scene.status === "ready" ? null : (

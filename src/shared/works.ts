@@ -139,6 +139,15 @@ export interface WorkRef {
   contentHash: ContentHash;
 }
 
+/**
+ * The world (a cartridge revision) an otherworld is being written in. Main resolves it to that
+ * world's look picture for the pictures drawn meanwhile; the renderer only ever sends these ids.
+ */
+export interface WorkLookSource {
+  cartridgeId: string;
+  version: string;
+}
+
 export interface WorkManifestCore {
   format: typeof WORK_FORMAT;
   formatVersion: typeof WORK_FORMAT_VERSION;
@@ -268,6 +277,11 @@ export const frameMessageSchema = z.discriminatedUnion("type", [
     column: z.number().int().nullable(),
   }),
   z.object({ ...envelope, type: z.literal("probed") }),
+  /**
+   * The player pressed Escape inside the world. The frame has keyboard focus while played, so the
+   * host never sees that key itself; it answers as if Escape were pressed outside the frame.
+   */
+  z.object({ ...envelope, type: z.literal("escape") }),
 ]);
 
 export type FrameMessage = z.infer<typeof frameMessageSchema>;

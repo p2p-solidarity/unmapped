@@ -274,6 +274,7 @@ function collectMarkers(source: LandSource, height: Height): MarkerInstance[] {
       glyph: marker.glyph,
       label: marker.label,
       beam: false,
+      portal: marker.portal,
     });
   });
   if (source.story !== null) {

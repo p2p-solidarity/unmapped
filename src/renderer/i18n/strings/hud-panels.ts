@@ -75,10 +75,10 @@ export const HUD_PANELS = {
     ja: "武器、モンスター、テンポ、部隊、シーンの変更などを書いてください。カートリッジに足りない機能は自動で追加されます。変更案を確認してから新しいバージョンを公開します。今のプレイは元のバージョンのままです。",
   },
   tweakPlaceNote: {
-    en: "A side-scrolling course or a grid dungeon, written into this save now. You walk into it from its entrance on the land and come back out where you went in, with what you found.",
+    en: "A side-scrolling course, a grid dungeon or an otherworld (one of your AI worlds), added to this save now. You walk into it from its entrance on the land and come back out where you went in, with what you found.",
     "zh-TW":
-      "一段橫向捲軸關卡或一座格子地城，現在就寫進這個存檔。從大地上的入口走進去，出來時回到原地，並帶著找到的東西。",
-    ja: "横スクロールのコースか、グリッドのダンジョンを今このセーブに書き込みます。大地の入口から入り、見つけた物を持って入った場所に戻ってきます。",
+      "一段橫向捲軸關卡、一座格子地城，或一個異界（你的某個 AI 世界），現在就加進這個存檔。從大地上的入口走進去，出來時回到原地，並帶著找到的東西。",
+    ja: "横スクロールのコース、グリッドのダンジョン、または異界（あなたの AI ワールド）を今このセーブに加えます。大地の入口から入り、見つけた物を持って入った場所に戻ってきます。",
   },
   tweakNeedsCartridge: {
     en: "Open a published v2 cartridge to create a mod revision.",
@@ -155,9 +155,9 @@ export const HUD_PANELS = {
   },
   kindDungeon: { en: "Dungeon", "zh-TW": "地城", ja: "ダンジョン" },
   kindDungeonDetail: {
-    en: "A first-person grid maze; the far end is somewhere in its corridors.",
-    "zh-TW": "第一人稱的格子迷宮；終點藏在走廊的某處。",
-    ja: "一人称のグリッド迷路。ゴールは通路のどこかにあります。",
+    en: "A grid maze seen from above; the far end is somewhere in its corridors.",
+    "zh-TW": "從上方俯視的格子迷宮；終點藏在走廊的某處。",
+    ja: "見下ろしのグリッド迷路。ゴールは通路のどこかにあります。",
   },
   placeNeedsLand: {
     en: "Places are added to open land. Open a world with open land.",

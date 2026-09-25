@@ -346,4 +346,12 @@ export const HUD = {
   door: { en: "Door", "zh-TW": "門", ja: "扉" },
   noteBy: { en: "Note · {author}", "zh-TW": "留言 · {author}", ja: "メモ · {author}" },
   ally: { en: "Ally {n}", "zh-TW": "隊友 {n}", ja: "味方 {n}" },
+
+  // ── Tweak panel: otherworlds (異界) ────────────────────────────────────────────────────────
+  kindOtherworld: { en: "Otherworld", "zh-TW": "異界", ja: "異界" },
+  kindOtherworldDetail: {
+    en: "A door into one of your AI worlds, played in its own sealed frame.",
+    "zh-TW": "通往你某個 AI 世界的門，在它自己封閉的框架裡遊玩。",
+    ja: "あなたの AI ワールドへの扉。封じられた専用の枠の中で遊びます。",
+  },
 } as const satisfies Record<string, Phrase>;

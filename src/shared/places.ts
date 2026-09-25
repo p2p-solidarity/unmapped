@@ -1,21 +1,31 @@
 // Places on the land (地點): a side-scrolling course or a grid dungeon the player walks into from the
-// open land and back out of, played by the engine's own kits. A place belongs to the save, like the
-// land's continued chapters — adding one is not a new cartridge version, and nothing is lost.
+// open land and back out of, played by the engine's own kits — or an otherworld (異界), whose
+// entrance leads into a sandboxed AI world (`interactive-web@1`, Rule 12). A place belongs to the
+// save, like the land's continued chapters — adding one is not a new cartridge version, and nothing
+// is lost.
 //
-// The model writes what lives there (its name, light, residents, loot, monsters, what to do); the
-// host builds the ground so it can always be played: a course along one row, or a real maze with a
-// guaranteed route. Coordinates the model wrote are not trusted — every entity is moved onto open
-// ground here. Deterministic from the stored seed, so a place rebuilds identically on every load.
+// For a course or a dungeon the model writes what lives there (its name, light, residents, loot,
+// monsters, what to do); the host builds the ground so it can always be played: a course along one
+// row, or a real maze with a guaranteed route. Coordinates the model wrote are not trusted — every
+// entity is moved onto open ground here. Deterministic from the stored seed, so a place rebuilds
+// identically on every load. An otherworld keeps no program at all: only the exact published
+// revision it opens (the work stays in `works/`) and its own pinned progress.
 
+import { z } from "zod";
 import { CHUNK_SIZE, type ChunkCoord } from "./chunks";
 import type { GameplayKitId } from "./gameplay";
 import { generateMaze } from "./maze";
+import { PLAY_ID, WORK_ID, type WorkRef } from "./works";
 import type { ExitSpec, PlatformSpec, SceneGraph, WallSpec } from "./world";
 
-export const PLACE_KINDS = ["side", "dungeon"] as const;
+/** Places the model writes as a Scene program and the host builds the ground of. */
+export const WRITTEN_PLACE_KINDS = ["side", "dungeon"] as const;
+export type WrittenPlaceKind = (typeof WRITTEN_PLACE_KINDS)[number];
+
+export const PLACE_KINDS = [...WRITTEN_PLACE_KINDS, "otherworld"] as const;
 export type PlaceKind = (typeof PLACE_KINDS)[number];
 
-export const PLACE_KIT: Record<PlaceKind, GameplayKitId> = {
+export const PLACE_KIT: Record<WrittenPlaceKind, GameplayKitId> = {
   side: "platformer_2_5d@1",
   dungeon: "dungeon_grid@1",
 };
@@ -33,14 +43,18 @@ export const PLACE_LIMITS = {
 export const PLACE_BACK = "↩";
 export const PLACE_GOAL = "✓";
 
-/** Save-owned: where a place's entrance stands and the program of what lives there. */
-export interface LandPlace {
+interface PlaceEntrance {
   id: string;
-  kind: PlaceKind;
   title: string;
   /** Chunk whose centre holds the entrance (a ford crossing, so it is always reachable). */
   cx: number;
   cz: number;
+  cleared: boolean;
+}
+
+/** Save-owned: where a course's or dungeon's entrance stands and the program of what lives there. */
+export interface WrittenPlace extends PlaceEntrance {
+  kind: WrittenPlaceKind;
   seed: number;
   /** The model's Scene program: residents, loot, monsters, light and objective. */
   source: string;
@@ -49,8 +63,76 @@ export interface LandPlace {
    * talking inside never asks the model. Absent on places written before words were kept.
    */
   dialogues?: Record<string, string>;
-  cleared: boolean;
 }
+
+/**
+ * Save-owned: an entrance into one exact published AI world. Its progress is the pinned journey
+ * `playId` in `work-plays/` (absent until the player first walks in); the world's code never
+ * enters the save.
+ */
+export interface OtherworldPlace extends PlaceEntrance {
+  kind: "otherworld";
+  work: WorkRef;
+  playId?: string;
+}
+
+export type LandPlace = WrittenPlace | OtherworldPlace;
+
+export function isOtherworld(place: LandPlace): place is OtherworldPlace {
+  return place.kind === "otherworld";
+}
+
+export function isWrittenPlace(place: LandPlace): place is WrittenPlace {
+  return place.kind !== "otherworld";
+}
+
+const PLACE_ID = /^p[0-9]{1,3}$/;
+const entrance = {
+  id: z.string().regex(PLACE_ID),
+  title: z.string().min(1).max(PLACE_LIMITS.titleChars),
+  cx: z.number().int().min(-64).max(64),
+  cz: z.number().int().min(-64).max(64),
+  cleared: z.boolean(),
+};
+
+/**
+ * `land.places` as a save stores it — checked wherever a save is read (main) and wherever a place
+ * arrives from outside. Places from before otherworlds existed parse unchanged.
+ */
+export const landPlaceSchema: z.ZodType<LandPlace> = z.union([
+  z
+    .object({
+      ...entrance,
+      kind: z.enum(WRITTEN_PLACE_KINDS),
+      seed: z.number().int().min(0).max(0xffffffff),
+      source: z.string().min(1).max(PLACE_LIMITS.sourceChars),
+      dialogues: z
+        .record(z.string().min(1).max(64), z.string().min(1).max(PLACE_LIMITS.dialogueChars))
+        .refine(
+          (words) => Object.keys(words).length <= PLACE_LIMITS.residents,
+          "too many residents",
+        )
+        .optional(),
+    })
+    .strict(),
+  z
+    .object({
+      ...entrance,
+      kind: z.literal("otherworld"),
+      work: z
+        .object({
+          workId: z.string().regex(WORK_ID),
+          version: z.string().regex(/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/),
+          contentHash: z.custom<WorkRef["contentHash"]>(
+            (value) => typeof value === "string" && /^sha256:[a-f0-9]{64}$/.test(value),
+            "must be an algorithm-tagged SHA-256 hash",
+          ),
+        })
+        .strict(),
+      playId: z.string().regex(PLAY_ID).optional(),
+    })
+    .strict(),
+]);
 
 /** Thick fog reads as mood from above but as a white wall from a side or first-person camera. */
 const PLACE_FOG_MAX = 0.035;
@@ -190,7 +272,7 @@ function settle(
 }
 
 /** The playable scene of a place: the model's residents on the host's ground. */
-export function buildPlace(place: LandPlace, written: SceneGraph): BuiltPlace {
+export function buildPlace(place: WrittenPlace, written: SceneGraph): BuiltPlace {
   const kit = PLACE_KIT[place.kind];
   if (place.kind === "side") {
     const { width, depth } = SIDE_FLOOR;
@@ -286,7 +368,7 @@ function calmSky(sky: SceneGraph["sky"]): SceneGraph["sky"] {
   return sky === null ? null : { ...sky, fogDensity: Math.min(sky.fogDensity, PLACE_FOG_MAX) };
 }
 
-function contract(place: LandPlace, kit: GameplayKitId): NonNullable<SceneGraph["contract"]> {
+function contract(place: WrittenPlace, kit: GameplayKitId): NonNullable<SceneGraph["contract"]> {
   return {
     sceneId: `place-${place.id}`,
     kit,
