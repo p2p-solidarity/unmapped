@@ -30,6 +30,7 @@
     "src/shared/**/*",
     "src/dsl/**/*",
     "src/harness/**/*",
+    "src/service/**/*",
     "electron.vite.config.ts",
     "vitest.config.ts",
     "scripts/**/*"

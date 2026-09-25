@@ -24,7 +24,8 @@
     "contracts:build": "node scripts/build-contracts.mjs && node scripts/build-lineage.mjs",
     "contracts:deploy": "node scripts/deploy-ledger.mjs",
     "ens:setup": "bun scripts/ens-setup.ts",
-    "lineage:market": "bun scripts/lineage-market.ts"
+    "lineage:market": "bun scripts/lineage-market.ts",
+    "service": "bun --tsconfig-override tsconfig.node.json src/service/main.ts"
   },
   "dependencies": {
     "@deepseek-ai/cordis": "^4.0.2",
