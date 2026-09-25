@@ -25,11 +25,27 @@
 | 0:00–0:30 | A 在大地上走一段，一塊新地顯影 | 「這是一個 AI 邊走邊寫的世界。每次發布，整個世界的內容會算成一個 sha256 雜湊——這就是它的身分。問題是：雜湊人記不住，也沒有主人。」 |
 | 0:30–1:15 | 標題 → 卡帶 → 選內建世界，指著名稱那一行 | 「所以每個版本都有一個 ENSv2 名字，例如 `aether-land.unmapped.eth`。名字上只有三筆文字紀錄：哪個世界、哪一版、哪個雜湊。內容本身不上鏈。」 |
 | 1:15–1:50 | 「用 ENS 名稱開啟」→ 輸入名字 → 開到那一版 | 「這不是寫死的：app 用 Universal Resolver 走 ENSv2 的樹，拿到雜湊，再跟本機的卡帶比對，對得上才開。」再輸入一個沒有卡帶紀錄的名字（例如 `nick.eth`），畫面說「這個名稱沒有指向任何卡帶」。 |
-| 1:50–2:50 | 市場：從根世界發行一個改編世界（ENSv2 那邊的畫面，Touch ID） | 「改編一個世界，就是在它的名字底下開一個子名稱。發行那一刻，registry 替這個新世界部署一個自己的子名稱 registry，所以改編的改編可以一直往下長。」現場解析新的子名稱，顯示它指向新世界的代幣與雜湊。 |
+| 1:50–2:50 | 市場：從根世界發行一個改編世界（「世界」→「市場」；簽名見下方「簽名的限制」） | 「改編一個世界，就是在它的名字底下開一個子名稱。發行那一刻，registry 替這個新世界部署一個自己的子名稱 registry，所以改編的改編可以一直往下長。」現場解析新的子名稱，顯示它指向新世界的代幣與雜湊。 |
 | 2:50–3:30 | 指出權利金領取（claim）與名字持有人 | 「名字不是裝飾：交易的權利金付給名字的持有人。registry 只保留兩個角色，名字是解放的 ERC-1155，可以安全轉手；轉手之後，錢就付給新的持有人。」（轉手目前只在模擬驗過——講的時候說「我們在模擬裡跑過」，不要現場做。） |
 | 3:30–4:00 | 回到遊戲 | 「對 AI 生成的內容來說，最難的是出處：誰做的、從哪一版來、改了什麼。ENSv2 的階層正好就是血緣。」 |
 
-操作細節（按鈕、Touch ID、要等多久）以 ENSv2 那邊的 `docs/demo/lineage-market.md` 為準；它還沒寫好之前，1:50 之後改成開 Etherscan 講模擬紀錄。
+操作細節（按鈕、簽名、要等多久）以 ENSv2 那邊的 `docs/demo/lineage-market.md` 為準；它還沒寫好之前，1:50 之後改成開 Etherscan 講模擬紀錄。
+
+### 鏈上現況（ENSv2 session 2026-09-26 回報；E2E 紀錄將放在 `docs/e2e/milestone-lineage-demo/`）
+
+| 項目 | 狀態 |
+| --- | --- |
+| 根世界 `aether-land.unmapped.eth`（卡帶 aether-land 1.2.0） | Sepolia 上真實發行 |
+| 名字的角色：registry 只留 `REGISTRAR`、`SET_PARENT`，持有人只有 `CAN_TRANSFER_ADMIN` | 根 registry 的 `isEmancipated()` 在鏈上讀回為 true |
+| 紀錄（`unwritten.cartridge`／`version`／`hash`／`token`／`auction`）放在 registry 的 Permissioned Resolver，Universal Resolver 任何深度都解析得到 | 真實 |
+| 名字轉手後權利金付給新持有人 | 只在模擬中 |
+| 現場發行改編世界（10 分鐘拍賣）：`bun run lineage:demo launch <label> --parent 0x5e8e39c25cEa96F3ED4d6B03c1fc17213453ae7f --blocks 50` | 指令已備好，由人在台上執行（花 Sepolia gas） |
+
+**可以講的故事**：我們一開始撞到 ENSv2 的 `TransferUnsafeUntilRegistryIsEmancipated`——registry 手上還握著能改指向的角色，名字就不能安全轉手。於是改成每個世界發行時就建好自己的子名稱 registry，registry 只留兩個角色，連我們自己的合約都無法收回或改指向任何名字。
+
+**live 連結**：`web/lineage-auction` 是唯讀的「Lineage Auction House」網頁，直接讀 Sepolia（清算價曲線、出價、池子、家族樹），不需要錢包，可放在任何靜態主機。本機：`python3 -m http.server 4173 --directory web/lineage-auction` → http://localhost:4173。
+
+**簽名的限制（上台前一定要知道）**：Electron 開發版叫不出 Touch ID（WebAuthn 需要簽章過的 build 與 keychain entitlement）。app 內的 passkey 目前只能用 USB 安全金鑰或 DevTools 的虛擬驗證器；「開瀏覽器用 Touch ID 簽、app 轉交結果」正在做，完成前台上不要說「按一下 Touch ID」。
 
 ## 要講清楚、不能講過頭的
 

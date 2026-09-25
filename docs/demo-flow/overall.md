@@ -56,7 +56,7 @@ ETHGlobal 的評審 demo 一般抓 4 分鐘（以現場公告為準）；超時�
 
 ### 第 4 幕：世界的出處在鏈上（40 秒）
 - **做**：打開卡帶清單，指著名稱那一行（例如 `aether-land.unmapped.eth`）。
-- **說**：「每個發布的世界版本都有內容雜湊。我們把名字掛在 ENSv2 上，名字指向這個雜湊；改編的世界是它底下的子名稱。改編世界的代幣用 Uniswap 的連續清算拍賣定價，交易時 v4 hook 抽 1% 往上分給每一代的名字持有人。玩家只要 Touch ID，不需要錢包、不需要 ETH。」
+- **說**：「每個發布的世界版本都有內容雜湊。我們把名字掛在 ENSv2 上，名字指向這個雜湊；改編的世界是它底下的子名稱。改編世界的代幣用 Uniswap 的連續清算拍賣定價，交易時 v4 hook 抽 1% 往上分給每一代的名字持有人。玩家用 passkey 簽名，不需要錢包、不需要 ETH。」（瀏覽器 Touch ID 簽名完成前，不要現場按 Touch ID，見 [track-ens.md](track-ens.md) 的「簽名的限制」。）
 - 細節與實際操作：[track-ens.md](track-ens.md)、[track-uniswap.md](track-uniswap.md)；市場操作手冊在 ENSv2 那邊的 `docs/demo/lineage-market.md`。
 - **說明底線**：鏈可以整個關掉，前三幕完全不需要鏈。
 
