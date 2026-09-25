@@ -7,6 +7,7 @@
 | 總體版 | 總評審、決賽、第一次聽到的人 | 約 4 分鐘 | AI 自動生成 → 走路不等 AI → 朋友的世界連成大陸（CRDT）→ 鏈上出處 | [overall.md](overall.md) |
 | ENS 聚焦版 | ENS：Best Use of ENSv2（$6,000） | 約 4 分鐘 | 世界的名字＝身分；改編＝子名稱；權利金跟著名字走 | [track-ens.md](track-ens.md) |
 | Uniswap 聚焦版 | Uniswap：Best Uniswap Stack Contribution（$6,000） | 約 4 分鐘 | CCA 拍賣定價 → v4 池 → hook 沿血緣分權利金 | [track-uniswap.md](track-uniswap.md) |
+| 投稿影片 | ETHGlobal 投稿（總評審＋ENS＋Uniswap 一支影片），2–4 分鐘、真人講解、不配樂、不加速 | 目標 3:30 | 以上全部濃縮：分段時間碼、要錄的畫面與剪接點、英文講稿、4 張投影片 | [video.md](video.md) |
 
 - 上台前：[setup.md](setup.md)（`.env` 金鑰、兩個視窗、信令伺服器、出狀況時怎麼辦）。
 - 給大家看的圖解：[explainer.html](explainer.html)（AI 怎麼自動生成、CRDT 為什麼不會亂、鏈上放什麼）。
@@ -34,9 +35,9 @@
 | `FEEDBACK.md`（Uniswap 必要） | 完成：[`FEEDBACK.md`](../../FEEDBACK.md) | — |
 | Uniswap Developer Feedback Form | **要人親自填** | 團隊 |
 | README 指到合約與行號（Uniswap 必要） | 進行中 | ENSv2 session |
-| ENS 的 live demo 連結 | 進行中（唯讀鏈上瀏覽頁，或 Etherscan＋影片） | ENSv2 session |
-| 市場畫面實機 E2E（發行、出價、買賣、領權利金） | 進行中 | ENSv2 session |
-| 總體版排練紀錄 | 完成（f98de40，第二段之前）：[`milestone-demo-flow`](../e2e/milestone-demo-flow/result.md)；第 2–4 幕照腳本通過，第 1 幕要先填名稱 | 第二段上線後重跑 |
+| ENS 的 live demo 連結 | 完成：https://unmapped-auction.gimmychang.workers.dev | — |
+| 市場畫面實機 E2E（出價、結算、買入、發放分潤） | 完成：[`milestone-lineage-demo`](../e2e/milestone-lineage-demo/result.md)（真的按 Touch ID 未測） | 上台前排練 |
+| 總體版排練紀錄 | 完成（1a10a9d，改寫前為 f98de40；第二段之前）：[`milestone-demo-flow`](../e2e/milestone-demo-flow/result.md)；第 2–4 幕照腳本通過，第 1 幕要先填名稱 | 第二段上線後重跑 |
 
 ## 第二段上線後要改的地方
 
