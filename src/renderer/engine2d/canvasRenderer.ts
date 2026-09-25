@@ -328,12 +328,13 @@ function drawPlayer(frame: LandFrame, transform: ScreenTransform): void {
   const { player, ctx, atlases, now } = frame;
   const [cx, cy] = toScreen(transform, player.x, player.z);
   const source = ACTOR_ASSETS.player;
-  const directionRow = { south: 0, west: 16, east: 32, north: 48 }[player.facing];
+  // Character sheets are one column per facing and one row per walk frame.
+  const facingColumn = { south: 0, north: 16, west: 32, east: 48 }[player.facing];
   const walkFrame = player.moving ? Math.floor(now / 140) % 4 : 0;
   const animated: SpriteAsset = {
     ...source,
-    sx: walkFrame * 16,
-    sy: directionRow,
+    sx: facingColumn,
+    sy: walkFrame * 16,
   };
   drawSprite(
     ctx,

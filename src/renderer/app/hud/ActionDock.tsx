@@ -1,7 +1,6 @@
 // Bottom dock + the "press E" prompt. The prompt text is resolved by the engine (nearbyPrompt);
 // the dock is pure chrome — every button toggles state that already exists.
 
-import { switchedCamera } from "@renderer/engine/CameraRig";
 import { useEngineStore, useSessionStore } from "@renderer/state";
 import { Button, colors, font, radius, space, Text } from "@renderer/ui";
 import type { JSX } from "react";
@@ -50,7 +49,8 @@ export function ActionDock(): JSX.Element {
   const toggleTweak = useSessionStore((state) => state.toggleTweak);
   const setScreen = useSessionStore((state) => state.setScreen);
   const cameraMode = useEngineStore((state) => state.cameraMode);
-  // Only open land lets the player choose the camera; every other scene's kit holds it.
+  const look = useEngineStore((state) => state.landLook);
+  // Open land has one camera but two looks; every other scene's kit holds its camera.
   const openLand = useEngineStore((state) => state.chunk !== null);
 
   return (
@@ -101,11 +101,11 @@ export function ActionDock(): JSX.Element {
           hotkey="V"
           onClick={() => {
             const engine = useEngineStore.getState();
-            engine.setCameraMode(switchedCamera(engine.cameraMode));
+            engine.setLandLook(engine.landLook === "hd2d" ? "pixel" : "hd2d");
           }}
           style={dockButton}
         >
-          {`Cam: ${cameraMode.toUpperCase()}`}
+          {`Look: ${look === "hd2d" ? "HD-2D" : "16-bit"}`}
         </Button>
       ) : (
         <Button variant="secondary" disabled style={dockButton}>

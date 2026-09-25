@@ -16,7 +16,7 @@ const targets = (await (await fetch(`http://127.0.0.1:${PORT}/json`)).json()) as
   url: string;
   webSocketDebuggerUrl: string;
 }>;
-const page = targets.find((t) => t.type === "page" && t.url.includes("localhost:5173"));
+const page = targets.find((t) => t.type === "page" && /^http:\/\/localhost:\d+\//.test(t.url));
 if (!page) throw new Error(`no page target: ${JSON.stringify(targets.map((t) => t.url))}`);
 const ws = new WebSocket(page.webSocketDebuggerUrl);
 await new Promise((resolve) => ws.addEventListener("open", resolve, { once: true }));

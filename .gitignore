@@ -8,3 +8,4 @@ models/
 *.tsbuildinfo
 .DS_Store
 native/afm-bridge/.build/
+.claude/worktrees/

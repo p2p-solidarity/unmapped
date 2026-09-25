@@ -40,7 +40,7 @@ export const GROUND_ASSETS: Record<Tile, SpriteAsset> = {
 };
 
 export const PROP_ASSETS: Partial<Record<PropKind, SpriteAsset>> = {
-  tree: sprite("prop.tree", "village", 16, 96, 32, 48),
+  tree: sprite("prop.tree", "village", 0, 96, 64, 48),
   rock: sprite("prop.rock", "village", 96, 68),
   flower: sprite("prop.flower", "village", 128, 64),
   mushroom: sprite("prop.mushroom", "village", 144, 64),

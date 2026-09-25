@@ -12,11 +12,6 @@ import type { GameplayKitRules, GameplayRules } from "@shared/gameplay";
 import { landSeedOf } from "@shared/land";
 import type { SceneGraph } from "@shared/world";
 import { type JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import ninjaUrl from "../../assets/cc0/ninja_blue.png";
-import samuraiBlueUrl from "../../assets/cc0/samurai_blue.png";
-import samuraiGreenUrl from "../../assets/cc0/samurai_green.png";
-import floorUrl from "../../assets/cc0/tileset_floor.png";
-import villageUrl from "../../assets/cc0/tileset_village_abandoned.png";
 import { isWallTile, spawnPoint, TILE_TOP } from "../engine/colliders";
 import { sceneForRun } from "../engine/combat/encounter";
 import { behaviorForKit, LEGACY_TPS_KIT, resolveSceneKit } from "../engine/kits/registry";
@@ -24,12 +19,12 @@ import { landTargets } from "../engine/landTargets";
 import { registerPlayerProbe } from "../engine/playerProbe";
 import { nearestTarget, sceneTargets, triggersWithin, triggerTarget } from "../engine/targets";
 import { isSprinting, matchesAction, moveAxis, useKeys } from "../engine/useKeys";
-import type { AtlasId } from "./assetCatalog";
-import { renderLandFrame, type SpriteAtlases } from "./canvasRenderer";
+import { loadAtlases } from "./atlases";
+import type { SpriteAtlases } from "./canvasRenderer";
 import { blockedByProps, cachedTerrain, walkableAt } from "./landModel";
+import { hd2dSurface, type LandSurface, pixelSurface } from "./landSurface";
 import { type StoryView, storyTargets } from "./storyLayer";
 
-const TILE_SIZE = 48;
 const PLAYER_RADIUS = 0.22;
 const MAX_DELTA = 0.05;
 const FPS_INTERVAL = 0.5;
@@ -51,6 +46,8 @@ const canvasStyle = {
   imageRendering: "pixelated",
   background: colors.bg,
 } as const;
+
+const overlayStyle = { ...canvasStyle, background: "transparent", pointerEvents: "none" } as const;
 
 export function isOpenLand2D(scene: SceneGraph, rules: GameplayRules | null): boolean {
   if (rules === null) return true;
@@ -87,7 +84,9 @@ export function LandView2D({
   const teleport = useEngineStore((state) => state.teleport);
   const [atlases, setAtlases] = useState<SpriteAtlases | null>(null);
   const [assetError, setAssetError] = useState<string | null>(null);
+  const look = useEngineStore((state) => state.landLook);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const overlayRef = useRef<HTMLCanvasElement>(null);
   const player = useRef<PlayerState>(initialPlayer(graph));
   const fired = useRef<Set<string>>(new Set());
 
@@ -114,6 +113,11 @@ export function LandView2D({
     (code: string) => {
       if (code === "KeyN") {
         useSessionStore.getState().toggleNotes(true);
+        return;
+      }
+      if (code === "KeyV") {
+        const engine = useEngineStore.getState();
+        engine.setLandLook(engine.landLook === "hd2d" ? "pixel" : "hd2d");
         return;
       }
       if (!matchesAction(code, gameplayRules?.bindings, "interact", INTERACT_KEYS)) return;
@@ -184,19 +188,31 @@ export function LandView2D({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas === null || atlases === null) return;
-    const context = canvas.getContext("2d");
-    if (context === null) return;
+    let surface: LandSurface | null = null;
+    try {
+      surface =
+        look === "hd2d"
+          ? hd2dSurface(canvas, overlayRef.current, atlases)
+          : pixelSurface(canvas, atlases);
+    } catch (error) {
+      // No WebGL here: say so and keep playing on the 16-bit canvas instead of a blank screen.
+      const reason = error instanceof Error ? error.message : String(error);
+      useSessionStore.getState().toast("danger", `HD-2D is unavailable (${reason}); using 16-bit.`);
+      useEngineStore.getState().setLandLook("pixel");
+      return;
+    }
+    if (surface === null) return;
+    const draw = surface;
     let frameId = 0;
     let previous = performance.now();
     let frameCount = 0;
     let fpsElapsed = 0;
     let lastChunk = "";
+    let bounds = { width: 1, height: 1 };
 
     const resize = (): void => {
-      const bounds = canvas.getBoundingClientRect();
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.max(1, Math.round(bounds.width * ratio));
-      canvas.height = Math.max(1, Math.round(bounds.height * ratio));
+      const rect = canvas.getBoundingClientRect();
+      bounds = { width: Math.max(1, rect.width), height: Math.max(1, rect.height) };
     };
     const observer = new ResizeObserver(resize);
     observer.observe(canvas);
@@ -227,17 +243,12 @@ export function LandView2D({
         useEngineStore.getState().interact(triggerTarget(trigger, position.x, position.z));
       }
 
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
-      context.setTransform(ratio, 0, 0, ratio, 0, 0);
-      renderLandFrame({
-        ctx: context,
-        width: canvas.width / ratio,
-        height: canvas.height / ratio,
-        tileSize: TILE_SIZE,
+      draw.draw({
+        width: bounds.width,
+        height: bounds.height,
         scene: state.graph,
         seed: state.landSeed,
         player: position,
-        atlases,
         chunks: state.chunks,
         progress: state.progress,
         notes: state.notes,
@@ -258,14 +269,22 @@ export function LandView2D({
     return () => {
       cancelAnimationFrame(frameId);
       observer.disconnect();
+      draw.dispose();
       useEngineStore.getState().setChunk(null);
       useEngineStore.getState().setNearby(null);
     };
-  }, [atlases, held]);
+  }, [atlases, held, look]);
 
   return (
     <>
-      <canvas ref={canvasRef} style={canvasStyle} aria-label="Unwritten Land 2D open world" />
+      {/* A canvas keeps the context it was first given, so each look gets its own element. */}
+      <canvas
+        key={look}
+        ref={canvasRef}
+        style={canvasStyle}
+        aria-label={look === "hd2d" ? "Unwritten Land, HD-2D view" : "Unwritten Land, 16-bit view"}
+      />
+      {look === "hd2d" ? <canvas ref={overlayRef} style={overlayStyle} /> : null}
       {assetError === null ? null : (
         <div
           role="alert"
@@ -348,27 +367,4 @@ function canStand(
     if (blockedByProps(written.scene.props, ox, oz, px, pz)) return false;
   }
   return true;
-}
-
-async function loadAtlases(): Promise<SpriteAtlases> {
-  const sources: Record<AtlasId, string> = {
-    floor: floorUrl,
-    village: villageUrl,
-    ninja: ninjaUrl,
-    samuraiBlue: samuraiBlueUrl,
-    samuraiGreen: samuraiGreenUrl,
-  };
-  const entries = await Promise.all(
-    Object.entries(sources).map(async ([id, url]) => [id, await loadImage(url)] as const),
-  );
-  return Object.fromEntries(entries) as SpriteAtlases;
-}
-
-function loadImage(url: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error(`Could not load ${url}`));
-    image.src = url;
-  });
 }

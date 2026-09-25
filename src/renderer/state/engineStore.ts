@@ -5,6 +5,18 @@ import type { ChunkCoord } from "@shared/chunks";
 import type { CameraMode, NearbyTarget } from "@shared/events";
 import { create } from "zustand";
 
+/** How open land is drawn: the lit HD-2D diorama or the flat 16-bit canvas. A device preference. */
+export type LandLook = "hd2d" | "pixel";
+const LOOK_KEY = "unwritten.landLook";
+
+function storedLook(): LandLook {
+  try {
+    return window.localStorage.getItem(LOOK_KEY) === "pixel" ? "pixel" : "hd2d";
+  } catch {
+    return "hd2d";
+  }
+}
+
 export interface EngineState {
   nearby: NearbyTarget | null;
   cameraMode: CameraMode;
@@ -22,6 +34,7 @@ export interface EngineState {
   chunk: ChunkCoord | null;
   /** One-shot move request (the door); `seq` bumps so the same spot twice still travels. */
   teleport: { x: number; z: number; seq: number } | null;
+  landLook: LandLook;
 
   setNearby(target: NearbyTarget | null): void;
   setCameraMode(mode: CameraMode): void;
@@ -32,6 +45,7 @@ export interface EngineState {
   setHeldBody(id: string | null): void;
   setChunk(chunk: ChunkCoord | null): void;
   requestTeleport(x: number, z: number): void;
+  setLandLook(look: LandLook): void;
   resetFloor(): void;
 }
 
@@ -46,6 +60,7 @@ export const useEngineStore = create<EngineState>()((set) => ({
   heldBodyId: null,
   chunk: null,
   teleport: null,
+  landLook: storedLook(),
 
   setNearby: (target) =>
     set((state) => (sameTarget(state.nearby, target) ? state : { nearby: target })),
@@ -59,6 +74,14 @@ export const useEngineStore = create<EngineState>()((set) => ({
   setChunk: (chunk) => set({ chunk }),
   requestTeleport: (x, z) =>
     set((state) => ({ teleport: { x, z, seq: (state.teleport?.seq ?? 0) + 1 } })),
+  setLandLook: (landLook) => {
+    try {
+      window.localStorage.setItem(LOOK_KEY, landLook);
+    } catch {
+      // Private windows and blocked storage keep the choice for this session only.
+    }
+    set({ landLook });
+  },
   resetFloor: () =>
     set({ nearby: null, lastInteract: null, openedTreasures: [], heldBodyId: null }),
 }));
