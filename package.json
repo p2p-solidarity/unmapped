@@ -20,7 +20,7 @@
     "eval:afm-provider": "bun --tsconfig-override tsconfig.test.json native/afm-bridge/Eval/provider-run.ts",
     "eval:afm-main": "node scripts/build-afm-bridge.mjs debug && electron-vite build && node scripts/eval-afm-main.mjs",
     "afm:build": "node scripts/build-afm-bridge.mjs debug",
-    "dist": "node scripts/build-afm-bridge.mjs release && electron-vite build && electron-builder",
+    "dist": "node scripts/build-afm-bridge.mjs release && electron-vite build && electron-builder && node scripts/check-dist-secrets.mjs",
     "contracts:build": "node scripts/build-contracts.mjs && node scripts/build-lineage.mjs",
     "contracts:deploy": "node scripts/deploy-ledger.mjs",
     "ens:setup": "bun scripts/ens-setup.ts",
@@ -77,7 +77,9 @@
     },
     "files": [
       "out/**/*",
-      "package.json"
+      "package.json",
+      "!**/.env",
+      "!**/.env.*"
     ],
     "mac": {
       "extraResources": [
