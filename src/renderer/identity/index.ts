@@ -1,5 +1,6 @@
 export { type Bytes, fromBase64, toBase64, toBase64Url } from "./bytes";
 export { decryptBytes, encryptBytes, type KeyLike, SEED_HEADER } from "./crypto";
+export { generateDataKey, unwrapDataKey, wrapDataKey } from "./dataKey";
 export { EnsLookup } from "./EnsLookup";
 export {
   ENS_SEED_KEY,
@@ -9,6 +10,7 @@ export {
   resolveEnsSeed,
 } from "./ens";
 export {
+  addPasskeyWrapping,
   currentKey,
   deriveSaveKey,
   lock,

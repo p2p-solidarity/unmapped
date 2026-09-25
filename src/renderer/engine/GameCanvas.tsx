@@ -7,7 +7,7 @@ import { Physics } from "@react-three/rapier";
 import { useEngineStore, useWorldStore } from "@renderer/state";
 import type { GameplayKitRules, GameplayRules } from "@shared/gameplay";
 import type { SceneGraph } from "@shared/world";
-import { type JSX, type RefObject, Suspense, useMemo, useRef } from "react";
+import { type JSX, type RefObject, Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { Atmosphere } from "./Atmosphere";
 import { CameraRig, defaultRig, type RigState } from "./CameraRig";
@@ -16,8 +16,9 @@ import { Exit } from "./Entities/Exit";
 import { Monster } from "./Entities/Monster";
 import { Npc } from "./Entities/Npc";
 import { Treasure } from "./Entities/Treasure";
+import { FpsKitFeatures } from "./FpsKitFeatures";
 import { Ground } from "./Ground";
-import { LEGACY_TPS_KIT, resolveSceneKit } from "./kits/registry";
+import { behaviorForKit, LEGACY_TPS_KIT, resolveSceneKit } from "./kits/registry";
 import { Platforms } from "./Platforms";
 import { Player } from "./Player";
 import { Props } from "./Props";
@@ -62,7 +63,7 @@ export function GameCanvas(): JSX.Element {
   );
 }
 
-function Stage({
+export function Stage({
   graph,
   gameplayRules,
 }: {
@@ -78,6 +79,11 @@ function Stage({
     const resolved = resolveSceneKit(gameplayRules, graph);
     return resolved.ok ? resolved.value : LEGACY_TPS_KIT;
   }, [gameplayRules, graph]);
+  const behavior = behaviorForKit(kit.id);
+
+  useEffect(() => {
+    useEngineStore.getState().setCameraMode(behavior.camera);
+  }, [behavior.camera]);
 
   if (!seeded.current) {
     seeded.current = true;
@@ -98,11 +104,13 @@ function Stage({
           player={player}
           rig={rig}
           kit={kit}
+          behavior={behavior}
           bindings={gameplayRules?.bindings}
         />
       </Physics>
       <SceneEntities graph={graph} player={player} />
-      <CameraRig player={player} rig={rig} kit={kit} />
+      <CameraRig player={player} rig={rig} kit={kit} bindings={gameplayRules?.bindings} />
+      {behavior.flashlight ? <FpsKitFeatures bindings={gameplayRules?.bindings} /> : null}
       <Proximity graph={graph} player={player} radius={kit.interactDistance} />
       <FpsMeter />
     </>

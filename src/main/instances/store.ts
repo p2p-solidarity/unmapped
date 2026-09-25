@@ -14,7 +14,7 @@ import { INSTANCE_FORMAT_VERSION, SAVE_FORMAT_VERSION } from "@shared/cartridge"
 import { err, fail, ok, type Result, toError } from "@shared/result";
 import { completeScene, transitionScene } from "@shared/sceneTransition";
 import { EMPTY_INVENTORY, type SceneGraph } from "@shared/world";
-import { readCartridgeRevision } from "../cartridges/store";
+import { cartridgeCompatibility, readCartridgeRevision } from "../cartridges/store";
 import { parseKarmaText } from "../worlds/schemas";
 import { instanceDir, isInstanceId, isSaveId, saveDir } from "./paths";
 import { instanceMetaSchema, saveStateSchema } from "./schemas";
@@ -59,6 +59,8 @@ export async function createInstance(
   name: string,
   now: Date = new Date(),
 ): Promise<Result<InstanceRecord>> {
+  const compatibility = cartridgeCompatibility(manifest);
+  if (!compatibility.ok) return compatibility;
   const instanceId = makeInstanceId(name, now);
   const at = now.toISOString();
   const cartridge = refOf(manifest);
@@ -171,6 +173,8 @@ export async function resolveInstance(
   const ref = instance.value.meta.cartridge;
   const cartridge = await readCartridgeRevision(cartridgesDir, ref.cartridgeId, ref.version);
   if (!cartridge.ok) return cartridge;
+  const compatibility = cartridgeCompatibility(cartridge.value.manifest);
+  if (!compatibility.ok) return compatibility;
   if (cartridge.value.manifest.contentHash !== ref.contentHash) {
     return err(
       "instance-cartridge-mismatch",
@@ -188,7 +192,8 @@ export async function resolveInstance(
   return ok({ instance: instance.value, cartridge: cartridge.value });
 }
 
-async function writeSave(
+/** Atomically replaces the active save and stamps instance.json with the same `updatedAt`. */
+export async function writeInstanceSave(
   instancesDir: string,
   resolved: ResolvedInstance,
   save: SaveState,
@@ -250,7 +255,7 @@ export async function transitionInstance(
   if (!target.ok) return target;
   const transitioned = transitionScene(resolved.value.instance.save, from.value, target.value, now);
   if (!transitioned.ok) return transitioned;
-  return writeSave(instancesDir, resolved.value, transitioned.value);
+  return writeInstanceSave(instancesDir, resolved.value, transitioned.value);
 }
 
 /** Ends the cartridge from its terminal scene. The checkpoint stays there, marked completed. */
@@ -266,7 +271,7 @@ export async function completeInstance(
   if (!current.ok) return current;
   const completed = completeScene(resolved.value.instance.save, current.value, now);
   if (!completed.ok) return completed;
-  return writeSave(instancesDir, resolved.value, completed.value);
+  return writeInstanceSave(instancesDir, resolved.value, completed.value);
 }
 
 export async function checkpointInstance(

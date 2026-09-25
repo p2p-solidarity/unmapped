@@ -5,11 +5,15 @@ import type {
   CartridgeManifest,
   CartridgeRevision,
   InstanceMeta,
+  LegacyMigrationReceipt,
   PublishCartridgeInput,
   ResolvedInstance,
+  UpgradeInstanceInput,
   WorkspaceMeta,
+  WorkspacePreview,
   WorkspaceRecord,
 } from "@shared/cartridge";
+import type { DataKeyWrappingRecord } from "@shared/identity";
 import type {
   AppInfo,
   CheckpointInstanceInput,
@@ -64,6 +68,8 @@ const api: SeedApi = {
     remove: (worldId: string) => invoke<Result<void>>(IPC.worlds.remove, worldId),
     exportSeed: (worldId: string) => invoke<Result<SeedExport>>(IPC.worlds.exportSeed, worldId),
     importSeed: () => invoke<Result<WorldMeta>>(IPC.worlds.importSeed),
+    migrate: (worldId: string) =>
+      invoke<Result<LegacyMigrationReceipt>>(IPC.worlds.migrate, worldId),
     onChanged: (listener: (event: WorldChangedEvent) => void) =>
       subscribe<WorldChangedEvent>(IPC.worlds.changed, listener),
   },
@@ -73,6 +79,9 @@ const api: SeedApi = {
       invoke<Result<CartridgeRevision>>(IPC.cartridges.read, cartridgeId, version),
     publish: (input: PublishCartridgeInput) =>
       invoke<Result<CartridgeManifest>>(IPC.cartridges.publish, input),
+    exportPack: (cartridgeId: string, version: string) =>
+      invoke<Result<SeedExport>>(IPC.cartridges.exportPack, cartridgeId, version),
+    importPack: () => invoke<Result<CartridgeManifest>>(IPC.cartridges.importPack),
   },
   instances: {
     list: () => invoke<Result<InstanceMeta[]>>(IPC.instances.list),
@@ -86,6 +95,11 @@ const api: SeedApi = {
       invoke<Result<ResolvedInstance>>(IPC.instances.complete, instanceId),
     checkpoint: (input: CheckpointInstanceInput) =>
       invoke<Result<InstanceMeta>>(IPC.instances.checkpoint, input),
+    upgrade: (input: UpgradeInstanceInput) =>
+      invoke<Result<ResolvedInstance>>(IPC.instances.upgrade, input),
+    exportBackup: (instanceId: string) =>
+      invoke<Result<SeedExport>>(IPC.instances.exportBackup, instanceId),
+    importBackup: () => invoke<Result<ResolvedInstance>>(IPC.instances.importBackup),
   },
   workspaces: {
     list: () => invoke<Result<WorkspaceMeta[]>>(IPC.workspaces.list),
@@ -97,6 +111,8 @@ const api: SeedApi = {
       invoke<Result<WorkspaceMeta>>(IPC.workspaces.writeScene, input),
     writeRules: (input: WriteWorkspaceRulesInput) =>
       invoke<Result<WorkspaceMeta>>(IPC.workspaces.writeRules, input),
+    preview: (workspaceId: string) =>
+      invoke<Result<WorkspacePreview>>(IPC.workspaces.preview, workspaceId),
     publish: (input: PublishWorkspaceInput) =>
       invoke<Result<CartridgeManifest>>(IPC.workspaces.publish, input),
   },
@@ -117,6 +133,9 @@ const api: SeedApi = {
   },
   vault: {
     getKey: () => invoke<Result<string>>(IPC.vault.getKey),
+    getWrappingRecords: () => invoke<Result<DataKeyWrappingRecord[]>>(IPC.vault.getWrappingRecords),
+    putWrappingRecord: (record: DataKeyWrappingRecord) =>
+      invoke<Result<void>>(IPC.vault.putWrappingRecord, record),
   },
   mods: {
     list: () => invoke<Result<ModSummary[]>>(IPC.mods.list),

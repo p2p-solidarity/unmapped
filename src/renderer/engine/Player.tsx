@@ -11,7 +11,6 @@ import {
   useRapier,
 } from "@react-three/rapier";
 import { useCharacterStore, useEngineStore, usePlatformStore } from "@renderer/state";
-import type { CameraMode } from "@shared/events";
 import type { GameplayKitRules, GameplayRules } from "@shared/gameplay";
 import type { SceneGraph } from "@shared/world";
 import { type JSX, type RefObject, useCallback, useEffect, useMemo, useRef } from "react";
@@ -27,6 +26,7 @@ import {
   TILE_TOP,
   type Vec3,
 } from "./colliders";
+import type { GameplayKitBehavior } from "./kits/registry";
 import { allPlatformBodies, bouncePadAt } from "./platformBoxes";
 import { isActionPressed, isSprinting, matchesAction, moveAxis, useKeys } from "./useKeys";
 
@@ -39,24 +39,19 @@ const JUMP_KEYS = new Set(["Space"]);
 /** Slack when deciding whether an upward move was blocked by a ceiling. */
 const CEILING_EPSILON = 1e-4;
 
-const CAMERA_ORDER: readonly CameraMode[] = ["orbit", "fps", "side", "topdown"];
-
-export function nextCameraMode(mode: CameraMode): CameraMode {
-  const index = CAMERA_ORDER.indexOf(mode);
-  return CAMERA_ORDER[(index + 1) % CAMERA_ORDER.length] ?? "orbit";
-}
-
 export function Player({
   graph,
   player,
   rig,
   kit,
+  behavior,
   bindings,
 }: {
   graph: SceneGraph;
   player: RefObject<THREE.Vector3>;
   rig: RefObject<RigState>;
   kit: GameplayKitRules;
+  behavior: GameplayKitBehavior;
   bindings?: GameplayRules["bindings"];
 }): JSX.Element {
   const { world } = useRapier();
@@ -104,7 +99,6 @@ export function Player({
         if (engine.nearby !== null) engine.interact(engine.nearby);
         return;
       }
-      if (code === "KeyC") engine.setCameraMode(nextCameraMode(engine.cameraMode));
     },
     [bindings],
   );
@@ -153,18 +147,25 @@ export function Player({
     isMovingRef.current = isMoving;
 
     const speed =
-      !engine.inputLocked && isSprinting(held, bindings) ? kit.sprintSpeed : kit.moveSpeed;
+      behavior.sprint && !engine.inputLocked && isSprinting(held, bindings)
+        ? kit.sprintSpeed
+        : kit.moveSpeed;
     const yaw = engine.cameraMode === "iso" ? ISO_YAW : rig.current.yaw;
 
     const forwardX = -Math.sin(yaw);
     const forwardZ = -Math.cos(yaw);
     const rightX = Math.cos(yaw);
     const rightZ = -Math.sin(yaw);
-    const sideView = engine.cameraMode === "side";
-    const dx = sideView
-      ? axis.strafe * speed * step
-      : (forwardX * axis.forward + rightX * axis.strafe) * speed * step;
-    const dz = sideView ? 0 : (forwardZ * axis.forward + rightZ * axis.strafe) * speed * step;
+    const dx =
+      behavior.movement === "side" || behavior.movement === "topdown"
+        ? axis.strafe * speed * step
+        : (forwardX * axis.forward + rightX * axis.strafe) * speed * step;
+    const dz =
+      behavior.movement === "side"
+        ? 0
+        : behavior.movement === "topdown"
+          ? -axis.forward * speed * step
+          : (forwardZ * axis.forward + rightZ * axis.strafe) * speed * step;
 
     // Smooth model yaw rotation toward movement direction
     if (isMoving && (dx !== 0 || dz !== 0)) {
@@ -220,6 +221,7 @@ export function Player({
     // Handle spacebar jump
     if (
       isActionPressed(held, bindings, "jump", JUMP_KEYS) &&
+      behavior.jump &&
       !engine.inputLocked &&
       isGrounded &&
       verticalVelocity.current <= 0.2

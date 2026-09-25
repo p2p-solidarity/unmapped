@@ -2,6 +2,7 @@
 // ARCHIVE slides a panel in on the right; Esc closes it back to the menu.
 
 import worldForgeArt from "@renderer/assets/generated/world-forge.png";
+import { RoomPanel } from "@renderer/net";
 import { useSessionStore } from "@renderer/state";
 import { Button } from "@renderer/ui";
 import { useState } from "react";
@@ -13,7 +14,7 @@ import { SystemPanel } from "./title/SystemPanel";
 import { useLibrary } from "./title/useLibrary";
 import { openInstance } from "./useInstanceLoader";
 
-type PanelId = "cartridges" | "system" | "archive";
+type PanelId = "join" | "cartridges" | "system" | "archive";
 
 interface MenuItem {
   id: "continue" | "new" | PanelId;
@@ -33,6 +34,7 @@ export function WorldsScreen() {
   const items: MenuItem[] = [
     { id: "continue", label: "Continue", disabled: latest === null },
     { id: "new", label: "New Game", disabled: false },
+    { id: "join", label: "Join", disabled: false },
     { id: "cartridges", label: "Cartridges", disabled: false },
     { id: "system", label: "System", disabled: false },
   ];
@@ -75,6 +77,7 @@ export function WorldsScreen() {
     },
     panel === null,
   );
+  useKeys({ Escape: () => setPanel(null) }, panel === "join");
 
   const closePanel = (): void => setPanel(null);
 
@@ -124,6 +127,7 @@ export function WorldsScreen() {
               <CartridgesPanel data={data} refresh={refresh} onClose={closePanel} />
             ) : null}
             {panel === "system" ? <SystemPanel onClose={closePanel} /> : null}
+            {panel === "join" ? <RoomPanel /> : null}
             {panel === "archive" ? (
               <ArchivePanel data={data} refresh={refresh} onClose={closePanel} />
             ) : null}

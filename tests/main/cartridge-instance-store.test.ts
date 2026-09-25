@@ -1,7 +1,18 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { publishCartridgeRevision, readCartridgeRevision } from "@main/cartridges/store";
+import { packCartridge, unpackCartridge } from "@main/cartridges/pack";
+import {
+  cartridgeCompatibility,
+  listCartridgeRevisions,
+  publishCartridgeRevision,
+  readCartridgeRevision,
+} from "@main/cartridges/store";
+import {
+  packInstanceBackup,
+  restoreInstanceBackup,
+  unpackInstanceBackup,
+} from "@main/instances/backup";
 import {
   checkpointInstance,
   completeInstance,
@@ -9,7 +20,9 @@ import {
   resolveInstance,
   transitionInstance,
 } from "@main/instances/store";
+import { upgradeInstance } from "@main/instances/upgrade";
 import type { PublishCartridgeInput } from "@shared/cartridge";
+import { strToU8, unzipSync, zipSync } from "fflate";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { testGenesis } from "./fixtures";
 
@@ -67,12 +80,13 @@ function scene(
 function cartridgeInput(
   entrance = scene("entrance", "tps_exploration@1", "vault"),
   ending = scene("ending", "tps_exploration@1", null),
+  version = "1.0.0",
 ): PublishCartridgeInput {
   return {
     manifest: {
       formatVersion: 1,
       cartridgeId: "salt-marsh",
-      version: "1.0.0",
+      version,
       name: "Salt Marsh",
       description: "A small test cartridge.",
       author: "kidney",
@@ -125,6 +139,28 @@ function cartridgeInput(
   };
 }
 
+function duplicateFirstCentralEntry(zip: Uint8Array): Uint8Array {
+  const view = new DataView(zip.buffer, zip.byteOffset, zip.byteLength);
+  let end = zip.length - 22;
+  while (end >= 0 && view.getUint32(end, true) !== 0x06054b50) end -= 1;
+  if (end < 0) throw new Error("test ZIP has no end record");
+  const central = view.getUint32(end + 16, true);
+  const entryBytes =
+    46 +
+    view.getUint16(central + 28, true) +
+    view.getUint16(central + 30, true) +
+    view.getUint16(central + 32, true);
+  const copy = new Uint8Array(zip.length + entryBytes);
+  copy.set(zip.subarray(0, end), 0);
+  copy.set(zip.subarray(central, central + entryBytes), end);
+  copy.set(zip.subarray(end), end + entryBytes);
+  const next = new DataView(copy.buffer);
+  next.setUint16(end + entryBytes + 8, view.getUint16(end + 8, true) + 1, true);
+  next.setUint16(end + entryBytes + 10, view.getUint16(end + 10, true) + 1, true);
+  next.setUint32(end + entryBytes + 12, view.getUint32(end + 12, true) + entryBytes, true);
+  return copy;
+}
+
 describe("immutable cartridge revisions", () => {
   it("publishes, verifies, and idempotently reuses the same revision", async () => {
     const first = unwrap(await publishCartridgeRevision(cartridgesDir, cartridgeInput()));
@@ -142,6 +178,21 @@ describe("immutable cartridge revisions", () => {
 
     const manifestPath = join(cartridgesDir, "salt-marsh", "1.0.0", "manifest.json");
     expect(JSON.parse(await readFile(manifestPath, "utf8")).contentHash).toBe(first.contentHash);
+  });
+
+  it("lists intact incompatible revisions but refuses to run them", async () => {
+    const input = cartridgeInput();
+    input.manifest.engineApiVersion = 2;
+    const manifest = unwrap(await publishCartridgeRevision(cartridgesDir, input));
+
+    expect(unwrap(await listCartridgeRevisions(cartridgesDir))).toEqual([manifest]);
+    const compatibility = cartridgeCompatibility(manifest);
+    expect(compatibility.ok).toBe(false);
+    if (!compatibility.ok) expect(compatibility.error.code).toBe("cartridge-engine-unsupported");
+
+    const instance = await createInstance(instancesDir, manifest, "Unsupported run");
+    expect(instance.ok).toBe(false);
+    if (!instance.ok) expect(instance.error.code).toBe("cartridge-engine-unsupported");
   });
 
   it("rejects different bytes at an existing cartridge id and version", async () => {
@@ -181,6 +232,119 @@ describe("immutable cartridge revisions", () => {
     const result = await publishCartridgeRevision(cartridgesDir, invalid);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe("cartridge-route-invalid");
+  });
+
+  it("rejects an offline prerequisite that no scene can grant", async () => {
+    const entrance = scene("entrance", "tps_exploration@1", "vault").replace(
+      '[], [], "carry"',
+      '["missing_flag"], [], "carry"',
+    );
+    const result = await publishCartridgeRevision(cartridgesDir, cartridgeInput(entrance));
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe("cartridge-prerequisite-invalid");
+  });
+});
+
+describe("portable cartridge and save archives", () => {
+  it("keeps cartridge exports content-only and verifies their exact bytes", async () => {
+    const manifest = unwrap(await publishCartridgeRevision(cartridgesDir, cartridgeInput()));
+    const revision = unwrap(await readCartridgeRevision(cartridgesDir, "salt-marsh", "1.0.0"));
+    const packed = unwrap(packCartridge(revision));
+    expect(Object.keys(unzipSync(packed)).sort()).toEqual([
+      "manifest.json",
+      "rules.oui",
+      "scenes/ending.oui",
+      "scenes/entrance.oui",
+      "scenes/vault.oui",
+    ]);
+    expect(unwrap(unpackCartridge(packed)).manifest.contentHash).toBe(manifest.contentHash);
+
+    const extra = zipSync({
+      "manifest.json": strToU8("{}"),
+      "../save.json": strToU8("personal"),
+    });
+    const unsafe = unpackCartridge(extra);
+    expect(unsafe.ok).toBe(false);
+    if (!unsafe.ok) expect(unsafe.error.code).toBe("cartridge-pack-unsafe");
+
+    const duplicate = unpackCartridge(duplicateFirstCentralEntry(packed));
+    expect(duplicate.ok).toBe(false);
+    if (!duplicate.ok) expect(duplicate.error.code).toBe("cartridge-pack-duplicate");
+
+    const unsafeDirectory = unpackCartridge(
+      zipSync({ ...unzipSync(packed), "../": new Uint8Array() }),
+    );
+    expect(unsafeDirectory.ok).toBe(false);
+    if (!unsafeDirectory.ok) expect(unsafeDirectory.error.code).toBe("cartridge-pack-unsafe");
+  });
+
+  it("restores save-only backups only when the exact cartridge is installed", async () => {
+    const manifest = unwrap(await publishCartridgeRevision(cartridgesDir, cartridgeInput()));
+    const instance = unwrap(await createInstance(instancesDir, manifest, "Portable run"));
+    const packed = unwrap(await packInstanceBackup(instancesDir, instance.meta.instanceId));
+    expect(Object.keys(unzipSync(packed)).sort()).toEqual([
+      "instance.json",
+      "saves/default/karma.jsonl",
+      "saves/default/save.json",
+    ]);
+    const record = unwrap(unpackInstanceBackup(packed));
+
+    const withExtraSlot = unzipSync(packed);
+    withExtraSlot["saves/other/save.json"] = strToU8("{}");
+    withExtraSlot["saves/other/karma.jsonl"] = strToU8("");
+    const extraSlot = unpackInstanceBackup(zipSync(withExtraSlot));
+    expect(extraSlot.ok).toBe(false);
+    if (!extraSlot.ok) expect(extraSlot.error.code).toBe("backup-unknown-file");
+
+    const duplicate = unpackInstanceBackup(duplicateFirstCentralEntry(packed));
+    expect(duplicate.ok).toBe(false);
+    if (!duplicate.ok) expect(duplicate.error.code).toBe("backup-duplicate");
+
+    const extraDirectory = unpackInstanceBackup(
+      zipSync({ ...unzipSync(packed), "saves/other/": new Uint8Array() }),
+    );
+    expect(extraDirectory.ok).toBe(false);
+    if (!extraDirectory.ok) expect(extraDirectory.error.code).toBe("backup-unknown-file");
+
+    const missing = await restoreInstanceBackup(
+      join(root, "empty-cartridges"),
+      instancesDir,
+      record,
+    );
+    expect(missing.ok).toBe(false);
+    if (!missing.ok) expect(missing.error.code).toBe("cartridge-missing");
+  });
+
+  it("validates the saved scene and preserves a suffix when a maximum-length id is taken", async () => {
+    const manifest = unwrap(await publishCartridgeRevision(cartridgesDir, cartridgeInput()));
+    const instance = unwrap(await createInstance(instancesDir, manifest, "Portable run"));
+    const packed = unwrap(await packInstanceBackup(instancesDir, instance.meta.instanceId));
+    const record = unwrap(unpackInstanceBackup(packed));
+
+    const badScene = await restoreInstanceBackup(cartridgesDir, join(root, "bad"), {
+      ...record,
+      save: { ...record.save, currentSceneId: "missing" },
+    });
+    expect(badScene.ok).toBe(false);
+    if (!badScene.ok) expect(badScene.error.code).toBe("backup-scene-missing");
+
+    const longId = `i${"d".repeat(95)}`;
+    await mkdir(join(instancesDir, longId), { recursive: true });
+    const restored = unwrap(
+      await restoreInstanceBackup(
+        cartridgesDir,
+        instancesDir,
+        {
+          ...record,
+          meta: { ...record.meta, instanceId: longId },
+          save: { ...record.save, instanceId: longId },
+        },
+        new Date("2026-09-26T12:00:00Z"),
+      ),
+    );
+    expect(restored.instance.meta.instanceId).not.toBe(longId);
+    expect(restored.instance.meta.instanceId).toMatch(/-r[a-z0-9]+$/);
+    expect(restored.instance.meta.instanceId).toHaveLength(96);
   });
 });
 
@@ -307,5 +471,50 @@ describe("pinned instances", () => {
     expect(reloaded.instance.save.inventory.materials).toEqual(["brass"]);
     expect(reloaded.instance.karma).toHaveLength(1);
     expect(reloaded.cartridge.manifest.contentHash).toBe(manifest.contentHash);
+  });
+
+  it("snapshots the save before explicitly re-pinning to a compatible revision", async () => {
+    const first = unwrap(await publishCartridgeRevision(cartridgesDir, cartridgeInput()));
+    const instance = unwrap(await createInstance(instancesDir, first, "Upgrade run"));
+    const secondInput = cartridgeInput(undefined, undefined, "1.1.0");
+    secondInput.manifest.description = "Compatible update";
+    const second = unwrap(await publishCartridgeRevision(cartridgesDir, secondInput));
+
+    const upgraded = unwrap(
+      await upgradeInstance(
+        cartridgesDir,
+        instancesDir,
+        instance.meta.instanceId,
+        "1.1.0",
+        new Date("2026-09-26T10:00:00Z"),
+      ),
+    );
+    expect(upgraded.instance.meta.cartridge.contentHash).toBe(second.contentHash);
+    expect(upgraded.instance.save.cartridge.version).toBe("1.1.0");
+    expect(await readdir(join(instancesDir, instance.meta.instanceId, "backups"))).toEqual([
+      "1.0.0-2026-09-26T10-00-00-000Z",
+    ]);
+  });
+
+  it("rejects an explicit downgrade before changing the pinned revision", async () => {
+    const older = unwrap(await publishCartridgeRevision(cartridgesDir, cartridgeInput()));
+    const newerInput = cartridgeInput(undefined, undefined, "2.0.0");
+    newerInput.manifest.description = "Newer revision";
+    const newer = unwrap(await publishCartridgeRevision(cartridgesDir, newerInput));
+    const instance = unwrap(await createInstance(instancesDir, newer, "Newer run"));
+
+    const downgrade = await upgradeInstance(
+      cartridgesDir,
+      instancesDir,
+      instance.meta.instanceId,
+      older.version,
+    );
+    expect(downgrade.ok).toBe(false);
+    if (!downgrade.ok) expect(downgrade.error.code).toBe("upgrade-version-not-newer");
+
+    const reloaded = unwrap(
+      await resolveInstance(cartridgesDir, instancesDir, instance.meta.instanceId),
+    );
+    expect(reloaded.instance.meta.cartridge.contentHash).toBe(newer.contentHash);
   });
 });

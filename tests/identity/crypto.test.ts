@@ -66,4 +66,17 @@ describe("encryptBytes / decryptBytes", () => {
     if (opened.ok) return;
     expect(opened.error.code).toBe("decrypt-failed");
   });
+
+  it("opens legacy ciphertext with the pre-Data-Key credential key", async () => {
+    const legacyKey = await localKey();
+    const dataKey = await localKey();
+    const sealed = await encryptBytes(legacyKey, payload);
+    const opened = await decryptBytes(
+      { method: "prf", credentialId: "legacy", key: dataKey, legacyKey },
+      sealed,
+    );
+    expect(opened.ok).toBe(true);
+    if (opened.ok)
+      expect(new TextDecoder().decode(opened.value)).toBe(new TextDecoder().decode(payload));
+  });
 });

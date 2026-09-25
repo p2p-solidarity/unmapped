@@ -137,6 +137,9 @@
   min-height: 0;
   width: min(720px, 100%);
   justify-self: end;
+  padding: 24px 28px;
+  background: rgba(8, 8, 10, 0.78);
+  backdrop-filter: blur(10px);
 }
 
 /* ── Cartridges ────────────────────────────────────────────────────────── */
@@ -222,6 +225,11 @@
   gap: 28px;
   height: 100%;
   max-width: 1080px;
+}
+
+/* Form-heavy screens dim the art evenly so tiles and text stay readable. */
+.g-shell:has(.forge, .ws) .g-shell__shade {
+  background: rgba(8, 8, 10, 0.72);
 }
 
 .forge-steps {

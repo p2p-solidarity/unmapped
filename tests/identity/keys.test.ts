@@ -1,4 +1,10 @@
-import { deriveSaveKey, HKDF_INFO, SECRET_BYTES } from "@renderer/identity/keys";
+import {
+  addPasskeyWrapping,
+  deriveSaveKey,
+  HKDF_INFO,
+  lock,
+  SECRET_BYTES,
+} from "@renderer/identity/keys";
 import { describe, expect, it } from "vitest";
 
 function secret(fill: number): Uint8Array<ArrayBuffer> {
@@ -44,5 +50,12 @@ describe("deriveSaveKey", () => {
 
   it("pins the HKDF info string", () => {
     expect(HKDF_INFO).toBe("aether-spire/save");
+  });
+
+  it("requires the current Data Key before linking another passkey", async () => {
+    lock();
+    const result = await addPasskeyWrapping();
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe("data-key-locked");
   });
 });

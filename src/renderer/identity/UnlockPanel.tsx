@@ -4,7 +4,7 @@
 import { Button, ErrorBlock, Surface, space, Text } from "@renderer/ui";
 import { errored, idle, type Loadable, loading, type Result, ready } from "@shared/result";
 import { useCallback, useState } from "react";
-import { type UnlockedKey, unlock, unlockWithKeychain } from "./keys";
+import { addPasskeyWrapping, type UnlockedKey, unlock, unlockWithKeychain } from "./keys";
 import { prfAvailability } from "./prf";
 
 const PASSKEY_CAPTION =
@@ -19,6 +19,7 @@ function maskCredential(credentialId: string): string {
 
 export function UnlockPanel({ onUnlocked }: { onUnlocked(): void }) {
   const [state, setState] = useState<Loadable<UnlockedKey>>(idle());
+  const [linkState, setLinkState] = useState<Loadable<string>>(idle());
   const passkeyAvailable = prfAvailability() === null;
 
   const run = useCallback(async (attempt: () => Promise<Result<UnlockedKey>>) => {
@@ -29,6 +30,12 @@ export function UnlockPanel({ onUnlocked }: { onUnlocked(): void }) {
 
   const withPasskey = useCallback(() => void run(unlock), [run]);
   const withKeychain = useCallback(() => void run(unlockWithKeychain), [run]);
+  const addPasskey = useCallback(() => {
+    setLinkState(loading());
+    void addPasskeyWrapping().then((result) => {
+      setLinkState(result.ok ? ready(result.value) : errored(result.error));
+    });
+  }, []);
 
   if (state.status === "loading") {
     return (
@@ -82,6 +89,23 @@ export function UnlockPanel({ onUnlocked }: { onUnlocked(): void }) {
             credential {maskCredential(credentialId)}
           </Text>
         )}
+        {passkeyAvailable ? (
+          <Button
+            variant="secondary"
+            fullWidth
+            disabled={linkState.status === "loading"}
+            onClick={addPasskey}
+          >
+            {linkState.status === "loading" ? "Waiting for passkey…" : "Add another passkey"}
+          </Button>
+        ) : null}
+        {linkState.status === "ready" ? (
+          <Text variant="caption" tone="muted" mono>
+            Added credential {maskCredential(linkState.value)}
+          </Text>
+        ) : linkState.status === "error" ? (
+          <ErrorBlock error={linkState.error} />
+        ) : null}
         <Button variant="primary" fullWidth onClick={onUnlocked} hotkey="↵">
           Continue
         </Button>

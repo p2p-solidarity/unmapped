@@ -7,9 +7,10 @@
 
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEngineStore } from "@renderer/state";
-import type { GameplayKitRules } from "@shared/gameplay";
+import type { GameplayKitRules, GameplayRules } from "@shared/gameplay";
 import { type JSX, type RefObject, useEffect, useRef } from "react";
 import * as THREE from "three";
+import { matchesAction } from "./useKeys";
 
 export interface RigState {
   /** Rotation about +Y. The player moves relative to this. */
@@ -45,10 +46,12 @@ export function CameraRig({
   player,
   rig,
   kit,
+  bindings,
 }: {
   player: RefObject<THREE.Vector3>;
   rig: RefObject<RigState>;
   kit: GameplayKitRules;
+  bindings?: GameplayRules["bindings"];
 }): JSX.Element | null {
   const camera = useThree((state) => state.camera);
   const canvas = useThree((state) => state.gl.domElement);
@@ -67,9 +70,20 @@ export function CameraRig({
     };
 
     const onPointerDown = (event: PointerEvent): void => {
-      if (event.button !== 0) return;
-      if (useEngineStore.getState().inputLocked) return;
-      if (useEngineStore.getState().cameraMode !== "orbit") return;
+      const engine = useEngineStore.getState();
+      if (engine.inputLocked) return;
+      if (engine.cameraMode === "fps" && document.pointerLockElement === canvas) {
+        const code = event.button === 0 ? "MouseLeft" : event.button === 2 ? "MouseRight" : null;
+        if (
+          code !== null &&
+          matchesAction(code, bindings, "inspect", ["MouseLeft"]) &&
+          engine.nearby !== null
+        ) {
+          engine.interact(engine.nearby);
+        }
+        return;
+      }
+      if (event.button !== 0 || engine.cameraMode !== "orbit") return;
       dragging.current = true;
     };
 
@@ -124,7 +138,7 @@ export function CameraRig({
       window.removeEventListener("pointerup", onPointerUp);
       document.removeEventListener("mousemove", onLookMove);
     };
-  }, [canvas, kit.lookSensitivity, rig]);
+  }, [bindings, canvas, kit.lookSensitivity, rig]);
 
   useEffect(() => {
     if (camera instanceof THREE.PerspectiveCamera) {

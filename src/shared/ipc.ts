@@ -6,11 +6,15 @@ import type {
   CartridgeRevision,
   InstanceMeta,
   InstanceProgressInput,
+  LegacyMigrationReceipt,
   PublishCartridgeInput,
   ResolvedInstance,
+  UpgradeInstanceInput,
   WorkspaceMeta,
+  WorkspacePreview,
   WorkspaceRecord,
 } from "./cartridge";
+import type { DataKeyWrappingRecord } from "./identity";
 import type { ChatEvent, ChatRequest, InferenceConfig, ProbeResult, SidecarStatus } from "./llm";
 import type { ModBundle, ModSummary } from "./mods";
 import type { Result } from "./result";
@@ -25,12 +29,15 @@ export const IPC = {
     remove: "worlds:remove",
     exportSeed: "worlds:export-seed",
     importSeed: "worlds:import-seed",
+    migrate: "worlds:migrate",
     changed: "worlds:changed",
   },
   cartridges: {
     list: "cartridges:list",
     read: "cartridges:read",
     publish: "cartridges:publish",
+    exportPack: "cartridges:export-pack",
+    importPack: "cartridges:import-pack",
   },
   instances: {
     list: "instances:list",
@@ -39,6 +46,9 @@ export const IPC = {
     transition: "instances:transition",
     complete: "instances:complete",
     checkpoint: "instances:checkpoint",
+    upgrade: "instances:upgrade",
+    exportBackup: "instances:export-backup",
+    importBackup: "instances:import-backup",
   },
   workspaces: {
     list: "workspaces:list",
@@ -46,6 +56,7 @@ export const IPC = {
     read: "workspaces:read",
     writeScene: "workspaces:write-scene",
     writeRules: "workspaces:write-rules",
+    preview: "workspaces:preview",
     publish: "workspaces:publish",
   },
   inference: {
@@ -62,6 +73,8 @@ export const IPC = {
   },
   vault: {
     getKey: "vault:get-key",
+    getWrappingRecords: "vault:get-wrapping-records",
+    putWrappingRecord: "vault:put-wrapping-record",
   },
   mods: {
     list: "mods:list",
@@ -163,12 +176,22 @@ export interface SeedApi {
     exportSeed(worldId: string): Promise<Result<SeedExport>>;
     /** Opens a file picker for a `.seed` and imports it as a new world. */
     importSeed(): Promise<Result<WorldMeta>>;
+    /**
+     * Preserves a legacy world as an immutable cartridge (its floor becomes one terminal scene)
+     * plus a pinned instance carrying its progress. The source directory is never deleted; a
+     * `migrated.json` receipt makes the call idempotent.
+     */
+    migrate(worldId: string): Promise<Result<LegacyMigrationReceipt>>;
     onChanged(listener: (event: WorldChangedEvent) => void): () => void;
   };
   cartridges: {
     list(): Promise<Result<CartridgeManifest[]>>;
     read(cartridgeId: string, version: string): Promise<Result<CartridgeRevision>>;
     publish(input: PublishCartridgeInput): Promise<Result<CartridgeManifest>>;
+    /** Writes a content-only `.cartridge` (manifest, rules, scenes) to a user-chosen path. */
+    exportPack(cartridgeId: string, version: string): Promise<Result<SeedExport>>;
+    /** Picks a `.cartridge`, verifies its hash and installs it; same bytes twice is a no-op. */
+    importPack(): Promise<Result<CartridgeManifest>>;
   };
   instances: {
     list(): Promise<Result<InstanceMeta[]>>;
@@ -178,6 +201,12 @@ export interface SeedApi {
     /** Ends the cartridge from its terminal scene; the checkpoint stays in that scene. */
     complete(instanceId: string): Promise<Result<ResolvedInstance>>;
     checkpoint(input: CheckpointInstanceInput): Promise<Result<InstanceMeta>>;
+    /** Re-pins to another installed version of the same cartridge after snapshotting the save. */
+    upgrade(input: UpgradeInstanceInput): Promise<Result<ResolvedInstance>>;
+    /** Writes a `.spire-backup` (instance + active save, never cartridge content). */
+    exportBackup(instanceId: string): Promise<Result<SeedExport>>;
+    /** Restores a `.spire-backup`; fails with `cartridge-missing` unless the exact revision is installed. */
+    importBackup(): Promise<Result<ResolvedInstance>>;
   };
   workspaces: {
     list(): Promise<Result<WorkspaceMeta[]>>;
@@ -185,6 +214,7 @@ export interface SeedApi {
     read(workspaceId: string): Promise<Result<WorkspaceRecord>>;
     writeScene(input: WriteWorkspaceSceneInput): Promise<Result<WorkspaceMeta>>;
     writeRules(input: WriteWorkspaceRulesInput): Promise<Result<WorkspaceMeta>>;
+    preview(workspaceId: string): Promise<Result<WorkspacePreview>>;
     publish(input: PublishWorkspaceInput): Promise<Result<CartridgeManifest>>;
   };
   inference: {
@@ -203,6 +233,9 @@ export interface SeedApi {
   vault: {
     /** 32 random bytes (base64) persisted with Electron safeStorage. Fallback when PRF is unavailable. */
     getKey(): Promise<Result<string>>;
+    getWrappingRecords(): Promise<Result<DataKeyWrappingRecord[]>>;
+    /** Adds or replaces one credential's wrapping record; other records are never touched. */
+    putWrappingRecord(record: DataKeyWrappingRecord): Promise<Result<void>>;
   };
   mods: {
     /** Installed mods under `<userData>/mods/<name>/mod.yml`, manifest-validated. */

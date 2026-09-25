@@ -4,12 +4,13 @@ import { parseRules, parseScene } from "@dsl/index";
 import type {
   CartridgeFileIntegrity,
   CartridgeManifest,
-  CartridgeManifestCore,
   CartridgeRevision,
   PublishCartridgeInput,
 } from "@shared/cartridge";
+import { ENGINE_API_VERSION, SAVE_SCHEMA_VERSION } from "@shared/cartridge";
+import type { SceneContract } from "@shared/gameplay";
 import { err, fail, ok, type Result, toError } from "@shared/result";
-import { cartridgeContentHash, fileIntegrity } from "./integrity";
+import { cartridgeContentHash, fileIntegrity, manifestCore } from "./integrity";
 import {
   cartridgeDir,
   cartridgeRevisionDir,
@@ -18,6 +19,7 @@ import {
   isCartridgeVersion,
   isSceneId,
 } from "./paths";
+import { reachableScenes } from "./routes";
 import { cartridgeManifestCoreSchema, cartridgeManifestSchema } from "./schemas";
 
 const MANIFEST_FILE = "manifest.json";
@@ -50,6 +52,24 @@ function validateIdentity(cartridgeId: string, version: string): Result<void> {
       "cartridge-version-invalid",
       `Invalid cartridge version: ${version}`,
       "Use a strict SemVer such as 1.0.0.",
+    );
+  }
+  return ok(undefined);
+}
+
+export function cartridgeCompatibility(manifest: CartridgeManifest): Result<void> {
+  if (manifest.engineApiVersion > ENGINE_API_VERSION) {
+    return err(
+      "cartridge-engine-unsupported",
+      `${manifest.cartridgeId}@${manifest.version} needs engine API ${manifest.engineApiVersion}; this build has ${ENGINE_API_VERSION}.`,
+      "Update Aether Spire to play this cartridge.",
+    );
+  }
+  if (manifest.saveSchemaVersion !== SAVE_SCHEMA_VERSION) {
+    return err(
+      "cartridge-save-unsupported",
+      `${manifest.cartridgeId}@${manifest.version} needs save schema ${manifest.saveSchemaVersion}; this build has ${SAVE_SCHEMA_VERSION}.`,
+      "Use a compatible Aether Spire build to play this cartridge.",
     );
   }
   return ok(undefined);
@@ -127,6 +147,7 @@ function prepare(input: PublishCartridgeInput): Result<CartridgeRevision> {
   const scenes: Record<string, string> = {};
   const targets = new Map<string, string[]>();
   const terminalScenes = new Set<string>();
+  const contracts = new Map<string, SceneContract>();
   for (const id of ids) {
     const source = normaliseSource(input.scenes[id] ?? "");
     const scene = parseScene(source);
@@ -145,6 +166,7 @@ function prepare(input: PublishCartridgeInput): Result<CartridgeRevision> {
         "A published scene needs one stable contract matching its manifest id.",
       );
     }
+    contracts.set(id, contract);
     if (!manifest.requiredKits.includes(contract.kit) || !declaredRuleKits.has(contract.kit)) {
       return err(
         "cartridge-kit-missing",
@@ -187,7 +209,25 @@ function prepare(input: PublishCartridgeInput): Result<CartridgeRevision> {
     if (contract.terminal) terminalScenes.add(id);
     scenes[id] = source;
   }
-  if (!canReachTerminal(manifest.entrySceneId, targets, terminalScenes)) {
+  const grantedFlags = new Set([...contracts.values()].flatMap((contract) => contract.grantsFlags));
+  for (const [id, contract] of contracts) {
+    if (contract.requiresItems.length > 0) {
+      return err(
+        "cartridge-prerequisite-invalid",
+        `${id}.oui requires items that this cartridge cannot grant deterministically: ${contract.requiresItems.join(", ")}.`,
+        "Use declarative save flags for offline progression until item grants are part of the cartridge format.",
+      );
+    }
+    const missing = contract.requiresFlags.filter((flag) => !grantedFlags.has(flag));
+    if (missing.length > 0) {
+      return err(
+        "cartridge-prerequisite-invalid",
+        `${id}.oui requires flags no scene grants: ${missing.join(", ")}.`,
+        "Grant every required flag from a reachable earlier scene.",
+      );
+    }
+  }
+  if (!canReachTerminal(manifest.entrySceneId, targets, terminalScenes, contracts)) {
     return err(
       "cartridge-route-invalid",
       "No terminal scene is reachable from the entry scene.",
@@ -204,22 +244,9 @@ function canReachTerminal(
   entry: string,
   targets: ReadonlyMap<string, string[]>,
   terminals: ReadonlySet<string>,
+  contracts: ReadonlyMap<string, SceneContract>,
 ): boolean {
-  const pending = [entry];
-  const seen = new Set<string>();
-  while (pending.length > 0) {
-    const id = pending.pop();
-    if (id === undefined || seen.has(id)) continue;
-    if (terminals.has(id)) return true;
-    seen.add(id);
-    pending.push(...(targets.get(id) ?? []));
-  }
-  return false;
-}
-
-function manifestCore(manifest: CartridgeManifest): CartridgeManifestCore {
-  const { contentHash: _contentHash, files: _files, ...core } = manifest;
-  return core;
+  return [...reachableScenes(entry, targets, contracts)].some((id) => terminals.has(id));
 }
 
 async function writeRevision(

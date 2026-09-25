@@ -23,6 +23,8 @@ export interface LockInput {
   floorFailed: boolean;
   /** True while the cartridge's finale overlay is shown. */
   endingOpen: boolean;
+  /** True while a model-authored change waits for an explicit player decision. */
+  proposalOpen: boolean;
   editorOpen: boolean;
   customizing: boolean;
   sceneReady: boolean;
@@ -38,6 +40,7 @@ export function derivedLock(input: LockInput): boolean {
     input.busy !== null ||
     input.floorFailed ||
     input.endingOpen ||
+    input.proposalOpen ||
     input.editorOpen ||
     input.customizing ||
     !input.sceneReady
@@ -52,6 +55,7 @@ export function useInputLock(): void {
   const busy = useSessionStore((state) => state.busy);
   const floorFailed = useSessionStore((state) => state.floorFailure !== null);
   const endingOpen = useSessionStore((state) => state.ending !== null);
+  const proposalOpen = useSessionStore((state) => state.changeProposals.length > 0);
   const editorOpen = usePlatformStore((state) => state.editorOpen);
   const customizing = useCharacterStore((state) => state.isCustomizing);
   const sceneReady = useWorldStore((state) => state.scene.status === "ready");
@@ -64,6 +68,7 @@ export function useInputLock(): void {
     busy,
     floorFailed,
     endingOpen,
+    proposalOpen,
     editorOpen,
     customizing,
     sceneReady,

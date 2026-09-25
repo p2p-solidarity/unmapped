@@ -4,6 +4,7 @@
 //   prompt  →  model  →  normalizeOutput  →  parse*  →  SceneGraph / DialogueGraph / ItemSpec
 //                                    └─ on DslError → repairPrompt → model (at most twice)
 
+export { DEFAULT_RULES_SOURCE } from "./defaultRules";
 export { sceneGrammar } from "./grammar";
 export {
   DIALOGUE_COMPONENT_NAMES,

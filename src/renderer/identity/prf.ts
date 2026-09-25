@@ -139,9 +139,9 @@ export async function registerPasskey(): Promise<Result<PasskeyRegistration>> {
     return err("prf-failed", "The authenticator returned no passkey.", CANCEL_HINT);
   }
   const credentialId = toBase64Url(new Uint8Array(credential.rawId));
-  storeCredentialId(credentialId);
   const extensions = credential.getClientExtensionResults();
-  return ok({ credentialId, prfEnabled: extensions.prf?.enabled === true });
+  const prfEnabled = extensions.prf?.enabled === true;
+  return ok({ credentialId, prfEnabled });
 }
 
 /** Evaluates PRF for `credentialId` and returns the raw 32-byte secret (never persisted). */

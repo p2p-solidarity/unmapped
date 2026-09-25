@@ -46,5 +46,15 @@ export interface EffectOutcome {
   message: string;
 }
 
+export interface ChangeProposal {
+  proposalId: string;
+  effect: GameEffect;
+  scope: "save" | "workspace";
+  preview: string;
+  compatible: boolean;
+  reasons: string[];
+  createdAt: string;
+}
+
 /** World flags live in meta.json and are readable by prompts/tools (quest state, switches). */
 export type WorldFlags = Record<string, string | number | boolean>;

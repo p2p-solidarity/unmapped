@@ -9,7 +9,7 @@
 import { parseScene, serializeScene } from "@dsl";
 import { useSessionStore } from "@renderer/state/sessionStore";
 import { useWorldStore } from "@renderer/state/worldStore";
-import type { EffectOutcome, GameEffect, WorldFlags } from "@shared/effects";
+import type { ChangeProposal, EffectOutcome, GameEffect, WorldFlags } from "@shared/effects";
 import type { AppError } from "@shared/result";
 import { ready } from "@shared/result";
 import type { SceneGraph } from "@shared/world";
@@ -164,15 +164,102 @@ async function apply(effect: GameEffect): Promise<EffectOutcome> {
   }
 }
 
+const SAVE_EFFECTS = new Set<GameEffect["kind"]>([
+  "mutate_world",
+  "grant_materials",
+  "consume_materials",
+  "grant_item",
+  "set_flag",
+]);
+
+export function effectScope(effect: GameEffect): ChangeProposal["scope"] {
+  return SAVE_EFFECTS.has(effect.kind) ? "save" : "workspace";
+}
+
+function preview(effect: GameEffect): string {
+  switch (effect.kind) {
+    case "set_flag":
+      return `Set save flag ${effect.key} to ${String(effect.value)}`;
+    case "mutate_world":
+      return "Change the saved atmosphere overlay";
+    case "grant_materials":
+      return `Add materials: ${effect.materials.join(", ")}`;
+    case "consume_materials":
+      return `Consume materials: ${effect.materials.join(", ")}`;
+    case "grant_item":
+      return `Add item: ${effect.item.name}`;
+    default:
+      return `${effect.kind} changes cartridge structure`;
+  }
+}
+
+const pending = new Map<string, GameEffect>();
+
+/** Proposals the session no longer lists (the player left Play) can never be approved. */
+function pruneStale(): void {
+  const listed = new Set(useSessionStore.getState().changeProposals.map((p) => p.proposalId));
+  for (const id of pending.keys()) if (!listed.has(id)) pending.delete(id);
+}
+
+export async function approveChangeProposal(proposalId: string): Promise<EffectOutcome> {
+  pruneStale();
+  const effect = pending.get(proposalId);
+  if (effect === undefined) return failed("that proposal is no longer pending");
+  const before = useWorldStore.getState();
+  const outcome = await apply(effect);
+  if (outcome.ok) {
+    pending.delete(proposalId);
+    useSessionStore.getState().removeChangeProposal(proposalId);
+  } else {
+    // Applying save-owned effects is optimistic because the checkpoint API reads the live store.
+    // A failed write must put that same save back exactly, otherwise retrying can duplicate items
+    // or leave an atmosphere/flag visible that never reached disk.
+    useWorldStore.setState({
+      meta: before.meta,
+      scene: before.scene,
+      inventory: before.inventory,
+      mutationSeq: before.mutationSeq,
+    });
+  }
+  return outcome;
+}
+
+export function rejectChangeProposal(proposalId: string): void {
+  pending.delete(proposalId);
+  useSessionStore.getState().removeChangeProposal(proposalId);
+}
+
+export function clearChangeProposals(): void {
+  pending.clear();
+  useSessionStore.getState().clearChangeProposals();
+}
+
 /** The function handed to `ctx.effects.provider`. */
 export function createEffectProvider(): (effect: GameEffect) => Promise<EffectOutcome> {
   return async (effect: GameEffect): Promise<EffectOutcome> => {
-    try {
-      return await apply(effect);
-    } catch (error) {
-      return failed(
-        `the world refused that change: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
+    // Narration changes nothing durable (it is a toast), so it needs no approval gate.
+    if (effect.kind === "narrate") return apply(effect);
+    pruneStale();
+    const scope = effectScope(effect);
+    const proposalId = crypto.randomUUID();
+    const compatible = scope === "save";
+    const proposal: ChangeProposal = {
+      proposalId,
+      effect,
+      scope,
+      preview: preview(effect),
+      compatible,
+      reasons: compatible
+        ? []
+        : ["Structural changes are authored in a Remix workspace and published as a new revision."],
+      createdAt: new Date().toISOString(),
+    };
+    useSessionStore.getState().addChangeProposal(proposal);
+    if (!compatible) return failed(`${proposal.preview}. ${proposal.reasons[0]}`);
+    pending.set(proposalId, effect);
+    // `ok` means the proposal was filed, not that the change happened: the player decides.
+    return done(
+      `proposed, not applied: "${proposal.preview}" waits for the player's approval. Do not describe it as done and do not resubmit it.`,
+    );
   };
 }

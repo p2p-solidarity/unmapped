@@ -13,7 +13,7 @@ const RIGHT = new Set(["KeyD", "ArrowRight"]);
 const SPRINT = new Set(["ShiftLeft", "ShiftRight"]);
 
 /** Keys we swallow so the surrounding app chrome never scrolls under the canvas. */
-const SWALLOWED = new Set([...FORWARD, ...BACKWARD, ...LEFT, ...RIGHT, "Space", "KeyE", "KeyC"]);
+const SWALLOWED = new Set([...FORWARD, ...BACKWARD, ...LEFT, ...RIGHT, "Space", "KeyE", "KeyF"]);
 
 export interface MoveAxis {
   /** +1 = away from the camera. */

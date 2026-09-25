@@ -1,12 +1,12 @@
 // Bottom dock + the "press E" prompt. The prompt text is resolved by the engine (nearbyPrompt);
 // the dock is pure chrome — every button toggles state that already exists.
 
-import { nextCameraMode } from "@renderer/engine/Player";
 import {
   useCharacterStore,
   useEngineStore,
   usePlatformStore,
   useSessionStore,
+  useWorldStore,
 } from "@renderer/state";
 import { Button, colors, font, radius, space, Text } from "@renderer/ui";
 import type { JSX } from "react";
@@ -57,7 +57,7 @@ export function ActionDock(): JSX.Element {
   const toggleConsole = useSessionStore((state) => state.toggleConsole);
   const setScreen = useSessionStore((state) => state.setScreen);
   const cameraMode = useEngineStore((state) => state.cameraMode);
-  const setCameraMode = useEngineStore((state) => state.setCameraMode);
+  const publishedRun = useWorldStore((state) => state.origin?.kind === "instance");
 
   return (
     <div
@@ -85,21 +85,23 @@ export function ActionDock(): JSX.Element {
       <Button variant="secondary" onClick={() => setIsCustomizing(true)} style={dockButton}>
         Avatar Class / 職業
       </Button>
-      <Button variant="primary" onClick={() => toggleEditor()} style={dockButton}>
-        {draftCount === 0
-          ? "Platform Editor / 平台編輯"
-          : `Platform Editor · ${draftCount} draft${draftCount === 1 ? "" : "s"}`}
+      <Button
+        variant="primary"
+        disabled={publishedRun}
+        onClick={() => toggleEditor()}
+        style={dockButton}
+      >
+        {publishedRun
+          ? "Remix to edit platforms"
+          : draftCount === 0
+            ? "Platform Editor / 平台編輯"
+            : `Platform Editor · ${draftCount} draft${draftCount === 1 ? "" : "s"}`}
       </Button>
       <Button variant="secondary" onClick={() => toggleConsole()} hotkey="F12" style={dockButton}>
         Console / 終端
       </Button>
-      <Button
-        variant="secondary"
-        onClick={() => setCameraMode(nextCameraMode(cameraMode))}
-        hotkey="C"
-        style={dockButton}
-      >
-        {`Cam: ${cameraMode.toUpperCase()}`}
+      <Button variant="secondary" disabled style={dockButton}>
+        {`Cam: ${cameraMode.toUpperCase()} · scene locked`}
       </Button>
     </div>
   );

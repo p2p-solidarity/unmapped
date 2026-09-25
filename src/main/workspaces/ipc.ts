@@ -11,6 +11,7 @@ import {
   writeWorkspaceRules,
   writeWorkspaceScene,
 } from "./store";
+import { validateWorkspace } from "./validation";
 
 const workspaceIdSchema = z.string().regex(/^[a-z0-9][a-z0-9-]{0,95}$/);
 const cartridgeIdSchema = z.string().regex(/^[a-z0-9][a-z0-9-]{0,79}$/);
@@ -63,6 +64,12 @@ export function registerWorkspacesIpc(ctx: MainContext): void {
   handle(IPC.workspaces.writeRules, z.tuple([writeRulesSchema]), ([input]) =>
     writeWorkspaceRules(ctx.workspacesDir, input.workspaceId, input.source),
   );
+  handle(IPC.workspaces.preview, z.tuple([workspaceIdSchema]), async ([workspaceId]) => {
+    const workspace = await readWorkspace(ctx.workspacesDir, workspaceId);
+    return workspace.ok
+      ? { ok: true as const, value: validateWorkspace(workspace.value) }
+      : workspace;
+  });
   handle(IPC.workspaces.publish, z.tuple([publishSchema]), ([input]) =>
     publishWorkspace(ctx.workspacesDir, ctx.cartridgesDir, input.workspaceId, input.version),
   );

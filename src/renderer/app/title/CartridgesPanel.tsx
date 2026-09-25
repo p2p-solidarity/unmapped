@@ -3,7 +3,14 @@
 
 import { useSessionStore } from "@renderer/state";
 import { Button, StatePanel, Text, TextField } from "@renderer/ui";
-import type { CartridgeManifest, InstanceMeta, WorkspaceMeta } from "@shared/cartridge";
+import {
+  type CartridgeManifest,
+  compareCartridgeVersions,
+  ENGINE_API_VERSION,
+  type InstanceMeta,
+  SAVE_SCHEMA_VERSION,
+  type WorkspaceMeta,
+} from "@shared/cartridge";
 import type { Loadable } from "@shared/result";
 import { useState } from "react";
 import { cycle, useKeys } from "../shell/useKeys";
@@ -54,13 +61,30 @@ function entryTitle(entry: Entry): string {
   return entry.workspace.name;
 }
 
+function compatibilityLabel(manifest: CartridgeManifest): string {
+  if (manifest.engineApiVersion > ENGINE_API_VERSION) {
+    return `incompatible · needs engine ${manifest.engineApiVersion}`;
+  }
+  if (manifest.saveSchemaVersion !== SAVE_SCHEMA_VERSION) {
+    return `incompatible · needs save schema ${manifest.saveSchemaVersion}`;
+  }
+  return `compatible · ${manifest.requiredKits.join(", ")}`;
+}
+
+function isCompatible(manifest: CartridgeManifest): boolean {
+  return (
+    manifest.engineApiVersion <= ENGINE_API_VERSION &&
+    manifest.saveSchemaVersion === SAVE_SCHEMA_VERSION
+  );
+}
+
 interface CartridgesPanelProps {
   data: Loadable<LibraryData>;
   refresh(): Promise<void>;
   onClose(): void;
 }
 
-export function CartridgesPanel({ data, onClose }: CartridgesPanelProps) {
+export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps) {
   const toast = useSessionStore((state) => state.toast);
   const openWorkspace = useSessionStore((state) => state.openWorkspace);
   const [cursor, setCursor] = useState(0);
@@ -69,6 +93,24 @@ export function CartridgesPanel({ data, onClose }: CartridgesPanelProps) {
 
   const list = data.status === "ready" ? entries(data.value) : [];
   const selected = list[Math.min(cursor, list.length - 1)];
+  const library = data.status === "ready" ? data.value : null;
+  const matchingRuns =
+    selected?.kind === "cartridge" && library !== null
+      ? library.instances.filter(
+          (instance) => instance.cartridge.contentHash === selected.manifest.contentHash,
+        )
+      : [];
+  const upgradeTarget =
+    selected?.kind === "save" && library !== null
+      ? (library.cartridges
+          .filter(
+            (manifest) =>
+              manifest.cartridgeId === selected.instance.cartridge.cartridgeId &&
+              isCompatible(manifest) &&
+              compareCartridgeVersions(manifest.version, selected.instance.cartridge.version) > 0,
+          )
+          .sort((a, b) => compareCartridgeVersions(b.version, a.version))[0] ?? null)
+      : null;
 
   const newRun = (manifest: CartridgeManifest): void => {
     setBusy(true);
@@ -119,6 +161,68 @@ export function CartridgesPanel({ data, onClose }: CartridgesPanelProps) {
       if (!result.ok) return toast("danger", result.error.message);
       openWorkspace(result.value.meta.workspaceId);
     })();
+  };
+
+  const exportSelected = (): void => {
+    if (selected === undefined) return;
+    setBusy(true);
+    void (async () => {
+      const result =
+        selected.kind === "cartridge"
+          ? await window.seed.cartridges.exportPack(
+              selected.manifest.cartridgeId,
+              selected.manifest.version,
+            )
+          : selected.kind === "save"
+            ? await window.seed.instances.exportBackup(selected.instance.instanceId)
+            : null;
+      setBusy(false);
+      if (result === null) return;
+      if (!result.ok) {
+        if (result.error.code !== "cancelled") toast("danger", result.error.message);
+        return;
+      }
+      toast("success", `Exported to ${result.value.path}`);
+    })();
+  };
+
+  const importCartridge = (): void => {
+    setBusy(true);
+    void window.seed.cartridges.importPack().then(async (result) => {
+      setBusy(false);
+      if (!result.ok) {
+        if (result.error.code !== "cancelled") toast("danger", result.error.message);
+        return;
+      }
+      toast("success", `Imported ${result.value.cartridgeId}@${result.value.version}`);
+      await refresh();
+    });
+  };
+
+  const importBackup = (): void => {
+    setBusy(true);
+    void window.seed.instances.importBackup().then(async (result) => {
+      setBusy(false);
+      if (!result.ok) {
+        if (result.error.code !== "cancelled") toast("danger", result.error.message);
+        return;
+      }
+      toast("success", `Restored ${result.value.instance.meta.name}`);
+      await refresh();
+    });
+  };
+
+  const upgrade = (): void => {
+    if (selected?.kind !== "save" || upgradeTarget === null) return;
+    setBusy(true);
+    void window.seed.instances
+      .upgrade({ instanceId: selected.instance.instanceId, version: upgradeTarget.version })
+      .then(async (result) => {
+        setBusy(false);
+        if (!result.ok) return toast("danger", result.error.message);
+        toast("success", `Upgraded to ${result.value.instance.meta.cartridge.version}`);
+        await refresh();
+      });
   };
 
   useKeys({
@@ -174,6 +278,17 @@ export function CartridgesPanel({ data, onClose }: CartridgesPanelProps) {
                 {selected.manifest.author} · {selected.manifest.cartridgeId}@
                 {selected.manifest.version}
               </span>
+              <span className="g-meta">{compatibilityLabel(selected.manifest)}</span>
+              <span className="g-meta">
+                {selected.manifest.lineage === null
+                  ? "original revision"
+                  : `${selected.manifest.lineage.kind} of ${selected.manifest.lineage.parent.cartridgeId}@${selected.manifest.lineage.parent.version}`}
+              </span>
+              <span className="g-meta">
+                {matchingRuns.length === 0
+                  ? "No runs for this exact revision"
+                  : `${matchingRuns.length} run${matchingRuns.length === 1 ? "" : "s"}: ${matchingRuns.map((run) => run.name).join(", ")}`}
+              </span>
             </>
           ) : null}
           {selected.kind === "save" ? (
@@ -192,7 +307,9 @@ export function CartridgesPanel({ data, onClose }: CartridgesPanelProps) {
             <div className="row-actions">
               <Button
                 variant="primary"
-                disabled={busy}
+                disabled={
+                  busy || (selected.kind === "cartridge" && !isCompatible(selected.manifest))
+                }
                 hotkey="⏎"
                 onClick={() => confirm(selected)}
               >
@@ -205,6 +322,16 @@ export function CartridgesPanel({ data, onClose }: CartridgesPanelProps) {
               {selected.kind === "cartridge" ? (
                 <Button disabled={busy} hotkey="R" onClick={() => startRemix(selected)}>
                   Remix
+                </Button>
+              ) : null}
+              {selected.kind !== "draft" ? (
+                <Button variant="ghost" disabled={busy} onClick={exportSelected}>
+                  {selected.kind === "cartridge" ? "Export .cartridge" : "Backup save"}
+                </Button>
+              ) : null}
+              {selected.kind === "save" && upgradeTarget !== null ? (
+                <Button disabled={busy} onClick={upgrade}>
+                  Upgrade to {upgradeTarget.version}
                 </Button>
               ) : null}
             </div>
@@ -243,6 +370,14 @@ export function CartridgesPanel({ data, onClose }: CartridgesPanelProps) {
           )}
         </div>
       )}
+      <div className="row-actions">
+        <Button variant="ghost" disabled={busy} onClick={importCartridge}>
+          Import .cartridge
+        </Button>
+        <Button variant="ghost" disabled={busy} onClick={importBackup}>
+          Restore backup
+        </Button>
+      </div>
     </>
   );
 }

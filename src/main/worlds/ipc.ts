@@ -5,6 +5,7 @@ import { IPC } from "@shared/ipc";
 import { z } from "zod";
 import type { MainContext } from "../context";
 import { handle } from "../handle";
+import { migrateLegacyWorld } from "./migrate";
 import { createWorldInputSchema, worldFileSchema, worldIdSchema } from "./schemas";
 import { createWorld, listWorlds, readWorldFile, removeWorld, writeWorldFile } from "./store";
 import { startWorldsWatcher } from "./watcher";
@@ -30,6 +31,10 @@ export function registerWorldsIpc(ctx: MainContext): void {
 
   handle(IPC.worlds.remove, z.tuple([worldIdSchema]), ([worldId]) =>
     removeWorld(ctx.worldsDir, worldId),
+  );
+
+  handle(IPC.worlds.migrate, z.tuple([worldIdSchema]), ([worldId]) =>
+    migrateLegacyWorld(ctx, worldId),
   );
 
   startWorldsWatcher(ctx);

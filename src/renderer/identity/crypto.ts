@@ -23,6 +23,10 @@ function cryptoKey(key: KeyLike): CryptoKey {
   return "key" in key ? key.key : key;
 }
 
+function decryptionKeys(key: KeyLike): CryptoKey[] {
+  return "key" in key ? [key.key, key.legacyKey] : [key];
+}
+
 export async function encryptBytes(key: KeyLike, bytes: Bytes): Promise<Bytes> {
   const iv = new Uint8Array(IV_BYTES);
   crypto.getRandomValues(iv);
@@ -47,10 +51,13 @@ export async function decryptBytes(key: KeyLike, bytes: Bytes): Promise<Result<B
   }
   const iv = bytes.subarray(HEADER.length, SEED_PREFIX_BYTES);
   const cipher = bytes.subarray(SEED_PREFIX_BYTES);
-  try {
-    const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, cryptoKey(key), cipher);
-    return ok(new Uint8Array(plain));
-  } catch {
-    return err("decrypt-failed", "AES-GCM authentication failed.", DECRYPT_HINT);
+  for (const candidate of decryptionKeys(key)) {
+    try {
+      const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, candidate, cipher);
+      return ok(new Uint8Array(plain));
+    } catch {
+      // A pre-Data-Key ASP1 payload uses the credential-derived legacy key; try it next.
+    }
   }
+  return err("decrypt-failed", "AES-GCM authentication failed.", DECRYPT_HINT);
 }

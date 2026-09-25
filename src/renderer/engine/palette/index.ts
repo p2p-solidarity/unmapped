@@ -125,6 +125,8 @@ export const ENTITY_PALETTE = {
   exitRing: "#8fe6ff",
   exitCore: "#e8fbff",
   triggerDebug: "#ff5c7a",
+  /** Warm beam of the FPS kit's flashlight. */
+  flashlight: "#fff3d6",
   /** Glowing lip along the top of a baked platform. */
   platformEdge: "#00f0ff",
   /** Bounce pads: the launch colour, on the lip and on the crystal. */

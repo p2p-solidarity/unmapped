@@ -1,5 +1,6 @@
 // Screen routing + transient UI state for the running session.
 
+import type { ChangeProposal } from "@shared/effects";
 import type { AppError, Loadable } from "@shared/result";
 import { idle } from "@shared/result";
 import type { DialogueGraph, ItemSpec } from "@shared/world";
@@ -50,6 +51,7 @@ export interface SessionState {
   /** Peers present in that room. Only meaningful while `roomCode !== null`. */
   peerCount: number;
   activeWorkspaceId: string | null;
+  changeProposals: ChangeProposal[];
 
   setScreen(screen: Screen): void;
   setEnding(ending: CartridgeEnding | null): void;
@@ -68,6 +70,9 @@ export interface SessionState {
   setRoomCode(code: string | null): void;
   setPeerCount(count: number): void;
   openWorkspace(workspaceId: string): void;
+  addChangeProposal(proposal: ChangeProposal): void;
+  removeChangeProposal(proposalId: string): void;
+  clearChangeProposals(): void;
 }
 
 let toastSeq = 0;
@@ -87,9 +92,12 @@ export const useSessionStore = create<SessionState>()((set) => ({
   roomCode: null,
   peerCount: 0,
   activeWorkspaceId: null,
+  changeProposals: [],
 
   // Leaving the play screen drops the finale overlay with it.
-  setScreen: (screen) => set(screen === "play" ? { screen } : { screen, ending: null }),
+  // Leaving Play drops the finale overlay and any unapproved proposals with it.
+  setScreen: (screen) =>
+    set(screen === "play" ? { screen } : { screen, ending: null, changeProposals: [] }),
   setEnding: (ending) => set({ ending }),
   toggleConsole: (open) => set((state) => ({ consoleOpen: open ?? !state.consoleOpen })),
   openDialogue: (npcId) => set({ dialogueNpcId: npcId, dialogue: { status: "loading" } }),
@@ -108,4 +116,13 @@ export const useSessionStore = create<SessionState>()((set) => ({
   setRoomCode: (roomCode) => set(roomCode === null ? { roomCode, peerCount: 0 } : { roomCode }),
   setPeerCount: (peerCount) => set({ peerCount: Math.max(0, Math.trunc(peerCount)) }),
   openWorkspace: (activeWorkspaceId) => set({ activeWorkspaceId, screen: "workspace" }),
+  addChangeProposal: (proposal) =>
+    set((state) => ({ changeProposals: [...state.changeProposals, proposal] })),
+  removeChangeProposal: (proposalId) =>
+    set((state) => ({
+      changeProposals: state.changeProposals.filter(
+        (proposal) => proposal.proposalId !== proposalId,
+      ),
+    })),
+  clearChangeProposals: () => set({ changeProposals: [] }),
 }));

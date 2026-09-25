@@ -68,6 +68,7 @@ function lock(overrides: Partial<LockInput> = {}): LockInput {
     busy: null,
     floorFailed: false,
     endingOpen: false,
+    proposalOpen: false,
     editorOpen: false,
     customizing: false,
     sceneReady: true,
@@ -92,6 +93,7 @@ describe("derivedLock", () => {
     expect(derivedLock(lock({ altarOpen: true }))).toBe(true);
     expect(derivedLock(lock({ editorOpen: true }))).toBe(true);
     expect(derivedLock(lock({ customizing: true }))).toBe(true);
+    expect(derivedLock(lock({ proposalOpen: true }))).toBe(true);
   });
 
   it("locks while a floor is being written and while its failure is on screen", () => {

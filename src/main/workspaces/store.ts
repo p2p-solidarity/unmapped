@@ -15,6 +15,7 @@ import { isCartridgeId, isCartridgeVersion, isSceneId } from "../cartridges/path
 import { publishCartridgeRevision } from "../cartridges/store";
 import { isWorkspaceId, workspaceDir, workspaceScenePath } from "./paths";
 import { workspaceMetaSchema } from "./schemas";
+import { validateWorkspace } from "./validation";
 
 const WORKSPACE_FILE = "workspace.json";
 const RULES_FILE = "rules.oui";
@@ -200,6 +201,15 @@ export async function publishWorkspace(
   if (!isCartridgeVersion(version)) return err("cartridge-version-invalid", "Use strict SemVer.");
   const workspace = await readWorkspace(workspacesDir, id);
   if (!workspace.ok) return workspace;
+  const preview = validateWorkspace(workspace.value);
+  if (!preview.valid) {
+    const messages = preview.checks.flatMap((check) => check.messages);
+    return err(
+      "workspace-validation-failed",
+      messages[0] ?? "The workspace is not valid for publishing.",
+      "Run Validate & Preview and fix every failed check before publishing.",
+    );
+  }
   const { meta, rules, scenes } = workspace.value;
   return publishCartridgeRevision(cartridgesDir, {
     manifest: {

@@ -1,5 +1,5 @@
 import { parseRules, parseScene } from "@dsl/index";
-import { resolveSceneKit } from "@renderer/engine/kits/registry";
+import { behaviorForKit, resolveSceneKit } from "@renderer/engine/kits/registry";
 import { useEngineStore, useSessionStore, useWorldStore } from "@renderer/state";
 import type { InstanceMeta, ResolvedInstance } from "@shared/cartridge";
 import { err, ok, type Result, ready } from "@shared/result";
@@ -47,13 +47,7 @@ export function hydrateInstance(resolved: ResolvedInstance): Result<InstanceMeta
     inventory: instance.save.inventory,
     gameplayRules: rules.value,
   });
-  const camera = {
-    "tps_exploration@1": "orbit",
-    "fps_puzzle@1": "fps",
-    "platformer_2_5d@1": "side",
-    "topdown_puzzle@1": "topdown",
-  } as const;
-  useEngineStore.getState().setCameraMode(camera[kit.value.id]);
+  useEngineStore.getState().setCameraMode(behaviorForKit(kit.value.id).camera);
   useEngineStore.getState().resetFloor();
   return ok(instance.meta);
 }

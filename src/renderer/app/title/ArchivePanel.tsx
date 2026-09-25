@@ -46,6 +46,16 @@ export function ArchivePanel({ data, refresh, onClose }: ArchivePanelProps) {
     await refresh();
   };
 
+  const migrate = async (id: string): Promise<void> => {
+    const result = await window.seed.worlds.migrate(id);
+    if (!result.ok) return toast("danger", result.error.message);
+    toast(
+      "success",
+      `Migrated to ${result.value.cartridge.cartridgeId}@${result.value.cartridge.version}`,
+    );
+    await refresh();
+  };
+
   return (
     <>
       <h2 className="g-heading">Archive</h2>
@@ -63,6 +73,9 @@ export function ArchivePanel({ data, refresh, onClose }: ArchivePanelProps) {
                   <Button onClick={() => void openWorld(world.id)}>Play</Button>
                   <Button variant="ghost" onClick={() => void exportSeed(world.id)}>
                     Export .seed
+                  </Button>
+                  <Button variant="ghost" onClick={() => void migrate(world.id)}>
+                    Migrate
                   </Button>
                   {confirmId === world.id ? (
                     <Button variant="destructive" onClick={() => void remove(world.id)}>

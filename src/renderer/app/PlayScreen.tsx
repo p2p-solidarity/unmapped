@@ -7,6 +7,7 @@ import { useSessionStore, useWorldStore } from "@renderer/state";
 import { Button, colors, ErrorBlock, StatePanel, Surface, space, Text, zIndex } from "@renderer/ui";
 import type { ReactNode } from "react";
 import { useFloorAdvance } from "./advanceFloor";
+import { ChangeProposalPanel } from "./ChangeProposalPanel";
 import { CharacterSelectModal } from "./CharacterSelectModal";
 import { Console } from "./Console";
 import { Hud } from "./Hud";
@@ -63,6 +64,7 @@ export function PlayScreen() {
       <CharacterSelectModal />
       <DialogueCard />
       <AltarPanel />
+      <ChangeProposalPanel />
       {consoleOpen ? <Console /> : null}
 
       {scene.status === "ready" ? null : (

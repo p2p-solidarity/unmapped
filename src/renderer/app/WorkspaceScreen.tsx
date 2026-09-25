@@ -1,7 +1,8 @@
 import worldForgeArt from "@renderer/assets/generated/world-forge.png";
+import { ScenePreviewCanvas } from "@renderer/engine";
 import { useSessionStore } from "@renderer/state";
-import { Button, StatePanel, TextField } from "@renderer/ui";
-import type { WorkspaceRecord } from "@shared/cartridge";
+import { Button, StatePanel, Text, TextField } from "@renderer/ui";
+import type { WorkspacePreview, WorkspaceRecord } from "@shared/cartridge";
 import { errored, idle, type Loadable, loading, ready } from "@shared/result";
 import { useCallback, useEffect, useState } from "react";
 import { GameShell } from "./shell/GameShell";
@@ -18,6 +19,7 @@ export function WorkspaceScreen() {
   const [source, setSource] = useState("");
   const [version, setVersion] = useState("1.0.0");
   const [busy, setBusy] = useState(false);
+  const [preview, setPreview] = useState<Loadable<WorkspacePreview>>(idle());
 
   useEffect(() => {
     if (workspaceId === null) {
@@ -76,6 +78,16 @@ export function WorkspaceScreen() {
     })();
   }, [save, setScreen, toast, version, workspaceId]);
 
+  const runPreview = useCallback(() => {
+    if (workspaceId === null) return;
+    void (async () => {
+      if (!(await save())) return;
+      setPreview(loading());
+      const result = await window.seed.workspaces.preview(workspaceId);
+      setPreview(result.ok ? ready(result.value) : errored(result.error));
+    })();
+  }, [save, workspaceId]);
+
   const files = (record: WorkspaceRecord): { id: string; title: string }[] => [
     { id: RULES_FILE, title: "Rules" },
     ...record.meta.scenes.map((scene) => ({ id: scene.id, title: scene.title })),
@@ -118,7 +130,10 @@ export function WorkspaceScreen() {
                 aria-label="OpenUI source"
                 className="ws__editor"
                 value={source}
-                onChange={(event) => setSource(event.target.value)}
+                onChange={(event) => {
+                  setSource(event.target.value);
+                  setPreview(idle());
+                }}
                 spellCheck={false}
               />
             </div>
@@ -130,6 +145,47 @@ export function WorkspaceScreen() {
               <Button disabled={busy} onClick={() => void save()}>
                 Save draft
               </Button>
+              <Button disabled={busy} onClick={runPreview}>
+                Validate & Preview
+              </Button>
+              {preview.status === "ready" ? (
+                <>
+                  {preview.value.checks.map((item) => (
+                    <div key={item.id}>
+                      <Text variant="caption" tone={item.ok ? "muted" : "danger"}>
+                        {item.ok ? `✓ ${item.label}` : `✕ ${item.label}`}
+                      </Text>
+                      {item.messages.map((message) => (
+                        <Text key={message} variant="caption" tone="danger">
+                          {message}
+                        </Text>
+                      ))}
+                    </div>
+                  ))}
+                  {preview.value.valid ? (
+                    <div style={{ height: 260, minHeight: 260 }}>
+                      <ScenePreviewCanvas
+                        rulesSource={preview.value.workspace.rules}
+                        sceneSource={
+                          preview.value.workspace.scenes[sceneId] ??
+                          preview.value.workspace.scenes[
+                            preview.value.workspace.meta.entrySceneId
+                          ] ??
+                          ""
+                        }
+                      />
+                    </div>
+                  ) : null}
+                </>
+              ) : preview.status === "loading" ? (
+                <Text variant="caption" tone="muted">
+                  Validating every scene…
+                </Text>
+              ) : preview.status === "error" ? (
+                <Text variant="caption" tone="danger">
+                  {preview.error.message}
+                </Text>
+              ) : null}
               <TextField
                 label="Version"
                 mono

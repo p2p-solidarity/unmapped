@@ -1,5 +1,10 @@
 import { createHash } from "node:crypto";
-import type { CartridgeFileIntegrity, CartridgeManifestCore, ContentHash } from "@shared/cartridge";
+import type {
+  CartridgeFileIntegrity,
+  CartridgeManifest,
+  CartridgeManifestCore,
+  ContentHash,
+} from "@shared/cartridge";
 
 export function sha256(content: string | Uint8Array): ContentHash {
   return `sha256:${createHash("sha256").update(content).digest("hex")}`;
@@ -34,4 +39,10 @@ export function cartridgeContentHash(
   return sha256(
     canonicalJson({ manifest, files: [...files].sort((a, b) => a.path.localeCompare(b.path)) }),
   );
+}
+
+/** The hashed part of a manifest: everything except the hash and the file table it seals. */
+export function manifestCore(manifest: CartridgeManifest): CartridgeManifestCore {
+  const { contentHash: _contentHash, files: _files, ...core } = manifest;
+  return core;
 }

@@ -7,6 +7,43 @@ export const CARTRIDGE_FORMAT_VERSION = 1 as const;
 export const INSTANCE_FORMAT_VERSION = 1 as const;
 export const SAVE_FORMAT_VERSION = 1 as const;
 export const WORKSPACE_FORMAT_VERSION = 1 as const;
+/** Runtime contract this build implements; a cartridge asking for more cannot be played here. */
+export const ENGINE_API_VERSION = 1 as const;
+/** Durable save shape this build writes; Phase A refuses to upgrade across a different one. */
+export const SAVE_SCHEMA_VERSION = 1 as const;
+export const LEGACY_MIGRATION_FORMAT_VERSION = 1 as const;
+
+const SEMVER =
+  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/;
+
+/** Compare two validated SemVer strings using precedence rules (build metadata is ignored). */
+export function compareCartridgeVersions(left: string, right: string): number {
+  const a = SEMVER.exec(left);
+  const b = SEMVER.exec(right);
+  if (a === null || b === null) return left.localeCompare(right);
+  for (let index = 1; index <= 3; index += 1) {
+    const aNumber = BigInt(a[index] ?? 0);
+    const bNumber = BigInt(b[index] ?? 0);
+    if (aNumber !== bNumber) return aNumber < bNumber ? -1 : 1;
+  }
+  const aPre = a[4]?.split(".");
+  const bPre = b[4]?.split(".");
+  if (aPre === undefined || bPre === undefined) {
+    return aPre === bPre ? 0 : aPre === undefined ? 1 : -1;
+  }
+  for (let index = 0; index < Math.max(aPre.length, bPre.length); index += 1) {
+    const aPart = aPre[index];
+    const bPart = bPre[index];
+    if (aPart === undefined || bPart === undefined) return aPart === undefined ? -1 : 1;
+    if (aPart === bPart) continue;
+    const aNumeric = /^\d+$/.test(aPart);
+    const bNumeric = /^\d+$/.test(bPart);
+    if (aNumeric && bNumeric) return BigInt(aPart) < BigInt(bPart) ? -1 : 1;
+    if (aNumeric !== bNumeric) return aNumeric ? -1 : 1;
+    return aPart < bPart ? -1 : 1;
+  }
+  return 0;
+}
 
 /** Algorithm-tagged immutable identity, for example `sha256:abc123...`. */
 export type ContentHash = `sha256:${string}`;
@@ -153,10 +190,47 @@ export interface WorkspaceRecord {
   scenes: Record<string, string>;
 }
 
+export interface WorkspaceValidationCheck {
+  id:
+    | "engine"
+    | "save"
+    | "rules"
+    | "catalog"
+    | "contracts"
+    | "kits"
+    | "prerequisites"
+    | "routes"
+    | "ending";
+  label: string;
+  ok: boolean;
+  messages: string[];
+}
+
+export interface WorkspacePreview {
+  workspace: WorkspaceRecord;
+  checks: WorkspaceValidationCheck[];
+  valid: boolean;
+}
+
 export interface CreateWorkspaceOptions {
   mode: WorkspaceMeta["mode"];
   targetCartridgeId: string;
   name: string;
   author: string;
   now?: Date;
+}
+
+export interface UpgradeInstanceInput {
+  instanceId: string;
+  /** Target version of the instance's own cartridgeId; the hash is verified before re-pinning. */
+  version: string;
+}
+
+/** Written into a legacy `worlds/<id>/` directory once it has been preserved as a cartridge. */
+export interface LegacyMigrationReceipt {
+  formatVersion: typeof LEGACY_MIGRATION_FORMAT_VERSION;
+  worldId: string;
+  cartridge: CartridgeRef;
+  instanceId: string;
+  migratedAt: string;
 }

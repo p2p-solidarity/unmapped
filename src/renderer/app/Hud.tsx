@@ -1,7 +1,7 @@
 // Heads-up display: The Seed VRMMO aesthetic, but every readout is a store value (Rule 2).
 // Layout only — the three cards live in ./hud, the numbers in ./hud/summary.ts.
 
-import { useInferenceStore, useSessionStore, useWorldStore } from "@renderer/state";
+import { useEngineStore, useInferenceStore, useSessionStore, useWorldStore } from "@renderer/state";
 import { colors, radius, space, Text, zIndex } from "@renderer/ui";
 import { type JSX, useMemo } from "react";
 import { ActionDock, NearbyPrompt } from "./hud/ActionDock";
@@ -34,6 +34,15 @@ function useHudSummary(): HudSummary {
 
 export function Hud(): JSX.Element {
   const summary = useHudSummary();
+  const cameraMode = useEngineStore((state) => state.cameraMode);
+  const controls =
+    cameraMode === "fps"
+      ? "WASD Move · F Flashlight · E Interact"
+      : cameraMode === "side"
+        ? "A/D Move · Space Jump · E Interact"
+        : cameraMode === "topdown"
+          ? "WASD Move · E Interact"
+          : "WASD Move · Shift Sprint · Space Jump · E Interact";
 
   return (
     <div
@@ -60,6 +69,41 @@ export function Hud(): JSX.Element {
         <SystemPanel summary={summary} />
       </div>
 
+      {cameraMode === "fps" ? (
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            width: 18,
+            height: 18,
+            transform: "translate(-50%, -50%)",
+          }}
+        >
+          <span
+            style={{
+              position: "absolute",
+              left: 8,
+              top: 2,
+              width: 2,
+              height: 14,
+              background: colors.text,
+            }}
+          />
+          <span
+            style={{
+              position: "absolute",
+              left: 2,
+              top: 8,
+              width: 14,
+              height: 2,
+              background: colors.text,
+            }}
+          />
+        </div>
+      ) : null}
+
       <div
         style={{
           display: "flex",
@@ -81,7 +125,7 @@ export function Hud(): JSX.Element {
           }}
         >
           <Text variant="caption" tone="dim">
-            WASD Move · Space Jump · E Interact · C Camera
+            {controls}
           </Text>
         </div>
       </div>
