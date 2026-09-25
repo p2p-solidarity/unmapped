@@ -79,7 +79,9 @@ export function hudSummary(
   session: SessionSlice,
   inference: InferenceSlice,
 ): HudSummary {
-  const last = world.karma.at(-1);
+  // The last thing the player chose in a conversation. Lines the host records (a treasure opened, a
+  // chapter cleared, a note left) carry no speaker and are host wording, not the player's choice.
+  const last = world.karma.findLast((entry) => entry.npcId !== null);
   return {
     worldName: text(world.meta?.name),
     floor: world.floor,

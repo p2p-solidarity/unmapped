@@ -4,7 +4,7 @@
 // land is kept in this save's notes.jsonl. Positions go through awareness in continent tiles.
 
 import { serializeScene } from "@dsl";
-import { recordNote, setNotePublisher } from "@renderer/app/land/notes";
+import { setNotePublisher } from "@renderer/app/land/notes";
 import { type Facing4, samplePlayer, samplePose } from "@renderer/engine/playerProbe";
 import { type RemotePlayer, setRemotePlayers } from "@renderer/engine/remoteRoster";
 import { errorLine, translate } from "@renderer/i18n";
@@ -84,7 +84,10 @@ function ownChunks(): WitnessedChunk[] {
   return out;
 }
 
-/** A note left on this world's land by someone else: keep it in this save's para-ledger. */
+/**
+ * A note left on this world's land by someone else: keep it with the land's notes. It is the
+ * visitor's act, not the owner's, so it never becomes a line of the owner's private karma.
+ */
 function keepVisitorNotes(doc: Y.Doc, worldId: string): void {
   const land = useLandStore.getState();
   if (land.instanceId !== worldId) return;
@@ -93,10 +96,7 @@ function keepVisitorNotes(doc: Y.Doc, worldId: string): void {
     if (land.notes.some((one) => one.id === note.id)) continue;
     useLandStore.getState().addNote(note);
     void window.seed.instances.appendNote({ instanceId: worldId, note }).then((stored) => {
-      if (stored.ok) {
-        recordNote(note);
-        return;
-      }
+      if (stored.ok) return;
       useSessionStore
         .getState()
         .toast("danger", translate("identity.noteNotKept", { reason: errorLine(stored.error) }));
@@ -223,7 +223,7 @@ export function useContinentSync(continent: Continent | null): void {
         error: {
           code: "continent-signaling-unreachable",
           message: `No signaling server answered within ${SIGNALING_WAIT_MS / 1000} s (${servers}).`,
-          hint: "On the title screen open System → Signaling servers, test them and save one that answers, then open the continent again. It turns live by itself if a server answers first.",
+          hint: "On the title screen open Settings → Signaling servers, test them and save one that answers, then open the continent again. It turns live by itself if a server answers first.",
         },
       });
     };
