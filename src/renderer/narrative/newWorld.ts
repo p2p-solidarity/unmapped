@@ -1,7 +1,9 @@
-// The minimal Create (plan.md §9): a name, one sentence of intent and a language become a world.
-// The model writes the bible and the place the player wakes in; the ordinary Forge publishes it as
-// an open-land cartridge (tps_exploration@1) with the bible hashed in, and a save is created. With
-// no model there is no world — the caller shows the error and its hint, never a prebuilt world.
+// Create a game (plan.md §9), in two halves the player sees apart. `planWorld`: a name, one
+// sentence, a story and a language become the world bible and the chapters on the map — cheap to
+// read, edit or ask for again. `buildWorld`: the place the player wakes in is written, the ordinary
+// Forge publishes an open-land cartridge (tps_exploration@1) with the bible, the story and the
+// chosen play style, and a save is created. With no model there is no world — the caller shows
+// the error and its hint, never a prebuilt world.
 
 import { biblePrompt, type NewWorldContext, originIssues, parseBible } from "@dsl";
 import { dslError } from "@dsl/parse/program";
@@ -10,7 +12,7 @@ import type { InstanceMeta, WorldBible } from "@shared/cartridge";
 import { fail, ok, type Result } from "@shared/result";
 import type { GenerationEvent, SceneGenerationRequest } from "@shared/scene-generation";
 import { parseStoryReply, type StoryPlan, storyMessages } from "@shared/story";
-import { openLandCartridge } from "./openLandCartridge";
+import { openLandCartridge, type PlayStyle } from "./openLandCartridge";
 import { generateProgram } from "./pipeline";
 import { generateSceneArtifact } from "./sceneGeneration";
 import { cartridgeIdFor } from "./ui/createModel";
@@ -24,13 +26,14 @@ const STORY_REPAIRS = 2;
  * protocol; a malformed plan goes back with the reason, at most twice. No story, no plan: a world
  * made from one sentence simply has no episodes.
  */
-async function planStory(
+export async function planStory(
   story: string,
   bible: WorldBible,
   language: string,
+  combat: boolean,
   signal?: AbortSignal,
 ): Promise<Result<StoryPlan>> {
-  const messages = storyMessages({ story, core: bible.core, style: bible.style, language });
+  const messages = storyMessages({ story, core: bible.core, style: bible.style, language, combat });
   for (let attempt = 0; ; attempt += 1) {
     const reply = await chat(
       { messages, maxTokens: 4_000, temperature: 0.7, grammar: null, stop: [], tools: [] },
@@ -50,12 +53,27 @@ async function planStory(
   }
 }
 
-export async function makeWorld(
-  ctx: NewWorldContext & { story?: string },
+/** What the player asked for on the first page of Create a game. */
+export interface WorldIdea extends NewWorldContext {
+  /** Their story; empty makes a world without chapters. */
+  story: string;
+  play: PlayStyle;
+}
+
+/** What the model proposed, before anything is published; the player may edit the chapters. */
+export interface WorldPlan {
+  bible: WorldBible;
+  story: StoryPlan | null;
+}
+
+const aborted = () => fail({ code: "request-aborted", message: "World generation was cancelled." });
+
+export async function planWorld(
+  idea: WorldIdea,
   onStage: (stage: NewWorldStage) => void,
-  onGenerationEvent?: (event: GenerationEvent) => void,
   signal?: AbortSignal,
-): Promise<Result<InstanceMeta>> {
+): Promise<Result<WorldPlan>> {
+  const ctx = { ...idea, fights: idea.play.fights };
   onStage("bible");
   const bible = await generateProgram<WorldBible>({
     system: biblePrompt(ctx),
@@ -67,23 +85,29 @@ export async function makeWorld(
     temperature: 0.9,
   });
   if (!bible.ok) return bible;
-  if (signal?.aborted) {
-    return fail({ code: "request-aborted", message: "World generation was cancelled." });
-  }
+  if (signal?.aborted) return aborted();
+  if (ctx.story.trim().length === 0) return ok({ bible: bible.value.graph, story: null });
+  onStage("story");
+  const combat = ctx.play.fights !== "none";
+  const planned = await planStory(ctx.story, bible.value.graph, ctx.language, combat, signal);
+  if (!planned.ok) return planned;
+  if (signal?.aborted) return aborted();
+  return ok({ bible: bible.value.graph, story: planned.value });
+}
 
-  let story: StoryPlan | undefined;
-  if (ctx.story !== undefined && ctx.story.trim().length > 0) {
-    onStage("story");
-    const planned = await planStory(ctx.story, bible.value.graph, ctx.language, signal);
-    if (!planned.ok) return planned;
-    story = planned.value;
-  }
-
+export async function buildWorld(
+  ctx: WorldIdea,
+  plan: WorldPlan,
+  onStage: (stage: NewWorldStage) => void,
+  onGenerationEvent?: (event: GenerationEvent) => void,
+  signal?: AbortSignal,
+): Promise<Result<InstanceMeta>> {
+  const story = plan.story ?? undefined;
   onStage("origin");
   const initialBrief = [
     `Create the open, walkable place where the player wakes in this world: ${ctx.intent.trim()}`,
-    `World core: ${bible.value.graph.core}`,
-    `Visual style: ${bible.value.graph.style}`,
+    `World core: ${plan.bible.core}`,
+    `Visual style: ${plan.bible.style}`,
     "Use a countryside biome and a 12 to 24 tile grass or sand floor.",
     "Place 1 to 3 residents, one sun light, and no exits, monsters, treasure, triggers, or platforms.",
     "Keep the centre tile empty and every floor edge open.",
@@ -138,11 +162,12 @@ export async function makeWorld(
     premise: ctx.intent.trim(),
     originSource: origin.value.source,
     bible: {
-      core: bible.value.graph.core,
-      style: `Language: ${ctx.language}\n${bible.value.graph.style}`,
+      core: plan.bible.core,
+      style: `Language: ${ctx.language}\n${plan.bible.style}`,
     },
     ...(story === undefined ? {} : { story }),
     createdAt: new Date().toISOString(),
+    play: ctx.play,
   });
   if (!input.ok) return input;
   const published = await window.seed.cartridges.publish(input.value);

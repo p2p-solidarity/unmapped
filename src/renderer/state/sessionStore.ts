@@ -13,7 +13,7 @@ import { create } from "zustand";
  * `seed` is New Game: a new land of the one game. `create` (a whole new game written by the model)
  * and `remix` (the full authoring flow) are advanced entries.
  */
-export type Screen = "worlds" | "seed" | "create" | "remix" | "play" | "workspace" | "works";
+export type Screen = "worlds" | "seed" | "create" | "play" | "workspace" | "works";
 
 export interface Toast {
   id: number;
@@ -46,6 +46,8 @@ export interface ActivePlace {
   graph: SceneGraph;
   rules: GameplayRules | null;
   goalExit: { x: number; z: number };
+  /** Set when the place is a story chapter (a climb or a maze): its episode id. */
+  chapter?: string;
 }
 
 export interface SessionState {

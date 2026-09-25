@@ -8,7 +8,7 @@ import {
   lookupRevision,
   publishRevisionOnChain,
 } from "@main/chain/ledger";
-import { fromBytes32, toBytes32 } from "@shared/chain";
+import { clipUtf8, fromBytes32, LEDGER_NOTE_MAX, toBytes32 } from "@shared/chain";
 import { type Abi, createPublicClient, custom, encodeFunctionResult } from "viem";
 import { describe, expect, it } from "vitest";
 
@@ -46,6 +46,13 @@ describe("content hashes on the ledger", () => {
     expect(toBytes32("sha256:short")).toBeNull();
     expect(fromBytes32(`0x${"ab".repeat(32)}`)).toBe(HASH);
     expect(fromBytes32(`0x${"00".repeat(32)}`)).toBeNull();
+  });
+
+  it("cuts a note to the contract's limit in bytes, never mid-character", () => {
+    const note = clipUtf8("潮".repeat(200), LEDGER_NOTE_MAX);
+    expect(new TextEncoder().encode(note).length).toBeLessThanOrEqual(LEDGER_NOTE_MAX);
+    expect(note).toBe("潮".repeat(93));
+    expect(clipUtf8("short", LEDGER_NOTE_MAX)).toBe("short");
   });
 });
 

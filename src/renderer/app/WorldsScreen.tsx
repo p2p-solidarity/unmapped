@@ -53,7 +53,7 @@ export function WorldsScreen() {
       return;
     }
     if (item.id === "new") setScreen("seed");
-    else if (item.id === "create") setScreen("remix");
+    else if (item.id === "create") setScreen("create");
     else if (item.id === "worlds") setScreen("works");
     else setPanel(item.id);
   };

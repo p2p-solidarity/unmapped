@@ -75,8 +75,11 @@ export function useLandCombat(input: {
   rules: GameplayRules | null;
   seed: number;
   player: RefObject<{ x: number; z: number; yaw: number }>;
+  /** Monsters standing on the land beyond the origin's and the wild ones (a story chapter's). */
+  extra?: readonly MonsterSpec[];
+  onFelled?: (id: string) => void;
 }): LandCombat {
-  const { graph, rules, seed, player } = input;
+  const { graph, rules, seed, player, extra, onFelled } = input;
   const chunk = useEngineStore((state) => state.chunk);
   const clock = useRef(newCombatClock());
   const shot = useRef<ShotTrace | null>(null);
@@ -104,7 +107,9 @@ export function useLandCombat(input: {
         wild.push(...wildMonsters(seed, { cx: cx + dx, cz: cz + dz }, graph));
       }
     }
-    const monsters = [...graph.monsters, ...wild].filter((one) => !defeated.current.has(one.id));
+    const monsters = [...graph.monsters, ...(extra ?? []), ...wild].filter(
+      (one) => !defeated.current.has(one.id),
+    );
     const built = buildEncounter({ ...graph, monsters }, rules, { armedAlone: true });
     if (built === null) {
       store.clear();
@@ -115,7 +120,7 @@ export function useLandCombat(input: {
       one.id === PLAYER_ID && wounds !== null ? { ...one, hp: Math.min(one.maxHp, wounds) } : one,
     );
     store.begin({ ...built, combatants });
-  }, [graph, rules, seed, cx, cz]);
+  }, [graph, rules, seed, cx, cz, extra]);
 
   useEffect(rebuild, [rebuild]);
 
@@ -156,9 +161,13 @@ export function useLandCombat(input: {
     [player],
   );
 
+  const felled = useRef(onFelled);
+  felled.current = onFelled;
   const remember = useCallback((): void => {
     for (const one of useEncounterStore.getState().combatants) {
-      if (one.side === "hostile" && one.hp <= 0) defeated.current.add(one.id);
+      if (one.side !== "hostile" || one.hp > 0 || defeated.current.has(one.id)) continue;
+      defeated.current.add(one.id);
+      felled.current?.(one.id);
     }
   }, []);
 

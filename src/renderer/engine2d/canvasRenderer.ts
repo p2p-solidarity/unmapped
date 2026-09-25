@@ -46,6 +46,8 @@ export interface LandFrame {
   shot?: ShotTrace | null;
   /** Entrances of the land's places (courses and dungeons). */
   places?: readonly LandPlace[];
+  /** The story chapter being played around its gate, in world tiles. */
+  chapter?: SceneGraph | null;
   now: number;
 }
 
@@ -195,6 +197,37 @@ function collectScenery(frame: LandFrame, transform: ScreenTransform): DrawItem[
         MONSTER_WIDTH[monster.kind],
       );
     }
+  }
+  // The story chapter around its gate: its people and finds, and its foes when no fight holds them.
+  const chapter = frame.chapter ?? null;
+  for (const npc of chapter?.npcs ?? []) {
+    const { x, z } = npc;
+    pushActor(
+      items,
+      frame,
+      transform,
+      x + 0.5,
+      z + 0.5,
+      ROLE_SPRITES[npc.role],
+      ROLE_WIDTH[npc.role],
+    );
+  }
+  for (const treasure of chapter?.treasures ?? []) {
+    const { x, z } = treasure;
+    pushMarker(items, frame, transform, x + 0.5, z + 0.5, LAND_2D_PALETTE.treasure, "◇");
+  }
+  const idle = frame.foes === null || frame.foes === undefined;
+  for (const monster of idle ? (chapter?.monsters ?? []) : []) {
+    const sprite = MONSTER_SPRITES[monster.kind];
+    pushActor(
+      items,
+      frame,
+      transform,
+      monster.x + 0.5,
+      monster.z + 0.5,
+      sprite,
+      MONSTER_WIDTH[monster.kind],
+    );
   }
   for (const foe of frame.foes ?? []) {
     pushActor(

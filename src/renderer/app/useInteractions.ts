@@ -6,6 +6,7 @@ import { translate } from "@renderer/i18n";
 import { startDialogue } from "@renderer/narrative";
 import { sendRoomInteraction } from "@renderer/net/sync";
 import { useEncounterStore, useEngineStore, useSessionStore, useWorldStore } from "@renderer/state";
+import { parseChapterTarget } from "@shared/chapter";
 import { endlessObjectiveOf } from "@shared/endless";
 import type { NearbyTarget } from "@shared/events";
 import { parsePlaceTarget } from "@shared/places";
@@ -13,6 +14,7 @@ import { parseEpisodeTarget } from "@shared/story";
 import type { SceneGraph } from "@shared/world";
 import { useEffect, useRef } from "react";
 import { makeKarmaEntry } from "./karmaFile";
+import { openChapterTreasure, talkChapter } from "./land/chapters";
 import { searchAt } from "./land/errands";
 import { enterPlace, leavePlace } from "./land/places";
 import { talkOnLand } from "./land/talk";
@@ -138,6 +140,11 @@ function dispatch(target: NearbyTarget, handlers: Handlers): void {
   const scene = currentScene();
   switch (target.kind) {
     case "npc":
+      // Someone of the story's chapter: their words were written with the chapter.
+      if (parseChapterTarget(target.id) !== null) {
+        talkChapter(target.id);
+        return;
+      }
       // Open land: every word was written when the place was witnessed; nothing is generated now.
       if (useEngineStore.getState().chunk !== null) {
         talkOnLand(target.id);
@@ -152,7 +159,8 @@ function dispatch(target: NearbyTarget, handlers: Handlers): void {
       session().openAltar();
       return;
     case "treasure":
-      openTreasure(target, scene);
+      if (parseChapterTarget(target.id) !== null) openChapterTreasure(target.id);
+      else openTreasure(target, scene);
       return;
     case "exit": {
       // A place's exits lead back out onto the land; its far end counts as crossing it.

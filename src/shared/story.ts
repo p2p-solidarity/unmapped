@@ -1,11 +1,13 @@
 // Story → RPG map. A player's story becomes the world bible plus a short chain of episodes; each
-// episode is a place on the open land where an AI-written world (`interactive-web@1`) is played —
-// a duel, a maze, a chase, a puzzle — and what the player earns is carried on to the next one.
-// The plan is cartridge content (`bible/story.json`, hashed); episode progress lives in the save.
+// episode is a chapter played in the game itself at its gate on the open land — people to meet,
+// things to find, foes to beat, or a climb or a maze entered from the gate (@shared/chapter) —
+// and what the player earns is carried on to the next one. The plan is cartridge content
+// (`bible/story.json`, hashed); what each chapter wrote and how far it got live in the save.
 // Once the authored episodes are cleared the land writes further chapters one at a time; those
 // are save-owned (`land.storyMore`) and follow the authored ones (`storyEpisodes`).
 
 import { z } from "zod";
+import type { ChapterStage } from "./chapter";
 import { CHUNK_SIZE, type ChunkCoord } from "./chunks";
 import type { ChatMessage } from "./llm";
 import { err, ok, type Result } from "./result";
@@ -191,14 +193,18 @@ export function parseEpisodeTarget(id: string): string | null {
 
 /** Save-owned progress of one episode. */
 export interface EpisodeProgress {
-  /** Draft the episode's world was generated in (kept so it can be changed later). */
+  /**
+   * Saves from before chapters were played in the game kept a separate AI-written world per
+   * episode: its draft, the revision played and the journey holding its state. Still read, so
+   * those saves open; never written any more.
+   */
   draftId: string | null;
-  /** The immutable revision that was played. */
   work: WorkRef | null;
-  /** Journey of one world holding that play's saved state. */
   playId: string | null;
   cleared: boolean;
   summary: string | null;
+  /** The chapter as written for play in the game, and how far the player got in it. */
+  stage?: ChapterStage | null;
 }
 
 /** Episodes open one after another: the first at once, every later one once the previous is cleared. */
@@ -223,9 +229,9 @@ export function nextEpisode(
 
 /** What the story needs next, as far as writing ahead is concerned. */
 export type StoryStep =
-  /** The next episode has no world yet: write it before the player reaches its gate. */
+  /** The next chapter is not written yet: write it before the player reaches its gate. */
   | { kind: "prepare"; episode: StoryEpisode }
-  /** The next episode's world is written; nothing to do until it is cleared. */
+  /** The next chapter is written; nothing to do until it is cleared. */
   | { kind: "ready"; episode: StoryEpisode }
   /** Everything written so far is cleared: the land writes the next chapter. */
   | { kind: "continue" }
@@ -238,7 +244,7 @@ export function storyStep(
 ): StoryStep {
   const next = nextEpisode(episodes, progress);
   if (next !== null) {
-    return (progress[next.id]?.playId ?? null) === null
+    return (progress[next.id]?.stage ?? null) === null
       ? { kind: "prepare", episode: next }
       : { kind: "ready", episode: next };
   }
@@ -328,11 +334,27 @@ export function parseStoryReply(reply: string): Result<StoryPlan> {
   );
 }
 
+/**
+ * What a chapter can be, because the game can play it: no card tables, dice or pages of choices,
+ * which the land cannot show (@shared/chapter).
+ */
+function kindsOfPlay(combat: boolean): string {
+  return combat
+    ? "The kinds of play the game has: meet (people to talk to), search (things to find), fight (foes to beat), climb (a side-scrolling course) and maze (a dungeon); a land chapter usually mixes meeting, finding and fighting."
+    : "The kinds of play the game has: meet (people to talk to), search (things to find), climb (a side-scrolling course) and maze (a dungeon). This game has no fighting: never write a fight.";
+}
+
+function kindLine(combat: boolean): string {
+  return combat ? "meet, search, fight, climb, maze" : "meet, search, climb, maze";
+}
+
 export interface StoryPromptInput {
   story: string;
   core: string;
   style: string;
   language: string;
+  /** Whether the game has fighting; without it no chapter is a fight. Defaults to true. */
+  combat?: boolean;
 }
 
 export function storyMessages(input: StoryPromptInput): ChatMessage[] {
@@ -340,7 +362,7 @@ export function storyMessages(input: StoryPromptInput): ChatMessage[] {
     {
       role: "system",
       content: `You turn a player's story into a short chain of playable episodes for an open-world RPG.
-Each episode is one small, self-contained game played at a place on the map: vary the kind of play between episodes (for example a turn-based duel, a maze, a real-time chase or fight, a platform climb, a puzzle, a card or dice contest, a stealth escape, a choice-driven scene) and let the stakes rise toward the end.
+Each episode is one chapter played in the game itself at a place on the map. ${kindsOfPlay(input.combat ?? true)} Vary the kind between episodes and let the stakes rise toward the end.
 Write every text in ${input.language}. Keep the world's rules and tone:
 CORE: ${input.core.slice(0, 1_500)}
 STYLE: ${input.style.slice(0, 600)}
@@ -351,7 +373,7 @@ Reply ONLY in this line format, with ${STORY_LIMITS.minEpisodes} to 6 episodes:
 @@episode
 title: <short title>
 place: <what the locals call the place>
-kind: <kind of play, a few words>
+kind: <one of: ${kindLine(input.combat ?? true)}>
 brief: <2-3 sentences: what the player does there, how it is won, what they carry away>
 @@end`,
     },
@@ -411,6 +433,8 @@ export interface ContinueStoryInput {
   language: string;
   core: string;
   style: string;
+  /** Whether the game has fighting; without it no chapter is a fight. Defaults to true. */
+  combat?: boolean;
 }
 
 /** Only the latest cleared episodes go to the model: the reply is one short block, so is the ask. */
@@ -427,7 +451,7 @@ export function continueStoryMessages(input: ContinueStoryInput): ChatMessage[] 
     {
       role: "system",
       content: `You continue an open-world RPG story whose episodes so far have all been played.
-Write exactly ONE next episode: one small, self-contained game at a new place on the map that follows from what happened. Use a different kind of play from the last episode (for example a turn-based duel, a maze, a real-time chase or fight, a platform climb, a puzzle, a card or dice contest, a stealth escape, a choice-driven scene).
+Write exactly ONE next episode: one chapter played in the game itself at a new place on the map, following from what happened. ${kindsOfPlay(input.combat ?? true)} Use a different kind from the last episode.
 Write every text in ${input.language}. Keep the world's rules and tone:
 CORE: ${input.core.slice(0, 1_000)}
 STYLE: ${input.style.slice(0, 400)}
@@ -436,7 +460,7 @@ Reply ONLY in this line format:
 @@episode
 title: <short title>
 place: <what the locals call the place>
-kind: <kind of play, a few words>
+kind: <one of: ${kindLine(input.combat ?? true)}>
 brief: <2-3 sentences: what the player does there, how it is won, what they carry away>
 @@end`,
     },
@@ -451,23 +475,6 @@ brief: <2-3 sentences: what the player does there, how it is won, what they carr
       ].join("\n"),
     },
   ];
-}
-
-/** The one request an episode's world is generated from: the brief plus just enough story. */
-export function episodeRequest(
-  story: { logline: string; episodes: readonly StoryEpisode[] },
-  episode: StoryEpisode,
-  bible: { core: string; style: string },
-): string {
-  const index = story.episodes.findIndex((entry) => entry.id === episode.id);
-  return [
-    `Episode ${index + 1} of ${story.episodes.length} — "${episode.title}" at ${episode.place} (${episode.kind}).`,
-    episode.brief,
-    `Story so far: ${story.logline}`,
-    `World: ${bible.core.slice(0, 700)}`,
-    `Style: ${bible.style.slice(0, 300)}`,
-    "host.carry holds what the player brings from earlier episodes (may be null): show it, use it if it fits, and pass it on in host.complete with what they earned added — never drop what came in.",
-  ].join("\n");
 }
 
 /** Merges what an episode hands back into the story's carried state, keeping earlier keys. */

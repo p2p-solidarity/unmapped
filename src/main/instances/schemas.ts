@@ -5,6 +5,7 @@ import {
   SAVE_FORMAT_VERSION,
   type SaveState,
 } from "@shared/cartridge";
+import { CHAPTER_KINDS, CHAPTER_LIMITS } from "@shared/chapter";
 import { DOOR_SLOTS } from "@shared/land";
 import { PLACE_KINDS, PLACE_LIMITS } from "@shared/places";
 import { SEED_PATTERN } from "@shared/seedCode";
@@ -67,6 +68,9 @@ export const savedPositionSchema = z
 
 const placedItemSchema = itemSpecSchema;
 
+/** Local ids of what a chapter's player has done: people met, treasures opened, foes felled. */
+const doneIds = z.array(z.string().max(64)).max(CHAPTER_LIMITS.doneIds);
+
 export const landProgressSchema = z
   .object({
     errands: z.record(z.string().max(120), z.enum(["accepted", "reached", "done"])),
@@ -117,6 +121,18 @@ export const landProgressSchema = z
             playId: z.string().regex(PLAY_ID).nullable(),
             cleared: z.boolean(),
             summary: z.string().max(WORK_LIMITS.summaryChars).nullable(),
+            stage: z
+              .object({
+                kind: z.enum(CHAPTER_KINDS),
+                source: z.string().min(1).max(CHAPTER_LIMITS.sourceChars),
+                seed: z.number().int().min(0).max(0xffffffff),
+                found: doneIds,
+                felled: doneIds,
+                met: doneIds,
+              })
+              .strict()
+              .nullable()
+              .optional(),
           })
           .strict(),
       )

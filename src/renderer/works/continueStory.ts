@@ -18,6 +18,8 @@ export interface ContinueStoryRequest {
   carry: Json | null;
   language: string;
   bible: { core: string; style: string };
+  /** Whether the game has fighting (its rules declare combat). */
+  combat: boolean;
   signal: AbortSignal;
 }
 
@@ -39,6 +41,7 @@ export async function writeNextChapter(
     language: request.language,
     core: request.bible.core,
     style: request.bible.style,
+    combat: request.combat,
   });
   for (let attempt = 0; ; attempt += 1) {
     const reply = await chat(

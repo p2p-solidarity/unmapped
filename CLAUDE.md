@@ -143,10 +143,15 @@ Worlds are stored beside cartridges, not inside them: `works/` (immutable, hashe
 
 ### Rule 13. A story is content; the chain is optional
 A world made from a story keeps its episode plan in the cartridge (`bible/story.json`, hashed with
-everything else); which episodes were played, their generated worlds and the carried items live in
-the save (`land.episodes`, `land.storyCarry`). Episode worlds are written when the player reaches
-the gate, never up front. The host — not the model — decides where a gate stands and merges the
-carry a world hands back, so one world cannot erase what earlier ones gave.
+everything else); what each chapter wrote, how far the player got and the carried items live in the
+save (`land.episodes[id].stage`, `land.storyCarry`). A chapter is played **in the game itself**,
+never on a separate page (`@shared/chapter`): on the land around its gate (the Chapter dialect —
+people with their words, finds, foes; no coordinates, the host sets them on walkable ground), or as
+a place when its kind is a climb or a maze. Only the next chapter is written ahead (or at its gate),
+never all up front. The host — not the model — decides where a gate stands, clears a chapter once
+every person is met, every treasure opened and every foe felled (or a place's far end reached), and
+merges what it gave into the carry. Saves from before keep `draftId/work/playId`; they are read,
+never written.
 
 On-chain provenance (`contracts/src/UnwrittenLedger.sol`) is optional and additive: content never
 goes on chain, only the sha256 hash the app already computes, its author, its lineage and short
@@ -295,6 +300,16 @@ export function TitleDiorama({ seedText }): JSX.Element;   // App's MenuBackdrop
 - Entrances stand at chunk centres chosen by `placeSpot` (reachable thanks to the fords). A place is
   played through `GameCanvas({ graph, rules })` while `sessionStore.place` is set; its exits call
   `leavePlace` (far end = crossed) and the land resumes at the entrance via `landReturn`.
+
+### Create a game (`app/create/`, `narrative/newWorld.ts`)
+- Three steps: the world and how it is played (`PlayStyle`: fights none | gun | blade, the weapon's
+  name in the player's words) → `planWorld` (bible + story plan; the bible is told the play style so
+  it never forbids the monsters the game will field) → the player edits the chapters (ids and gates
+  re-derived by `episodePlaces`) → `buildWorld` (origin scene, `openLandCartridge` with the play
+  style as capability requirements, publish, new save). Only building publishes.
+- The legacy six-step `CreateScreen` (scene bases, Genre Matrix, capability report) is unlinked;
+  do not route a menu to it again. Offer no option the land cannot play (companions exist in the
+  rules but are not drawn or followed on the land yet).
 
 ### `src/renderer/identity`
 ```ts

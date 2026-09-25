@@ -3,6 +3,7 @@
 
 import { createLibrary, type Library } from "@openuidev/lang-core";
 import { BIBLE_COMPONENTS } from "./schemas/bible";
+import { CHAPTER_COMPONENTS } from "./schemas/chapter";
 import { CHUNK_COMPONENTS } from "./schemas/chunk";
 import { DIALOGUE_COMPONENTS } from "./schemas/dialogue";
 import { Deliver, Errands, Find, Guide } from "./schemas/errand";
@@ -71,6 +72,17 @@ export const chunkLibrary: Library = createLibrary({
     { name: "Who lives here", components: ["NPC", "Talk", "Choice"] },
     { name: "What it remembers", components: ["Lore"] },
     { name: "What someone asks", components: ["Find", "Deliver", "Guide", "Item"] },
+  ],
+});
+
+export const chapterLibrary: Library = createLibrary({
+  id: "unwritten-land/chapter",
+  root: "Chapter",
+  components: [...CHAPTER_COMPONENTS],
+  componentGroups: [
+    { name: "Who is here", components: ["NPC", "Talk", "Choice"] },
+    { name: "What stands in the way", components: ["Monster"] },
+    { name: "What can be found", components: ["Treasure"] },
   ],
 });
 

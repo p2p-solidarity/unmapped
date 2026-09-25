@@ -8,6 +8,7 @@ export { DEFAULT_RULES_SOURCE } from "./defaultRules";
 export { sceneGrammar } from "./grammar";
 export { hygieneIssues } from "./hygiene";
 export {
+  chapterLibrary,
   chunkLibrary,
   DIALOGUE_COMPONENT_NAMES,
   dialogueLibrary,
@@ -35,6 +36,12 @@ export {
 export { normalizeOutput } from "./normalize";
 export { parseBible } from "./parse/bible";
 export {
+  CHAPTER_PARTS,
+  type ChapterContext,
+  type ChapterDraft,
+  parseChapter,
+} from "./parse/chapter";
+export {
   CHUNK_LIMITS,
   type ChunkContext,
   parseChunk,
@@ -52,6 +59,7 @@ export {
   candidateIssues,
   candidateScenePrompt,
 } from "./prompts/candidate";
+export { CHAPTER_EXAMPLE, type ChapterPromptContext, chapterPrompt } from "./prompts/chapter";
 export {
   authoredSection,
   bibleSections,

@@ -3,6 +3,7 @@
 // Every failure is a Result with a hint; the app works with no chain configured at all.
 
 import {
+  clipUtf8,
   fromBytes32,
   LEDGER_KINDS,
   LEDGER_NOTE_MAX,
@@ -191,5 +192,5 @@ export function witnessOnChain(
   if (hash === null) {
     return Promise.resolve(err("ledger-bad-hash", `${input.contentHash} is not a content hash.`));
   }
-  return write("witness", [hash, input.note.slice(0, LEDGER_NOTE_MAX)], clients);
+  return write("witness", [hash, clipUtf8(input.note, LEDGER_NOTE_MAX)], clients);
 }

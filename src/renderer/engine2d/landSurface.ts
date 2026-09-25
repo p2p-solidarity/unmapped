@@ -25,6 +25,8 @@ export interface SurfaceFrame {
   /** The last shot, drawn for a moment after it is fired. */
   shot: ShotTrace | null;
   places: readonly LandPlace[];
+  /** The story chapter being played around its gate, in world tiles; null when there is none. */
+  chapter: SceneGraph | null;
   now: number;
 }
 
@@ -78,6 +80,7 @@ export function hd2dSurface(
         foes: frame.foes,
         shot: frame.shot,
         places: frame.places,
+        chapter: frame.chapter,
         focus: frame.player,
         player: frame.player,
         now: frame.now,

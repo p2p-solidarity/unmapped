@@ -1,10 +1,12 @@
 // An open-land cartridge from one origin scene: the ordinary Forge with the one game's fixed mode
-// (`adventure_rpg` → a single `tps_exploration@1` context), a bible hashed in, and no finale.
+// (`adventure_rpg` → a single `tps_exploration@1` context), a bible hashed in, and no finale. A
+// play style chosen when the world is made adds fighting (a gun or a blade) to that same context,
+// so the world starts with its rules instead of needing a mod revision.
 // Pure apart from hashing, so the built-in game is produced by a script with exactly the code a
 // model-written world is published with.
 
-import { parseScene } from "@dsl";
-import { compileCapabilities } from "@shared/capabilities";
+import { parseRules, parseScene, serializeRules } from "@dsl";
+import { type CapabilityRequirement, compileCapabilities } from "@shared/capabilities";
 import { BUILTIN_MODULES } from "@shared/capability-modules";
 import type { PublishCartridgeInput, WorldBible } from "@shared/cartridge";
 import { hashText } from "@shared/content-hash";
@@ -22,6 +24,32 @@ const SELECTION: ModeSelection = {
   settings: [],
 };
 
+export interface PlayStyle {
+  /** Fighting on the land: none, a gun or a blade. */
+  fights: "none" | "gun" | "blade";
+  /** What the player calls their weapon, in their own words; empty keeps the forge's name. */
+  weapon: string;
+}
+
+export const PEACEFUL: PlayStyle = { fights: "none", weapon: "" };
+
+function styleRequirements(style: PlayStyle): CapabilityRequirement[] {
+  const specs = [
+    ...(style.fights === "gun" ? ["combat:shooter"] : []),
+    ...(style.fights === "blade" ? ["combat:melee"] : []),
+  ];
+  return specs.map((spec) => {
+    const [key = "", value = ""] = spec.split(":");
+    return {
+      key: key as CapabilityRequirement["key"],
+      value,
+      required: true,
+      sourceModes: [],
+      reason: "Chosen when the world was made.",
+    };
+  });
+}
+
 export interface OpenLandInput {
   cartridgeId: string;
   version: string;
@@ -34,6 +62,8 @@ export interface OpenLandInput {
   story?: StoryPlan;
   /** Fixed for the built-in game so its content hash is stable; now for a new world. */
   createdAt: string;
+  /** Peaceful when absent (the built-in game). */
+  play?: PlayStyle;
 }
 
 export async function openLandCartridge(
@@ -41,8 +71,9 @@ export async function openLandCartridge(
 ): Promise<Result<PublishCartridgeInput>> {
   const origin = parseScene(input.originSource);
   if (!origin.ok) return err("open-land-origin-invalid", origin.error.message, origin.error.hint);
+  const play = input.play ?? PEACEFUL;
   const resolution = compileCapabilities({
-    requirements: requirementsFor(SELECTION),
+    requirements: [...requirementsFor(SELECTION), ...styleRequirements(play)],
     modules: BUILTIN_MODULES,
     overrides: {},
     accepted: {},
@@ -123,10 +154,24 @@ export async function openLandCartridge(
   };
   const built = await buildCartridge(snapshot, resolution);
   if (!built.ok) return built;
+  const rules = namedWeapon(built.value.rules, play.weapon.trim());
+  if (!rules.ok) return rules;
   return ok({
     ...built.value,
+    rules: rules.value,
     manifest: { ...built.value.manifest, version: input.version, createdAt: input.createdAt },
     bible: input.bible,
     ...(input.story === undefined ? {} : { story: input.story }),
   });
+}
+
+/** The forged rules with the player's own name on the starting weapon. */
+function namedWeapon(source: string, name: string): Result<string> {
+  if (name === "") return ok(source);
+  const rules = parseRules(source);
+  if (!rules.ok) return err("open-land-rules-invalid", rules.error.message);
+  const [first, ...rest] = rules.value.weapons;
+  if (first === undefined) return ok(source);
+  const weapons = [{ ...first, name: name.slice(0, 40) }, ...rest];
+  return ok(`${serializeRules({ ...rules.value, weapons }).replace(/\n*$/, "")}\n`);
 }

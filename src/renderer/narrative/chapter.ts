@@ -1,0 +1,35 @@
+// Writing a story chapter for play on the land: the model writes its people, their words, its finds
+// and its foes against the world bible; parse → issues → repair ≤ 2 rounds (Rule 7). A chapter that
+// never parses is an error the player sees, never a stand-in.
+
+import { bibleSections, type ChapterDraft, type ChapterPromptContext, chapterPrompt } from "@dsl";
+import { parseChapter } from "@dsl/parse/chapter";
+import { ORDER } from "@harness";
+import type { WorldBible } from "@shared/cartridge";
+import type { Result } from "@shared/result";
+import { generateProgram, type Program } from "./pipeline";
+
+export const CHAPTER_MAX_TOKENS = 2400;
+
+export function generateChapter(
+  ctx: ChapterPromptContext & { bible: WorldBible | null },
+): Promise<Result<Program<ChapterDraft>>> {
+  const bible = ctx.bible === null ? null : bibleSections(ctx.bible);
+  return generateProgram<ChapterDraft>({
+    system: chapterPrompt(ctx),
+    user: "Write the Chapter program now. Output the program only.",
+    purpose: "scene",
+    language: ctx.language,
+    parse: (source) => parseChapter(source, { combat: ctx.combat, language: ctx.language }),
+    ...(bible === null
+      ? {}
+      : {
+          sections: [
+            { name: "chapter:bible-core", order: ORDER.WORLD_RULES, text: bible.core },
+            { name: "chapter:bible-style", order: ORDER.WORLD_RULES + 1, text: bible.style },
+          ],
+        }),
+    maxTokens: CHAPTER_MAX_TOKENS,
+    temperature: 0.9,
+  });
+}

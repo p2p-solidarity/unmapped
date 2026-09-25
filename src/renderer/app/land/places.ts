@@ -30,6 +30,7 @@ import { err, ok, type Result } from "@shared/result";
 import { storyEpisodes } from "@shared/story";
 import { makeKarmaEntry } from "../karmaFile";
 import { checkpointCurrentInstance } from "../usePersistWorld";
+import { clearChapterById } from "./chapters";
 
 /**
  * The rules a place plays under: its kit's stock tuning, with everything the player carries from
@@ -145,6 +146,12 @@ export function leavePlace(finished: boolean): void {
   const session = useSessionStore.getState();
   const place = session.place;
   if (place === null) return;
+  // A chapter played as a place is the story's, not one of the land's own places.
+  if (place.chapter !== undefined) {
+    if (finished) clearChapterById(place.chapter, place.graph.quests[0]?.text ?? place.title);
+    session.leavePlace();
+    return;
+  }
   if (finished) {
     useLandStore.getState().setPlaceCleared(place.id);
     const world = useWorldStore.getState();

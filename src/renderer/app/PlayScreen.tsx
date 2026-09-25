@@ -7,12 +7,14 @@ import { useT } from "@renderer/i18n";
 import { AltarPanel, DialogueCard } from "@renderer/narrative";
 import { useRunStore, useSessionStore, useWorldStore } from "@renderer/state";
 import { Button, colors, ErrorBlock, StatePanel, Surface, space, Text, zIndex } from "@renderer/ui";
-import { EpisodePanel, EpisodePrefetch } from "@renderer/works";
+import { EpisodePrefetch } from "@renderer/works";
 import type { ReactNode } from "react";
 import { useFloorAdvance } from "./advanceFloor";
 import { ChangeProposalPanel } from "./ChangeProposalPanel";
 import { Console } from "./Console";
 import { Hud } from "./Hud";
+import { ChapterPanel } from "./land/ChapterPanel";
+import { chapterFelled } from "./land/chapters";
 import { DoorPanel } from "./land/DoorPanel";
 import { useErrandArrivals } from "./land/errands";
 import { NotePanel } from "./land/NotePanel";
@@ -105,6 +107,7 @@ export function PlayScreen() {
           // player starts where that save stands rather than where the last one left off.
           key={`${instanceId ?? "none"}:${scene.value.contract?.sceneId ?? scene.value.name}`}
           rawGraph={scene.value}
+          onFelled={chapterFelled}
           gameplayRules={gameplayRules}
         />
       ) : (
@@ -115,7 +118,7 @@ export function PlayScreen() {
       <AltarPanel />
       <ChangeProposalPanel />
       <DoorPanel />
-      <EpisodePanel />
+      <ChapterPanel />
       {hasStory ? <EpisodePrefetch /> : null}
       <NotePanel />
       <TweakPanel />

@@ -110,14 +110,9 @@ export function SeedScreen(): JSX.Element {
               </>
             )}
           </StatePanel>
-          <div style={{ display: "flex", gap: space.sm, flexWrap: "wrap" }}>
-            <Button variant="ghost" disabled={busy} onClick={() => setScreen("create")}>
-              Write one world with the model
-            </Button>
-            <Button variant="ghost" disabled={busy} onClick={() => setScreen("remix")}>
-              Build a game scene by scene
-            </Button>
-          </div>
+          <Button variant="ghost" disabled={busy} onClick={() => setScreen("create")}>
+            Or create your own game from a story
+          </Button>
         </Surface>
       </div>
     </GameShell>

@@ -41,6 +41,8 @@ export interface LandSource {
   foes?: readonly Foe[] | null;
   /** Entrances of the land's places (courses and dungeons). */
   places?: readonly LandPlace[];
+  /** The story chapter being played around its gate, in world tiles. */
+  chapter?: SceneGraph | null;
 }
 
 export function floorOf(source: Pick<LandSource, "origin">): FloorSpec {
@@ -97,6 +99,10 @@ export function collectContent(source: LandSource, coords: readonly ChunkCoord[]
   const fighting = source.foes !== null && source.foes !== undefined;
   if (source.origin !== null && coords.some((c) => c.cx === 0 && c.cz === 0)) {
     pushScene(content, height, source.origin, 0, 0, !fighting);
+  }
+  // A chapter's foes are in the fight's roster while one is on; its people and finds always stand.
+  if (source.chapter !== null && source.chapter !== undefined) {
+    pushScene(content, height, source.chapter, 0, 0, !fighting);
   }
   for (const foe of source.foes ?? []) {
     const board = MONSTER_BOARDS[foe.kind];

@@ -38,7 +38,22 @@ export interface WitnessOnChainInput {
   note: string;
 }
 
+/** The contract counts a note in UTF-8 bytes (`bytes(note).length`), not in characters. */
 export const LEDGER_NOTE_MAX = 280;
+
+/** The longest start of `text` that fits in `maxBytes` of UTF-8, never splitting a character. */
+export function clipUtf8(text: string, maxBytes: number): string {
+  const encoder = new TextEncoder();
+  let out = "";
+  let used = 0;
+  for (const char of text) {
+    const size = encoder.encode(char).length;
+    if (used + size > maxBytes) break;
+    out += char;
+    used += size;
+  }
+  return out;
+}
 
 export const ZERO_HASH = `0x${"00".repeat(32)}` as const;
 

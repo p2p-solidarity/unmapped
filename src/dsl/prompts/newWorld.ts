@@ -13,6 +13,17 @@ export interface NewWorldContext {
   name: string;
   intent: string;
   language: string;
+  /** How the world is fought in: absent or "none" for a world where nobody fights. */
+  fights?: "none" | "gun" | "blade";
+}
+
+/** The bible must allow what the game will put on the land, or every chapter contradicts it. */
+function fightingRule(fights: NewWorldContext["fights"]): string {
+  if (fights === undefined || fights === "none") {
+    return "Nobody fights in this world: taboos may rule out monsters and weapons.";
+  }
+  const arm = fights === "gun" ? "a gun" : "a blade";
+  return `This world has fights: monsters roam the open land and the player carries ${arm}. Say in the rules what the monsters are and why they are here, in the world's own terms; never list monsters, weapons or fighting among the taboos.`;
 }
 
 const ROLE =
@@ -28,6 +39,7 @@ export function biblePrompt(ctx: NewWorldContext): string {
       "The whole program is ONE statement: root = Bible(...) with every string and list written inline inside the call. Never define premise, rules or any other value as its own statement.",
       `Write every part in ${languageName(ctx.language)}.`,
       "Rules are concrete everyday facts, not lore dumps. Taboos name what must never appear.",
+      fightingRule(ctx.fights),
       "The example shows syntax only. Never reuse its words.",
     ],
     examples: [BIBLE_EXAMPLE],

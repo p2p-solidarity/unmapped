@@ -5,6 +5,7 @@
 // would be a gauge with nothing behind it (Rule 2). A real player identity arrives with
 // PlayerProfile once the capability modules say a game needs one (plan.md §0.4).
 
+import { readChapter } from "@renderer/engine2d/chapterLayer";
 import {
   useEngineStore,
   useLandStore,
@@ -13,9 +14,11 @@ import {
   useWorldStore,
 } from "@renderer/state";
 import { colors, font, radius, StatePanel, Surface, space, Text } from "@renderer/ui";
+import { chapterLeft } from "@shared/chapter";
 import { formatSeedCode } from "@shared/seedCode";
 import { nextEpisode, STORY_CAP, storyEpisodes } from "@shared/story";
 import type { JSX } from "react";
+import { chapterParts } from "../land/chapters";
 import { LandStatus } from "./LandStatus";
 import type { HudSummary } from "./summary";
 
@@ -41,11 +44,24 @@ function StoryLine(): JSX.Element | null {
       : all.length >= STORY_CAP
         ? " · the story has reached its last chapter"
         : " · the next chapter is not written yet";
+  const stage = next === null ? null : (episodes?.[next.id]?.stage ?? null);
+  const draft = stage?.kind === "land" ? readChapter(stage.source) : null;
+  const left = draft === null || stage === null ? null : chapterLeft(chapterParts(draft), stage);
   return (
-    <Text variant="caption" tone="accent">
-      {count}
-      {tail}
-    </Text>
+    <>
+      <Text variant="caption" tone="accent">
+        {count}
+        {tail}
+      </Text>
+      {/* The chapter being played around its gate: its goal and what it still asks for. */}
+      {draft === null || left === null ? null : (
+        <Text variant="caption" tone="muted">
+          {draft.goal}
+          {` · talk ${left.talk} · find ${left.find}`}
+          {draft.monsters.length > 0 ? ` · defeat ${left.defeat}` : ""}
+        </Text>
+      )}
+    </>
   );
 }
 

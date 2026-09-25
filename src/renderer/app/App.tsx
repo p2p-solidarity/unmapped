@@ -2,21 +2,20 @@
 // (inference sync, input lock, world hot-reload, world persistence).
 
 import { TitleDiorama } from "@renderer/hd2d";
-import { CreateScreen, useInferenceSync } from "@renderer/narrative";
+import { useInferenceSync } from "@renderer/narrative";
 import { useLandSync } from "@renderer/net/landSync";
 import { useActiveRoom } from "@renderer/net/lifecycle";
 import { leaveActiveRoom, useRoomSync } from "@renderer/net/sync";
 import { useSessionStore } from "@renderer/state";
 import { WorksScreen } from "@renderer/works";
 import { useEffect, useMemo, useRef } from "react";
+import { CreateGameScreen } from "./create/CreateGameScreen";
 import { hotkeyAction, isTypingTarget } from "./hotkeys";
 import { type InferenceSync, InferenceSyncContext } from "./inferenceSync";
-import { NewWorldScreen } from "./NewWorldScreen";
 import { PlayScreen } from "./PlayScreen";
 import { SeedScreen } from "./SeedScreen";
 import { Toasts } from "./Toasts";
 import { useInputLock } from "./useInputLock";
-import { openInstance } from "./useInstanceLoader";
 import { usePersistWorld } from "./usePersistWorld";
 import { useWorldSync } from "./useWorldLoader";
 import { WorkspaceScreen } from "./WorkspaceScreen";
@@ -65,7 +64,6 @@ function useGlobalKeys(): void {
 
 function Screens() {
   const screen = useSessionStore((state) => state.screen);
-  const setScreen = useSessionStore((state) => state.setScreen);
 
   switch (screen) {
     case "worlds":
@@ -73,16 +71,7 @@ function Screens() {
     case "seed":
       return <SeedScreen />;
     case "create":
-      return <NewWorldScreen />;
-    case "remix":
-      return (
-        <CreateScreen
-          onCancel={() => setScreen("worlds")}
-          onCreated={(meta) => {
-            void openInstance(meta.instanceId);
-          }}
-        />
-      );
+      return <CreateGameScreen />;
     case "play":
       return <PlayScreen />;
     case "workspace":
@@ -93,13 +82,7 @@ function Screens() {
 }
 
 /** Menus stand over one living land, kept across menu changes so its drift never restarts. */
-const LIVE_BACKDROP: ReadonlySet<string> = new Set([
-  "worlds",
-  "seed",
-  "create",
-  "remix",
-  "workspace",
-]);
+const LIVE_BACKDROP: ReadonlySet<string> = new Set(["worlds", "seed", "create", "workspace"]);
 
 function MenuBackdrop() {
   const screen = useSessionStore((state) => state.screen);

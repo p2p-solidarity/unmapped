@@ -183,6 +183,7 @@ export function createHd2dRenderer(
       frame.story,
       frame.seed,
       frame.places,
+      frame.chapter,
     ];
     if (key === contentKey && refs.every((ref, index) => ref === contentRefs[index])) return;
     contentKey = key;

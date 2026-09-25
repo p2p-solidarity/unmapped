@@ -11,7 +11,7 @@ import { CHUNK_SIZE, chunkKey, chunkOf } from "@shared/chunks";
 import { seedFromText } from "@shared/endless";
 import type { GameplayKitRules, GameplayRules } from "@shared/gameplay";
 import { landSeedOf } from "@shared/land";
-import { storyEpisodes } from "@shared/story";
+import { nextEpisode, storyEpisodes } from "@shared/story";
 import type { SceneGraph } from "@shared/world";
 import { type JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { isWallTile, spawnPoint, TILE_TOP } from "../engine/colliders";
@@ -23,6 +23,7 @@ import { nearestTarget, sceneTargets, triggersWithin, triggerTarget } from "../e
 import { isSprinting, matchesAction, moveAxis, useKeys } from "../engine/useKeys";
 import { loadAtlases } from "./atlases";
 import type { SpriteAtlases } from "./canvasRenderer";
+import { chapterScene, readChapter } from "./chapterLayer";
 import { blockedByProps, cachedTerrain, walkableAt } from "./landModel";
 import { hd2dSurface, type LandSurface, pixelSurface } from "./landSurface";
 import { placeTargets } from "./placeLayer";
@@ -74,9 +75,12 @@ export function isOpenLand2D(scene: SceneGraph, rules: GameplayRules | null): bo
 export function LandView2D({
   rawGraph,
   gameplayRules,
+  onFelled,
 }: {
   rawGraph: SceneGraph;
   gameplayRules: GameplayRules | null;
+  /** A combatant fell on the land (the app records a story chapter's foes). */
+  onFelled?: (id: string) => void;
 }): JSX.Element {
   const runSeed = useRunStore((state) => state.seed);
   const depthSeed = useSessionStore((state) => {
@@ -125,20 +129,43 @@ export function LandView2D({
     [plan, progress],
   );
   const places = useMemo(() => progress?.places ?? [], [progress]);
+  // The story's current chapter, standing around its gate (a climb or a maze is entered instead).
+  const chapter = useMemo(() => {
+    const next = story === null ? null : nextEpisode(story.episodes, story.progress);
+    const stage = next === null ? null : (story?.progress[next.id]?.stage ?? null);
+    const draft = stage?.kind === "land" ? readChapter(stage.source) : null;
+    if (next === null || stage === null || draft === null) return null;
+    return chapterScene(next, stage, draft, (x, z) =>
+      canStand(graph, landSeed, chunks, x + 0.5, z + 0.5),
+    );
+  }, [story, graph, landSeed, chunks]);
   const extraTargets = useMemo(
     () => [
       ...landTargets(chunks, progress, graph),
       ...(story === null ? [] : storyTargets(story)),
       ...placeTargets(places),
+      // Its foes are fought, not talked to: only its people and treasures are targets.
+      ...(chapter === null ? [] : sceneTargets({ ...chapter, monsters: [] })),
     ],
-    [chunks, progress, graph, story, places],
+    [chunks, progress, graph, story, places, chapter],
   );
   const targets = useMemo(
     () => [...sceneTargets(graph, opened), ...extraTargets],
     [graph, opened, extraTargets],
   );
 
-  const combat = useLandCombat({ graph, rules: gameplayRules, seed: landSeed, player });
+  // Rebuilt only when who stands in the chapter changes, not on every talk or find.
+  const foeKey = chapter?.monsters.map((monster) => monster.id).join(",") ?? "";
+  // biome-ignore lint/correctness/useExhaustiveDependencies: foeKey is the roster's identity
+  const extra = useMemo(() => chapter?.monsters ?? [], [foeKey]);
+  const combat = useLandCombat({
+    graph,
+    rules: gameplayRules,
+    seed: landSeed,
+    player,
+    extra,
+    ...(onFelled === undefined ? {} : { onFelled }),
+  });
   const combatRef = useRef(combat);
   combatRef.current = combat;
 
@@ -221,6 +248,7 @@ export function LandView2D({
   // update often; routing them through a ref keeps one long-lived rAF loop instead of tearing it
   // down (and blanking the HUD's chunk/nearby state) on every write.
   const live = useRef({
+    chapter,
     chunks,
     gameplayRules,
     graph,
@@ -233,6 +261,7 @@ export function LandView2D({
     targets,
   });
   live.current = {
+    chapter,
     chunks,
     gameplayRules,
     graph,
@@ -327,6 +356,7 @@ export function LandView2D({
         foes: combatRef.current.foes(),
         shot: combatRef.current.shot.current,
         places: state.places,
+        chapter: state.chapter,
         now,
       });
 
