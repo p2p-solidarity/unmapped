@@ -41,7 +41,8 @@ function base64Url(bytes: Uint8Array): string {
 }
 
 async function sha256(bytes: Uint8Array): Promise<Uint8Array> {
-  return new Uint8Array(await crypto.subtle.digest("SHA-256", bytes as BufferSource));
+  // slice() gives a copy backed by a plain ArrayBuffer, which every WebCrypto typing accepts.
+  return new Uint8Array(await crypto.subtle.digest("SHA-256", bytes.slice()));
 }
 
 /** What the authenticator signed: sha256(authenticatorData ‖ sha256(clientDataJSON)). */
