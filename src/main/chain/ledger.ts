@@ -7,11 +7,12 @@ import {
   fromBytes32,
   LEDGER_KINDS,
   LEDGER_NOTE_MAX,
+  LEDGER_URI_MAX,
   type LedgerConfig,
+  type LedgerKind,
   type LedgerRevision,
-  type PublishOnChainInput,
   toBytes32,
-  type WitnessOnChainInput,
+  utf8Bytes,
   ZERO_HASH,
 } from "@shared/chain";
 import { err, ok, type Result, toError } from "@shared/result";
@@ -168,24 +169,45 @@ async function write(
   }
 }
 
+/** A revision as main read it from disk (chain/subjects.ts) — never a hash the renderer sent. */
+export interface LedgerPublication {
+  contentHash: string;
+  parent: string | null;
+  kind: LedgerKind;
+  uri: string;
+}
+
+/** The exact arguments `publish` is sent with, or why they would be refused. */
+export function publishArgs(
+  input: LedgerPublication,
+): Result<readonly [`0x${string}`, `0x${string}`, number, string]> {
+  const hash = toBytes32(input.contentHash);
+  if (hash === null) return err("ledger-bad-hash", `${input.contentHash} is not a content hash.`);
+  const parent = input.parent === null ? ZERO_HASH : toBytes32(input.parent);
+  if (parent === null) return err("ledger-bad-hash", `${input.parent} is not a content hash.`);
+  // The contract measures `bytes(uri).length`; a cut URI would point nowhere, so it is refused.
+  const bytes = utf8Bytes(input.uri);
+  if (bytes > LEDGER_URI_MAX) {
+    return err(
+      "ledger-uri-too-long",
+      `The URI is ${bytes} bytes; the ledger takes at most ${LEDGER_URI_MAX}.`,
+      "Use a shorter link (an ipfs:// or https:// address), or leave it empty.",
+    );
+  }
+  return ok([hash, parent, LEDGER_KINDS.indexOf(input.kind), input.uri] as const);
+}
+
 export function publishRevisionOnChain(
-  input: PublishOnChainInput,
+  input: LedgerPublication,
   clients?: LedgerClients,
 ): Promise<Result<{ txHash: string }>> {
-  const hash = toBytes32(input.contentHash);
-  if (hash === null) {
-    return Promise.resolve(err("ledger-bad-hash", `${input.contentHash} is not a content hash.`));
-  }
-  const parent = input.parent === null ? ZERO_HASH : toBytes32(input.parent);
-  if (parent === null) {
-    return Promise.resolve(err("ledger-bad-hash", `${input.parent} is not a content hash.`));
-  }
-  const kind = LEDGER_KINDS.indexOf(input.kind);
-  return write("publish", [hash, parent, kind, input.uri.slice(0, 400)], clients);
+  const args = publishArgs(input);
+  if (!args.ok) return Promise.resolve(args);
+  return write("publish", args.value, clients);
 }
 
 export function witnessOnChain(
-  input: WitnessOnChainInput,
+  input: { contentHash: string; note: string },
   clients?: LedgerClients,
 ): Promise<Result<{ txHash: string }>> {
   const hash = toBytes32(input.contentHash);

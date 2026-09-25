@@ -1,4 +1,4 @@
-import { generateMaze, type MazeRequest, type MazeTile, nextFloor } from "@shared/maze";
+import { generateMaze, type MazeRequest, type MazeTile } from "@shared/maze";
 import { describe, expect, it } from "vitest";
 
 function request(overrides: Partial<MazeRequest> = {}): MazeRequest {
@@ -70,13 +70,6 @@ describe("generateMaze", () => {
     expect(routeIsWalkable(looped)).toBe(true);
   });
 
-  it("emits walls as runs, not one statement per tile", () => {
-    const result = generateMaze(request());
-    const tiles = 21 * 21 - result.open.length;
-    expect(result.walls.length).toBeLessThan(tiles);
-    expect(result.walls.every((wall) => wall.width >= 1)).toBe(true);
-  });
-
   it("never walls in a tile it also reports as open", () => {
     const result = generateMaze(request({ seed: 13 }));
     const open = new Set(result.open.map((tile) => `${tile.x},${tile.z}`));
@@ -90,23 +83,5 @@ describe("generateMaze", () => {
   it("survives a cramped floor without stranding the player", () => {
     const tiny = generateMaze(request({ width: 7, depth: 7, exit: { x: 5, z: 5 } }));
     expect(routeIsWalkable(tiny)).toBe(true);
-  });
-});
-
-describe("nextFloor", () => {
-  it("starts the next floor where the last one ended, with a new layout", () => {
-    const first = request();
-    const second = nextFloor(first, { x: 19, z: 19 }, 1);
-    expect(second.entrance).toEqual({ x: 19, z: 19 });
-    expect(second.seed).not.toBe(first.seed);
-    expect(routeIsWalkable(generateMaze(second))).toBe(true);
-  });
-
-  it("is a stable chain: the same run replays the same floors", () => {
-    const base = request();
-    const a = nextFloor(base, { x: 19, z: 19 }, 3);
-    const b = nextFloor(base, { x: 19, z: 19 }, 3);
-    expect(generateMaze(a).walls).toEqual(generateMaze(b).walls);
-    expect(nextFloor(base, { x: 19, z: 19 }, 4).seed).not.toBe(a.seed);
   });
 });

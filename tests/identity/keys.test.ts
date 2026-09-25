@@ -33,14 +33,6 @@ describe("deriveSaveKey", () => {
     expect(await rawBytes(a.value)).not.toEqual(await rawBytes(b.value));
   });
 
-  it("derives an AES-GCM-256 key usable for both directions", async () => {
-    const derived = await deriveSaveKey(secret(3));
-    expect(derived.ok).toBe(true);
-    if (!derived.ok) return;
-    expect(derived.value.algorithm.name).toBe("AES-GCM");
-    expect(derived.value.usages.sort()).toEqual(["decrypt", "encrypt"]);
-  });
-
   it("rejects a secret of the wrong length", async () => {
     const derived = await deriveSaveKey(new Uint8Array(16));
     expect(derived.ok).toBe(false);

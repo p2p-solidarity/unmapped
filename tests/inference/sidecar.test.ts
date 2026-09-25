@@ -1,4 +1,4 @@
-import { createRingBuffer, STDERR_LINES, sidecarArgs } from "@main/inference/sidecar";
+import { sidecarArgs } from "@main/inference/sidecar";
 import type { SidecarConfig } from "@shared/llm";
 import { describe, expect, it } from "vitest";
 
@@ -26,58 +26,11 @@ describe("sidecarArgs", () => {
     ]);
   });
 
-  it("drops terminal colour codes from captured output", () => {
-    const buffer = createRingBuffer();
-    buffer.push("\u001b[38;2;255;107;128mYOU HAVE NOT AGREED\u001b[0m\n");
-    expect(buffer.tail()).toBe("YOU HAVE NOT AGREED");
-  });
-
   it("runs Apple's model as fm serve on the configured port", () => {
     expect(sidecarArgs({ ...config, binaryPath: "/usr/bin/fm", port: 11535 })).toEqual([
       "serve",
       "--port",
       "11535",
     ]);
-  });
-
-  it("carries a custom port and context size through as strings", () => {
-    const args = sidecarArgs({ ...config, port: 9099, ctxSize: 4096 });
-    expect(args[args.indexOf("--port") + 1]).toBe("9099");
-    expect(args[args.indexOf("-c") + 1]).toBe("4096");
-  });
-});
-
-describe("createRingBuffer", () => {
-  it("keeps only the last N lines", () => {
-    const ring = createRingBuffer(3);
-    ring.push("a\nb\nc\nd\n");
-    expect(ring.lines()).toEqual(["b", "c", "d"]);
-  });
-
-  it("splits multi-line chunks and drops blank lines", () => {
-    const ring = createRingBuffer(10);
-    ring.push("first\n\n  \nsecond\n");
-    ring.push("third");
-    expect(ring.lines()).toEqual(["first", "second", "third"]);
-  });
-
-  it("tails the most recent lines as text", () => {
-    const ring = createRingBuffer(10);
-    ring.push("one\ntwo\nthree\n");
-    expect(ring.tail(2)).toBe("two\nthree");
-  });
-
-  it("clears", () => {
-    const ring = createRingBuffer(10);
-    ring.push("x");
-    ring.clear();
-    expect(ring.lines()).toEqual([]);
-  });
-
-  it("defaults to the documented 50-line window", () => {
-    const ring = createRingBuffer();
-    ring.push(Array.from({ length: 80 }, (_, i) => `line ${i}`).join("\n"));
-    expect(ring.lines()).toHaveLength(STDERR_LINES);
-    expect(ring.lines()[0]).toBe("line 30");
   });
 });

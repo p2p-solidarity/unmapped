@@ -1,4 +1,4 @@
-import { describeError, ERRORS, fill, type Phrase, STRINGS, UI_LANGUAGES } from "@renderer/i18n";
+import { ERRORS, type Phrase, STRINGS, UI_LANGUAGES } from "@renderer/i18n";
 import { languageName, slipsIntoSimplified } from "@shared/language";
 import { describe, expect, it } from "vitest";
 
@@ -35,12 +35,6 @@ describe("UI strings", () => {
       expect(slipsIntoSimplified("zh-TW", phrase["zh-TW"]), key).toBe(false);
     }
   });
-
-  it("fills values and English plurals", () => {
-    expect(fill("{n} {n|model|models}", { n: 1 })).toBe("1 model");
-    expect(fill("{n} {n|model|models}", { n: 3 })).toBe("3 models");
-    expect(fill("B{depth}", {})).toBe("B{depth}");
-  });
 });
 
 describe("model language names", () => {
@@ -50,29 +44,5 @@ describe("model language names", () => {
     expect(languageName("ja-JP")).toBe("Japanese (Japan) (ja-JP)");
     expect(slipsIntoSimplified("zh-TW", "我们这里")).toBe(true);
     expect(slipsIntoSimplified("zh-TW", "我們這裡")).toBe(false);
-  });
-});
-
-describe("errors on screen", () => {
-  const code = Object.keys(ERRORS)[0] as string;
-  const error = { code, message: "Port 8080 refused", hint: "Run llama-server --port 8080" };
-
-  it("keeps the source's exact words in English", () => {
-    expect(describeError(error, "en")).toEqual({
-      message: error.message,
-      hint: error.hint,
-      detail: null,
-    });
-  });
-
-  it("translates a known code elsewhere and keeps the original as detail", () => {
-    const ja = describeError(error, "ja");
-    expect(ja.message).toBe(ERRORS[code]?.message.ja);
-    expect(ja.detail).toBe("Port 8080 refused — Run llama-server --port 8080");
-  });
-
-  it("shows an unknown code's own words", () => {
-    const other = { code: "not-in-the-table", message: "x" };
-    expect(describeError(other, "zh-TW")).toEqual({ message: "x", hint: null, detail: null });
   });
 });

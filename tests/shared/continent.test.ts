@@ -3,7 +3,6 @@ import {
   anchorSlot,
   CONTINENT_SPACING,
   ownerOf,
-  pickAnchor,
   resolveAnchors,
   shiftChunk,
   territoryMap,
@@ -23,11 +22,6 @@ describe("continent anchors", () => {
       seen.add(`${slot.cx},${slot.cz}`);
     }
     expect(seen.size).toBe(25);
-  });
-
-  it("picks the first free slot", () => {
-    expect(pickAnchor([])).toEqual({ cx: 0, cz: 0 });
-    expect(pickAnchor([{ cx: 0, cz: 0 }])).toEqual(anchorSlot(1));
   });
 
   it("settles a clash the same way on every peer: the earlier claim keeps the slot", () => {

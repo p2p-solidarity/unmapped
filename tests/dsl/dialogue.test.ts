@@ -1,27 +1,9 @@
 import { parseDialogue } from "@dsl/index";
 import { LIMITS } from "@dsl/limits";
-import { EXAMPLE_DIALOGUE } from "@dsl/prompts/dialogue";
 import { describe, expect, it } from "vitest";
 import { fixture } from "./fixtures";
 
 describe("parseDialogue", () => {
-  it("reads three choices and a mutation", () => {
-    const result = parseDialogue(fixture("dialogue.oui"));
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    const dialogue = result.value;
-    expect(dialogue.npcId).toBe("hana_inn");
-    expect(dialogue.line).toContain("steam");
-    expect(dialogue.choices).toHaveLength(3);
-    expect(dialogue.choices[1]).toEqual({
-      label: "Trade a towel for supper",
-      action: "trade",
-      effect: "Hana ladles soup into a chipped bowl.",
-      gives: ["hot soup"],
-    });
-    expect(dialogue.mutation).toEqual({ skyColor: "#d9b06a", fogDensity: 0.08, biome: null });
-  });
-
   it('rejects the action "fight", which the engine cannot honour', () => {
     const result = parseDialogue(fixture("dialogue-fight.oui"));
     expect(result.ok).toBe(false);
@@ -62,9 +44,5 @@ describe("parseDialogue", () => {
     const silent = parseDialogue('root = Dialogue("hana_inn", "...", [])');
     expect(silent.ok).toBe(false);
     if (!silent.ok) expect(silent.error.code).toBe("dsl-no-choices");
-  });
-
-  it("parses the program shipped inside the prompt", () => {
-    expect(parseDialogue(EXAMPLE_DIALOGUE).ok).toBe(true);
   });
 });

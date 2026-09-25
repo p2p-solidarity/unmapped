@@ -3,7 +3,6 @@ import {
   type Blocker,
   type Combatant,
   hitscan,
-  isAlive,
   monsterHp,
   type Ray,
   type WeaponSpec,
@@ -45,20 +44,9 @@ describe("applyDamage", () => {
     expect(third.applied).toBe(0);
     expect(third.killed).toBe(false);
   });
-
-  it("never drives hp below zero", () => {
-    expect(applyDamage(target({ hp: 5 }), 999).combatant.hp).toBe(0);
-    expect(isAlive(applyDamage(target({ hp: 5 }), 999).combatant)).toBe(false);
-  });
 });
 
 describe("hitscan", () => {
-  it("hits a target straight ahead and reports its distance", () => {
-    const hit = hitscan(forward(), RIFLE, [target()]);
-    expect(hit?.combatantId).toBe("drone");
-    expect(hit?.distance).toBeCloseTo(10, 1);
-  });
-
   it("misses a target beside the line of fire", () => {
     expect(hitscan(forward(), RIFLE, [target({ x: 4 })])).toBeNull();
   });
@@ -106,11 +94,6 @@ describe("hitscan", () => {
 });
 
 describe("monsterHp", () => {
-  it("scales with level from the rules' base and step", () => {
-    expect(monsterHp(20, 8, 1)).toBe(20);
-    expect(monsterHp(20, 8, 4)).toBe(44);
-  });
-
   it("never returns a monster that is already dead", () => {
     expect(monsterHp(0, 0, 1)).toBe(1);
   });

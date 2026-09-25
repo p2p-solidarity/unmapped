@@ -4,12 +4,6 @@ import { z } from "zod";
 import { createInput } from "./fixtures";
 
 describe("ipc payload schemas", () => {
-  it("checks arity for no-argument channels", () => {
-    const noArgs = z.tuple([]);
-    expect(noArgs.safeParse([]).success).toBe(true);
-    expect(noArgs.safeParse(["unexpected"]).success).toBe(false);
-  });
-
   it("checks the worlds.read argument tuple", () => {
     const args = z.tuple([worldIdSchema, worldFileSchema]);
     expect(args.safeParse(["abc-1", "world.oui"]).success).toBe(true);

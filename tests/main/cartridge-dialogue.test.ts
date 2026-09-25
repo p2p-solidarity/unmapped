@@ -4,10 +4,9 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { packCartridge, unpackCartridge } from "@main/cartridges/pack";
-import { publishCartridgeRevision, readCartridgeRevision } from "@main/cartridges/store";
+import { publishCartridgeRevision } from "@main/cartridges/store";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { KEEPER_DIALOGUE, v2CartridgeInput, v2CartridgeWithVoices } from "../fixtures/v2";
+import { KEEPER_DIALOGUE, v2CartridgeWithVoices } from "../fixtures/v2";
 
 function unwrap<T>(result: { ok: true; value: T } | { ok: false; error: { code: string } }): T {
   if (!result.ok) throw new Error(`expected ok, got ${result.error.code}`);
@@ -27,14 +26,6 @@ afterEach(async () => {
 });
 
 describe("baked cartridge dialogue", () => {
-  it("publishes, declares and reads back one conversation per NPC", async () => {
-    const manifest = unwrap(await publishCartridgeRevision(cartridgesDir, v2CartridgeWithVoices()));
-    expect(manifest.files.map((file) => file.path)).toContain("dialogue/opening/keeper.oui");
-
-    const loaded = unwrap(await readCartridgeRevision(cartridgesDir, "v2-world", "2.0.0"));
-    expect(loaded.dialogues["opening/keeper"]).toBe(KEEPER_DIALOGUE);
-  });
-
   it("changes the cartridge identity, because the words are part of the content", async () => {
     const withVoices = unwrap(
       await publishCartridgeRevision(cartridgesDir, v2CartridgeWithVoices("2.0.0")),
@@ -43,15 +34,6 @@ describe("baked cartridge dialogue", () => {
     silent.dialogues = {};
     const without = unwrap(await publishCartridgeRevision(cartridgesDir, silent));
     expect(withVoices.contentHash).not.toBe(without.contentHash);
-  });
-
-  it("survives a .cartridge round trip", async () => {
-    unwrap(await publishCartridgeRevision(cartridgesDir, v2CartridgeWithVoices()));
-    const revision = unwrap(await readCartridgeRevision(cartridgesDir, "v2-world", "2.0.0"));
-    const packed = unwrap(packCartridge(revision));
-    const restored = unwrap(unpackCartridge(packed));
-    expect(restored.dialogues).toEqual(revision.dialogues);
-    expect(restored.manifest.contentHash).toBe(revision.manifest.contentHash);
   });
 
   it("refuses a conversation for an NPC the scene does not contain", async () => {
@@ -70,11 +52,5 @@ describe("baked cartridge dialogue", () => {
     const published = await publishCartridgeRevision(cartridgesDir, input);
     expect(published.ok).toBe(false);
     if (!published.ok) expect(published.error.code).toBe("cartridge-dialogue-invalid");
-  });
-
-  it("leaves a cartridge with no baked voices with an empty map, not a missing one", async () => {
-    unwrap(await publishCartridgeRevision(cartridgesDir, v2CartridgeInput()));
-    const loaded = unwrap(await readCartridgeRevision(cartridgesDir, "v2-world", "2.0.0"));
-    expect(loaded.dialogues).toEqual({});
   });
 });

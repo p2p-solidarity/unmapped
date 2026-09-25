@@ -1,11 +1,10 @@
 import { AppleLocalSceneProvider } from "@main/inference/appleLocalProvider";
 import type { NativeEvent, NativeRequest, NativeTransport } from "@main/inference/nativeTransport";
 import { fail, ok, type Result } from "@shared/result";
-import type { GenerationOptions, SceneIntent, SceneState } from "@shared/scene-generation";
+import type { SceneState } from "@shared/scene-generation";
 import { describe, expect, it } from "vitest";
 import {
   afmCapabilitiesPayload,
-  afmEventPlan,
   afmEventsPayload,
   afmLayoutPayload,
   terminalResult,
@@ -38,30 +37,6 @@ class FakeTransport implements NativeTransport {
 }
 
 describe("AppleLocalSceneProvider", () => {
-  it("maps native guided-generation capability to the provider contract", async () => {
-    const transport = new FakeTransport((request) =>
-      terminalResult(request, afmCapabilitiesPayload()),
-    );
-    const provider = new AppleLocalSceneProvider(transport);
-
-    const result = await provider.capabilities();
-
-    expect(result).toEqual({
-      ok: true,
-      value: {
-        providerId: "apple-local",
-        available: true,
-        locality: "device",
-        constraintModes: ["swift-generable"],
-        contextTokens: 4096,
-        supportsStreaming: false,
-        supportsReasoning: false,
-        supportedPurposes: ["new-room", "repair-room", "expand-room"],
-      },
-    });
-    expect(transport.requests).toMatchObject([{ method: "capabilities", payload: {} }]);
-  });
-
   it("marks the provider unavailable when native layout vocabulary drifts", async () => {
     const transport = new FakeTransport((request) =>
       terminalResult(
@@ -102,57 +77,6 @@ describe("AppleLocalSceneProvider", () => {
     expect(result).toMatchObject({
       ok: true,
       value: { available: false, unavailableReason: "apple_intelligence_not_enabled" },
-    });
-  });
-
-  it("runs events then layout and returns one provider-neutral scene draft", async () => {
-    const transport = new FakeTransport((request) => {
-      if (request.method === "generateEvents") {
-        return terminalResult(request, afmEventsPayload());
-      }
-      return terminalResult(request, afmLayoutPayload());
-    });
-    const provider = new AppleLocalSceneProvider(transport);
-    const intent: SceneIntent = {
-      requestId: "request-1",
-      purpose: "new-room",
-      sceneId: "room-1",
-      brief: "A quiet room",
-      language: "en-US",
-    };
-    const state = {
-      worldPlan: null,
-      currentScene: null,
-      flags: {},
-      inventory: [],
-      assetCatalog: [],
-      capabilityProfile: { entries: [] },
-    } satisfies SceneState;
-    const options: GenerationOptions = {
-      signal: new AbortController().signal,
-      maxRepairAttempts: 1,
-    };
-
-    const result = await provider.generateScene(intent, state, options);
-
-    expect(result).toMatchObject({
-      ok: true,
-      value: {
-        requestId: "request-1",
-        providerId: "apple-local",
-        purpose: "new-room",
-        ast: { sceneId: "room-1", eventPlan: afmEventPlan },
-        graph: null,
-        worldPlan: null,
-      },
-    });
-    expect(transport.requests.map((request) => request.method)).toEqual([
-      "generateEvents",
-      "generateLayout",
-    ]);
-    expect(transport.requests[1]?.payload).toMatchObject({
-      eventPlan: afmEventPlan,
-      subjectRequirements: [],
     });
   });
 

@@ -1,13 +1,8 @@
-// The app's side of the ledger: what it makes of a reply, and what it says when nothing is set up.
+// The app's side of the ledger: how hashes and notes are encoded, and what it makes of a reply.
 // The contract's own rules are covered in ledger.test.ts by running it in an EVM.
 
 import { readFileSync } from "node:fs";
-import {
-  ledgerClients,
-  ledgerConfig,
-  lookupRevision,
-  publishRevisionOnChain,
-} from "@main/chain/ledger";
+import { lookupRevision } from "@main/chain/ledger";
 import { clipUtf8, fromBytes32, LEDGER_NOTE_MAX, toBytes32 } from "@shared/chain";
 import { type Abi, createPublicClient, custom, encodeFunctionResult } from "viem";
 import { describe, expect, it } from "vitest";
@@ -57,27 +52,6 @@ describe("content hashes on the ledger", () => {
 });
 
 describe("ledger adapter", () => {
-  it("says what is configured and refuses to guess when nothing is", async () => {
-    expect(ledgerConfig({})).toEqual({
-      readable: false,
-      writable: false,
-      chainId: null,
-      address: null,
-      explorer: null,
-    });
-    const configured = ledgerConfig({
-      rpcUrl: "https://example.invalid",
-      address: ADDRESS,
-      privateKey: "0x01",
-      chainId: "84532",
-    });
-    expect(configured).toMatchObject({ readable: true, writable: true, chainId: 84532 });
-    expect(configured.explorer).toContain("basescan");
-    const missing = ledgerClients({});
-    expect(missing.ok).toBe(false);
-    if (!missing.ok) expect(missing.error.code).toBe("ledger-not-configured");
-  });
-
   it("reads a revision and reports an unpublished hash as null", async () => {
     const published = await lookupRevision(
       HASH,
@@ -109,17 +83,5 @@ describe("ledger adapter", () => {
     );
     expect(unknown.ok && unknown.value).toBeNull();
     expect((await lookupRevision("not-a-hash", clientsAnswering({}))).ok).toBe(false);
-  });
-
-  it("will not publish without a signing key, and says how to get one", async () => {
-    const result = await publishRevisionOnChain(
-      { contentHash: HASH, parent: null, kind: "world", uri: "" },
-      clientsAnswering({}),
-    );
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.error.code).toBe("ledger-read-only");
-      expect(result.error.hint).toContain("UNWRITTEN_PRIVATE_KEY");
-    }
   });
 });

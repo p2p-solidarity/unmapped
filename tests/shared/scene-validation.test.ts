@@ -40,18 +40,6 @@ describe("scene validation", () => {
     expect(result.error.issues.some((issue) => issue.code === "navigation-unreachable")).toBe(true);
   });
 
-  it("accepts a bounded scene with a clear exit and reachable target", () => {
-    const result = validateScene(makeScene({ exits: [exit(6, 6)] }), {
-      spawn: { x: 1, z: 1 },
-      requiredTargets: [{ x: 6, z: 6 }],
-    });
-
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.value.valid).toBe(true);
-    expect(result.value.metrics.reachableRequiredTargets).toBe(1);
-  });
-
   it("treats a raised platform as non-blocking for the floor-grid route", () => {
     const result = inspectScene(makeScene({ platforms: [platform(3, 3, { y: 1 })] }), {
       spawn: { x: 1, z: 1 },

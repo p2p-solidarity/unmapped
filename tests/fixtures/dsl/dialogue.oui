@@ -1,5 +1,0 @@
-root = Dialogue("hana_inn", "You walked up from the steam. Sit, the water is still hot.", [c1, c2, c3], shift)
-c1 = Choice("Ask about the brass key", "talk", "Hana looks at the laundry basket.", [])
-c2 = Choice("Trade a towel for supper", "trade", "Hana ladles soup into a chipped bowl.", ["hot soup"])
-c3 = Choice("Go back to the stair", "leave", "Hana waves without turning around.", [])
-shift = Mutation("#d9b06a", 0.08, null)

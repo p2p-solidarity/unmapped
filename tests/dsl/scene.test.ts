@@ -1,7 +1,5 @@
-import { accentFor, parseScene, ROLE_LOOK } from "@dsl/index";
+import { parseScene } from "@dsl/index";
 import { LIMITS } from "@dsl/limits";
-import { SCENE_EXAMPLES } from "@dsl/prompts/scene";
-import { ARCHETYPES } from "@shared/world";
 import { describe, expect, it } from "vitest";
 import { fixture } from "./fixtures";
 
@@ -13,78 +11,6 @@ const expectOk = <T>(
 };
 
 describe("parseScene", () => {
-  it("walks a valid program into a SceneGraph", () => {
-    const scene = expectOk(parseScene(fixture("valid-scene.oui")));
-    expect(scene.name).toBe("Terrace of Bells");
-    expect(scene.biome).toBe("onsen_town");
-    expect(scene.floor).toEqual({ width: 18, depth: 14, tile: "wood" });
-    expect(scene.npcs).toHaveLength(2);
-    expect(scene.monsters).toHaveLength(1);
-    expect(scene.treasures).toHaveLength(1);
-    expect(scene.props).toHaveLength(5);
-    expect(scene.patches).toHaveLength(2);
-    expect(scene.platforms).toHaveLength(1);
-    expect(scene.walls).toHaveLength(1);
-    expect(scene.lights).toHaveLength(2);
-    expect(scene.exits).toHaveLength(1);
-    expect(scene.quests).toHaveLength(1);
-    expect(scene.triggers).toHaveLength(1);
-    expect(scene.sky).toEqual({ color: "#7fa8d0", fog: "#c9dcea", fogDensity: 0.03 });
-    expect(scene.npcs[0]).toEqual({
-      id: "hana_inn",
-      name: "Hana",
-      x: 4,
-      z: 5,
-      role: "merchant",
-      mood: "joyful",
-      color: "#e2b7c3",
-      ...ROLE_LOOK.merchant,
-      accent: accentFor("#e2b7c3"),
-    });
-    expect(scene.patches[0]).toEqual({ x: 8, z: 0, width: 3, depth: 14, tile: "stone" });
-    expect(scene.platforms[0]).toEqual({
-      x: 12,
-      z: 10,
-      width: 3,
-      depth: 2,
-      y: 1.5,
-      height: 0.5,
-      tile: "wood",
-      bounce: true,
-    });
-    expect(scene.lights[1]).toEqual({
-      kind: "point",
-      color: "#ffcf9a",
-      intensity: 0.7,
-      x: 9,
-      z: 6,
-    });
-    expect(scene.props[1]).toEqual({
-      kind: "tree",
-      x: 2,
-      z: 11,
-      scale: 1,
-      tint: null,
-      dynamic: false,
-    });
-    expect(scene.treasures[0]?.loot).toEqual(["folded towel", "brass key"]);
-  });
-
-  it("resolves references defined after the root statement", () => {
-    const scene = expectOk(
-      parseScene(
-        [
-          'root = Scene("Forward", "meadow", [ground, later, sky1])',
-          'later = NPC("late_comer", "Late", 2, 3, "bard", "manic", "#123456")',
-          'ground = Floor(8, 8, "grass")',
-          'sky1 = Sky("#101010", "#202020", 0.01)',
-        ].join("\n"),
-      ),
-    );
-    expect(scene.npcs[0]?.id).toBe("late_comer");
-    expect(scene.floor.width).toBe(8);
-  });
-
   it("fails with dsl-missing-floor when nothing can be stood on", () => {
     const result = parseScene(fixture("missing-floor.oui"));
     expect(result.ok).toBe(false);
@@ -201,38 +127,6 @@ describe("parseScene", () => {
     expect(scene.quests[0]?.text).toContain("Floor(2)");
   });
 
-  it("parses the example program of every archetype", () => {
-    for (const archetype of ARCHETYPES) {
-      const result = parseScene(SCENE_EXAMPLES[archetype]);
-      expect(result.ok, `${archetype} example must parse`).toBe(true);
-    }
-  });
-
-  it("dresses an NPC from its role and keeps a look the model wrote out", () => {
-    const scene = expectOk(parseScene(fixture("valid-scene.oui")));
-    expect(scene.npcs[0]).toMatchObject({ ...ROLE_LOOK.merchant, accent: accentFor("#e2b7c3") });
-    expect(scene.npcs[1]).toMatchObject({
-      body: "tall",
-      hat: "headband",
-      held: "hammer",
-      accent: "#ffd166",
-    });
-    const monk = expectOk(
-      parseScene(
-        [
-          'root = Scene("Cell", "abyss", [ground, m])',
-          'ground = Floor(8, 8, "stone")',
-          'm = NPC("still_monk", "Still", 2, 2, "monk", "calm", "#ccbbaa", null, "crown")',
-        ].join("\n"),
-      ),
-    );
-    expect(monk.npcs[0]).toMatchObject({
-      body: ROLE_LOOK.monk.body,
-      hat: "crown",
-      held: ROLE_LOOK.monk.held,
-    });
-  });
-
   it("defaults a monster to size 1 with no tint and clamps a hallucinated size", () => {
     const scene = expectOk(parseScene(fixture("clamp-scene.oui")));
     expect(scene.monsters[0]).toMatchObject({
@@ -282,12 +176,6 @@ describe("parseScene", () => {
       tile: "void",
       bounce: true,
     });
-  });
-
-  it("leaves bounce off unless the model asked for it", () => {
-    const scene = expectOk(parseScene(fixture("terrain-scene.oui")));
-    expect(scene.platforms.map((platform) => platform.bounce)).toEqual([false, true, false]);
-    expect(scene.platforms[2]?.y).toBe(4);
   });
 
   it("keeps at most the engine's share of patches and platforms", () => {

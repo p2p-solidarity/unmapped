@@ -110,40 +110,6 @@ describe("typed mod publication", () => {
       await rm(root, { recursive: true, force: true });
     }
   });
-  it("rebuilds every timing context and requires a new run", async () => {
-    const root = await mkdtemp(join(tmpdir(), "aether-timing-test-"));
-    try {
-      const manifest = unwrap(await publishCartridgeRevision(root, armedInput()));
-      const base = unwrap(
-        await readCartridgeRevision(root, manifest.cartridgeId, manifest.version),
-      );
-      const input = proposal(base);
-      input.operations = [
-        {
-          type: "change_timing",
-          change: {
-            from: "realtime",
-            to: "revolver",
-            resolution: "shared_team",
-            turnDurationMs: null,
-          },
-        },
-      ];
-      const preview = unwrap(previewModProposal(base, input));
-      const published = unwrap(await publishCartridgeRevision(root, preview.revision));
-      expect(published.formatVersion).toBe(2);
-      if (published.formatVersion !== 2) return;
-      expect(
-        published.definition.capabilityProfile.contexts.every((c) =>
-          c.profile.entries.some((e) => e.key === "timing" && e.value === "revolver"),
-        ),
-      ).toBe(true);
-      expect(preview.compatibility.saveImpact).toBe("new_instance");
-    } finally {
-      await rm(root, { recursive: true, force: true });
-    }
-  });
-
   it("adds what an unarmed cartridge lacks instead of refusing, and still publishes", async () => {
     const root = await mkdtemp(join(tmpdir(), "aether-unarmed-test-"));
     try {

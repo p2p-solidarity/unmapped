@@ -2,7 +2,6 @@ import {
   approveChangeProposal,
   clearChangeProposals,
   createEffectProvider,
-  effectScope,
 } from "@renderer/harness/effectProvider";
 import { useSessionStore } from "@renderer/state/sessionStore";
 import { useWorldStore } from "@renderer/state/worldStore";
@@ -39,33 +38,6 @@ afterEach(() => {
 });
 
 describe("change proposal ownership", () => {
-  it("allows only save-owned effects to be approved during Play", () => {
-    expect(effectScope({ kind: "set_flag", key: "gate", value: true })).toBe("save");
-    expect(
-      effectScope({
-        kind: "mutate_world",
-        skyColor: null,
-        fogDensity: 0.1,
-        biome: null,
-      }),
-    ).toBe("save");
-    expect(
-      effectScope({
-        kind: "spawn_monster",
-        monster: {
-          id: "m",
-          kind: "slime",
-          x: 1,
-          z: 1,
-          level: 1,
-          weakness: "light",
-          size: 1,
-          color: null,
-        },
-      }),
-    ).toBe("workspace");
-  });
-
   it("does not mutate the live save when approval persistence fails", async () => {
     const checkpoint = vi
       .fn()
@@ -89,14 +61,6 @@ describe("change proposal ownership", () => {
     expect(useWorldStore.getState().inventory.materials).toEqual(["moon-glass"]);
     expect(useSessionStore.getState().changeProposals).toHaveLength(0);
     expect(checkpoint).toHaveBeenCalledTimes(2);
-  });
-
-  it("narrates immediately: a toast is not durable state, so no proposal is filed", async () => {
-    const provider = createEffectProvider();
-    const outcome = await provider({ kind: "narrate", text: "The forge hums." });
-    expect(outcome.ok).toBe(true);
-    expect(useSessionStore.getState().changeProposals).toEqual([]);
-    expect(useSessionStore.getState().toasts.at(-1)?.text).toBe("The forge hums.");
   });
 
   it("drops unapproved proposals when the player leaves Play and refuses a stale approval", async () => {

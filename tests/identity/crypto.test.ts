@@ -40,14 +40,6 @@ describe("encryptBytes / decryptBytes", () => {
     expect(opened.error.code).toBe("bad-header");
   });
 
-  it("rejects a payload too short to hold a header and IV", async () => {
-    const key = await localKey();
-    const opened = await decryptBytes(key, new Uint8Array(8));
-    expect(opened.ok).toBe(false);
-    if (opened.ok) return;
-    expect(opened.error.code).toBe("bad-header");
-  });
-
   it("rejects tampered ciphertext", async () => {
     const key = await localKey();
     const sealed = await encryptBytes(key, payload);

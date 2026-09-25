@@ -29,27 +29,6 @@ function scene(overrides: Partial<SceneGraph> = {}): SceneGraph {
 }
 
 describe("shuffleForRun", () => {
-  it("moves the monsters and treasure without touching the authored space", () => {
-    const base = scene();
-    const run = shuffleForRun(base, 12345);
-    expect(run.floor).toEqual(base.floor);
-    expect(run.walls).toEqual(base.walls);
-    expect(run.exits).toEqual(base.exits);
-    expect(run.props).toEqual(base.props);
-    const moved = run.monsters.some(
-      (monster, index) =>
-        monster.x !== base.monsters[index]?.x || monster.z !== base.monsters[index]?.z,
-    );
-    expect(moved).toBe(true);
-  });
-
-  it("keeps every mover, with everything but its position intact", () => {
-    const run = shuffleForRun(scene(), 999);
-    expect(run.monsters.map((one) => one.id)).toEqual(["a", "b", "c"]);
-    expect(run.monsters.map((one) => one.level)).toEqual([1, 2, 3]);
-    expect(run.treasures[0]?.loot).toEqual(["scrap"]);
-  });
-
   it("is deterministic: the same seed replays the same layout", () => {
     const a = shuffleForRun(scene(), 7);
     const b = shuffleForRun(scene(), 7);

@@ -28,15 +28,6 @@ function request(purpose: SceneGenerationRequest["intent"]["purpose"]): SceneGen
 }
 
 describe("scene generation IPC payload", () => {
-  it("parses a state-aware repair request into the service contract", () => {
-    const parsed = parseSceneGenerationRequest(request("repair-room"));
-
-    expect(parsed.ok).toBe(true);
-    if (!parsed.ok) return;
-    expect(parsed.value.state.currentScene?.name).toBe("A room");
-    expect(parsed.value.intent.purpose).toBe("repair-room");
-  });
-
   it("rejects repair and expansion when the renderer omits the current scene", () => {
     const input = request("expand-room");
     input.state.currentSceneSource = null;

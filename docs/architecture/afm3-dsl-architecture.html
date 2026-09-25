@@ -753,7 +753,7 @@
     <div class="layout"><main id="main">
       <div class="page-intro" data-page-intro="core"><div><p class="section-kicker">Page 01 · Product direction</p><h2 data-page-title>先降低產出的成本</h2><p>框架的工作是讓想法更快成為可操作的作品，再讓創作者低成本迭代。</p></div><span class="status inference">方向已確認</span></div>
       <div class="page-intro" data-page-intro="game" hidden><div><p class="section-kicker">Page 02 · The game today</p><h2 data-page-title>現在的遊戲：一張無限的 HD-2D 大地</h2><p>標題、開新世界、章節、戰鬥、調整機制與地點。以下全是開發版的實機截圖，文字寫的是它們現在怎麼運作。</p></div><span class="status verified">實機截圖 · 2026-09-23</span></div>
-      <div class="page-intro" data-page-intro="progress" hidden><div><p class="section-kicker">Page 03 · Delivery plan</p><h2 data-page-title>故事、戰鬥與地點都接上同一張地圖</h2><p>生成方式、隔離播放器、創作閉環、無限章節、HD-2D、大地戰鬥、地點、角色圖與 Create a game 都已實作並實機驗收；本頁只寫實際量到的數字。</p></div><span class="status verified">階段 1–11 已交付</span></div>
+      <div class="page-intro" data-page-intro="progress" hidden><div><p class="section-kicker">Page 03 · Delivery plan</p><h2 data-page-title>故事、戰鬥與地點都接上同一張地圖</h2><p>生成方式、隔離播放器、創作閉環、無限章節、HD-2D、大地戰鬥、地點、角色圖與 Create a game 都已實作並實機驗收；本頁只寫實際量到的數字。</p></div><span class="status verified">階段 1–13 已交付</span></div>
       <div class="page-intro" data-page-intro="technical" hidden><div><p class="section-kicker">Page 04 · Contract &amp; world</p><h2 data-page-title>固定服務介面，開放作品玩法</h2><p>作品契約、執行邊界、儲存責任與故事章節都已落地；本頁是現況，不是提案。</p></div><span class="status verified">契約已實作</span></div>
       <div class="page-intro" data-page-intro="chain" hidden><div><p class="section-kicker">Page 05 · On-chain</p><h2 data-page-title>上鏈只記出處、見證與名稱</h2><p>內容永遠不上鏈；鏈上只有雜湊、作者、血緣、玩家留下的話，以及指向卡帶版本的 ENSv2 名稱。沒有設定鏈，整個遊戲照常運作。</p></div><span class="status unverified">合約已測 · ENSv2 已模擬 · 尚未送出交易</span></div>
         <section id="entry" data-section data-page="core" data-open-default>
@@ -874,6 +874,7 @@
 <tr><td>9 · 地點</td><td>橫向捲軸與地城，從大地走進去、走出來；存檔自己的，不產生新版本</td><td>地形一定走得通；離開後回到入口旁、大地狀態不變</td><td><span class="status verified">已完成，兩種都實玩通過</span></td></tr>
 <tr><td>10 · 角色與怪物圖</td><td>9 種 NPC 職業、8 種怪物各一張，由影像模型畫一次（gpt-image-1-mini，18 張），兩種外觀都用</td><td>遊戲執行時不產圖；每張的 prompt 與用量有紀錄</td><td><span class="status verified">已完成</span></td></tr>
 <tr><td>11 · Create a game</td><td>三步：世界與玩法 → 可修改的計畫（聖經、章節、門的地圖）→ 建立並進入；舊的六步 Genre Matrix 流程連同它的 authoring workspace 與 IPC 已刪除</td><td>只有建立會發布；聖經會配合玩法（有戰鬥就不把怪物列為禁忌）</td><td><span class="status verified">已完成，實際建立並進入一個新世界</span></td></tr>
+<tr><td>12 · 測試改以 E2E 為主</td><td>刪掉 E2E 已經涵蓋、或只是重述實作的單元測試：834 → 384 個，119 → 93 檔。留下的只守 E2E 碰不到的失敗：不可信輸入、模型寫壞的輸出、存檔悄悄遺失、加密、多種子的不變量、鏈上編碼。CLAUDE.md Rule 0：之後以 E2E 驗證功能，每次結束在 <code>docs/e2e/</code> 留下可重播的紀錄並更新本頁</td><td><code>bun run check</code> 全綠；實機 E2E（新遊戲 → 固定種子 → 走路 → 切換畫面）通過，renderer 無錯誤</td><td><span class="status verified">已完成 · <a href="../e2e/2026-09-24-test-prune/result.md">E2E 紀錄</a></span></td></tr>
 <tr><td>13 · ENSv2 與卡帶名稱</td><td>ENS 讀取改走 ENSv2 Universal Resolver（預設 Sepolia，可切主網，支援 CCIP-Read 與 DNS 名稱）；每個發布的卡帶可在 Sepolia 認領 <code>&lt;cartridgeId&gt;.&lt;父名稱&gt;.eth</code>，紀錄只有 id、版本與 sha256。<code>bun run ens:setup</code> 做一次性設定，<code>--dry-run</code> 用 <code>eth_simulateV1</code> 跑完整條鏈上流程（見第 05 頁）</td><td>模擬中的子名稱能從 Universal Resolver 讀回；app 內 Sepolia／主網解析、卡帶名稱列與「用 ENS 名稱開啟」實機通過，renderer 0 個錯誤（E2E 38 秒）</td><td><span class="status verified">已完成 · 鏈上只以模擬驗證，尚未送出真實交易 · <a href="../e2e/2026-09-24-ensv2-cartridge-names/result.md">E2E 紀錄</a></span></td></tr>
 </tbody></table></div>
 <div class="table-wrap" role="region" aria-label="實測數字" tabindex="0"><table><thead><tr><th scope="col">量到的</th><th scope="col">結果</th></tr></thead><tbody>
@@ -884,7 +885,7 @@
 <tr><td>素材生成</td><td>3 張 256px 透明 PNG，各約 16 秒、約 1,056 output tokens</td></tr>
 <tr><td>隔離</td><td>惡意作品拿不到 preload／Node／父頁面／儲存／eval／網路／彈窗／導頁；無窮迴圈只吃掉自己的行程（97% CPU），宿主往返仍 95–98 毫秒</td></tr>
 </tbody></table></div>
-<div class="callout"><strong>完成定義：</strong>有程式碼只代表已有實作。以上每一項都跑過專案檢查（808 測試；刪掉舊流程時一併移除了它的 38 個測試）與實機操作；失敗、取消與重新開啟也各驗過一次。詳細紀錄與未量測項目見 <a href="../experiments/interactive-works-acceptance-2026-09-23.md">驗收文件</a>。</div>
+<div class="callout"><strong>完成定義：</strong>有程式碼只代表已有實作。以上每一項都跑過專案檢查（當時 808 測試；階段 12 起只留守 E2E 碰不到之處的測試，現為 385 個）與實機操作；失敗、取消與重新開啟也各驗過一次。詳細紀錄與未量測項目見 <a href="../experiments/interactive-works-acceptance-2026-09-23.md">驗收文件</a>；階段 12 起每次實機驗收都留在 <code>docs/e2e/&lt;日期&gt;-&lt;流程&gt;/</code>（<code>run.json</code> 可重播、<code>result.md</code>、截圖）。</div>
         </section>
         <section id="stages" data-section data-page="progress" data-open-default>
           <div class="section-head"><p class="section-kicker">02 · Acceptance</p><h2>每階段只解決一個問題</h2><p class="section-intro">先證明生成方式，再固定執行契約；避免一開始把新的框架做成另一個龐大引擎。</p></div>
@@ -1103,7 +1104,7 @@
 </tbody></table></div>
         </section>
       <footer class="footer">
-        <p><strong>文件狀態：</strong>2026-09-24（Revision 6，已和程式逐項比對）。階段 1–11（生成方式、隔離播放器、創作閉環、故事章節、素材生成、無限章節、HD-2D、大地戰鬥與調整機制、地點、角色與怪物圖、Create a game）已實作並實機驗收；畫面見第 02 頁，數字見第 03 頁與 <a href="../experiments/interactive-works-acceptance-2026-09-23.md">驗收紀錄</a>；智能合約已寫、已測、尚未部署；ENS 已改用 ENSv2，卡帶子名稱的鏈上流程已模擬通過、尚未送出真實交易。本頁保留原檔名以維持入口，AFM／DSL 不再代表整體產品的必經架構。</p>
+        <p><strong>文件狀態：</strong>2026-09-24（Revision 6，已和程式逐項比對）。階段 1–11（生成方式、隔離播放器、創作閉環、故事章節、素材生成、無限章節、HD-2D、大地戰鬥與調整機制、地點、角色與怪物圖、Create a game）已實作並實機驗收；階段 12 把測試改成以 E2E 為主；畫面見第 02 頁，數字見第 03 頁與 <a href="../experiments/interactive-works-acceptance-2026-09-23.md">驗收紀錄</a>；智能合約已寫、已測、尚未部署；ENS 已改用 ENSv2，卡帶子名稱的鏈上流程已模擬通過、尚未送出真實交易。本頁保留原檔名以維持入口，AFM／DSL 不再代表整體產品的必經架構。</p>
         <p><strong>實作參考：</strong><a href="../../CLAUDE.md">現有工程規範</a> · <a href="../../plan.md">既有遊戲計劃</a> · <a href="../../src/main/instances/backup.ts">目前備份邊界</a> · <a href="../research/afm3-architecture-source-audit.md">AFM 歷史研究</a>。這些是既有能力與研究參考，不代表新版執行作品已交付。</p>
       </footer>
     </main></div>

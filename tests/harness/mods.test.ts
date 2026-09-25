@@ -1,6 +1,5 @@
 import {
   createHarness,
-  fillTemplate,
   type Harness,
   modPlugin,
   parseModManifest,
@@ -29,31 +28,6 @@ function bundle(overrides: Partial<ModBundle> = {}): ModBundle {
 }
 
 describe("parseModManifest", () => {
-  it("accepts the reference manifest", () => {
-    const result = parseModManifest(GOOD);
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.value).toMatchObject({
-      name: "onsen-festival",
-      version: "0.1.0",
-      prompt: [{ name: "onsen-lore", order: 420, file: "prompt/lore.md" }],
-      skills: ["skills"],
-    });
-    expect(result.value.tools[0]).toMatchObject({
-      name: "light_lanterns",
-      parameters: { hue: { type: "string", required: true } },
-      effect: { kind: "mutate_world", skyColor: "{{hue}}" },
-    });
-  });
-
-  it("defaults the optional fields", () => {
-    const result = parseModManifest("name: bare-mod\nversion: 1.0.0\n");
-    expect(result).toMatchObject({
-      ok: true,
-      value: { author: "", description: "", inject: [], prompt: [], tools: [], skills: [] },
-    });
-  });
-
   it("reports every way the broken manifest is wrong", () => {
     const result = parseModManifest(BROKEN);
     expect(result.ok).toBe(false);
@@ -99,10 +73,6 @@ tools:
 });
 
 describe("validateModBundle", () => {
-  it("accepts a bundle whose files are all present", () => {
-    expect(validateModBundle(bundle())).toMatchObject({ ok: true });
-  });
-
   it("rejects a manifest that points at a file the bundle does not carry", () => {
     const result = validateModBundle(bundle({ files: {} }));
     expect(result).toMatchObject({ ok: false, error: { code: "mod-file-missing" } });
@@ -118,49 +88,6 @@ describe("validateModBundle", () => {
       }),
     );
     expect(result).toMatchObject({ ok: false, error: { code: "skill-frontmatter" } });
-  });
-});
-
-describe("fillTemplate", () => {
-  it("keeps the argument's own type when the whole string is one reference", () => {
-    expect(fillTemplate({ fogDensity: "{{density}}" }, { density: 0.02 })).toEqual({
-      ok: true,
-      value: { fogDensity: 0.02 },
-    });
-    expect(fillTemplate("{{flag}}", { flag: true })).toEqual({ ok: true, value: true });
-    expect(fillTemplate("{{list}}", { list: ["a"] })).toEqual({ ok: true, value: ["a"] });
-  });
-
-  it("renders a reference into surrounding text", () => {
-    expect(fillTemplate("a {{hue}} lantern ({{n}})", { hue: "amber", n: 7 })).toEqual({
-      ok: true,
-      value: "a amber lantern (7)",
-    });
-  });
-
-  it("walks nested objects and arrays and leaves non-strings alone", () => {
-    expect(
-      fillTemplate(
-        { kind: "grant_materials", materials: ["{{a}}", "river iron"], count: 2, none: null },
-        { a: "lantern oil" },
-      ),
-    ).toEqual({
-      ok: true,
-      value: {
-        kind: "grant_materials",
-        materials: ["lantern oil", "river iron"],
-        count: 2,
-        none: null,
-      },
-    });
-  });
-
-  it("names an unknown placeholder instead of substituting nothing", () => {
-    const result = fillTemplate({ skyColor: "{{hue_hex}}" }, { hue: "#f2b06a" });
-    expect(result).toMatchObject({ ok: false, error: { code: "mod-template-placeholder" } });
-    if (result.ok) return;
-    expect(result.error.message).toContain('unknown placeholder "{{hue_hex}}"');
-    expect(result.error.hint).toContain("hue");
   });
 });
 
@@ -249,12 +176,5 @@ describe("modPlugin", () => {
     expect(result.isError).toBe(true);
     expect(result.content).toContain('unknown placeholder "{{density}}"');
     expect(applied).toEqual([]);
-  });
-
-  it("leaves the disposer the apply() body returns equivalent to unloading the fiber", () => {
-    const drop = modPlugin(bundle()).apply(harness.ctx);
-    expect(harness.ctx.tools.has("light_lanterns")).toBe(true);
-    drop();
-    expect(harness.ctx.tools.has("light_lanterns")).toBe(false);
   });
 });

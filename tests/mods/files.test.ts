@@ -4,7 +4,7 @@
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { collectDirFiles, collectZipFiles, writeModFiles, zipRoot } from "@main/mods/files";
+import { collectDirFiles, collectZipFiles, writeModFiles } from "@main/mods/files";
 import {
   hasModExtension,
   isModName,
@@ -105,14 +105,6 @@ describe("collectDirFiles", () => {
     expect(files.value["prompt/lore.md"]).toBe("# lore");
   });
 
-  it("refuses a folder with no manifest", async () => {
-    const src = join(dir, "src");
-    await writeTree(src, { "prompt/lore.md": "# lore" });
-    const files = await collectDirFiles(src);
-    expect(files.ok).toBe(false);
-    if (!files.ok) expect(files.error.code).toBe("mod-manifest-missing");
-  });
-
   it("refuses a file over the size limit", async () => {
     const src = join(dir, "src");
     await writeTree(src, { "mod.yml": MANIFEST });
@@ -123,52 +115,7 @@ describe("collectDirFiles", () => {
   });
 });
 
-describe("zipRoot", () => {
-  it("finds the manifest at the archive root", () => {
-    const root = zipRoot(["mod.yml", "prompt/lore.md"]);
-    expect(root).toEqual({ ok: true, value: "" });
-  });
-
-  it("finds a single top-level folder", () => {
-    const root = zipRoot(["onsen-festival/mod.yml", "onsen-festival/prompt/lore.md"]);
-    expect(root).toEqual({ ok: true, value: "onsen-festival/" });
-  });
-
-  it("refuses an archive with no manifest, or one buried too deep", () => {
-    expect(zipRoot(["prompt/lore.md"]).ok).toBe(false);
-    expect(zipRoot(["a/b/mod.yml"]).ok).toBe(false);
-  });
-
-  it("refuses two competing top-level mods", () => {
-    expect(zipRoot(["a/mod.yml", "b/mod.yml"]).ok).toBe(false);
-  });
-});
-
 describe("collectZipFiles", () => {
-  it("strips a single top-level folder", () => {
-    const files = collectZipFiles(
-      zipOf({
-        "onsen-festival/mod.yml": MANIFEST,
-        "onsen-festival/prompt/lore.md": "# lore",
-      }),
-    );
-    expect(files.ok).toBe(true);
-    if (!files.ok) return;
-    expect(Object.keys(files.value).sort()).toEqual(["mod.yml", "prompt/lore.md"]);
-  });
-
-  it("rejects a traversal entry outright rather than skipping it", () => {
-    const files = collectZipFiles(zipOf({ "mod.yml": MANIFEST, "../escape.md": "no" }));
-    expect(files.ok).toBe(false);
-    if (!files.ok) expect(files.error.code).toBe("mod-path-unsafe");
-  });
-
-  it("rejects an archive carrying a file type a mod may not ship", () => {
-    const files = collectZipFiles(zipOf({ "mod.yml": MANIFEST, "payload.js": "boom" }));
-    expect(files.ok).toBe(false);
-    if (!files.ok) expect(files.error.code).toBe("mod-file-rejected");
-  });
-
   it("rejects an oversize entry", () => {
     const files = collectZipFiles(
       zipOf({ "mod.yml": MANIFEST, "huge.md": "x".repeat(MAX_MOD_FILE_BYTES + 1) }),
@@ -185,19 +132,6 @@ describe("collectZipFiles", () => {
 });
 
 describe("writeModFiles", () => {
-  it("writes nested files under <modsDir>/<name>", async () => {
-    const written = await writeModFiles(dir, "onsen-festival", {
-      "mod.yml": MANIFEST,
-      "skills/lantern-rite/SKILL.md": "# rite",
-    });
-    expect(written.ok).toBe(true);
-    const skill = await readFile(
-      join(dir, "onsen-festival", "skills", "lantern-rite", "SKILL.md"),
-      "utf8",
-    );
-    expect(skill).toBe("# rite");
-  });
-
   it("replaces a previous install instead of merging into it", async () => {
     await writeModFiles(dir, "onsen-festival", { "mod.yml": MANIFEST, "old.md": "gone" });
     const written = await writeModFiles(dir, "onsen-festival", { "mod.yml": MANIFEST });

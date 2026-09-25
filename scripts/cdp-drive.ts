@@ -7,6 +7,9 @@
 // actions: {eval: "js"} | {shot: "file.png"} | {hold: "KeyW", ms: 2000} | {click: [x, y]} | {wait: ms} | {text: true}
 //          | {clickText: "Cartridges"} — clicks the smallest visible element whose text is exactly that
 //          | {type: "words"} — inserts text into the focused field
+//
+// The argument is either that action array or a docs/e2e run.json — { env, model, actions } — so a
+// recorded run replays as-is: bun scripts/cdp-drive.ts "$(cat docs/e2e/<run>/run.json)"
 import { writeFile } from "node:fs/promises";
 
 // A second app (a room guest) can listen elsewhere: CDP_PORT=9334 bun scripts/cdp-drive.ts …
@@ -51,7 +54,8 @@ const VK: Record<string, number> = {
   KeyN: 78,
 };
 
-const actions = JSON.parse(process.argv[2] ?? "[]");
+const input = JSON.parse(process.argv[2] ?? "[]");
+const actions = Array.isArray(input) ? input : (input.actions ?? []);
 for (const action of actions) {
   if (action.eval !== undefined) {
     const r = await send("Runtime.evaluate", {

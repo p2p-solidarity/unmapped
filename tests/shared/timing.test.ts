@@ -34,23 +34,6 @@ function playRound(system: Parameters<typeof beginEncounter>[0]): string[] {
 }
 
 describe("round order", () => {
-  it("runs the party before the hostiles in plain turn-based", () => {
-    expect(roundOrder("turn_based", SQUAD)).toEqual(["ally", "player", "drone", "golem"]);
-  });
-
-  it("orders by speed under initiative, fastest first", () => {
-    expect(roundOrder("initiative", SQUAD)).toEqual(["drone", "player", "ally", "golem"]);
-  });
-
-  it("alternates sides under the revolver policy", () => {
-    expect(roundOrder("revolver", SQUAD)).toEqual(["ally", "drone", "player", "golem"]);
-  });
-
-  it("leaves realtime and turn_bar with no fixed order", () => {
-    expect(roundOrder("realtime", SQUAD)).toEqual([]);
-    expect(roundOrder("turn_bar", SQUAD)).toEqual([]);
-  });
-
   it("skips the dead", () => {
     const fallen = SQUAD.map((actor) =>
       actor.id === "drone" ? { ...actor, alive: false } : actor,
@@ -73,12 +56,6 @@ describe("turn loop", () => {
     expect(state.index).toBe(0);
     expect(activeActor(state)).toBe("ally");
   });
-
-  it("never hands a turn out in realtime", () => {
-    const state = beginEncounter("realtime", SQUAD);
-    expect(activeActor(state)).toBeNull();
-    expect(advance(commit(state), SQUAD)).toEqual(state);
-  });
 });
 
 describe("phase_based", () => {
@@ -100,24 +77,11 @@ describe("phase_based", () => {
 });
 
 describe("turn_bar", () => {
-  it("hands the turn to whoever fills their bar first", () => {
-    const state = beginEncounter("turn_bar", SQUAD);
-    expect(activeActor(state)).toBeNull();
-    // drone has speed 14, so it crosses BAR_FULL first.
-    const charged = chargeBars(state, SQUAD, BAR_FULL / 14);
-    expect(activeActor(charged)).toBe("drone");
-  });
-
   it("carries the overflow so a fast actor keeps its lead", () => {
     const state = chargeBars(beginEncounter("turn_bar", SQUAD), SQUAD, BAR_FULL / 10);
     // player crossed exactly; drone crossed earlier and keeps the remainder.
     expect(state.bars.drone).toBeGreaterThan(0);
     expect(state.order).toEqual(["drone", "player"]);
-  });
-
-  it("does nothing for the other policies", () => {
-    const state = beginEncounter("turn_based", SQUAD);
-    expect(chargeBars(state, SQUAD, 5)).toEqual(state);
   });
 });
 

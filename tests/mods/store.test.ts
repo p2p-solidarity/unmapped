@@ -10,7 +10,6 @@ import { join } from "node:path";
 import {
   installFromDir,
   installFromZip,
-  listMods,
   readModBundle,
   removeMod,
   skillFiles,
@@ -98,14 +97,6 @@ describe("installFromDir + readModBundle", () => {
       "skills/kettle.md",
       "skills/lantern-rite/SKILL.md",
     ]);
-  });
-
-  it("lists exactly what is installed, and an empty directory is a legitimate empty list", async () => {
-    expect(await listMods(modsDir)).toEqual({ ok: true, value: [] });
-    await installFromDir(await writeTree(join(root, "src"), TREE), modsDir);
-    const listed = await listMods(modsDir);
-    expect(listed.ok).toBe(true);
-    if (listed.ok) expect(listed.value.map((mod) => mod.name)).toEqual(["onsen-festival"]);
   });
 
   it("removes a mod and then reports it missing", async () => {

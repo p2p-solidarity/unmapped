@@ -3,6 +3,7 @@
 // read: the pin is derived from the exact cartridge revision the save already names (installed
 // with the same hash), `player`/`party` start empty, nothing else changes. The upgrade is pure;
 // the files on disk stay as they are until the next ordinary save writes the current format.
+// A `.spire-backup` exported by such a build goes through the same upgrade when it is imported.
 
 import {
   type CartridgeManifest,
@@ -17,6 +18,7 @@ import { err, ok, type Result } from "@shared/result";
 import { z } from "zod";
 import { deriveRuntimePin } from "../cartridges/integrity";
 import { cartridgeRefSchema } from "../cartridges/schemas";
+import { readCartridgeRevision } from "../cartridges/store";
 import { inventorySchema, worldFlagsSchema } from "../worlds/schemas";
 import { instanceMetaSchema, mutationSchema, saveStateSchema } from "./schemas";
 
@@ -102,4 +104,27 @@ export function upgradeLegacyInstance(
   });
   if (!upgradedSave.success) return err("save-invalid", issue("save.json", upgradedSave.error));
   return ok({ meta: upgradedMeta.data, save: upgradedSave.data });
+}
+
+/**
+ * A format 1 instance and save from outside the instances folder (a backup), upgraded against the
+ * exact revision its instance.json names — refused, never re-pinned, when that is not installed.
+ */
+export async function upgradeLegacyFromLibrary(
+  cartridgesDir: string,
+  rawMeta: unknown,
+  rawSave: unknown,
+): Promise<Result<{ meta: InstanceMeta; save: SaveState }>> {
+  const meta = legacyInstanceMetaSchema.safeParse(rawMeta);
+  if (!meta.success) return err("instance-invalid", issue("instance.json", meta.error));
+  const ref = meta.data.cartridge;
+  const revision = await readCartridgeRevision(cartridgesDir, ref.cartridgeId, ref.version);
+  if (!revision.ok || revision.value.manifest.contentHash !== ref.contentHash) {
+    return err(
+      "cartridge-missing",
+      `${ref.cartridgeId}@${ref.version} (${ref.contentHash.slice(0, 23)}…) is not installed here.`,
+      "Import that exact cartridge revision first; a save is never re-pinned on restore.",
+    );
+  }
+  return upgradeLegacyInstance(rawMeta, rawSave, revision.value.manifest);
 }

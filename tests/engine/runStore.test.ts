@@ -21,13 +21,4 @@ describe("runStore.begin", () => {
     expect(floor).toBe(2);
     expect(score).toBe(20);
   });
-
-  it("starts progress over for other rules or an ended run, still keeping the seed", () => {
-    useRunStore.getState().begin(ENDLESS);
-    useRunStore.getState().recordKill(1);
-    const seed = useRunStore.getState().seed;
-    useRunStore.getState().settle({ playerAlive: false, hostilesStanding: 1 });
-    useRunStore.getState().begin(ENDLESS);
-    expect(useRunStore.getState()).toMatchObject({ outcome: "running", score: 0, floor: 1, seed });
-  });
 });

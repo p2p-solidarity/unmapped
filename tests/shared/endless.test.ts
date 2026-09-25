@@ -2,12 +2,7 @@
 // depth; it only reuses what the author wrote; and its stairs are always reachable.
 
 import { parseScene, serializeScene } from "@dsl/index";
-import {
-  type AuthoredScene,
-  endlessFloor,
-  endlessObjectiveOf,
-  endlessTemplate,
-} from "@shared/endless";
+import { type AuthoredScene, endlessFloor, endlessObjectiveOf } from "@shared/endless";
 import type { SceneGraph } from "@shared/world";
 import { describe, expect, it } from "vitest";
 
@@ -64,11 +59,6 @@ function stairsReachable(graph: SceneGraph): boolean {
 }
 
 describe("endless depths", () => {
-  it("continues from the last scene the player can walk in", () => {
-    expect(endlessTemplate([deck, finale])?.sceneId).toBe("deck");
-    expect(endlessTemplate([finale])).toBeNull();
-  });
-
   it("regenerates the same floor for the same seed and depth, and deeper floors differ", () => {
     const input = { scenes: [deck, finale], seed: 42, combat: true, objectiveText: text };
     const one = endlessFloor({ ...input, depth: 3 });

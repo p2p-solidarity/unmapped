@@ -1,14 +1,15 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, stat, writeFile } from "node:fs/promises";
 import { IPC, type SeedExport } from "@shared/ipc";
 import { err, fail, ok, type Result, toError } from "@shared/result";
 import { SEED_PATTERN } from "@shared/seedCode";
-import { dialog } from "electron";
 import { z } from "zod";
 import { readCartridgeRevision } from "../cartridges/store";
 import type { MainContext } from "../context";
 import { handle } from "../handle";
 import { inventorySchema, karmaEntrySchema, worldFlagsSchema } from "../worlds/schemas";
 import { packInstanceBackup, restoreInstanceBackup, unpackInstanceBackup } from "./backup";
+import { chooseBackupSource, chooseBackupTarget } from "./backupDialog";
+import { BACKUP_LIMITS } from "./backupShape";
 import { appendNote, appendNoteSchema, readLand, witnessChunk, witnessChunkSchema } from "./land";
 import { landProgressSchema, mutationSchema, savedPositionSchema } from "./schemas";
 import {
@@ -48,45 +49,38 @@ const checkpointSchema = z
 const upgradeSchema = z
   .object({ instanceId: instanceIdSchema, version: z.string().min(1).max(128) })
   .strict();
-const BACKUP_FILTER = [{ name: "Unwritten Land save backup", extensions: ["spire-backup"] }];
 const CANCEL_HINT = "Choose a file to continue, or pick the action again when you are ready.";
 
 async function exportBackup(ctx: MainContext, instanceId: string): Promise<Result<SeedExport>> {
   const packed = await packInstanceBackup(ctx.instancesDir, instanceId, ctx.cartridgesDir);
   if (!packed.ok) return packed;
-  const chosen = await dialog.showSaveDialog({
-    title: "Export save backup",
-    defaultPath: `${instanceId}.spire-backup`,
-    filters: BACKUP_FILTER,
-  });
-  if (chosen.canceled || chosen.filePath === undefined || chosen.filePath.length === 0) {
-    return err("cancelled", "Export cancelled", CANCEL_HINT);
-  }
+  const target = await chooseBackupTarget(`${instanceId}.spire-backup`);
+  if (target === null) return err("cancelled", "Export cancelled", CANCEL_HINT);
   try {
-    await writeFile(chosen.filePath, packed.value);
+    await writeFile(target, packed.value);
   } catch (error) {
     return fail(toError(error, "backup-write-failed"));
   }
-  return ok({ path: chosen.filePath, bytes: packed.value.byteLength });
+  return ok({ path: target, bytes: packed.value.byteLength });
 }
 
 async function importBackup(ctx: MainContext) {
-  const chosen = await dialog.showOpenDialog({
-    title: "Import save backup",
-    properties: ["openFile"],
-    filters: BACKUP_FILTER,
-  });
-  const path = chosen.filePaths[0];
-  if (chosen.canceled || path === undefined) {
-    return err("cancelled", "Import cancelled", CANCEL_HINT);
-  }
+  const path = await chooseBackupSource();
+  if (path === null) return err("cancelled", "Import cancelled", CANCEL_HINT);
   let bytes: Buffer;
   try {
+    if ((await stat(path)).size > BACKUP_LIMITS.archiveBytes) {
+      return err(
+        "backup-too-large",
+        "That file is larger than a .spire-backup may be.",
+        "Choose a backup exported by Unwritten Land.",
+      );
+    }
     bytes = await readFile(path);
   } catch (error) {
     return fail(toError(error, "backup-read-failed"));
   }
-  const unpacked = unpackInstanceBackup(new Uint8Array(bytes));
+  const unpacked = await unpackInstanceBackup(new Uint8Array(bytes), ctx.cartridgesDir);
   if (!unpacked.ok) return unpacked;
   return restoreInstanceBackup(ctx.cartridgesDir, ctx.instancesDir, unpacked.value);
 }

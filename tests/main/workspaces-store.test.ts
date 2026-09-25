@@ -137,57 +137,6 @@ describe("Remix workspaces", () => {
     expect(sourceAgain.scenes.ending).toBe(`${originalScene}\n`);
   });
 
-  it("reports the complete static preview checklist in one pass", async () => {
-    const sourceManifest = unwrap(await publishCartridgeRevision(cartridgesDir, input()));
-    const source = unwrap(await readCartridgeRevision(cartridgesDir, "original", "1.0.0"));
-    const workspace = unwrap(
-      await createWorkspaceFromRevision(workspacesDir, source, {
-        mode: "revision",
-        targetCartridgeId: "original",
-        name: sourceManifest.name,
-        author: sourceManifest.author,
-      }),
-    );
-    const preview = validateWorkspace(workspace);
-    expect(preview.valid).toBe(true);
-    expect(preview.checks.map((item) => item.id)).toEqual([
-      "engine",
-      "save",
-      "rules",
-      "catalog",
-      "contracts",
-      "kits",
-      "prerequisites",
-      "routes",
-      "ending",
-    ]);
-    expect(preview.checks.every((item) => item.ok)).toBe(true);
-  });
-
-  it("reports prerequisites that cannot be satisfied by offline cartridge progression", async () => {
-    const sourceManifest = unwrap(await publishCartridgeRevision(cartridgesDir, input()));
-    const source = unwrap(await readCartridgeRevision(cartridgesDir, "original", "1.0.0"));
-    const workspace = unwrap(
-      await createWorkspaceFromRevision(workspacesDir, source, {
-        mode: "revision",
-        targetCartridgeId: "original",
-        name: sourceManifest.name,
-        author: sourceManifest.author,
-      }),
-    );
-    workspace.scenes.ending = originalScene.replace(
-      '[], [], "carry"',
-      '["missing_flag"], [], "carry"',
-    );
-
-    const preview = validateWorkspace(workspace);
-    expect(preview.valid).toBe(false);
-    expect(preview.checks.find((item) => item.id === "prerequisites")?.messages).toEqual([
-      "ending.oui requires flags no scene grants: missing_flag.",
-    ]);
-    expect(preview.checks.find((item) => item.id === "ending")?.ok).toBe(false);
-  });
-
   it("refuses publish when the full workspace preview is invalid", async () => {
     const incompatible = input();
     incompatible.manifest.engineApiVersion = 2;

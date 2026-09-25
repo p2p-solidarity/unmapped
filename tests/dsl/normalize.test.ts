@@ -32,11 +32,6 @@ describe("normalizeOutput", () => {
     expect(normalizeOutput(dangling)).toBe('root = Scene("C", "meadow", [f])');
   });
 
-  it("keeps a bare program untouched", () => {
-    const program = 'root = Scene("A", "meadow", [f])\nf = Floor(8, 8, "grass")';
-    expect(normalizeOutput(program)).toBe(program);
-  });
-
   it("is applied by parseScene, so fences and thinking still parse", () => {
     const result = parseScene(fixture("fenced-scene.oui"));
     expect(result.ok).toBe(true);

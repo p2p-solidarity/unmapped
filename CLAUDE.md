@@ -27,8 +27,24 @@ Any OpenAI-compatible endpoint works (llama.cpp, Ollama `qwen3.5:4b`, vLLM servi
 `src/shared/llm.ts`. Keys are read from `.env` **in the main process only**.
 
 ## Rules (each one exists because the previous version of it caused a bug)
-### Rule 0. Do not over engineering
-- TDD test to much only need to know this part can run is ok
+### Rule 0. Do not over-engineer, and test end to end
+- **Never write unit tests after you write code.** A test written to fit code that already exists
+  only restates it, and it breaks on every refactor.
+- **E2E is the preferred and normally the only testing mechanism.** Use it to verify every complex
+  feature: drive the real app (see "Verify before claiming done"). Every E2E run ends with a
+  verifiable, repeatable artifact in `docs/e2e/<YYYY-MM-DD>-<flow>/`: `run.json` (the exact
+  `scripts/cdp-drive.ts` actions, the env, and the model), `result.md` (what you checked, the
+  outputs you observed, the numbers from dev logs), and the screenshots it took. Someone else can
+  replay `run.json` against a throwaway userData and compare.
+- **If you must test a system in isolation, first write down all the ways it could fail, then
+  write the code.** Put that list at the top of the test file before the code exists; every
+  isolated test names the failure it guards. Only failures E2E cannot reach earn one: untrusted
+  input (IPC, frames, peers, mods), malformed model output, silent data loss (hashes, pins,
+  compare-and-set, legacy saves), crypto, invariants over many seeds, and on-chain encoding.
+  No tests of prompt wording, constants, defaults, palettes, getters or rendering math.
+- **After the E2E run passes, every session updates the progress page**: Page 03 (`#progress`) of
+  `docs/architecture/afm3-dsl-architecture.html`. Add or update the stage row, write only numbers
+  you measured, and link that session's `docs/e2e/` artifact. Nothing unverified goes in (Rule 2).
 
 ### Rule 1. Every source file ≤ 600 lines — enforced by `bun run lines`
 Split by responsibility (parser / prompt / repair), never by "part 1 / part 2".
@@ -132,7 +148,8 @@ src/
     ├── net/       yjs + y-webrtc rooms: shared dotfiles + presence
     ├── state/     zustand stores (world, engine, session, inference)
     └── ui/        primitives + tokens
-tests/             vitest (dsl, shared, main/worlds with tmp dirs)
+tests/             vitest — only failures E2E cannot reach (Rule 0); fixtures in tests/fixtures/
+docs/e2e/          one folder per E2E run: run.json + result.md + screenshots (Rule 0)
 ```
 
 ### Rule 11. Extensions are prompt + tools, never code (docs/harness.md)
@@ -402,5 +419,14 @@ export function useContinentSync(continent): void;   // publish own world, read 
   initiates (upstream glare left one-way data channels).
 
 ## Verify before claiming done
-`bun run check` must pass. For UI/engine work also run `bun run dev` and exercise the flow you
-changed. Report failures verbatim — a red check is information, not something to hide.
+1. `bun run check` must pass (typecheck, lint, line limit, and the few isolated tests in `tests/`).
+2. E2E: run the flow you changed in the real app, never on the user's own data or window:
+   ```bash
+   mkdir -p "$TMPDIR/ud"   # copy cartridges in if the flow needs them
+   AETHER_TEST_USER_DATA="$TMPDIR/ud" bun run dev --remoteDebuggingPort 9333   # in the background
+   bun scripts/cdp-drive.ts "$(cat docs/e2e/<run>/run.json)"
+   ```
+   Then write the artifact from Rule 0 (`run.json`, `result.md`, screenshots) under `docs/e2e/`.
+3. Update the progress page (Rule 0) with what that run verified.
+
+Report failures verbatim — a red check or a failed E2E step is information, not something to hide.

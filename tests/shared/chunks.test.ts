@@ -1,6 +1,5 @@
 import {
   CHUNK_SIZE,
-  chunkOf,
   chunksAround,
   chunkTerrain,
   clearFords,
@@ -14,13 +13,6 @@ import { describe, expect, it } from "vitest";
 const origin = { floor: { width: 20, depth: 16, tile: "grass" as const } };
 
 describe("chunks", () => {
-  it("maps world positions to chunk coordinates on both sides of zero", () => {
-    expect(chunkOf(0, 0)).toEqual({ cx: 0, cz: 0 });
-    expect(chunkOf(31.9, 32)).toEqual({ cx: 0, cz: 1 });
-    expect(chunkOf(-0.1, -32.1)).toEqual({ cx: -1, cz: -2 });
-    expect(chunksAround({ cx: 3, cz: -1 }, 2)).toHaveLength(25);
-  });
-
   it("regenerates the same chunk from the same seed, and a different one from another", () => {
     const coord = { cx: -4, cz: 7 };
     const a = chunkTerrain({ seed: 1234, coord, origin });

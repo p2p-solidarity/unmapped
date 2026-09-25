@@ -290,6 +290,30 @@ export const SAVE_ERRORS: Record<string, ErrorText> = {
     },
     hint: HINT.exportAgain,
   },
+  "backup-too-large": {
+    message: {
+      en: "The .spire-backup is larger than a backup may be.",
+      "zh-TW": ".spire-backup 超過備份允許的大小。",
+      ja: ".spire-backup がバックアップの上限より大きすぎます。",
+    },
+    hint: {
+      en: "Use a backup exported by Unwritten Land; a save with this much land is kept by copying its instance folder.",
+      "zh-TW": "請使用 Unwritten Land 匯出的備份；土地這麼多的存檔，請直接複製它的存檔資料夾保存。",
+      ja: "Unwritten Land が書き出したバックアップを使ってください。これほど土地の多いセーブは、インスタンスのフォルダーをそのままコピーして保管します。",
+    },
+  },
+  "backup-land-invalid": {
+    message: {
+      en: "The witnessed land in this save is damaged.",
+      "zh-TW": "這個存檔裡已顯影的土地資料已損毀。",
+      ja: "このセーブに記録された土地のデータが壊れています。",
+    },
+    hint: {
+      en: "If it came from a backup file, export that backup again from the save it came from.",
+      "zh-TW": "如果它來自備份檔，請從原本的存檔重新匯出那份備份。",
+      ja: "バックアップファイルから来たものなら、元のセーブからもう一度書き出してください。",
+    },
+  },
   "backup-scene-missing": {
     message: {
       en: "The backup's current scene is missing from its cartridge.",

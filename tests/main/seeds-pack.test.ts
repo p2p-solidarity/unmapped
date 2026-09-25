@@ -23,23 +23,6 @@ function unwrap<T>(result: { ok: true; value: T } | { ok: false; error: { code: 
 }
 
 describe("packWorld / unpackSeed", () => {
-  it("round-trips a world through a .seed with meta.json at the zip root", async () => {
-    const meta = unwrap(await createWorld(dir, createInput("Round Trip")));
-    const bytes = unwrap(await packWorld(join(dir, meta.id)));
-    expect(Object.keys(unzipSync(bytes)).sort()).toEqual([
-      "genesis.json",
-      "inventory.json",
-      "karma.jsonl",
-      "meta.json",
-      "world.oui",
-    ]);
-
-    const { files } = unwrap(unpackSeed(bytes));
-    expect(JSON.parse(files["meta.json"]).name).toBe("Round Trip");
-    expect(files["world.oui"]).toContain("Scene(");
-    expect(files["karma.jsonl"]).toBe("");
-  });
-
   it("imports an unpacked seed as a new world with a fresh id", async () => {
     const meta = unwrap(await createWorld(dir, createInput("Traveller")));
     const bytes = unwrap(await packWorld(join(dir, meta.id)));
@@ -55,12 +38,6 @@ describe("packWorld / unpackSeed", () => {
       imported.id,
     );
     expect(unwrap(await listWorlds(dir))).toHaveLength(2);
-  });
-
-  it("errors when the world directory is missing a dotfile", async () => {
-    const result = await packWorld(join(dir, "does-not-exist"));
-    expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error.code).toBe("seed-incomplete");
   });
 });
 

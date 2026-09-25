@@ -1,26 +1,40 @@
-// A `.spire-backup` is instance.json plus the active save (save.json, karma.jsonl). It carries the
-// pinned CartridgeRef but never cartridge content, so restoring on a machine without that exact
-// revision reports what is missing instead of silently substituting a newer one (plan §一, §七).
+// A `.spire-backup` is instance.json plus the active save: save.json, karma.jsonl and the land the
+// player witnessed (chunks, lore.jsonl, notes.jsonl — backupLand.ts). It carries the pinned
+// CartridgeRef but never cartridge content, so restoring on a machine without that exact revision
+// reports what is missing instead of silently substituting a newer one (plan §一, §七). Backups
+// from an older build (instance format 1) are upgraded against that exact revision on import.
 
 import { mkdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { CartridgeRef, InstanceRecord, ResolvedInstance } from "@shared/cartridge";
+import type {
+  CartridgeRef,
+  InstanceMeta,
+  InstanceRecord,
+  ResolvedInstance,
+  SaveState,
+} from "@shared/cartridge";
+import type { LandRecord } from "@shared/land";
 import { err, fail, ok, type Result, toError } from "@shared/result";
-import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
-import { validateArchiveEntryNames } from "../archive";
+import { strToU8, zipSync } from "fflate";
 import { verifyRuntimePin } from "../cartridges/integrity";
 import { cartridgeCompatibility, readCartridgeRevision } from "../cartridges/store";
 import { parseKarmaText } from "../worlds/schemas";
+import { landEntries, landFromFiles, validateLand, writeLand } from "./backupLand";
+import { BACKUP_LIMITS, readBackupFiles, SHAPE_HINT } from "./backupShape";
+import { readLand } from "./land";
+import { legacyInstanceMetaSchema, upgradeLegacyFromLibrary } from "./legacy";
 import { instanceDir, isInstanceId, isSaveId } from "./paths";
 import { instanceMetaSchema, saveStateSchema } from "./schemas";
 import { readInstance, resolveInstance } from "./store";
 
 const INSTANCE_FILE = "instance.json";
-const SAVE_ENTRY = /^saves\/([a-z0-9][a-z0-9-]{0,63})\/(save\.json|karma\.jsonl)$/;
 const ZIP_LEVEL = 6;
 const MAX_INSTANCE_ID_BYTES = 96;
-const SHAPE_HINT =
-  "A .spire-backup holds exactly instance.json, saves/<id>/save.json and saves/<id>/karma.jsonl.";
+
+/** One instance, its active save and that save's witnessed land. */
+export interface InstanceBackup extends InstanceRecord {
+  land: LandRecord;
+}
 
 function serializeKarma(entries: InstanceRecord["karma"]): string {
   return entries.length === 0
@@ -42,118 +56,109 @@ export async function packInstanceBackup(
 ): Promise<Result<Uint8Array>> {
   const instance = await readInstance(instancesDir, instanceId, cartridgesDir);
   if (!instance.ok) return instance;
+  const land = await readLand(instancesDir, instanceId, cartridgesDir);
+  if (!land.ok) return land;
+  const valid = validateLand(instanceId, land.value);
+  if (!valid.ok) return valid;
   const { meta, save, karma } = instance.value;
   const base = `saves/${meta.activeSaveId}`;
-  try {
-    return ok(
-      zipSync(
-        {
-          [INSTANCE_FILE]: strToU8(`${JSON.stringify(meta, null, 2)}\n`),
-          [`${base}/save.json`]: strToU8(`${JSON.stringify(save, null, 2)}\n`),
-          [`${base}/karma.jsonl`]: strToU8(serializeKarma(karma)),
-        },
-        { level: ZIP_LEVEL },
-      ),
+  const texts: Record<string, string> = {
+    [INSTANCE_FILE]: `${JSON.stringify(meta, null, 2)}\n`,
+    [`${base}/save.json`]: `${JSON.stringify(save, null, 2)}\n`,
+    [`${base}/karma.jsonl`]: serializeKarma(karma),
+  };
+  for (const [path, text] of Object.entries(landEntries(land.value))) {
+    texts[`${base}/${path}`] = text;
+  }
+  const files = Object.fromEntries(
+    Object.entries(texts).map(([path, text]) => [path, strToU8(text)]),
+  );
+  const total = Object.values(files).reduce((sum, bytes) => sum + bytes.byteLength, 0);
+  if (Object.keys(files).length > BACKUP_LIMITS.entries || total > BACKUP_LIMITS.totalBytes) {
+    return err(
+      "backup-too-large",
+      `This save is ${total} bytes in ${Object.keys(files).length} files, more than one backup holds.`,
+      "Copy the instance folder itself to keep it; a .spire-backup cannot hold this much land.",
     );
+  }
+  try {
+    return ok(zipSync(files, { level: ZIP_LEVEL }));
   } catch (error) {
     return fail(toError(error, "backup-pack-failed"));
   }
 }
 
-function unsafeEntry(name: string): boolean {
-  return (
-    name.startsWith("/") ||
-    name.startsWith("\\") ||
-    /^[A-Za-z]:/.test(name) ||
-    name.split(/[\\/]/).some((segment) => segment === "..")
-  );
+function parseJson(text: string, file: string, code: string): Result<unknown> {
+  try {
+    return ok(JSON.parse(text));
+  } catch (error) {
+    return err(code, `${file}: ${toError(error).message}`);
+  }
 }
 
-export function unpackInstanceBackup(bytes: Uint8Array): Result<InstanceRecord> {
-  const names = validateArchiveEntryNames(bytes, "backup-duplicate");
-  if (!names.ok) return names;
-  let unzipped: Record<string, Uint8Array>;
-  try {
-    unzipped = unzipSync(bytes);
-  } catch (error) {
-    return err(
-      "backup-unreadable",
-      "That file is not a readable .spire-backup archive.",
-      `Export it again from Unwritten Land. (${toError(error).message})`,
-    );
+/** instance.json + save.json in the current format; a format 1 pair is upgraded (legacy.ts). */
+async function readRecord(
+  cartridgesDir: string,
+  rawMeta: unknown,
+  saveText: string,
+): Promise<Result<{ meta: InstanceMeta; save: SaveState }>> {
+  const rawSave = parseJson(saveText, "save.json", "save-invalid");
+  if (!rawSave.ok) return rawSave;
+  if ((rawMeta as { formatVersion?: unknown } | null)?.formatVersion === 1) {
+    return upgradeLegacyFromLibrary(cartridgesDir, rawMeta, rawSave.value);
   }
-  const saves = new Map<string, { save?: string; karma?: string }>();
-  const saveDirectories = new Set<string>();
-  let metaText: string | null = null;
-  for (const [name, raw] of Object.entries(unzipped)) {
-    if (unsafeEntry(name))
-      return err("backup-unsafe", `Refusing archive entry ${name}.`, SHAPE_HINT);
-    if (name.endsWith("/")) {
-      if (name === "saves/") continue;
-      const directory = /^saves\/([a-z0-9][a-z0-9-]{0,63})\/$/.exec(name);
-      if (directory?.[1] === undefined) {
-        return err("backup-unknown-file", `Unexpected entry ${name}.`, SHAPE_HINT);
-      }
-      saveDirectories.add(directory[1]);
-      continue;
-    }
-    if (name === INSTANCE_FILE) {
-      metaText = strFromU8(raw);
-      continue;
-    }
-    const match = SAVE_ENTRY.exec(name);
-    if (match?.[1] === undefined || match[2] === undefined) {
-      return err("backup-unknown-file", `Unexpected entry ${name}.`, SHAPE_HINT);
-    }
-    const slot = saves.get(match[1]) ?? {};
-    if (match[2] === "save.json") slot.save = strFromU8(raw);
-    else slot.karma = strFromU8(raw);
-    saves.set(match[1], slot);
+  const meta = instanceMetaSchema.safeParse(rawMeta);
+  if (!meta.success) {
+    return err("instance-invalid", meta.error.issues[0]?.message ?? "Invalid instance.json");
   }
-  if (metaText === null) return err("backup-incomplete", "instance.json is missing.", SHAPE_HINT);
-  let rawMeta: unknown;
-  try {
-    rawMeta = JSON.parse(metaText);
-  } catch (error) {
-    return err("instance-invalid", `instance.json: ${toError(error).message}`);
+  const save = saveStateSchema.safeParse(rawSave.value);
+  if (!save.success) {
+    return err("save-invalid", save.error.issues[0]?.message ?? "Invalid save.json");
   }
-  const parsedMeta = instanceMetaSchema.safeParse(rawMeta);
-  if (!parsedMeta.success) {
-    return err("instance-invalid", parsedMeta.error.issues[0]?.message ?? "Invalid instance.json");
+  return ok({ meta: meta.data, save: save.data });
+}
+
+/**
+ * Reads a backup archive without writing anything. `cartridgesDir` is only consulted for a format 1
+ * backup, whose runtime pin is derived from the exact revision it names.
+ */
+export async function unpackInstanceBackup(
+  bytes: Uint8Array,
+  cartridgesDir: string,
+): Promise<Result<InstanceBackup>> {
+  const files = readBackupFiles(bytes);
+  if (!files.ok) return files;
+  if (files.value.instance === null) {
+    return err("backup-incomplete", "instance.json is missing.", SHAPE_HINT);
   }
-  const meta = parsedMeta.data;
-  if (!isInstanceId(meta.instanceId) || !isSaveId(meta.activeSaveId)) {
+  const rawMeta = parseJson(files.value.instance, INSTANCE_FILE, "instance-invalid");
+  if (!rawMeta.ok) return rawMeta;
+  // Which save is active, from either format, before its files are looked at.
+  const named =
+    (rawMeta.value as { formatVersion?: unknown } | null)?.formatVersion === 1
+      ? legacyInstanceMetaSchema.safeParse(rawMeta.value)
+      : instanceMetaSchema.safeParse(rawMeta.value);
+  if (!named.success) {
+    return err("instance-invalid", named.error.issues[0]?.message ?? "Invalid instance.json");
+  }
+  const { instanceId, activeSaveId } = named.data;
+  if (!isInstanceId(instanceId) || !isSaveId(activeSaveId)) {
     return err("instance-invalid", "The backup names an invalid instance or save id.");
   }
-  const slot = saves.get(meta.activeSaveId);
+  const slot = files.value.saves.get(activeSaveId);
   if (slot?.save === undefined || slot.karma === undefined) {
-    return err("backup-incomplete", `saves/${meta.activeSaveId} is incomplete.`, SHAPE_HINT);
+    return err("backup-incomplete", `saves/${activeSaveId} is incomplete.`, SHAPE_HINT);
   }
-  if (saves.size !== 1) {
+  if (files.value.saves.size !== 1) {
     return err(
       "backup-unknown-file",
       "The backup contains save slots other than the active save.",
       SHAPE_HINT,
     );
   }
-  if ([...saveDirectories].some((id) => id !== meta.activeSaveId)) {
-    return err(
-      "backup-unknown-file",
-      "The backup contains save directories other than the active save.",
-      SHAPE_HINT,
-    );
-  }
-  let rawSave: unknown;
-  try {
-    rawSave = JSON.parse(slot.save);
-  } catch (error) {
-    return err("save-invalid", `save.json: ${toError(error).message}`);
-  }
-  const parsedSave = saveStateSchema.safeParse(rawSave);
-  if (!parsedSave.success) {
-    return err("save-invalid", parsedSave.error.issues[0]?.message ?? "Invalid save.json");
-  }
-  const save = parsedSave.data;
+  const record = await readRecord(cartridgesDir, rawMeta.value, slot.save);
+  if (!record.ok) return record;
+  const { meta, save } = record.value;
   if (
     save.instanceId !== meta.instanceId ||
     !sameRef(meta.cartridge, save.cartridge) ||
@@ -168,7 +173,9 @@ export function unpackInstanceBackup(bytes: Uint8Array): Result<InstanceRecord> 
   }
   const karma = parseKarmaText(slot.karma);
   if (!karma.ok) return karma;
-  return ok({ meta, save, karma: karma.value });
+  const land = landFromFiles(meta.instanceId, slot);
+  if (!land.ok) return land;
+  return ok({ meta, save, karma: karma.value, land: land.value });
 }
 
 async function exists(path: string): Promise<boolean> {
@@ -187,10 +194,10 @@ async function exists(path: string): Promise<boolean> {
 export async function restoreInstanceBackup(
   cartridgesDir: string,
   instancesDir: string,
-  record: InstanceRecord,
+  backup: InstanceBackup,
   now: Date = new Date(),
 ): Promise<Result<ResolvedInstance>> {
-  const ref = record.meta.cartridge;
+  const ref = backup.meta.cartridge;
   const revision = await readCartridgeRevision(cartridgesDir, ref.cartridgeId, ref.version);
   const shortHash = ref.contentHash.slice(0, 23);
   if (!revision.ok || revision.value.manifest.contentHash !== ref.contentHash) {
@@ -202,32 +209,32 @@ export async function restoreInstanceBackup(
   }
   const compatibility = cartridgeCompatibility(revision.value.manifest);
   if (!compatibility.ok) return compatibility;
-  const metaPin = verifyRuntimePin(revision.value.manifest, record.meta.runtimePin);
+  const metaPin = verifyRuntimePin(revision.value.manifest, backup.meta.runtimePin);
   if (!metaPin.ok) return metaPin;
-  const savePin = verifyRuntimePin(revision.value.manifest, record.save.runtimePin);
+  const savePin = verifyRuntimePin(revision.value.manifest, backup.save.runtimePin);
   if (!savePin.ok) return savePin;
-  if (record.save.saveSchemaVersion !== revision.value.manifest.saveSchemaVersion) {
+  if (backup.save.saveSchemaVersion !== revision.value.manifest.saveSchemaVersion) {
     return err(
       "save-schema-mismatch",
       "The backup's save schema does not match its cartridge revision.",
       "Restore the exact revision this save was written against.",
     );
   }
-  if (revision.value.scenes[record.save.currentSceneId] === undefined) {
+  if (revision.value.scenes[backup.save.currentSceneId] === undefined) {
     return err(
       "backup-scene-missing",
-      `The backup points to missing scene ${record.save.currentSceneId}.`,
+      `The backup points to missing scene ${backup.save.currentSceneId}.`,
       "Restore the exact unmodified cartridge revision used by this save.",
     );
   }
-  const taken = await exists(instanceDir(instancesDir, record.meta.instanceId));
+  const taken = await exists(instanceDir(instancesDir, backup.meta.instanceId));
   const suffix = `-r${now.getTime().toString(36)}`;
   const instanceId = taken
-    ? `${record.meta.instanceId.slice(0, MAX_INSTANCE_ID_BYTES - suffix.length)}${suffix}`
-    : record.meta.instanceId;
+    ? `${backup.meta.instanceId.slice(0, MAX_INSTANCE_ID_BYTES - suffix.length)}${suffix}`
+    : backup.meta.instanceId;
   const at = now.toISOString();
-  const meta = { ...record.meta, instanceId, updatedAt: at };
-  const save = { ...record.save, instanceId, updatedAt: at };
+  const meta = { ...backup.meta, instanceId, updatedAt: at };
+  const save = { ...backup.save, instanceId, updatedAt: at };
   const destination = instanceDir(instancesDir, instanceId);
   const staging = join(instancesDir, `.staging-${instanceId}-${process.pid}-${Date.now()}`);
   try {
@@ -236,7 +243,8 @@ export async function restoreInstanceBackup(
     await mkdir(saveDir, { recursive: true });
     await writeFile(join(staging, INSTANCE_FILE), `${JSON.stringify(meta, null, 2)}\n`, "utf8");
     await writeFile(join(saveDir, "save.json"), `${JSON.stringify(save, null, 2)}\n`, "utf8");
-    await writeFile(join(saveDir, "karma.jsonl"), serializeKarma(record.karma), "utf8");
+    await writeFile(join(saveDir, "karma.jsonl"), serializeKarma(backup.karma), "utf8");
+    await writeLand(saveDir, backup.land);
     await rename(staging, destination);
   } catch (error) {
     await rm(staging, { recursive: true, force: true }).catch(() => undefined);

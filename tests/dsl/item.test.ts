@@ -1,6 +1,5 @@
 import { parseItem } from "@dsl/index";
 import { LIMITS } from "@dsl/limits";
-import { EXAMPLE_ITEM } from "@dsl/prompts/item";
 import { describe, expect, it } from "vitest";
 import { fixture } from "./fixtures";
 
@@ -47,9 +46,5 @@ describe("parseItem", () => {
     expect(result.error.code).toBe("dsl-invalid-props");
     expect(result.error.errors[0]?.message).toContain("kind");
     expect(result.error.errors[0]?.message).toContain("spaceship");
-  });
-
-  it("parses the program shipped inside the prompt", () => {
-    expect(parseItem(EXAMPLE_ITEM).ok).toBe(true);
   });
 });

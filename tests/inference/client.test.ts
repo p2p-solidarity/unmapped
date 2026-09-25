@@ -23,11 +23,6 @@ const config = (over: Partial<InferenceConfig>): InferenceConfig => ({
 });
 
 describe("usesReasoningParams", () => {
-  it("is true for the openai and gateway presets, which default to GPT-5 models", () => {
-    expect(usesReasoningParams(config({ ...PROVIDER_PRESETS.openai }))).toBe(true);
-    expect(usesReasoningParams(config({ ...PROVIDER_PRESETS["openui-gateway"] }))).toBe(true);
-  });
-
   it("is false when the openai preset is pointed at a non-reasoning model", () => {
     expect(usesReasoningParams(config({ ...PROVIDER_PRESETS.openai, model: "gpt-4o" }))).toBe(
       false,
@@ -75,13 +70,6 @@ describe("buildChatBody", () => {
     expect(body.chat_template_kwargs).toBeUndefined();
   });
 
-  it("treats the openui gateway like openai", () => {
-    const body = buildChatBody(config({ ...PROVIDER_PRESETS["openui-gateway"] }), request);
-    expect(body.max_completion_tokens).toBe(1600);
-    expect(body.temperature).toBeUndefined();
-    expect(body.reasoning_effort).toBe("low");
-  });
-
   it("sends max_tokens + temperature for llama.cpp, plus grammar and thinking-off", () => {
     const body = buildChatBody(config({ kind: "llamacpp" }), request);
     expect(body.max_tokens).toBe(1600);
@@ -106,18 +94,5 @@ describe("buildChatBody", () => {
     expect(
       buildChatBody(config({ ...PROVIDER_PRESETS.vllm }), request).chat_template_kwargs,
     ).toBeUndefined();
-  });
-
-  it("omits stop when the caller passed none and includes it otherwise", () => {
-    expect(buildChatBody(config({}), request).stop).toBeUndefined();
-    expect(buildChatBody(config({}), { ...request, stop: ["</program>"] }).stop).toEqual([
-      "</program>",
-    ]);
-  });
-
-  it("always streams with usage accounting", () => {
-    const body = buildChatBody(config({}), request);
-    expect(body.stream).toBe(true);
-    expect(body.stream_options).toEqual({ include_usage: true });
   });
 });

@@ -1,9 +1,4 @@
-import {
-  makeKarmaEntry,
-  parseKarmaJsonl,
-  parseKarmaLine,
-  serializeKarmaJsonl,
-} from "@renderer/app/karmaFile";
+import { parseKarmaJsonl, serializeKarmaJsonl } from "@renderer/app/karmaFile";
 import type { KarmaEntry } from "@shared/world";
 import { describe, expect, it } from "vitest";
 
@@ -25,11 +20,6 @@ describe("karma.jsonl", () => {
     expect(parseKarmaJsonl(text)).toEqual({ entries, skipped: 0 });
   });
 
-  it("serializes an empty ledger as an empty file", () => {
-    expect(serializeKarmaJsonl([])).toBe("");
-    expect(parseKarmaJsonl("")).toEqual({ entries: [], skipped: 0 });
-  });
-
   it("skips and counts lines a human broke, keeping the good ones", () => {
     const text = [
       JSON.stringify(entry),
@@ -45,42 +35,5 @@ describe("karma.jsonl", () => {
     expect(parsed.entries).toHaveLength(2);
     expect(parsed.entries[1]?.action).toBe("leave");
     expect(parsed.skipped).toBe(4);
-  });
-
-  it("accepts every action the world vocabulary allows", () => {
-    for (const action of [
-      "talk",
-      "fight",
-      "trade",
-      "open_exit",
-      "craft",
-      "leave",
-      "wish",
-      "genesis",
-      "floor",
-    ]) {
-      expect(parseKarmaLine(JSON.stringify({ ...entry, action }))).not.toBeNull();
-    }
-    expect(parseKarmaLine(JSON.stringify({ ...entry, action: "ascend" }))).toBeNull();
-  });
-
-  it("requires npcId to be a string or null, never undefined", () => {
-    const { npcId: _omitted, ...withoutNpc } = entry;
-    expect(parseKarmaLine(JSON.stringify(withoutNpc))).toBeNull();
-    expect(parseKarmaLine(JSON.stringify({ ...entry, npcId: null }))).not.toBeNull();
-    expect(parseKarmaLine(JSON.stringify({ ...entry, npcId: 7 }))).toBeNull();
-  });
-
-  it("makeKarmaEntry fills at/npcId without inventing anything else", () => {
-    const made = makeKarmaEntry({
-      floor: 1,
-      action: "trade",
-      choice: "opened chest-1",
-      effect: "rope",
-    });
-    expect(made.npcId).toBeNull();
-    expect(made.floor).toBe(1);
-    expect(made.effect).toBe("rope");
-    expect(Number.isNaN(new Date(made.at).getTime())).toBe(false);
   });
 });

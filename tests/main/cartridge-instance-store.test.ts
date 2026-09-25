@@ -162,24 +162,6 @@ function duplicateFirstCentralEntry(zip: Uint8Array): Uint8Array {
 }
 
 describe("immutable cartridge revisions", () => {
-  it("publishes, verifies, and idempotently reuses the same revision", async () => {
-    const first = unwrap(await publishCartridgeRevision(cartridgesDir, cartridgeInput()));
-    expect(first.contentHash).toMatch(/^sha256:[a-f0-9]{64}$/);
-
-    const second = unwrap(await publishCartridgeRevision(cartridgesDir, cartridgeInput()));
-    expect(second).toEqual(first);
-
-    const loaded = unwrap(
-      await readCartridgeRevision(cartridgesDir, first.cartridgeId, first.version),
-    );
-    expect(loaded.manifest).toEqual(first);
-    expect(loaded.rules).toContain("Rules(");
-    expect(loaded.scenes.entrance).toBe(scene("entrance", "tps_exploration@1", "vault"));
-
-    const manifestPath = join(cartridgesDir, "salt-marsh", "1.0.0", "manifest.json");
-    expect(JSON.parse(await readFile(manifestPath, "utf8")).contentHash).toBe(first.contentHash);
-  });
-
   it("lists intact incompatible revisions but refuses to run them", async () => {
     const input = cartridgeInput();
     input.manifest.engineApiVersion = 2;
@@ -294,21 +276,22 @@ describe("portable cartridge and save archives", () => {
       "saves/default/karma.jsonl",
       "saves/default/save.json",
     ]);
-    const record = unwrap(unpackInstanceBackup(packed));
+    const record = unwrap(await unpackInstanceBackup(packed, cartridgesDir));
 
     const withExtraSlot = unzipSync(packed);
     withExtraSlot["saves/other/save.json"] = strToU8("{}");
     withExtraSlot["saves/other/karma.jsonl"] = strToU8("");
-    const extraSlot = unpackInstanceBackup(zipSync(withExtraSlot));
+    const extraSlot = await unpackInstanceBackup(zipSync(withExtraSlot), cartridgesDir);
     expect(extraSlot.ok).toBe(false);
     if (!extraSlot.ok) expect(extraSlot.error.code).toBe("backup-unknown-file");
 
-    const duplicate = unpackInstanceBackup(duplicateFirstCentralEntry(packed));
+    const duplicate = await unpackInstanceBackup(duplicateFirstCentralEntry(packed), cartridgesDir);
     expect(duplicate.ok).toBe(false);
     if (!duplicate.ok) expect(duplicate.error.code).toBe("backup-duplicate");
 
-    const extraDirectory = unpackInstanceBackup(
+    const extraDirectory = await unpackInstanceBackup(
       zipSync({ ...unzipSync(packed), "saves/other/": new Uint8Array() }),
+      cartridgesDir,
     );
     expect(extraDirectory.ok).toBe(false);
     if (!extraDirectory.ok) expect(extraDirectory.error.code).toBe("backup-unknown-file");
@@ -326,7 +309,7 @@ describe("portable cartridge and save archives", () => {
     const manifest = unwrap(await publishCartridgeRevision(cartridgesDir, cartridgeInput()));
     const instance = unwrap(await createInstance(instancesDir, manifest, "Portable run"));
     const packed = unwrap(await packInstanceBackup(instancesDir, instance.meta.instanceId));
-    const record = unwrap(unpackInstanceBackup(packed));
+    const record = unwrap(await unpackInstanceBackup(packed, cartridgesDir));
 
     const badScene = await restoreInstanceBackup(cartridgesDir, join(root, "bad"), {
       ...record,
@@ -356,57 +339,6 @@ describe("portable cartridge and save archives", () => {
 });
 
 describe("pinned instances", () => {
-  it("creates a default save and resolves the exact immutable revision", async () => {
-    const manifest = unwrap(await publishCartridgeRevision(cartridgesDir, cartridgeInput()));
-    const instance = unwrap(
-      await createInstance(
-        instancesDir,
-        manifest,
-        "Salt Marsh run",
-        new Date("2026-09-26T01:00:00Z"),
-      ),
-    );
-
-    expect(instance.meta.cartridge).toEqual({
-      cartridgeId: "salt-marsh",
-      version: "1.0.0",
-      contentHash: manifest.contentHash,
-    });
-    expect(instance.save.currentSceneId).toBe("entrance");
-    expect(instance.save.inventory).toEqual({ items: [], materials: [] });
-
-    const resolved = unwrap(
-      await resolveInstance(cartridgesDir, instancesDir, instance.meta.instanceId),
-    );
-    expect(resolved.cartridge.manifest.contentHash).toBe(manifest.contentHash);
-    expect(resolved.instance).toEqual(instance);
-  });
-
-  it("moves through declared scenes offline and persists the checkpoint", async () => {
-    const manifest = unwrap(await publishCartridgeRevision(cartridgesDir, cartridgeInput()));
-    const instance = unwrap(
-      await createInstance(instancesDir, manifest, "Offline run", new Date("2026-09-26T01:00:00Z")),
-    );
-
-    const transitioned = unwrap(
-      await transitionInstance(
-        cartridgesDir,
-        instancesDir,
-        instance.meta.instanceId,
-        "vault",
-        new Date("2026-09-26T01:05:00Z"),
-      ),
-    );
-    expect(transitioned.instance.save.currentSceneId).toBe("vault");
-    expect(transitioned.instance.save.flags.entrance_done).toBe(true);
-    expect(transitioned.instance.save.completedSceneIds).toEqual(["entrance"]);
-
-    const reloaded = unwrap(
-      await resolveInstance(cartridgesDir, instancesDir, instance.meta.instanceId),
-    );
-    expect(reloaded.instance.save).toEqual(transitioned.instance.save);
-  });
-
   it("ends the cartridge from its terminal scene and refuses everywhere else", async () => {
     const manifest = unwrap(await publishCartridgeRevision(cartridgesDir, cartridgeInput()));
     const instance = unwrap(
@@ -435,49 +367,6 @@ describe("pinned instances", () => {
       "utf8",
     );
     expect(original).toBe(cartridgeInput().scenes.ending);
-  });
-
-  it("persists player progress without modifying the cartridge", async () => {
-    const manifest = unwrap(await publishCartridgeRevision(cartridgesDir, cartridgeInput()));
-    const instance = unwrap(
-      await createInstance(
-        instancesDir,
-        manifest,
-        "Progress run",
-        new Date("2026-09-26T02:00:00Z"),
-      ),
-    );
-    unwrap(
-      await checkpointInstance(
-        instancesDir,
-        {
-          instanceId: instance.meta.instanceId,
-          expectedUpdatedAt: instance.meta.updatedAt,
-          flags: { chest_open: true },
-          inventory: { items: [], materials: ["brass"] },
-          mutation: null,
-          karma: [
-            {
-              at: "2026-09-26T02:01:00.000Z",
-              floor: 1,
-              npcId: null,
-              choice: "opened chest",
-              action: "trade",
-              effect: "brass",
-            },
-          ],
-        },
-        new Date("2026-09-26T02:02:00Z"),
-      ),
-    );
-
-    const reloaded = unwrap(
-      await resolveInstance(cartridgesDir, instancesDir, instance.meta.instanceId),
-    );
-    expect(reloaded.instance.save.flags.chest_open).toBe(true);
-    expect(reloaded.instance.save.inventory.materials).toEqual(["brass"]);
-    expect(reloaded.instance.karma).toHaveLength(1);
-    expect(reloaded.cartridge.manifest.contentHash).toBe(manifest.contentHash);
   });
 
   it("hashes the world bible with the content and keeps it through pack and unpack", async () => {

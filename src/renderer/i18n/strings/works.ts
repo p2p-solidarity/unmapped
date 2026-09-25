@@ -45,6 +45,16 @@ export const WORKS = {
     ja: "オンチェーン · {author}…",
   },
   notOnChain: { en: "not on chain", "zh-TW": "未上鏈", ja: "オンチェーン未登録" },
+  noLedger: {
+    en: "No on-chain ledger is set up on this machine, so worlds are not checked or registered on chain.",
+    "zh-TW": "這台電腦沒有設定鏈上帳本，所以不會在鏈上查詢或登錄世界。",
+    ja: "このマシンにはオンチェーン台帳が設定されていないため、ワールドをチェーンで確認・登録しません。",
+  },
+  checkingChain: {
+    en: "asking the ledger…",
+    "zh-TW": "正在查詢鏈上帳本…",
+    ja: "台帳に照会中…",
+  },
   registerOnChain: { en: "Register on chain", "zh-TW": "登錄到鏈上帳本", ja: "台帳に登録" },
   confirmGas: { en: "Confirm · spends gas", "zh-TW": "確認 · 需支付 gas", ja: "確定 · ガス代あり" },
   registerAsk: {

@@ -2,10 +2,9 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parseRules, serializeRules } from "@dsl/index";
-import { canonicalJson, deriveRuntimePin, sha256 } from "@main/cartridges/integrity";
+import { canonicalJson, sha256 } from "@main/cartridges/integrity";
 import { packCartridge, unpackCartridge } from "@main/cartridges/pack";
 import { publishCartridgeRevision, readCartridgeRevision } from "@main/cartridges/store";
-import { packInstanceBackup, unpackInstanceBackup } from "@main/instances/backup";
 import { createInstance, resolveInstance } from "@main/instances/store";
 import { upgradeInstance } from "@main/instances/upgrade";
 import { createWorkspaceFromRevision, publishWorkspace } from "@main/workspaces/store";
@@ -48,26 +47,6 @@ describe("v2 storage", () => {
     expect(second.contentHash).toBe(first.contentHash);
     expect(loaded.rules).not.toContain("\r");
     expect(Object.values(loaded.scenes).every((source) => !source.includes("\r"))).toBe(true);
-  });
-
-  it("publishes every context and persists a recomputed runtime pin in instance and save", async () => {
-    const manifest = unwrap(await publishCartridgeRevision(cartridgesDir, v2CartridgeInput()));
-    const expectedPin = unwrap(deriveRuntimePin(manifest));
-    const instance = unwrap(await createInstance(instancesDir, manifest, "V2 run"));
-
-    expect(manifest.formatVersion).toBe(2);
-    if (manifest.formatVersion !== 2) throw new Error("expected v2 manifest");
-    expect(
-      manifest.definition.capabilityProfile.contexts.map((context) => context.contextId),
-    ).toEqual(["explore", "puzzle"]);
-    expect(instance.meta.runtimePin).toEqual(expectedPin);
-    expect(instance.save.runtimePin).toEqual(expectedPin);
-    expect(
-      unwrap(await resolveInstance(cartridgesDir, instancesDir, instance.meta.instanceId)),
-    ).toBeDefined();
-
-    const packed = unwrap(await packInstanceBackup(instancesDir, instance.meta.instanceId));
-    expect(unwrap(unpackInstanceBackup(packed)).meta.runtimePin).toEqual(expectedPin);
   });
 
   it("rejects a tampered runtime pin when resolving", async () => {

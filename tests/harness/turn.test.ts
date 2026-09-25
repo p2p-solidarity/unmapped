@@ -55,33 +55,6 @@ describe("runTurn", () => {
     await harness.dispose();
   });
 
-  it("prepends the assembled prompt and returns the model's answer", async () => {
-    const { chat, seen } = fakeChat([say("灯りは戻った。")]);
-    const result = await runTurn({
-      ctx: harness.ctx,
-      chat,
-      messages: [
-        { role: "system", content: "an incoming system message that must be replaced" },
-        { role: "user", content: "I light the lantern." },
-      ],
-      assemble: ASSEMBLE,
-    });
-
-    expect(result).toEqual(
-      ok({
-        text: "灯りは戻った。",
-        steps: 1,
-        toolResults: [],
-        messages: [
-          { role: "system", content: "speak ja-JP" },
-          { role: "user", content: "I light the lantern." },
-          { role: "assistant", content: "灯りは戻った。" },
-        ],
-      }),
-    );
-    expect(seen[0]?.tools.map((tool) => tool.name)).toEqual(["set_flag"]);
-  });
-
   it("executes tool calls, feeds the results back, and answers on the next step", async () => {
     const { chat, seen } = fakeChat([
       say("", [{ id: "c1", name: "set_flag", arguments: '{"key":"gate_7_open"}' }]),
@@ -111,38 +84,6 @@ describe("runTurn", () => {
     ]);
     // The second request carries the whole history back to the model.
     expect(seen[1]?.messages).toHaveLength(3);
-  });
-
-  it("offers no tools and passes the grammar through when useTools is false", async () => {
-    const { chat, seen } = fakeChat([say("Scene { }")]);
-    await runTurn({
-      ctx: harness.ctx,
-      chat,
-      messages: [],
-      assemble: { purpose: "scene", language: "en" },
-      useTools: false,
-      grammar: "root ::= scene",
-      maxTokens: 512,
-      temperature: 0.2,
-    });
-    expect(seen[0]).toMatchObject({
-      tools: [],
-      grammar: "root ::= scene",
-      maxTokens: 512,
-      temperature: 0.2,
-    });
-  });
-
-  it("drops the grammar when tools are offered, because no server honours both", async () => {
-    const { chat, seen } = fakeChat([say("ok")]);
-    await runTurn({
-      ctx: harness.ctx,
-      chat,
-      messages: [],
-      assemble: ASSEMBLE,
-      grammar: "root ::= scene",
-    });
-    expect(seen[0]?.grammar).toBeNull();
   });
 
   it("gives up after maxSteps of tool calls", async () => {

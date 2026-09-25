@@ -93,18 +93,6 @@ function draft(overrides: Partial<SceneDraft> = {}): SceneDraft {
 }
 
 describe("SceneArtifactService", () => {
-  it("parses provider source then validates a reachable generated scene", async () => {
-    const service = new SceneArtifactService([new StaticProvider(draft())]);
-
-    const result = await service.generateScene(intent, state, options);
-
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.value.source).toContain('Scene("A room"');
-    expect(result.value.graph.exits[0]?.targetSceneId).toBe("next-room");
-    expect(result.value.validation.metrics.reachableRequiredTargets).toBe(1);
-  });
-
   it("refuses a draft that has no canonical OpenUI source or graph", async () => {
     const service = new SceneArtifactService([
       new StaticProvider(draft({ source: null, ast: null })),

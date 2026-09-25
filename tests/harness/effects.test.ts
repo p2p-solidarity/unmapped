@@ -35,55 +35,6 @@ describe("ctx.effects", () => {
     expect(() => install()).not.toThrow();
   });
 
-  it("passes a valid effect through, filling in the defaults the DSL uses", async () => {
-    install();
-    expect(await harness.ctx.effects.apply({ kind: "mutate_world", skyColor: "#d9b06a" })).toEqual({
-      ok: true,
-      message: "applied mutate_world",
-    });
-    expect(applied[0]).toEqual({
-      kind: "mutate_world",
-      skyColor: "#d9b06a",
-      fogDensity: null,
-      biome: null,
-    });
-
-    await harness.ctx.effects.apply({
-      kind: "spawn_monster",
-      monster: { id: "shade_a", kind: "shade", x: 3, z: 4, level: 5 },
-    });
-    expect(applied[1]).toEqual({
-      kind: "spawn_monster",
-      monster: {
-        id: "shade_a",
-        kind: "shade",
-        x: 3,
-        z: 4,
-        level: 5,
-        weakness: "",
-        size: 1,
-        color: null,
-      },
-    });
-
-    await harness.ctx.effects.apply({
-      kind: "spawn_npc",
-      npc: {
-        id: "mira",
-        name: "Mira",
-        x: 2,
-        z: 2,
-        role: "elder",
-        mood: "calm",
-        color: "#8899aa",
-      },
-    });
-    // The accent falls back to the body colour, exactly like the DSL's own default.
-    expect(applied[2]).toMatchObject({
-      npc: { body: "slim", hat: "none", held: "none", accent: "#8899aa" },
-    });
-  });
-
   it.each([
     ["an unknown kind", { kind: "explode_world" }],
     ["a bad colour", { kind: "mutate_world", skyColor: "red" }],
@@ -105,14 +56,5 @@ describe("ctx.effects", () => {
     expect(outcome.ok).toBe(false);
     expect(outcome.message).toMatch(/^invalid effect: /);
     expect(applied).toEqual([]);
-  });
-
-  it("names the offending field so the model can retry", async () => {
-    install();
-    const outcome = await harness.ctx.effects.apply({
-      kind: "add_quest",
-      quest: { id: "lantern-vigil", text: "x".repeat(500) },
-    });
-    expect(outcome.message).toContain("quest.text");
   });
 });

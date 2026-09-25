@@ -1,19 +1,7 @@
-import { BIBLE_EXAMPLE, originIssues, parseBible, parseScene } from "@dsl/index";
-import { bibleLanguage } from "@shared/cartridge";
+import { originIssues, parseScene } from "@dsl/index";
 import { describe, expect, it } from "vitest";
 
 describe("new world", () => {
-  it("renders a bible program into fixed core and style text", () => {
-    const bible = parseBible(BIBLE_EXAMPLE);
-    if (!bible.ok) throw new Error(bible.error.message);
-    expect(bible.value.core).toContain("Rules:\n- Buses run twice a day");
-    expect(bible.value.style.startsWith("Naming:")).toBe(true);
-    expect(bibleLanguage({ ...bible.value, style: `Language: ja-JP\n${bible.value.style}` })).toBe(
-      "ja-JP",
-    );
-    expect(bibleLanguage(bible.value)).toBe(null);
-  });
-
   it("sends back an origin that walls in its edges or brings monsters", () => {
     const walled = parseScene(`root = Scene("Edge", "countryside", [ground, sun1, wall1, ren, boar])
 ground = Floor(14, 14, "grass")

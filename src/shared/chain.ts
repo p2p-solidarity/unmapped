@@ -25,21 +25,33 @@ export interface LedgerRevision {
   uri: string;
 }
 
+/**
+ * A revision on this machine, named the way the renderer knows it. Main reads its content hash and
+ * parent from disk itself, so a renderer can never put a hash it made up on chain.
+ */
+export type LedgerSubject =
+  | { kind: "cartridge"; cartridgeId: string; version: string }
+  | { kind: "world"; workId: string; version: string };
+
 export interface PublishOnChainInput {
-  contentHash: string;
-  parent: string | null;
-  kind: LedgerKind;
+  subject: LedgerSubject;
   /** Where the bytes can be fetched; empty when it is only an authorship claim. */
   uri: string;
 }
 
 export interface WitnessOnChainInput {
-  contentHash: string;
+  subject: LedgerSubject;
   note: string;
 }
 
 /** The contract counts a note in UTF-8 bytes (`bytes(note).length`), not in characters. */
 export const LEDGER_NOTE_MAX = 280;
+/** The contract's `MAX_URI`, also in UTF-8 bytes. */
+export const LEDGER_URI_MAX = 400;
+
+export function utf8Bytes(text: string): number {
+  return new TextEncoder().encode(text).length;
+}
 
 /** The longest start of `text` that fits in `maxBytes` of UTF-8, never splitting a character. */
 export function clipUtf8(text: string, maxBytes: number): string {

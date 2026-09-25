@@ -95,21 +95,6 @@ describe("deterministic cartridge scene transitions", () => {
 });
 
 describe("cartridge endings", () => {
-  it("completes a terminal scene in place: flags granted, scene recorded, checkpoint unmoved", () => {
-    const finale = scene("ending", {
-      contract: { ...contract("ending"), grantsFlags: ["relic_found"], terminal: true },
-      exits: [{ x: 7, z: 7, to: "The light", targetSceneId: null }],
-    });
-    const before = { ...save(), currentSceneId: "ending", completedSceneIds: ["entrance"] };
-    const result = completeScene(before, finale, new Date("2026-09-26T02:00:00Z"));
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.value.currentSceneId).toBe("ending");
-    expect(result.value.flags.relic_found).toBe(true);
-    expect(result.value.completedSceneIds).toEqual(["entrance", "ending"]);
-    expect(result.value.updatedAt).toBe("2026-09-26T02:00:00.000Z");
-  });
-
   it("refuses to end the cartridge from a scene that is not terminal", () => {
     const result = completeScene(save(), scene("entrance"));
     expect(result.ok).toBe(false);

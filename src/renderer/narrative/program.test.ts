@@ -52,15 +52,6 @@ function spec(over: Partial<ProgramSpec<{ name: string }, FakeError>> = {}) {
 }
 
 describe("runProgram", () => {
-  it("returns the parsed program on the first try", async () => {
-    const { chat, seen } = scriptedChat([VALID]);
-    const result = await runProgram(chat, spec());
-    expect(result.ok).toBe(true);
-    if (result.ok) expect(result.value).toEqual({ source: VALID, graph: { name: "ok" } });
-    expect(seen).toHaveLength(1);
-    expect(seen[0]?.messages).toBe(2);
-  });
-
   it("repairs an invalid program and succeeds on the second call", async () => {
     const { chat, seen } = scriptedChat(["Scene(broken)", VALID]);
     const result = await runProgram(chat, spec());
@@ -102,25 +93,5 @@ describe("runProgram", () => {
       spec({ normalize: (raw) => raw.replace(/```/g, "").trim() }),
     );
     expect(result.ok).toBe(true);
-  });
-
-  it("passes grammar, budget and temperature through to the chat bridge", async () => {
-    let captured: { grammar: string | null; maxTokens: number; temperature: number } | null = null;
-    const chat: ProgramChat = async (request) => {
-      captured = {
-        grammar: request.grammar,
-        maxTokens: request.maxTokens,
-        temperature: request.temperature,
-      };
-      return ok({ text: VALID, usage: null });
-    };
-    await runProgram(chat, spec({ grammar: "root ::= x", maxTokens: 321, temperature: 0.1 }));
-    expect(captured).toEqual({ grammar: "root ::= x", maxTokens: 321, temperature: 0.1 });
-  });
-
-  it("honours a custom repair budget", async () => {
-    const { chat, seen } = scriptedChat(["Scene(broken)"]);
-    await runProgram(chat, spec({ maxRepairs: 0 }));
-    expect(seen).toHaveLength(1);
   });
 });

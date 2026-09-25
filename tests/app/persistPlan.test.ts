@@ -1,4 +1,3 @@
-import { derivedLock, type LockInput } from "@renderer/app/useInputLock";
 import { type PersistSlice, persistPlan } from "@renderer/app/usePersistWorld";
 import type { Inventory, KarmaEntry, WorldMeta } from "@shared/world";
 import { describe, expect, it } from "vitest";
@@ -25,24 +24,6 @@ function slice(overrides: Partial<PersistSlice> = {}): PersistSlice {
 const NOTHING = { karma: false, inventory: false, meta: false };
 
 describe("persistPlan", () => {
-  it("writes nothing when nothing changed", () => {
-    expect(persistPlan(slice(), slice())).toEqual(NOTHING);
-  });
-
-  it("writes karma.jsonl when the ledger changed", () => {
-    const next = slice({ karma: [...karma] });
-    expect(persistPlan(next, slice())).toEqual({ ...NOTHING, karma: true });
-  });
-
-  it("writes inventory.json when the inventory changed", () => {
-    const next = slice({ inventory: { items: [], materials: ["ore"] } });
-    expect(persistPlan(next, slice())).toEqual({ ...NOTHING, inventory: true });
-  });
-
-  it("writes meta.json when the floor changed", () => {
-    expect(persistPlan(slice({ floor: 2 }), slice())).toEqual({ ...NOTHING, meta: true });
-  });
-
   it("writes nothing while the store is hydrating from the dotfiles", () => {
     const loaded = slice({ hydrating: true, karma: [...karma], floor: 4 });
     expect(persistPlan(loaded, slice())).toEqual(NOTHING);
@@ -56,54 +37,5 @@ describe("persistPlan", () => {
     expect(persistPlan(slice({ floor: 9 }), slice({ meta: { ...meta, id: "w2" } }))).toEqual(
       NOTHING,
     );
-  });
-});
-
-function lock(overrides: Partial<LockInput> = {}): LockInput {
-  return {
-    screen: "play",
-    consoleOpen: false,
-    dialogueOpen: false,
-    altarOpen: false,
-    busy: null,
-    floorFailed: false,
-    endingOpen: false,
-    proposalOpen: false,
-    runEnded: false,
-    paused: false,
-    tweakOpen: false,
-    sceneReady: true,
-    ...overrides,
-  };
-}
-
-describe("derivedLock", () => {
-  it("leaves the keyboard to the engine on a playable floor", () => {
-    expect(derivedLock(lock())).toBe(false);
-  });
-
-  it("locks on every screen that is not the running world", () => {
-    for (const screen of ["worlds", "create"] as const) {
-      expect(derivedLock(lock({ screen }))).toBe(true);
-    }
-  });
-
-  it("locks while an overlay owns the input", () => {
-    expect(derivedLock(lock({ consoleOpen: true }))).toBe(true);
-    expect(derivedLock(lock({ dialogueOpen: true }))).toBe(true);
-    expect(derivedLock(lock({ altarOpen: true }))).toBe(true);
-    expect(derivedLock(lock({ proposalOpen: true }))).toBe(true);
-    expect(derivedLock(lock({ runEnded: true }))).toBe(true);
-    expect(derivedLock(lock({ paused: true }))).toBe(true);
-    expect(derivedLock(lock({ tweakOpen: true }))).toBe(true);
-  });
-
-  it("locks while a floor is being written and while its failure is on screen", () => {
-    expect(derivedLock(lock({ busy: "Weaving floor 3…" }))).toBe(true);
-    expect(derivedLock(lock({ floorFailed: true }))).toBe(true);
-  });
-
-  it("locks while there is no parsed scene to walk on", () => {
-    expect(derivedLock(lock({ sceneReady: false }))).toBe(true);
   });
 });

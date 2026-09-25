@@ -318,4 +318,16 @@ export const NET_ERRORS: Record<string, ErrorText> = {
       ja: "正しいコンテンツハッシュではありません。",
     },
   },
+  "ledger-uri-too-long": {
+    message: {
+      en: "That link is longer than the ledger accepts.",
+      "zh-TW": "這個連結超過鏈上帳本能接受的長度。",
+      ja: "そのリンクは台帳が受け付ける長さを超えています。",
+    },
+    hint: {
+      en: "Use a shorter link (an ipfs:// or https:// address), or leave it empty.",
+      "zh-TW": "請改用較短的連結（ipfs:// 或 https:// 位址），或留白。",
+      ja: "短いリンク（ipfs:// や https:// のアドレス）を使うか、空欄にしてください。",
+    },
+  },
 };
