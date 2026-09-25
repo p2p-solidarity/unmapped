@@ -17,9 +17,9 @@ const SEED_SHAPE = {
 };
 
 const SEED_CORRUPT = {
-  en: "The file decrypted, but it is not a valid Unwritten Land world.",
-  "zh-TW": "檔案已解密，但它不是有效的 Unwritten Land 世界。",
-  ja: "ファイルは復号できましたが、正しい Unwritten Land のワールドではありません。",
+  en: "The file decrypted, but it is not a valid UNMAPPED world.",
+  "zh-TW": "檔案已解密，但它不是有效的《無界之地》世界。",
+  ja: "ファイルは復号できましたが、正しい UNMAPPED のワールドではありません。",
 };
 
 export const IDENTITY_ERRORS: Record<string, ErrorText> = {
@@ -125,9 +125,9 @@ export const IDENTITY_ERRORS: Record<string, ErrorText> = {
       ja: "ここでは OS キーチェーンで鍵を保護できません。",
     },
     hint: {
-      en: "Unlock your OS keychain and restart Unwritten Land, or unlock with a passkey instead.",
-      "zh-TW": "請解鎖系統鑰匙圈並重新啟動 Unwritten Land，或改用通行密鑰解鎖。",
-      ja: "OS キーチェーンのロックを解除して Unwritten Land を再起動するか、代わりにパスキーでロックを解除してください。",
+      en: "Unlock your OS keychain and restart UNMAPPED, or unlock with a passkey instead.",
+      "zh-TW": "請解鎖系統鑰匙圈並重新啟動《無界之地》，或改用通行密鑰解鎖。",
+      ja: "OS キーチェーンのロックを解除して UNMAPPED を再起動するか、代わりにパスキーでロックを解除してください。",
     },
   },
   "vault-write-failed": {
@@ -177,14 +177,14 @@ export const IDENTITY_ERRORS: Record<string, ErrorText> = {
   // ── Encrypted and plain seeds ──────────────────────────────────────────────────────────────
   "bad-header": {
     message: {
-      en: "That file is not an encrypted Unwritten Land seed (.seed.enc).",
-      "zh-TW": "這個檔案不是 Unwritten Land 的加密種子（.seed.enc）。",
-      ja: "そのファイルは Unwritten Land の暗号化シード（.seed.enc）ではありません。",
+      en: "That file is not an encrypted UNMAPPED seed (.seed.enc).",
+      "zh-TW": "這個檔案不是《無界之地》的加密種子（.seed.enc）。",
+      ja: "そのファイルは UNMAPPED の暗号化シード（.seed.enc）ではありません。",
     },
     hint: {
-      en: "Pick a .seed.enc file exported from Unwritten Land.",
-      "zh-TW": "請選擇從 Unwritten Land 匯出的 .seed.enc 檔案。",
-      ja: "Unwritten Land から書き出した .seed.enc ファイルを選んでください。",
+      en: "Pick a .seed.enc file exported from UNMAPPED.",
+      "zh-TW": "請選擇從《無界之地》匯出的 .seed.enc 檔案。",
+      ja: "UNMAPPED から書き出した .seed.enc ファイルを選んでください。",
     },
   },
   "decrypt-failed": {

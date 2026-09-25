@@ -4,10 +4,11 @@
 
 import { ASSETS } from "@renderer/assets";
 import { type StringKey, useT } from "@renderer/i18n";
-import { useEngineStore } from "@renderer/state";
+import { useEngineStore, useSessionStore } from "@renderer/state";
 import { colors, radius, Surface, space, Text } from "@renderer/ui";
 import type { JSX } from "react";
 import type { HudSummary, InferenceSummary, ProviderState } from "./summary";
+import { WorldUsage } from "./UsagePanel";
 
 const DOT: Record<ProviderState, string> = {
   unconfigured: colors.textDim,
@@ -101,6 +102,9 @@ function ProviderLine({ inference }: { inference: InferenceSummary }): JSX.Eleme
 
 export function SystemPanel({ summary }: { summary: HudSummary }): JSX.Element {
   const t = useT();
+  const instanceId = useSessionStore(
+    (state) => state.activeInstance?.instance.meta.instanceId ?? null,
+  );
   return (
     <Surface
       variant="overlay"
@@ -136,6 +140,7 @@ export function SystemPanel({ summary }: { summary: HudSummary }): JSX.Element {
         )}
         <FpsCaption />
       </div>
+      <WorldUsage scope={instanceId === null ? null : { kind: "instance", id: instanceId }} />
     </Surface>
   );
 }

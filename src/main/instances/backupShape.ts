@@ -42,7 +42,7 @@ type FileKind = keyof typeof BACKUP_LIMITS.fileBytes;
 export const SHAPE_HINT =
   "A .spire-backup holds instance.json and one save: saves/<id>/save.json, karma.jsonl, and its " +
   "witnessed land (lore.jsonl, notes.jsonl, chunks/<cx>_<cz>/scene.oui, errands.oui, " +
-  "dialogue/<npc>.oui). Export it again from Unwritten Land.";
+  "dialogue/<npc>.oui). Export it again from UNMAPPED.";
 
 const SAVE = "([a-z0-9][a-z0-9-]{0,63})";
 const COORD = "(-?[0-9]{1,5})";
@@ -164,7 +164,7 @@ const tooLarge = (what: string): Result<never> =>
   err(
     "backup-too-large",
     `${what} is larger than a .spire-backup may be.`,
-    "This backup was not made by Unwritten Land, or its save outgrew what one backup can hold.",
+    "This backup was not made by UNMAPPED, or its save outgrew what one backup can hold.",
   );
 
 /** Checks every name and size, then inflates only what passed. Nothing is written anywhere. */
@@ -218,7 +218,7 @@ export function readBackupFiles(bytes: Uint8Array): Result<BackupFiles> {
     return err(
       "backup-unreadable",
       "That file is not a readable .spire-backup archive.",
-      `Export it again from Unwritten Land. (${toError(error).message})`,
+      `Export it again from UNMAPPED. (${toError(error).message})`,
     );
   }
   if (refusal !== null) return refusal;

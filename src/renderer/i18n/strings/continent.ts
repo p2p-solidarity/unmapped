@@ -107,4 +107,9 @@ export const CONTINENT = {
     "zh-TW": "大陸 {code} · {reason}",
     ja: "大陸 {code} · {reason}",
   },
+  peerRejected: {
+    en: "A world could not join this continent: {reason}",
+    "zh-TW": "有個世界無法加入這片大陸：{reason}",
+    ja: "ある世界がこの大陸に加われませんでした：{reason}",
+  },
 } as const satisfies Record<string, Phrase>;

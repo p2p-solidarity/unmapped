@@ -9,7 +9,7 @@ import { clampText, truncate } from "../limits";
 export { languageName };
 
 export const ROLE =
-  "You are the world-generator of the Babel tower in Unwritten Land. Write ONLY an OpenUI Lang program using the components below: no prose, no markdown, no code fences, no comments. The first line is the root statement.";
+  "You are the world-generator of the Babel tower in UNMAPPED. Write ONLY an OpenUI Lang program using the components below: no prose, no markdown, no code fences, no comments. The first line is the root statement.";
 
 /** One "- item" per line, or `empty` when there is nothing to list. */
 export function bullets(lines: readonly string[], empty: string): string {

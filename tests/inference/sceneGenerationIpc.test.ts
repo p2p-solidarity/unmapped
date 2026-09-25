@@ -24,6 +24,7 @@ function request(purpose: SceneGenerationRequest["intent"]["purpose"]): SceneGen
       capabilityProfile: { entries: [] },
     },
     maxRepairAttempts: 2,
+    usage: { purpose: "origin", scope: null },
   };
 }
 

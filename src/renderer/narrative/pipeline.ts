@@ -14,6 +14,7 @@ import { useInferenceStore } from "@renderer/state/inferenceStore";
 import type { ChunkCoord } from "@shared/chunks";
 import type { ChatMessage } from "@shared/llm";
 import { fail, ok, type Result } from "@shared/result";
+import type { UsagePurpose } from "@shared/usage";
 import { type Program, type ProgramChat, runProgram } from "./program";
 import { DSL_SECTION, runNarrativeTurn, type TurnSection } from "./turn";
 
@@ -36,6 +37,7 @@ function isSystem(message: ChatMessage): boolean {
  */
 function harnessChat(
   purpose: PromptPurpose,
+  task: UsagePurpose,
   language: string,
   extra: { sections?: readonly TurnSection[]; coord?: ChunkCoord; signal?: AbortSignal } = {},
 ): ProgramChat {
@@ -46,6 +48,7 @@ function harnessChat(
       .join("\n\n");
     const turn = await runNarrativeTurn({
       purpose,
+      task,
       language,
       messages: request.messages.filter((message) => !isSystem(message)),
       section: { name: DSL_SECTION, order: ORDER.DSL_SPEC, text: spec },
@@ -57,8 +60,7 @@ function harnessChat(
       onDelta,
     });
     if (!turn.ok) return fail(turn.error);
-    // `runTurn` accounts for a whole turn, not one completion; the program loop only reads `text`.
-    return ok({ text: turn.value.text, usage: null });
+    return ok({ text: turn.value.text, usage: turn.value.usage });
   };
 }
 
@@ -67,6 +69,8 @@ export interface GenerateProgramInput<T> {
   user: string;
   /** What the turn is for: "scene" | "dialogue" | "item". */
   purpose: PromptPurpose;
+  /** What the calls are counted as in the usage ledger (witness, chapter, place…). */
+  task: UsagePurpose;
   /** `genesis.language` — the model writes in the player's language (Rule 10). */
   language: string;
   parse(source: string): Result<T, DslError>;
@@ -87,7 +91,7 @@ export function generateProgram<T>(input: GenerateProgramInput<T>): Promise<Resu
     ...(input.coord === undefined ? {} : { coord: input.coord }),
     ...(input.signal === undefined ? {} : { signal: input.signal }),
   };
-  return runProgram<T, DslError>(harnessChat(input.purpose, input.language, extra), {
+  return runProgram<T, DslError>(harnessChat(input.purpose, input.task, input.language, extra), {
     ...input,
     normalize: normalizeOutput,
     repair: repairPrompt,

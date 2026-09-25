@@ -8,7 +8,7 @@ import { decodeKey, encodeKey, generateKeyBytes, vaultKeyPath } from "./key";
 
 const FILE_MODE = 0o600;
 const UNAVAILABLE_HINT =
-  "Unlock your OS keychain (macOS Keychain / gnome-keyring / Windows DPAPI) and restart Unwritten Land, or unlock the world with a passkey instead.";
+  "Unlock your OS keychain (macOS Keychain / gnome-keyring / Windows DPAPI) and restart UNMAPPED, or unlock the world with a passkey instead.";
 
 async function readStoredKey(path: string): Promise<string | null> {
   let blob: Buffer;

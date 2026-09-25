@@ -59,18 +59,23 @@ function decodeVarUint(
 }
 
 /**
- * Uses y-webrtc's reliable ordered RTCDataChannel without putting runtime state in its Y.Doc.
+ * Uses y-webrtc's reliable ordered RTCDataChannel without putting any state in its Y.Doc.
  * The outer frame is a harmless "remove unknown broadcast peer" message, so y-webrtc ignores it
- * while this module reads the namespaced payload from a second data listener.
+ * while this module reads the namespaced payload from a second data listener. Each protocol (the
+ * bounded-scene session, the continent) has its own namespace and its own message check.
  */
-export function encodeSessionMessage(message: SessionMessage): Uint8Array {
-  const payload = new TextEncoder().encode(JSON.stringify({ namespace: NAMESPACE, message }));
-  if (payload.byteLength > MAX_MESSAGE_BYTES) throw new Error("session message is too large");
+export function encodeFrame(namespace: string, message: unknown): Uint8Array {
+  const payload = new TextEncoder().encode(JSON.stringify({ namespace, message }));
+  if (payload.byteLength > MAX_MESSAGE_BYTES) throw new Error("channel message is too large");
   const length = encodeVarUint(payload.byteLength);
   return new Uint8Array([Y_WEBRTC_BC_PEER_MESSAGE, Y_WEBRTC_REMOVE_PEER, ...length, ...payload]);
 }
 
-export function decodeSessionMessage(data: Uint8Array): SessionMessage | null {
+export function decodeFrame<M>(
+  namespace: string,
+  data: Uint8Array,
+  isMessage: (value: unknown) => value is M,
+): M | null {
   if (data.byteLength < 4 || data.byteLength > MAX_MESSAGE_BYTES + 8) return null;
   if (data[0] !== Y_WEBRTC_BC_PEER_MESSAGE || data[1] !== Y_WEBRTC_REMOVE_PEER) return null;
   const decodedLength = decodeVarUint(data, 2);
@@ -85,15 +90,23 @@ export function decodeSessionMessage(data: Uint8Array): SessionMessage | null {
     if (
       decoded === null ||
       typeof decoded !== "object" ||
-      (decoded as { namespace?: unknown }).namespace !== NAMESPACE
+      (decoded as { namespace?: unknown }).namespace !== namespace
     ) {
       return null;
     }
     const message = (decoded as { message?: unknown }).message;
-    return isSessionMessage(message) ? message : null;
+    return isMessage(message) ? message : null;
   } catch {
     return null;
   }
+}
+
+export function encodeSessionMessage(message: SessionMessage): Uint8Array {
+  return encodeFrame(NAMESPACE, message);
+}
+
+export function decodeSessionMessage(data: Uint8Array): SessionMessage | null {
+  return decodeFrame(NAMESPACE, data, isSessionMessage);
 }
 
 function record(value: unknown): value is Record<string, unknown> {
@@ -123,6 +136,7 @@ function validHello(value: unknown): boolean {
     typeof value.modLock.lockHash === "string" &&
     Number.isSafeInteger(value.engineApiVersion) &&
     Number.isSafeInteger(value.networkProtocolVersion) &&
+    Number.isSafeInteger(value.physicsVersion) &&
     typeof value.playerProfileId === "string"
   );
 }
@@ -182,17 +196,30 @@ function isSessionMessage(value: unknown): value is SessionMessage {
   );
 }
 
-export interface SessionChannel {
+export interface Channel<M> {
   peerIds(): string[];
-  send(peerId: string, message: SessionMessage): boolean;
+  send(peerId: string, message: M): boolean;
   onPeer(listener: (peerId: string) => void): () => void;
-  onMessage(listener: (peerId: string, message: SessionMessage) => void): () => void;
+  /** A peer's connection closed; it will say hello again if it comes back. */
+  onPeerLeft(listener: (peerId: string) => void): () => void;
+  onMessage(listener: (peerId: string, message: M) => void): () => void;
   close(): void;
 }
 
+export type SessionChannel = Channel<SessionMessage>;
+
 export function openSessionChannel(provider: WebrtcProvider): SessionChannel {
+  return openChannel(provider, NAMESPACE, isSessionMessage);
+}
+
+export function openChannel<M>(
+  provider: WebrtcProvider,
+  namespace: string,
+  isMessage: (value: unknown) => value is M,
+): Channel<M> {
   const peerListeners = new Set<(peerId: string) => void>();
-  const messageListeners = new Set<(peerId: string, message: SessionMessage) => void>();
+  const leftListeners = new Set<(peerId: string) => void>();
+  const messageListeners = new Set<(peerId: string, message: M) => void>();
   const attached = new Map<
     string,
     {
@@ -216,7 +243,7 @@ export function openSessionChannel(provider: WebrtcProvider): SessionChannel {
     };
     const dataListener = (data: Uint8Array) => {
       markReady();
-      const message = decodeSessionMessage(new Uint8Array(data));
+      const message = decodeFrame(namespace, new Uint8Array(data), isMessage);
       if (message === null) return;
       for (const notify of messageListeners) notify(peerId, message);
     };
@@ -236,6 +263,7 @@ export function openSessionChannel(provider: WebrtcProvider): SessionChannel {
     current.peer.off?.("connect", current.connectListener);
     current.peer.off?.("data", current.dataListener);
     attached.delete(peerId);
+    for (const notify of leftListeners) notify(peerId);
   };
   const onPeers = (change: PeerChange) => {
     for (const peerId of change.removed) detach(peerId);
@@ -250,7 +278,7 @@ export function openSessionChannel(provider: WebrtcProvider): SessionChannel {
       const connection = attached.get(peerId);
       if (connection === undefined || !connection.ready) return false;
       try {
-        connection.peer.send(encodeSessionMessage(message));
+        connection.peer.send(encodeFrame(namespace, message));
         return true;
       } catch {
         return false;
@@ -263,12 +291,17 @@ export function openSessionChannel(provider: WebrtcProvider): SessionChannel {
       }
       return () => peerListeners.delete(listener);
     },
+    onPeerLeft(listener) {
+      leftListeners.add(listener);
+      return () => leftListeners.delete(listener);
+    },
     onMessage(listener) {
       messageListeners.add(listener);
       return () => messageListeners.delete(listener);
     },
     close() {
       provider.off("peers", onPeers);
+      leftListeners.clear();
       for (const peerId of [...attached.keys()]) detach(peerId);
       peerListeners.clear();
       messageListeners.clear();

@@ -98,7 +98,7 @@ export function createWindow(): BrowserWindow {
     minWidth: MIN_WIDTH,
     minHeight: MIN_HEIGHT,
     backgroundColor: BACKGROUND,
-    title: "Unwritten Land",
+    title: "UNMAPPED — 無界之地",
     show: false,
     autoHideMenuBar: true,
     webPreferences: {

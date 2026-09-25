@@ -43,7 +43,7 @@ export function unpackSeed(bytes: Uint8Array): Result<{ files: SeedFiles }> {
     return err(
       "seed-unreadable",
       "That file is not a readable .seed archive",
-      `Export it again from Unwritten Land. (${toError(error).message})`,
+      `Export it again from UNMAPPED. (${toError(error).message})`,
     );
   }
 

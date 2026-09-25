@@ -7,6 +7,7 @@ import { bibleProblems } from "@shared/bible";
 import { fromResult, idle, type Loadable, loading } from "@shared/result";
 import { checkPlayKinds } from "@shared/storyEdits";
 import { type JSX, useEffect, useState } from "react";
+import { UsageLine } from "../hud/UsagePanel";
 import { GameShell } from "../shell/GameShell";
 import {
   canKeepStory,
@@ -20,6 +21,7 @@ import {
 } from "./draftState";
 import { IdeaStep } from "./IdeaStep";
 import { StoryStep } from "./StoryStep";
+import { StreamPreview } from "./StreamPreview";
 import { STAGE_LABEL, STEP_LABEL, STEPS, useCreateController } from "./useCreateController";
 import { WorldStep } from "./WorldStep";
 
@@ -384,6 +386,7 @@ export function CreateGameScreen(): JSX.Element {
                   )}
                 </div>
               )}
+              <UsageLine scope={{ kind: "create", id: draft.draftId }} draft />
               {error !== null && <ErrorBlock error={error} />}
               {saving && (
                 <Text variant="caption" tone="dim">
@@ -395,15 +398,7 @@ export function CreateGameScreen(): JSX.Element {
                   <Text tone="accent">
                     {t(STAGE_LABEL[stage], stageArg)} · {t("create.elapsed", { s: elapsed })}
                   </Text>
-                  {progress && (
-                    <Text
-                      variant="caption"
-                      tone="dim"
-                      style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}
-                    >
-                      {progress}
-                    </Text>
-                  )}
+                  {progress && <StreamPreview stage={stage} text={progress} />}
                 </Surface>
               )}
               <div style={{ display: "flex", gap: space.sm, flexWrap: "wrap" }}>

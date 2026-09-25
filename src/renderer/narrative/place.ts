@@ -20,6 +20,7 @@ export function generatePlace(
     system: placePrompt(ctx),
     user: "Write the Place program for this place now. Output the program only.",
     purpose: "scene",
+    task: "place",
     language: ctx.language,
     parse: (source) => {
       const parsed = parsePlace(source, { language: ctx.language });

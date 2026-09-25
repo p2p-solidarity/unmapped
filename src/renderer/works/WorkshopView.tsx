@@ -4,6 +4,7 @@
 // and token use stay visible, and any earlier playable version can be restored.
 
 import { errorLine, formatNumber, type StringKey, type Translate, useT } from "@renderer/i18n";
+import { useUsageScope } from "@renderer/llm";
 import { useInferenceStore } from "@renderer/state/inferenceStore";
 import { Button, colors, ErrorBlock, Surface, space, Text, TextField } from "@renderer/ui";
 import type { AppError } from "@shared/result";
@@ -82,6 +83,7 @@ export function WorkshopView({
 }): JSX.Element {
   const t = useT();
   const model = useInferenceStore((state) => state.config?.model ?? null);
+  useUsageScope({ kind: "work", id: draftId });
   const [draft, setDraft] = useState<WorkDraft | null>(null);
   const [error, setError] = useState<AppError | null>(null);
   const [running, setRunning] = useState<Running | null>(null);
@@ -207,13 +209,22 @@ export function WorkshopView({
       const stage = t("works.stageDrawing", { asset: assetId });
       setRunning({ controller, stage, startedAt: Date.now() });
     }
+    // Cancel reaches the image request itself; a cancelled picture is never stored.
+    const requestId = crypto.randomUUID();
+    const onAbort = (): void => {
+      void window.seed.works.cancelAsset(requestId);
+    };
+    controller.signal.addEventListener("abort", onAbort, { once: true });
     const written =
       how === "pick"
         ? await window.seed.works.replaceAsset(draftId, assetId)
-        : await window.seed.works.generateAsset(draftId, assetId);
+        : await window.seed.works.generateAsset(draftId, assetId, requestId);
+    controller.signal.removeEventListener("abort", onAbort);
     if (!written.ok) {
       setRunning(null);
-      setNotice(errorLine(written.error));
+      setNotice(
+        written.error.code === "cancelled" ? t("works.noticeCancelled") : errorLine(written.error),
+      );
       return;
     }
     if (written.value === null) {

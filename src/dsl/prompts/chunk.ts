@@ -5,27 +5,27 @@
 
 import type { WorldBible } from "@shared/cartridge";
 import { CHUNK_SIZE, type ChunkCoord, type ChunkHole, type ChunkTerrain } from "@shared/chunks";
-import { type NpcSpec, PROP_KINDS } from "@shared/world";
+import { type NpcSpec, PROP_KINDS, type PropKind } from "@shared/world";
 import { chunkLibrary } from "../libraries";
 import { clampText } from "../limits";
 import { CHUNK_LIMITS, WITNESS_ACTIONS } from "../parse/chunk";
 import { languageName } from "./shared";
 
 /** Syntax demonstration only (Rule 2): parsed by the DSL tests, never rendered or saved. */
-export const CHUNK_EXAMPLE = `root = Chunk("Kasumi Crossing", [pole, machine, stop, tree1, rin, old_tomo, talk_rin, talk_tomo, crossing, rule, rin_node, lost_key, key_charm])
-pole = Prop("utility_pole", 14, 9)
-machine = Prop("vending_machine", 16, 10)
-stop = Prop("bus_stop", 12, 12)
+export const CHUNK_EXAMPLE = `root = Chunk("Kasumi Crossing", [sign, well1, house1, tree1, rin, old_tomo, talk_rin, talk_tomo, crossing, rule, rin_node, lost_key, key_charm])
+sign = Prop("signpost", 14, 9)
+well1 = Prop("well", 16, 10)
+house1 = Prop("house", 12, 12)
 tree1 = Prop("tree", 22, 5, 1.4)
 rin = NPC("rin", "Rin", 15, 12, "child", "joyful", "#e2a35b")
 old_tomo = NPC("tomo", "Tomo", 11, 13, "elder", "calm", "#8c8a7a", "elder", "straw", "basket")
 talk_rin = Talk("rin", "The bus only stops if somebody waves. Nobody has waved since spring.", [c1, c2])
 c1 = Choice("Wave for her", "talk", "Rin laughs and waves back at the empty road.", [])
 c2 = Choice("Walk on", "leave", "Rin goes back to counting cars.", [])
-talk_tomo = Talk("tomo", "Leave a coin on the machine for whoever comes after you. That is how it works here.", [c3])
+talk_tomo = Talk("tomo", "Leave a coin on the well for whoever comes after you. That is how it works here.", [c3])
 c3 = Choice("Leave a coin", "trade", "Tomo nods and hands you a paper crane.", ["paper crane"])
-crossing = Lore("kasumi_crossing", "place", "Kasumi Crossing", "A bus stop and a vending machine where two farm roads meet.", [], 0.2)
-rule = Lore("coin_for_the_next", "custom", "A coin for the next one", "Travellers leave one coin on the vending machine for whoever comes after.", ["kasumi_crossing"], 0.5)
+crossing = Lore("kasumi_crossing", "place", "Kasumi Crossing", "A signpost and a well where two farm roads meet.", [], 0.2)
+rule = Lore("coin_for_the_next", "custom", "A coin for the next one", "Travellers leave one coin on the well's rim for whoever comes after.", ["kasumi_crossing"], 0.5)
 rin_node = Lore("rin", "person", "Rin", "Counts the cars that pass; says nobody has waved since spring.", ["kasumi_crossing"], 0.3)
 lost_key = Find("lost_key", "tomo", "I dropped the shed key somewhere by the old tree.", 22, 6, "key_charm", "That's the one. Keep the bell on it; it was my wife's.")
 key_charm = Item("key_charm", "Rusty bell", "charm", 1, "rings when the wind turns", null, ["charm_bell"], ["memory"], "A small brass bell tied with faded string.")`;
@@ -34,7 +34,24 @@ export interface ChunkPromptContext {
   language: string;
   coord: ChunkCoord;
   hole: ChunkHole | null;
+  /** The prop kinds this world is built from (`worldPropKinds` of its bible). */
+  props: readonly PropKind[];
+  /** The bible's own art direction; null for a bible written before the look existed. */
+  look: string | null;
 }
+
+/** Kinds that read as a landmark from far away, when the world has them. */
+const TALL: readonly PropKind[] = [
+  "chimney",
+  "steel_tower",
+  "windmill",
+  "utility_pole",
+  "house",
+  "pillar",
+  "statue",
+  "crane",
+  "pipe_stack",
+];
 
 /** The DSL section: the Chunk components, the rules a repair round enforces, one example. */
 export function chunkSpec(ctx: ChunkPromptContext): string {
@@ -48,12 +65,12 @@ export function chunkSpec(ctx: ChunkPromptContext): string {
     preamble:
       "You are the land of this world being seen for the first time. Write ONLY an OpenUI Lang program: no prose, no markdown, no code fences, no comments. The first line is the root statement.",
     additionalRules: [
-      `Write every word the player reads — place and resident names, lines, answers, lore — in ${languageName(ctx.language)}. Ids stay ascii snake_case.`,
+      `Write every word the player reads — place and resident names, lines, answers, lore — in ${languageName(ctx.language)}. Ids and statement names (left of =) stay ascii snake_case.`,
       `Coordinates are this chunk's own tiles: every x and z is 0..${CHUNK_SIZE - 1}.`,
       ...hole,
       `${CHUNK_LIMITS.minNpcs} to ${CHUNK_LIMITS.maxNpcs} NPCs, each with exactly one Talk. 3 to ${CHUNK_LIMITS.maxProps} Props, at most ${CHUNK_LIMITS.maxWalls} Walls.`,
-      "At least one Prop is tall enough to be seen from far away (chimney, steel_tower, windmill, utility_pole, house, a big tree) — it is this place's landmark.",
-      `Props of the countryside: ${PROP_KINDS.filter((kind) => !["altar", "machine_gear", "conveyor", "boiler", "pipe_stack", "crane", "reactor", "torch"].includes(kind)).join(", ")}.`,
+      `At least one Prop is tall enough to be seen from far away (${[...TALL.filter((kind) => ctx.props.includes(kind)), "a big tree"].join(", ")}) — it is this place's landmark.`,
+      `Props this world is built from: ${ctx.props.join(", ")}.${ctx.look === null || ctx.props.length < PROP_KINDS.length ? "" : " Use only the ones that fit the bible's look."}`,
       `A Choice action is one of ${WITNESS_ACTIONS.join(", ")}. gives is [] or one small keepsake.`,
       `Lore: exactly one "place" node named like the Chunk, at least one "custom" — a small rule people here keep — and up to ${CHUNK_LIMITS.maxLore - 2} more (person, event, object).`,
       "Link every new Lore to what it grew out of. When a neighbouring place has a custom, this place's custom is a variation of it or a disagreement with it — keep one element, change another, never copy it — and it links to that custom's id.",

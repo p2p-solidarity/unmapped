@@ -14,6 +14,8 @@ import {
   serializeScene,
 } from "@dsl";
 import { dslError } from "@dsl/parse/program";
+import { usageTag } from "@renderer/llm";
+import { worldPropKinds } from "@shared/bible";
 import type { WorldBible } from "@shared/cartridge";
 import type { ContextWindow, InferenceConfig, ProviderKind } from "@shared/llm";
 import { type AppError, fail, ok, type Result } from "@shared/result";
@@ -115,7 +117,7 @@ async function viaChat(config: InferenceConfig, input: OriginInput): Promise<Res
     attempt += 1;
     const parsed = parseScene(source);
     if (!parsed.ok) return reportRepair(parsed);
-    const issues = originIssues(parsed.value);
+    const issues = originIssues(parsed.value, worldPropKinds(input.bible));
     return issues.length === 0 ? parsed : reportRepair({ ok: false, error: unfit(issues) });
   };
   const reportRepair = <E extends AppError>(failed: { ok: false; error: E }) => {
@@ -134,6 +136,7 @@ async function viaChat(config: InferenceConfig, input: OriginInput): Promise<Res
     system: originPrompt(input.world, input.bible),
     user: "Write the Scene program for the place the player wakes in. Output the program only.",
     purpose: "scene",
+    task: "origin",
     language: input.world.language,
     parse,
     grammar: grammarForProvider(sceneGrammar()),
@@ -152,7 +155,7 @@ async function viaBridge(input: OriginInput): Promise<Result<SceneGraph>> {
     `Create the open, walkable place where the player wakes in this world: ${world.intent.trim()}`,
     `World core: ${bible.core}`,
     `Visual style: ${bible.style}`,
-    "Use a countryside biome and a 12 to 24 tile grass or sand floor.",
+    "Choose the biome, the ground and the props that fit the world's Look above, on a 12 to 24 tile floor of grass, stone, sand, snow or wood.",
     "Place 1 to 3 residents, one sun light, and no exits, monsters, treasure, triggers, or platforms.",
     "Keep the centre tile empty and every floor edge open.",
   ].join("\n");
@@ -162,7 +165,8 @@ async function viaBridge(input: OriginInput): Promise<Result<SceneGraph>> {
     signal,
   );
   if (!origin.ok) return origin;
-  let issues = originIssues(origin.value.graph);
+  const props = worldPropKinds(bible);
+  let issues = originIssues(origin.value.graph, props);
   for (let repair = 0; issues.length > 0 && repair < MAX_REPAIRS; repair += 1) {
     const diagnostics = issues
       .map((issue) => `${issue.message}${issue.hint === undefined ? "" : ` (${issue.hint})`}`)
@@ -179,7 +183,7 @@ async function viaBridge(input: OriginInput): Promise<Result<SceneGraph>> {
       signal,
     );
     if (!origin.ok) return origin;
-    issues = originIssues(origin.value.graph);
+    issues = originIssues(origin.value.graph, props);
   }
   return issues.length > 0 ? fail(unfit(issues)) : ok(origin.value.graph);
 }
@@ -207,5 +211,6 @@ function sceneRequest(
       capabilityProfile: { entries: [] },
     },
     maxRepairAttempts: 2,
+    usage: usageTag("origin"),
   };
 }

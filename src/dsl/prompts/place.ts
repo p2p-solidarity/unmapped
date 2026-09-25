@@ -71,7 +71,7 @@ export function placePrompt(ctx: PlacePromptContext): string {
   const wish = clampText(ctx.wish, 300);
   return placeLibrary.prompt({
     preamble: [
-      "You write one place of an Unwritten Land world. Write ONLY an OpenUI Lang program: no prose, no markdown, no code fences, no comments. The first line is the root statement.",
+      "You write one place of an UNMAPPED world. Write ONLY an OpenUI Lang program: no prose, no markdown, no code fences, no comments. The first line is the root statement.",
       `## The place\n${KIND_NOTE[ctx.kind]}`,
       wish.length === 0 ? null : `## What the player asked for\n"${wish}"`,
     ]

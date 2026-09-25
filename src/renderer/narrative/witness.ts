@@ -17,6 +17,7 @@ import {
   type WitnessedDraft,
 } from "@dsl";
 import { ORDER } from "@harness";
+import { bibleLook, worldPropKinds } from "@shared/bible";
 import type { WorldBible } from "@shared/cartridge";
 import type { ChunkTerrain } from "@shared/chunks";
 import type { Result } from "@shared/result";
@@ -54,19 +55,29 @@ export function witnessSections(input: WitnessInput): TurnSection[] {
 
 export function generateChunk(
   input: WitnessInput,
-  onDelta?: (text: string) => void,
+  io: { signal?: AbortSignal; onDelta?: (text: string) => void } = {},
 ): Promise<Result<Program<WitnessedDraft>>> {
   const { coord } = input;
+  // The world's own style decides what its land is built from (rev 6), not one house style.
+  const props = worldPropKinds(input.bible);
   return generateProgram<WitnessedDraft>({
-    system: chunkSpec({ language: input.language, coord, hole: input.hole }),
+    system: chunkSpec({
+      language: input.language,
+      coord,
+      hole: input.hole,
+      props,
+      look: bibleLook(input.bible),
+    }),
     user: `Someone has just walked onto chunk (${coord.cx}, ${coord.cz}) for the first time. Write what they find there. Output the program only.`,
     purpose: "chunk",
+    task: "witness",
     language: input.language,
-    parse: (source) => parseChunk(source, input),
+    parse: (source) => parseChunk(source, { ...input, props }),
     sections: witnessSections(input),
     coord,
     maxTokens: WITNESS_MAX_TOKENS,
     temperature: WITNESS_TEMPERATURE,
-    onDelta,
+    ...(io.onDelta === undefined ? {} : { onDelta: io.onDelta }),
+    ...(io.signal === undefined ? {} : { signal: io.signal }),
   });
 }

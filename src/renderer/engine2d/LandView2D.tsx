@@ -19,7 +19,7 @@ import { spawnPoint, TILE_TOP } from "../engine/colliders";
 import { sceneForRun } from "../engine/combat/encounter";
 import { behaviorForKit, LEGACY_TPS_KIT, resolveSceneKit } from "../engine/kits/registry";
 import { landTargets } from "../engine/landTargets";
-import { registerPlayerProbe } from "../engine/playerProbe";
+import { registerPlayerProbe, registerPoseProbe } from "../engine/playerProbe";
 import { getRemotePlayers } from "../engine/remoteRoster";
 import { nearestTarget, sceneTargets, triggersWithin, triggerTarget } from "../engine/targets";
 import { isSprinting, matchesAction, moveAxis, useKeys } from "../engine/useKeys";
@@ -134,9 +134,11 @@ export function LandView2D({
   const look = useEngineStore((state) => state.landLook);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
-  // Once per mount: it consumes the way back from a place.
+  // Once per mount: it reads the way back from a place (consumed after mount, never in render).
   const [start] = useState(() => initialPlayer(graph));
   const player = useRef<PlayerState>(start);
+  // A door request made before this view existed belongs to an earlier walk; only later ones move.
+  const teleportAtMount = useRef(teleport?.seq ?? null);
   const fired = useRef<Set<string>>(new Set());
   const route = useRef<Route | null>(null);
 
@@ -263,11 +265,25 @@ export function LandView2D({
     }));
   }, [graph.contract?.sceneId]);
 
+  // Presence: the others on the continent see which way this player faces and whether they walk.
+  useEffect(
+    () =>
+      registerPoseProbe(() => ({
+        facing: player.current.facing,
+        moving: player.current.moving,
+      })),
+    [],
+  );
+
   useEffect(() => {
-    if (teleport === null) return;
+    if (teleport === null || teleport.seq === teleportAtMount.current) return;
     player.current.x = teleport.x;
     player.current.z = teleport.z;
   }, [teleport]);
+
+  useEffect(() => {
+    useSessionStore.getState().takeLandReturn();
+  }, []);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: trigger entries reset with the floor
   useEffect(() => {
@@ -517,7 +533,8 @@ export function LandView2D({
 
 function initialPlayer(scene: SceneGraph): PlayerState {
   // Coming back out of a place: stand at its entrance, not where the save last put the player.
-  const back = useSessionStore.getState().takeLandReturn();
+  // Only read here: a store write during render would re-render other components mid-render.
+  const back = useSessionStore.getState().landReturn;
   if (back !== null) return { x: back.x, z: back.z, yaw: 0, facing: "south", moving: false };
   const sceneId = scene.contract?.sceneId ?? null;
   const saved = useSessionStore.getState().activeInstance?.instance.save.position;

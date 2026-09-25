@@ -2,9 +2,10 @@
 // parse, and send a malformed reply back with the reason, at most `repairs` times (Rule 7's two by
 // default). An abort stops the stream in flight and the loop; it is never retried.
 
-import { chat } from "@renderer/llm";
+import { chat, usageTag } from "@renderer/llm";
 import type { ChatMessage } from "@shared/llm";
 import { fail, type Result } from "@shared/result";
+import type { UsagePurpose } from "@shared/usage";
 
 export interface CallIo {
   signal: AbortSignal;
@@ -13,6 +14,8 @@ export interface CallIo {
 }
 
 export interface LineCall<T> {
+  /** What the call is counted as in the usage ledger. */
+  task: UsagePurpose;
   messages: ChatMessage[];
   parse(reply: string): Result<T>;
   maxTokens: number;
@@ -34,6 +37,7 @@ export async function askInLines<T>(call: LineCall<T>, io: CallIo): Promise<Resu
         grammar: null,
         stop: [],
         tools: [],
+        usage: usageTag(call.task),
       },
       io.onDelta,
       { signal: io.signal },

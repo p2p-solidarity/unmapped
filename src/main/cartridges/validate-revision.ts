@@ -72,14 +72,14 @@ export function cartridgeCompatibility(manifest: CartridgeManifest): Result<void
     return err(
       "cartridge-engine-unsupported",
       `${manifest.cartridgeId}@${manifest.version} needs engine API ${manifest.engineApiVersion}; this build has ${ENGINE_API_VERSION}.`,
-      "Update Unwritten Land to play this cartridge.",
+      "Update UNMAPPED to play this cartridge.",
     );
   }
   if (manifest.saveSchemaVersion !== SAVE_SCHEMA_VERSION) {
     return err(
       "cartridge-save-unsupported",
       `${manifest.cartridgeId}@${manifest.version} needs save schema ${manifest.saveSchemaVersion}; this build has ${SAVE_SCHEMA_VERSION}.`,
-      "Use a compatible Unwritten Land build to play this cartridge.",
+      "Use a compatible UNMAPPED build to play this cartridge.",
     );
   }
   return ok(undefined);

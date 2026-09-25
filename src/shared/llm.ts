@@ -2,6 +2,7 @@
 // only sees streamed ChatEvents over IPC.
 
 import type { AppError } from "./result";
+import type { UsageTag } from "./usage";
 
 export const PROVIDER_KINDS = [
   "openai",
@@ -197,11 +198,15 @@ export interface ChatRequest {
    * fits and refuses (`model-context-too-small`) when even this much does not.
    */
   minTokens?: number;
+  /** What the call is for and which world it belongs to; main writes it to the usage ledger. */
+  usage: UsageTag;
 }
 
 export interface ChatUsage {
   prompt: number;
   completion: number;
+  /** Input tokens the provider served from its prompt cache; null when it did not say. */
+  cached: number | null;
 }
 
 export type ChatEvent =

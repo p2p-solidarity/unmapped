@@ -136,9 +136,9 @@ export const SAVE_ERRORS: Record<string, ErrorText> = {
   },
   "instance-legacy-format": {
     message: {
-      en: "This save was made by an older version of Unwritten Land.",
-      "zh-TW": "這個存檔是由舊版 Unwritten Land 建立的。",
-      ja: "このセーブは古いバージョンの Unwritten Land で作られました。",
+      en: "This save was made by an older version of UNMAPPED.",
+      "zh-TW": "這個存檔是由舊版《無界之地》建立的。",
+      ja: "このセーブは古いバージョンの UNMAPPED で作られました。",
     },
     hint: {
       en: "It is left untouched on disk. Import its exact cartridge version, or restore it from a backup.",
@@ -297,9 +297,9 @@ export const SAVE_ERRORS: Record<string, ErrorText> = {
       ja: ".spire-backup がバックアップの上限より大きすぎます。",
     },
     hint: {
-      en: "Use a backup exported by Unwritten Land; a save with this much land is kept by copying its instance folder.",
-      "zh-TW": "請使用 Unwritten Land 匯出的備份；土地這麼多的存檔，請直接複製它的存檔資料夾保存。",
-      ja: "Unwritten Land が書き出したバックアップを使ってください。これほど土地の多いセーブは、インスタンスのフォルダーをそのままコピーして保管します。",
+      en: "Use a backup exported by UNMAPPED; a save with this much land is kept by copying its instance folder.",
+      "zh-TW": "請使用《無界之地》匯出的備份；土地這麼多的存檔，請直接複製它的存檔資料夾保存。",
+      ja: "UNMAPPED が書き出したバックアップを使ってください。これほど土地の多いセーブは、インスタンスのフォルダーをそのままコピーして保管します。",
     },
   },
   "backup-land-invalid": {
@@ -321,5 +321,29 @@ export const SAVE_ERRORS: Record<string, ErrorText> = {
       ja: "バックアップの現在のシーンが、カートリッジにありません。",
     },
     hint: HINT.exactRevision,
+  },
+  "physics-newer": {
+    message: {
+      en: "This world was made by a newer version of the land's physics.",
+      "zh-TW": "這個世界是用較新版的大地物理做出來的。",
+      ja: "この世界は、より新しい版の大地の物理で作られています。",
+    },
+    hint: {
+      en: "Update UNMAPPED to open it.",
+      "zh-TW": "請更新《無界之地》再開啟。",
+      ja: "UNMAPPEDを更新してから開いてください。",
+    },
+  },
+  "physics-unsupported": {
+    message: {
+      en: "This world was made on land physics this build no longer reproduces.",
+      "zh-TW": "這個世界所用的大地物理，這一版已經無法重現。",
+      ja: "この世界の大地の物理は、この版ではもう再現できません。",
+    },
+    hint: {
+      en: "Open it with the build it was made in.",
+      "zh-TW": "請用當初建立它的版本開啟。",
+      ja: "作られたときの版で開いてください。",
+    },
   },
 };

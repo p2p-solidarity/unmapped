@@ -13,6 +13,8 @@ export const CREATE_WORLD = {
   partTaboos: { en: "What never appears", "zh-TW": "不會出現的事物", ja: "登場しないもの" },
   partNaming: { en: "Naming", "zh-TW": "命名方式", ja: "名前の付け方" },
   partVoice: { en: "How people speak", "zh-TW": "人物語氣", ja: "話し方" },
+  partLook: { en: "How it looks", "zh-TW": "外觀風格", ja: "見た目" },
+  streamWriting: { en: "Writing…", "zh-TW": "正在寫…", ja: "書いています…" },
   cardNote: {
     en: "Note for this card (optional)",
     "zh-TW": "給這張卡片的備註（選填）",

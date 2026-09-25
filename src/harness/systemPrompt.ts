@@ -124,17 +124,25 @@ export class SystemPromptService extends Service {
   }
 
   /**
-   * Resolve every section for one assembly.
+   * Resolve every section for one assembly. `turn` holds sections of this one turn (a DSL spec, a
+   * world bible): they are sorted in with the registered ones but never registered, so two turns
+   * running at once on one world harness never see each other's.
    *
-   * @throws when a section references an unknown or valueless variable.
+   * @throws when a section references an unknown or valueless variable, or a turn section reuses
+   * a registered name.
    */
-  assemble(assemble: AssembleContext): AssembledPrompt {
+  assemble(assemble: AssembleContext, turn: readonly PromptSection[] = []): AssembledPrompt {
     const variables: Record<string, string | undefined> = {};
     for (const [name, provider] of this.variables) variables[name] = provider(assemble);
+    for (const section of turn) {
+      if (this.sections.has(section.name)) {
+        throw new Error(`prompt section "${section.name}" is already registered`);
+      }
+    }
 
     const parts: string[] = [];
     const names: string[] = [];
-    for (const section of [...this.sections.values()].sort(compareSections)) {
+    for (const section of [...this.sections.values(), ...turn].sort(compareSections)) {
       const raw = typeof section.text === "function" ? section.text(assemble) : section.text;
       const text = section.interpolate === false ? raw : interpolate(raw, variables, section.name);
       if (text.trim().length === 0) continue;

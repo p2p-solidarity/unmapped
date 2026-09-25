@@ -4,6 +4,7 @@
 // input lock and the overlay read the same value instead of each re-deriving it.
 
 import { errorLine, translate } from "@renderer/i18n";
+import { usageTag } from "@renderer/llm";
 import { generateSceneArtifact, generationEventLabel } from "@renderer/narrative";
 import { requestRoomTransition } from "@renderer/net/sync";
 import { useEngineStore, useRunStore, useSessionStore, useWorldStore } from "@renderer/state";
@@ -187,6 +188,7 @@ function start(to: string, targetSceneId: string | null): void {
           capabilityProfile: { entries: [] },
         },
         maxRepairAttempts: 2,
+        usage: usageTag("scene"),
       },
       (event) => {
         const label = generationEventLabel(event);

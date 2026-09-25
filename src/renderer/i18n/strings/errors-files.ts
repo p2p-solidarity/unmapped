@@ -407,18 +407,18 @@ export const FILE_ERRORS: Record<string, ErrorText> = {
       ja: "アプリのメインプロセスが応答しませんでした。",
     },
     hint: {
-      en: "Try again; if it keeps happening, restart Unwritten Land.",
-      "zh-TW": "請再試一次；如果一直發生，請重新啟動 Unwritten Land。",
-      ja: "もう一度試してください。何度も起きる場合は Unwritten Land を再起動してください。",
+      en: "Try again; if it keeps happening, restart UNMAPPED.",
+      "zh-TW": "請再試一次；如果一直發生，請重新啟動《無界之地》。",
+      ja: "もう一度試してください。何度も起きる場合は UNMAPPED を再起動してください。",
     },
   },
   "ipc-invalid": BAD_REQUEST,
   "invalid-payload": BAD_REQUEST,
   "preload-unavailable": {
     message: {
-      en: "This only works inside the Unwritten Land app.",
-      "zh-TW": "這只能在 Unwritten Land 應用程式裡使用。",
-      ja: "これは Unwritten Land アプリの中でのみ使えます。",
+      en: "This only works inside the UNMAPPED app.",
+      "zh-TW": "這只能在《無界之地》應用程式裡使用。",
+      ja: "これは UNMAPPED アプリの中でのみ使えます。",
     },
   },
 };

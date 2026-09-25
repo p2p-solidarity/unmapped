@@ -53,6 +53,81 @@ export const NET_ERRORS: Record<string, ErrorText> = {
     },
     hint: NETWORK,
   },
+  "continent-signaling-unreachable": {
+    message: {
+      en: "No signaling server answered, so no other world can find this continent.",
+      "zh-TW": "沒有任何信令伺服器回應，其他世界找不到這片大陸。",
+      ja: "どのシグナリングサーバーも応答しないため、ほかの世界はこの大陸を見つけられません。",
+    },
+    hint: {
+      en: "On the title screen open System → Signaling servers, test them and save one that answers, then open the continent again. It turns live by itself if a server answers first.",
+      "zh-TW":
+        "請在標題畫面開啟「系統 → 信令伺服器」，測試後儲存一個有回應的伺服器，再重新開啟大陸。若伺服器先回應，會自動恢復連線。",
+      ja: "タイトル画面で「システム → シグナリングサーバー」を開き、テストして応答するサーバーを保存してから、大陸を開き直してください。先にサーバーが応答すれば自動でつながります。",
+    },
+  },
+
+  // ── Signaling servers (System → Signaling servers) ────────────────────────────────────────
+  "signaling-bad-url": {
+    message: {
+      en: "That is not a signaling server address.",
+      "zh-TW": "這不是信令伺服器的位址。",
+      ja: "それはシグナリングサーバーのアドレスではありません。",
+    },
+    hint: {
+      en: "A signaling server looks like wss://example.com.",
+      "zh-TW": "信令伺服器的位址長得像 wss://example.com。",
+      ja: "シグナリングサーバーのアドレスは wss://example.com のような形です。",
+    },
+  },
+  "signaling-timeout": {
+    message: {
+      en: "The signaling server did not answer in time.",
+      "zh-TW": "信令伺服器沒有及時回應。",
+      ja: "シグナリングサーバーが時間内に応答しませんでした。",
+    },
+    hint: {
+      en: "The server may be down, asleep or blocked on this network. Test it again, or use another server.",
+      "zh-TW": "伺服器可能已關閉、正在休眠，或被這個網路封鎖。請再測試一次，或改用其他伺服器。",
+      ja: "サーバーが停止中、休止中、またはこのネットワークで遮断されている可能性があります。もう一度テストするか、別のサーバーを使ってください。",
+    },
+  },
+  "signaling-closed": {
+    message: {
+      en: "The signaling server could not be reached.",
+      "zh-TW": "無法連上信令伺服器。",
+      ja: "シグナリングサーバーに接続できませんでした。",
+    },
+    hint: {
+      en: "Check the address and this network; the server may be down.",
+      "zh-TW": "請檢查位址與這個網路；伺服器也可能已關閉。",
+      ja: "アドレスとこのネットワークを確認してください。サーバーが停止している可能性もあります。",
+    },
+  },
+  "signaling-no-relay": {
+    message: {
+      en: "The server accepted the connection but did not relay a test message.",
+      "zh-TW": "伺服器接受了連線，卻沒有轉送測試訊息。",
+      ja: "サーバーは接続を受け付けましたが、テストメッセージを中継しませんでした。",
+    },
+    hint: {
+      en: "It may not be a y-webrtc signaling server. Use one that runs y-webrtc's signaling server.",
+      "zh-TW": "它可能不是 y-webrtc 信令伺服器。請改用執行 y-webrtc 信令伺服器的位址。",
+      ja: "y-webrtc のシグナリングサーバーではない可能性があります。y-webrtc のシグナリングサーバーを動かしているものを使ってください。",
+    },
+  },
+  "signaling-not-saved": {
+    message: {
+      en: "This device's signaling servers could not be saved.",
+      "zh-TW": "無法儲存這台裝置的信令伺服器。",
+      ja: "この端末のシグナリングサーバーを保存できませんでした。",
+    },
+    hint: {
+      en: "Storage may be disabled for this app; the servers in use did not change.",
+      "zh-TW": "這個應用程式的儲存空間可能被停用；目前使用的伺服器沒有改變。",
+      ja: "このアプリのストレージが無効になっている可能性があります。使用中のサーバーは変わっていません。",
+    },
+  },
   "room-instance-required": {
     message: {
       en: "Choose a save before opening a room.",
@@ -79,6 +154,42 @@ export const NET_ERRORS: Record<string, ErrorText> = {
   },
 
   // ── Continents ─────────────────────────────────────────────────────────────────────────────
+  "continent-physics-mismatch": {
+    message: {
+      en: "That world was made on another version of the land's physics.",
+      "zh-TW": "那個世界是用另一版的大地物理做出來的。",
+      ja: "その世界は、別の版の大地の物理で作られています。",
+    },
+    hint: {
+      en: "Both worlds need the same version to share land; update the older build.",
+      "zh-TW": "兩個世界要同一版才能共享大地；請更新較舊的那一方。",
+      ja: "大地を共有するには同じ版が必要です。古いほうを更新してください。",
+    },
+  },
+  "continent-protocol-mismatch": {
+    message: {
+      en: "That world speaks another continent protocol.",
+      "zh-TW": "那個世界使用不同版本的大陸協定。",
+      ja: "その世界は別の版の大陸プロトコルを使っています。",
+    },
+    hint: {
+      en: "Both players need the same build of UNMAPPED.",
+      "zh-TW": "兩位玩家需要使用同一版的《無界之地》。",
+      ja: "両方のプレイヤーが同じ版の UNMAPPED を使う必要があります。",
+    },
+  },
+  "continent-same-world": {
+    message: {
+      en: "This same world is already on the continent from another window or machine.",
+      "zh-TW": "同一個世界已經從另一個視窗或另一台電腦加入這片大陸了。",
+      ja: "同じ世界が、別のウィンドウか別の端末からすでに大陸にいます。",
+    },
+    hint: {
+      en: "Leave the continent there first.",
+      "zh-TW": "請先在那邊離開大陸。",
+      ja: "先にそちらで大陸を離れてください。",
+    },
+  },
   "continent-no-land": {
     message: {
       en: "Only a world with open land can join a continent.",

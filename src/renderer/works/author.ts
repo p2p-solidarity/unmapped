@@ -4,7 +4,7 @@
 // so a cancelled, failed or late attempt leaves the last playable version exactly as it was.
 
 import { translate } from "@renderer/i18n";
-import { chat } from "@renderer/llm";
+import { chat, usageTag } from "@renderer/llm";
 import type { ChatMessage } from "@shared/llm";
 import { err, ok, type Result } from "@shared/result";
 import {
@@ -135,6 +135,7 @@ export async function runAttempt(
         grammar: null,
         stop: [],
         tools: [],
+        usage: usageTag("work"),
       },
       undefined,
       { signal: deps.signal, timeoutMs: MODEL_TIMEOUT_MS },

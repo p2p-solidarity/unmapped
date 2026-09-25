@@ -12,6 +12,7 @@ import { LAND } from "./land";
 import { MODEL } from "./model";
 import type { Phrase } from "./phrase";
 import { TITLE } from "./title";
+import { USAGE } from "./usage";
 import { WORKS } from "./works";
 
 export const STRINGS = {
@@ -25,6 +26,7 @@ export const STRINGS = {
   land: LAND,
   model: MODEL,
   title: TITLE,
+  usage: USAGE,
   works: WORKS,
 } as const;
 

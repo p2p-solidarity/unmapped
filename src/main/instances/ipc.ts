@@ -75,7 +75,7 @@ async function importBackup(ctx: MainContext) {
       return err(
         "backup-too-large",
         "That file is larger than a .spire-backup may be.",
-        "Choose a backup exported by Unwritten Land.",
+        "Choose a backup exported by UNMAPPED.",
       );
     }
     bytes = await readFile(path);

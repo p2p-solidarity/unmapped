@@ -8,6 +8,7 @@ import { IPC } from "@shared/ipc";
 import type {
   ChatEvent,
   ChatRequest,
+  ChatUsage,
   ContextWindow,
   InferenceConfig,
   ProbeResult,
@@ -15,8 +16,10 @@ import type {
 } from "@shared/llm";
 import { fail, ok, type Result, toError } from "@shared/result";
 import type { GenerationEvent, SceneArtifact } from "@shared/scene-generation";
+import { usageTagSchema } from "@shared/usage";
 import { ipcMain } from "electron";
 import { z } from "zod";
+import { recordUsage } from "../usage/ipc";
 import { streamChat } from "./client";
 import { loadConfig, parseConfig, saveConfig } from "./config";
 import { readContextWindow } from "./context";
@@ -72,6 +75,7 @@ const chatRequestSchema = z.object({
   stop: z.array(z.string()).max(8),
   tools: z.array(toolSchemaSchema).max(64),
   minTokens: z.number().int().min(1).max(32_768).optional(),
+  usage: usageTagSchema,
 });
 
 function invalid(what: string): Result<never> {
@@ -125,8 +129,15 @@ export function registerInferenceIpc(ctx: MainContext): void {
 
   async function runChat(request: ChatRequest, controller: AbortController): Promise<void> {
     const started = Date.now();
+    let settled: { provider: string; model: string; usage: ChatUsage | null; code: string } = {
+      provider: "unknown",
+      model: "unknown",
+      usage: null,
+      code: "failed",
+    };
     try {
       const config = await currentConfig();
+      settled = { ...settled, provider: config.kind, model: config.model };
       const [key, context] = await Promise.all([resolveApiKey(config), contextFor(config, false)]);
       if (!key.ok) {
         process.stdout.write(
@@ -143,11 +154,13 @@ export function registerInferenceIpc(ctx: MainContext): void {
         { apiKey: key.value?.key ?? null, context },
       );
       // Provider, time and budget only — never a prompt, an answer or a key.
-      const head = `[inference] ${result.ok ? "done" : "fail"} ${request.id} · ${config.kind} ${config.model} · ${Date.now() - started} ms`;
+      const head = `[inference] ${result.ok ? "done" : "fail"} ${request.id} · ${request.usage.purpose} · ${config.kind} ${config.model} · ${Date.now() - started} ms`;
       if (result.ok) {
         const { usage, maxTokens } = result.value;
+        settled = { ...settled, usage, code: "done" };
+        const cached = usage?.cached ?? null;
         process.stdout.write(
-          `${head} · max ${maxTokens}${usage === null ? "" : ` · ${usage.prompt}+${usage.completion} tokens`}${context === null ? "" : ` · ctx ${context.tokens}`}\n`,
+          `${head} · max ${maxTokens}${usage === null ? "" : ` · ${usage.prompt}+${usage.completion} tokens${cached === null ? "" : ` (${cached} cached)`}`}${context === null ? "" : ` · ctx ${context.tokens}`}\n`,
         );
         emit({
           id: request.id,
@@ -157,6 +170,7 @@ export function registerInferenceIpc(ctx: MainContext): void {
           usage: result.value.usage,
         });
       } else {
+        settled = { ...settled, code: result.error.code };
         process.stdout.write(`${head} · ${result.error.code}\n`);
         emit({ id: request.id, type: "error", error: result.error });
       }
@@ -164,6 +178,18 @@ export function registerInferenceIpc(ctx: MainContext): void {
       emit({ id: request.id, type: "error", error: toError(e, "provider") });
     } finally {
       inflight.delete(request.id);
+      const { usage } = settled;
+      await recordUsage(ctx, {
+        tag: request.usage,
+        provider: settled.provider,
+        model: settled.model,
+        input: usage?.prompt ?? null,
+        output: usage?.completion ?? null,
+        cached: usage?.cached ?? null,
+        ms: Date.now() - started,
+        outcome:
+          settled.code === "done" ? "done" : settled.code === "aborted" ? "aborted" : "failed",
+      });
     }
   }
 
@@ -249,7 +275,8 @@ export function registerInferenceIpc(ctx: MainContext): void {
     async (event, raw: unknown): Promise<Result<SceneArtifact>> => {
       const parsed = parseSceneGenerationRequest(raw);
       if (!parsed.ok) return parsed;
-      const { intent, state, maxRepairAttempts } = parsed.value;
+      const { intent, state, maxRepairAttempts, usage } = parsed.value;
+      const started = Date.now();
       if (sceneInflight.has(intent.requestId)) {
         return fail({
           code: "duplicate-request",
@@ -278,6 +305,21 @@ export function registerInferenceIpc(ctx: MainContext): void {
             }
             send(payload);
           },
+        });
+        const spent = result.ok ? (result.value.usage ?? null) : null;
+        await recordUsage(ctx, {
+          tag: usage,
+          provider: result.ok ? result.value.providerId : "apple-local",
+          model: "foundation-models",
+          input: spent?.prompt ?? null,
+          output: spent?.completion ?? null,
+          cached: spent?.cached ?? null,
+          ms: Date.now() - started,
+          outcome: result.ok
+            ? "done"
+            : controller.signal.aborted || result.error.code === "request-aborted"
+              ? "aborted"
+              : "failed",
         });
         if (result.ok) {
           send({

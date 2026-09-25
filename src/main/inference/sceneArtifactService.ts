@@ -376,6 +376,7 @@ export class SceneArtifactService implements SceneGenerationServiceContract {
         degraded: draft.providerId !== "apple-local",
         validation,
       },
+      ...(draft.usage === undefined ? {} : { usage: draft.usage }),
     });
   }
 }

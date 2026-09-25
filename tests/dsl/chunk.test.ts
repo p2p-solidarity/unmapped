@@ -47,7 +47,9 @@ describe("chunk dialect", () => {
     for (const dialogue of dialogues) {
       expect(parseDialogue(serializeDialogue(dialogue))).toEqual({ ok: true, value: dialogue });
     }
-    expect(chunkSpec({ language: "en", coord: { cx: 2, cz: -1 }, hole: null })).toContain("Lore(");
+    expect(
+      chunkSpec({ language: "en", coord: { cx: 2, cz: -1 }, hole: null, props: [], look: null }),
+    ).toContain("Lore(");
   });
 
   it("sends back residents placed in the authored village and links to unknown lore", () => {

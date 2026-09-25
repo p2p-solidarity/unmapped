@@ -43,6 +43,7 @@ export function generateScene(
     system,
     user,
     purpose: "scene",
+    task: "scene",
     language: input.genesis.language,
     parse: parseScene,
     grammar: grammarForProvider(sceneGrammar()),

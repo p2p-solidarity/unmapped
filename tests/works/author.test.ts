@@ -7,7 +7,10 @@ import type { WorkDraft } from "@shared/works";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const chat = vi.fn();
-vi.mock("@renderer/llm", () => ({ chat: (...args: unknown[]) => chat(...args) }));
+vi.mock("@renderer/llm", () => ({
+  chat: (...args: unknown[]) => chat(...args),
+  usageTag: (purpose: string) => ({ purpose, scope: null }),
+}));
 
 const { runAttempt } = await import("../../src/renderer/works/author");
 

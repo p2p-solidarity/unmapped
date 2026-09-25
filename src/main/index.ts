@@ -116,6 +116,6 @@ async function boot(): Promise<void> {
 
 void app.whenReady().then(boot, (error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
-  process.stderr.write(`Unwritten Land failed to start: ${message}\n`);
+  process.stderr.write(`UNMAPPED failed to start: ${message}\n`);
   app.quit();
 });

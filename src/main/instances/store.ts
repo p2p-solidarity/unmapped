@@ -15,7 +15,7 @@ import { endlessTemplate, seedFromText } from "@shared/endless";
 import { err, fail, ok, type Result, toError } from "@shared/result";
 import { completeScene, transitionScene } from "@shared/sceneTransition";
 import { EMPTY_INVENTORY, type SceneGraph } from "@shared/world";
-import { deriveRuntimePin, verifyRuntimePin } from "../cartridges/integrity";
+import { newRuntimePin, verifyRuntimePin } from "../cartridges/integrity";
 import { cartridgeCompatibility, readCartridgeRevision } from "../cartridges/store";
 import { parseKarmaText } from "../worlds/schemas";
 import { legacyInstanceMetaSchema, upgradeLegacyInstance } from "./legacy";
@@ -74,7 +74,8 @@ export async function createInstance(
   const instanceId = makeInstanceId(name, now);
   const at = now.toISOString();
   const cartridge = refOf(manifest);
-  const pin = deriveRuntimePin(manifest);
+  // A new world is made on this build's physics, and keeps it (@shared/physics).
+  const pin = newRuntimePin(manifest);
   if (!pin.ok) return pin;
   const runtimePin = pin.value;
   const meta: InstanceMeta = {

@@ -3,7 +3,9 @@
 
 import { GameCanvas } from "@renderer/engine";
 import { isOpenLand2D, LandView2D } from "@renderer/engine2d";
+import { useWorldHarness } from "@renderer/harness";
 import { useT } from "@renderer/i18n";
+import { useUsageScope } from "@renderer/llm";
 import { AltarPanel, DialogueCard } from "@renderer/narrative";
 import { useRunStore, useSessionStore, useWorldStore } from "@renderer/state";
 import { Button, colors, ErrorBlock, StatePanel, Surface, space, Text, zIndex } from "@renderer/ui";
@@ -84,6 +86,10 @@ export function PlayScreen() {
     (state) => state.activeInstance?.instance.meta.instanceId ?? null,
   );
 
+  // The loaded world's harness: every witnessing, chapter and place turn reads its snapshot and the
+  // hot lore around the player through it, and leaving Play disposes it with its mods.
+  useWorldHarness();
+  useUsageScope(instanceId === null ? null : { kind: "instance", id: instanceId });
   useInteractions({ onAdvanceFloor: advance, onDescend: descend });
   usePositionAutosave();
   useWitness();

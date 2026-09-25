@@ -2,6 +2,7 @@ import type { ModuleLock } from "./capabilities";
 import type { CartridgeRef, ContentHash, RuntimePin } from "./cartridge";
 import type { NearbyTarget } from "./events";
 import type { ModLock } from "./mods";
+import { physicsOf } from "./physics";
 import type { PartyState, PlayerState } from "./player";
 import { type AppError, err, fail, ok, type Result } from "./result";
 import type { Inventory, KarmaEntry, WorldMutation } from "./world";
@@ -17,6 +18,8 @@ export interface SessionHello {
   modLock: ModLock;
   engineApiVersion: number;
   networkProtocolVersion: number;
+  /** The physics the world was made on; two worlds on different physics see different land. */
+  physicsVersion: number;
   playerProfileId: string;
 }
 
@@ -77,6 +80,7 @@ export function createSessionHello(input: CreateSessionHelloInput): SessionHello
     modLock: input.runtimePin.modLock,
     engineApiVersion: input.engineApiVersion,
     networkProtocolVersion: input.networkProtocolVersion,
+    physicsVersion: physicsOf(input.runtimePin),
     playerProfileId: input.playerProfileId,
   };
 }
@@ -145,6 +149,9 @@ export function validateSessionHello(local: SessionHello, remote: SessionHello):
   }
   if (local.networkProtocolVersion !== remote.networkProtocolVersion) {
     return mismatch("session-network-version-mismatch", "network protocol version");
+  }
+  if (local.physicsVersion !== remote.physicsVersion) {
+    return mismatch("session-physics-mismatch", "physics version");
   }
   if (remote.playerProfileId.trim().length === 0) {
     return err("session-profile-invalid", "The peer did not identify a player profile.");

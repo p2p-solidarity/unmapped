@@ -17,7 +17,7 @@ import {
 import { Button, space, Text } from "@renderer/ui";
 import { type ChunkCoord, chunkKey } from "@shared/chunks";
 import type { JSX } from "react";
-import { retryWitness, witnessBlocker } from "../land/witness";
+import { cancelWitness, retryWitness, WITNESS_CANCELLED, witnessBlocker } from "../land/witness";
 
 function OwnLand({ chunk }: { chunk: ChunkCoord }): JSX.Element {
   const status = useLandStore((state) => state.chunks[chunkKey(chunk)]);
@@ -37,17 +37,28 @@ function OwnLand({ chunk }: { chunk: ChunkCoord }): JSX.Element {
   }
   if (status?.status === "writing") {
     return (
-      <Text variant="caption" tone="accent">
-        {t("hud.landWitnessing")}
-      </Text>
+      <div style={{ display: "flex", flexDirection: "column", gap: space.xs }}>
+        <Text variant="caption" tone="accent">
+          {t("hud.landWitnessing")}
+        </Text>
+        <Button variant="ghost" onClick={cancelWitness}>
+          {t("hud.cancelWitness")}
+        </Button>
+      </div>
     );
   }
   if (status?.status === "failed") {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: space.xs }}>
-        <Text variant="caption" tone="danger">
-          {t("hud.landFailed", { reason: errorLine(status.error) })}
-        </Text>
+        {status.error.code === WITNESS_CANCELLED ? (
+          <Text variant="caption" tone="muted">
+            {t("hud.witnessCancelled")}
+          </Text>
+        ) : (
+          <Text variant="caption" tone="danger">
+            {t("hud.landFailed", { reason: errorLine(status.error) })}
+          </Text>
+        )}
         <Button variant="secondary" onClick={() => retryWitness(chunk)}>
           {t("hud.retryWitness")}
         </Button>

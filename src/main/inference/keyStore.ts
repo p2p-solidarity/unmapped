@@ -58,7 +58,7 @@ export async function readKeyRecord(provider: KeyProvider): Promise<Result<KeyRe
     return err(
       "key-storage-unavailable",
       `The saved ${provider} key cannot be decrypted: this computer's keychain encryption is not available.`,
-      "Unlock the OS keychain and restart Unwritten Land, or remove the saved key in System → Model.",
+      "Unlock the OS keychain and restart UNMAPPED, or remove the saved key in System → Model.",
     );
   }
   let record: KeyRecord | null;
@@ -76,13 +76,13 @@ export async function readKeyRecord(provider: KeyProvider): Promise<Result<KeyRe
 export async function writeKeyRecord(record: KeyRecord): Promise<Result<void>> {
   const path = keyPath(record.provider);
   if (path === null || root === null) {
-    return err("key-store-unready", "The key store is not open yet.", "Restart Unwritten Land.");
+    return err("key-store-unready", "The key store is not open yet.", "Restart UNMAPPED.");
   }
   if (!safeStorage.isEncryptionAvailable()) {
     return err(
       "key-storage-unavailable",
       "This computer's keychain encryption is not available, so the key cannot be saved.",
-      "Unlock the OS keychain and restart Unwritten Land, or put the key in the .env file.",
+      "Unlock the OS keychain and restart UNMAPPED, or put the key in the .env file.",
     );
   }
   try {

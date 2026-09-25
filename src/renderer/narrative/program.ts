@@ -3,6 +3,7 @@
 // Rule 7: at most two repair rounds, and a program that still will not parse is an error state —
 // never a hand-written fallback.
 
+import { addUsage } from "@harness";
 import type { ChatMessage, ChatUsage } from "@shared/llm";
 import type { AppError, Result } from "@shared/result";
 import { fail, ok } from "@shared/result";
@@ -44,6 +45,8 @@ export interface Program<T> {
   /** The exact program text that parsed, ready to write to `world.oui`. */
   source: string;
   graph: T;
+  /** Tokens over every round, repairs included; null when the provider reported none. */
+  usage: ChatUsage | null;
 }
 
 export async function runProgram<T, E extends AppError>(
@@ -57,6 +60,7 @@ export async function runProgram<T, E extends AppError>(
   ];
   let messages = opening;
   let last: E | null = null;
+  let usage: ChatUsage | null = null;
 
   for (let round = 0; round <= maxRepairs; round++) {
     if (spec.signal?.aborted === true) {
@@ -73,10 +77,11 @@ export async function runProgram<T, E extends AppError>(
     );
     // A transport failure (no model, auth, timeout) is not something a repair prompt can fix.
     if (!response.ok) return fail(response.error);
+    usage = addUsage(usage, response.value.usage);
 
     const source = spec.normalize(response.value.text);
     const parsed = spec.parse(source);
-    if (parsed.ok) return ok({ source, graph: parsed.value });
+    if (parsed.ok) return ok({ source, graph: parsed.value, usage });
 
     last = parsed.error;
     // Only the latest attempt goes back (the repair prompt quotes it again): earlier rounds would

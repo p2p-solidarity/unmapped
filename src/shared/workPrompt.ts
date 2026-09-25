@@ -18,7 +18,7 @@ export const WORK_PROBLEM_LIMIT = 8;
 
 const library = WORK_LIBRARY.map((entry) => `- ${entry.path}: ${entry.note}`).join("\n");
 
-export const WORK_CONTRACT = `You write one small browser game "world" for the Unwritten Land player.
+export const WORK_CONTRACT = `You write one small browser game "world" for the UNMAPPED player.
 
 Runtime (a sandboxed page; the global \`host\` is the only API):
 - host.root: empty <div> filling the page; put your DOM or <canvas> in it.

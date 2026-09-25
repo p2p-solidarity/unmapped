@@ -5,7 +5,7 @@
 
 import { serializeScene } from "@dsl";
 import { recordNote, setNotePublisher } from "@renderer/app/land/notes";
-import { samplePlayer } from "@renderer/engine/playerProbe";
+import { type Facing4, samplePlayer, samplePose } from "@renderer/engine/playerProbe";
 import { type RemotePlayer, setRemotePlayers } from "@renderer/engine/remoteRoster";
 import { errorLine, translate } from "@renderer/i18n";
 import { useContinentStore, useLandStore, useSessionStore, useWorldStore } from "@renderer/state";
@@ -30,8 +30,10 @@ import {
 } from "./continentDoc";
 import { buildContinentView } from "./continentView";
 import { playerName } from "./room";
+import { SIGNALING_WAIT_MS } from "./signaling";
 
 const POSITION_MS = 250;
+const FACINGS: readonly Facing4[] = ["north", "south", "east", "west"];
 
 interface Claim {
   anchor: ChunkCoord;
@@ -132,12 +134,13 @@ export function useContinentSync(continent: Continent | null): void {
       publishNotes(doc, worldId, home);
     };
 
+    // Only worlds whose hello passed count as here: an unverified peer is neither drawn nor listed.
     const online = (): Set<string> => {
+      const verified = continent.gate.verifiedWorlds();
       const ids = new Set<string>();
       for (const [clientId, state] of awareness.getStates()) {
-        if (clientId !== awareness.clientID && typeof state.worldId === "string") {
-          ids.add(state.worldId);
-        }
+        if (clientId === awareness.clientID || typeof state.worldId !== "string") continue;
+        if (verified.has(state.worldId)) ids.add(state.worldId);
       }
       return ids;
     };
@@ -163,29 +166,66 @@ export function useContinentSync(continent: Continent | null): void {
       const anchor = useContinentStore.getState().anchor;
       if (anchor === null) return;
       const others: RemotePlayer[] = [];
+      const verified = continent.gate.verifiedWorlds();
       for (const [clientId, state] of awareness.getStates()) {
         if (clientId === awareness.clientID) continue;
-        const pos = state.pos as { x?: unknown; z?: unknown } | undefined;
+        if (typeof state.worldId !== "string" || !verified.has(state.worldId)) continue;
+        const pos = state.pos as
+          | { x?: unknown; z?: unknown; facing?: unknown; moving?: unknown }
+          | undefined;
         if (typeof state.name !== "string" || pos === undefined) continue;
         if (typeof pos.x !== "number" || typeof pos.z !== "number") continue;
         if (!Number.isFinite(pos.x) || !Number.isFinite(pos.z)) continue;
         const x = pos.x - anchor.cx * CHUNK_SIZE;
         const z = pos.z - anchor.cz * CHUNK_SIZE;
-        others.push({ clientId, name: state.name.slice(0, 40), x, y: 0, z });
+        // Presence is untrusted peer data: an unknown facing stands facing the viewer.
+        const facing = FACINGS.find((one) => one === pos.facing) ?? "south";
+        others.push({
+          clientId,
+          name: state.name.slice(0, 40),
+          x,
+          y: 0,
+          z,
+          facing,
+          moving: pos.moving === true,
+        });
       }
       setRemotePlayers(others);
     };
 
+    // "Connecting" lasts only SIGNALING_WAIT_MS without any signaling server or peer; then the
+    // continent says so with a way out, and turns live again the moment a server answers.
+    let lostSince: number | null = null;
     const status = (): void => {
       const connected = continent.signalingStatus().some((entry) => entry.connected);
-      const peers = continent.peerCount();
-      useContinentStore
-        .getState()
-        .setStatus(
-          connected || peers > 0
-            ? { kind: "live", code: continent.code, peers }
-            : { kind: "connecting", code: continent.code },
-        );
+      const peers = continent.gate.verifiedWorlds().size;
+      const store = useContinentStore.getState();
+      const previous = store.status;
+      if (connected || peers > 0) {
+        lostSince = null;
+        if (previous.kind !== "live" || previous.peers !== peers) {
+          store.setStatus({ kind: "live", code: continent.code, peers });
+        }
+        return;
+      }
+      lostSince ??= Date.now();
+      if (Date.now() - lostSince < SIGNALING_WAIT_MS) {
+        if (previous.kind !== "connecting") {
+          store.setStatus({ kind: "connecting", code: continent.code });
+        }
+        return;
+      }
+      if (previous.kind === "error") return;
+      const servers = continent.signaling.join(", ");
+      store.setStatus({
+        kind: "error",
+        code: continent.code,
+        error: {
+          code: "continent-signaling-unreachable",
+          message: `No signaling server answered within ${SIGNALING_WAIT_MS / 1000} s (${servers}).`,
+          hint: "On the title screen open System → Signaling servers, test them and save one that answers, then open the continent again. It turns live by itself if a server answers first.",
+        },
+      });
     };
     // A peer's data channel opening fires no provider event, so the count is also re-read slowly.
     const statusTimer = setInterval(status, 2000);
@@ -200,6 +240,19 @@ export function useContinentSync(continent: Continent | null): void {
     };
     awareness.on("change", onAwareness);
     const offChange = continent.onChange(status);
+    // A peer that passes (or fails) the hello changes who is drawn and what land is shown.
+    let turnedAway = 0;
+    const offGate = continent.gate.onChange(() => {
+      refresh();
+      players();
+      const rejected = continent.gate.rejected();
+      for (const error of rejected.slice(turnedAway)) {
+        useSessionStore
+          .getState()
+          .toast("danger", translate("continent.peerRejected", { reason: errorLine(error) }));
+      }
+      turnedAway = rejected.length;
+    });
     const offLand = useLandStore.subscribe(publish);
     const offWorld = useWorldStore.subscribe((state, previous) => {
       if (state.scene !== previous.scene) publish();
@@ -208,9 +261,12 @@ export function useContinentSync(continent: Continent | null): void {
       const where = samplePlayer();
       const anchor = useContinentStore.getState().anchor;
       if (where === null || anchor === null) return;
+      const pose = samplePose();
       awareness.setLocalStateField("pos", {
         x: where.x + anchor.cx * CHUNK_SIZE,
         z: where.z + anchor.cz * CHUNK_SIZE,
+        facing: pose?.facing ?? "south",
+        moving: pose?.moving ?? false,
       });
     }, POSITION_MS);
 
@@ -224,6 +280,7 @@ export function useContinentSync(continent: Continent | null): void {
       for (const map of [maps.worlds, maps.chunks, maps.notes]) map.unobserve(onDoc);
       awareness.off("change", onAwareness);
       offChange();
+      offGate();
       offLand();
       offWorld();
       setNotePublisher(null);

@@ -6,7 +6,7 @@
 import { isAbsolute } from "node:path";
 import { app, dialog } from "electron";
 
-const BACKUP_FILTER = [{ name: "Unwritten Land save backup", extensions: ["spire-backup"] }];
+const BACKUP_FILTER = [{ name: "UNMAPPED save backup", extensions: ["spire-backup"] }];
 
 function scriptedPath(): string | null {
   if (app.isPackaged || !process.env.AETHER_TEST_USER_DATA) return null;

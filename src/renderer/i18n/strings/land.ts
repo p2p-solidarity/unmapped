@@ -299,14 +299,14 @@ export const LAND = {
 
   // ── The land's two looks ─────────────────────────────────────────────────────────────────
   viewHd2d: {
-    en: "Unwritten Land, HD-2D view",
-    "zh-TW": "Unwritten Land，HD-2D 畫面",
-    ja: "Unwritten Land、HD-2D 表示",
+    en: "UNMAPPED, HD-2D view",
+    "zh-TW": "《無界之地》，HD-2D 畫面",
+    ja: "UNMAPPED、HD-2D 表示",
   },
   viewPixel: {
-    en: "Unwritten Land, 16-bit view",
-    "zh-TW": "Unwritten Land，16-bit 畫面",
-    ja: "Unwritten Land、16-bit 表示",
+    en: "UNMAPPED, 16-bit view",
+    "zh-TW": "《無界之地》，16-bit 畫面",
+    ja: "UNMAPPED、16-bit 表示",
   },
   hd2dUnavailable: {
     en: "HD-2D is unavailable ({reason}); using 16-bit.",

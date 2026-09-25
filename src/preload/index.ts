@@ -69,6 +69,7 @@ import type {
   SceneArtifact,
   SceneGenerationRequest,
 } from "@shared/scene-generation";
+import type { UsageRecord, UsageScope, UsageSummary } from "@shared/usage";
 import type {
   PlayChange,
   WorkDraft,
@@ -240,8 +241,9 @@ const api: SeedApi = {
       invoke<Result<{ draft: WorkDraft; manifest: WorkManifest }>>(IPC.works.publishDraft, draftId),
     replaceAsset: (draftId: string, assetId: string) =>
       invoke<Result<WrittenCandidate | null>>(IPC.works.replaceAsset, draftId, assetId),
-    generateAsset: (draftId: string, assetId: string) =>
-      invoke<Result<WrittenCandidate>>(IPC.works.generateAsset, draftId, assetId),
+    generateAsset: (draftId: string, assetId: string, requestId: string) =>
+      invoke<Result<WrittenCandidate>>(IPC.works.generateAsset, draftId, assetId, requestId),
+    cancelAsset: (requestId: string) => invoke<Result<void>>(IPC.works.cancelAsset, requestId),
     createPlay: (input: CreateWorkPlayInput) =>
       invoke<Result<WorkPlay>>(IPC.works.createPlay, input),
     readPlay: (playId: string) => invoke<Result<WorkPlay>>(IPC.works.readPlay, playId),
@@ -271,6 +273,12 @@ const api: SeedApi = {
       invoke<Result<{ path: string; base64: string } | null>>(IPC.app.pickFile, options),
     saveFile: (input: SaveFileInput) =>
       invoke<Result<{ path: string } | null>>(IPC.app.saveFile, input),
+  },
+  usage: {
+    summary: (scope: UsageScope) => invoke<Result<UsageSummary>>(IPC.usage.summary, scope),
+    link: (from: UsageScope, to: UsageScope) => invoke<Result<void>>(IPC.usage.link, from, to),
+    onChanged: (listener: (record: UsageRecord) => void) =>
+      subscribe<UsageRecord>(IPC.usage.changed, listener),
   },
   createDrafts: {
     list: () => invoke<Result<CreateDraftEntry[]>>(IPC.createDrafts.list),

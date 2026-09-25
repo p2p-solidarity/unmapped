@@ -1,6 +1,6 @@
 // The builtin module registry: exactly what this engine implements today, and nothing else.
 //
-// This file is the one place that answers "can Unwritten Land actually do X?". Adding a line for
+// This file is the one place that answers "can UNMAPPED actually do X?". Adding a line for
 // something that does not run is the failure plan.md §2.3 forbids, so every entry carries an
 // `implementedBy` receipt naming real code. Splitting it out of `capabilities.ts` keeps the
 // compiler (an algorithm) separate from the inventory (data that changes as modules land).

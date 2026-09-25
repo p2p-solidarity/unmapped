@@ -1,19 +1,31 @@
 import { readFile, writeFile } from "node:fs/promises";
+import { isAbsolute } from "node:path";
 import { IPC, type SeedExport } from "@shared/ipc";
 import { err, fail, ok, type Result, toError } from "@shared/result";
-import { dialog } from "electron";
+import { app, dialog } from "electron";
 import { z } from "zod";
 import type { MainContext } from "../context";
 import { handle } from "../handle";
-import { manifestCore } from "./integrity";
-import { packCartridge, unpackCartridge } from "./pack";
+import { installCartridgePack } from "./install";
+import { packCartridge } from "./pack";
 import { publishCartridgeInputSchema } from "./schemas";
 import { listCartridgeRevisions, publishCartridgeRevision, readCartridgeRevision } from "./store";
 
 const cartridgeIdSchema = z.string().regex(/^[a-z0-9][a-z0-9-]{0,79}$/);
 const versionSchema = z.string().min(1).max(128);
-const PACK_FILTER = [{ name: "Unwritten Land cartridge", extensions: ["cartridge"] }];
+const PACK_FILTER = [{ name: "UNMAPPED cartridge", extensions: ["cartridge"] }];
 const CANCEL_HINT = "Choose a file to continue, or pick the action again when you are ready.";
+
+/**
+ * A native dialog cannot be driven over CDP: an E2E run of the unpackaged app on a throwaway
+ * userData may set AETHER_TEST_CARTRIDGE_PATH, and both dialogs answer with it (as backups do with
+ * AETHER_TEST_BACKUP_PATH). The renderer still never names a file.
+ */
+function scriptedPath(): string | null {
+  if (app.isPackaged || !process.env.AETHER_TEST_USER_DATA) return null;
+  const path = process.env.AETHER_TEST_CARTRIDGE_PATH;
+  return path !== undefined && isAbsolute(path) ? path : null;
+}
 
 async function exportPack(
   ctx: MainContext,
@@ -24,11 +36,15 @@ async function exportPack(
   if (!revision.ok) return revision;
   const packed = packCartridge(revision.value);
   if (!packed.ok) return packed;
-  const chosen = await dialog.showSaveDialog({
-    title: "Export cartridge",
-    defaultPath: `${cartridgeId}-${version}.cartridge`,
-    filters: PACK_FILTER,
-  });
+  const scripted = scriptedPath();
+  const chosen =
+    scripted !== null
+      ? { canceled: false, filePath: scripted }
+      : await dialog.showSaveDialog({
+          title: "Export cartridge",
+          defaultPath: `${cartridgeId}-${version}.cartridge`,
+          filters: PACK_FILTER,
+        });
   if (chosen.canceled || chosen.filePath === undefined || chosen.filePath.length === 0) {
     return err("cancelled", "Export cancelled", CANCEL_HINT);
   }
@@ -41,11 +57,15 @@ async function exportPack(
 }
 
 async function importPack(ctx: MainContext) {
-  const chosen = await dialog.showOpenDialog({
-    title: "Import cartridge",
-    properties: ["openFile"],
-    filters: PACK_FILTER,
-  });
+  const scripted = scriptedPath();
+  const chosen =
+    scripted !== null
+      ? { canceled: false, filePaths: [scripted] }
+      : await dialog.showOpenDialog({
+          title: "Import cartridge",
+          properties: ["openFile"],
+          filters: PACK_FILTER,
+        });
   const path = chosen.filePaths[0];
   if (chosen.canceled || path === undefined) {
     return err("cancelled", "Import cancelled", CANCEL_HINT);
@@ -56,16 +76,8 @@ async function importPack(ctx: MainContext) {
   } catch (error) {
     return fail(toError(error, "cartridge-read-failed"));
   }
-  const unpacked = unpackCartridge(new Uint8Array(bytes));
-  if (!unpacked.ok) return unpacked;
-  // Publishing re-validates routes and kits and is idempotent for identical bytes; a different
-  // revision at the same id/version is refused rather than overwritten.
-  return publishCartridgeRevision(ctx.cartridgesDir, {
-    manifest: manifestCore(unpacked.value.manifest),
-    rules: unpacked.value.rules,
-    scenes: unpacked.value.scenes,
-    assets: unpacked.value.assets,
-  });
+  // The exact revision that was exported: bible, story and dialogues included (./install.ts).
+  return installCartridgePack(ctx.cartridgesDir, new Uint8Array(bytes));
 }
 
 export function registerCartridgesIpc(ctx: MainContext): void {

@@ -1,16 +1,20 @@
-// The continent room: one y-webrtc room per continent, its Y.Doc holding every merged world's
-// public face (continentDoc.ts) and its awareness carrying where each player stands. There is no
-// host: each world writes only its own entries, so worlds from different cartridges can merge —
-// no cartridge bytes, rules or story ever cross the room, only the land as it was witnessed.
+// The continent room: one y-webrtc room per continent. Each machine's continent Y.Doc holds every
+// merged world's public face (continentDoc.ts); its entries cross only to peers whose hello passed
+// (continentGate.ts) — the room's own y-webrtc document stays empty, so nothing syncs by itself.
+// Awareness carries where each player stands. There is no host: each world writes only its own
+// entries, so worlds from different cartridges can merge — no cartridge bytes, rules or story ever
+// cross the room, only the land as it was witnessed.
 //
 // The code of a continent is the door number of whoever opened it (plateOf); anyone who knows it
 // can bring their own world in.
 
+import { continentHello, isContinentMessage } from "@shared/continentHello";
 import type { AppError } from "@shared/result";
 import { err, ok, type Result } from "@shared/result";
 import { useSyncExternalStore } from "react";
 import { WebrtcProvider } from "y-webrtc";
 import * as Y from "yjs";
+import { openChannel } from "./channel";
 import {
   isValidRoomCode,
   normalizeRoomCode,
@@ -19,24 +23,32 @@ import {
   roomName,
 } from "./codes";
 import { removeWorld } from "./continentDoc";
+import { type ContinentGate, gateContinent } from "./continentGate";
 import {
-  DEFAULT_SIGNALING,
   onSignalingChange,
   type RoomOptions,
+  retryStuckSignaling,
   type SignalingStatus,
   signalingStatusOf,
 } from "./room";
+import { SIGNALING_RETRY_MS, signalingServers } from "./signaling";
 
 /** Time for the goodbye (our entry removed, presence cleared) to leave before the room closes. */
 const GOODBYE_MS = 300;
 const CONTINENT_PREFIX = "continent";
+const CONTINENT_NAMESPACE = "unwritten-land-continent-v1";
 
 export interface Continent {
   code: string;
   /** This machine's world (its instance id). */
   worldId: string;
+  /** This machine's copy of the continent; filled only through the gate. */
   doc: Y.Doc;
   provider: WebrtcProvider;
+  /** Which peers passed the hello, and which were turned away. */
+  gate: ContinentGate;
+  /** The signaling servers this continent was opened with (this device's list at the time). */
+  signaling: string[];
   signalingStatus(): SignalingStatus[];
   /** Direct peer connections that are actually open right now (not still being negotiated). */
   peerCount(): number;
@@ -50,6 +62,8 @@ export interface OpenContinentInput {
   worldId: string;
   /** Shown over this player's head on everyone else's land. */
   name: string;
+  /** The physics this world was made on (its runtime pin); only worlds on the same one merge. */
+  physicsVersion: number;
 }
 
 export function openContinent(
@@ -64,21 +78,31 @@ export function openContinent(
       `Door numbers are ${ROOM_CODE_LENGTH} characters from ${ROOM_CODE_ALPHABET}.`,
     );
   }
-  const signaling = options?.signaling ?? [...DEFAULT_SIGNALING];
+  const signaling = options?.signaling ?? signalingServers();
   if (signaling.length === 0) return err("room-no-signaling", "No signaling server configured.");
   const doc = new Y.Doc();
+  // The room's document is never written: land goes through the gate, to verified peers only.
+  const roomDoc = new Y.Doc();
   let provider: WebrtcProvider;
   try {
-    provider = new WebrtcProvider(`${roomName(code)}:${CONTINENT_PREFIX}`, doc, {
+    provider = new WebrtcProvider(`${roomName(code)}:${CONTINENT_PREFIX}`, roomDoc, {
       signaling,
       password: options?.password,
     });
   } catch (cause) {
     doc.destroy();
+    roomDoc.destroy();
     const message = cause instanceof Error ? cause.message : String(cause);
     return err("room-failed", `Could not open the peer connection: ${message}`);
   }
   provider.awareness.setLocalState({ name: input.name, worldId: input.worldId });
+  const stopRetrying = retryStuckSignaling(provider, SIGNALING_RETRY_MS);
+  const channel = openChannel(provider, CONTINENT_NAMESPACE, isContinentMessage);
+  const gate = gateContinent(
+    doc,
+    continentHello({ code, worldId: input.worldId, physicsVersion: input.physicsVersion }),
+    channel,
+  );
 
   let left = false;
   return ok({
@@ -86,6 +110,8 @@ export function openContinent(
     worldId: input.worldId,
     doc,
     provider,
+    gate,
+    signaling,
     signalingStatus: () => signalingStatusOf(provider),
     peerCount: () => {
       const room = (
@@ -97,10 +123,12 @@ export function openContinent(
     },
     onChange(listener) {
       const offSignaling = onSignalingChange(provider, listener);
+      const offGate = gate.onChange(listener);
       provider.on("peers", listener);
       provider.awareness.on("change", listener);
       return () => {
         offSignaling();
+        offGate();
         provider.off("peers", listener);
         provider.awareness.off("change", listener);
       };
@@ -108,13 +136,17 @@ export function openContinent(
     leave() {
       if (left) return;
       left = true;
+      stopRetrying();
       // Take this world with us: the others stop drawing it at once instead of keeping a ghost.
       removeWorld(doc, input.worldId);
       provider.awareness.setLocalState(null);
       setTimeout(() => {
+        gate.close();
+        channel.close();
         provider.disconnect();
         provider.destroy();
         doc.destroy();
+        roomDoc.destroy();
       }, GOODBYE_MS);
     },
   });

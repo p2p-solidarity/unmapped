@@ -4,6 +4,14 @@
 import type { Phrase } from "./phrase";
 
 export const COMMON = {
+  // ── The game ───────────────────────────────────────────────────────────────────────────────
+  // The name is 《無界之地》 / UNMAPPED in every language; only the line under it is translated.
+  tagline: {
+    en: "An Autonomous Open World",
+    "zh-TW": "自主開放世界",
+    ja: "自律するオープンワールド",
+  },
+
   // ── Language ───────────────────────────────────────────────────────────────────────────────
   language: { en: "Language", "zh-TW": "語言", ja: "言語" },
   languageNote: {

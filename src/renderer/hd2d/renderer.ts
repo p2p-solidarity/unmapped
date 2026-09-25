@@ -282,7 +282,7 @@ export function createHd2dRenderer(
         const standing =
           other === undefined
             ? null
-            : { x: other.x, z: other.z, facing: "south" as const, moving: false };
+            : { x: other.x, z: other.z, facing: other.facing, moving: other.moving };
         const ground = standing === null ? 0 : standHeight(tileAt, standing.x, standing.z);
         mesh.place(standing, frame.now, ground, delta);
       });

@@ -49,6 +49,7 @@ export async function generateItem(
     system,
     user,
     purpose: "item",
+    task: "item",
     language: input.genesis.language,
     parse: parseItem,
     maxTokens: ITEM_MAX_TOKENS,

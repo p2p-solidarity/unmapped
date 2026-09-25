@@ -20,6 +20,9 @@ export const Bible = defineComponent({
       "how places and people are named here, with two examples, in the player's language",
     ),
     voice: text("how people speak: sentence length, register, habits, in the player's language"),
+    look: text(
+      "what this world looks like — buildings, materials, colours, era — concrete enough to draw, in the player's language",
+    ),
   }),
   component: "Bible",
 });

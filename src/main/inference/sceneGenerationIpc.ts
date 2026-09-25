@@ -6,6 +6,7 @@ import { CAPABILITY_KEYS } from "@shared/capabilities";
 import type { ContentHash } from "@shared/cartridge";
 import { fail, ok, type Result } from "@shared/result";
 import type { SceneGenerationRequest, SceneIntent, SceneState } from "@shared/scene-generation";
+import { type UsageTag, usageTagSchema } from "@shared/usage";
 import { ITEM_KINDS } from "@shared/world";
 import { z } from "zod";
 
@@ -101,6 +102,7 @@ const requestSchema = z
     intent: intentSchema,
     state: stateSchema,
     maxRepairAttempts: z.number().int().min(0).max(2),
+    usage: usageTagSchema,
   })
   .strict()
   .superRefine((value, ctx) => {
@@ -120,6 +122,7 @@ export interface ParsedSceneGenerationRequest {
   intent: SceneIntent;
   state: SceneState;
   maxRepairAttempts: number;
+  usage: UsageTag;
 }
 
 function invalid(message: string): Result<never> {
@@ -148,5 +151,6 @@ export function parseSceneGenerationRequest(raw: unknown): Result<ParsedSceneGen
       capabilityProfile: request.state.capabilityProfile,
     },
     maxRepairAttempts: request.maxRepairAttempts,
+    usage: request.usage,
   });
 }

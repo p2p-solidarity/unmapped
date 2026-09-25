@@ -27,7 +27,7 @@ export function parseBible(source: string): Result<BibleFields, DslError> {
       dslError({
         code: "dsl-invalid-props",
         message: `Bible(...) has invalid arguments — ${parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; ")}`,
-        hint: 'Write root = Bible("<premise>", "<tone>", ["<rule>", …], ["<taboo>", …], "<naming>", "<voice>").',
+        hint: 'Write root = Bible("<premise>", "<tone>", ["<rule>", …], ["<taboo>", …], "<naming>", "<voice>", "<look>").',
       }),
     );
   }
@@ -39,6 +39,7 @@ export function parseBible(source: string): Result<BibleFields, DslError> {
     taboos: cleanItems("taboos", p.taboos),
     naming: clampLine(p.naming, BIBLE_LIMITS.naming),
     voice: clampLine(p.voice, BIBLE_LIMITS.voice),
+    look: clampLine(p.look, BIBLE_LIMITS.look),
   };
   const issues = bibleProblems(fields).map((problem) => {
     if (problem.part === "rules")

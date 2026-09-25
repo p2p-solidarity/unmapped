@@ -140,14 +140,14 @@ export const CARTRIDGE_ERRORS: Record<string, ErrorText> = {
   },
   "cartridge-engine-unsupported": {
     message: {
-      en: "This cartridge needs a newer Unwritten Land.",
-      "zh-TW": "這張卡帶需要較新版本的 Unwritten Land。",
-      ja: "このカートリッジには、より新しい Unwritten Land が必要です。",
+      en: "This cartridge needs a newer UNMAPPED.",
+      "zh-TW": "這張卡帶需要較新版本的《無界之地》。",
+      ja: "このカートリッジには、より新しい UNMAPPED が必要です。",
     },
     hint: {
-      en: "Update Unwritten Land to play it.",
-      "zh-TW": "請更新 Unwritten Land 再遊玩。",
-      ja: "Unwritten Land を更新してから遊んでください。",
+      en: "Update UNMAPPED to play it.",
+      "zh-TW": "請更新《無界之地》再遊玩。",
+      ja: "UNMAPPED を更新してから遊んでください。",
     },
   },
   "cartridge-save-unsupported": {
@@ -157,9 +157,9 @@ export const CARTRIDGE_ERRORS: Record<string, ErrorText> = {
       ja: "このカートリッジのセーブ形式に、このバージョンは対応していません。",
     },
     hint: {
-      en: "Use a compatible version of Unwritten Land.",
-      "zh-TW": "請使用相容版本的 Unwritten Land。",
-      ja: "対応しているバージョンの Unwritten Land を使ってください。",
+      en: "Use a compatible version of UNMAPPED.",
+      "zh-TW": "請使用相容版本的《無界之地》。",
+      ja: "対応しているバージョンの UNMAPPED を使ってください。",
     },
   },
   "cartridge-missing": {
@@ -323,9 +323,9 @@ export const CARTRIDGE_ERRORS: Record<string, ErrorText> = {
       ja: "カートリッジに、このバージョンにはないモジュールが必要です。",
     },
     hint: {
-      en: "Update Unwritten Land, or publish with the modules this version has.",
-      "zh-TW": "請更新 Unwritten Land，或只用這個版本有的功能模組來發布。",
-      ja: "Unwritten Land を更新するか、このバージョンにあるモジュールだけで公開してください。",
+      en: "Update UNMAPPED, or publish with the modules this version has.",
+      "zh-TW": "請更新《無界之地》，或只用這個版本有的功能模組來發布。",
+      ja: "UNMAPPED を更新するか、このバージョンにあるモジュールだけで公開してください。",
     },
   },
   "cartridge-mod-lock-invalid": {

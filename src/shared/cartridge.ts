@@ -210,6 +210,11 @@ export interface RuntimePin {
   modLock: ModLock;
   profileHash: ContentHash;
   effectiveHash: ContentHash;
+  /**
+   * The physics the world was made with (@shared/physics): terrain, combat and lore code, which no
+   * cartridge hash covers. Absent in a pin written before it was versioned, which means 1.
+   */
+  physicsVersion?: number;
 }
 
 export interface LegacyInstanceMeta {

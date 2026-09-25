@@ -56,6 +56,20 @@ export function dslError(input: DslErrorInput): DslError {
   };
 }
 
+const ASCII_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
+/** `name = ` at the start of a line, where the name is anything but spaces and punctuation. */
+const STATEMENT_HEAD = /^\s*([^\s=(),"'[\]]+)\s*=(?!=)/;
+
+/** Statement names the parser would skip silently; empty when every name is ascii. */
+export function foreignNames(program: string): string[] {
+  const names: string[] = [];
+  for (const line of program.split("\n")) {
+    const name = STATEMENT_HEAD.exec(line)?.[1];
+    if (name !== undefined && !ASCII_NAME.test(name) && !names.includes(name)) names.push(name);
+  }
+  return names;
+}
+
 export function failWith(error: DslError): Result<never, DslError> {
   return { ok: false, error };
 }
@@ -91,6 +105,25 @@ const codeFor = (errors: readonly ValidationError[]): string =>
  */
 export function parseRoot(dialect: Dialect, source: string): Result<ElementNode, DslError> {
   const program = aliasSource(normalizeOutput(source));
+  // The parser skips a statement named in another script (`阿潮 = NPC(...)`) and every reference
+  // to it without a word, so the program "parses" short of its people. Refuse it by name instead.
+  const foreign = foreignNames(program);
+  if (foreign.length > 0) {
+    return failWith(
+      dslError({
+        code: "dsl-invalid-name",
+        message: `Statement names must be ascii: ${foreign.join(", ")}.`,
+        hint: "Name every statement in ascii snake_case (a_chao = NPC(...)) and use that name in the arrays; only the quoted strings may use other scripts.",
+        errors: foreign.map((name) =>
+          propError(
+            "statement",
+            `"${name}" is not an ascii name, so the statement was lost.`,
+            "Rename it in ascii snake_case, where it is defined and where it is used.",
+          ),
+        ),
+      }),
+    );
+  }
   const result = dialect.parser.parse(program);
   const { meta } = result;
 

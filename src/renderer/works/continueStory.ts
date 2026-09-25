@@ -2,7 +2,7 @@
 // `@@episode` block from the model, placed and numbered by the host. A malformed reply goes back
 // once with the reason; after that it is an error the player sees, never an invented chapter.
 
-import { chat } from "@renderer/llm";
+import { chat, usageTag } from "@renderer/llm";
 import type { Result } from "@shared/result";
 import type { EpisodeProgress, StoryEpisode } from "@shared/story";
 import { continueStoryMessages, parseNextEpisode } from "@shared/story";
@@ -52,6 +52,7 @@ export async function writeNextChapter(
         grammar: null,
         stop: [],
         tools: [],
+        usage: usageTag("story"),
       },
       undefined,
       { signal: request.signal },

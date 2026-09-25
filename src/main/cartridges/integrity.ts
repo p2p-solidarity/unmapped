@@ -8,6 +8,7 @@ import type {
   RuntimePin,
 } from "@shared/cartridge";
 import { EMPTY_MOD_LOCK } from "@shared/mods";
+import { checkPhysics, PHYSICS_VERSION, physicsOf } from "@shared/physics";
 import { err, ok, type Result } from "@shared/result";
 
 export function sha256(content: string | Uint8Array): ContentHash {
@@ -153,18 +154,32 @@ export function deriveRuntimePin(manifest: CartridgeManifest): Result<RuntimePin
 /** Backwards-compatible name for callers created while the v2 format was being introduced. */
 export const runtimePinForManifest = deriveRuntimePin;
 
+/**
+ * A stored pin is the cartridge's derived pin plus the physics the world was made with. The
+ * cartridge part must match the installed revision exactly; the physics must be one this build
+ * reproduces (@shared/physics). Returns the stored pin, physics included.
+ */
 export function verifyRuntimePin(
   manifest: CartridgeManifest,
   stored: RuntimePin,
 ): Result<RuntimePin> {
   const derived = deriveRuntimePin(manifest);
   if (!derived.ok) return derived;
-  if (canonicalJson(derived.value) !== canonicalJson(stored)) {
+  const { physicsVersion, ...cartridgePart } = stored;
+  if (canonicalJson(derived.value) !== canonicalJson(cartridgePart)) {
     return err(
       "runtime-pin-mismatch",
       "The stored runtime pin does not match the installed cartridge revision.",
       "Restore the exact cartridge revision or create a fresh instance.",
     );
   }
-  return derived;
+  const physics = checkPhysics(physicsOf(stored));
+  if (!physics.ok) return physics;
+  return ok(physicsVersion === undefined ? derived.value : { ...derived.value, physicsVersion });
+}
+
+/** The pin a new world is made with: its cartridge's, on this build's physics. */
+export function newRuntimePin(manifest: CartridgeManifest): Result<RuntimePin> {
+  const derived = deriveRuntimePin(manifest);
+  return derived.ok ? ok({ ...derived.value, physicsVersion: PHYSICS_VERSION }) : derived;
 }

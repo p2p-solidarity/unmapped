@@ -1,4 +1,4 @@
-// The Seed harness: how anything in Unwritten Land talks to the model (Rule 11, docs/harness.md).
+// The Seed harness: how anything in UNMAPPED talks to the model (Rule 11, docs/harness.md).
 //
 // Framework-agnostic — it runs in the renderer, in the Electron main process and in vitest, and
 // imports no React, no Electron and no DOM. Five Cordis services hold everything a turn needs:
@@ -71,7 +71,7 @@ export { ORDER, type OrderName } from "./order";
 export { parseSkillFile, SkillsService } from "./skills";
 export { interpolate, SystemPromptService } from "./systemPrompt";
 export { ToolsService } from "./tools";
-export { runTurn, TURN_DEFAULTS, type TurnInput } from "./turn";
+export { addUsage, runTurn, TURN_DEFAULTS, type TurnInput } from "./turn";
 export type {
   AssembleContext,
   AssembledPrompt,

@@ -3,7 +3,9 @@
 
 import type { AssetRef } from "./assets";
 import type { CapabilityProfile } from "./capabilities";
+import type { ChatUsage } from "./llm";
 import type { AppError, Result } from "./result";
+import type { UsageTag } from "./usage";
 import type { ItemSpec, SceneGraph } from "./world";
 
 export const PROVIDER_IDS = ["apple-local", "apple-pcc", "llamacpp", "openai-compatible"] as const;
@@ -69,6 +71,8 @@ export interface SceneGenerationRequest {
   intent: SceneIntent;
   state: SceneGenerationRequestState;
   maxRepairAttempts: number;
+  /** What the call is for and which world it belongs to (the usage ledger). */
+  usage: UsageTag;
 }
 
 export interface GenerationOptions {
@@ -155,6 +159,8 @@ export interface SceneDraft {
   ast: SceneAST | null;
   graph: SceneGraph | null;
   worldPlan: WorldPlan | null;
+  /** Tokens the provider reported for this draft, when it reports any. */
+  usage?: ChatUsage;
 }
 
 export type ValidationStage =
@@ -210,6 +216,7 @@ export interface SceneArtifact {
   graph: SceneGraph;
   validation: ValidationReport;
   receipt: ValidationReceipt;
+  usage?: ChatUsage;
 }
 
 export type GenerationEvent =

@@ -1,5 +1,5 @@
-// System sub-menu: real readings of this machine (build, storage, model endpoint) and save
-// protection. Only reached on purpose — the title screen itself stays quiet.
+// System sub-menu: real readings of this machine (build, storage, model endpoint, signaling
+// servers) and save protection. Only reached on purpose — the title screen itself stays quiet.
 
 import { LANGUAGE_LABEL, UI_LANGUAGES, useLanguageStore, useT } from "@renderer/i18n";
 import { UnlockPanel } from "@renderer/identity";
@@ -9,6 +9,7 @@ import { errored, idle, type Loadable, loading, ready, toError } from "@shared/r
 import { useEffect, useState } from "react";
 import { useKeys } from "../shell/useKeys";
 import { ModelPanel } from "./ModelPanel";
+import { SignalingPanel } from "./SignalingPanel";
 
 function useAppInfo(): Loadable<AppInfo> {
   const [info, setInfo] = useState<Loadable<AppInfo>>(idle());
@@ -64,6 +65,8 @@ export function SystemPanel({ onClose }: { onClose(): void }) {
       </section>
 
       <ModelPanel />
+
+      <SignalingPanel />
 
       <StatePanel state={info} loadingText={t("title.readingBuild")}>
         {(value) => (

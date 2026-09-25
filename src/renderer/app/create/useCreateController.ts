@@ -1,5 +1,6 @@
 // Create a game: durable idea → reviewed world → reviewed story → Build. Only Build publishes.
 import { contentLanguage, type StringKey, useT } from "@renderer/i18n";
+import { useUsageScope } from "@renderer/llm";
 import { buildWorld, type NewWorldStage } from "@renderer/narrative/newWorld";
 import { PEACEFUL } from "@renderer/narrative/openLandCartridge";
 import { generationEventLabel } from "@renderer/narrative/sceneGeneration";
@@ -31,6 +32,8 @@ import type { Idea } from "./IdeaStep";
 import { patchBible } from "./WorldStep";
 
 export const STEPS: readonly CreateStep[] = ["idea", "world", "story", "build"];
+/** Characters of streamed text kept for the live preview: a whole story plan fits. */
+const STREAM_KEEP = 24_000;
 export const STEP_LABEL: Record<CreateStep, StringKey> = {
   idea: "create.stepIdea",
   world: "create.stepWorld",
@@ -55,6 +58,7 @@ const CARD_LABEL: Record<BiblePart, StringKey> = {
   taboos: "create.partTaboos",
   naming: "create.partNaming",
   voice: "create.partVoice",
+  look: "create.partLook",
 };
 const cancelled = (error: AppError): boolean =>
   error.code === "cancelled" || error.code === "request-aborted";
@@ -84,6 +88,8 @@ export function useCreateController() {
   const [progress, setProgress] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const controller = useRef<AbortController | null>(null);
+  // Every call made for this draft counts toward it, and toward the world Build makes from it.
+  useUsageScope(draft === null ? null : { kind: "create", id: draft.draftId });
 
   useEffect(() => {
     refreshProbe();
@@ -197,8 +203,13 @@ export function useCreateController() {
     setElapsed(0);
     const request = new AbortController();
     controller.current = request;
+    // Deltas are pieces: the preview reads everything written so far (StreamPreview).
+    let streamed = "";
     try {
-      const result = await work(request.signal, (text) => setProgress(text.slice(-500)));
+      const result = await work(request.signal, (text) => {
+        streamed += text;
+        setProgress(streamed.slice(-STREAM_KEEP));
+      });
       if (request.signal.aborted)
         return fail({ code: "cancelled", message: "The request was cancelled." });
       if (!result.ok && !cancelled(result.error)) setError(result.error);
@@ -427,6 +438,11 @@ export function useCreateController() {
       ),
     );
     if (!result.ok) return;
+    const linked = await window.seed.usage.link(
+      { kind: "create", id: current.draftId },
+      { kind: "instance", id: result.value.instanceId },
+    );
+    if (!linked.ok) setError(linked.error);
     const removed = await window.seed.createDrafts.remove(current.draftId);
     if (!removed.ok) setError(removed.error);
     void openInstance(result.value.instanceId);

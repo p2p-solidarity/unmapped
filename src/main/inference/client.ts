@@ -227,9 +227,16 @@ export async function streamChat(
       }
       calls.push(delta?.tool_calls as ToolCallDelta[] | undefined);
       if (chunk.usage) {
-        usage = { prompt: chunk.usage.prompt_tokens, completion: chunk.usage.completion_tokens };
+        const cached = chunk.usage.prompt_tokens_details?.cached_tokens;
+        usage = {
+          prompt: chunk.usage.prompt_tokens,
+          completion: chunk.usage.completion_tokens,
+          cached: typeof cached === "number" ? cached : null,
+        };
       }
     }
+    // An aborted stream can end quietly instead of throwing: it is still a cancelled request.
+    if (signal.aborted) return fail({ code: "aborted", message: "The request was cancelled." });
     const tail = think.flush();
     if (tail.length > 0) onDelta(tail);
     return ok({

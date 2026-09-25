@@ -5,7 +5,7 @@
 // facts and a closed list of operations; anything outside that list is rejected by the schema
 // before it ever reaches the game.
 
-import { chat } from "@renderer/llm";
+import { chat, usageTag } from "@renderer/llm";
 import type { GameplayRules } from "@shared/gameplay";
 import { languageName } from "@shared/language";
 import { err, ok, type Result } from "@shared/result";
@@ -138,6 +138,7 @@ export async function generateTweak(input: {
     grammar: null,
     stop: [],
     tools: [],
+    usage: usageTag("tweak"),
   });
   if (!result.ok) return result;
 

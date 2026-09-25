@@ -1,7 +1,11 @@
-// The world bible as the player reviews it in Create a game: six parts (premise, tone, rules,
-// taboos, naming, voice), each edited or rewritten on its own. A cartridge still stores two text
-// files (bible/core.md, bible/style.md): `flattenBible` renders them from the parts at publish,
+// The world bible as the player reviews it in Create a game: seven parts (premise, tone, rules,
+// taboos, naming, voice, look), each edited or rewritten on its own. A cartridge still stores two
+// text files (bible/core.md, bible/style.md): `flattenBible` renders them from the parts at publish,
 // deterministically, so the cartridge format and its content-hash rules stay as they were.
+//
+// The look (rev 6) is the world's own art direction: what its places and things look like. Prompts
+// and pictures read it from style.md (`Look:`), with the props a world allows (`Props:`), instead of
+// one house style; a bible from before it has neither and keeps the countryside it was written for.
 //
 // One part is rewritten by the model in a tiny line format — `@@<part>`, the text (or one `- item`
 // per line for rules and taboos), `@@end` — read and bounded here like the story's @@ protocol.
@@ -11,8 +15,17 @@ import type { WorldBible } from "./cartridge";
 import { languageName } from "./language";
 import type { ChatMessage } from "./llm";
 import { err, ok, type Result } from "./result";
+import { PROP_KINDS, type PropKind } from "./world";
 
-export const BIBLE_PARTS = ["premise", "tone", "rules", "taboos", "naming", "voice"] as const;
+export const BIBLE_PARTS = [
+  "premise",
+  "tone",
+  "rules",
+  "taboos",
+  "naming",
+  "voice",
+  "look",
+] as const;
 export type BiblePart = (typeof BIBLE_PARTS)[number];
 export type BibleListPart = "rules" | "taboos";
 export type BibleTextPart = Exclude<BiblePart, BibleListPart>;
@@ -24,6 +37,8 @@ export interface BibleFields {
   taboos: string[];
   naming: string;
   voice: string;
+  /** What this world looks like — buildings, materials, colours, era. */
+  look: string;
 }
 
 export const BIBLE_LIMITS = {
@@ -31,6 +46,7 @@ export const BIBLE_LIMITS = {
   tone: 200,
   naming: 300,
   voice: 300,
+  look: 300,
   /** Characters per rule or taboo. */
   line: 160,
   rules: { min: 3, max: 6 },
@@ -67,6 +83,8 @@ export const bibleFieldsSchema = z
     taboos: listSchema("taboos"),
     naming: z.string().max(BIBLE_LIMITS.naming),
     voice: z.string().max(BIBLE_LIMITS.voice),
+    // A draft saved before the look existed reads as an empty card the player fills in.
+    look: z.string().max(BIBLE_LIMITS.look).default(""),
   })
   .strict();
 
@@ -98,8 +116,61 @@ export function flattenBible(fields: BibleFields): WorldBible {
     style: [
       `Naming: ${clampLine(fields.naming, BIBLE_LIMITS.naming)}`,
       `Voice: ${clampLine(fields.voice, BIBLE_LIMITS.voice)}`,
+      `Look: ${clampLine(fields.look, BIBLE_LIMITS.look)}`,
     ].join("\n"),
   };
+}
+
+/** The `Key: value` line of style.md, or null when the bible has none. */
+function styleLine(bible: WorldBible | null, key: string): string | null {
+  if (bible === null) return null;
+  const match = new RegExp(`^${key}:[ \t]*(.+)$`, "m").exec(bible.style);
+  const value = match?.[1]?.trim() ?? "";
+  return value === "" ? null : value;
+}
+
+/** The world's own art direction (`Look:` in style.md). */
+export function bibleLook(bible: WorldBible | null): string | null {
+  return styleLine(bible, "Look");
+}
+
+/** The props a world names outright (`Props:` in style.md), known kinds only. */
+export function bibleProps(bible: WorldBible | null): PropKind[] | null {
+  const line = styleLine(bible, "Props");
+  if (line === null) return null;
+  const kinds = line
+    .split(/[,，、\s]+/)
+    .map((one) => one.trim())
+    .filter((one): one is PropKind => (PROP_KINDS as readonly string[]).includes(one));
+  return kinds.length === 0 ? null : [...new Set(kinds)];
+}
+
+/**
+ * What every world written before the look existed was told to build with (the old fixed Shōwa
+ * countryside: every kind but the dungeon and factory ones), in the order its prompts listed them.
+ * Such a bible has no `Look:` or `Props:` line, and keeps exactly this.
+ */
+export const LEGACY_PROP_KINDS: readonly PropKind[] = PROP_KINDS.filter(
+  (kind) =>
+    ![
+      "altar",
+      "machine_gear",
+      "conveyor",
+      "boiler",
+      "pipe_stack",
+      "crane",
+      "reactor",
+      "torch",
+    ].includes(kind),
+);
+
+/**
+ * The props this world is built from: the ones its bible names; for a world with a look but no
+ * list, every kind the engine has (the model keeps to those that fit the look); for a bible from
+ * before the look, the countryside it was written for.
+ */
+export function worldPropKinds(bible: WorldBible | null): readonly PropKind[] {
+  return bibleProps(bible) ?? (bibleLook(bible) === null ? LEGACY_PROP_KINDS : PROP_KINDS);
 }
 
 const PART_ASK: Record<BiblePart, string> = {
@@ -109,6 +180,7 @@ const PART_ASK: Record<BiblePart, string> = {
   taboos: `the TABOOS: ${BIBLE_LIMITS.taboos.min} to ${BIBLE_LIMITS.taboos.max} things that never appear here`,
   naming: "the NAMING: how places and people are named here, with two examples",
   voice: "the VOICE: how people speak — sentence length, register, habits",
+  look: "the LOOK: one or two sentences on what this world looks like — its buildings, materials, colours and era — so every place and picture can be drawn to match",
 };
 
 export interface BibleCardInput {
@@ -149,6 +221,7 @@ TABOOS:
 ${list(f.taboos)}
 NAMING: ${f.naming}
 VOICE: ${f.voice}
+LOOK: ${f.look}
 
 Rewrite only ${PART_ASK[input.part]}. Follow the player's note, and keep it consistent with every other part. Write it in ${languageName(input.language)}.
 Reply ONLY in this format:

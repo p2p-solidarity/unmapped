@@ -30,6 +30,7 @@ export const runtimePinSchema: z.ZodType<RuntimePin> = z
     modLock: modLockSchema,
     profileHash: contentHashSchema,
     effectiveHash: contentHashSchema,
+    physicsVersion: z.number().int().min(1).max(10_000).optional(),
   })
   .strict() as unknown as z.ZodType<RuntimePin>;
 

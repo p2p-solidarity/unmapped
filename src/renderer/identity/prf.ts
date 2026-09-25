@@ -18,7 +18,7 @@ export const CREDENTIAL_STORAGE_KEY = "aether.credentialId";
 export const PRF_SALT_SOURCE = "aether-spire/v1";
 export const PRF_SECRET_BYTES = 32;
 
-const RP_NAME = "Unwritten Land";
+const RP_NAME = "UNMAPPED";
 /** Frozen: part of the credential identity; a different value enrols a different passkey. */
 const USER_NAME = "aether-spire-player";
 const ES256 = -7;

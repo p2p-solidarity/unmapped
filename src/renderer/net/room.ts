@@ -31,8 +31,10 @@ import {
   roomName,
 } from "./codes";
 import { type PeerInfo, toPeerInfo } from "./peers";
+import { signalingServers } from "./signaling";
 
-export const DEFAULT_SIGNALING: readonly string[] = ["wss://y-webrtc-eu.fly.dev"];
+// The signaling list and its per-device override live in signaling.ts; re-exported for old callers.
+export { DEFAULT_SIGNALING, SIGNALING_KEY, signalingServers } from "./signaling";
 export const PLAYER_NAME_KEY = "aether.playerName";
 
 export interface SignalingStatus {
@@ -79,6 +81,8 @@ interface SignalingConnLike {
   url: string;
   connected: boolean;
   unsuccessfulReconnects: number;
+  /** lib0's WebsocketClient: the socket of the current attempt, null between attempts. */
+  ws: WebSocket | null;
   on(name: string, listener: () => void): void;
   off(name: string, listener: () => void): void;
 }
@@ -118,6 +122,27 @@ export function signalingStatusOf(provider: WebrtcProvider): SignalingStatus[] {
   }));
 }
 
+/**
+ * A browser WebSocket can wait minutes for a handshake, and y-webrtc retries a server only after
+ * the attempt fails. A signaling server that is slow right now (public ones have taken 5–16 s or
+ * never answered) would hold its slot all that time; closing a handshake still pending after
+ * `afterMs` makes y-webrtc try again within 2.5 s, so a server that answers later is found.
+ */
+export function retryStuckSignaling(provider: WebrtcProvider, afterMs: number): () => void {
+  const pendingSince = new WeakMap<WebSocket, number>();
+  const timer = setInterval(() => {
+    const now = Date.now();
+    for (const connection of connections(provider)) {
+      const socket = connection.ws;
+      if (socket === null || socket.readyState !== WebSocket.CONNECTING) continue;
+      const since = pendingSince.get(socket);
+      if (since === undefined) pendingSince.set(socket, now);
+      else if (now - since >= afterMs) socket.close();
+    }
+  }, 1000);
+  return () => clearInterval(timer);
+}
+
 /** Calls `listener` whenever a signaling server of `provider` connects or drops. */
 export function onSignalingChange(provider: WebrtcProvider, listener: () => void): () => void {
   const conns = connections(provider);
@@ -146,7 +171,7 @@ function open(
       "Open a v2 instance or migrate and publish this cartridge first.",
     );
   }
-  const signaling = options?.signaling ?? [...DEFAULT_SIGNALING];
+  const signaling = options?.signaling ?? signalingServers();
   if (signaling.length === 0) return err("room-no-signaling", "No signaling server configured.");
 
   const doc = new Y.Doc();

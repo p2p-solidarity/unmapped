@@ -14,7 +14,7 @@ import {
 } from "@renderer/state";
 import { type ChunkCoord, chunkKey, chunksAround, chunkTerrain } from "@shared/chunks";
 import { landSeedOf } from "@shared/land";
-import type { AppError } from "@shared/result";
+import { type AppError, toError } from "@shared/result";
 import { useEffect } from "react";
 import { makeKarmaEntry } from "../karmaFile";
 
@@ -80,6 +80,30 @@ function neighbours(coord: ChunkCoord) {
   });
 }
 
+interface Inflight {
+  key: string;
+  instanceId: string;
+  controller: AbortController;
+  /** Why it was stopped: Cancel waits for Retry; leaving Play leaves the chunk unwritten. */
+  reason: "cancel" | "leave" | null;
+}
+
+/** The one witnessing in flight: Cancel and leaving Play abort its model call itself. */
+let inflight: Inflight | null = null;
+
+export const WITNESS_CANCELLED = "cancelled";
+
+function stop(reason: "cancel" | "leave"): void {
+  if (inflight === null || inflight.reason !== null) return;
+  inflight.reason = reason;
+  inflight.controller.abort();
+}
+
+/** Stops the witnessing in flight; the chunk stays unwritten and waits for Retry. */
+export function cancelWitness(): void {
+  stop("cancel");
+}
+
 async function witness(coord: ChunkCoord): Promise<void> {
   const key = chunkKey(coord);
   const land = useLandStore.getState();
@@ -102,20 +126,43 @@ async function witness(coord: ChunkCoord): Promise<void> {
     origin: { floor: origin.floor },
   });
   land.setChunk(key, { status: "writing" });
+  const controller = new AbortController();
+  const mine: Inflight = { key, instanceId, controller, reason: null };
+  inflight = mine;
 
-  const program = await generateChunk({
-    bible,
-    coord,
-    biome: origin.biome,
-    ground: origin.floor.tile,
-    hole: terrain.hole,
-    lore: land.lore,
-    language: world.genesis.language,
-    terrain,
-    neighbours: neighbours(coord),
-    ...(isOrigin ? { authored: origin.npcs } : {}),
-  });
+  const program = await generateChunk(
+    {
+      bible,
+      coord,
+      biome: origin.biome,
+      ground: origin.floor.tile,
+      hole: terrain.hole,
+      lore: land.lore,
+      language: world.genesis.language,
+      terrain,
+      neighbours: neighbours(coord),
+      ...(isOrigin ? { authored: origin.npcs } : {}),
+    },
+    { signal: controller.signal },
+  );
+  if (inflight === mine) inflight = null;
   if (useLandStore.getState().instanceId !== instanceId) return;
+  // A cancelled witnessing writes nothing: not the chunk, not its lore, not a karma line.
+  if (controller.signal.aborted) {
+    if (mine.reason === "leave") {
+      useLandStore.getState().forget(key);
+      return;
+    }
+    useLandStore.getState().setChunk(key, {
+      status: "failed",
+      error: {
+        code: WITNESS_CANCELLED,
+        message: "Witnessing was cancelled; nothing was written.",
+        hint: "Retry when you want this place witnessed.",
+      },
+    });
+    return;
+  }
   if (!program.ok) {
     useLandStore.getState().setChunk(key, { status: "failed", error: program.error });
     return;
@@ -160,10 +207,18 @@ async function witness(coord: ChunkCoord): Promise<void> {
 export function witnessHere(): void {
   const chunk = useEngineStore.getState().chunk;
   if (chunk === null) return;
-  void witness(chunk).then(() => {
-    const now = useEngineStore.getState().chunk;
-    if (now !== null && (now.cx !== chunk.cx || now.cz !== chunk.cz)) witnessHere();
-  });
+  void witness(chunk)
+    .catch((thrown: unknown) => {
+      // Never leave a chunk "witnessing" forever: whatever broke is shown, with Retry.
+      if (useLandStore.getState().chunks[chunkKey(chunk)]?.status !== "writing") return;
+      useLandStore
+        .getState()
+        .setChunk(chunkKey(chunk), { status: "failed", error: toError(thrown, "witness-failed") });
+    })
+    .then(() => {
+      const now = useEngineStore.getState().chunk;
+      if (now !== null && (now.cx !== chunk.cx || now.cz !== chunk.cz)) witnessHere();
+    });
 }
 
 /** Clears a failed chunk and tries again while the player stands on it. */
@@ -189,6 +244,8 @@ export function useWitness(): void {
     witnessHere();
     return () => {
       for (const stop of unsubscribe) stop();
+      // Leaving Play stops the model call; the chunk is unwritten again, not failed.
+      stop("leave");
     };
   }, []);
 }

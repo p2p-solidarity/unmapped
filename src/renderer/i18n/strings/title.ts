@@ -187,6 +187,64 @@ export const TITLE = {
     ja: "オフライン — llama-server / ollama を起動するか、F12 のコンソールでプロバイダーを変更してください",
   },
 
+  // ── System → Signaling servers (a per-device preference) ──────────────────────────────────
+  signalingHeading: {
+    en: "Signaling servers",
+    "zh-TW": "信令伺服器",
+    ja: "シグナリングサーバー",
+  },
+  signalingIntro: {
+    en: "Friends find each other through a signaling server before their worlds connect directly. Two machines meet only if they share at least one server. This list is for this device only.",
+    "zh-TW":
+      "夥伴們會先透過信令伺服器找到彼此，世界才會直接相連。兩台機器至少要共用一個伺服器才能相遇。這份清單只屬於這台裝置。",
+    ja: "仲間同士はまずシグナリングサーバーを通じて互いを見つけ、それから世界が直接つながります。2 台の端末は、少なくとも 1 つのサーバーを共有しているときだけ出会えます。このリストはこの端末だけの設定です。",
+  },
+  signalingUsingDefault: {
+    en: "This device uses the default servers.",
+    "zh-TW": "這台裝置使用預設的伺服器。",
+    ja: "この端末は既定のサーバーを使っています。",
+  },
+  signalingUsingOwn: {
+    en: "This device uses its own list.",
+    "zh-TW": "這台裝置使用自己的清單。",
+    ja: "この端末は独自のリストを使っています。",
+  },
+  signalingField: {
+    en: "Servers — ws:// or wss://, one per line",
+    "zh-TW": "伺服器 — ws:// 或 wss://，每行一個",
+    ja: "サーバー — ws:// または wss://、1 行に 1 つ",
+  },
+  signalingInvalid: {
+    en: "Not a ws:// or wss:// address: {entries}",
+    "zh-TW": "不是 ws:// 或 wss:// 位址：{entries}",
+    ja: "ws:// または wss:// のアドレスではありません：{entries}",
+  },
+  signalingEmpty: {
+    en: "Add at least one server, or go back to the default.",
+    "zh-TW": "請至少加入一個伺服器，或恢復預設。",
+    ja: "少なくとも 1 つサーバーを追加するか、既定に戻してください。",
+  },
+  signalingTest: { en: "Test connection", "zh-TW": "測試連線", ja: "接続をテスト" },
+  signalingSave: { en: "Save for this device", "zh-TW": "儲存到這台裝置", ja: "この端末に保存" },
+  signalingUseDefault: { en: "Use default", "zh-TW": "使用預設", ja: "既定に戻す" },
+  signalingUntested: { en: "not tested", "zh-TW": "尚未測試", ja: "未テスト" },
+  signalingTesting: { en: "testing…", "zh-TW": "測試中…", ja: "テスト中…" },
+  signalingReachable: {
+    en: "reachable · handshake {handshake} ms · relay {relay} ms",
+    "zh-TW": "可連線 · 握手 {handshake} ms · 轉送 {relay} ms",
+    ja: "接続可能 · ハンドシェイク {handshake} ms · 中継 {relay} ms",
+  },
+  signalingSaved: {
+    en: "Saved for this device.",
+    "zh-TW": "已儲存到這台裝置。",
+    ja: "この端末に保存しました。",
+  },
+  signalingApplyNote: {
+    en: "Changes apply the next time you open your door or walk through a friend's.",
+    "zh-TW": "變更會在下次敞開你的門或穿過夥伴的門時生效。",
+    ja: "変更は、次に自分の扉を開くか仲間の扉をくぐったときに反映されます。",
+  },
+
   // ── Workspace (remix / revision editor) ────────────────────────────────────────────────────
   openingWorkspace: {
     en: "Opening workspace…",

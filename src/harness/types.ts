@@ -129,16 +129,22 @@ export interface WorldSnapshot {
 
 // ── Turn ─────────────────────────────────────────────────────────────────────────────────────
 
-/** The renderer's streaming chat call, narrowed to what a turn needs. */
+/**
+ * The renderer's streaming chat call, narrowed to what a turn needs. The caller tags the request
+ * for the usage ledger; the signal aborts the completion in flight, not only the steps after it.
+ */
 export type ChatFn = (
-  request: Omit<ChatRequest, "id">,
+  request: Omit<ChatRequest, "id" | "usage">,
   onDelta?: (text: string) => void,
+  options?: { signal?: AbortSignal },
 ) => Promise<Result<{ text: string; toolCalls: ToolCall[]; usage: ChatUsage | null }>>;
 
 export interface TurnResult {
   text: string;
   /** How many model steps ran (1 when the model answered without calling a tool). */
   steps: number;
+  /** Tokens over every step, or null when the provider reported none for any of them. */
+  usage: ChatUsage | null;
   toolResults: ToolExecutionResult[];
   /** The full conversation the turn produced, system message first. */
   messages: ChatMessage[];

@@ -328,6 +328,14 @@ export const MODEL_ERRORS: Record<string, ErrorText> = {
     },
     hint: HINT.retryModel,
   },
+  "dsl-invalid-name": {
+    message: {
+      en: "The program named some of its parts in a script the game cannot read.",
+      "zh-TW": "程式用遊戲讀不懂的文字替某些部分命名。",
+      ja: "プログラムが、ゲームの読めない文字で一部に名前を付けています。",
+    },
+    hint: HINT.retryModel,
+  },
   "dsl-orphaned-statement": {
     message: {
       en: "The program defines parts it never uses.",

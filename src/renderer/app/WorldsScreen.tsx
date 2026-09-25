@@ -104,13 +104,10 @@ export function WorldsScreen() {
       <div className="title">
         <div className="title__left">
           <div className="title__crest">
-            <h1 className="title__logo">
-              Unwritten
-              <br />
-              Land
-            </h1>
+            <h1 className="title__logo">UNMAPPED</h1>
             <div className="title__rule" aria-hidden="true" />
-            <p className="title__sub">未記之地</p>
+            <p className="title__sub">無界之地</p>
+            <p className="title__tagline">{t("common.tagline")}</p>
           </div>
           <nav className="title__menu" aria-label={t("title.mainMenu")}>
             {items.map((item, index) => (

@@ -283,10 +283,15 @@ function collectScenery(frame: LandFrame, transform: ScreenTransform): DrawItem[
     ...placeMarkers(frame.places ?? []),
     ...(frame.continent ?? []),
   ];
-  // Other players on the continent: the same walker figure, standing, with their name over it.
-  const standing: SpriteAsset = { ...ACTOR_ASSETS.player, sx: 0, sy: 0 };
+  // Other players on the continent: the same walker figure, facing and stepping the way they do,
+  // with their name over it.
   for (const other of frame.others ?? []) {
-    pushActor(items, frame, transform, other.x, other.z, standing, 1, {
+    const figure: SpriteAsset = {
+      ...ACTOR_ASSETS.player,
+      sx: FACING_COLUMN[other.facing],
+      sy: other.moving ? (Math.floor(frame.now / 140) % 4) * 16 : 0,
+    };
+    pushActor(items, frame, transform, other.x, other.z, figure, 1, {
       text: other.name,
       color: LAND_2D_PALETTE.remote,
     });
@@ -452,12 +457,14 @@ function drawGoal(frame: LandFrame, transform: ScreenTransform): void {
   frame.ctx.stroke();
 }
 
+const FACING_COLUMN = { south: 0, north: 16, west: 32, east: 48 } as const;
+
 function drawPlayer(frame: LandFrame, transform: ScreenTransform): void {
   const { player, ctx, atlases, now } = frame;
   const [cx, cy] = toScreen(transform, player.x, player.z);
   const source = ACTOR_ASSETS.player;
   // Character sheets are one column per facing and one row per walk frame.
-  const facingColumn = { south: 0, north: 16, west: 32, east: 48 }[player.facing];
+  const facingColumn = FACING_COLUMN[player.facing];
   const walkFrame = player.moving ? Math.floor(now / 140) % 4 : 0;
   const animated: SpriteAsset = {
     ...source,

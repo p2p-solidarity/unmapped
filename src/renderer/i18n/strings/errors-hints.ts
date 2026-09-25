@@ -41,9 +41,9 @@ export const HINT = {
     ja: "バックアップから復元してください。",
   },
   exportAgain: {
-    en: "Export it again from Unwritten Land.",
-    "zh-TW": "請從 Unwritten Land 重新匯出。",
-    ja: "Unwritten Land からもう一度書き出してください。",
+    en: "Export it again from UNMAPPED.",
+    "zh-TW": "請從《無界之地》重新匯出。",
+    ja: "UNMAPPED からもう一度書き出してください。",
   },
   repairCartridge: {
     en: "Repair it in a Remix workspace, or reinstall the cartridge.",
@@ -76,9 +76,9 @@ export const HINT = {
     ja: "不具合です。報告してください。",
   },
   sameAsHost: {
-    en: "Open a save of the host's exact cartridge version, on the same version of Unwritten Land.",
-    "zh-TW": "請開啟與房主相同卡帶版本的存檔，並使用相同版本的 Unwritten Land。",
-    ja: "ホストと同じカートリッジの版のセーブを、同じバージョンの Unwritten Land で開いてください。",
+    en: "Open a save of the host's exact cartridge version, on the same version of UNMAPPED.",
+    "zh-TW": "請開啟與房主相同卡帶版本的存檔，並使用相同版本的《無界之地》。",
+    ja: "ホストと同じカートリッジの版のセーブを、同じバージョンの UNMAPPED で開いてください。",
   },
   askAgain: {
     en: "Describe the change again, more simply.",

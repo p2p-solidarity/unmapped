@@ -103,6 +103,7 @@ describe("packFiles / unpackFiles", () => {
       chain: {} as SeedApi["chain"],
       app: {} as SeedApi["app"],
       createDrafts: {} as SeedApi["createDrafts"],
+      usage: {} as SeedApi["usage"],
     } as SeedApi;
     const previous = globalThis.window;
     Object.defineProperty(globalThis, "window", { configurable: true, value: { seed: api } });
@@ -164,6 +165,7 @@ describe("packFiles / unpackFiles", () => {
       chain: {} as SeedApi["chain"],
       app: {} as SeedApi["app"],
       createDrafts: {} as SeedApi["createDrafts"],
+      usage: {} as SeedApi["usage"],
     } as SeedApi;
     const previous = globalThis.window;
     Object.defineProperty(globalThis, "window", { configurable: true, value: { seed: api } });

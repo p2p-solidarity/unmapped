@@ -1,0 +1,203 @@
+{
+  "manifest": {
+    "formatVersion": 2,
+    "cartridgeId": "aether-land",
+    "version": "1.1.0",
+    "name": "未記之地",
+    "description": "A land where the maps stopped being drawn.",
+    "author": "Aether Spire",
+    "createdAt": "2026-09-25T00:00:00.000Z",
+    "engineApiVersion": 1,
+    "saveSchemaVersion": 1,
+    "networkProtocolVersion": 1,
+    "definition": {
+      "formatVersion": 2,
+      "gameId": "aether-land",
+      "title": "未記之地",
+      "description": "A land where the maps stopped being drawn.",
+      "author": "Aether Spire",
+      "modeSelection": {
+        "genres": ["adventure_rpg"],
+        "timings": [],
+        "structures": [],
+        "settings": []
+      },
+      "capabilityProfile": {
+        "profileId": "profile-4f97551d91e3",
+        "defaultContextId": "main",
+        "contexts": [
+          {
+            "contextId": "main",
+            "profile": {
+              "entries": [
+                {
+                  "key": "camera",
+                  "value": "third_person",
+                  "moduleId": "tps_camera@1"
+                },
+                {
+                  "key": "physics",
+                  "value": "grounded",
+                  "moduleId": "grounded_physics@1"
+                },
+                {
+                  "key": "timing",
+                  "value": "realtime",
+                  "moduleId": "realtime_timing@1"
+                },
+                {
+                  "key": "network",
+                  "value": "offline",
+                  "moduleId": "offline_session@1"
+                },
+                {
+                  "key": "progression",
+                  "value": "stat_growth",
+                  "moduleId": "run_progression@1"
+                },
+                {
+                  "key": "content",
+                  "value": "narrative",
+                  "moduleId": "narrative_layer@1"
+                }
+              ]
+            }
+          }
+        ],
+        "transitions": []
+      },
+      "assetPacks": [],
+      "scenePlan": {
+        "orderedSceneIds": ["origin"],
+        "entrySceneId": "origin",
+        "endingSceneIds": ["origin"],
+        "transitions": []
+      },
+      "scenes": [
+        {
+          "sceneId": "origin",
+          "slotId": "origin",
+          "candidateId": "origin",
+          "sourceHash": "sha256:b34e9fab78e79b822ecd13a9e37b1b3a7ffa79d850a240f6401878ecd3f651fd",
+          "requiredProfileId": "profile-4f97551d91e3",
+          "requiredContextId": "main",
+          "requiredModules": [
+            "tps_camera",
+            "grounded_physics",
+            "realtime_timing",
+            "offline_session",
+            "run_progression",
+            "narrative_layer"
+          ],
+          "assets": []
+        }
+      ],
+      "narrative": {
+        "required": false,
+        "premise": "A land where the maps stopped being drawn.",
+        "finale": "",
+        "scenes": [
+          {
+            "sceneId": "origin",
+            "title": "Home",
+            "summary": "",
+            "objective": ""
+          }
+        ]
+      },
+      "moduleLock": {
+        "entries": [
+          {
+            "moduleId": "tps_camera",
+            "version": "1",
+            "source": "builtin",
+            "provides": ["camera:third_person"],
+            "requires": [],
+            "deterministic": true,
+            "implementedBy": "src/renderer/engine/CameraRig.tsx (orbit branch)"
+          },
+          {
+            "moduleId": "grounded_physics",
+            "version": "1",
+            "source": "builtin",
+            "provides": ["physics:grounded"],
+            "requires": [],
+            "deterministic": false,
+            "implementedBy": "src/renderer/engine/Player.tsx (Rapier kinematic capsule, static colliders)"
+          },
+          {
+            "moduleId": "realtime_timing",
+            "version": "1",
+            "source": "builtin",
+            "provides": ["timing:realtime"],
+            "requires": [],
+            "deterministic": false,
+            "implementedBy": "src/renderer/engine/Player.tsx useFrame loop (no scheduler, wall-clock pacing)"
+          },
+          {
+            "moduleId": "offline_session",
+            "version": "1",
+            "source": "builtin",
+            "provides": ["network:offline"],
+            "requires": [],
+            "deterministic": true,
+            "implementedBy": "single-process play; no session protocol involved"
+          },
+          {
+            "moduleId": "run_progression",
+            "version": "1",
+            "source": "builtin",
+            "provides": [
+              "progression:run_based",
+              "progression:score_run",
+              "progression:stat_growth"
+            ],
+            "requires": [],
+            "deterministic": true,
+            "implementedBy": "src/shared/progression.ts + renderer/state/runStore.ts"
+          },
+          {
+            "moduleId": "narrative_layer",
+            "version": "1",
+            "source": "builtin",
+            "provides": ["content:narrative"],
+            "requires": [],
+            "deterministic": false,
+            "implementedBy": "src/renderer/narrative (scene / dialogue / item generation against the DSL)"
+          }
+        ]
+      },
+      "modLock": {
+        "entries": [],
+        "lockHash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "provenance": {
+        "source": "new",
+        "parent": null,
+        "generation": [
+          {
+            "operation": "initial",
+            "generationSeed": 0,
+            "requestHash": "sha256:ea5b395a60b2cc20f03443071a17b321fbf3462c14813fe4eea9f7d3374e65bd",
+            "parentCandidateHash": null,
+            "modelId": null,
+            "createdAt": "2026-09-25T00:00:00.000Z"
+          }
+        ]
+      }
+    },
+    "lineage": {
+      "kind": "revision",
+      "parent": null
+    }
+  },
+  "rules": "root = Rules(\"tps_exploration@1\", \"grounded\", [kit1, progression1, move_forward, move_backward, move_left, move_right, sprint, jump, interact, grab, flashlight, fire, end_turn, pause])\nkit1 = Kit(\"tps_exploration@1\", 4, 7, 6.4, 15, 2, 55, 0.0022, 9)\nprogression1 = Progression(\"stat_growth\", 3)\nmove_forward = Bind(\"move_forward\", [\"KeyW\", \"ArrowUp\"])\nmove_backward = Bind(\"move_backward\", [\"KeyS\", \"ArrowDown\"])\nmove_left = Bind(\"move_left\", [\"KeyA\", \"ArrowLeft\"])\nmove_right = Bind(\"move_right\", [\"KeyD\", \"ArrowRight\"])\nsprint = Bind(\"sprint\", [\"ShiftLeft\", \"ShiftRight\"])\njump = Bind(\"jump\", [\"Space\"])\ninteract = Bind(\"interact\", [\"KeyE\"])\ngrab = Bind(\"grab\", [\"KeyG\"])\nflashlight = Bind(\"flashlight\", [\"KeyF\"])\nfire = Bind(\"fire\", [\"MouseLeft\"])\nend_turn = Bind(\"end_turn\", [\"KeyR\"])\npause = Bind(\"pause\", [\"KeyP\"])\n",
+  "scenes": {
+    "origin": "root = Scene(\"Home\", \"countryside\", [contract1, floor1, sky1, light1])\ncontract1 = Contract(\"origin\", \"tps_exploration@1\", [], [], \"carry\", [], true, \"profile-4f97551d91e3\", \"main\", [\"tps_camera\", \"grounded_physics\", \"realtime_timing\", \"offline_session\", \"run_progression\", \"narrative_layer\"])\nfloor1 = Floor(16, 16, \"grass\")\nsky1 = Sky(\"#b9d3e3\", \"#dfe8ea\", 0.02)\nlight1 = Light(\"sun\", \"#fff3d6\", 1.4)\n"
+  },
+  "dialogues": {},
+  "bible": {
+    "core": "Premise: A land where the maps stopped being drawn. Past what is known the land is real, but it has no names, no people and no stories until someone walks there and sees it. The player is a witness, not a hero.\nTone: Shōwa-era countryside. Quiet, a little lonely, warm.\nRules:\n- People live ordinary lives: fields, a small shop, the bus that comes twice a day, the bathhouse, mending the power line.\n- Common sights: utility poles, a single-track railway, unmanned stations, a bathhouse chimney, a vending machine glowing in a field, breakwaters, windmills, terraced fields.\n- Every place keeps one small custom of its own. Neighbouring places keep similar customs; the farther you walk, the stranger they become.\n- People remember things differently and may contradict each other and older stories.\n- Help is repaid with favours and small keepsakes, not money.\nNever:\n- Magic, monsters, swords, prophecies, heroes, the end of the world.\n- Anyone speaking of maps being drawn by someone, of games, players, or of being written.",
+    "style": "Naming: Places are named after what stands there or what happens there, short and plain. People go by short first names or nicknames.\nVoice: Short sentences, plain words. People mention the weather or the season before anything else. Every word the player reads is in the player's language.\nLook: Shōwa-era countryside: wooden houses with tin roofs, utility poles along farm roads, a single-track railway, a bathhouse chimney, a vending machine glowing in a field; dry grass, weathered wood and a pale warm sky.\nProps: tree, rock, crate, well, statue, pillar, fence, flower, mushroom, signpost, utility_pole, vending_machine, bus_stop, rail_track, chimney, steel_tower, windmill, breakwater, house"
+  }
+}

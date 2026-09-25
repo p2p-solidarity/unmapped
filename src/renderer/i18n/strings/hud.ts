@@ -99,6 +99,16 @@ export const HUD = {
   },
   sceneNotParsed: { en: "Scene not parsed", "zh-TW": "場景未解析", ja: "シーン未解析" },
   biome: { en: "Biome", "zh-TW": "地貌", ja: "バイオーム" },
+  // One per BIOMES value (@shared/world): a bounded scene's engine biome, never its raw id.
+  biome_meadow: { en: "Meadow", "zh-TW": "草原", ja: "草原" },
+  biome_onsen_town: { en: "Hot-spring town", "zh-TW": "溫泉小鎮", ja: "温泉町" },
+  biome_ruined_castle: { en: "Ruined castle", "zh-TW": "古城廢墟", ja: "廃城" },
+  biome_cyber_workshop: { en: "Cyber workshop", "zh-TW": "電子工坊", ja: "サイバー工房" },
+  biome_abyss: { en: "Abyss", "zh-TW": "深淵", ja: "深淵" },
+  biome_sky_isle: { en: "Sky isle", "zh-TW": "天空浮島", ja: "空の浮島" },
+  biome_snowfield: { en: "Snowfield", "zh-TW": "雪原", ja: "雪原" },
+  biome_lava_forge: { en: "Lava forge", "zh-TW": "熔岩鍛爐", ja: "溶岩の鍛冶場" },
+  biome_countryside: { en: "Countryside", "zh-TW": "鄉間", ja: "田園" },
   storyCount: {
     en: "Story {done}/{total}",
     "zh-TW": "故事 {done}/{total}",
@@ -151,6 +161,12 @@ export const HUD = {
   landWitnessing: { en: "WITNESSING…", "zh-TW": "顯影中…", ja: "観測中…" },
   landFailed: { en: "FAILED · {reason}", "zh-TW": "失敗 · {reason}", ja: "失敗 · {reason}" },
   retryWitness: { en: "Retry witnessing", "zh-TW": "重新顯影", ja: "もう一度観測" },
+  cancelWitness: { en: "Cancel witnessing", "zh-TW": "取消顯影", ja: "観測をやめる" },
+  witnessCancelled: {
+    en: "Witnessing cancelled; nothing was written here.",
+    "zh-TW": "已取消顯影；這裡沒有寫下任何東西。",
+    ja: "観測をやめました。ここには何も書かれていません。",
+  },
   landUnwritten: { en: "UNWRITTEN", "zh-TW": "未記", ja: "未記録" },
 
   // ── System card ────────────────────────────────────────────────────────────────────────────

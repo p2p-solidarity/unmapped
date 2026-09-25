@@ -7,10 +7,16 @@
 // tool loop and an abort are all values, never exceptions.
 
 import type { Context } from "@deepseek-ai/cordis";
-import type { ChatMessage } from "@shared/llm";
+import type { ChatMessage, ChatUsage } from "@shared/llm";
 import { err, fail, ok, type Result, toError } from "@shared/result";
 import "./events";
-import type { AssembleContext, ChatFn, ToolExecutionResult, TurnResult } from "./types";
+import type {
+  AssembleContext,
+  ChatFn,
+  PromptSection,
+  ToolExecutionResult,
+  TurnResult,
+} from "./types";
 
 /** Defaults chosen for a 4B local model on a 16 GB machine: short answers, warm temperature. */
 export const TURN_DEFAULTS = { maxSteps: 4, maxTokens: 2048, temperature: 0.8 } as const;
@@ -21,6 +27,8 @@ export interface TurnInput {
   /** The conversation so far. Any system message is dropped: the harness owns that slot. */
   messages: ChatMessage[];
   assemble: AssembleContext;
+  /** Sections for this turn only, assembled in but never registered (see `assemble`). */
+  sections?: readonly PromptSection[];
   /** Offer the registered tools to the model (default true). */
   useTools?: boolean;
   maxSteps?: number;
@@ -29,6 +37,17 @@ export interface TurnInput {
   /** GBNF grammar; only sent when no tools are offered, since the two cannot be combined. */
   grammar?: string | null;
   onDelta?(text: string): void;
+}
+
+/** Sums two steps' tokens; a step the provider did not report adds nothing it did not say. */
+export function addUsage(a: ChatUsage | null, b: ChatUsage | null): ChatUsage | null {
+  if (a === null) return b;
+  if (b === null) return a;
+  return {
+    prompt: a.prompt + b.prompt,
+    completion: a.completion + b.completion,
+    cached: a.cached === null && b.cached === null ? null : (a.cached ?? 0) + (b.cached ?? 0),
+  };
 }
 
 export async function runTurn(input: TurnInput): Promise<Result<TurnResult>> {
@@ -40,11 +59,11 @@ export async function runTurn(input: TurnInput): Promise<Result<TurnResult>> {
 
   let system: string;
   try {
-    system = ctx.systemPrompt.assemble(assemble).text;
+    system = ctx.systemPrompt.assemble(assemble, input.sections ?? []).text;
   } catch (thrown) {
     return fail({
       ...toError(thrown, "prompt-assemble"),
-      hint: "a prompt section referenced a variable no plugin registered",
+      hint: "a prompt section referenced a variable no plugin registered, or reused a registered name",
     });
   }
 
@@ -54,6 +73,7 @@ export async function runTurn(input: TurnInput): Promise<Result<TurnResult>> {
     ...input.messages.filter((message) => message.role !== "system"),
   ];
   const toolResults: ToolExecutionResult[] = [];
+  let usage: ChatUsage | null = null;
 
   for (let step = 1; step <= maxSteps; step += 1) {
     if (aborted()) return err("aborted", "the turn was aborted");
@@ -69,13 +89,16 @@ export async function runTurn(input: TurnInput): Promise<Result<TurnResult>> {
         tools: schemas,
       },
       input.onDelta,
+      // The signal reaches the completion in flight, so a cancel stops the provider stream too.
+      assemble.signal === undefined ? undefined : { signal: assemble.signal },
     );
     if (!response.ok) return fail(response.error);
+    usage = addUsage(usage, response.value.usage);
 
     const { text, toolCalls } = response.value;
     if (toolCalls.length === 0) {
       messages.push({ role: "assistant", content: text });
-      return ok({ text, steps: step, toolResults, messages });
+      return ok({ text, steps: step, usage, toolResults, messages });
     }
 
     messages.push({ role: "assistant", content: text, toolCalls });

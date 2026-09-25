@@ -32,6 +32,7 @@ const request = (over: Partial<ChatRequest>): ChatRequest => ({
   grammar: null,
   stop: [],
   tools: [],
+  usage: { purpose: "resolve", scope: null },
   ...over,
 });
 

@@ -51,6 +51,7 @@ import type {
   SceneArtifact,
   SceneGenerationRequest,
 } from "./scene-generation";
+import type { UsageRecord, UsageScope, UsageSummary } from "./usage";
 import type {
   CandidateMetrics,
   DraftCandidate,
@@ -169,6 +170,7 @@ export const IPC = {
     publishDraft: "works:publish-draft",
     replaceAsset: "works:replace-asset",
     generateAsset: "works:generate-asset",
+    cancelAsset: "works:cancel-asset",
     createPlay: "works:create-play",
     readPlay: "works:read-play",
     changePlay: "works:change-play",
@@ -188,6 +190,12 @@ export const IPC = {
     openExternal: "app:open-external",
     pickFile: "app:pick-file",
     saveFile: "app:save-file",
+  },
+  /** The usage ledger (<userData>/usage.jsonl): one line per model call, written by main. */
+  usage: {
+    summary: "usage:summary",
+    link: "usage:link",
+    changed: "usage:changed",
   },
   /** Create a game drafts (<userData>/workspaces/create.<id>/draft.json). */
   createDrafts: {
@@ -445,8 +453,17 @@ export interface SeedApi {
     publishDraft(draftId: string): Promise<Result<{ draft: WorkDraft; manifest: WorkManifest }>>;
     /** Picks an image file for one asset id of head; null when the picker was cancelled. */
     replaceAsset(draftId: string, assetId: string): Promise<Result<WrittenCandidate | null>>;
-    /** Asks the image model for one asset of head (main-side key); the result is a pending candidate. */
-    generateAsset(draftId: string, assetId: string): Promise<Result<WrittenCandidate>>;
+    /**
+     * Asks the image model for one asset of head (main-side key); the result is a pending
+     * candidate. `requestId` names the call so `cancelAsset` can abort it in flight.
+     */
+    generateAsset(
+      draftId: string,
+      assetId: string,
+      requestId: string,
+    ): Promise<Result<WrittenCandidate>>;
+    /** Aborts an image request; its picture, if any arrives, is never stored. */
+    cancelAsset(requestId: string): Promise<Result<void>>;
     createPlay(input: CreateWorkPlayInput): Promise<Result<WorkPlay>>;
     readPlay(playId: string): Promise<Result<WorkPlay>>;
     changePlay(playId: string, change: PlayChange): Promise<Result<WorkPlay>>;
@@ -471,6 +488,13 @@ export interface SeedApi {
     openExternal(url: string): Promise<Result<void>>;
     pickFile(options: PickFileOptions): Promise<Result<{ path: string; base64: string } | null>>;
     saveFile(input: SaveFileInput): Promise<Result<{ path: string } | null>>;
+  };
+  /** What model calls cost, per world. Recording happens in main as each call settles. */
+  usage: {
+    summary(scope: UsageScope): Promise<Result<UsageSummary>>;
+    /** Counts `from`'s calls toward `to` (the Create draft a world was built from). */
+    link(from: UsageScope, to: UsageScope): Promise<Result<void>>;
+    onChanged(listener: (record: UsageRecord) => void): () => void;
   };
   /** Create a game drafts: nothing here is published; Build does that. */
   createDrafts: {

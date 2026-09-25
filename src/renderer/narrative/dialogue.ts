@@ -51,6 +51,7 @@ export function generateDialogue(
     system,
     user,
     purpose: "dialogue",
+    task: "dialogue",
     language: input.genesis.language,
     parse: parseDialogue,
     maxTokens: DIALOGUE_MAX_TOKENS,

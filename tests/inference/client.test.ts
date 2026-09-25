@@ -14,6 +14,7 @@ const request: ChatRequest = {
   grammar: "root ::= scene",
   stop: [],
   tools: [],
+  usage: { purpose: "scene", scope: null },
 };
 
 const config = (over: Partial<InferenceConfig>): InferenceConfig => ({

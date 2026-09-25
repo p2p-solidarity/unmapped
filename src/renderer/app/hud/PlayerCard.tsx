@@ -1,5 +1,6 @@
-// Left HUD card: where you are (worldStore.floor + the parsed biome), what you have done (karma),
-// what you carry, and what this floor asks of you (scene.quests).
+// Left HUD card: where you are (worldStore.floor + the parsed biome in a bounded scene, the land
+// readouts on open land), what you have done (karma), what you carry, and what this floor asks of
+// you (scene.quests).
 //
 // There is no avatar portrait or class name here: the engine has no class system, so showing one
 // would be a gauge with nothing behind it (Rule 2). A real player identity arrives with
@@ -129,6 +130,9 @@ export function PlayerCard({ summary }: { summary: HudSummary }): JSX.Element {
   const chunk = useEngineStore((state) => state.chunk);
   // Which land of the one game this is; shared with a friend, it is the same land for them.
   const seed = useSessionStore((state) => state.activeInstance?.instance.save.seed);
+  // Inside a place the scene played is the place's, not the land's origin scene in worldStore.
+  const placeBiome = useSessionStore((state) => state.place?.graph.biome ?? null);
+  const biome = placeBiome ?? summary.biome;
   const t = useT();
 
   return (
@@ -191,25 +195,29 @@ export function PlayerCard({ summary }: { summary: HudSummary }): JSX.Element {
       <div
         style={{
           display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
+          flexDirection: "column",
+          gap: space.xs,
           marginTop: 4,
           paddingTop: 4,
           borderTop: `1px solid ${colors.surfaceBorder}`,
         }}
       >
-        <Text variant="caption" tone="muted">
-          {t(summary.biome === null ? "hud.sceneNotParsed" : "hud.biome")}
-        </Text>
-        {summary.biome === null ? null : (
-          <Text variant="caption" tone="accent" mono>
-            {summary.biome.toUpperCase()}
-          </Text>
+        {/* Open land is not one of the engine's biomes: the land status above names the place. */}
+        {chunk !== null ? null : (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <Text variant="caption" tone="muted">
+              {t(biome === null ? "hud.sceneNotParsed" : "hud.biome")}
+            </Text>
+            {biome === null ? null : (
+              <Text variant="caption" tone="accent">
+                {t(`hud.biome_${biome}`)}
+              </Text>
+            )}
+          </div>
         )}
+        <StoryLine />
+        <QuestList />
       </div>
-
-      <StoryLine />
-      <QuestList />
     </Surface>
   );
 }

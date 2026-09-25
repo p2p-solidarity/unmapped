@@ -1,6 +1,8 @@
 // Every model turn in the game goes through here, so the system prompt the model sees is always the
 // assembled one: built-in sections, the enabled mods' sections, and — for a DSL turn — the library
-// spec registered for exactly that turn and disposed after it (Rule 11).
+// spec and the bible for exactly that turn (Rule 11). Turn sections are handed to the assembly, not
+// registered on the harness: the loaded world's harness is shared, and a witnessing and a chapter
+// written at the same time must neither collide on a name nor read each other's sections.
 //
 // Before a world exists there is no world harness to borrow (Genesis writes floor 1 for a world
 // that has not been created yet), so that turn runs on a throwaway harness with the built-ins only.
@@ -15,9 +17,11 @@ import {
 } from "@harness";
 import { getWorldHarness } from "@renderer/harness/worldHarness";
 import { chat } from "@renderer/llm/client";
+import { usageTag } from "@renderer/llm/usage";
 import type { ChunkCoord } from "@shared/chunks";
-import type { ChatMessage } from "@shared/llm";
-import { fail, ok, type Result } from "@shared/result";
+import type { ChatMessage, ChatUsage } from "@shared/llm";
+import { fail, ok, type Result, toError } from "@shared/result";
+import type { UsagePurpose } from "@shared/usage";
 
 type HarnessContext = Harness["ctx"];
 
@@ -33,6 +37,8 @@ export interface TurnSection {
 export interface NarrativeTurnInput {
   /** What this turn is for; prompt sections may key off it. */
   purpose: PromptPurpose;
+  /** What the call is counted as in the usage ledger. */
+  task: UsagePurpose;
   /** The player's language (Rule 10) — the model answers in it, we never translate. */
   language: string;
   messages: ChatMessage[];
@@ -54,6 +60,7 @@ export interface NarrativeTurnInput {
 export interface NarrativeTurn {
   text: string;
   toolResults: ToolExecutionResult[];
+  usage: ChatUsage | null;
 }
 
 interface Borrowed {
@@ -76,24 +83,23 @@ async function borrow(): Promise<Borrowed> {
 
 export async function runNarrativeTurn(input: NarrativeTurnInput): Promise<Result<NarrativeTurn>> {
   const borrowed = await borrow();
-  const disposers = [...(input.section ? [input.section] : []), ...(input.sections ?? [])]
+  const sections = [...(input.section ? [input.section] : []), ...(input.sections ?? [])]
     .filter((section) => section.text.length > 0)
-    .map((section) =>
-      borrowed.ctx.systemPrompt.section({
-        name: section.name,
-        order: section.order,
-        text: section.text,
-        // Bible and world text are data: a "{{" in them must not break assembly.
-        interpolate: false,
-      }),
-    );
+    .map((section) => ({
+      name: section.name,
+      order: section.order,
+      text: section.text,
+      // Bible and world text are data: a "{{" in them must not break assembly.
+      interpolate: false,
+    }));
 
-  const signal = input.signal;
+  const tag = usageTag(input.task);
   try {
     const result = await runTurn({
       ctx: borrowed.ctx,
-      // The signal also aborts the completion in flight, not only the steps after it.
-      chat: signal === undefined ? chat : (request, onDelta) => chat(request, onDelta, { signal }),
+      sections,
+      // runTurn hands the signal on, so it aborts the completion in flight too.
+      chat: (request, onDelta, options) => chat({ ...request, usage: tag }, onDelta, options),
       messages: input.messages,
       assemble: {
         purpose: input.purpose,
@@ -109,9 +115,15 @@ export async function runNarrativeTurn(input: NarrativeTurnInput): Promise<Resul
       onDelta: input.onDelta,
     });
     if (!result.ok) return fail(result.error);
-    return ok({ text: result.value.text, toolResults: result.value.toolResults });
+    return ok({
+      text: result.value.text,
+      toolResults: result.value.toolResults,
+      usage: result.value.usage,
+    });
+  } catch (thrown) {
+    // A turn never rejects: whoever waits on it (a witnessing, a chapter) must get an error value.
+    return fail(toError(thrown, "turn-failed"));
   } finally {
-    for (const dispose of disposers) dispose();
     await borrowed.release();
   }
 }

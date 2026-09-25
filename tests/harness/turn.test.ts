@@ -19,8 +19,11 @@ const say = (text: string, toolCalls: ToolCall[] = []): ChatStep =>
   ok({ text, toolCalls, usage: null });
 
 /** A model that replays a scripted list of answers and records what it was asked. */
-function fakeChat(steps: ChatStep[]): { chat: ChatFn; seen: Omit<ChatRequest, "id">[] } {
-  const seen: Omit<ChatRequest, "id">[] = [];
+function fakeChat(steps: ChatStep[]): {
+  chat: ChatFn;
+  seen: Omit<ChatRequest, "id" | "usage">[];
+} {
+  const seen: Omit<ChatRequest, "id" | "usage">[] = [];
   const chat: ChatFn = (request) => {
     seen.push(request);
     const step = steps[seen.length - 1];

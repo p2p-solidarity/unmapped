@@ -19,6 +19,7 @@ export function generateChapter(
     system: chapterPrompt(ctx),
     user: "Write the Chapter program now. Output the program only.",
     purpose: "scene",
+    task: "chapter",
     language: ctx.language,
     parse: (source) => parseChapter(source, { combat: ctx.combat, language: ctx.language }),
     ...(bible === null

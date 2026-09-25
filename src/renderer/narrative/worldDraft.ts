@@ -46,6 +46,7 @@ export async function writeBible(idea: WorldIdea, io: CallIo): Promise<Result<Bi
     }),
     user: "Write the Bible program for this world now. Output the program only.",
     purpose: "free",
+    task: "bible",
     language: idea.language,
     parse: parseBible,
     maxTokens: 1400,
@@ -66,6 +67,7 @@ export function rewriteBiblePart(
 ): Promise<Result<Partial<BibleFields>>> {
   return askInLines(
     {
+      task: "bible",
       messages: bibleCardMessages({
         name: idea.name,
         intent: idea.intent,
@@ -96,6 +98,7 @@ export async function writeStory(
   const bible = flattenBible(fields);
   const plan = await askInLines(
     {
+      task: "story",
       messages: storyMessages({
         story: idea.story,
         core: bible.core,
@@ -142,6 +145,7 @@ export function rewriteChapter(
 ): Promise<Result<EpisodeText>> {
   return askInLines(
     {
+      task: "story-edit",
       messages: rewriteChapterMessages(ctx, index, note),
       parse: (reply) => checkedChapter(parseChapterReply(reply), ctx.combat),
       maxTokens: CHAPTER_TOKENS,
@@ -158,6 +162,7 @@ export function writeChapterAt(
 ): Promise<Result<EpisodeText>> {
   return askInLines(
     {
+      task: "story-edit",
       messages: insertChapterMessages(ctx, at),
       parse: (reply) => checkedChapter(parseChapterReply(reply), ctx.combat),
       maxTokens: CHAPTER_TOKENS,
@@ -175,6 +180,7 @@ export function rewriteUnlocked(
 ): Promise<Result<Map<number, EpisodeText>>> {
   return askInLines(
     {
+      task: "story-edit",
       messages: storyNoteMessages(ctx, unlocked, note),
       parse: (reply) => {
         const parsed = parseChapterRewrites(reply, unlocked);

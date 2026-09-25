@@ -1,7 +1,7 @@
 import { repairPrompt } from "@dsl/index";
 import { modProposalLibrary, parseModProposal } from "@dsl/modProposal";
 import type { DslError } from "@dsl/types";
-import { chat } from "@renderer/llm";
+import { chat, usageTag } from "@renderer/llm";
 import { BUILTIN_MODULES } from "@shared/capability-modules";
 import type { CartridgeRevision } from "@shared/cartridge";
 import type { ChatMessage } from "@shared/llm";
@@ -52,6 +52,7 @@ ${modProposalLibrary.prompt()}`;
       grammar: null,
       stop: [],
       tools: [],
+      usage: usageTag("mod"),
     });
     if (!response.ok) return response;
     result = parseModProposal(response.value.text, metadata);

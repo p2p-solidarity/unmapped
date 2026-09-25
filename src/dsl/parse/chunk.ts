@@ -11,6 +11,7 @@ import type {
   Biome,
   DialogueGraph,
   NpcSpec,
+  PropKind,
   PropSpec,
   SceneGraph,
   Tile,
@@ -61,6 +62,8 @@ export interface ChunkContext {
    * gets one Talk, so nobody in the world ever needs a model at the moment they are spoken to.
    */
   authored?: readonly NpcSpec[];
+  /** The prop kinds this world is built from (its bible's style); absent means any kind. */
+  props?: readonly PropKind[];
 }
 
 export interface WitnessedDraft extends WitnessedErrands {
@@ -135,6 +138,17 @@ export function toWitnessedChunk(
     }
   }
 
+  const allowed = ctx.props;
+  const foreign = allowed === undefined ? [] : props.filter((prop) => !allowed.includes(prop.kind));
+  if (foreign.length > 0 && allowed !== undefined) {
+    issues.push(
+      issue(
+        "Prop",
+        `${[...new Set(foreign.map((prop) => prop.kind))].join(", ")} do not belong in this world.`,
+        `Use only ${allowed.join(", ")}.`,
+      ),
+    );
+  }
   const where = [...props, ...walls, ...npcs].filter((thing) => inHole(ctx.hole, thing.x, thing.z));
   if (where.length > 0 && ctx.hole !== null) {
     issues.push(

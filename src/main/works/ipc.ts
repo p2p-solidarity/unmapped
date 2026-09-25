@@ -24,6 +24,7 @@ import { app, BrowserWindow, dialog, protocol, webFrameMain } from "electron";
 import { z } from "zod";
 import type { MainContext } from "../context";
 import { handle } from "../handle";
+import { recordUsage } from "../usage/ipc";
 import {
   createDraft,
   listDrafts,
@@ -35,7 +36,7 @@ import {
   writeCandidate,
 } from "./drafts";
 import { FrameSessions } from "./frame";
-import { assetPrompt, generateImage } from "./images";
+import { assetPrompt, imageProvider } from "./images";
 import { readLibrary } from "./library";
 import { openSession } from "./session";
 import { changePlay, createPlay, listPlays, listRevisions, readPlay, type WorkDirs } from "./store";
@@ -48,6 +49,7 @@ export function registerWorkScheme(): void {
 }
 
 const text = (max: number) => z.string().max(max);
+const REQUEST_ID = /^[A-Za-z0-9-]{8,64}$/;
 const workTextSchema = z.object({
   main: text(WORK_LIMITS.codeBytes),
   style: text(WORK_LIMITS.codeBytes),
@@ -144,6 +146,7 @@ export function registerWorksIpc(ctx: MainContext): void {
     draftsDir: join(ctx.userData, "work-drafts"),
   };
   const sessions = new FrameSessions();
+  const imageInflight = new Map<string, AbortController>();
 
   protocol.handle(WORK_SCHEME, (request) => {
     const url = new URL(request.url);
@@ -272,8 +275,11 @@ export function registerWorksIpc(ctx: MainContext): void {
   );
   handle(
     IPC.works.generateAsset,
-    z.tuple([z.string().regex(DRAFT_ID), z.string().regex(ASSET_ID)]),
-    async ([draftId, assetId]) => {
+    z.tuple([z.string().regex(DRAFT_ID), z.string().regex(ASSET_ID), z.string().regex(REQUEST_ID)]),
+    async ([draftId, assetId, requestId]) => {
+      if (imageInflight.has(requestId)) {
+        return err("duplicate-request", `Picture request ${requestId} is already running.`);
+      }
       const draft = await readDraft(dirs, draftId);
       if (!draft.ok) return draft;
       const head = draft.value.head;
@@ -283,9 +289,39 @@ export function registerWorksIpc(ctx: MainContext): void {
       const assets = assetMapSchema.parse(JSON.parse(content.value.text.assets));
       const entry = assets[assetId];
       if (entry === undefined) return err("asset-unknown", `This world has no asset "${assetId}".`);
-      const prompt = assetPrompt({ note: entry.note, assetId, world: draft.value.title });
-      const image = await generateImage(prompt);
+      const first = draft.value.candidates.find((candidate) => candidate.kind === "generate");
+      const prompt = assetPrompt({
+        note: entry.note,
+        assetId,
+        world: draft.value.title,
+        description: first?.request ?? null,
+        usesLibrary: Object.values(assets).some((one) => one.src?.startsWith("library/") === true),
+      });
+      const controller = new AbortController();
+      imageInflight.set(requestId, controller);
+      const provider = imageProvider();
+      const started = Date.now();
+      const image = await provider.generate(prompt, controller.signal).finally(() => {
+        imageInflight.delete(requestId);
+      });
+      await recordUsage(ctx, {
+        tag: { purpose: "image", scope: { kind: "work", id: draftId } },
+        provider: provider.id,
+        model: provider.model,
+        input: image.ok ? image.value.inputTokens : null,
+        output: image.ok ? image.value.outputTokens : null,
+        cached: null,
+        ms: Date.now() - started,
+        outcome: image.ok ? "done" : image.error.code === "cancelled" ? "aborted" : "failed",
+      });
+      process.stdout.write(
+        `[image] ${image.ok ? "done" : "fail"} ${requestId} · ${provider.id} · ${Date.now() - started} ms${image.ok ? "" : ` · ${image.error.code}`}\n`,
+      );
       if (!image.ok) return image;
+      // A cancel that raced the last byte: the picture arrived, but the player said no.
+      if (controller.signal.aborted) {
+        return err("cancelled", "The picture was cancelled; nothing was changed.");
+      }
       const path = `assets/${assetId}.png`;
       const nextAssets = { ...assets, [assetId]: { ...entry, src: path } };
       return writeCandidate(dirs, {
@@ -306,6 +342,15 @@ export function registerWorksIpc(ctx: MainContext): void {
       });
     },
   );
+  handle(IPC.works.cancelAsset, z.tuple([z.string().regex(REQUEST_ID)]), ([requestId]) => {
+    const controller = imageInflight.get(requestId);
+    if (controller === undefined) {
+      return err("image-not-running", "That picture request is no longer running.");
+    }
+    controller.abort();
+    process.stdout.write(`[image] abort ${requestId}\n`);
+    return ok(undefined);
+  });
   handle(
     IPC.works.createPlay,
     z.tuple([

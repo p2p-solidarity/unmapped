@@ -8,6 +8,7 @@ import {
   type CartridgeRef,
   compareCartridgeVersions,
   type ResolvedInstance,
+  type RuntimePin,
 } from "@shared/cartridge";
 import { err, fail, ok, type Result, toError } from "@shared/result";
 import { deriveRuntimePin } from "../cartridges/integrity";
@@ -58,9 +59,13 @@ export async function upgradeInstance(
       "Finish or leave the current scene on the pinned version, then upgrade.",
     );
   }
-  const nextPin = deriveRuntimePin(manifest);
-  if (!nextPin.ok) return nextPin;
-  if (nextPin.value.profileHash !== meta.runtimePin.profileHash) {
+  const derived = deriveRuntimePin(manifest);
+  if (!derived.ok) return derived;
+  // A new revision of the content is still the same land: the world keeps the physics it was made on.
+  const { physicsVersion } = meta.runtimePin;
+  const nextPin: RuntimePin =
+    physicsVersion === undefined ? derived.value : { ...derived.value, physicsVersion };
+  if (nextPin.profileHash !== meta.runtimePin.profileHash) {
     return err(
       "upgrade-runtime-migration-required",
       `${current.cartridgeId}@${version} changes the pinned runtime contract.`,
@@ -88,14 +93,14 @@ export async function upgradeInstance(
     {
       instance: {
         ...instance.value,
-        meta: { ...meta, cartridge: next, runtimePin: nextPin.value },
+        meta: { ...meta, cartridge: next, runtimePin: nextPin },
       },
       cartridge: target.value,
     },
     {
       ...save,
       cartridge: next,
-      runtimePin: nextPin.value,
+      runtimePin: nextPin,
       updatedAt: now.toISOString(),
     },
   );

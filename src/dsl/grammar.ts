@@ -9,7 +9,7 @@
 import { SCENE_COMPONENT_NAMES } from "./libraries";
 
 const RULES = (components: string): string[] => [
-  "# Unwritten Land — Scene dialect of OpenUI Lang. Structural only; the parser checks types.",
+  "# UNMAPPED — Scene dialect of OpenUI Lang. Structural only; the parser checks types.",
   "root ::= ws stmt (nl stmt)* ws",
   'stmt ::= ident sp "=" sp call',
   'call ::= comp sp "(" ws args? ws ")"',

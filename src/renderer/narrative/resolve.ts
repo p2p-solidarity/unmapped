@@ -45,6 +45,7 @@ export async function resolveChoice(
 
   const turn = await runNarrativeTurn({
     purpose: "resolve",
+    task: "resolve",
     language: genesis.language,
     messages: [{ role: "user", content: user }],
     useTools: true,

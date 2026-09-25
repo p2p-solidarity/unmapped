@@ -80,7 +80,7 @@ export function unpackCartridge(bytes: Uint8Array): Result<CartridgeRevision> {
     return err(
       "cartridge-pack-unreadable",
       "That file is not a readable .cartridge archive.",
-      `Export it again from Unwritten Land. (${toError(error).message})`,
+      `Export it again from UNMAPPED. (${toError(error).message})`,
     );
   }
   const sceneSources = new Map<string, string>();

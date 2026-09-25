@@ -2,6 +2,8 @@
 // a slow clock and written through the ordinary instance checkpoint — only after the player has
 // actually moved, once more when they leave Play, and when the window hides or is closed (so the
 // last few seconds before quitting are kept too; a killed process can still lose them).
+// A visitor on another world's land has no position here (`currentPosition` is null there, see
+// engine/playerProbe.ts), so the save keeps the last one on this world's own land.
 
 import { errorLine, translate } from "@renderer/i18n";
 import { useSessionStore } from "@renderer/state";

@@ -343,6 +343,7 @@ export class AppleLocalSceneProvider implements SceneProvider {
         "Regenerate the layout from the validated subject requirements.",
       );
     }
+    const spent = [events.data.metrics, layout.data.metrics];
     return ok({
       requestId: intent.requestId,
       providerId: this.id,
@@ -351,6 +352,11 @@ export class AppleLocalSceneProvider implements SceneProvider {
       ast: layout.data.ast,
       graph: null,
       worldPlan: null,
+      usage: {
+        prompt: spent.reduce((sum, one) => sum + one.inputTokens, 0),
+        completion: spent.reduce((sum, one) => sum + one.outputTokens, 0),
+        cached: spent.reduce((sum, one) => sum + one.cachedInputTokens, 0),
+      },
     });
   }
 

@@ -17,6 +17,7 @@ const LABELS: Record<BiblePart, StringKey> = {
   taboos: "create.partTaboos",
   naming: "create.partNaming",
   voice: "create.partVoice",
+  look: "create.partLook",
 };
 
 function WorldCard({

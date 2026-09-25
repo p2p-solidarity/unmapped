@@ -16,6 +16,7 @@ import { registerInferenceIpc } from "./inference/ipc";
 import { registerInstancesIpc } from "./instances/ipc";
 import { registerModsIpc } from "./mods/ipc";
 import { registerSeedIpc } from "./seeds/ipc";
+import { registerUsageIpc } from "./usage/ipc";
 import { registerVaultIpc } from "./vault/ipc";
 import { registerWorksIpc } from "./works/ipc";
 import { registerCreateDraftsIpc } from "./workspaces/createDraftsIpc";
@@ -38,4 +39,5 @@ export function registerIpc(ctx: MainContext): void {
   registerWorksIpc(ctx);
   registerChainIpc(ctx);
   registerCreateDraftsIpc(ctx);
+  registerUsageIpc(ctx);
 }

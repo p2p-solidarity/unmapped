@@ -7,6 +7,9 @@ export interface RemotePlayer {
   x: number;
   y: number;
   z: number;
+  /** Which way they face and whether they walk, as their own land view last reported it. */
+  facing: "north" | "south" | "east" | "west";
+  moving: boolean;
 }
 
 let players: RemotePlayer[] = [];
