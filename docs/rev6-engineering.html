@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rev 6 工程方向</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --ground: #eef0f3;
+    --panel: #fbfbf9;
+    --panel-2: #e4e7ee;
+    --text: #151a2e;
+    --muted: #4c5370;
+    --faint: #767c93;
+    --line: #cdd2dd;
+    --brass: #9c7231;
+    --gold: #8a6424;
+    --gold-soft: rgba(156, 114, 49, 0.12);
+    --good: #3b7446;
+    --drift: #a4452f;
+    --zone: rgba(21, 26, 46, 0.045);
+    --serif: "Noto Serif TC", "Songti TC", "Hiragino Mincho ProN", "Yu Mincho", Georgia, serif;
+    --sans: "Noto Sans TC", "PingFang TC", "Hiragino Sans", "Microsoft JhengHei", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground: #0b0d17;
+      --panel: #151a2c;
+      --panel-2: #1c2238;
+      --text: #f1e9d6;
+      --muted: #c2b79d;
+      --faint: #8d8574;
+      --line: #2c3249;
+      --brass: #7a6840;
+      --gold: #d9ae5f;
+      --gold-soft: rgba(217, 174, 95, 0.13);
+      --good: #8cc08f;
+      --drift: #e08a75;
+      --zone: rgba(241, 233, 214, 0.04);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground: #0b0d17;
+    --panel: #151a2c;
+    --panel-2: #1c2238;
+    --text: #f1e9d6;
+    --muted: #c2b79d;
+    --faint: #8d8574;
+    --line: #2c3249;
+    --brass: #7a6840;
+    --gold: #d9ae5f;
+    --gold-soft: rgba(217, 174, 95, 0.13);
+    --good: #8cc08f;
+    --drift: #e08a75;
+    --zone: rgba(241, 233, 214, 0.04);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--text);
+    font: 400 16px/1.8 var(--sans);
+    padding-inline: 20px;
+    padding-block: 0 72px;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--gold); text-underline-offset: 3px; }
+  a:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+  code { font-family: var(--mono); font-size: 0.84em; background: var(--panel-2); padding: 1px 5px; border-radius: 2px; overflow-wrap: anywhere; }
+
+  .page { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  @media (min-width: 1040px) { .page { grid-template-columns: 184px minmax(0, 1fr); gap: 56px; } }
+  .toc { display: none; }
+  @media (min-width: 1040px) {
+    .toc { display: block; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 32px); align-self: start; padding-top: 56px; font-size: 13.5px; line-height: 1.5; }
+  }
+  .toc p { margin: 0 0 12px; color: var(--faint); letter-spacing: 0.14em; font-size: 11.5px; }
+  .toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+  .toc a { color: var(--muted); text-decoration: none; }
+  .toc a:hover { color: var(--gold); }
+
+  main { min-width: 0; }
+  section { padding-top: 56px; }
+  section + section { border-top: 1px solid var(--line); margin-top: 56px; }
+  .prose { max-width: 44em; }
+  .eyebrow { font-size: 12px; letter-spacing: 0.16em; color: var(--gold); font-weight: 500; margin: 0 0 10px; }
+  h1, h2, h3 { font-family: var(--serif); text-wrap: balance; line-height: 1.35; margin: 0; }
+  h1 { font-size: clamp(30px, 4.4vw, 44px); font-weight: 700; }
+  h2 { font-size: clamp(23px, 2.8vw, 28px); font-weight: 700; margin-bottom: 14px; }
+  h3 { font-size: 18px; font-weight: 600; margin: 26px 0 10px; }
+  p { margin: 0 0 14px; }
+  .lede { font-size: 17.5px; color: var(--muted); max-width: 42em; margin-top: 18px; }
+  .note { font-size: 14px; color: var(--faint); max-width: 46em; }
+
+  .hero { padding-top: 56px; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--faint); margin-bottom: 20px; }
+  .meta-row strong { color: var(--muted); font-weight: 500; }
+
+  .frame { background: var(--panel); border: 1px solid var(--brass); outline: 1px solid var(--brass); outline-offset: 4px; border-radius: 2px; padding: 20px 24px; margin: 28px 4px; }
+  .frame p { margin: 0; font-size: 15px; color: var(--muted); }
+  .frame p + p { margin-top: 10px; }
+  .frame b { color: var(--text); font-weight: 500; }
+
+  .tbl-wrap { overflow-x: auto; margin: 16px 0 10px; -webkit-overflow-scrolling: touch; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.7; min-width: 760px; }
+  th, td { text-align: left; vertical-align: top; padding: 11px 14px 11px 0; border-bottom: 1px solid var(--line); }
+  th { font-weight: 500; font-size: 12.5px; color: var(--faint); letter-spacing: 0.06em; border-bottom: 1px solid var(--brass); }
+  td:first-child { font-family: var(--serif); font-weight: 600; font-size: 15px; }
+  td.pick { color: var(--gold); font-weight: 500; }
+  td.where { font-size: 12.5px; color: var(--faint); }
+  td.done { color: var(--text); }
+  td.num { font-family: var(--mono); color: var(--gold); font-weight: 600; width: 34px; }
+
+  .rules { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 10px; max-width: 46em; }
+  .rules li { font-size: 14.5px; color: var(--muted); padding-left: 14px; border-left: 2px solid var(--brass); }
+  .rules b { color: var(--text); font-weight: 500; }
+
+  figure { margin: 26px 0; }
+  .fig-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .fig-scroll svg { display: block; width: 100%; min-width: 720px; height: auto; color: var(--text); }
+  figcaption { font-size: 13.5px; color: var(--faint); margin-top: 10px; max-width: 46em; }
+  .d-zone { fill: var(--zone); stroke: var(--line); stroke-dasharray: 4 4; }
+  .d-node { fill: var(--panel); stroke: currentColor; stroke-width: 1.2; }
+  .d-node.gold { stroke: var(--gold); stroke-width: 1.6; }
+  .d-t { font: 600 13px var(--sans); fill: currentColor; }
+  .d-s { font: 400 11px var(--sans); fill: var(--muted); }
+  .d-z { font: 500 11px var(--sans); fill: var(--faint); letter-spacing: 0.06em; }
+  .d-l { font: 400 11px var(--sans); fill: var(--muted); }
+  .d-g { font: 500 11px var(--sans); fill: var(--gold); }
+  .d-line { stroke: currentColor; stroke-width: 1.2; fill: none; }
+  .d-line.gold { stroke: var(--gold); stroke-width: 1.6; }
+  .d-line.dash { stroke-dasharray: 5 4; }
+  .d-head { fill: currentColor; }
+  .d-head.gold { fill: var(--gold); }
+
+  .phases { display: grid; margin-top: 16px; }
+  .phase { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px 28px; padding: 16px 0 18px; border-top: 1px solid var(--line); }
+  @media (min-width: 820px) { .phase { grid-template-columns: 200px minmax(0, 1fr); } }
+  .phase .ph { font-family: var(--serif); font-weight: 700; font-size: 17.5px; line-height: 1.45; }
+  .phase .ph small { display: block; font-family: var(--sans); font-weight: 400; font-size: 12.5px; color: var(--faint); margin-top: 4px; }
+  .phase p { font-size: 14.5px; color: var(--muted); margin: 0 0 8px; }
+  .phase .done { font-size: 14px; color: var(--text); margin: 0; }
+  .phase .done b { color: var(--good); font-weight: 500; }
+
+  dl.glossary { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; margin: 16px 0 0; max-width: 52em; }
+  @media (min-width: 720px) { dl.glossary { grid-template-columns: 150px minmax(0, 1fr); } }
+  dl.glossary dt { font-family: var(--serif); font-weight: 600; padding: 10px 0 0; }
+  dl.glossary dd { margin: 0; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14.5px; color: var(--muted); }
+  @media (min-width: 720px) { dl.glossary dt { border-bottom: 1px solid var(--line); padding: 10px 0; } }
+
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+  @media (max-width: 520px) { body { font-size: 15.5px; } .frame { padding: 18px 16px; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <nav class="toc" aria-label="目錄">
+    <p>目錄</p>
+    <ol>
+      <li><a href="#top">這次在改什麼</a></li>
+      <li><a href="#decisions">已拍板</a></li>
+      <li><a href="#invariants">不變的規則</a></li>
+      <li><a href="#architecture">目標架構</a></li>
+      <li><a href="#areas">現在 → 目標</a></li>
+      <li><a href="#phase1">第一段：任務清單</a></li>
+      <li><a href="#phases">後面三段</a></li>
+      <li><a href="#open">待工程設計</a></li>
+      <li><a href="#glossary">名詞</a></li>
+      <li><a href="#docs">文件關係</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="hero" id="top">
+      <div class="meta-row">
+        <span><strong>給工程師</strong> · 產品方向 Revision 6</span>
+        <span>2026-09-25</span>
+        <span>專案名稱：《無界之地》——自主開放世界（UNMAPPED — An Autonomous Open World），2026-09-26 定案</span>
+      </div>
+      <h1>從「每人一份存檔」，<br>走向「大家的世界」。</h1>
+      <p class="lede">
+        地基不用重來：不可變內容、DSL 驗證、確定性地形、見證、手記都照用。
+        這次調整把產品從「AI 互動作品框架」收斂成一個平台：一套 2D 引擎承載很多世界，每個世界有一份創世和一段大家共享的歷史。
+        平常靠痕跡相遇，朋友同時在線時能一起見證；世界舒適、值得照顧，也能離開我們的伺服器繼續活下去。
+      </p>
+      <div class="frame">
+        <p><b>自主世界在這裡是精神，不是規格。</b>下面的架構與任務是目前的最佳做法，工程上有更好的做法可以提出來換；但「已拍板」與「不變的規則」兩節是約束。</p>
+        <p><b>要怎麼讀：</b>先看「已拍板」和「不變的規則」，再看「第一段：任務清單」，這是現在就要做的。後三段只需要知道方向，還不用設計細節。</p>
+      </div>
+    </header>
+
+    <section id="decisions">
+      <p class="eyebrow">約束</p>
+      <h2>已拍板的十一件事，對程式的意思</h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th style="width:13%">題目</th><th style="width:27%">決定</th><th>對程式的意思</th></tr></thead>
+          <tbody>
+            <tr><td>多人核心</td><td class="pick">痕跡為底、同在為峰</td><td>世界不依賴任何人在線。同一套同步有兩種速度：一起在線時即時，分開時晚點。位置與表情是暫時資料，不進歷史。</td></tr>
+            <tr><td>歷史歸屬</td><td class="pick">屬於世界，大家共享</td><td>見證的內容從「存檔」搬到「世界的共同歷史」；個人進度仍留在存檔。後來的人同步，不重新生成。</td></tr>
+            <tr><td>預設範圍</td><td class="pick">朋友圈，邀請制</td><td>世界要有「誰能進來、誰能寫」的設定：私人／朋友／公開，預設朋友。</td></tr>
+            <tr><td>遺忘</td><td class="pick">回到霧裡，等人重新見證</td><td>地方的「現在」可以淡去並重新見證；歷史紀錄本身永不刪除。</td></tr>
+            <tr><td>設計重心</td><td class="pick">舒適與照顧</td><td>預設玩法是探索；戰鬥是選配，而且一定有安全的家與城鎮。照顧（造訪、幫忙、送禮、手記）會被記錄並影響地方的鮮活程度。</td></tr>
+            <tr><td>執行環境</td><td class="pick">收斂成一套 2D</td><td>地點（側視、地城）改用 engine2d；AI 小遊戲成為世界裡的「異界」地點；R3F／Rapier 凍結、不加功能。</td></tr>
+            <tr><td>手機</td><td class="pick">先讓架構不擋路</td><td>素材依雜湊、按需下載；離線優先；AI 經平台代管；輸入走動作表。暫時不做手機客戶端。</td></tr>
+            <tr><td>世界節拍</td><td class="pick">要，並讓 AI 寫傳聞</td><td>世界服務定期執行一拍：合併、照顧與遺忘、換季、批次產生傳聞。傳聞只能轉述歷史中真的發生過的事。</td></tr>
+            <tr><td>AI 費用</td><td class="pick">我們先付固定額度，之後自帶金鑰或訂閱</td><td>沉浸式翻譯的模式：生成閘道管額度與代管金鑰；自帶金鑰與本機模型也要能用。額度綁帳號。</td></tr>
+            <tr><td>影像授權</td><td class="pick">現階段不商用</td><td>可以先接 Qwen-Image-2.1。素材生成必須接在可替換的介面後面，因為訂閱一上線就算商用。</td></tr>
+            <tr><td>上鏈</td><td class="pick">等共享世界穩定再上</td><td>現有合約不部署也不擴充。之後只做創世出處與每拍的歷史指紋，玩家不需要錢包。</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="invariants">
+      <p class="eyebrow">底線</p>
+      <h2>不變的規則</h2>
+      <div class="prose"><p><code>CLAUDE.md</code> 的 Rule 0–13 全部照舊（DSL 是真相、repair ≤ 2、數值 clamp、沒有假資料、錯誤是值、Electron 安全、每檔 ≤ 600 行、卡帶不可變、Rule 12 沙箱……）。這次再加上六條：</p></div>
+      <ul class="rules">
+        <li><b>走路永遠不等 AI，互動當下不呼叫模型。</b>生成只在見證、寫章節、創世、節拍這些時刻發生，而且都在背景。</li>
+        <li><b>AI 只提案。</b>任何模型產出都要通過 parser 與規則驗證，再由人確認（或依世界規則自動確認），才寫進歷史。</li>
+        <li><b>同一份驗證，兩邊都跑。</b>見證、地點、章節的驗證放在 <code>src/shared</code>／<code>src/dsl</code> 的純函式裡，客戶端和世界服務用同一份。</li>
+        <li><b>歷史只累積。</b>寫進去就不改不刪；「現在的樣子」由歷史推導，可以淡去、可以疊層。</li>
+        <li><b>物理有版本。</b>地形產生、戰鬥公式、lore 常數等會影響「世界長什麼樣」的程式，改了就要升版本，世界釘住它建立時的版本。</li>
+        <li><b>鏈可以整個關掉。</b>沒有設定鏈時，每個畫面都照常運作。</li>
+      </ul>
+    </section>
+
+    <section id="architecture">
+      <p class="eyebrow">架構</p>
+      <h2>目標架構：本機優先的核心迴圈，加上一個很小的世界服務</h2>
+      <figure>
+        <div class="fig-scroll">
+          <svg viewBox="0 0 860 330" role="img" aria-label="目標架構：玩家裝置上跑核心迴圈，AI 產出經提案閘門確認後寫入本機資料；本機資料與世界服務的中繼雙向同步共同歷史與同在；中繼與其他玩家交換痕跡與同在；世界節拍定期讀寫中繼並透過生成閘道寫傳聞；生成閘道代管金鑰呼叫模型供應商；自帶金鑰時客戶端直接呼叫模型；之後世界節拍把每拍指紋寫到鏈上。">
+            <defs>
+              <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="d-head" d="M0 0 L10 5 L0 10 z"/></marker>
+              <marker id="ahg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="d-head gold" d="M0 0 L10 5 L0 10 z"/></marker>
+            </defs>
+            <path class="d-line dash" d="M156 70 V28 H744 V70" marker-end="url(#ah)"/>
+            <text class="d-l" x="450" y="20" text-anchor="middle">自帶金鑰或本機模型時，直接呼叫</text>
+
+            <rect class="d-zone" x="12" y="40" width="288" height="276" rx="2"/>
+            <text class="d-z" x="24" y="58">玩家的裝置 · 離線也能玩</text>
+            <rect class="d-zone" x="340" y="40" width="260" height="276" rx="2"/>
+            <text class="d-z" x="352" y="58">世界服務 · 很小、任何人可架</text>
+            <rect class="d-zone" x="640" y="40" width="208" height="276" rx="2"/>
+            <text class="d-z" x="652" y="58">外部</text>
+
+            <rect class="d-node" x="28" y="70" width="256" height="56" rx="2"/>
+            <text class="d-t" x="156" y="93" text-anchor="middle">核心迴圈（engine2d）</text>
+            <text class="d-s" x="156" y="112" text-anchor="middle">走路・見證・委託・章節・戰鬥</text>
+            <rect class="d-node gold" x="28" y="150" width="256" height="56" rx="2"/>
+            <text class="d-t" x="156" y="173" text-anchor="middle">提案閘門</text>
+            <text class="d-s" x="156" y="192" text-anchor="middle">parser＋規則驗證 → 確認才入史</text>
+            <rect class="d-node" x="28" y="230" width="256" height="70" rx="2"/>
+            <text class="d-t" x="156" y="252" text-anchor="middle">本機資料</text>
+            <text class="d-s" x="156" y="271" text-anchor="middle">創世（不可變）・共同歷史（只增）</text>
+            <text class="d-s" x="156" y="289" text-anchor="middle">個人進度（私人）・素材快取（LRU）</text>
+
+            <path class="d-line" d="M156 126 V150" marker-end="url(#ah)"/>
+            <text class="d-l" x="164" y="142">AI 產出</text>
+            <path class="d-line gold" d="M156 206 V230" marker-end="url(#ahg)"/>
+            <text class="d-g" x="164" y="222">確認後寫入</text>
+
+            <rect class="d-node" x="356" y="70" width="228" height="56" rx="2"/>
+            <text class="d-t" x="470" y="93" text-anchor="middle">生成閘道</text>
+            <text class="d-s" x="470" y="112" text-anchor="middle">額度・代管金鑰・先查有沒有人寫過</text>
+            <rect class="d-node" x="356" y="150" width="228" height="56" rx="2"/>
+            <text class="d-t" x="470" y="173" text-anchor="middle">世界節拍</text>
+            <text class="d-s" x="470" y="192" text-anchor="middle">合併・照顧與遺忘・換季・傳聞</text>
+            <rect class="d-node" x="356" y="230" width="228" height="70" rx="2"/>
+            <text class="d-t" x="470" y="252" text-anchor="middle">中繼</text>
+            <text class="d-s" x="470" y="271" text-anchor="middle">收存與轉發共同歷史</text>
+            <text class="d-s" x="470" y="289" text-anchor="middle">同在：位置與表情（不落盤）</text>
+
+            <path class="d-line" d="M284 98 H356" marker-start="url(#ah)" marker-end="url(#ah)"/>
+            <text class="d-l" x="320" y="90" text-anchor="middle">生成</text>
+            <path class="d-line gold" d="M284 265 H356" marker-start="url(#ahg)" marker-end="url(#ahg)"/>
+            <text class="d-g" x="320" y="257" text-anchor="middle">同步</text>
+            <path class="d-line" d="M470 206 V230" marker-start="url(#ah)" marker-end="url(#ah)"/>
+            <text class="d-l" x="478" y="222">每一拍</text>
+            <path class="d-line" d="M470 150 V126" marker-end="url(#ah)"/>
+            <text class="d-l" x="478" y="142">寫傳聞</text>
+
+            <rect class="d-node" x="656" y="70" width="176" height="56" rx="2"/>
+            <text class="d-t" x="744" y="93" text-anchor="middle">模型供應商</text>
+            <text class="d-s" x="744" y="112" text-anchor="middle">文字・圖・影片</text>
+            <rect class="d-node" x="656" y="150" width="176" height="56" rx="2"/>
+            <text class="d-t" x="744" y="173" text-anchor="middle">鏈（之後）</text>
+            <text class="d-s" x="744" y="192" text-anchor="middle">創世出處・每拍指紋</text>
+            <rect class="d-node" x="656" y="237" width="176" height="56" rx="2"/>
+            <text class="d-t" x="744" y="260" text-anchor="middle">其他玩家</text>
+            <text class="d-s" x="744" y="279" text-anchor="middle">同一個世界的朋友</text>
+
+            <path class="d-line" d="M584 98 H656" marker-end="url(#ah)"/>
+            <text class="d-l" x="620" y="90" text-anchor="middle">代管</text>
+            <path class="d-line dash" d="M584 178 H656" marker-end="url(#ah)"/>
+            <text class="d-l" x="620" y="170" text-anchor="middle">指紋</text>
+            <path class="d-line gold" d="M584 265 H656" marker-start="url(#ahg)" marker-end="url(#ahg)"/>
+            <text class="d-g" x="620" y="257" text-anchor="middle">痕跡・同在</text>
+          </svg>
+        </div>
+        <figcaption>同一套規則（<code>src/shared</code>、<code>src/dsl</code>）在裝置和世界服務兩邊都跑。世界服務只保存、轉發有作者的歷史，並定期跑節拍；玩家離線時照樣能玩，連上後再同步。今天的 Electron main 行程仍負責檔案、金鑰與推論，只是多了「對世界服務同步」這件事。</figcaption>
+      </figure>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th style="width:14%">四樣東西</th><th style="width:30%">是什麼</th><th style="width:28%">今天在哪裡</th><th>目標特性</th></tr></thead>
+          <tbody>
+            <tr><td>創世</td><td>聖經（起源、基調、命名、語氣、美術方向）、規則、種子、故事骨架、風格參考圖、物理版本</td><td>卡帶：<code>manifest.json</code>、<code>rules.oui</code>、<code>bible/</code>、<code>story.json</code></td><td>不可變、內容雜湊為身分、改版記血緣</td></tr>
+            <tr><td>共同歷史</td><td>見證的地方與 lore、地點、續寫的章節、手記、路標、禮物、照顧紀錄</td><td>散在存檔：<code>chunks/</code>、<code>lore.jsonl</code>、<code>notes.jsonl</code>、<code>karma.jsonl</code>、<code>save.json</code> 的 <code>land.storyMore</code>／<code>land.places</code></td><td>只增；每筆有作者與時間；合併就是取聯集；同一個世界的人同步</td></tr>
+            <tr><td>個人進度</td><td>位置、背包、委託與章節進度、紀念物、戰鬥等級</td><td><code>save.json</code></td><td>私人、可覆寫</td></tr>
+            <tr><td>素材</td><td>角色圖、地形、聲音、影片</td><td>內建 CC0＋<code>src/assets/generated</code>；AI 作品的 <code>assets/</code></td><td>依內容雜湊存取、按需下載、LRU；缺了就退回原型圖</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="areas">
+      <p class="eyebrow">差距</p>
+      <h2>各面向：現在 → 目標</h2>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th style="width:12%">面向</th><th style="width:32%">現在</th><th style="width:32%">目標</th><th>相關程式</th></tr></thead>
+          <tbody>
+            <tr><td>歷史與存檔</td><td>見證內容都在存檔裡；<code>karma.jsonl</code> 每次存檔整檔重寫，主程式不檢查是否延續</td><td>一段只增的共同歷史；個人進度另存；先在本機成形，再經中繼共享</td><td class="where">src/shared/land.ts、src/main/instances/store.ts、land.ts</td></tr>
+            <tr><td>多人</td><td>房主權威的 y-webrtc 房間；公開 signaling、無 TURN；Y.Doc 只在記憶體；只有房主能見證；驗證前就開始同步土地</td><td>進入的是世界本身；中繼收存與轉發歷史；同在走同一條連線；P2P 只是加速</td><td class="where">src/renderer/net/room.ts、landSync.ts</td></tr>
+            <tr><td>同在的畫面</td><td>其他玩家只畫在 3D 的 <code>GameCanvas</code>；2D 大地沒有畫</td><td>engine2d 兩種畫法都畫出其他玩家與表情</td><td class="where">src/renderer/engine/RemotePlayers.tsx、engine2d/</td></tr>
+            <tr><td>AI 呼叫</td><td>用量只有 AI Worlds 記；世界內容生成回傳 <code>usage: null</code>；harness turn 呼叫 <code>chat()</code> 時沒帶 abort signal，取消只在步驟之間生效；沒有畫面顯示串流</td><td>每次呼叫都記用量（含快取 token）並顯示；取消會中斷請求；串流畫到畫面上</td><td class="where">src/renderer/narrative/pipeline.ts、program.ts、src/harness/turn.ts</td></tr>
+            <tr><td>lore 錨點</td><td><code>useWorldHarness</code> 沒有呼叫者，<code>mountWorldHarness</code> 從未執行，lore 熱區從未進 prompt</td><td>每次見證、章節、地點生成都帶世界快照與 lore 熱區</td><td class="where">src/renderer/harness/、src/renderer/narrative/turn.ts</td></tr>
+            <tr><td>風格</td><td>昭和鄉間寫死在 prompt；角色圖固定 16-bit 風格</td><td>風格來自每個世界的創世（聖經、美術方向、風格參考圖）；昭和鄉間是內建世界自己的設定</td><td class="where">src/dsl/prompts/newWorld.ts:37、chunk.ts:56、src/main/works/images.ts:23</td></tr>
+            <tr><td>起點場景</td><td>場景提供者只註冊 Apple 本機模型；沒有它就建不起世界</td><td>有雲端路徑（聊天模型寫 Scene DSL，沿用既有 prompt、parse、repair）</td><td class="where">src/main/inference/ipc.ts:76、sceneProvider.ts</td></tr>
+            <tr><td>創世流程</td><td>世界名＋一句話＋故事 → 聖經與章節，只有章節能改 → 建造</td><td>幾個字 → 設定卡擴寫（逐張改、重寫、鎖定）→ 看樣子 → 確認（報價）→ 建造</td><td class="where">src/renderer/app/create/、narrative/newWorld.ts</td></tr>
+            <tr><td>執行環境</td><td>engine2d、R3F／Rapier（地點與舊場景）、沙箱 iframe（AI Worlds）三套</td><td>一套 2D；地點改 engine2d；AI 小遊戲成為「異界」地點；R3F 凍結</td><td class="where">src/renderer/engine/、engine2d/、works/</td></tr>
+            <tr><td>輸入</td><td>只有鍵盤滑鼠</td><td>動作表：鍵鼠與手把（Gamepad API）；選單可純手把操作</td><td class="where">src/shared/gameplay.ts、src/renderer/engine/useKeys.ts</td></tr>
+            <tr><td>備份與匯出</td><td><code>.spire-backup</code> 只有 instance、save、karma；<code>.cartridge</code> 匯入只重新發布 manifest、rules、scenes、assets（讀程式推論，會掉聖經、故事與對白）</td><td>一個世界可以整份匯出、在別處重新架起</td><td class="where">src/main/instances/backup.ts、src/main/cartridges/ipc.ts:62</td></tr>
+            <tr><td>物理版本</td><td>地形與戰鬥公式不在任何雜湊內；<code>ENGINE_API_VERSION</code> 是 1，地形改過一次</td><td>物理版本號寫進釘選；改地形或公式就升版本</td><td class="where">src/shared/chunks.ts、combat.ts、cartridge.ts</td></tr>
+            <tr><td>鏈</td><td>每則短語一筆交易；作者是送交易的 app 金鑰；從未部署</td><td>共享世界穩定後：創世出處＋每拍指紋；作者是簽章者</td><td class="where">contracts/src/UnwrittenLedger.sol、src/main/chain/</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="phase1">
+      <p class="eyebrow">現在要做</p>
+      <h2>第一段：修好已經設計好的</h2>
+      <div class="prose"><p>這一段不改資料格式，也不加新玩法，只把設計好、卻沒接上的東西接起來。每一項都要 <code>bun run check</code> 全綠，並在 <code>bun run dev</code> 實際走過（驗證方式見 <code>docs/handoff-next-session.md</code> §3）。順序照表，前兩項最有感。</p></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th style="width:4%"></th><th style="width:22%">任務</th><th style="width:30%">在哪裡</th><th>完成的樣子</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1</td><td>掛上世界 harness，讓 lore 熱區進 prompt</td><td class="where"><code>useWorldHarness</code> 沒有呼叫者；<code>narrative/turn.ts:65</code> 因此拿到 null</td><td class="done">載入世界時掛上 harness；見證、章節、地點的 prompt 裡看得到 lore 熱區與世界快照（有測試）</td></tr>
+            <tr><td class="num">2</td><td>每次 AI 呼叫記用量並顯示</td><td class="where"><code>narrative/pipeline.ts:61</code> 回傳 <code>usage: null</code>；<code>cached_tokens</code> 沒被讀</td><td class="done">每個呼叫點都記下用途、模型、輸入、輸出、快取 token、秒數；有一個畫面看得到每個世界累計用了多少</td></tr>
+            <tr><td class="num">3</td><td>取消真的中斷請求</td><td class="where"><code>src/harness/turn.ts</code> 呼叫 <code>input.chat()</code> 時沒帶 signal；<code>program.ts</code>、<code>pipeline.ts</code> 沒有傳 signal；圖片的取消沒接上</td><td class="done">在見證、章節、圖片生成中途取消，main 的 log 顯示請求被中斷，結果不會被套用</td></tr>
+            <tr><td class="num">4</td><td>串流畫到畫面上</td><td class="where"><code>onDelta</code> 只在 narrative 裡傳遞，沒有畫面使用</td><td class="done">至少 Create 的計畫與章節卡會逐步顯示文字</td></tr>
+            <tr><td class="num">5</td><td>風格不寫死</td><td class="where"><code>dsl/prompts/newWorld.ts:37</code>、<code>chunk.ts:56</code>、<code>main/works/images.ts:23</code></td><td class="done">昭和氣氛、鄉間道具、16-bit 圖風都搬進內建世界自己的聖經／風格；用非鄉間的點子建世界，結果裡不再出現昭和元素；內建世界的感覺不變</td></tr>
+            <tr><td class="num">6</td><td>起點場景有雲端路徑</td><td class="where"><code>main/inference/ipc.ts:76</code> 只註冊 <code>appleLocalProvider</code></td><td class="done">沒有 <code>/usr/bin/fm</code>、只有 OpenAI key 的機器也能完成 Create</td></tr>
+            <tr><td class="num">7</td><td>備份包含整個世界</td><td class="where"><code>main/instances/backup.ts</code></td><td class="done">匯出 → 清空 → 匯入後，見證過的土地、lore、手記都還在；舊格式的備份仍能匯入</td></tr>
+            <tr><td class="num">8</td><td>卡帶匯入保留聖經、故事與對白</td><td class="where"><code>main/cartridges/ipc.ts:62</code>（先寫測試重現）</td><td class="done">匯出再匯入同一張卡帶，內容雜湊相同</td></tr>
+            <tr><td class="num">9</td><td>2D 大地畫出其他玩家</td><td class="where"><code>RemotePlayers</code> 只掛在 <code>GameCanvas.tsx:218</code></td><td class="done">兩個行程在同一個房間時，HD-2D 與 16-bit 兩種畫法都看得到對方</td></tr>
+            <tr><td class="num">10</td><td>驗證通過前不同步土地</td><td class="where"><code>net/landSync.ts</code> 的 <code>useLandSync</code> 不看驗證狀態</td><td class="done">沒通過 <code>SessionHello</code> 的一方收不到土地、lore、手記（有測試）</td></tr>
+            <tr><td class="num">11</td><td>物理版本</td><td class="where"><code>shared/chunks.ts</code>、<code>combat.ts</code>、runtime pin</td><td class="done">有測試守住地形產生的輸出；改了地形或公式卻沒升版本時，測試失敗</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">標「讀程式」的項目（8 與 9 的現況）是從程式碼推論，動手前先重現一次。</p>
+    </section>
+
+    <section id="phases">
+      <p class="eyebrow">之後</p>
+      <h2>後面三段：先知道方向，還不用設計細節</h2>
+      <div class="phases">
+        <div class="phase">
+          <div class="ph">二 · 創世、操作、收斂<small>玩家體驗</small></div>
+          <div>
+            <p>設定卡擴寫（逐張改、只重寫一張、鎖定）→ 低畫質概念圖選風格（成為之後生成的參考圖）→ 確認時報價 → 先寫起點就讓人進去；舒適的預設世界；動作表與手把、選單焦點導覽；標題入口收斂成「繼續、世界、創造世界、設定」；地點改用 engine2d；AI Worlds 成為「異界」地點。</p>
+            <p class="done"><b>完成的樣子：</b>新玩家從幾個字到能走動只要幾分鐘，過程中一直有事做；不碰鍵鼠也能從標題玩到過第一章；遊戲裡只剩一套 2D 畫面。</p>
+          </div>
+        </div>
+        <div class="phase">
+          <div class="ph">三 · 大家的世界<small>核心</small></div>
+          <div>
+            <p>先在本機把散落的紀錄收成一段只增的共同歷史（附遷移）；再加上世界服務：中繼、世界的門（私人／朋友／公開）、同在、痕跡（手記、路標、禮物）、世界節拍（照顧與遺忘、換季、傳聞）。生成前先向世界問「這裡有人寫過嗎」。</p>
+            <p class="done"><b>完成的樣子：</b>你離線時朋友照樣能進你的世界，看到你見證過的地方，不必讓 AI 重寫；兩人同時在線時一起看著同一個地方顯影；很久沒人去的地方會起霧，居民會說起別人做過的事。</p>
+          </div>
+        </div>
+        <div class="phase">
+          <div class="ph">四 · 開放與長久<small>對外</small></div>
+          <div>
+            <p>帳號與免費額度、自帶金鑰、訂閱；訂閱上線前換成可商用的影像模型；世界整份匯出與重新架設；共享世界穩定後輕量上鏈；手機客戶端。再往後：發明與改版分叉、一起戰鬥與過章、影片與音樂。</p>
+            <p class="done"><b>完成的樣子：</b>收費上線時，用到的每個模型都有商用授權；關掉我們的伺服器，別人仍能用匯出的檔案把世界架起來。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="open">
+      <p class="eyebrow">交給工程</p>
+      <h2>待工程設計的問題</h2>
+      <div class="prose"><p>這些是「怎麼做」，由工程師提出做法。開工前先寫一頁設計說明，對齊後再動手。</p></div>
+      <ul class="rules">
+        <li><b>共同歷史的格式：</b>一筆事件長什麼樣、怎麼編 id、作者怎麼表示，以及怎麼從現有存檔遷移。</li>
+        <li><b>世界服務的協定與身分：</b>玩家怎麼證明「這筆是我寫的」、邀請怎麼驗證、中繼怎麼防灌水。</li>
+        <li><b>節拍的算法：</b>「照顧」怎麼計分、多久算遺忘、傳聞批次怎麼切，以及怎麼只轉述真的發生過的事。</li>
+        <li><b>同在的呈現：</b>在 engine2d 上怎麼插值、怎麼做表情；「一起見證」時，兩個人怎麼看到同一段串流。</li>
+        <li><b>額度記帳：</b>閘道端怎麼計；自帶金鑰與本機模型怎麼和「先查有沒有人寫過」共存。</li>
+        <li><b>物理版本的粒度：</b>地形、戰鬥、lore 常數要一個版本號，還是分開。</li>
+        <li><b>地點改 2D：</b>側視與俯視地城要沿用 engine2d 的哪些部分，戰鬥迴圈怎麼共用。</li>
+      </ul>
+    </section>
+
+    <section id="glossary">
+      <p class="eyebrow">共同語言</p>
+      <h2>名詞</h2>
+      <dl class="glossary">
+        <dt>創世</dt><dd>一個世界不可變的起點：聖經、規則、種子、故事骨架、風格參考圖、物理版本。今天的卡帶就是它的雛形。</dd>
+        <dt>共同歷史</dt><dd>同一個世界所有人共享、只增的紀錄：見證、地點、章節、手記、路標、禮物、照顧。</dd>
+        <dt>個人進度</dt><dd>只屬於一位玩家的狀態：位置、背包、委託與章節進度。</dd>
+        <dt>見證</dt><dd>第一次走進未記之處時，AI 起草這裡的樣子，經驗證與確認後寫進共同歷史。</dd>
+        <dt>痕跡</dt><dd>玩家留在世界裡、給後來的人看的東西：見證的地方、手記、路標、禮物、走出來的小路。</dd>
+        <dt>同在</dt><dd>同時在線的人看得見彼此（位置、表情），屬於暫時資料，不進歷史。</dd>
+        <dt>提案</dt><dd>AI 的任何產出在被確認之前的狀態。只有提案能變成歷史。</dd>
+        <dt>異聞</dt><dd>同一處出現兩份寫法時，沒被採用的那一份；它保留並列，不會被刪除。</dd>
+        <dt>節拍</dt><dd>世界服務定期執行的一拍：合併、照顧與遺忘、換季、傳聞。</dd>
+        <dt>異界</dt><dd>世界裡的一種地點，入口後面是沙箱裡的 AI 小遊戲（今天的 AI Worlds，Rule 12）。</dd>
+        <dt>硬／軟邊界</dt><dd>硬：任何人重算都一樣（地形、規則、誰先寫下）。軟：有作者與順序，但可以爭論（地名、台詞、手記、小遊戲結果）。</dd>
+      </dl>
+    </section>
+
+    <section id="docs">
+      <p class="eyebrow">文件</p>
+      <h2>文件關係</h2>
+      <ul class="rules">
+        <li><b><code>CLAUDE.md</code></b>：工程規則，繼續有效；本方向確認後會更新。</li>
+        <li><b><code>plan.md</code></b>：產品規格。§1「一個遊戲」、§2 寫死的昭和風格、§8「每個人的世界由自己見證／房間＝房主的世界」三處被本文件取代；其餘沿用（被看見才存在、核心迴圈、控制核心、事實與敘述分開、家與門）。</li>
+        <li><b><code>docs/architecture/afm3-dsl-architecture.html</code></b>：Revision 5，描述現況，仍然正確。</li>
+        <li><b><code>docs/rev6-ai-brief.md</code></b>：同一個方向，寫給 AI 開發代理。</li>
+        <li><b>專案名稱</b>：已定案為《無界之地》——自主開放世界（UNMAPPED — An Autonomous Open World）。</li>
+        <li><b>有衝突時</b>：以本文件為準，直到 <code>CLAUDE.md</code> 與 <code>plan.md</code> 更新。</li>
+      </ul>
+    </section>
+  </main>
+</div>
+</body>
+</html>

@@ -1,10 +1,10 @@
 # The Seed Harness — mods as prompt sections + tool calls
 
-Unwritten Land adopts the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)
+UNMAPPED adopts the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)
 "everything is a plugin" model, built on the same framework ([Cordis](https://github.com/cordiverse/cordis),
 published as `@deepseek-ai/cordis`). What dsh does for a coding agent, we do for a game master:
 
-| dsh concept | Unwritten Land equivalent |
+| dsh concept | UNMAPPED equivalent |
 | --- | --- |
 | plugin with `inject` + `apply(ctx)`, reversible `ctx.effect()` | built-in plugin or **mod** mounted into the harness context; unmount unwinds every registration |
 | `ctx.systemPrompt.section({ name, order, text })` | persona, world rules, DSL spec, mod lore, runtime context, output format |

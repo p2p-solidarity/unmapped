@@ -1,0 +1,518 @@
+{
+  "env": {
+    "app": "AETHER_TEST_USER_DATA=$TMPDIR/ud-followup-hud-biome (empty at the start) bun run dev --remoteDebuggingPort 9337",
+    "runs": "`actions` ran in process 1 (the code as handed over, then the PlayerCard fix arrived by HMR at the end). `afterFix` ran in process 2: a fresh `bun run dev` on the SAME userData after the fix, so the two places and the witnessed chunks were already in the save and no model call was needed",
+    "locale": "zh-TW (system default); en and ja chosen through Title → System → Language",
+    "build": "main at 9642f9a + the uncommitted rev 6 phase-1 working tree (bun run dev); renderer on localhost:5174 because the user's dev server holds 5173",
+    "window": "1440 × 868",
+    "replayNotes": "The `eval` steps import dev modules (/state/index.ts, /engine/playerProbe.ts) from the Vite dev server only to read state and positions; every action that changes the game is a click or a key. The walking holds match this seed's land and where the model put the places (東 → chunk 1·0 and 2·0); a replay whose model writes different ground may need other holds. The tree detour (D 500 ms) is specific to this land."
+  },
+  "model": "openai · gpt-5.4-mini (System → Model default; key from .env)",
+  "actions": [
+    {
+      "clickText": "新遊戲"
+    },
+    {
+      "wait": 2500
+    },
+    {
+      "eval": "(()=>{const i=document.querySelectorAll('input')[0];i.focus();i.select()})()"
+    },
+    {
+      "type": "V6AU-HW5A"
+    },
+    {
+      "clickText": "開始"
+    },
+    {
+      "eval": "(async()=>{const t0=Date.now();for(let i=0;i<360;i++){if(/已記/.test(document.body.innerText))return Date.now()-t0;await new Promise(r=>setTimeout(r,250));}return 'still writing';})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-followup-hud-biome/01-open-land-card-zh-TW.jpg"
+    },
+    {
+      "eval": "(async()=>{const s=await import('/state/index.ts');const p=s.useSessionStore.getState().place;const w=s.useWorldStore.getState().scene;const card=[...document.querySelectorAll('div')].find(e=>e.style&&e.style.borderLeft&&e.style.borderLeft.includes('3px'));return JSON.stringify({place:p&&[p.id,p.title,p.graph.biome],worldSceneBiome:w.value?w.value.biome:w.status,chunk:s.useEngineStore.getState().chunk,nearby:s.useEngineStore.getState().nearby,lang:document.documentElement.lang,card:card&&card.innerText,biomeWord:card?/地貌|Biome|バイオーム|COUNTRYSIDE/i.test(card.innerText):null})})()"
+    },
+    {
+      "clickText": "調整機制"
+    },
+    {
+      "wait": 800
+    },
+    {
+      "clickText": "新增關卡"
+    },
+    {
+      "wait": 600
+    },
+    {
+      "eval": "(()=>{const i=[...document.querySelectorAll('input, textarea')].pop();i.focus();return i.placeholder})()"
+    },
+    {
+      "type": "往東走，一段沙丘上的短短跑酷路線"
+    },
+    {
+      "clickText": "新增這個關卡"
+    },
+    {
+      "eval": "(async()=>{const t0=Date.now();for(let i=0;i<480;i++){const b=[...document.querySelectorAll('button')].find(x=>x.innerText.trim()===\"新增這個關卡\");if(b&&!b.disabled&&Date.now()-t0>1500){return Date.now()-t0}await new Promise(r=>setTimeout(r,250));}return 'timeout';})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-followup-hud-biome/02-place-made.jpg"
+    },
+    {
+      "clickText": "關閉"
+    },
+    {
+      "wait": 500
+    },
+    {
+      "hold": [
+        "KeyD",
+        "ShiftLeft"
+      ],
+      "ms": 2500
+    },
+    {
+      "hold": [
+        "KeyS",
+        "ShiftLeft"
+      ],
+      "ms": 1100
+    },
+    {
+      "hold": [
+        "KeyD",
+        "ShiftLeft"
+      ],
+      "ms": 500
+    },
+    {
+      "hold": [
+        "KeyS",
+        "ShiftLeft"
+      ],
+      "ms": 900
+    },
+    {
+      "hold": [
+        "KeyW",
+        "ShiftLeft"
+      ],
+      "ms": 250
+    },
+    {
+      "hold": [
+        "KeyD",
+        "ShiftLeft"
+      ],
+      "ms": 2500
+    },
+    {
+      "wait": 300
+    },
+    {
+      "eval": "(async()=>{const m=await import('/engine/playerProbe.ts');const s=await import('/state/index.ts');return JSON.stringify([m.samplePlayer(),s.useEngineStore.getState().chunk,s.useEngineStore.getState().nearby])})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-followup-hud-biome/03-at-place-entrance.jpg"
+    },
+    {
+      "hold": "KeyE",
+      "ms": 80
+    },
+    {
+      "wait": 2500
+    },
+    {
+      "eval": "(async()=>{const s=await import('/state/index.ts');const p=s.useSessionStore.getState().place;const w=s.useWorldStore.getState().scene;const card=[...document.querySelectorAll('div')].find(e=>e.style&&e.style.borderLeft&&e.style.borderLeft.includes('3px'));return JSON.stringify({place:p&&[p.id,p.title,p.graph.biome],worldSceneBiome:w.value?w.value.biome:w.status,chunk:s.useEngineStore.getState().chunk,nearby:s.useEngineStore.getState().nearby,lang:document.documentElement.lang,card:card&&card.innerText,biomeWord:card?/地貌|Biome|バイオーム|COUNTRYSIDE/i.test(card.innerText):null})})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-followup-hud-biome/04-place-card-zh-TW.jpg"
+    },
+    {
+      "clickText": "← 主頁"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "clickText": "系統"
+    },
+    {
+      "wait": 1000
+    },
+    {
+      "clickText": "English"
+    },
+    {
+      "wait": 600
+    },
+    {
+      "hold": "Escape",
+      "ms": 80
+    },
+    {
+      "wait": 600
+    },
+    {
+      "clickText": "Continue"
+    },
+    {
+      "wait": 4000
+    },
+    {
+      "eval": "(async()=>{const s=await import('/state/index.ts');const p=s.useSessionStore.getState().place;const w=s.useWorldStore.getState().scene;const card=[...document.querySelectorAll('div')].find(e=>e.style&&e.style.borderLeft&&e.style.borderLeft.includes('3px'));return JSON.stringify({place:p&&[p.id,p.title,p.graph.biome],worldSceneBiome:w.value?w.value.biome:w.status,chunk:s.useEngineStore.getState().chunk,nearby:s.useEngineStore.getState().nearby,lang:document.documentElement.lang,card:card&&card.innerText,biomeWord:card?/地貌|Biome|バイオーム|COUNTRYSIDE/i.test(card.innerText):null})})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-followup-hud-biome/05-open-land-card-en.jpg"
+    },
+    {
+      "hold": "KeyE",
+      "ms": 80
+    },
+    {
+      "wait": 2500
+    },
+    {
+      "eval": "(async()=>{const s=await import('/state/index.ts');const p=s.useSessionStore.getState().place;const w=s.useWorldStore.getState().scene;const card=[...document.querySelectorAll('div')].find(e=>e.style&&e.style.borderLeft&&e.style.borderLeft.includes('3px'));return JSON.stringify({place:p&&[p.id,p.title,p.graph.biome],worldSceneBiome:w.value?w.value.biome:w.status,chunk:s.useEngineStore.getState().chunk,nearby:s.useEngineStore.getState().nearby,lang:document.documentElement.lang,card:card&&card.innerText,biomeWord:card?/地貌|Biome|バイオーム|COUNTRYSIDE/i.test(card.innerText):null})})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-followup-hud-biome/06-place-card-en.jpg"
+    },
+    {
+      "clickText": "← Home"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "clickText": "System"
+    },
+    {
+      "wait": 1000
+    },
+    {
+      "clickText": "日本語"
+    },
+    {
+      "wait": 600
+    },
+    {
+      "hold": "Escape",
+      "ms": 80
+    },
+    {
+      "wait": 600
+    },
+    {
+      "clickText": "つづきから"
+    },
+    {
+      "wait": 4000
+    },
+    {
+      "eval": "(async()=>{const s=await import('/state/index.ts');const p=s.useSessionStore.getState().place;const w=s.useWorldStore.getState().scene;const card=[...document.querySelectorAll('div')].find(e=>e.style&&e.style.borderLeft&&e.style.borderLeft.includes('3px'));return JSON.stringify({place:p&&[p.id,p.title,p.graph.biome],worldSceneBiome:w.value?w.value.biome:w.status,chunk:s.useEngineStore.getState().chunk,nearby:s.useEngineStore.getState().nearby,lang:document.documentElement.lang,card:card&&card.innerText,biomeWord:card?/地貌|Biome|バイオーム|COUNTRYSIDE/i.test(card.innerText):null})})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-followup-hud-biome/07-open-land-card-ja.jpg"
+    },
+    {
+      "hold": "KeyE",
+      "ms": 80
+    },
+    {
+      "wait": 2500
+    },
+    {
+      "eval": "(async()=>{const s=await import('/state/index.ts');const p=s.useSessionStore.getState().place;const w=s.useWorldStore.getState().scene;const card=[...document.querySelectorAll('div')].find(e=>e.style&&e.style.borderLeft&&e.style.borderLeft.includes('3px'));return JSON.stringify({place:p&&[p.id,p.title,p.graph.biome],worldSceneBiome:w.value?w.value.biome:w.status,chunk:s.useEngineStore.getState().chunk,nearby:s.useEngineStore.getState().nearby,lang:document.documentElement.lang,card:card&&card.innerText,biomeWord:card?/地貌|Biome|バイオーム|COUNTRYSIDE/i.test(card.innerText):null})})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-followup-hud-biome/08-place-card-ja.jpg"
+    },
+    {
+      "clickText": "← ホーム"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "clickText": "つづきから"
+    },
+    {
+      "wait": 4000
+    },
+    {
+      "clickText": "ルール調整"
+    },
+    {
+      "wait": 800
+    },
+    {
+      "clickText": "ステージを追加"
+    },
+    {
+      "wait": 600
+    },
+    {
+      "clickText": "ダンジョン"
+    },
+    {
+      "wait": 300
+    },
+    {
+      "eval": "(()=>{const i=[...document.querySelectorAll('input, textarea')].pop();i.focus();return i.placeholder})()"
+    },
+    {
+      "type": "東にある雪原の氷の洞窟、吹雪で凍りついた迷路"
+    },
+    {
+      "clickText": "このステージを追加"
+    },
+    {
+      "eval": "(async()=>{const t0=Date.now();for(let i=0;i<480;i++){const b=[...document.querySelectorAll('button')].find(x=>x.innerText.trim()===\"このステージを追加\");if(b&&!b.disabled&&Date.now()-t0>1500){return Date.now()-t0}await new Promise(r=>setTimeout(r,250));}return 'timeout';})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-followup-hud-biome/09-dungeon-made-ja.jpg"
+    },
+    {
+      "clickText": "閉じる"
+    },
+    {
+      "wait": 500
+    },
+    {
+      "hold": [
+        "KeyD",
+        "ShiftLeft"
+      ],
+      "ms": 300
+    },
+    {
+      "hold": [
+        "KeyD",
+        "ShiftLeft"
+      ],
+      "ms": 4200
+    },
+    {
+      "wait": 300
+    },
+    {
+      "eval": "(async()=>{const m=await import('/engine/playerProbe.ts');const s=await import('/state/index.ts');return JSON.stringify([m.samplePlayer(),s.useEngineStore.getState().chunk,s.useEngineStore.getState().nearby])})()"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "hold": "KeyE",
+      "ms": 80
+    },
+    {
+      "wait": 2500
+    },
+    {
+      "eval": "(async()=>{const s=await import('/state/index.ts');const p=s.useSessionStore.getState().place;const w=s.useWorldStore.getState().scene;const card=[...document.querySelectorAll('div')].find(e=>e.style&&e.style.borderLeft&&e.style.borderLeft.includes('3px'));return JSON.stringify({place:p&&[p.id,p.title,p.graph.biome],worldSceneBiome:w.value?w.value.biome:w.status,chunk:s.useEngineStore.getState().chunk,nearby:s.useEngineStore.getState().nearby,lang:document.documentElement.lang,card:card&&card.innerText,biomeWord:card?/地貌|Biome|バイオーム|COUNTRYSIDE/i.test(card.innerText):null})})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-followup-hud-biome/10-dungeon-card-before-fix-ja.jpg"
+    }
+  ],
+  "fix": "src/renderer/app/hud/PlayerCard.tsx: the bounded-scene biome row reads the active place's graph.biome (useSessionStore place) before falling back to summary.biome (worldStore.scene). Then `bun run check` (green) and a stop + restart of the app for `afterFix`.",
+  "afterFix": [
+    {
+      "clickText": "システム"
+    },
+    {
+      "wait": 1000
+    },
+    {
+      "clickText": "繁體中文"
+    },
+    {
+      "wait": 600
+    },
+    {
+      "hold": "Escape",
+      "ms": 80
+    },
+    {
+      "wait": 600
+    },
+    {
+      "clickText": "繼續遊戲"
+    },
+    {
+      "wait": 5000
+    },
+    {
+      "eval": "(async()=>{const s=await import('/state/index.ts');const p=s.useSessionStore.getState().place;const w=s.useWorldStore.getState().scene;const card=[...document.querySelectorAll('div')].find(e=>e.style&&e.style.borderLeft&&e.style.borderLeft.includes('3px'));return JSON.stringify({place:p&&[p.id,p.title,p.graph.biome],worldSceneBiome:w.value?w.value.biome:w.status,chunk:s.useEngineStore.getState().chunk,nearby:s.useEngineStore.getState().nearby,lang:document.documentElement.lang,card:card&&card.innerText,biomeWord:card?/地貌|Biome|バイオーム|COUNTRYSIDE/i.test(card.innerText):null})})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-followup-hud-biome/11-after-fix-open-land-zh-TW.jpg"
+    },
+    {
+      "hold": "KeyE",
+      "ms": 80
+    },
+    {
+      "wait": 2500
+    },
+    {
+      "eval": "(async()=>{const s=await import('/state/index.ts');const p=s.useSessionStore.getState().place;const w=s.useWorldStore.getState().scene;const card=[...document.querySelectorAll('div')].find(e=>e.style&&e.style.borderLeft&&e.style.borderLeft.includes('3px'));return JSON.stringify({place:p&&[p.id,p.title,p.graph.biome],worldSceneBiome:w.value?w.value.biome:w.status,chunk:s.useEngineStore.getState().chunk,nearby:s.useEngineStore.getState().nearby,lang:document.documentElement.lang,card:card&&card.innerText,biomeWord:card?/地貌|Biome|バイオーム|COUNTRYSIDE/i.test(card.innerText):null})})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-followup-hud-biome/12-after-fix-dungeon-zh-TW.jpg"
+    },
+    {
+      "hold": "KeyE",
+      "ms": 80
+    },
+    {
+      "wait": 2500
+    },
+    {
+      "eval": "(async()=>{const m=await import('/engine/playerProbe.ts');const s=await import('/state/index.ts');return JSON.stringify([m.samplePlayer(),s.useEngineStore.getState().chunk,s.useEngineStore.getState().nearby])})()"
+    },
+    {
+      "hold": [
+        "KeyW",
+        "ShiftLeft"
+      ],
+      "ms": 200
+    },
+    {
+      "hold": [
+        "KeyA",
+        "ShiftLeft"
+      ],
+      "ms": 4200
+    },
+    {
+      "wait": 300
+    },
+    {
+      "eval": "(async()=>{const m=await import('/engine/playerProbe.ts');const s=await import('/state/index.ts');return JSON.stringify([m.samplePlayer(),s.useEngineStore.getState().chunk,s.useEngineStore.getState().nearby])})()"
+    },
+    {
+      "wait": 800
+    },
+    {
+      "hold": "KeyE",
+      "ms": 80
+    },
+    {
+      "wait": 2500
+    },
+    {
+      "eval": "(async()=>{const s=await import('/state/index.ts');const p=s.useSessionStore.getState().place;const w=s.useWorldStore.getState().scene;const card=[...document.querySelectorAll('div')].find(e=>e.style&&e.style.borderLeft&&e.style.borderLeft.includes('3px'));return JSON.stringify({place:p&&[p.id,p.title,p.graph.biome],worldSceneBiome:w.value?w.value.biome:w.status,chunk:s.useEngineStore.getState().chunk,nearby:s.useEngineStore.getState().nearby,lang:document.documentElement.lang,card:card&&card.innerText,biomeWord:card?/地貌|Biome|バイオーム|COUNTRYSIDE/i.test(card.innerText):null})})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-followup-hud-biome/13-after-fix-side-zh-TW.jpg"
+    },
+    {
+      "clickText": "← 主頁"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "clickText": "系統"
+    },
+    {
+      "wait": 1000
+    },
+    {
+      "clickText": "English"
+    },
+    {
+      "wait": 600
+    },
+    {
+      "hold": "Escape",
+      "ms": 80
+    },
+    {
+      "wait": 600
+    },
+    {
+      "clickText": "Continue"
+    },
+    {
+      "wait": 5000
+    },
+    {
+      "hold": [
+        "KeyD",
+        "ShiftLeft"
+      ],
+      "ms": 3900
+    },
+    {
+      "wait": 400
+    },
+    {
+      "eval": "(async()=>{const m=await import('/engine/playerProbe.ts');const s=await import('/state/index.ts');return JSON.stringify([m.samplePlayer(),s.useEngineStore.getState().chunk,s.useEngineStore.getState().nearby])})()"
+    },
+    {
+      "hold": "KeyE",
+      "ms": 80
+    },
+    {
+      "wait": 2500
+    },
+    {
+      "eval": "(async()=>{const s=await import('/state/index.ts');const p=s.useSessionStore.getState().place;const w=s.useWorldStore.getState().scene;const card=[...document.querySelectorAll('div')].find(e=>e.style&&e.style.borderLeft&&e.style.borderLeft.includes('3px'));return JSON.stringify({place:p&&[p.id,p.title,p.graph.biome],worldSceneBiome:w.value?w.value.biome:w.status,chunk:s.useEngineStore.getState().chunk,nearby:s.useEngineStore.getState().nearby,lang:document.documentElement.lang,card:card&&card.innerText,biomeWord:card?/地貌|Biome|バイオーム|COUNTRYSIDE/i.test(card.innerText):null})})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-followup-hud-biome/14-after-fix-dungeon-en.jpg"
+    },
+    {
+      "clickText": "← Home"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "clickText": "System"
+    },
+    {
+      "wait": 1000
+    },
+    {
+      "clickText": "日本語"
+    },
+    {
+      "wait": 600
+    },
+    {
+      "hold": "Escape",
+      "ms": 80
+    },
+    {
+      "wait": 600
+    },
+    {
+      "clickText": "つづきから"
+    },
+    {
+      "wait": 5000
+    },
+    {
+      "eval": "(async()=>{const s=await import('/state/index.ts');const p=s.useSessionStore.getState().place;const w=s.useWorldStore.getState().scene;const card=[...document.querySelectorAll('div')].find(e=>e.style&&e.style.borderLeft&&e.style.borderLeft.includes('3px'));return JSON.stringify({place:p&&[p.id,p.title,p.graph.biome],worldSceneBiome:w.value?w.value.biome:w.status,chunk:s.useEngineStore.getState().chunk,nearby:s.useEngineStore.getState().nearby,lang:document.documentElement.lang,card:card&&card.innerText,biomeWord:card?/地貌|Biome|バイオーム|COUNTRYSIDE/i.test(card.innerText):null})})()"
+    },
+    {
+      "hold": "KeyE",
+      "ms": 80
+    },
+    {
+      "wait": 2500
+    },
+    {
+      "eval": "(async()=>{const s=await import('/state/index.ts');const p=s.useSessionStore.getState().place;const w=s.useWorldStore.getState().scene;const card=[...document.querySelectorAll('div')].find(e=>e.style&&e.style.borderLeft&&e.style.borderLeft.includes('3px'));return JSON.stringify({place:p&&[p.id,p.title,p.graph.biome],worldSceneBiome:w.value?w.value.biome:w.status,chunk:s.useEngineStore.getState().chunk,nearby:s.useEngineStore.getState().nearby,lang:document.documentElement.lang,card:card&&card.innerText,biomeWord:card?/地貌|Biome|バイオーム|COUNTRYSIDE/i.test(card.innerText):null})})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-followup-hud-biome/15-after-fix-dungeon-ja.jpg"
+    }
+  ]
+}

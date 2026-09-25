@@ -1,4 +1,6 @@
-# Unwritten Land
+# UNMAPPED — 《無界之地》
+
+**An Autonomous Open World · 自主開放世界**
 
 An Electron desktop engine for **player-owned, LLM-generated worlds** — the working
 implementation of the ideas in [`plan.md`](plan.md).

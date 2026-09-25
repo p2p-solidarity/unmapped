@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Unwritten Land 新版規格：降低 AI 生成、執行與修改互動作品的成本。2D 優先、玩法由 AI 定義、三階段開發計劃與可複製 Prompt。">
-  <title>Unwritten Land｜AI 互動作品框架 · 新版規格</title>
+  <meta name="description" content="UNMAPPED（無界之地）新版規格：降低 AI 生成、執行與修改互動作品的成本。2D 優先、玩法由 AI 定義、三階段開發計劃與可複製 Prompt。">
+  <title>UNMAPPED 無界之地｜AI 互動作品框架 · 新版規格</title>
   <style>
     :root {
       color-scheme: dark;
@@ -727,7 +727,7 @@
   <a class="skip-link" href="#main">跳到主要內容</a>
   <div class="shell">
     <header class="topbar">
-      <a class="brand" href="#top" aria-label="回到文件頂端"><span class="brand-mark" aria-hidden="true">UL</span><span>Unwritten Land · Framework Specification</span></a>
+      <a class="brand" href="#top" aria-label="回到文件頂端"><span class="brand-mark" aria-hidden="true">UM</span><span>UNMAPPED · Framework Specification</span></a>
       <div class="top-actions"><span class="page-name" id="page-name">產品方向</span><button class="ghost-button" type="button" id="print">列印 / PDF</button>
         <button class="ghost-button menu-button" type="button" id="menu-open" aria-haspopup="dialog" aria-controls="doc-drawer" aria-expanded="false"><span class="menu-icon" aria-hidden="true"><i></i><i></i><i></i></span>分頁目錄</button>
       </div>
@@ -747,7 +747,7 @@
     <div class="hero" id="top" data-page-hero="core">
       <p class="eyebrow">Product direction · Revision 5 · gameplay milestone</p>
       <h1>讓 AI 更容易產出，<br>讓每次修改更便宜。</h1>
-      <p class="hero-lede">Unwritten Land 是讓 AI 生成、執行與修改互動作品的框架。降低製作與試錯成本是核心價值；遊戲是主要用途，2D 是預設，Three.js 是可選能力。現在的主作品是一張無限的 HD-2D 大地：故事寫成一章接一章的章節（最多 99 章），戰鬥、橫向捲軸與地城都在同一張地圖上。</p>
+      <p class="hero-lede">UNMAPPED（無界之地）是讓 AI 生成、執行與修改互動作品的框架。降低製作與試錯成本是核心價值；遊戲是主要用途，2D 是預設，Three.js 是可選能力。現在的主作品是一張無限的 HD-2D 大地：故事寫成一章接一章的章節（最多 99 章），戰鬥、橫向捲軸與地城都在同一張地圖上。</p>
       <div class="hero-meta"><span class="pill">HTML / CSS / JavaScript</span><span class="pill">玩法由作品定義</span><span class="pill">局部修改與修補</span><span class="pill">HD-2D 大地 · 已實機驗收</span></div>
     </div>
     <div class="layout"><main id="main">
@@ -881,7 +881,11 @@
 <tr><td>15 · 模型切換與 Create 起點</td><td>標題的「系統 → 模型」可切換雲端與本機模型、寫入鑰匙圈金鑰；Create 的世界計畫與起點依選定模型生成。本機請求送出前檢查上下文容量。</td><td>在隔離資料目錄中選回 OpenAI，完成世界計畫、起點、發布並進入大地；本機模型限制明列於紀錄</td><td><span class="status verified">雲端流程已實機驗證 · <a href="../e2e/milestone-model-switch/result.md">E2E 紀錄</a></span></td></tr>
 <tr><td>16 · 遊玩循環與大陸入口</td><td>標題選存檔加入大陸；地點生成時把 NPC 台詞存進存檔；門落點檢查碰撞與領地；大地兩種外觀加入家中紀念物展示，並調整章節背景生成的共用工作</td><td>實機重播：標題→新遊戲→家門→切換兩種外觀→標題加入大陸（0 位夥伴）→生成地城→讀取 1 份已存台詞；10 張截圖、renderer 0 個錯誤；當時 <code>bun run check</code> 為 93 檔／385 測試全過。非空紀念物、第二位夥伴及章節取消／接續尚未實機驗證</td><td><span class="status verified">部分驗證 · <a href="../e2e/milestone-play-loop/result.md">E2E 紀錄</a></span></td></tr>
 <tr><td>17 · 整合驗收里程碑</td><td>把 16 階段合在一起從頭走一次，並修掉審查與實機找到的問題：金鑰讀不到時回錯誤、備份匯出與匯入用同一套上限、Create 拒絕大地玩不了的章節種類、起點提示補上範例程式、HD-2D 怪物畫在它走到的位置、標題移除舊的「加入房間」</td><td>全新資料：系統 → 模型（OpenAI 1,444 毫秒連線）→ Create 四步：世界 4.6 秒、單卡重寫 1.8 秒、故事 5.9 秒（4 章）、單章重寫 2.6 秒、插入 3.2 秒、全篇備註 4.4 秒且鎖定章節不變 → 關掉 app 重開草稿仍在 → 建立：修正前起點 3 次呼叫都缺地面而失敗，修正後 2 次呼叫進入大地 → 野怪追上並造成傷害、倒下後可回家重來；renderer 0 個錯誤；<code>bun run check</code> 96 檔／409 測試</td><td><span class="status verified">部分驗證 · HD-2D 怪物移動的修正未再實機觀察、戰鬥傷害速率待查 · <a href="../e2e/milestone-integration/result.md">E2E 紀錄</a></span></td></tr>
+<tr><td>18 · Rev 6 第一段 · 模型呼叫（3.1–3.6）</td><td>Play 掛上世界 harness，見證／章節／地點的 prompt 帶世界快照與 lore 熱區；每次模型呼叫（文字與圖片）由 main 記進 <code>usage.jsonl</code>（用途、模型、輸入／輸出／快取、毫秒），Create 草稿的用量併入建出的世界，HUD 與用量面板顯示；取消一路傳到供應商；Create 的世界卡片與章節卡邊寫邊顯示；外觀成為世界卡片（<code>Look:</code>），道具清單與圖片風格讀世界自己的設定，內建世界發布 1.1.0（1.0.0 保留）</td><td>全新資料以「沙漠裡的鐘錶城」建世界：串流 2.5 秒時卡片已半寫、5.5 秒章節卡 3 張完整；聖經、起點（沙地、鐵塔、路牌）、見證的「沙角」皆無昭和元素；起點走聊天模型 2 次呼叫；用量面板 10 次 17,952 入／5,746 出／快取 5,120，與 main 紀錄逐筆相符；取消見證 3.0 秒 → main <code>aborted</code> 3,017 毫秒、取消章節 1,688 毫秒，皆未寫入。實機找到並修掉 3 個問題（共用 harness 上的段落撞名造成見證卡死、中止的串流被記成 done、模型用中文命名語句被靜默丟掉）；<code>bun run check</code> 102 檔／429 測試</td><td><span class="status verified">已完成 · 沙漠世界的地貌仍顯示 COUNTRYSIDE（尚無沙漠 biome）· <a href="../e2e/milestone-rev6-create/result.md">E2E 紀錄</a></span></td></tr>
+<tr><td>19 · Rev 6 第一段 · 大地與分享（3.3、3.7–3.11）</td><td>備份含見證的土地、lore 與手記；卡帶匯入帶回聖經、故事與對白；2D 大地兩種畫法畫出其他玩家的名字、朝向與走路；大陸改成先交換 hello（協定、門牌、物理版本）通過才收發土地，且每個夥伴只能寫自己的世界與土地、不能覆寫已寫下的土地與手記；物理版本寫進世界釘選並有地形／戰鬥／lore／地城指紋測試；AI 世界圖片取消會中止請求；可在裝置上指定 signaling 伺服器</td><td>兩個行程各自資料夾、以本機 signaling 連成大陸：兩邊顯示 1 位已驗證夥伴，HD-2D 與 16-bit 都看到對方朝東、西、南、北走；卡帶匯出 5,572 位元組、在另一個行程匯入後雜湊相同且檔案逐一相同；備份 4,838 位元組，刪除存檔再還原後土地、lore、手記逐位元相同；圖片 2.5 秒取消 → main <code>cancelled</code> 2,537 毫秒、未產生候選；renderer 0 個錯誤</td><td><span class="status verified">已完成 · 預設公開 signaling 從本機連不上，實機用本機伺服器 · 驗證失敗的 hello 只在單元測試 · <a href="../e2e/milestone-rev6-land/result.md">E2E 紀錄</a></span></td></tr>
 <tr><td>20 · Lineage market（ENSv2 × Uniswap CCA／v4 hook）</td><td>世界可以「發行」：名字掛在上游世界的名字底下（<code>mushroom.zelda.&lt;label&gt;.eth</code>），代幣經 Uniswap Continuous Clearing Auction 以上游世界的代幣計價拍賣，畢業後由 LBPStrategy 開成 v4 池；<code>LineageHook</code> 每跳抽 1%，依 50／30／20 分給世界、上一代、再上一代，付給領取當下持有 ENS 名字的人。每個名字都是已解放（emancipated）的 ENSv2 token，可安全轉移。<code>bun run lineage:market --dry-run</code> 以 <code>eth_simulateV1</code> 在 Sepolia 真實的 ENSv2 與 Uniswap 合約上跑完整條流程</td><td>模擬中：三代世界各自拍賣並畢業開池（zelda 以 0.009999 MockUSDC 成交）；Universal Resolver 把 remix 名字解析到發行的代幣；10 MockUSDC 兩跳買到 3,260.384 MUSHROOM、三跳買到 3,612.798 NIGHT，每跳分潤都是買到數量的 1/99、份額精確；名字轉手後分潤付給新持有人；4 種偽造或越權被拒；<code>bun run check</code> 102 檔／430 測試</td><td><span class="status verified">合約已部署到 Sepolia（<code>unmapped.eth</code>，8 筆交易、約 0.0074 ETH，鏈上讀回確認接線與 emancipated）· 發行、拍賣、交易只以模擬驗證；app 尚未接上 · <a href="../e2e/milestone-lineage-market/result.md">E2E 紀錄</a></span></td></tr>
+<tr><td>21 · Rev 6 第一段 · 收尾</td><td>存檔只記自己土地上的位置：站在別人領地時取樣標為 <code>visiting:&lt;worldId&gt;</code>，任何存檔點都不寫入；在別人土地上離開大陸或換大陸，先把玩家送回自己的門旁，重開也不再沿用上一次的門目標。標題「系統 → 信令伺服器」可檢視、實測（兩個連線互相轉送一則訊息）、儲存與還原這台裝置的清單；卡住 12 秒的握手會重試，20 秒內沒有伺服器也沒有已驗證夥伴就改顯示 <code>continent-signaling-unreachable</code> 與提示，伺服器一回應就恢復。大地上的玩家卡片不再顯示未翻譯的 COUNTRYSIDE，地點與有界場景顯示翻譯後的地貌（取地點自己的地貌）</td><td>兩個行程以本機 signaling 連成大陸，B 走到 A 的土地：5 秒以上的自動存檔、回主頁、關視窗都沒把外地位置寫進 B 的存檔；同一行程重開與重新啟動都回到 B 自己的土地，且 0 次新的模型呼叫；在 A 的門撥房號後 B 回到自家門旁；A 仍即時看到 B（座標差恰好 192 格），B 的手記寫進 A 的手記。信令面板：本機伺服器握手 16 毫秒、轉送 1 毫秒；錯誤網址、1006 關閉、回音伺服器各給出對應錯誤；只設不回應的伺服器時 HUD 在 22,151 毫秒轉為錯誤，換上真伺服器 5.5 秒後恢復連線，照提示改設本機伺服器後 74 毫秒連上。地點內的地貌在中、英、日三種語言都顯示翻譯後的名稱（鄉間、雪原），實機找到並修掉地城顯示大地地貌的問題；renderer 0 個錯誤（修正後離開地點時出現 2 次 React 開發警告）；<code>bun run check</code> 102 檔／430 測試</td><td><span class="status verified">部分驗證 · 「離開大陸」在別人土地上沒有按鈕可按，只從模組呼叫驗證；第二個預設 signaling（y-webrtc.fly.dev）本次 5 次皆未回應；舊版有界樓層與未解析場景的地貌未驗 · <a href="../e2e/milestone-rev6-followup-visitor-position/result.md">訪客位置</a> · <a href="../e2e/milestone-rev6-followup-signaling/result.md">信令</a> · <a href="../e2e/milestone-rev6-followup-hud-biome/result.md">地貌</a></span></td></tr>
+<tr><td>22 · 更名《無界之地》／UNMAPPED</td><td>玩家看得到的名稱全部改為《無界之地》（繁中）／UNMAPPED（英、日），標題畫面加上副標「自主開放世界／An Autonomous Open World／自律するオープンワールド」；模型 prompt 裡的自稱一併改名；內建世界發布 1.2.0「無界之地」（1.0.0、1.1.0 保留給舊存檔）。<code>productName</code>、<code>appId</code>、localStorage 鍵、<code>UNWRITTEN_*</code>、ENS 固定鍵照舊（改了會讓存檔資料夾與鑰匙圈金鑰對不上）。同時修掉離開地點時的兩個問題：render 期間寫 store 的 React 警告、舊的門目標在畫面掛載時被重播</td><td>視窗標題 <code>UNMAPPED — 無界之地</code>；標題畫面三種語言副標正確；新遊戲顯示「無界之地 · 新遊戲」；留著 11 格外的舊傳送請求進出地城，玩家回到入口旁 (80.5, 17.9)；兩次離開 React 警告 0、renderer 錯誤 0；<code>bun run check</code> 102 檔／430 測試</td><td><span class="status verified">已完成 · 打包後的 app 名稱尚未更換 · <a href="../e2e/milestone-rename-unmapped/result.md">E2E 紀錄</a></span></td></tr>
 </tbody></table></div>
 <div class="table-wrap" role="region" aria-label="實測數字" tabindex="0"><table><thead><tr><th scope="col">量到的</th><th scope="col">結果</th></tr></thead><tbody>
 <tr><td>首次可玩（自動檢查通過）</td><td>四個玩法（RPG／ARPG／迷宮／瑪利歐式平台）3/4 第一次就過，全部在 1 次修補內可玩；故事章節（當時是 AI 網頁小遊戲）2/2 第一次就過</td></tr>

@@ -1,0 +1,582 @@
+{
+  "env": {
+    "signaling": "PORT=4444 node node_modules/y-webrtc/bin/server.js; both apps set localStorage unwritten.signaling = ws://127.0.0.1:4444 (first action of each)",
+    "hostA": "AETHER_TEST_USER_DATA=$TMPDIR/ud-followup-vp-a (empty) bun run dev --remoteDebuggingPort 9333",
+    "guestB": "AETHER_TEST_USER_DATA=$TMPDIR/ud-followup-vp-b (empty) bun run dev --remoteDebuggingPort 9334; restarted once with the same userData (see `restart`)",
+    "locale": "zh-TW (system default)",
+    "build": "main at 70f5eba + the uncommitted rev 6 working tree incl. the visitor-position change (playerProbe.ts, continentActions.ts, usePositionAutosave.ts)",
+    "window": "1440 x 868",
+    "doorNumber": "A's door number is derived from its instance id (random suffix), so it differs per run: this run got ZTVJCV. Replace ZTVJCV below with the number A's `actions` prints.",
+    "probe": "the `eval` steps that return {sample, visiting, chunk, teleport, continent, anchor, worlds} import the dev modules /engine/playerProbe.ts and /state/index.ts read-only (same module instances vite serves the app); the one step that calls leaveContinent() imports /net/continentActions.ts because no button reaches it from foreign land (see result.md)",
+    "order": "actions (A) -> guest (B) -> together (B walks while A captures) -> guestVisit -> guestLeavePlayAndReopen -> guestRoomDial -> guestLeaveContinent -> guestCloseWindow -> restart (shell) -> guestAfterRestart; `shell` steps are run by hand between drive calls"
+  },
+  "model": "openai · gpt-5.4-mini (witnessing the two origin chunks only)",
+  "actions": [
+    {
+      "eval": "localStorage.setItem('unwritten.signaling','ws://127.0.0.1:4444')"
+    },
+    {
+      "clickText": "新遊戲"
+    },
+    {
+      "wait": 2500
+    },
+    {
+      "eval": "(()=>{const i=document.querySelectorAll('input')[0];i.focus();i.select()})()"
+    },
+    {
+      "type": "V6AU-HW5A"
+    },
+    {
+      "clickText": "開始"
+    },
+    {
+      "eval": "(async()=>{for(let i=0;i<240;i++){if(/已記/.test(document.body.innerText))return document.body.innerText.slice(0,400);await new Promise(r=>setTimeout(r,250));}return 'still writing';})()"
+    },
+    {
+      "hold": "KeyE",
+      "ms": 80
+    },
+    {
+      "wait": 1200
+    },
+    {
+      "clickText": "向夥伴敞開我的門"
+    },
+    {
+      "wait": 2500
+    },
+    {
+      "eval": "document.body.innerText.match(/大陸[^\\n]*|已連線[^\\n]*/g)"
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-followup-visitor-position/01-A-door-open.jpg"
+    },
+    {
+      "eval": "(()=>{const all=[...document.querySelectorAll('input')];all[all.length-1].focus();return all.length})()"
+    },
+    {
+      "type": "QRSTUV"
+    },
+    {
+      "clickText": "設定到轉盤 1"
+    },
+    {
+      "wait": 800
+    },
+    {
+      "eval": "document.body.innerText.match(/轉盤 1[^\\n]*\\n[^\\n]*/g)"
+    },
+    {
+      "clickText": "關閉"
+    },
+    {
+      "wait": 600
+    }
+  ],
+  "guest": [
+    {
+      "eval": "localStorage.setItem('unwritten.signaling','ws://127.0.0.1:4444')"
+    },
+    {
+      "clickText": "新遊戲"
+    },
+    {
+      "wait": 2500
+    },
+    {
+      "eval": "(()=>{const i=document.querySelectorAll('input')[0];i.focus();i.select()})()"
+    },
+    {
+      "type": "B7QM-2PXD"
+    },
+    {
+      "clickText": "開始"
+    },
+    {
+      "eval": "(async()=>{for(let i=0;i<240;i++){if(/已記/.test(document.body.innerText))return document.body.innerText.slice(0,300);await new Promise(r=>setTimeout(r,250));}return 'still writing';})()"
+    },
+    {
+      "eval": "(async()=>{const p=await import('/engine/playerProbe.ts');const st=await import('/state/index.ts');const s=p.samplePlayer();const c=st.useContinentStore.getState();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},visiting:s?p.isVisiting(s):null,chunk:st.useEngineStore.getState().chunk,teleport:st.useEngineStore.getState().teleport,continent:c.status.kind+(c.status.code?(' '+c.status.code):''),anchor:c.anchor,worlds:c.worlds.map(w=>({id:w.worldId,anchor:w.anchor,door:w.door,online:w.online}))})})()"
+    },
+    {
+      "hold": "KeyD",
+      "ms": 1200
+    },
+    {
+      "hold": "KeyS",
+      "ms": 600
+    },
+    {
+      "wait": 7000
+    },
+    {
+      "eval": "(async()=>{const p=await import('/engine/playerProbe.ts');const st=await import('/state/index.ts');const s=p.samplePlayer();const c=st.useContinentStore.getState();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},visiting:s?p.isVisiting(s):null,chunk:st.useEngineStore.getState().chunk,teleport:st.useEngineStore.getState().teleport,continent:c.status.kind+(c.status.code?(' '+c.status.code):''),anchor:c.anchor,worlds:c.worlds.map(w=>({id:w.worldId,anchor:w.anchor,door:w.door,online:w.online}))})})()"
+    },
+    {
+      "shell": "python3 -c \"import json,glob;d=json.load(open(glob.glob('$TMPDIR/ud-followup-vp-b/instances/b7qm-*/saves/default/save.json')[0]));print(d['position'],d['updatedAt'])\""
+    },
+    {
+      "clickText": "← 主頁"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "clickText": "加入大陸"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "clickText": "未記之地 · B7QM-2PXD"
+    },
+    {
+      "eval": "(()=>{const all=[...document.querySelectorAll('input')];all[all.length-1].focus();return all.length})()"
+    },
+    {
+      "type": "ZTVJCV"
+    },
+    {
+      "clickText": "穿過這扇門"
+    },
+    {
+      "wait": 9000
+    },
+    {
+      "eval": "document.body.innerText.slice(0,500)"
+    },
+    {
+      "eval": "(async()=>{const p=await import('/engine/playerProbe.ts');const st=await import('/state/index.ts');const s=p.samplePlayer();const c=st.useContinentStore.getState();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},visiting:s?p.isVisiting(s):null,chunk:st.useEngineStore.getState().chunk,teleport:st.useEngineStore.getState().teleport,continent:c.status.kind+(c.status.code?(' '+c.status.code):''),anchor:c.anchor,worlds:c.worlds.map(w=>({id:w.worldId,anchor:w.anchor,door:w.door,online:w.online}))})})()"
+    },
+    {
+      "hold": "KeyA",
+      "ms": 1200
+    },
+    {
+      "hold": "KeyW",
+      "ms": 600
+    },
+    {
+      "wait": 300
+    },
+    {
+      "eval": "(async()=>{const p=await import('/engine/playerProbe.ts');const st=await import('/state/index.ts');const s=p.samplePlayer();const c=st.useContinentStore.getState();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},visiting:s?p.isVisiting(s):null,chunk:st.useEngineStore.getState().chunk,teleport:st.useEngineStore.getState().teleport,continent:c.status.kind+(c.status.code?(' '+c.status.code):''),anchor:c.anchor,worlds:c.worlds.map(w=>({id:w.worldId,anchor:w.anchor,door:w.door,online:w.online}))})})()"
+    },
+    {
+      "eval": "document.body.innerText.match(/E · [^\\n]*/g)"
+    },
+    {
+      "wait": 6000
+    },
+    {
+      "shell": "python3 -c \"import json,glob;d=json.load(open(glob.glob('$TMPDIR/ud-followup-vp-b/instances/b7qm-*/saves/default/save.json')[0]));print(d['position'],d['updatedAt'])\""
+    },
+    {
+      "hold": "KeyE",
+      "ms": 80
+    },
+    {
+      "wait": 1200
+    },
+    {
+      "clickText": "前往他們的門"
+    },
+    {
+      "wait": 3000
+    },
+    {
+      "eval": "(async()=>{const p=await import('/engine/playerProbe.ts');const st=await import('/state/index.ts');const s=p.samplePlayer();const c=st.useContinentStore.getState();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},visiting:s?p.isVisiting(s):null,chunk:st.useEngineStore.getState().chunk,teleport:st.useEngineStore.getState().teleport,continent:c.status.kind+(c.status.code?(' '+c.status.code):''),anchor:c.anchor,worlds:c.worlds.map(w=>({id:w.worldId,anchor:w.anchor,door:w.door,online:w.online}))})})()"
+    },
+    {
+      "eval": "document.body.innerText.slice(0,260)"
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-followup-visitor-position/02-B-at-A-door.jpg"
+    }
+  ],
+  "together": [
+    {
+      "B": {
+        "hold": "KeyD",
+        "ms": 2000
+      },
+      "A": [
+        {
+          "wait": 1100
+        },
+        {
+          "shot": "docs/e2e/milestone-rev6-followup-visitor-position/03-A-sees-B-walking-on-A-land.jpg"
+        }
+      ]
+    },
+    {
+      "B": [
+        {
+          "hold": "KeyS",
+          "ms": 700
+        },
+        {
+          "wait": 300
+        },
+        {
+          "eval": "(async()=>{const p=await import('/engine/playerProbe.ts');const st=await import('/state/index.ts');const s=p.samplePlayer();const c=st.useContinentStore.getState();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},visiting:s?p.isVisiting(s):null,chunk:st.useEngineStore.getState().chunk,teleport:st.useEngineStore.getState().teleport,continent:c.status.kind+(c.status.code?(' '+c.status.code):''),anchor:c.anchor,worlds:c.worlds.map(w=>({id:w.worldId,anchor:w.anchor,door:w.door,online:w.online}))})})()"
+        }
+      ]
+    },
+    {
+      "A": {
+        "eval": "(async()=>{const r=await import('/engine/remoteRoster.ts');return JSON.stringify(r.getRemotePlayers())})()"
+      }
+    }
+  ],
+  "guestVisit": [
+    {
+      "hold": "KeyN",
+      "ms": 80
+    },
+    {
+      "wait": 800
+    },
+    {
+      "eval": "(()=>{const f=document.querySelectorAll('input, textarea');f[0].focus();return f[0].tagName})()"
+    },
+    {
+      "type": "訪客到此一遊：門口東邊的草很軟。"
+    },
+    {
+      "clickText": "留下留言"
+    },
+    {
+      "wait": 2000
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-followup-visitor-position/04-B-note-on-A-land.jpg"
+    },
+    {
+      "clickText": "關閉"
+    },
+    {
+      "wait": 500
+    },
+    {
+      "shell": "cat $TMPDIR/ud-followup-vp-a/instances/v6au-*/saves/default/notes.jsonl; ls $TMPDIR/ud-followup-vp-b/instances/b7qm-*/saves/default/"
+    },
+    {
+      "shell": "python3 -c \"import json,glob;d=json.load(open(glob.glob('$TMPDIR/ud-followup-vp-b/instances/b7qm-*/saves/default/save.json')[0]));print(d['position'],d['updatedAt'])\""
+    }
+  ],
+  "guestLeavePlayAndReopen": [
+    {
+      "hold": "KeyD",
+      "ms": 800
+    },
+    {
+      "wait": 6000
+    },
+    {
+      "eval": "(async()=>{const p=await import('/engine/playerProbe.ts');const st=await import('/state/index.ts');const s=p.samplePlayer();const c=st.useContinentStore.getState();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},visiting:s?p.isVisiting(s):null,chunk:st.useEngineStore.getState().chunk,teleport:st.useEngineStore.getState().teleport,continent:c.status.kind+(c.status.code?(' '+c.status.code):''),anchor:c.anchor,worlds:c.worlds.map(w=>({id:w.worldId,anchor:w.anchor,door:w.door,online:w.online}))})})()"
+    },
+    {
+      "clickText": "← 主頁"
+    },
+    {
+      "wait": 2500
+    },
+    {
+      "eval": "(async()=>{const p=await import('/engine/playerProbe.ts');const st=await import('/state/index.ts');const s=p.samplePlayer();const c=st.useContinentStore.getState();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},visiting:s?p.isVisiting(s):null,chunk:st.useEngineStore.getState().chunk,teleport:st.useEngineStore.getState().teleport,continent:c.status.kind+(c.status.code?(' '+c.status.code):''),anchor:c.anchor,worlds:c.worlds.map(w=>({id:w.worldId,anchor:w.anchor,door:w.door,online:w.online}))})})()"
+    },
+    {
+      "shell": "python3 -c \"import json,glob;d=json.load(open(glob.glob('$TMPDIR/ud-followup-vp-b/instances/b7qm-*/saves/default/save.json')[0]));print(d['position'],d['updatedAt'])\""
+    },
+    {
+      "clickText": "繼續遊戲"
+    },
+    {
+      "wait": 5000
+    },
+    {
+      "eval": "(async()=>{const p=await import('/engine/playerProbe.ts');const st=await import('/state/index.ts');const s=p.samplePlayer();const c=st.useContinentStore.getState();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},visiting:s?p.isVisiting(s):null,chunk:st.useEngineStore.getState().chunk,teleport:st.useEngineStore.getState().teleport,continent:c.status.kind+(c.status.code?(' '+c.status.code):''),anchor:c.anchor,worlds:c.worlds.map(w=>({id:w.worldId,anchor:w.anchor,door:w.door,online:w.online}))})})()"
+    },
+    {
+      "eval": "document.body.innerText.slice(0,200)"
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-followup-visitor-position/05-B-reopened-same-process.jpg"
+    },
+    {
+      "wait": 8000
+    },
+    {
+      "eval": "(async()=>{const p=await import('/engine/playerProbe.ts');const st=await import('/state/index.ts');const s=p.samplePlayer();const c=st.useContinentStore.getState();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},visiting:s?p.isVisiting(s):null,chunk:st.useEngineStore.getState().chunk,teleport:st.useEngineStore.getState().teleport,continent:c.status.kind+(c.status.code?(' '+c.status.code):''),anchor:c.anchor,worlds:c.worlds.map(w=>({id:w.worldId,anchor:w.anchor,door:w.door,online:w.online}))})})()"
+    },
+    {
+      "shell": "grep -n '\\[inference\\]' $TMPDIR/vp-b.log; ls $TMPDIR/ud-followup-vp-b/instances/b7qm-*/saves/default/chunks/"
+    }
+  ],
+  "guestRoomDial": [
+    {
+      "hold": "KeyW",
+      "ms": 450
+    },
+    {
+      "wait": 300
+    },
+    {
+      "eval": "(async()=>{const p=await import('/engine/playerProbe.ts');const st=await import('/state/index.ts');const s=p.samplePlayer();const c=st.useContinentStore.getState();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},visiting:s?p.isVisiting(s):null,chunk:st.useEngineStore.getState().chunk,teleport:st.useEngineStore.getState().teleport,continent:c.status.kind+(c.status.code?(' '+c.status.code):''),anchor:c.anchor,worlds:c.worlds.map(w=>({id:w.worldId,anchor:w.anchor,door:w.door,online:w.online}))})})()"
+    },
+    {
+      "hold": "KeyE",
+      "ms": 80
+    },
+    {
+      "wait": 1200
+    },
+    {
+      "eval": "(()=>{const all=[...document.querySelectorAll('input')];all[all.length-1].focus();return all.length})()"
+    },
+    {
+      "type": "ZTVJCV"
+    },
+    {
+      "clickText": "穿過這扇門"
+    },
+    {
+      "wait": 8000
+    },
+    {
+      "clickText": "前往他們的門"
+    },
+    {
+      "wait": 2500
+    },
+    {
+      "hold": "KeyD",
+      "ms": 1500
+    },
+    {
+      "hold": "KeyA",
+      "ms": 1300
+    },
+    {
+      "wait": 300
+    },
+    {
+      "eval": "(async()=>{const p=await import('/engine/playerProbe.ts');const st=await import('/state/index.ts');const s=p.samplePlayer();const c=st.useContinentStore.getState();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},visiting:s?p.isVisiting(s):null,chunk:st.useEngineStore.getState().chunk,teleport:st.useEngineStore.getState().teleport,continent:c.status.kind+(c.status.code?(' '+c.status.code):''),anchor:c.anchor,worlds:c.worlds.map(w=>({id:w.worldId,anchor:w.anchor,door:w.door,online:w.online}))})})()"
+    },
+    {
+      "hold": "KeyE",
+      "ms": 80
+    },
+    {
+      "wait": 1200
+    },
+    {
+      "eval": "document.body.innerText.match(/[^\\n]*的門[\\s\\S]{0,300}/g)"
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-followup-visitor-position/06-B-foreign-door-card-room-dial.jpg"
+    },
+    {
+      "shell": "python3 -c \"import json,glob;d=json.load(open(glob.glob('$TMPDIR/ud-followup-vp-b/instances/b7qm-*/saves/default/save.json')[0]));print(d['position'],d['updatedAt'])\""
+    },
+    {
+      "clickText": "前往"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "eval": "(async()=>{const p=await import('/engine/playerProbe.ts');const st=await import('/state/index.ts');const s=p.samplePlayer();const c=st.useContinentStore.getState();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},visiting:s?p.isVisiting(s):null,chunk:st.useEngineStore.getState().chunk,teleport:st.useEngineStore.getState().teleport,continent:c.status.kind+(c.status.code?(' '+c.status.code):''),anchor:c.anchor,worlds:c.worlds.map(w=>({id:w.worldId,anchor:w.anchor,door:w.door,online:w.online}))})})()"
+    },
+    {
+      "eval": "document.body.innerText.slice(0,330)"
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-followup-visitor-position/07-B-home-after-room-dial.jpg"
+    },
+    {
+      "wait": 4000
+    },
+    {
+      "eval": "(async()=>{const p=await import('/engine/playerProbe.ts');const st=await import('/state/index.ts');const s=p.samplePlayer();const c=st.useContinentStore.getState();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},visiting:s?p.isVisiting(s):null,chunk:st.useEngineStore.getState().chunk,teleport:st.useEngineStore.getState().teleport,continent:c.status.kind+(c.status.code?(' '+c.status.code):''),anchor:c.anchor,worlds:c.worlds.map(w=>({id:w.worldId,anchor:w.anchor,door:w.door,online:w.online}))})})()"
+    },
+    {
+      "shell": "python3 -c \"import json,glob;d=json.load(open(glob.glob('$TMPDIR/ud-followup-vp-b/instances/b7qm-*/saves/default/save.json')[0]));print(d['position'],d['updatedAt'])\""
+    }
+  ],
+  "guestLeaveContinent": [
+    {
+      "hold": "KeyE",
+      "ms": 80
+    },
+    {
+      "wait": 1200
+    },
+    {
+      "eval": "(()=>{const all=[...document.querySelectorAll('input')];all[all.length-1].focus();return all.length})()"
+    },
+    {
+      "type": "ZTVJCV"
+    },
+    {
+      "clickText": "穿過這扇門"
+    },
+    {
+      "wait": 8000
+    },
+    {
+      "clickText": "前往他們的門"
+    },
+    {
+      "wait": 2500
+    },
+    {
+      "hold": "KeyD",
+      "ms": 1500
+    },
+    {
+      "hold": "KeyS",
+      "ms": 800
+    },
+    {
+      "wait": 300
+    },
+    {
+      "eval": "(async()=>{const p=await import('/engine/playerProbe.ts');const st=await import('/state/index.ts');const s=p.samplePlayer();const c=st.useContinentStore.getState();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},visiting:s?p.isVisiting(s):null,chunk:st.useEngineStore.getState().chunk,teleport:st.useEngineStore.getState().teleport,continent:c.status.kind+(c.status.code?(' '+c.status.code):''),anchor:c.anchor,worlds:c.worlds.map(w=>({id:w.worldId,anchor:w.anchor,door:w.door,online:w.online}))})})()"
+    },
+    {
+      "eval": "document.body.innerText.includes('離開大陸')"
+    },
+    {
+      "shell": "python3 -c \"import json,glob;d=json.load(open(glob.glob('$TMPDIR/ud-followup-vp-b/instances/b7qm-*/saves/default/save.json')[0]));print(d['position'],d['updatedAt'])\""
+    },
+    {
+      "eval": "(async()=>{const m=await import('/net/continentActions.ts');m.leaveContinent();return 'left'})()"
+    },
+    {
+      "wait": 1000
+    },
+    {
+      "eval": "(async()=>{const p=await import('/engine/playerProbe.ts');const st=await import('/state/index.ts');const s=p.samplePlayer();const c=st.useContinentStore.getState();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},visiting:s?p.isVisiting(s):null,chunk:st.useEngineStore.getState().chunk,teleport:st.useEngineStore.getState().teleport,continent:c.status.kind+(c.status.code?(' '+c.status.code):''),anchor:c.anchor,worlds:c.worlds.map(w=>({id:w.worldId,anchor:w.anchor,door:w.door,online:w.online}))})})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-followup-visitor-position/08-B-home-after-leaveContinent.jpg"
+    },
+    {
+      "hold": "KeyS",
+      "ms": 900
+    },
+    {
+      "wait": 6000
+    },
+    {
+      "eval": "(async()=>{const p=await import('/engine/playerProbe.ts');const st=await import('/state/index.ts');const s=p.samplePlayer();const c=st.useContinentStore.getState();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},visiting:s?p.isVisiting(s):null,chunk:st.useEngineStore.getState().chunk,teleport:st.useEngineStore.getState().teleport,continent:c.status.kind+(c.status.code?(' '+c.status.code):''),anchor:c.anchor,worlds:c.worlds.map(w=>({id:w.worldId,anchor:w.anchor,door:w.door,online:w.online}))})})()"
+    },
+    {
+      "shell": "python3 -c \"import json,glob;d=json.load(open(glob.glob('$TMPDIR/ud-followup-vp-b/instances/b7qm-*/saves/default/save.json')[0]));print(d['position'],d['updatedAt'])\""
+    }
+  ],
+  "guestCloseWindow": [
+    {
+      "hold": "KeyW",
+      "ms": 900
+    },
+    {
+      "wait": 6000
+    },
+    {
+      "eval": "(async()=>{const p=await import('/engine/playerProbe.ts');const st=await import('/state/index.ts');const s=p.samplePlayer();const c=st.useContinentStore.getState();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},visiting:s?p.isVisiting(s):null,chunk:st.useEngineStore.getState().chunk,teleport:st.useEngineStore.getState().teleport,continent:c.status.kind+(c.status.code?(' '+c.status.code):''),anchor:c.anchor,worlds:c.worlds.map(w=>({id:w.worldId,anchor:w.anchor,door:w.door,online:w.online}))})})()"
+    },
+    {
+      "shell": "python3 -c \"import json,glob;d=json.load(open(glob.glob('$TMPDIR/ud-followup-vp-b/instances/b7qm-*/saves/default/save.json')[0]));print(d['position'],d['updatedAt'])\""
+    },
+    {
+      "hold": "KeyE",
+      "ms": 80
+    },
+    {
+      "wait": 1200
+    },
+    {
+      "eval": "(()=>{const all=[...document.querySelectorAll('input')];all[all.length-1].focus();return all.length})()"
+    },
+    {
+      "type": "ZTVJCV"
+    },
+    {
+      "clickText": "穿過這扇門"
+    },
+    {
+      "wait": 8000
+    },
+    {
+      "clickText": "前往他們的門"
+    },
+    {
+      "wait": 2500
+    },
+    {
+      "hold": "KeyD",
+      "ms": 1800
+    },
+    {
+      "wait": 6500
+    },
+    {
+      "eval": "(async()=>{const p=await import('/engine/playerProbe.ts');const st=await import('/state/index.ts');const s=p.samplePlayer();const c=st.useContinentStore.getState();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},visiting:s?p.isVisiting(s):null,chunk:st.useEngineStore.getState().chunk,teleport:st.useEngineStore.getState().teleport,continent:c.status.kind+(c.status.code?(' '+c.status.code):''),anchor:c.anchor,worlds:c.worlds.map(w=>({id:w.worldId,anchor:w.anchor,door:w.door,online:w.online}))})})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-followup-visitor-position/09-B-on-A-land-before-close.jpg"
+    },
+    {
+      "shell": "python3 -c \"import json,glob;d=json.load(open(glob.glob('$TMPDIR/ud-followup-vp-b/instances/b7qm-*/saves/default/save.json')[0]));print(d['position'],d['updatedAt'])\""
+    },
+    {
+      "eval": "setTimeout(()=>window.close(),100); 'closing'"
+    },
+    {
+      "wait": 5000
+    },
+    {
+      "shell": "python3 -c \"import json,glob;d=json.load(open(glob.glob('$TMPDIR/ud-followup-vp-b/instances/b7qm-*/saves/default/save.json')[0]));print(d['position'],d['updatedAt'])\""
+    }
+  ],
+  "restart": [
+    {
+      "shell": "stop B's dev process (the bun run dev on 9334 and its electron child), then: AETHER_TEST_USER_DATA=$TMPDIR/ud-followup-vp-b bun run dev --remoteDebuggingPort 9334 > $TMPDIR/vp-b-2.log 2>&1 &"
+    }
+  ],
+  "guestAfterRestart": [
+    {
+      "eval": "localStorage.getItem('unwritten.signaling')"
+    },
+    {
+      "clickText": "繼續遊戲"
+    },
+    {
+      "wait": 6000
+    },
+    {
+      "eval": "(async()=>{const p=await import('/engine/playerProbe.ts');const st=await import('/state/index.ts');const s=p.samplePlayer();const c=st.useContinentStore.getState();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},visiting:s?p.isVisiting(s):null,chunk:st.useEngineStore.getState().chunk,teleport:st.useEngineStore.getState().teleport,continent:c.status.kind+(c.status.code?(' '+c.status.code):''),anchor:c.anchor,worlds:c.worlds.map(w=>({id:w.worldId,anchor:w.anchor,door:w.door,online:w.online}))})})()"
+    },
+    {
+      "eval": "document.body.innerText.slice(0,200)"
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-followup-visitor-position/10-B-reopened-after-restart.jpg"
+    },
+    {
+      "wait": 8000
+    },
+    {
+      "eval": "(async()=>{const p=await import('/engine/playerProbe.ts');const st=await import('/state/index.ts');const s=p.samplePlayer();const c=st.useContinentStore.getState();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},visiting:s?p.isVisiting(s):null,chunk:st.useEngineStore.getState().chunk,teleport:st.useEngineStore.getState().teleport,continent:c.status.kind+(c.status.code?(' '+c.status.code):''),anchor:c.anchor,worlds:c.worlds.map(w=>({id:w.worldId,anchor:w.anchor,door:w.door,online:w.online}))})})()"
+    },
+    {
+      "shell": "grep -n '\\[inference\\]' $TMPDIR/vp-b-2.log; ls $TMPDIR/ud-followup-vp-b/instances/b7qm-*/saves/default/chunks/"
+    },
+    {
+      "shell": "python3 -c \"import json,glob;d=json.load(open(glob.glob('$TMPDIR/ud-followup-vp-b/instances/b7qm-*/saves/default/save.json')[0]));print(d['position'],d['updatedAt'])\""
+    }
+  ]
+}

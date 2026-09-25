@@ -1,4 +1,11 @@
-# Unwritten Land — Electron engine for player-owned, LLM-generated worlds
+# UNMAPPED — 《無界之地》: An Autonomous Open World (Electron engine for player-owned, LLM-generated worlds)
+
+**Name.** Every player-visible name is 《無界之地》 (zh-TW) / UNMAPPED (en, ja), with the tagline
+`common.tagline` ("An Autonomous Open World" · 自主開放世界). The old name survives only as
+identifiers that must not change without a migration: `productName` / `appId` in package.json (they
+decide the userData folder and the macOS keychain entry that wraps saved keys), the `unwritten.*` /
+`aether.*` localStorage keys, `UNWRITTEN_*` env vars, `UnwrittenLedger`, the frozen ENS text keys
+`unwritten.*`, and the built-in cartridge id `aether-land` (its revisions ≤ 1.1.0 keep the old name).
 
 Desktop-first (Electron) implementation of `plan.md`: the model writes a tiny **OpenUI Lang
 dialect** (our game DSL), a parser is the source of truth, Three.js renders it, published content
@@ -195,21 +202,25 @@ screen must still work and say plainly that no ledger is set up.
 export function createHarness(): Harness;   // { ctx: Context; dispose(): Promise<void> } with systemPrompt/tools/skills/effects/world services mounted
 export const ORDER: { PERSONA: 100; WORLD_RULES: 200; DSL_SPEC: 300; MOD_MIN: 400; MOD_MAX: 600; CONTEXT: 700; EXAMPLES: 800; OUTPUT: 900 };
 ctx.systemPrompt.section({ name, order, text: string | ((a: AssembleContext) => string) }): () => void
-ctx.systemPrompt.variable(name, provider): () => void;   ctx.systemPrompt.assemble(a): { text: string; sections: string[] }
+ctx.systemPrompt.variable(name, provider): () => void;   ctx.systemPrompt.assemble(a, turn?: PromptSection[]): { text: string; sections: string[] }
+// `turn` sections belong to one turn only and are never registered: the loaded world's harness is
+// shared, so a witnessing and a chapter written at once must not collide or read each other's.
 ctx.tools.register(def: ToolDefinition): () => void;   ctx.tools.schemas(): ToolSchema[];   ctx.tools.execute(call: ToolCall, exec): Promise<ToolExecutionResult>
 export function defineTool<P>(config: { name; description; parameters: ParamSpecMap; execute(args: P, exec): Promise<JsonValue> }): ToolDefinition
 events (waterfall unless noted): "tools/pre-execute"(exec, next) → { kind: "allow" } | { kind: "deny"; reason }, "tools/execute"(exec, next), "tools/post-execute"(exec, result, next), "tools/result"(result) emit
 ctx.skills.provider(p: SkillProvider): () => void;   ctx.skills.catalog(): SkillSummary[];   ctx.skills.load(name): Promise<Result<string>>
 ctx.effects.provider(apply: (e: GameEffect) => Promise<EffectOutcome>): () => void;   ctx.effects.apply(e): Promise<EffectOutcome>   // validates e with zod first
 ctx.world.set(snapshot: WorldSnapshot | null) / ctx.world.get()   // { genesis, meta, scene, karma, inventory, floor }
-export function runTurn(input: { ctx; chat: ChatFn; messages: ChatMessage[]; maxSteps?: number; useTools?: boolean; onDelta? }): Promise<Result<TurnResult>>
+export function runTurn(input: { ctx; chat: ChatFn; messages: ChatMessage[]; sections?: PromptSection[]; maxSteps?: number; useTools?: boolean; onDelta? }): Promise<Result<TurnResult>>
+// ChatFn gets `{ signal }` as its third argument (the assemble signal aborts the call in flight);
+// TurnResult.usage sums every step's tokens.
 export function parseModManifest(yaml: string): Result<ModManifest>;   export function modPlugin(bundle: ModBundle): Plugin   // sections + tools + skills, all reversible
 export const builtins: { persona, worldContext, worldTools, skillTool }: Plugin[]
 ```
 
 ### `src/renderer/harness`
 ```ts
-export function useWorldHarness(): Harness | null;   // one harness per loaded run; model effects become typed Change Proposals and approved save-owned effects checkpoint the instance. `narrate` is a toast and applies at once. A filed proposal answers the model `ok: true` with a "proposed, not applied" message; leaving Play discards unapproved proposals.
+export function useWorldHarness(): Harness | null;   // mounted by PlayScreen; one harness per loaded run; model effects become typed Change Proposals and approved save-owned effects checkpoint the instance. `narrate` is a toast and applies at once. A filed proposal answers the model `ok: true` with a "proposed, not applied" message; leaving Play discards unapproved proposals.
 export function ModsPanel(): JSX.Element;            // list/install/remove installed mods, toggle per-world enablement (writes meta.mods)
 ```
 
@@ -251,10 +262,21 @@ Components take **positional** args in zod key order (required first). Enums com
 - `inference/` owns `InferenceConfig` persistence (`inference.json` in userData), the OpenAI-SDK
   client (`baseURL` from config, key from `process.env[apiKeyEnv]`), streaming → `inference:event`,
   abort, `/v1/models` probe, and the `llama-server` sidecar (spawn, health poll, kill on quit).
+- `usage/` owns the usage ledger `<userData>/usage.jsonl` (@shared/usage): one append-only line per
+  model call — purpose, world scope, provider, model, input / output / cached tokens, ms, outcome —
+  written where each chat, Apple scene or image request settles (never by the renderer); numbers
+  only, never a prompt, answer or key. A world's total folds in the Create draft linked to it.
+- `works/images.ts`: every picture goes through an `ImageProvider` (swap the model = swap the
+  object); its look comes from the world (its maker's words, its library art), never a house style.
+- `game/base.ts` installs every shipped `aether-land-<version>.json`, oldest first; never drop one
+  (a save pinned to it must still open on a new machine). New Game starts on the newest.
 
 ### `src/renderer/llm`
 ```ts
-export function chat(request: Omit<ChatRequest, "id">, onDelta?: (text: string) => void): Promise<Result<{ text: string; usage: ChatUsage | null }>>;
+export function chat(request: Omit<ChatRequest, "id">, onDelta?: (text: string) => void, options?: { signal?; timeoutMs? }): Promise<Result<{ text: string; usage: ChatUsage | null }>>;
+// Every request carries `usage: usageTag(purpose)`; the scope is the world whose screen set it
+export function usageTag(purpose: UsagePurpose): UsageTag;   useUsageScope(scope): void;   // Play: instance, Create: draft, Workshop: work draft
+export function useUsageSummary(scope): Loadable<UsageSummary>;   // re-read on usage:changed
 export function abortChat(id: string): Promise<void>;
 export function useInferenceSync(): void;   // hydrates inferenceStore (config, probe, sidecar) and subscribes to sidecar events
 ```
@@ -305,6 +327,13 @@ export function TitleDiorama({ seedText }): JSX.Element;   // App's MenuBackdrop
   kind (row 1) of `src/assets/generated/actors.png` (`engine2d/actorSprites.ts`). They are drawn
   once by `bun scripts/gen-sprites.ts`, a dev step that spends the OpenAI key (ask first); raw
   pictures stay in `.cache/sprites/`, provenance in `actors.json`. Never generate sprites at runtime.
+- Physics is versioned (`@shared/physics`): the ground and wildlife (`@shared/chunks`), the fight
+  formulas (combat, progression, foes), lore heat and dungeons. A new world pins
+  `runtimePin.physicsVersion` (absent = 1); a build opens only `PHYSICS_SUPPORTED`, and worlds on
+  different physics never merge on a continent. Changing that output without bumping
+  `PHYSICS_VERSION` (and recording its fingerprint) fails `tests/shared/physics.test.ts`.
+- Other players on the continent are drawn by both looks with their name, facing and walk
+  (`remoteRoster`, the pose from `registerPoseProbe`); presence is awareness, never saved.
 - Reachability is the host's: every chunk's centre row/column is a ford (`isFord` in
   `@shared/chunks` — water there is sand, nothing grows) and the origin chunk is dry; written chunks
   pass through `clearFords` when they enter the land store. Story gates stand at chunk centres, so
@@ -333,12 +362,18 @@ export function TitleDiorama({ seedText }): JSX.Element;   // App's MenuBackdrop
 
 ### Create a game (`app/create/`, `narrative/newWorld.ts`)
 - Four steps: idea (world, optional story material, language, `PlayStyle`: fights none | gun | blade)
-  → world (six editable bible cards, each independently rewritable) → story (3–8 editable chapters,
+  → world (seven editable bible cards, each independently rewritable; the seventh, the look, is the
+  world's own art direction) → story (3–8 editable chapters,
   even without player story material; rewrite, insert, move, remove, lock, or revise the unlocked
   chapters; ids and gates re-derived by `episodePlaces`) → `buildWorld` (origin scene,
   `openLandCartridge` with play style as capability requirements, publish, new save). Only building
   publishes. Autosaved drafts live in `<userData>/workspaces/create.<draftId>/draft.json`, not in
   published cartridges. Changing the idea marks dependent world/story content stale.
+- Style is the world's (rev 6): prompts read the bible's `Look:` and `Props:` lines
+  (`worldPropKinds` in @shared/bible) — biome, ground and props for the origin, props for every
+  witnessing, enforced by the parsers. A bible from before the look keeps `LEGACY_PROP_KINDS`. No
+  prompt names a period or genre of its own. Create's world and story steps stream into previews
+  (`StreamPreview`); nothing streamed is kept.
 - The legacy six-step Create (scene bases, Genre Matrix, capability report, its authoring
   workspaces and IPC) was deleted; do not bring it back. Offer no option the land cannot play
   (companions exist in the rules but are not drawn or followed on the land yet).
@@ -432,8 +467,22 @@ export function useContinentSync(continent): void;   // publish own world, read 
   spiral slots `CONTINENT_SPACING` apart); territory = nearest anchor. Only a territory's owner
   witnesses there; a note left on someone's land goes to *their* notes.jsonl. Other worlds are
   shifted into this world's coordinates, so chunk keys, targets and tiles stay local everywhere.
+  A save stores a position only on its own land: `samplePlayer()` tags a sample on another
+  territory `visiting:<worldId>`, so no checkpoint writes it, and leaving or switching a continent
+  while visiting (`leaveContinent` / `openHere`) first brings the player to their own door.
 - Y.Doc maps `worlds` / `chunks` / `notes`, keys prefixed `worldId|`; chunks and notes are set once.
-  Everything read from it is zod-checked and re-parsed by the DSL. Cartridge bytes, rules, story,
+  The doc is each machine's own; y-webrtc's room doc stays empty. Entries cross only through
+  `continentGate.ts`, to and from a peer whose hello passed `validateContinentHello`
+  (@shared/continentHello: same code, protocol and physics version); an unverified peer gets our
+  hello and nothing else, and is neither drawn nor counted. Every entry is checked on arrival
+  (`readContinentEntry`, `mayWrite`: a peer writes only its own world and chunks, notes on anyone's
+  land, and never overwrites a chunk or a note), then zod-checked and re-parsed by the DSL.
+- Signaling (`net/signaling.ts`): `signalingServers()` — the per-device list in localStorage
+  `unwritten.signaling` (ws/wss URLs, e.g. y-webrtc's bundled server for a two-process E2E), else
+  `DEFAULT_SIGNALING`; title → System → Signaling servers views, tests (`probeSignaling`: a real
+  publish relayed between two sockets), saves and resets it. A continent retries a handshake stuck
+  for 12 s (`retryStuckSignaling`) and, with no server and no verified peer for 20 s, shows the
+  error `continent-signaling-unreachable` until one answers. Cartridge bytes, rules, story,
   errands and foes never cross; worlds from different cartridges can merge. Positions ride awareness
   in continent tiles. `landModel`/renderers take an optional `TerritoryMap` so each territory is
   drawn and collided with its owner's seed. Offset markers + foreign doors: `engine2d/continentLayer.ts`.
