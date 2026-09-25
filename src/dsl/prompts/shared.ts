@@ -1,0 +1,44 @@
+// Small text helpers shared by the three prompt builders. Everything a prompt interpolates is
+// bounded here: a 4B local model has to read the whole system prompt on every generation, so the
+// covenant, the karma trail and the inventory can never grow it without limit.
+
+import type { Genesis } from "@shared/world";
+import { clampText, truncate } from "../limits";
+
+export const ROLE =
+  "You are the world-generator of the Babel tower in Aether Spire. Write ONLY an OpenUI Lang program using the components below: no prose, no markdown, no code fences, no comments. The first line is the root statement.";
+
+/** One "- item" per line, or `empty` when there is nothing to list. */
+export function bullets(lines: readonly string[], empty: string): string {
+  const clean = lines.map((line) => line.trim()).filter((line) => line !== "");
+  return clean.length === 0 ? empty : clean.map((line) => `- ${line}`).join("\n");
+}
+
+/** The newest `max` lines, each cut to `width` characters — the prompt budget is finite. */
+export function recent(lines: readonly string[], max: number, width: number): string[] {
+  const clean = lines.map((line) => clampText(line, width)).filter((line) => line !== "");
+  return truncate(clean.slice(-max), max);
+}
+
+/** "Japanese (ja-JP)" when the runtime knows the tag, otherwise the raw BCP-47 tag. */
+export function languageName(tag: string): string {
+  try {
+    const name = new Intl.DisplayNames(["en"], { type: "language" }).of(tag);
+    return name === undefined || name === tag ? tag : `${name} (${tag})`;
+  } catch {
+    return tag;
+  }
+}
+
+export function languageRule(genesis: Genesis): string {
+  return `Write every word the player reads — floor and NPC names, quest text, weaknesses, lines, labels — in ${languageName(genesis.language)}. Ids, event names, archetype words and mesh part names stay ascii snake_case.`;
+}
+
+export function covenant(genesis: Genesis): string {
+  return [
+    `Archetype: ${genesis.archetype}. Physics: ${genesis.physics}. Language: ${languageName(genesis.language)}. Seed: ${genesis.seed}.`,
+    `The covenant the player swore: "${clampText(genesis.intent, 180)}"`,
+  ].join("\n");
+}
+
+export const section = (title: string, body: string): string => `## ${title}\n${body}`;

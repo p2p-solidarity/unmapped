@@ -1,0 +1,74 @@
+{
+  "name": "aether-spire",
+  "productName": "Aether Spire",
+  "version": "0.1.0",
+  "description": "Electron desktop engine for LLM-generated, player-owned autonomous worlds (OpenUI Lang DSL + Three.js + P2P + passkey saves)",
+  "private": true,
+  "type": "module",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json && tsc --noEmit -p tsconfig.test.json",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "lines": "node scripts/check-lines.mjs",
+    "test": "vitest run",
+    "check": "bun run typecheck && bun run lint && bun run lines && bun run test",
+    "dist": "electron-vite build && electron-builder"
+  },
+  "dependencies": {
+    "@deepseek-ai/cordis": "^4.0.2",
+    "@openuidev/lang-core": "^0.3.0",
+    "@openuidev/react-lang": "^0.3.0",
+    "@react-three/drei": "^10.7.8",
+    "@react-three/fiber": "^9.7.0",
+    "@react-three/rapier": "^2.2.0",
+    "chokidar": "^5.0.0",
+    "dotenv": "^17.2.0",
+    "fflate": "^0.8.2",
+    "js-yaml": "^4.1.0",
+    "openai": "^7.15.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "three": "^0.186.0",
+    "viem": "^2.56.5",
+    "y-webrtc": "^10.3.0",
+    "yjs": "^13.6.32",
+    "zod": "^4.6.5",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.13",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@types/three": "^0.186.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "electron": "^44.3.0",
+    "electron-builder": "^26.15.3",
+    "electron-vite": "^5.0.0",
+    "typescript": "^5.9.0",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.0"
+  },
+  "build": {
+    "appId": "gg.solidarity.aetherspire",
+    "productName": "Aether Spire",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.games"
+    }
+  }
+}

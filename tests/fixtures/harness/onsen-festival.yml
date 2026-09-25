@@ -1,0 +1,32 @@
+name: onsen-festival
+version: 0.1.0
+author: kidney.eth
+description: Every floor gets a hot-spring town undercurrent and a lantern ritual.
+inject: []
+prompt:
+  - { name: onsen-lore, order: 420, file: prompt/lore.md }
+tools:
+  - name: light_lanterns
+    description: Light the festival lanterns; the sky warms and the fog thins.
+    parameters:
+      hue:
+        type: string
+        enum: ["#f2b06a", "#f2a0b0", "#8fd6a8"]
+        required: true
+        description: The lantern colour, as hex.
+      density:
+        type: number
+        minimum: 0
+        maximum: 0.2
+    effect:
+      kind: mutate_world
+      skyColor: "{{hue}}"
+      fogDensity: "{{density}}"
+      biome: onsen_town
+  - name: offer_towel
+    description: Hand the player a festival towel.
+    parameters: {}
+    effect:
+      kind: grant_materials
+      materials: [festival towel]
+skills: [skills]

@@ -1,0 +1,3 @@
+root = Scene("Wrong Parts", "meadow", [ground, wizard1])
+ground = Floor(10, 10, "grass")
+wizard1 = Wizard("gandalf", 2, 2)

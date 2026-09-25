@@ -1,0 +1,13 @@
+name: Onsen Festival
+version: one
+prompt:
+  - { name: lore, order: 120, file: ../../../etc/passwd }
+  - { name: lore, order: 450, file: prompt/lore.md }
+tools:
+  - name: LightLanterns
+    description: ""
+    parameters:
+      hue: { type: colour }
+    effect:
+      kind: explode_world
+skills: ["../escape"]

@@ -1,0 +1,416 @@
+/* Out-of-world screens: title menu, sub-panels, forge, workspace. Palette comes from the --g-*
+   variables (ui/tokens.ts cssVars) — no hex literals here (Rule 3). Deliberately quiet: one moving
+   key art, a menu, no glow. */
+
+.g-shell {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--g-bg);
+  color: var(--g-text);
+}
+
+.g-shell__art {
+  position: absolute;
+  inset: -5%;
+  background-size: cover;
+  background-position: center;
+  animation: g-drift 40s ease-in-out infinite alternate;
+}
+
+.g-shell__shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(8, 8, 10, 0.88) 0%, rgba(8, 8, 10, 0.45) 38%, transparent 70%),
+    linear-gradient(0deg, rgba(8, 8, 10, 0.8) 0%, transparent 35%);
+}
+
+.g-stage {
+  position: absolute;
+  inset: 0;
+  padding: 56px 72px 72px;
+  overflow: hidden;
+}
+
+.g-hints {
+  position: absolute;
+  right: 28px;
+  bottom: 16px;
+  display: flex;
+  gap: 2px;
+}
+
+.g-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 0;
+  background: transparent;
+  color: var(--g-dim);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.g-hint:disabled {
+  cursor: default;
+}
+
+.g-hint:not(:disabled):hover {
+  color: var(--g-text);
+}
+
+.g-hint span {
+  margin-left: 3px;
+}
+
+.g-scroll {
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--g-border) transparent;
+}
+
+.g-enter {
+  animation: g-fade 240ms ease-out;
+}
+
+.g-heading {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--g-muted);
+}
+
+.g-meta {
+  font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  color: var(--g-dim);
+  overflow-wrap: anywhere;
+}
+
+/* ── Title menu ────────────────────────────────────────────────────────── */
+
+.title {
+  display: grid;
+  grid-template-columns: minmax(260px, 380px) minmax(0, 1fr);
+  gap: 64px;
+  height: 100%;
+}
+
+.title__left {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 0;
+}
+
+.title__logo {
+  margin: 0;
+  font-size: clamp(38px, 4.6vw, 64px);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--g-text);
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.7);
+}
+
+.title__menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: -40px;
+}
+
+.title__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-self: end;
+  max-height: 100%;
+  min-height: 0;
+  width: min(720px, 100%);
+  justify-self: end;
+}
+
+/* ── Cartridges ────────────────────────────────────────────────────────── */
+
+.carts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cart-row > span {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.cart-row strong {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--g-border);
+}
+
+.route {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  color: var(--g-muted);
+  font-size: 13px;
+}
+
+.route span::before {
+  content: "◆ ";
+  color: var(--g-dim);
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.info-list {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 8px 16px;
+  margin: 0;
+}
+
+.info-list dt {
+  color: var(--g-dim);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.info-list dd {
+  margin: 0;
+  color: var(--g-muted);
+  font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+/* ── Forge ─────────────────────────────────────────────────────────────── */
+
+.forge {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  height: 100%;
+  max-width: 1080px;
+}
+
+.forge-steps {
+  display: flex;
+  gap: 28px;
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.forge-step {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  color: var(--g-dim);
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.forge-step[data-current="true"] {
+  color: var(--g-text);
+  border-bottom-color: var(--g-text);
+}
+
+.forge-body {
+  flex: 1;
+  min-height: 0;
+}
+
+.forge-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.forge-grid--materials {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.forge-grid--acts {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.forge-grid--brief {
+  grid-template-columns: minmax(0, 1.3fr) minmax(240px, 0.7fr);
+  gap: 24px;
+}
+
+.tile-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tile-body strong {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.tile-body small {
+  color: var(--g-dim);
+  font-size: 12px;
+}
+
+.act-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.forge-foot {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.forging {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: rgba(8, 8, 10, 0.78);
+}
+
+.forging__bar {
+  width: min(360px, 70vw);
+  height: 2px;
+  background: var(--g-border);
+  overflow: hidden;
+}
+
+.forging__bar i {
+  display: block;
+  height: 100%;
+  background: var(--g-text);
+  transition: width 400ms ease;
+}
+
+/* ── Workspace ─────────────────────────────────────────────────────────── */
+
+.ws {
+  display: grid;
+  grid-template-columns: minmax(180px, 230px) minmax(0, 1fr) minmax(220px, 270px);
+  gap: 24px;
+  height: 100%;
+}
+
+.ws__col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+.ws__editor {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  resize: none;
+  padding: 16px;
+  border: 1px solid var(--g-border);
+  background: rgba(8, 8, 10, 0.86);
+  color: var(--g-text);
+  font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.55;
+  tab-size: 2;
+}
+
+.ws__editor:focus {
+  outline: none;
+  border-color: var(--g-muted);
+}
+
+/* ── Motion ────────────────────────────────────────────────────────────── */
+
+@keyframes g-drift {
+  from {
+    transform: scale(1) translate(0, 0);
+  }
+  to {
+    transform: scale(1.08) translate(-2%, -1%);
+  }
+}
+
+@keyframes g-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (max-width: 900px) {
+  .g-stage {
+    padding: 28px 24px 64px;
+    overflow-y: auto;
+  }
+
+  .title,
+  .ws,
+  .forge-grid--acts,
+  .forge-grid--brief,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .title {
+    height: auto;
+    gap: 32px;
+  }
+
+  .title__menu {
+    margin-left: -24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

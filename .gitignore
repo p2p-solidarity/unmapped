@@ -1,0 +1,9 @@
+node_modules/
+out/
+dist/
+.vitest/
+.env
+*.gguf
+models/
+*.tsbuildinfo
+.DS_Store

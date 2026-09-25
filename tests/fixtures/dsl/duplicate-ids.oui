@@ -1,0 +1,4 @@
+root = Scene("Twins", "meadow", [ground, a1, a2])
+ground = Floor(10, 10, "grass")
+a1 = NPC("twin", "First", 2, 2, "child", "joyful", "#ffffff")
+a2 = NPC("twin", "Second", 3, 3, "child", "wary", "#eeeeee")

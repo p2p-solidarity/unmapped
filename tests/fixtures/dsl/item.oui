@@ -1,0 +1,1 @@
+root = Item("steam_ladle", "Steam Ladle", "tool", 38, "Draws hot water from any stone.", "The hand that holds it never feels cold again.", ["shaft_bamboo", "shell_round", "core_ember", "not_a_real_part"], ["water", "Restoration", "water"], "Bent from the inn's last good ladle and a promise to Hana.")

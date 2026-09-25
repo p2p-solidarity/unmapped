@@ -1,0 +1,24 @@
+name: onsen-festival
+version: 0.1.0
+author: kidney.eth
+description: Every floor carries a hot-spring town undercurrent, and the lanterns can be lit.
+inject: []
+prompt:
+  - { name: onsen-lore, order: 420, file: prompt/lore.md }
+tools:
+  - name: light_lanterns
+    description: >-
+      Light the festival lanterns. The sky takes the lantern colour, the fog thins, and the floor
+      reads as a hot-spring town. Call this only when the player has actually done something that
+      would light them.
+    parameters:
+      color:
+        type: string
+        description: Lantern colour as a #rrggbb hex string, e.g. "#ffb347" for amber.
+        required: true
+    effect:
+      kind: mutate_world
+      skyColor: "{{color}}"
+      fogDensity: 0.012
+      biome: onsen_town
+skills: [skills]

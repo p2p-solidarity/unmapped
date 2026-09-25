@@ -1,0 +1,16 @@
+<think>
+The player asked for a quiet floor, so I will keep the monsters small.
+I should write Floor first... no, root first.
+</think>
+Here is the next floor of the tower:
+
+```openui
+root = Scene("Quiet Field", "meadow", [ground, sky1, sun1, gate, flower1])
+ground = Floor(12, 12, "grass")
+sky1 = Sky("#9fc7ff", "#cfe3ff", 0.02)
+sun1 = Light("sun", "#fff3d0", 1.2)
+gate = Exit(11, 6, "Stair of Soft Rain")
+flower1 = Prop("flower", 4, 4)
+```
+
+Enjoy the floor!

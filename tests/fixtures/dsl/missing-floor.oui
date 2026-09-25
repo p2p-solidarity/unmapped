@@ -1,0 +1,4 @@
+root = Scene("No Ground", "sky_isle", [sky1, lamp1, gate])
+sky1 = Sky("#9fc7ff", "#cfe3ff", 0.02)
+lamp1 = Light("ambient", "#ffffff", 1.2)
+gate = Exit(3, 3, "Nowhere")

@@ -1,0 +1,2 @@
+root = Dialogue("kenji_smith", "Do not touch the anvil.", [c1])
+c1 = Choice("Swing at Kenji", "fight", "Kenji breaks the stranger's wrist.", [])

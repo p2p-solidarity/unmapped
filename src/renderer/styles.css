@@ -1,0 +1,106 @@
+/* Reset only. Colours and type live in ui/tokens.ts — no literals here (Rule 3); main.tsx paints
+   the body from the tokens. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+}
+
+canvas {
+  display: block;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* ── Primitive states. Palette arrives as --g-* vars (tokens.cssVars) set on #root. ── */
+
+.ui-btn {
+  transition:
+    color 140ms ease,
+    background 140ms ease,
+    border-color 140ms ease,
+    transform 90ms ease;
+  user-select: none;
+}
+
+.ui-btn:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+.ui-btn:focus-visible {
+  outline: 1px solid var(--g-accent);
+  outline-offset: 2px;
+}
+
+.ui-btn[data-variant="secondary"]:not(:disabled):hover,
+.ui-btn[data-variant="tile"]:not(:disabled):hover {
+  border-color: var(--g-muted);
+}
+
+.ui-btn[data-variant="menu"]:focus-visible {
+  outline: none;
+}
+
+.ui-btn[data-variant="menu"]::before {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  border-block: 6px solid transparent;
+  border-left: 9px solid var(--g-text);
+  transform: translate(-6px, -50%);
+  opacity: 0;
+  transition:
+    transform 160ms ease,
+    opacity 160ms ease;
+}
+
+.ui-btn[data-variant="menu"][data-active="true"]::before {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+
+.ui-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-size: 10px;
+  line-height: 1;
+  opacity: 0.7;
+}
