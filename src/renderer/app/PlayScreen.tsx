@@ -63,7 +63,7 @@ export function PlayScreen() {
   const runScore = useRunStore((state) => state.score);
   const runKills = useRunStore((state) => state.kills);
   const resetRun = useRunStore((state) => state.reset);
-  const { advance, retry, stay, descend } = useFloorAdvance();
+  const { advance, retry, stay, cancel, descend } = useFloorAdvance();
   const t = useT();
   const inDepths = useSessionStore(
     (state) => state.activeInstance?.instance.save.endless !== undefined,
@@ -124,9 +124,14 @@ export function PlayScreen() {
             {busy}
           </Text>
           {legacy ? (
-            <Text variant="body" tone="muted">
-              The model is writing this floor in OpenUI Lang…
-            </Text>
+            <>
+              <Text variant="body" tone="muted">
+                The main process is generating and validating this scene before it appears.
+              </Text>
+              <Button variant="ghost" onClick={cancel}>
+                Cancel generation
+              </Button>
+            </>
           ) : null}
         </OverlayCard>
       )}

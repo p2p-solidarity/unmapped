@@ -41,6 +41,11 @@ import type {
   WitnessedChunk,
 } from "@shared/land";
 import type {
+  GenerationEvent,
+  SceneArtifact,
+  SceneGenerationRequest,
+} from "@shared/scene-generation";
+import type {
   ChatEvent,
   ChatRequest,
   InferenceConfig,
@@ -150,6 +155,10 @@ const api: SeedApi = {
       invoke<Result<CartridgeManifest>>(IPC.workspaces.publish, input),
   },
   inference: {
+    appleLocalCapabilities: () =>
+      invoke<Result<import("@shared/scene-generation").ProviderCapabilities>>(
+        IPC.inference.appleLocalCapabilities,
+      ),
     getConfig: () => invoke<InferenceConfig>(IPC.inference.getConfig),
     setConfig: (config: InferenceConfig) =>
       invoke<Result<InferenceConfig>>(IPC.inference.setConfig, config),
@@ -158,6 +167,12 @@ const api: SeedApi = {
     abort: (requestId: string) => invoke<void>(IPC.inference.abort, requestId),
     onEvent: (listener: (event: ChatEvent) => void) =>
       subscribe<ChatEvent>(IPC.inference.event, listener),
+    generateScene: (request: SceneGenerationRequest) =>
+      invoke<Result<SceneArtifact>>(IPC.inference.sceneGenerate, request),
+    cancelScene: (requestId: string) =>
+      invoke<Result<void>>(IPC.inference.sceneCancel, requestId),
+    onSceneEvent: (listener: (event: GenerationEvent) => void) =>
+      subscribe<GenerationEvent>(IPC.inference.sceneEvent, listener),
     sidecarStart: () => invoke<Result<SidecarStatus>>(IPC.inference.sidecarStart),
     sidecarStop: () => invoke<Result<void>>(IPC.inference.sidecarStop),
     sidecarStatus: () => invoke<SidecarStatus>(IPC.inference.sidecarStatus),

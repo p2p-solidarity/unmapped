@@ -1,13 +1,13 @@
 {
-  "name": "aether-spire",
-  "productName": "Aether Spire",
+  "name": "unwritten-land",
+  "productName": "Unwritten Land",
   "version": "0.1.0",
   "description": "Electron desktop engine for LLM-generated, player-owned autonomous worlds (OpenUI Lang DSL + Three.js + P2P + passkey saves)",
   "private": true,
   "type": "module",
   "main": "./out/main/index.js",
   "scripts": {
-    "dev": "electron-vite dev",
+    "dev": "node scripts/build-afm-bridge.mjs debug && electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json && tsc --noEmit -p tsconfig.test.json",
@@ -16,7 +16,11 @@
     "lines": "node scripts/check-lines.mjs",
     "test": "vitest run",
     "check": "bun run typecheck && bun run lint && bun run lines && bun run test",
-    "dist": "electron-vite build && electron-builder"
+    "demo:cartridges": "bun --tsconfig-override tsconfig.test.json scripts/demo-cartridges.mjs",
+    "eval:afm-provider": "bun --tsconfig-override tsconfig.test.json native/afm-bridge/Eval/provider-run.ts",
+    "eval:afm-main": "node scripts/build-afm-bridge.mjs debug && electron-vite build && node scripts/eval-afm-main.mjs",
+    "afm:build": "node scripts/build-afm-bridge.mjs debug",
+    "dist": "node scripts/build-afm-bridge.mjs release && electron-vite build && electron-builder"
   },
   "dependencies": {
     "@deepseek-ai/cordis": "^4.0.2",
@@ -55,8 +59,8 @@
     "vitest": "^5.0.0"
   },
   "build": {
-    "appId": "gg.solidarity.aetherspire",
-    "productName": "Aether Spire",
+    "appId": "gg.solidarity.unwrittenland",
+    "productName": "Unwritten Land",
     "directories": {
       "output": "dist"
     },
@@ -65,6 +69,12 @@
       "package.json"
     ],
     "mac": {
+      "extraResources": [
+        {
+          "from": "native/afm-bridge/.build/release/afm-bridge",
+          "to": "afm-bridge"
+        }
+      ],
       "target": [
         "dmg"
       ],

@@ -28,6 +28,12 @@ import type {
 import type { ChatEvent, ChatRequest, InferenceConfig, ProbeResult, SidecarStatus } from "./llm";
 import type { ModBundle, ModSummary } from "./mods";
 import type { Result } from "./result";
+import type {
+  GenerationEvent,
+  ProviderCapabilities,
+  SceneArtifact,
+  SceneGenerationRequest,
+} from "./scene-generation";
 import type { Genesis, WorldFile, WorldMeta } from "./world";
 
 export const IPC = {
@@ -87,12 +93,16 @@ export const IPC = {
     publish: "workspaces:publish",
   },
   inference: {
+    appleLocalCapabilities: "inference:apple-local-capabilities",
     getConfig: "inference:get-config",
     setConfig: "inference:set-config",
     probe: "inference:probe",
     chat: "inference:chat",
     abort: "inference:abort",
     event: "inference:event",
+    sceneGenerate: "inference:scene-generate",
+    sceneCancel: "inference:scene-cancel",
+    sceneEvent: "inference:scene-event",
     sidecarStart: "inference:sidecar-start",
     sidecarStop: "inference:sidecar-stop",
     sidecarStatus: "inference:sidecar-status",
@@ -273,6 +283,7 @@ export interface SeedApi {
     publish(input: PublishWorkspaceInput): Promise<Result<CartridgeManifest>>;
   };
   inference: {
+    appleLocalCapabilities(): Promise<Result<ProviderCapabilities>>;
     getConfig(): Promise<InferenceConfig>;
     setConfig(config: InferenceConfig): Promise<Result<InferenceConfig>>;
     probe(): Promise<Result<ProbeResult>>;
@@ -280,6 +291,10 @@ export interface SeedApi {
     chat(request: ChatRequest): Promise<Result<void>>;
     abort(requestId: string): Promise<void>;
     onEvent(listener: (event: ChatEvent) => void): () => void;
+    /** Runs the provider-neutral main-process scene artifact pipeline. */
+    generateScene(request: SceneGenerationRequest): Promise<Result<SceneArtifact>>;
+    cancelScene(requestId: string): Promise<Result<void>>;
+    onSceneEvent(listener: (event: GenerationEvent) => void): () => void;
     sidecarStart(): Promise<Result<SidecarStatus>>;
     sidecarStop(): Promise<Result<void>>;
     sidecarStatus(): Promise<SidecarStatus>;

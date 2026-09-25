@@ -3,11 +3,12 @@
 // screen says so and offers nothing prebuilt (Rule 2). The full authoring flow lives behind Remix.
 
 import worldForgeArt from "@renderer/assets/generated/world-forge.png";
+import { generationEventLabel } from "@renderer/narrative/sceneGeneration";
 import { makeWorld, type NewWorldStage } from "@renderer/narrative/newWorld";
 import { useInferenceStore, useSessionStore } from "@renderer/state";
 import { Button, ErrorBlock, Surface, space, Text, TextField } from "@renderer/ui";
 import type { AppError } from "@shared/result";
-import { type JSX, useEffect, useState } from "react";
+import { type JSX, useEffect, useRef, useState } from "react";
 import { useRefreshProbe } from "./inferenceSync";
 import { GameShell } from "./shell/GameShell";
 import { openInstance } from "./useInstanceLoader";
@@ -30,6 +31,8 @@ export function NewWorldScreen(): JSX.Element {
   const [language, setLanguage] = useState(navigator.language);
   const [stage, setStage] = useState<NewWorldStage | null>(null);
   const [error, setError] = useState<AppError | null>(null);
+  const [generationProgress, setGenerationProgress] = useState<string | null>(null);
+  const generation = useRef<AbortController | null>(null);
   const refreshProbe = useRefreshProbe();
 
   // The probe on screen may be from app start; look again the moment the player wants a world.
@@ -54,9 +57,20 @@ export function NewWorldScreen(): JSX.Element {
 
   const make = (): void => {
     setError(null);
-    void makeWorld({ name, intent, language }, setStage).then((result) => {
+    setGenerationProgress(null);
+    const controller = new AbortController();
+    generation.current = controller;
+    void makeWorld(
+      { name, intent, language },
+      setStage,
+      (event) => setGenerationProgress(generationEventLabel(event)),
+      controller.signal,
+    ).then((result) => {
+      generation.current = null;
       setStage(null);
+      setGenerationProgress(null);
       if (!result.ok) {
+        if (result.error.code === "request-aborted") return;
         setError(result.error);
         return;
       }
@@ -123,9 +137,14 @@ export function NewWorldScreen(): JSX.Element {
           {error === null ? null : <ErrorBlock error={error} />}
           {stage === null ? null : (
             <Text variant="body" tone="accent">
-              {STAGES[stage]}
+              {generationProgress ?? STAGES[stage]}
             </Text>
           )}
+          {stage === "origin" ? (
+            <Button variant="ghost" onClick={() => generation.current?.abort()}>
+              Cancel generation
+            </Button>
+          ) : null}
           <Button variant="primary" fullWidth disabled={!ready} onClick={make}>
             {error === null ? "Make this world" : "Try again"}
           </Button>

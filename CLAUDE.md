@@ -1,4 +1,4 @@
-# Aether Spire — Electron engine for player-owned, LLM-generated worlds
+# Unwritten Land — Electron engine for player-owned, LLM-generated worlds
 
 Desktop-first (Electron) implementation of `plan.md`: the model writes a tiny **OpenUI Lang
 dialect** (our game DSL), a parser is the source of truth, Three.js renders it, published content
@@ -221,6 +221,12 @@ export function GameCanvas(): JSX.Element;   // full-viewport R3F canvas; reads 
 - `usePlatformStore.drafts` are unsaved editor **drafts**: rendered translucent (with colliders
   so they can be test-jumped) until the editor's "Apply" bakes them into the scene via
   `serializeScene`. The engine never reads world state from localStorage.
+- **Open land** (`plan.md` §4): a kit whose `GameplayKitBehavior.open` is true (`tps_exploration@1`)
+  has no floor edge. `<ChunkField>` streams 32 × 32-tile chunks around the player (5 × 5 drawn,
+  3 × 3 with colliders) from `@shared/chunks` — deterministic from `seedFromText(cartridgeId)` +
+  chunk coordinates, never stored, never the model. The authored scene is chunk (0, 0). The sun
+  follows the player and fog has a floor that hides the rim. `engineStore.chunk` is the HUD's
+  `LAND cx · cz`; it is null in a bounded scene.
 - The scene contract locks the kit and camera: TPS orbit, FPS pointer-lock + reticle + flashlight,
   2.5D side movement, and top-down board movement. Players cannot cycle away from the contract.
 - Movement and interaction ignore input while `inputLocked`.

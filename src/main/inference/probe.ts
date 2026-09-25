@@ -4,7 +4,8 @@
 import type { InferenceConfig, ProbeResult } from "@shared/llm";
 import { ok, type Result } from "@shared/result";
 
-export const PROBE_TIMEOUT_MS = 3000;
+/** The first request out of a cold main process pays DNS and TLS; 3 s was not always enough. */
+export const PROBE_TIMEOUT_MS = 8000;
 
 interface ModelsBody {
   data?: { id?: unknown; owned_by?: unknown }[];

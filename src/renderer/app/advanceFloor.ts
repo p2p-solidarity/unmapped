@@ -4,10 +4,11 @@
 // input lock and the overlay read the same value instead of each re-deriving it.
 
 import { translate } from "@renderer/i18n";
-import { generateScene } from "@renderer/narrative";
+import { generateSceneArtifact, generationEventLabel } from "@renderer/narrative";
 import { requestRoomTransition } from "@renderer/net/sync";
 import { useEngineStore, useRunStore, useSessionStore, useWorldStore } from "@renderer/state";
 import { ready } from "@shared/result";
+import { assetsForScene } from "@shared/assets";
 import { WORLD_FILES } from "@shared/world";
 import { useCallback } from "react";
 import { hasDepths } from "./endlessScene";
@@ -23,9 +24,12 @@ export interface FloorAdvanceApi {
   advance(to: string, targetSceneId: string | null): void;
   retry(): void;
   stay(): void;
+  cancel(): void;
   /** Below the ending: the next generated floor of the endless depths. */
   descend(): void;
 }
+
+let activeFloorGeneration: AbortController | null = null;
 
 export function busyLabel(floor: number): string {
   return `Weaving floor ${floor}…`;
@@ -151,19 +155,57 @@ function start(to: string, targetSceneId: string | null): void {
     return;
   }
   const floor = world.floor + 1;
+  if (world.scene.status !== "ready") {
+    session.toast("danger", "The current scene is not ready to expand.");
+    return;
+  }
+  const currentScene = world.scene.value;
   session.setFloorFailure(null);
   session.setBusy(busyLabel(floor));
+  const controller = new AbortController();
+  activeFloorGeneration = controller;
   void (async () => {
-    const result = await generateScene({
-      genesis,
-      floor,
-      karma: world.karma,
-      previousExit: to,
-      inventory: world.inventory,
-    });
+    const requestId = crypto.randomUUID();
+    const result = await generateSceneArtifact(
+      {
+        intent: {
+          requestId,
+          purpose: "expand-room",
+          sceneId: `floor-${floor}`,
+          language: genesis.language,
+          brief: [
+            `Expand this world into floor ${floor}.`,
+            `World intent: ${genesis.intent}`,
+            `The player arrived through the exit labelled "${to}".`,
+            "Preserve continuity with the current room and create a complete next room.",
+          ]
+            .join("\n")
+            .slice(0, 2_000),
+        },
+        state: {
+          worldPlan: null,
+          currentSceneSource: world.sceneSource,
+          flags: meta.flags,
+          inventory: world.inventory.items,
+          assetCatalog: assetsForScene(currentScene),
+          capabilityProfile: { entries: [] },
+        },
+        maxRepairAttempts: 2,
+      },
+      (event) => {
+        const label = generationEventLabel(event);
+        if (label !== null) useSessionStore.getState().setBusy(label);
+      },
+      controller.signal,
+    );
+    if (activeFloorGeneration === controller) activeFloorGeneration = null;
     const session2 = useSessionStore.getState();
     session2.setBusy(null);
     if (!result.ok) {
+      if (result.error.code === "request-aborted") {
+        session2.toast("info", "Scene generation cancelled.");
+        return;
+      }
       session2.setFloorFailure({ to, floor, error: result.error });
       return;
     }
@@ -197,7 +239,14 @@ export function useFloorAdvance(): FloorAdvanceApi {
     useSessionStore.getState().setFloorFailure(null);
   }, []);
 
+  const cancel = useCallback(() => {
+    const controller = activeFloorGeneration;
+    if (controller === null) return;
+    useSessionStore.getState().setBusy("Cancelling scene generation…");
+    controller.abort();
+  }, []);
+
   const descend = useCallback(() => descendInstance(), []);
 
-  return { advance, retry, stay, descend };
+  return { advance, retry, stay, cancel, descend };
 }

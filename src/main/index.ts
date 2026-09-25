@@ -6,6 +6,10 @@ import { join, resolve } from "node:path";
 import { app, BrowserWindow } from "electron";
 import type { MainContext } from "./context";
 import { loadEnv } from "./env";
+import {
+  createManagedAppleLocalSceneProvider,
+  resolveAppleLocalHelperPath,
+} from "./inference/appleLocalHelper";
 import { registerIpc } from "./ipc";
 import { applyCsp, createWindow } from "./window";
 
@@ -21,9 +25,10 @@ type Cleanup = () => Promise<void> | void;
 const cleanups: Cleanup[] = [];
 let shuttingDown = false;
 
-function createContext(): MainContext {
+function createContext(appleLocalProvider: MainContext["appleLocalProvider"]): MainContext {
   const userData = app.getPath("userData");
   return {
+    appleLocalProvider,
     userData,
     worldsDir: join(userData, "worlds"),
     cartridgesDir: join(userData, "cartridges"),
@@ -59,12 +64,40 @@ app.on("window-all-closed", () => {
 });
 
 async function boot(): Promise<void> {
-  const ctx = createContext();
+  const appleLocalProvider =
+    process.platform === "darwin"
+      ? createManagedAppleLocalSceneProvider({
+          helperPath: resolveAppleLocalHelperPath({
+            isPackaged: app.isPackaged,
+            appPath: app.getAppPath(),
+            resourcesPath: process.resourcesPath,
+          }),
+          onBeforeQuit(cleanup) {
+            cleanups.push(cleanup);
+          },
+        })
+      : null;
+  const ctx = createContext(appleLocalProvider);
   await Promise.all(
     [ctx.worldsDir, ctx.cartridgesDir, ctx.instancesDir, ctx.workspacesDir, ctx.profilesDir].map(
       (directory) => mkdir(directory, { recursive: true }),
     ),
   );
+  if (appleLocalProvider !== null) {
+    const capabilities = await appleLocalProvider.capabilities();
+    if (process.env.AETHER_AFM_MAIN_SMOKE === "1") {
+      process.stdout.write(`AFM_MAIN_SMOKE ${JSON.stringify(capabilities)}\n`);
+      app.quit();
+      return;
+    }
+    if (!capabilities.ok) {
+      process.stderr.write(
+        `[apple-local] ${capabilities.error.code}: ${capabilities.error.message}\n`,
+      );
+    } else if (!capabilities.value.available) {
+      process.stderr.write(`[apple-local] unavailable: ${capabilities.value.unavailableReason}\n`);
+    }
+  }
   applyCsp();
   registerIpc(ctx);
   createWindow();

@@ -2,9 +2,12 @@
 // A missing or corrupt file is not an error — it falls back to the default provider so the app
 // still boots (Rule 5: errors are values, and this one has an obvious recovery).
 
+import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import {
+  APPLE_FM_BINARY,
+  APPLE_FM_SIDECAR,
   type InferenceConfig,
   PROVIDER_KINDS,
   PROVIDER_PRESETS,
@@ -39,6 +42,7 @@ const TRUSTED_API_KEY_ENVS = {
 const TRUSTED_SIDECAR_PATHS = new Set([
   "/opt/homebrew/bin/llama-server",
   "/usr/local/bin/llama-server",
+  APPLE_FM_BINARY,
 ]);
 
 /**
@@ -111,7 +115,12 @@ export function isTrustedInferenceConfig(config: InferenceConfig): boolean {
   } else if (config.kind === "openui-gateway") {
     if (config.apiKeyEnv !== TRUSTED_API_KEY_ENVS["openui-gateway"]) return false;
     if (!sameEndpoint(config.baseUrl, PROVIDER_PRESETS["openui-gateway"].baseUrl)) return false;
-  } else if (config.kind === "llamacpp" || config.kind === "ollama" || config.kind === "vllm") {
+  } else if (
+    config.kind === "llamacpp" ||
+    config.kind === "ollama" ||
+    config.kind === "vllm" ||
+    config.kind === "apple-fm"
+  ) {
     if (config.apiKeyEnv !== null || !isLoopbackEndpoint(config.baseUrl)) return false;
   } else if (config.kind === "custom") {
     if (config.apiKeyEnv !== null) return false;
@@ -136,11 +145,16 @@ export function configPath(userData: string): string {
  * Cloud when a key is already in the environment, otherwise the local llama.cpp sidecar.
  * An env var that exists but is empty counts as absent — an empty key cannot authenticate.
  */
-export function defaultConfig(env: EnvLike = process.env): InferenceConfig {
+export function defaultConfig(
+  env: EnvLike = process.env,
+  hasAppleFm: boolean = existsSync(APPLE_FM_BINARY),
+): InferenceConfig {
   const key = env.OPENAI_API_KEY;
   if (typeof key === "string" && key.length > 0) {
     return { ...PROVIDER_PRESETS.openai, sidecar: null };
   }
+  // No cloud key: the on-device Apple model when this Mac has it, else a local llama.cpp.
+  if (hasAppleFm) return { ...PROVIDER_PRESETS["apple-fm"], sidecar: { ...APPLE_FM_SIDECAR } };
   return { ...PROVIDER_PRESETS.llamacpp, sidecar: { ...DEFAULT_SIDECAR } };
 }
 
@@ -161,7 +175,7 @@ export function parseConfig(raw: unknown): Result<InferenceConfig> {
     return fail({
       code: "untrusted-config",
       message: "This inference endpoint or credential source is not trusted.",
-      hint: "Use the OpenAI or OpenUI preset, a loopback local server, or a keyless custom endpoint; sidecars must be llama-server.",
+      hint: "Use the OpenAI or OpenUI preset, a loopback local server, or a keyless custom endpoint; sidecars must be llama-server or Apple's fm.",
     });
   }
   return ok(parsed.data);

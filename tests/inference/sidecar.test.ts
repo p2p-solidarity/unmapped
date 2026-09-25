@@ -26,6 +26,20 @@ describe("sidecarArgs", () => {
     ]);
   });
 
+  it("drops terminal colour codes from captured output", () => {
+    const buffer = createRingBuffer();
+    buffer.push("\u001b[38;2;255;107;128mYOU HAVE NOT AGREED\u001b[0m\n");
+    expect(buffer.tail()).toBe("YOU HAVE NOT AGREED");
+  });
+
+  it("runs Apple's model as fm serve on the configured port", () => {
+    expect(sidecarArgs({ ...config, binaryPath: "/usr/bin/fm", port: 11535 })).toEqual([
+      "serve",
+      "--port",
+      "11535",
+    ]);
+  });
+
   it("carries a custom port and context size through as strings", () => {
     const args = sidecarArgs({ ...config, port: 9099, ctxSize: 4096 });
     expect(args[args.indexOf("--port") + 1]).toBe("9099");

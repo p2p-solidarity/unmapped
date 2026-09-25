@@ -22,8 +22,15 @@ describe("defaultConfig", () => {
     expect(config.sidecar).toBeNull();
   });
 
+  it("uses Apple's on-device model when the key is absent and fm exists", () => {
+    const config = defaultConfig({}, true);
+    expect(config.kind).toBe("apple-fm");
+    expect(config.sidecar?.binaryPath).toBe("/usr/bin/fm");
+    expect(parseConfig(config).ok).toBe(true);
+  });
+
   it("falls back to llama.cpp with a sidecar when the key is absent", () => {
-    const config = defaultConfig({});
+    const config = defaultConfig({}, false);
     expect(config.kind).toBe("llamacpp");
     expect(config.apiKeyEnv).toBeNull();
     expect(config.sidecar).toEqual({
@@ -35,7 +42,7 @@ describe("defaultConfig", () => {
   });
 
   it("treats an empty OPENAI_API_KEY as absent", () => {
-    expect(defaultConfig({ OPENAI_API_KEY: "" }).kind).toBe("llamacpp");
+    expect(defaultConfig({ OPENAI_API_KEY: "" }, false).kind).toBe("llamacpp");
   });
 });
 
@@ -125,13 +132,13 @@ describe("parseConfig", () => {
 describe("loadConfig / saveConfig", () => {
   it("returns the default when the file is missing", async () => {
     const dir = await tmp();
-    await expect(loadConfig(dir, {})).resolves.toMatchObject({ kind: "llamacpp" });
+    await expect(loadConfig(dir, {})).resolves.toEqual(defaultConfig({}));
   });
 
   it("returns the default when the file is invalid JSON", async () => {
     const dir = await tmp();
     await writeFile(configPath(dir), "{ not json", "utf8");
-    await expect(loadConfig(dir, {})).resolves.toMatchObject({ kind: "llamacpp" });
+    await expect(loadConfig(dir, {})).resolves.toEqual(defaultConfig({}));
   });
 
   it("returns the default when the file fails validation", async () => {

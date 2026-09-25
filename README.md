@@ -1,4 +1,4 @@
-# Aether Spire
+# Unwritten Land
 
 An Electron desktop engine for **player-owned, LLM-generated worlds** — the working
 implementation of the ideas in [`plan.md`](plan.md).

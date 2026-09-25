@@ -7,3 +7,4 @@ dist/
 models/
 *.tsbuildinfo
 .DS_Store
+native/afm-bridge/.build/

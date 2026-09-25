@@ -1,0 +1,20 @@
+[
+  {
+    "id": "roadside-shrine",
+    "sceneId": "eval-roadside-shrine",
+    "language": "en-US",
+    "brief": "A quiet roadside shrine. The player inspects an altar, then leaves through the only exit."
+  },
+  {
+    "id": "snow-signal",
+    "sceneId": "eval-snow-signal",
+    "language": "en-US",
+    "brief": "A compact snowfield signal station. The player checks one signpost before following the marked exit."
+  },
+  {
+    "id": "country-well",
+    "sceneId": "eval-country-well",
+    "language": "ja-JP",
+    "brief": "田舎道の小さな井戸。プレイヤーは井戸を調べてから、ひとつだけの出口へ進む。"
+  }
+]

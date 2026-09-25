@@ -7,40 +7,24 @@ import {
   biblePrompt,
   type NewWorldContext,
   originIssues,
-  originPrompt,
   parseBible,
-  parseScene,
 } from "@dsl";
 import { dslError } from "@dsl/parse/program";
 import type { InstanceMeta, WorldBible } from "@shared/cartridge";
-import { ok, type Result } from "@shared/result";
-import type { SceneGraph } from "@shared/world";
+import { fail, ok, type Result } from "@shared/result";
+import type { GenerationEvent, SceneGenerationRequest } from "@shared/scene-generation";
 import { openLandCartridge } from "./openLandCartridge";
 import { generateProgram } from "./pipeline";
+import { generateSceneArtifact } from "./sceneGeneration";
 import { cartridgeIdFor } from "./ui/createModel";
 
 export type NewWorldStage = "bible" | "origin" | "publish";
 
-function parseOrigin(source: string) {
-  const scene = parseScene(source);
-  if (!scene.ok) return scene;
-  const issues = originIssues(scene.value);
-  return issues.length === 0
-    ? scene
-    : {
-        ok: false as const,
-        error: dslError({
-          code: "dsl-origin-unfit",
-          message: `${issues.length} problem(s) make this place unfit to start in.`,
-          hint: "Resend the whole Scene program with every listed problem fixed.",
-          errors: issues,
-        }),
-      };
-}
-
 export async function makeWorld(
   ctx: NewWorldContext,
   onStage: (stage: NewWorldStage) => void,
+  onGenerationEvent?: (event: GenerationEvent) => void,
+  signal?: AbortSignal,
 ): Promise<Result<InstanceMeta>> {
   onStage("bible");
   const bible = await generateProgram<WorldBible>({
@@ -53,18 +37,58 @@ export async function makeWorld(
     temperature: 0.9,
   });
   if (!bible.ok) return bible;
+  if (signal?.aborted) {
+    return fail({ code: "request-aborted", message: "World generation was cancelled." });
+  }
 
   onStage("origin");
-  const origin = await generateProgram<SceneGraph>({
-    system: originPrompt(ctx, bible.value.graph),
-    user: "Write the Scene program of the place the player wakes in. Output the program only.",
-    purpose: "scene",
-    language: ctx.language,
-    parse: parseOrigin,
-    maxTokens: 2200,
-    temperature: 0.9,
-  });
+  const initialBrief = [
+    `Create the open, walkable place where the player wakes in this world: ${ctx.intent.trim()}`,
+    `World core: ${bible.value.graph.core}`,
+    `Visual style: ${bible.value.graph.style}`,
+    "Use a countryside biome and a 12 to 24 tile grass or sand floor.",
+    "Place 1 to 3 residents, one sun light, and no exits, monsters, treasure, triggers, or platforms.",
+    "Keep the centre tile empty and every floor edge open.",
+  ]
+    .join("\n")
+    .slice(0, 2_000);
+  let currentSource: string | null = null;
+  let origin = await generateSceneArtifact(
+    sceneRequest("new-room", initialBrief, ctx.language, currentSource),
+    onGenerationEvent,
+    signal,
+  );
   if (!origin.ok) return origin;
+  let issues = originIssues(origin.value.graph);
+  for (let repair = 0; issues.length > 0 && repair < 2; repair += 1) {
+    currentSource = origin.value.source;
+    const diagnostics = issues
+      .map((issue) => `${issue.message}${issue.hint === undefined ? "" : ` (${issue.hint})`}`)
+      .join("\n")
+      .slice(0, 1_400);
+    origin = await generateSceneArtifact(
+      sceneRequest(
+        "repair-room",
+        `Repair the current origin scene so it is safe and open for play. Fix every issue:\n${diagnostics}`,
+        ctx.language,
+        currentSource,
+      ),
+      onGenerationEvent,
+      signal,
+    );
+    if (!origin.ok) return origin;
+    issues = originIssues(origin.value.graph);
+  }
+  if (issues.length > 0) {
+    return fail(
+      dslError({
+        code: "dsl-origin-unfit",
+        message: `${issues.length} problem(s) make this place unfit to start in.`,
+        hint: issues.map((issue) => `${issue.message} ${issue.hint ?? ""}`.trim()).join(" "),
+        errors: issues,
+      }),
+    );
+  }
 
   onStage("publish");
   // The world keeps the language it was made in, inside its hashed bible (Rule 10).
@@ -90,4 +114,30 @@ export async function makeWorld(
     name: published.value.name,
   });
   return created.ok ? ok(created.value.instance.meta) : created;
+}
+
+function sceneRequest(
+  purpose: "new-room" | "repair-room",
+  brief: string,
+  language: string,
+  currentSceneSource: string | null,
+): SceneGenerationRequest {
+  return {
+    intent: {
+      requestId: crypto.randomUUID(),
+      purpose,
+      brief: brief.slice(0, 2_000),
+      language,
+      sceneId: "origin",
+    },
+    state: {
+      worldPlan: null,
+      currentSceneSource,
+      flags: {},
+      inventory: [],
+      assetCatalog: [],
+      capabilityProfile: { entries: [] },
+    },
+    maxRepairAttempts: 2,
+  };
 }

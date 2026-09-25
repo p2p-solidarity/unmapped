@@ -6,6 +6,7 @@ export { karmaToJsonl, persistProgress } from "./persist";
 export { generateProgram, grammarForProvider, type Program } from "./pipeline";
 export { type ChoiceResolution, resolveChoice } from "./resolve";
 export { generateScene } from "./scene";
+export { generateSceneArtifact, generationEventLabel } from "./sceneGeneration";
 export { inventorySummary, karmaSummary } from "./summaries";
 export {
   DSL_SECTION,

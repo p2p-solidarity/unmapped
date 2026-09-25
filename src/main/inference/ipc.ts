@@ -7,11 +7,14 @@ import type { MainContext } from "@main/context";
 import { IPC } from "@shared/ipc";
 import type { ChatEvent, ChatRequest, InferenceConfig, SidecarStatus } from "@shared/llm";
 import { fail, ok, type Result, toError } from "@shared/result";
+import type { GenerationEvent, SceneArtifact } from "@shared/scene-generation";
 import { ipcMain } from "electron";
 import { z } from "zod";
 import { streamChat } from "./client";
 import { loadConfig, parseConfig, saveConfig } from "./config";
 import { probe } from "./probe";
+import { SceneArtifactService } from "./sceneArtifactService";
+import { parseSceneGenerationRequest } from "./sceneGenerationIpc";
 import { createSidecar } from "./sidecar";
 
 const MAX_CONTENT = 200_000;
@@ -68,6 +71,10 @@ function invalid(what: string): Result<never> {
 export function registerInferenceIpc(ctx: MainContext): void {
   const sidecar = createSidecar(ctx);
   const inflight = new Map<string, AbortController>();
+  const sceneInflight = new Map<string, AbortController>();
+  const sceneService = new SceneArtifactService(
+    ctx.appleLocalProvider === null ? [] : [ctx.appleLocalProvider],
+  );
   let cached: InferenceConfig | null = null;
 
   async function currentConfig(): Promise<InferenceConfig> {
@@ -108,6 +115,21 @@ export function registerInferenceIpc(ctx: MainContext): void {
 
   ipcMain.handle(IPC.inference.getConfig, async (): Promise<InferenceConfig> => currentConfig());
 
+  ipcMain.handle(IPC.inference.appleLocalCapabilities, async () => {
+    if (ctx.appleLocalProvider !== null) return ctx.appleLocalProvider.capabilities();
+    return ok({
+      providerId: "apple-local" as const,
+      available: false,
+      locality: "device" as const,
+      constraintModes: ["swift-generable" as const],
+      contextTokens: null,
+      supportsStreaming: false,
+      supportsReasoning: false,
+      supportedPurposes: ["new-room" as const, "repair-room" as const, "expand-room" as const],
+      unavailableReason: "macos_required",
+    });
+  });
+
   ipcMain.handle(
     IPC.inference.setConfig,
     async (_event, raw: unknown): Promise<Result<InferenceConfig>> => {
@@ -119,7 +141,17 @@ export function registerInferenceIpc(ctx: MainContext): void {
     },
   );
 
-  ipcMain.handle(IPC.inference.probe, async () => probe(await currentConfig()));
+  // Apple's model has no daemon of its own: a probe starts `fm serve` whenever it is not running.
+  // Unaccepted terms make fm exit at once, so the renderer's offline re-probe notices
+  // `sudo fm license` within one retry; the reason stays visible as the sidecar's error.
+  ipcMain.handle(IPC.inference.probe, async () => {
+    const config = await currentConfig();
+    const idle = sidecar.status().state === "stopped" || sidecar.status().state === "error";
+    if (config.kind === "apple-fm" && config.sidecar !== null && idle) {
+      await sidecar.start(config.sidecar);
+    }
+    return probe(config);
+  });
 
   ipcMain.handle(IPC.inference.chat, async (_event, raw: unknown): Promise<Result<void>> => {
     const parsed = chatRequestSchema.safeParse(raw);
@@ -133,6 +165,10 @@ export function registerInferenceIpc(ctx: MainContext): void {
     }
     const controller = new AbortController();
     inflight.set(request.id, controller);
+    // One line per model request, so "talking never calls the model" can be checked from the log.
+    process.stdout.write(
+      `[inference] chat ${request.id} · ${request.messages.length} messages · ${request.tools.length} tools\n`,
+    );
     // Deliberately not awaited: the invoke resolves as soon as the stream is registered so the
     // renderer can start listening; every outcome reaches it as a ChatEvent.
     void runChat(request, controller);
@@ -142,6 +178,74 @@ export function registerInferenceIpc(ctx: MainContext): void {
   ipcMain.handle(IPC.inference.abort, async (_event, raw: unknown): Promise<void> => {
     if (typeof raw !== "string") return;
     inflight.get(raw)?.abort();
+  });
+
+  ipcMain.handle(
+    IPC.inference.sceneGenerate,
+    async (event, raw: unknown): Promise<Result<SceneArtifact>> => {
+      const parsed = parseSceneGenerationRequest(raw);
+      if (!parsed.ok) return parsed;
+      const { intent, state, maxRepairAttempts } = parsed.value;
+      if (sceneInflight.has(intent.requestId)) {
+        return fail({
+          code: "duplicate-request",
+          message: `Scene generation ${intent.requestId} is already running.`,
+          hint: "Wait for it to finish or cancel it before retrying.",
+        });
+      }
+      const controller = new AbortController();
+      sceneInflight.set(intent.requestId, controller);
+      const send = (payload: GenerationEvent): void => {
+        if (!event.sender.isDestroyed()) event.sender.send(IPC.inference.sceneEvent, payload);
+      };
+      try {
+        const result = await sceneService.generateScene(intent, state, {
+          signal: controller.signal,
+          maxRepairAttempts,
+          // The provider reports its own terminal state before artifact validation. Main owns the
+          // public terminal event so the UI only sees completed after every gate passed.
+          onEvent: (payload) => {
+            if (payload.type === "completed" || payload.type === "error" || payload.type === "cancelled") {
+              return;
+            }
+            send(payload);
+          },
+        });
+        if (result.ok) {
+          send({
+            type: "completed",
+            requestId: intent.requestId,
+            providerId: result.value.providerId,
+          });
+        } else if (controller.signal.aborted || result.error.code === "request-aborted") {
+          send({ type: "cancelled", requestId: intent.requestId });
+        } else {
+          send({ type: "error", requestId: intent.requestId, error: result.error });
+        }
+        return result;
+      } catch (cause) {
+        const error = toError(cause, "scene-generation-failed");
+        send({ type: "error", requestId: intent.requestId, error });
+        return fail(error);
+      } finally {
+        sceneInflight.delete(intent.requestId);
+      }
+    },
+  );
+
+  ipcMain.handle(IPC.inference.sceneCancel, async (_event, raw: unknown): Promise<Result<void>> => {
+    if (typeof raw !== "string" || raw.length === 0 || raw.length > 128) {
+      return invalid("scene cancellation request");
+    }
+    const controller = sceneInflight.get(raw);
+    if (controller === undefined) {
+      return fail({
+        code: "scene-generation-not-found",
+        message: "That scene generation request is no longer running.",
+      });
+    }
+    controller.abort();
+    return ok(undefined);
   });
 
   ipcMain.handle(IPC.inference.sidecarStart, async (): Promise<Result<SidecarStatus>> => {
@@ -156,5 +260,7 @@ export function registerInferenceIpc(ctx: MainContext): void {
   ctx.onBeforeQuit(() => {
     for (const controller of inflight.values()) controller.abort();
     inflight.clear();
+    for (const controller of sceneInflight.values()) controller.abort();
+    sceneInflight.clear();
   });
 }

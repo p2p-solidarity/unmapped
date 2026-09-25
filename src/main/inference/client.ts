@@ -69,7 +69,12 @@ export interface ChatBody {
 /** Reasoning models (GPT-5 family, o-series) take `max_completion_tokens` and reject `temperature`. */
 export function usesReasoningParams(config: InferenceConfig): boolean {
   // Local runtimes never take these fields, whatever the model is called.
-  if (config.kind === "llamacpp" || config.kind === "ollama" || config.kind === "vllm")
+  if (
+    config.kind === "llamacpp" ||
+    config.kind === "ollama" ||
+    config.kind === "vllm" ||
+    config.kind === "apple-fm"
+  )
     return false;
   // Gateways namespace the model ("openai/gpt-5"), so match the last path segment. The OpenAI
   // preset is included on purpose: switching its model to gpt-4o must not send reasoning fields.
@@ -212,7 +217,9 @@ export function mapProviderError(
       hint:
         config.kind === "llamacpp"
           ? "start llama-server (llama-server -m <model>.gguf --port 8080 --jinja) or fix baseUrl"
-          : `check baseUrl (${config.baseUrl}) and that the server is running`,
+          : config.kind === "apple-fm"
+            ? "start Apple's model from System → Inference (fm serve); run `sudo fm license` once first"
+            : `check baseUrl (${config.baseUrl}) and that the server is running`,
     });
   }
   if (e instanceof APIError) {
