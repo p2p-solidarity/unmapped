@@ -67,6 +67,7 @@ export async function createInstance(
   name: string,
   now: Date = new Date(),
   seed?: string,
+  language?: string,
 ): Promise<Result<InstanceRecord>> {
   const compatibility = cartridgeCompatibility(manifest);
   if (!compatibility.ok) return compatibility;
@@ -104,6 +105,7 @@ export async function createInstance(
     mutation: null,
     completedSceneIds: [],
     ...(seed === undefined ? {} : { seed }),
+    ...(language === undefined ? {} : { language }),
     updatedAt: at,
   };
   const record: InstanceRecord = { meta, save, karma: [] };

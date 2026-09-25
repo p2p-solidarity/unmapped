@@ -4,6 +4,7 @@
 import type { SaveState } from "./cartridge";
 import type { ChunkCoord } from "./chunks";
 import { seedFromText } from "./endless";
+import type { FelledLedger } from "./foes";
 import type { LoreNode } from "./lore";
 import type { LandPlace } from "./places";
 import type { EpisodeProgress, StoryEpisode } from "./story";
@@ -72,6 +73,8 @@ export interface LandProgress {
   storyMore?: StoryEpisode[];
   /** Side-scrolling courses and grid dungeons added to this land, entered from their gates. */
   places?: LandPlace[];
+  /** Hostiles felled on the land and when, so they stay down until they respawn (`@shared/foes`). */
+  felled?: FelledLedger;
 }
 
 export const DOOR_SLOTS = 4;

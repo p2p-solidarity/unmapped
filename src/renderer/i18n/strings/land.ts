@@ -24,6 +24,11 @@ export const LAND = {
   todoTalk: { en: "talk to {n} more", "zh-TW": "再與 {n} 人交談", ja: "あと {n} 人と話す" },
   todoFind: { en: "open {n} more", "zh-TW": "再開啟 {n} 個", ja: "あと {n} 個開ける" },
   todoDefeat: { en: "defeat {n} more", "zh-TW": "再擊敗 {n} 個", ja: "あと {n} 体倒す" },
+  revived: {
+    en: "You are back at home. Take a moment to recover.",
+    "zh-TW": "你回到了家，先喘口氣。",
+    ja: "家に戻りました。少し休んでください。",
+  },
   todoNone: {
     en: "Everything here is done.",
     "zh-TW": "這裡的事都完成了。",

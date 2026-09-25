@@ -435,7 +435,11 @@ export function LandView2D({
         useEngineStore.getState().interact(triggerTarget(trigger, position.x, position.z));
       }
 
-      if (!useEngineStore.getState().inputLocked) combatRef.current.step(delta);
+      if (!useEngineStore.getState().inputLocked) {
+        combatRef.current.step(delta, (x, z) =>
+          canStandAt(state.graph, state.landSeed, state.chunks, x, z, state.land),
+        );
+      }
 
       draw.draw({
         width: bounds.width,

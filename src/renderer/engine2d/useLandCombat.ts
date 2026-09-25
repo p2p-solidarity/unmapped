@@ -1,15 +1,20 @@
 // Combat on the open land itself — no screen change, no second combat model. When the cartridge's
 // rules declare combat, the fight is whoever is near: the authored origin's monsters plus the wild
 // monsters of the 3 × 3 chunks around the player (`wildMonsters`), rebuilt as the player crosses a
-// chunk. The trigger, cooldown, turns and progression are `combatLoop.ts`, exactly as in 3D; the
-// shot flies the way the player faces. A monster felled this session stays down until reload.
+// chunk. The trigger, cooldown, turns, progression and hostiles closing in are `combatLoop.ts`,
+// exactly as in 3D; this only says where the walker stands and what ground a hostile may cross (the
+// walker's own `canStandAt`). The shot flies the way the player faces. The fallen stay down in the
+// save until they respawn (`landFelled.ts`).
 
-import { useEncounterStore, useEngineStore, useRunStore } from "@renderer/state";
+import { translate } from "@renderer/i18n";
+import { useEncounterStore, useEngineStore, useLandStore, useRunStore, useSessionStore } from "@renderer/state";
 import { chunkOf, wildMonsters } from "@shared/chunks";
 import type { TerritoryMap } from "@shared/continent";
+import { FOE_TUNING } from "@shared/foes";
 import type { GameplayRules } from "@shared/gameplay";
 import type { MonsterKind, MonsterSpec, SceneGraph } from "@shared/world";
 import { type RefObject, useCallback, useEffect, useMemo, useRef } from "react";
+import { spawnPoint } from "../engine/colliders";
 import {
   type CombatAim,
   type FireResult,
@@ -18,7 +23,11 @@ import {
   passTurn,
   stepCombat,
 } from "../engine/combat/combatLoop";
-import { buildEncounter, PLAYER_ID, shotBlockers } from "../engine/combat/encounter";
+import { buildEncounter, carryWounds, PLAYER_ID, shotBlockers } from "../engine/combat/encounter";
+import { shownAt } from "../engine/combat/hostiles";
+import { createShove } from "../engine/combat/livePositions";
+import { felledBook } from "./landFelled";
+import { findPath } from "./walkTo";
 
 /** A shot's path for the renderers to draw for a moment. */
 export interface ShotTrace {
@@ -45,28 +54,16 @@ export interface Foe {
 /** Chest height of a shot on flat ground, like the 2.5D kits. */
 const SHOT_HEIGHT = 0.6;
 
-/**
- * Who has fallen on each land this session, kept outside the component: stepping into a place and
- * back out remounts the land view, and that must not raise the dead.
- */
-const FELLED = new Map<string, Set<string>>();
-
-function felledOn(land: string): Set<string> {
-  let set = FELLED.get(land);
-  if (set === undefined) {
-    set = new Set();
-    FELLED.set(land, set);
-  }
-  return set;
-}
+type Stand = (x: number, z: number) => boolean;
 
 export interface LandCombat {
   /** True while the player holds a weapon on this land. */
   armed(): boolean;
   fire(now: number): void;
   passTurn(): void;
-  step(delta: number): void;
-  /** The living hostiles near the player, or null when this cartridge has no combat. */
+  /** One frame of the fight; `stand` is where the walker (and so a hostile) can stand this frame. */
+  step(delta: number, stand: Stand): void;
+  /** The living hostiles near the player where they stand now, or null with no combat. */
   foes(): Foe[] | null;
   shot: RefObject<ShotTrace | null>;
 }
@@ -85,9 +82,13 @@ export function useLandCombat(input: {
   const { graph, rules, seed, player, extra, onFelled } = input;
   const land = input.land ?? null;
   const chunk = useEngineStore((state) => state.chunk);
+  const instanceId = useLandStore((state) => state.instanceId);
   const clock = useRef(newCombatClock());
   const shot = useRef<ShotTrace | null>(null);
-  const defeated = useRef(felledOn(`${seed}:${graph.contract?.sceneId ?? graph.name}`));
+  const landKey = `${instanceId ?? "unsaved"}:${seed}:${graph.contract?.sceneId ?? graph.name}`;
+  const book = useMemo(() => felledBook(landKey), [landKey]);
+  const stand = useRef<Stand>(() => false);
+  const shove = useMemo(() => createShove(), []);
   const combat = rules?.combat ?? null;
   const blockers = useMemo(() => shotBlockers(graph.walls), [graph.walls]);
 
@@ -95,10 +96,13 @@ export function useLandCombat(input: {
     if (combat !== null) useRunStore.getState().begin(rules?.progression ?? []);
   }, [combat, rules]);
 
-  // Whoever is near makes up the fight. Crossing a chunk rebuilds it; the player's wounds carry.
+  // Whoever is near makes up the fight. Crossing a chunk rebuilds it; everyone's wounds carry.
   const cx = chunk?.cx ?? chunkOf(player.current.x, player.current.z).cx;
   const cz = chunk?.cz ?? chunkOf(player.current.x, player.current.z).cz;
   const hp = useRef<number | null>(null);
+  // Who this land last put in the fight: only their wounds carry into the next roster, never those
+  // of a place's fight that has not been torn down yet.
+  const own = useRef(new Set<string>());
   const rebuild = useCallback((): void => {
     const store = useEncounterStore.getState();
     if (rules === null || rules.combat === null) {
@@ -114,19 +118,17 @@ export function useLandCombat(input: {
       }
     }
     const monsters = [...graph.monsters, ...(extra ?? []), ...wild].filter(
-      (one) => !defeated.current.has(one.id),
+      (one) => !book.isDown(one.id),
     );
     const built = buildEncounter({ ...graph, monsters }, rules, { armedAlone: true });
     if (built === null) {
       store.clear();
       return;
     }
-    const wounds = hp.current;
-    const combatants = built.combatants.map((one) =>
-      one.id === PLAYER_ID && wounds !== null ? { ...one, hp: Math.min(one.maxHp, wounds) } : one,
-    );
-    store.begin({ ...built, combatants });
-  }, [graph, rules, seed, cx, cz, extra, land]);
+    const ours = store.combatants.every((one) => own.current.has(one.id));
+    store.begin(carryWounds(built, ours ? store.combatants : [], hp.current));
+    own.current = new Set(built.combatants.map((one) => one.id));
+  }, [graph, rules, seed, cx, cz, extra, land, book]);
 
   useEffect(rebuild, [rebuild]);
 
@@ -149,7 +151,33 @@ export function useLandCombat(input: {
     };
   }, [rebuild, rules]);
 
-  useEffect(() => () => useEncounterStore.getState().clear(), []);
+  // Getting back up after a fall ("keep looking"): at home, whole again, with a moment's guard; the
+  // hostiles go back to where they stood and whoever was felled stays down.
+  useEffect(
+    () =>
+      useRunStore.subscribe((state, previous) => {
+        if (previous.outcome !== "defeated" || state.outcome !== "running") return;
+        if (rules?.combat === null || rules?.combat === undefined) return;
+        const [x, , z] = spawnPoint(graph);
+        player.current.x = x;
+        player.current.z = z;
+        hp.current = null;
+        clock.current.hostiles.clear();
+        clock.current.guard = FOE_TUNING.reviveGuardSeconds;
+        shove.drop();
+        rebuild();
+        useSessionStore.getState().toast("info", translate("land.revived"));
+      }),
+    [graph, rules, player, rebuild, shove],
+  );
+
+  useEffect(
+    () => () => {
+      book.flush();
+      useEncounterStore.getState().clear();
+    },
+    [book],
+  );
 
   const aim = useMemo<CombatAim>(
     () => ({
@@ -163,19 +191,23 @@ export function useLandCombat(input: {
       }),
       player: () => ({ x: player.current.x, z: player.current.z }),
       endless: true,
+      ground: {
+        stand: (x, z) => stand.current(x, z),
+        route: (from, to) => findPath(from, to, stand.current),
+      },
+      shove: (dx, dz) => shove.push(dx, dz),
     }),
-    [player],
+    [player, shove],
   );
 
   const felled = useRef(onFelled);
   felled.current = onFelled;
   const remember = useCallback((): void => {
     for (const one of useEncounterStore.getState().combatants) {
-      if (one.side !== "hostile" || one.hp > 0 || defeated.current.has(one.id)) continue;
-      defeated.current.add(one.id);
-      felled.current?.(one.id);
+      if (one.side !== "hostile" || one.hp > 0) continue;
+      if (book.fell(one.id)) felled.current?.(one.id);
     }
-  }, []);
+  }, [book]);
 
   const trace = useCallback(
     (result: FireResult | null, now: number): void => {
@@ -203,26 +235,38 @@ export function useLandCombat(input: {
       remember();
     },
     passTurn: () => passTurn(clock.current),
-    step: (delta) => {
+    step: (delta, standHere) => {
       if (combat === null) return;
+      stand.current = standHere;
+      // A blow's push plays out over a few frames, through the walker's own collision.
+      const push = shove.take(delta);
+      const walker = player.current;
+      const trapped = !standHere(walker.x, walker.z);
+      if (trapped || standHere(walker.x + push.x, walker.z)) walker.x += push.x;
+      if (trapped || standHere(walker.x, walker.z + push.z)) walker.z += push.z;
       stepCombat(clock.current, aim, blockers, rules, delta);
       remember();
+      if (book.tick(delta).length > 0) rebuild();
     },
     foes: () => {
       if (combat === null) return null;
-      // A monster's roster label is its kind (`buildEncounter`).
+      // A monster's roster label is its kind (`buildEncounter`); it is drawn where it walked to.
       return useEncounterStore
         .getState()
         .combatants.filter((one) => one.side === "hostile" && one.hp > 0)
-        .map((one) => ({
-          id: one.id,
-          kind: one.label as MonsterKind,
-          x: one.x,
-          z: one.z,
-          hp: one.hp,
-          maxHp: one.maxHp,
-          level: one.level,
-        }));
+        .map((one) => {
+          const live = clock.current.hostiles.get(one.id);
+          const at = live === undefined ? one : shownAt(live);
+          return {
+            id: one.id,
+            kind: one.label as MonsterKind,
+            x: at.x,
+            z: at.z,
+            hp: one.hp,
+            maxHp: one.maxHp,
+            level: one.level,
+          };
+        });
     },
     shot,
   };

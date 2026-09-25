@@ -1,19 +1,51 @@
 // A cartridge's ENS name in the Cartridges panel: `<cartridgeId>.<parent>` on Sepolia ENSv2. The
 // line reads the name live (unclaimed / this version / another version) and, on a machine with a
-// signing key, claims it or points it at the selected revision. `OpenByEnsName` goes the other way:
-// a name → the exact revision it points at → Play if that revision's hash is in the library.
+// signing key, claims it or points it at the selected revision — saying how many transactions that
+// takes, and linking each one it sent on Sepolia Etherscan. `OpenByEnsName` goes the other way: a
+// name → the exact revision it points at → Play if that revision's hash is in the library.
 
 import { errorLine, useT } from "@renderer/i18n";
 import { lookupCartridgeName } from "@renderer/identity";
 import { useSessionStore } from "@renderer/state";
 import { Button, StatePanel, Text, TextField } from "@renderer/ui";
 import type { CartridgeManifest } from "@shared/cartridge";
-import { type CartridgePointer, cartridgeName, type EnsNamesConfig } from "@shared/ensNames";
+import {
+  type CartridgePointer,
+  cartridgeName,
+  type EnsNamesConfig,
+  SEPOLIA_TX_URL,
+} from "@shared/ensNames";
 import { errored, idle, type Loadable, loading, ready } from "@shared/result";
 import { useCallback, useEffect, useState } from "react";
 
 const ref = (pointer: { cartridgeId: string; version: string }) =>
   `${pointer.cartridgeId}@${pointer.version}`;
+
+const shortTx = (hash: string): string => `${hash.slice(0, 10)}…${hash.slice(-6)}`;
+
+/** The transactions a claim sent, each a link to Sepolia Etherscan. */
+function SentTransactions({ txHashes }: { txHashes: string[] }) {
+  const t = useT();
+  const toast = useSessionStore((state) => state.toast);
+  return (
+    <div className="row-actions">
+      <span className="g-meta">{t("title.ensSent", { n: txHashes.length })}</span>
+      {txHashes.map((hash) => (
+        <Button
+          key={hash}
+          variant="ghost"
+          onClick={() =>
+            void window.seed.app.openExternal(`${SEPOLIA_TX_URL}${hash}`).then((opened) => {
+              if (!opened.ok) toast("danger", errorLine(opened.error));
+            })
+          }
+        >
+          {t("title.ensTxLink", { tx: shortTx(hash) })}
+        </Button>
+      ))}
+    </div>
+  );
+}
 
 /** This machine's ENS name setup, read once; null while it loads. */
 export function useEnsNames(): EnsNamesConfig | null {
@@ -33,7 +65,10 @@ export function CartridgeNameLine({ manifest, config }: CartridgeNameLineProps) 
   const t = useT();
   const toast = useSessionStore((state) => state.toast);
   const [record, setRecord] = useState<Loadable<CartridgePointer | null>>(idle());
-  const [writing, setWriting] = useState(false);
+  /** Which write is in flight: a first claim (register + records) or a repoint (records only). */
+  const [writing, setWriting] = useState<"claim" | "repoint" | null>(null);
+  /** What the last claim sent, and for which revision (the panel reuses this line on selection). */
+  const [sent, setSent] = useState<{ contentHash: string; txHashes: string[] } | null>(null);
   const name = config?.parent == null ? null : cartridgeName(manifest.cartridgeId, config.parent);
 
   const read = useCallback(async () => {
@@ -53,11 +88,13 @@ export function CartridgeNameLine({ manifest, config }: CartridgeNameLineProps) 
 
   const pointsHere =
     record.status === "ready" && record.value?.contentHash === manifest.contentHash;
-  const claim = (): void => {
-    setWriting(true);
+  const claim = (kind: "claim" | "repoint"): void => {
+    setWriting(kind);
+    setSent(null);
     void window.seed.chain.claimName(manifest.cartridgeId, manifest.version).then((result) => {
-      setWriting(false);
+      setWriting(null);
       if (!result.ok) return toast("danger", errorLine(result.error));
+      setSent({ contentHash: manifest.contentHash, txHashes: result.value.txHashes });
       toast("success", t("title.ensClaimed", { name: result.value.name, ref: ref(manifest) }));
       void read();
     });
@@ -77,11 +114,23 @@ export function CartridgeNameLine({ manifest, config }: CartridgeNameLineProps) 
   return (
     <>
       <span className="g-meta">
-        {t("title.ensName")} {name} · {writing ? t("title.ensWriting") : status}
+        {t("title.ensName")} {name} ·{" "}
+        {writing === "claim"
+          ? t("title.ensWritingClaim")
+          : writing === "repoint"
+            ? t("title.ensWritingRepoint")
+            : status}
       </span>
+      {sent?.contentHash !== manifest.contentHash || sent.txHashes.length === 0 ? null : (
+        <SentTransactions txHashes={sent.txHashes} />
+      )}
       {record.status !== "ready" || pointsHere ? null : config.writable ? (
         <div className="row-actions">
-          <Button variant="secondary" disabled={writing} onClick={claim}>
+          <Button
+            variant="secondary"
+            disabled={writing !== null}
+            onClick={() => claim(record.value === null ? "claim" : "repoint")}
+          >
             {record.value === null ? t("title.ensClaim") : t("title.ensRepoint")}
           </Button>
         </div>

@@ -1,8 +1,9 @@
 // New Game (plan.md §1): one game, many lands. Pick a seed — a fresh one is already rolled, or type
 // a friend's — and walk into that land. Nothing here needs a model: the land is generated from the
-// seed, and whoever lives on it is witnessed later, when a model is reachable.
+// seed, and whoever lives on it is witnessed later, when a model is reachable. The land's language
+// (what its residents say) is chosen here and kept in the save.
 
-import { useT } from "@renderer/i18n";
+import { contentLanguage, languageLabel, useT } from "@renderer/i18n";
 import { useSessionStore } from "@renderer/state";
 import { Button, ErrorBlock, StatePanel, Surface, space, Text, TextField } from "@renderer/ui";
 import type { CartridgeManifest } from "@shared/cartridge";
@@ -16,6 +17,7 @@ import {
   SEED_LENGTH,
 } from "@shared/seedCode";
 import { type JSX, useEffect, useState } from "react";
+import { languages } from "./create/IdeaStep";
 import { GameShell } from "./shell/GameShell";
 import { openInstance } from "./useInstanceLoader";
 
@@ -24,6 +26,7 @@ export function SeedScreen(): JSX.Element {
   const setScreen = useSessionStore((state) => state.setScreen);
   const [game, setGame] = useState<Loadable<CartridgeManifest>>(loading());
   const [seed, setSeed] = useState(randomSeedCode);
+  const [language, setLanguage] = useState(contentLanguage);
   const [error, setError] = useState<AppError | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -43,6 +46,7 @@ export function SeedScreen(): JSX.Element {
         version: manifest.version,
         name: `${manifest.name} · ${formatSeedCode(seed)}`,
         seed,
+        language,
       })
       .then((created) => {
         setBusy(false);
@@ -103,6 +107,22 @@ export function SeedScreen(): JSX.Element {
                     {t("title.seedInvalid", { n: SEED_LENGTH })}
                   </Text>
                 )}
+                <Text variant="caption" tone="dim">
+                  {t("title.landLanguage")}
+                </Text>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: space.xs }}>
+                  {languages().map((tag) => (
+                    <Button
+                      key={tag}
+                      variant="chip"
+                      active={language === tag}
+                      disabled={busy}
+                      onClick={() => setLanguage(tag)}
+                    >
+                      {`${languageLabel(tag)} · ${tag}`}
+                    </Button>
+                  ))}
+                </div>
                 {error === null ? null : <ErrorBlock error={error} />}
                 <Button
                   variant="primary"

@@ -27,6 +27,7 @@ import {
   tileToWorld,
   type Vec3,
 } from "./colliders";
+import { playerShove } from "./combat/livePositions";
 import {
   FACING_YAW,
   type Facing,
@@ -285,7 +286,9 @@ export function Player({
 
     const dy = verticalVelocity.current * step;
 
-    kinematic.computeColliderMovement(collider, { x: dx, y: dy, z: dz });
+    // A hostile's blow shoves the body back through the same controller (combat/livePositions).
+    const shove = playerShove.take(step);
+    kinematic.computeColliderMovement(collider, { x: dx + shove.x, y: dy, z: dz + shove.z });
     const movement = kinematic.computedMovement();
     const current = body.translation();
     // Open land has no edge: the ground simply continues into the next chunk.

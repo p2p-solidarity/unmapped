@@ -34,6 +34,11 @@ export const TITLE = {
     ja: "シードごとに、同じゲームの別の大地が生まれます。同じシードを入力すれば、誰でも同じ大地に立てます。",
   },
   seedLabel: { en: "Seed", "zh-TW": "種子", ja: "シード" },
+  landLanguage: {
+    en: "Language — everyone you meet on this land speaks it",
+    "zh-TW": "語言——這片大地上遇見的每個人都說這種語言",
+    ja: "言語：この大地で出会う人は、みなこの言語で話します",
+  },
   roll: { en: "Roll", "zh-TW": "隨機", ja: "ランダム" },
   seedInvalid: {
     en: "A seed is {n} letters and digits (no I, O, 0 or 1).",
@@ -245,11 +250,24 @@ export const TITLE = {
     "zh-TW": "把名稱指向這個版本",
     ja: "名前をこの版に向ける",
   },
-  ensWriting: {
-    en: "Writing to Sepolia… (two transactions)",
-    "zh-TW": "正在寫入 Sepolia…（兩筆交易）",
-    ja: "Sepolia に書き込み中…（2 件のトランザクション）",
+  // A first claim registers the name, then writes its records; a half-finished claim that already
+  // registered it sends only the records, hence "up to". Repointing only writes the records.
+  ensWritingClaim: {
+    en: "Registering the name and writing its records on Sepolia… (up to two transactions)",
+    "zh-TW": "正在 Sepolia 註冊名稱並寫入紀錄…（最多兩筆交易）",
+    ja: "Sepolia で名前を登録し、レコードを書き込み中…（最大 2 件のトランザクション）",
   },
+  ensWritingRepoint: {
+    en: "Pointing the name at this version on Sepolia… (one transaction)",
+    "zh-TW": "正在 Sepolia 把名稱指向這個版本…（一筆交易）",
+    ja: "Sepolia で名前をこの版に向けています…（1 件のトランザクション）",
+  },
+  ensSent: {
+    en: "Sent {n} {n|transaction|transactions}:",
+    "zh-TW": "已送出 {n} 筆交易：",
+    ja: "{n} 件のトランザクションを送信しました：",
+  },
+  ensTxLink: { en: "{tx} ↗ Etherscan", "zh-TW": "{tx} ↗ Etherscan", ja: "{tx} ↗ Etherscan" },
   ensClaimed: {
     en: "{name} now points at {ref}",
     "zh-TW": "{name} 現在指向 {ref}",

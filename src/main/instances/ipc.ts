@@ -1,5 +1,6 @@
 import { readFile, stat, writeFile } from "node:fs/promises";
 import { IPC, type SeedExport } from "@shared/ipc";
+import { LANGUAGE_TAG_PATTERN } from "@shared/language";
 import { err, fail, ok, type Result, toError } from "@shared/result";
 import { SEED_PATTERN } from "@shared/seedCode";
 import { z } from "zod";
@@ -32,6 +33,7 @@ const createInstanceSchema = z
     version: z.string().min(1).max(128),
     name: z.string().trim().min(1).max(120),
     seed: z.string().regex(SEED_PATTERN).optional(),
+    language: z.string().regex(LANGUAGE_TAG_PATTERN).optional(),
   })
   .strict();
 const checkpointSchema = z
@@ -103,6 +105,7 @@ export function registerInstancesIpc(ctx: MainContext): void {
       input.name,
       new Date(),
       input.seed,
+      input.language,
     );
     return instance.ok ? ok({ instance: instance.value, cartridge: cartridge.value }) : instance;
   });

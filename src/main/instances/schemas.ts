@@ -6,7 +6,9 @@ import {
   type SaveState,
 } from "@shared/cartridge";
 import { CHAPTER_KINDS, CHAPTER_LIMITS } from "@shared/chapter";
+import { FELLED_LIMITS } from "@shared/foes";
 import { DOOR_SLOTS } from "@shared/land";
+import { LANGUAGE_TAG_PATTERN } from "@shared/language";
 import { PLACE_KINDS, PLACE_LIMITS } from "@shared/places";
 import { SEED_PATTERN } from "@shared/seedCode";
 import { STORY_CAP, storyEpisodeSchema } from "@shared/story";
@@ -67,6 +69,19 @@ export const savedPositionSchema = z
   .strict();
 
 const placedItemSchema = itemSpecSchema;
+
+/** Seconds of land play: finite, never negative, bounded so a hand-edited save cannot overflow. */
+const playClock = z.number().min(0).max(FELLED_LIMITS.clockMax);
+
+/** Hostiles felled on open land (`@shared/foes`): the land's play clock and when each one fell. */
+export const felledLedgerSchema = z
+  .object({
+    clock: playClock,
+    at: z
+      .record(z.string().min(1).max(FELLED_LIMITS.idChars), playClock)
+      .refine((at) => Object.keys(at).length <= FELLED_LIMITS.entries, "too many felled entries"),
+  })
+  .strict();
 
 /** Local ids of what a chapter's player has done: people met, treasures opened, foes felled. */
 const doneIds = z.array(z.string().max(64)).max(CHAPTER_LIMITS.doneIds);
@@ -162,6 +177,7 @@ export const landProgressSchema = z
       )
       .max(PLACE_LIMITS.max)
       .optional(),
+    felled: felledLedgerSchema.optional(),
   })
   .strict();
 
@@ -212,6 +228,7 @@ export const saveStateSchema: z.ZodType<SaveState> = z
     position: savedPositionSchema.optional(),
     land: landProgressSchema.optional(),
     seed: z.string().regex(SEED_PATTERN).optional(),
+    language: z.string().regex(LANGUAGE_TAG_PATTERN).optional(),
     updatedAt: z.string().min(1),
   })
   .strict();

@@ -7,6 +7,7 @@ import type { MonsterSpec } from "@shared/world";
 import { type JSX, useRef } from "react";
 import type * as THREE from "three";
 import { TILE_TOP } from "../colliders";
+import { hostileShownAt } from "../combat/livePositions";
 import {
   hash2,
   SLIM_CAPSULE,
@@ -26,6 +27,7 @@ const AURA_OPACITY = 0.3;
 const AURA_EMISSIVE = 1.4;
 
 export function Monster({ monster }: { monster: MonsterSpec }): JSX.Element {
+  const root = useRef<THREE.Group>(null);
   const group = useRef<THREE.Group>(null);
   const aura = useRef<THREE.Mesh>(null);
   const look = monsterLook(monster);
@@ -33,6 +35,9 @@ export function Monster({ monster }: { monster: MonsterSpec }): JSX.Element {
   const phase = hash2(monster.x, monster.z) * Math.PI * 2;
 
   useFrame((state) => {
+    // A real-time fight walks it (combat/livePositions); otherwise it stays on its tile.
+    const live = hostileShownAt(monster.id);
+    if (live !== null) root.current?.position.set(live.x, TILE_TOP, live.z);
     const node = group.current;
     if (node === null) return;
     const t = state.clock.elapsedTime;
@@ -42,7 +47,7 @@ export function Monster({ monster }: { monster: MonsterSpec }): JSX.Element {
   });
 
   return (
-    <group position={[monster.x + 0.5, TILE_TOP, monster.z + 0.5]}>
+    <group ref={root} position={[monster.x + 0.5, TILE_TOP, monster.z + 0.5]}>
       <group ref={group} scale={size}>
         <Silhouette shape={look.shape} look={look} />
       </group>

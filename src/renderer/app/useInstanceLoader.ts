@@ -72,7 +72,8 @@ export function hydrateInstance(resolved: ResolvedInstance): Result<InstanceMeta
       cartridge.manifest.formatVersion === 1
         ? cartridge.manifest.genesis
         : {
-            language: bibleLanguage(cartridge.bible) ?? contentLanguage(),
+            // The language picked at New Game, else the one the bible names, else the UI's.
+            language: instance.save.language ?? bibleLanguage(cartridge.bible) ?? contentLanguage(),
             intent:
               cartridge.manifest.definition.narrative.premise || cartridge.manifest.description,
           },

@@ -1,11 +1,13 @@
 // `shooter_combat@1` + `turn_scheduler@1` + `team_party@1`, wired into the running 3D scene.
 //
-// The fight itself — trigger, cooldown, aim preview, other combatants' turns — is `combatLoop.ts`,
-// shared with the open land. This component only feeds it the camera's aim and the frame clock,
-// and binds the trigger. It renders nothing — the HUD reads the same store.
+// The fight itself — trigger, cooldown, aim preview, other combatants' turns, hostiles closing in
+// — is `combatLoop.ts`, shared with the open land. This component only feeds it the camera's aim,
+// the scene's walkable ground and the frame clock, and binds the trigger. It renders nothing — the
+// HUD reads the same store, <Monster> follows `livePositions`.
 
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEncounterStore, useEngineStore, useRunStore } from "@renderer/state";
+import { FOE_TUNING } from "@shared/foes";
 import type { GameplayRules } from "@shared/gameplay";
 import type { SceneGraph } from "@shared/world";
 import { type JSX, type RefObject, useCallback, useEffect, useMemo, useRef } from "react";
@@ -14,7 +16,15 @@ import type { RigState } from "../CameraRig";
 import type { GameplayKitBehavior } from "../kits/registry";
 import { matchesAction, useKeys } from "../useKeys";
 import { type CombatAim, fireWeapon, newCombatClock, passTurn, stepCombat } from "./combatLoop";
-import { buildEncounter, shotBlockers, shotDirection, shotOrigin } from "./encounter";
+import {
+  buildEncounter,
+  carryWounds,
+  shotBlockers,
+  shotDirection,
+  shotOrigin,
+} from "./encounter";
+import { playerShove, showHostiles } from "./livePositions";
+import { sceneGround } from "./sceneGround";
 
 export function CombatControl({
   graph,
@@ -42,8 +52,13 @@ export function CombatControl({
     useRunStore.getState().begin(rules?.progression ?? []);
   }, [rules]);
 
+  const clock = useRef(newCombatClock());
+
   // A new scene is a new fight. Rebuilding on the scene's identity keeps a reload honest.
   useEffect(() => {
+    clock.current.hostiles.clear();
+    clock.current.guard = 0;
+    playerShove.drop();
     const built = buildEncounter(graph, rules);
     if (built === null) {
       clear();
@@ -53,7 +68,25 @@ export function CombatControl({
     return clear;
   }, [graph, rules, begin, clear]);
 
-  const clock = useRef(newCombatClock());
+  useEffect(() => showHostiles(clock.current.hostiles), []);
+
+  // Getting back up after a fall ("keep looking"): full health and a moment's guard, the hostiles
+  // back where they stood — and whoever was felled stays down.
+  useEffect(
+    () =>
+      useRunStore.subscribe((state, previous) => {
+        if (previous.outcome !== "defeated" || state.outcome !== "running") return;
+        const built = buildEncounter(graph, rules);
+        if (built === null) return;
+        clock.current.hostiles.clear();
+        clock.current.guard = FOE_TUNING.reviveGuardSeconds;
+        playerShove.drop();
+        begin(carryWounds(built, useEncounterStore.getState().combatants, null));
+      }),
+    [graph, rules, begin],
+  );
+
+  const ground = useMemo(() => sceneGround(graph), [graph]);
 
   const aim = useMemo<CombatAim>(
     () => ({
@@ -63,8 +96,13 @@ export function CombatControl({
         ...shotDirection(movement, rig.current.yaw, rig.current.pitch, facing.current),
       }),
       player: () => ({ x: player.current.x, z: player.current.z }),
+      ground,
+      // A grid walker moves tile to tile and a fixed one not at all: a blow does not slide them.
+      ...(movement === "grid" || movement === "none"
+        ? {}
+        : { shove: (dx: number, dz: number) => playerShove.push(dx, movement === "side" ? 0 : dz) }),
     }),
-    [player, rig, facing, movement],
+    [player, rig, facing, movement, ground],
   );
 
   const fire = useCallback(() => {

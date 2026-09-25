@@ -1,6 +1,9 @@
 // A BCP-47 tag as the model reads it. Shared so the story prompts (shared) and the DSL prompts name
 // a language the same way, and so hygiene checks can ask which script a world is written in.
 
+/** A language tag a save may carry ("ja-JP", "zh-TW", "en"): language, then up to three subtags. */
+export const LANGUAGE_TAG_PATTERN = /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8}){0,3}$/;
+
 /** "Hant" / "Hans" / "Jpan" … for a tag, or null when the runtime cannot tell. */
 export function scriptOf(tag: string): string | null {
   try {

@@ -284,6 +284,11 @@ export interface SaveState {
    * made before seeds, whose land still comes from their cartridge id.
    */
   seed?: string;
+  /**
+   * Language the land is written in (BCP-47), chosen at New Game. Absent on older saves and on
+   * worlds made from a story, whose bible names the language instead.
+   */
+  language?: string;
   updatedAt: string;
 }
 

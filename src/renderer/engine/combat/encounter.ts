@@ -175,6 +175,34 @@ export function buildEncounter(
   };
 }
 
+/**
+ * A rebuilt fight keeps what the old one did to whoever is in both: hostiles keep their wounds (the
+ * fallen stay down), and the player keeps `playerHp` (null: full health, as after getting back up).
+ * The turn order is set up again from who is still standing.
+ */
+export function carryWounds(
+  built: BuiltEncounter,
+  previous: readonly EncounterCombatant[],
+  playerHp: number | null,
+): BuiltEncounter {
+  const before = new Map(previous.map((one) => [one.id, one.hp]));
+  const combatants = built.combatants.map((one) => {
+    if (one.id === PLAYER_ID) {
+      return playerHp === null ? one : { ...one, hp: Math.max(0, Math.min(one.maxHp, playerHp)) };
+    }
+    if (one.side !== "hostile") return one;
+    const hp = before.get(one.id);
+    return hp === undefined ? one : { ...one, hp: Math.max(0, Math.min(one.maxHp, hp)) };
+  });
+  const actors = combatants.map((one) => ({
+    id: one.id,
+    side: one.side,
+    speed: one.speed,
+    alive: one.hp > 0,
+  }));
+  return { ...built, combatants, turn: beginEncounter(built.turn.system, actors) };
+}
+
 /** Camera forward for the FPS/orbit rigs, which both look along `-Z` rotated by yaw then pitch. */
 export function aimDirection(yaw: number, pitch: number): { dx: number; dy: number; dz: number } {
   const flat = Math.cos(pitch);

@@ -1,17 +1,21 @@
 // The one combat model (`shooter_combat@1` + `turn_scheduler@1` + `team_party@1`), free of any
-// renderer: the player's trigger, the cooldown, the aim preview, and the turns that belong to
-// somebody else. The 3D canvas (CombatControl) and the open land (LandView2D) both drive it, so a
-// weapon added by a mod behaves the same wherever it is fired.
+// renderer: the player's trigger, the cooldown, the aim preview, the turns that belong to somebody
+// else, and in real time the hostiles that close in and strike back. The 3D canvas (CombatControl)
+// and the open land (LandView2D) both drive it, so a weapon added by a mod — or a monster's blow —
+// behaves the same wherever it happens; they only say where things can stand.
 //
-// Rule 4: the clock is a plain mutable object the caller keeps in a ref; only a shot, a hit or a
-// turn change reaches the store.
+// Rule 4: the clock is a plain mutable object the caller keeps in a ref — including where every
+// real-time hostile has walked to (`hostiles.ts`); only a shot, a hit or a turn change reaches the
+// store.
 
-import { useEncounterStore, useRunStore } from "@renderer/state";
+import { type EncounterCombatant, useEncounterStore, useRunStore } from "@renderer/state";
 import { type Blocker, hitscan, type Ray } from "@shared/combat";
+import { FOE_TUNING, foeDamage } from "@shared/foes";
 import type { GameplayRules } from "@shared/gameplay";
 import { damageAtLevel } from "@shared/progression";
 import { activeActor, chargeBars, isContinuous } from "@shared/timing";
 import { chooseVictim, PLAYER_ID } from "./encounter";
+import { type HostileGround, type HostileState, type Point, stepHostiles } from "./hostiles";
 
 /** How long a committed action is played out before the turn moves on. */
 export const RESOLVE_SECONDS = 0.45;
@@ -20,10 +24,27 @@ export interface CombatClock {
   cooldown: number;
   resolve: number;
   tick: number;
+  /** Real time: where each living hostile has walked to and what it is doing, keyed by id. */
+  hostiles: Map<string, HostileState>;
+  /** Seconds the player cannot be hurt again (after a blow, after getting back up). */
+  guard: number;
 }
 
 export function newCombatClock(): CombatClock {
-  return { cooldown: 0, resolve: 0, tick: 0 };
+  return { cooldown: 0, resolve: 0, tick: 0, hostiles: new Map(), guard: 0 };
+}
+
+/** The fight's hostiles where they stand this instant (the roster only knows where they began). */
+export function liveHostiles(
+  clock: CombatClock,
+  combatants: readonly EncounterCombatant[],
+): EncounterCombatant[] {
+  return combatants
+    .filter((one) => one.side === "hostile")
+    .map((one) => {
+      const live = clock.hostiles.get(one.id);
+      return live === undefined ? one : { ...one, x: live.x, z: live.z };
+    });
 }
 
 export interface CombatAim {
@@ -36,6 +57,10 @@ export interface CombatAim {
    * only the player falling ends the fight.
    */
   endless?: boolean;
+  /** Where real-time hostiles may walk: the same test the player moves by. Absent = they hold. */
+  ground?: HostileGround;
+  /** Pushes the player back by (dx, dz) tiles, through the controller's own collision. */
+  shove?(dx: number, dz: number): void;
 }
 
 /** What a trigger pull did, with how far the shot flew when it connected. */
@@ -52,9 +77,11 @@ export function strike(
   endless = false,
 ): boolean {
   const store = useEncounterStore.getState();
+  const hostile = store.combatants.find((one) => one.id === targetId)?.side === "hostile";
   const killed = store.hit(targetId, damage);
   const run = useRunStore.getState();
-  if (killed) run.recordKill(victimLevel);
+  // Only a felled hostile is a kill; the player falling ends the run, it is not a trophy.
+  if (killed && hostile) run.recordKill(victimLevel);
   const after = useEncounterStore.getState().combatants;
   run.settle({
     playerAlive: (after.find((one) => one.id === PLAYER_ID)?.hp ?? 0) > 0,
@@ -98,12 +125,7 @@ export function fireWeapon(
     return { outcome: "reload", distance: null };
   }
 
-  const hit = hitscan(
-    aim.ray(),
-    weapon,
-    state.combatants.filter((one) => one.side === "hostile"),
-    blockers,
-  );
+  const hit = hitscan(aim.ray(), weapon, liveHostiles(clock, state.combatants), blockers);
   // Nothing in the line of fire is not a shot: it spends neither a round nor a turn.
   if (hit === null) {
     state.recordShot("empty");
@@ -129,23 +151,25 @@ export function stepCombat(
   delta: number,
 ): void {
   if (clock.cooldown > 0) clock.cooldown = Math.max(0, clock.cooldown - delta);
+  if (clock.guard > 0) clock.guard = Math.max(0, clock.guard - delta);
 
   const store = useEncounterStore.getState();
 
   // Aim preview: the same hitscan the trigger will use, so nothing promises a hit the shot would
   // not make. `setAimTarget` only writes when the target identity changes (Rule 4).
   if (store.weapon !== null) {
-    const preview = hitscan(
-      aim.ray(),
-      store.weapon,
-      store.combatants.filter((one) => one.side === "hostile"),
-      blockers,
-    );
+    const live = liveHostiles(clock, store.combatants);
+    const preview = hitscan(aim.ray(), store.weapon, live, blockers);
     store.setAimTarget(preview?.combatantId ?? null);
   }
 
   const turn = store.turn;
-  if (turn === null || isContinuous(turn.system)) return;
+  if (turn === null) return;
+  // Real time: the hostiles close in and strike on their own clock (a paused world holds still).
+  if (isContinuous(turn.system)) {
+    if (!store.paused) stepRealtimeHostiles(clock, aim, rules, delta);
+    return;
+  }
 
   // A committed action is still playing out.
   if (clock.resolve > 0) {
@@ -210,6 +234,40 @@ export function stepCombat(
   }
   store.commitTurn();
   clock.resolve = RESOLVE_SECONDS;
+}
+
+/** Every living hostile walks, winds up or strikes; a blow lands through `strike`, like a shot. */
+function stepRealtimeHostiles(
+  clock: CombatClock,
+  aim: CombatAim,
+  rules: GameplayRules | null,
+  delta: number,
+): void {
+  const combat = rules?.combat ?? null;
+  const store = useEncounterStore.getState();
+  if (combat === null || useRunStore.getState().outcome !== "running") return;
+  const you = store.combatants.find((one) => one.id === PLAYER_ID);
+  if (you === undefined || you.hp <= 0) return;
+  const roster = store.combatants.filter((one) => one.side === "hostile" && one.hp > 0);
+  const player = aim.player();
+  const ground = aim.ground ?? null;
+  stepHostiles(clock.hostiles, roster, { player, delta, ground }, (id, from) => {
+    const attacker = roster.find((one) => one.id === id);
+    // A blow inside the guard window after the last one glances off.
+    if (attacker === undefined || clock.guard > 0) return false;
+    strike(PLAYER_ID, foeDamage(combat, attacker.level), 1, aim.endless);
+    clock.guard = FOE_TUNING.guardSeconds;
+    shoveAway(aim, from, player);
+    return useRunStore.getState().outcome !== "running";
+  });
+}
+
+function shoveAway(aim: CombatAim, from: Point, player: Point): void {
+  const dx = player.x - from.x;
+  const dz = player.z - from.z;
+  const length = Math.hypot(dx, dz);
+  if (aim.shove === undefined || length < 1e-6) return;
+  aim.shove((dx / length) * FOE_TUNING.knockback, (dz / length) * FOE_TUNING.knockback);
 }
 
 /** Ends the player's planning turn with no action (the `end_turn` key). */

@@ -187,6 +187,8 @@ export interface CreateInstanceInput {
   name: string;
   /** World seed of an open-land game; omitted for cartridges that have none. */
   seed?: string;
+  /** Language the land is written in (BCP-47); omitted to follow the bible or the UI language. */
+  language?: string;
 }
 
 export type CheckpointInstanceInput = InstanceProgressInput;
