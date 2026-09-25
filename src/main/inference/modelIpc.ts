@@ -1,4 +1,4 @@
-// The channels behind System → Model: write-only API keys and what can run a model on this
+// The channels behind Settings → Model: write-only API keys and what can run a model on this
 // computer. A key goes in through `setApiKey` and never comes back out — the renderer only ever
 // sees a KeyStatus. Every payload is zod-checked (`keys.ts`); nothing here logs a key.
 

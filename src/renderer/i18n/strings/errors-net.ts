@@ -60,14 +60,14 @@ export const NET_ERRORS: Record<string, ErrorText> = {
       ja: "どのシグナリングサーバーも応答しないため、ほかの世界はこの大陸を見つけられません。",
     },
     hint: {
-      en: "On the title screen open System → Signaling servers, test them and save one that answers, then open the continent again. It turns live by itself if a server answers first.",
+      en: "On the title screen open Settings → Signaling servers, test them and save one that answers, then open the continent again. It turns live by itself if a server answers first.",
       "zh-TW":
-        "請在標題畫面開啟「系統 → 信令伺服器」，測試後儲存一個有回應的伺服器，再重新開啟大陸。若伺服器先回應，會自動恢復連線。",
-      ja: "タイトル画面で「システム → シグナリングサーバー」を開き、テストして応答するサーバーを保存してから、大陸を開き直してください。先にサーバーが応答すれば自動でつながります。",
+        "請在標題畫面開啟「設定 → 信令伺服器」，測試後儲存一個有回應的伺服器，再重新開啟大陸。若伺服器先回應，會自動恢復連線。",
+      ja: "タイトル画面で「設定 → シグナリングサーバー」を開き、テストして応答するサーバーを保存してから、大陸を開き直してください。先にサーバーが応答すれば自動でつながります。",
     },
   },
 
-  // ── Signaling servers (System → Signaling servers) ────────────────────────────────────────
+  // ── Signaling servers (Settings → Signaling servers) ────────────────────────────────────────
   "signaling-bad-url": {
     message: {
       en: "That is not a signaling server address.",

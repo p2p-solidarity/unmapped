@@ -84,6 +84,13 @@ export async function runProgram<T, E extends AppError>(
     if (parsed.ok) return ok({ source, graph: parsed.value, usage });
 
     last = parsed.error;
+    if (round < maxRepairs) {
+      // Why a repair round was spent, so a run can be read back from the log (never the text itself).
+      const first = (parsed.error as { errors?: { message?: string }[] }).errors?.[0]?.message;
+      console.warn(
+        `[repair] ${round + 1}/${maxRepairs} · ${parsed.error.code} · ${parsed.error.message.slice(0, 200)}${first === undefined ? "" : ` · ${first.slice(0, 200)}`}`,
+      );
+    }
     // Only the latest attempt goes back (the repair prompt quotes it again): earlier rounds would
     // fill a small local context with programs that were already rejected.
     if (round < maxRepairs) {
@@ -103,7 +110,7 @@ function exhausted(last: AppError | null, rounds: number): AppError {
     return {
       code: "program-invalid",
       message: "The model never produced a parsable program.",
-      hint: "try again, or switch to a larger model in System → Model",
+      hint: "try again, or switch to a larger model in Settings → Model",
     };
   }
   // A DSL error carries the statement-level complaints; the first one is what the player (and
@@ -114,6 +121,6 @@ function exhausted(last: AppError | null, rounds: number): AppError {
     message: `${last.message}${first === undefined ? "" : ` ${first}`} (still invalid after ${rounds} repair ${
       rounds === 1 ? "round" : "rounds"
     })`,
-    hint: last.hint ?? "try again, or switch to a larger model in System → Model",
+    hint: last.hint ?? "try again, or switch to a larger model in Settings → Model",
   };
 }

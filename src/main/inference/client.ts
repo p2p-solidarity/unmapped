@@ -191,7 +191,7 @@ export function createClient(
     return fail({
       code: "no-api-key",
       message: `The ${safeConfig.kind} provider needs an API key and none is set.`,
-      hint: `Enter a key in System → Model (Cloud API), or add ${safeConfig.apiKeyEnv ?? "the key"} to .env.`,
+      hint: `Enter a key in Settings → Model (Cloud API), or add ${safeConfig.apiKeyEnv ?? "the key"} to .env.`,
     });
   }
   return ok(new OpenAI({ baseURL: safeConfig.baseUrl, apiKey: apiKey ?? "local" }));
@@ -266,8 +266,8 @@ export function mapProviderError(
         config.kind === "llamacpp"
           ? "start llama-server (llama-server -m <model>.gguf --port 8080 --jinja) or fix baseUrl"
           : config.kind === "apple-fm"
-            ? "select Apple on-device in System → Model (it starts fm serve); run `sudo fm license` once first"
-            : `check the endpoint (${config.baseUrl}) in System → Model and that the server is running`,
+            ? "select Apple on-device in Settings → Model (it starts fm serve); run `sudo fm license` once first"
+            : `check the endpoint (${config.baseUrl}) in Settings → Model and that the server is running`,
     });
   }
   if (e instanceof APIError) {
@@ -275,14 +275,14 @@ export function mapProviderError(
       return fail({
         code: "auth",
         message: `The provider rejected the credentials: ${e.message}`,
-        hint: "enter a valid key in System → Model (Cloud API)",
+        hint: "enter a valid key in Settings → Model (Cloud API)",
       });
     }
     if (e.status === 404) {
       return fail({
         code: "model-not-found",
         message: `${config.baseUrl} does not serve model "${config.model}".`,
-        hint: "pick one of the models the server lists in System → Model",
+        hint: "pick one of the models the server lists in Settings → Model",
       });
     }
     return fail({

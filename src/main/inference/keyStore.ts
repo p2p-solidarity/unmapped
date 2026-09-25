@@ -39,7 +39,7 @@ function keyPath(provider: KeyProvider): string | null {
   return root === null ? null : join(root, `${provider}.key`);
 }
 
-const UNREADABLE_HINT = "Open System → Model, remove the saved key and enter it again.";
+const UNREADABLE_HINT = "Open Settings → Model, remove the saved key and enter it again.";
 
 /**
  * The saved key for `provider`: ok(null) only when none was saved. A file that exists but cannot
@@ -59,7 +59,7 @@ export async function readKeyRecord(provider: KeyProvider): Promise<Result<KeyRe
     return err(
       "key-storage-unavailable",
       `The saved ${provider} key cannot be decrypted: this computer's keychain encryption is not available.`,
-      "Unlock the OS keychain and restart UNMAPPED, or remove the saved key in System → Model.",
+      "Unlock the OS keychain and restart UNMAPPED, or remove the saved key in Settings → Model.",
     );
   }
   let record: KeyRecord | null;

@@ -1,18 +1,18 @@
 // Hints that several error codes share, so every screen tells the player the same next step in
-// the same words. Players choose their model in Title → System → Model.
+// the same words. Players choose their model in Title → Settings → Model.
 
 import type { Phrase } from "./phrase";
 
 export const HINT = {
   retryModel: {
-    en: "Try again, or switch to a larger model in System → Model.",
-    "zh-TW": "請再試一次，或到「系統 → 模型」換用較大的模型。",
-    ja: "もう一度試すか、「システム → モデル」でより大きなモデルに切り替えてください。",
+    en: "Try again, or switch to a larger model in Settings → Model.",
+    "zh-TW": "請再試一次，或到「設定 → 模型」換用較大的模型。",
+    ja: "もう一度試すか、「設定 → モデル」でより大きなモデルに切り替えてください。",
   },
   checkModel: {
-    en: "Check the model in System → Model, then try again.",
-    "zh-TW": "請到「系統 → 模型」檢查模型，然後再試一次。",
-    ja: "「システム → モデル」でモデルを確認してから、もう一度試してください。",
+    en: "Check the model in Settings → Model, then try again.",
+    "zh-TW": "請到「設定 → 模型」檢查模型，然後再試一次。",
+    ja: "「設定 → モデル」でモデルを確認してから、もう一度試してください。",
   },
   tryAgain: { en: "Try again.", "zh-TW": "請再試一次。", ja: "もう一度試してください。" },
   disk: {

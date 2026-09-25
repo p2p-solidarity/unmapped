@@ -70,7 +70,7 @@ export function fitOutput(
     return fail({
       code: "model-context-too-small",
       message: `This task needs about ${prompt} tokens of prompt and at least ${need} of answer, but ${modelLabel} holds ${window.tokens} in all.`,
-      hint: "Switch to Cloud API in System → Model, or give the local model a larger context.",
+      hint: "Switch to Cloud API in Settings → Model, or give the local model a larger context.",
     });
   }
   return ok({ maxTokens: Math.min(request.maxTokens, room), promptTokens: prompt });

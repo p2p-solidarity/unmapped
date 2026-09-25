@@ -43,7 +43,7 @@ function userDataEnvPath(): string | null {
 
 /**
  * Dev: the cwd is the repo root. Packaged: the app bundle, the app's data folder, then the cwd.
- * Keys typed in System → Model need none of these (`inference/keyStore.ts`).
+ * Keys typed in Settings → Model need none of these (`inference/keyStore.ts`).
  */
 export function envCandidatePaths(): string[] {
   const fromCwd = join(process.cwd(), ".env");

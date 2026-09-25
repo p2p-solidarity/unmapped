@@ -13,7 +13,7 @@ import { randomFromAlphabet } from "./codes";
  * y-webrtc connects to every server listed and two machines meet through any one they share, so
  * two lower the odds that nobody can meet; a build that only knows y-webrtc-eu (y-webrtc's own
  * default) still meets this one there. For a dependable meeting place, run y-webrtc's signaling
- * server yourself and enter it in System → Signaling servers.
+ * server yourself and enter it in Settings → Signaling servers.
  */
 export const DEFAULT_SIGNALING: readonly string[] = [
   "wss://y-webrtc-eu.fly.dev",

@@ -45,6 +45,10 @@ export async function askInLines<T>(call: LineCall<T>, io: CallIo): Promise<Resu
     if (!reply.ok) return reply;
     const parsed = call.parse(reply.value.text);
     if (parsed.ok || attempt >= repairs) return parsed;
+    // Why a repair round was spent, so a run can be read back from the log (never the text itself).
+    console.warn(
+      `[repair] ${call.task} ${attempt + 1}/${repairs} · ${parsed.error.code} · ${parsed.error.message.slice(0, 240)}`,
+    );
     messages.push(
       { role: "assistant", content: reply.value.text.slice(0, 20_000) },
       {

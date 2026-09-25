@@ -1,6 +1,6 @@
 // Hydrates the inference store on mount: config → sidecar status → probe, then keeps the sidecar
 // status live. Every screen that shows model state mounts this once; `refreshProbe` is for the
-// "Retry connection" affordances. Any change of provider (System → Model or the console) probes
+// "Retry connection" affordances. Any change of provider (Settings → Model or the console) probes
 // the new one at once, so a reading from the previous provider never stays on screen.
 
 import { useInferenceStore } from "@renderer/state/inferenceStore";

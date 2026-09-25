@@ -108,7 +108,7 @@ export interface ContextWindow {
   source: "sidecar" | "server" | "model" | "assumed";
 }
 
-// ── Keys typed on screen (System → Model) ────────────────────────────────────────────────────
+// ── Keys typed on screen (Settings → Model) ────────────────────────────────────────────────────
 // The renderer may hand main a key but never reads one back: it only ever sees a KeyStatus.
 
 /** Providers a player can give a key to; everything else runs on this machine without one. */

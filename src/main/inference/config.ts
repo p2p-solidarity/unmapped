@@ -179,7 +179,7 @@ export function parseConfig(raw: unknown): Result<InferenceConfig> {
     return fail({
       code: "untrusted-config",
       message: "This inference endpoint or credential source is not trusted.",
-      hint: "Use the OpenAI or OpenUI preset, a loopback local server, or a custom endpoint whose key is entered in System → Model; sidecars must be llama-server or Apple's fm.",
+      hint: "Use the OpenAI or OpenUI preset, a loopback local server, or a custom endpoint whose key is entered in Settings → Model; sidecars must be llama-server or Apple's fm.",
     });
   }
   return ok(parsed.data);

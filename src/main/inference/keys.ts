@@ -1,4 +1,4 @@
-// API keys a player types in System → Model. Pure rules only — validation, the record format and
+// API keys a player types in Settings → Model. Pure rules only — validation, the record format and
 // which key a request may use; `keyStore.ts` encrypts records with safeStorage. A key is bound to
 // the one base URL it was entered for and is never sent anywhere else, and nothing in here ever
 // hands a key to the renderer: the renderer only sees a KeyStatus.
@@ -150,7 +150,7 @@ export function pickApiKey(
 
 /**
  * `pickApiKey` over the result of reading the saved record. .env is always the fallback: a saved
- * key that no longer reads still lets the .env key through (System → Model keeps showing it as
+ * key that no longer reads still lets the .env key through (Settings → Model keeps showing it as
  * unreadable), and it is an error only when there is no .env key either.
  */
 export function resolveKey(
