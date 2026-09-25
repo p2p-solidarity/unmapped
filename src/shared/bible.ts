@@ -276,3 +276,77 @@ export function parseBibleCard(part: BiblePart, reply: string): Result<Partial<B
   if (text === "") return err("bible-card-invalid", `The ${part} is empty.`, format);
   return ok({ [part]: text });
 }
+
+export interface BibleCardsInput extends Omit<BibleCardInput, "part"> {
+  /** The parts to write again (the unlocked cards); every other part is fixed context. */
+  parts: readonly BiblePart[];
+}
+
+const PART_HEADER: Record<BiblePart, string> = {
+  premise: "PREMISE",
+  tone: "TONE",
+  rules: "RULES",
+  taboos: "TABOOS",
+  naming: "NAMING",
+  voice: "VOICE",
+  look: "LOOK",
+};
+
+/**
+ * Asks for several parts in one reply — "rewrite the unlocked cards" — with the locked parts given
+ * as fixed text the new ones must agree with. The reply is one `@@<part>` block per asked part.
+ */
+export function bibleCardsMessages(input: BibleCardsInput): ChatMessage[] {
+  const f = input.fields;
+  const asked = BIBLE_PARTS.filter((part) => input.parts.includes(part));
+  const listing = BIBLE_PARTS.map((part) => {
+    const mark = asked.includes(part) ? "(rewrite)" : "(fixed: keep exactly)";
+    const value = f[part];
+    return Array.isArray(value)
+      ? `${PART_HEADER[part]} ${mark}:\n${value.map((item) => `- ${item}`).join("\n")}`
+      : `${PART_HEADER[part]} ${mark}: ${value}`;
+  }).join("\n");
+  const format = asked
+    .map(
+      (part) =>
+        `@@${part}\n${isListPart(part) ? `- <one ${part === "rules" ? "rule" : "taboo"} per line>` : "<the text>"}`,
+    )
+    .join("\n");
+  return [
+    {
+      role: "system",
+      content: `You edit the bible of a game world called "${input.name.slice(0, 60)}": ${input.intent.slice(0, 400)}
+${fightingLine(input.fights)}
+The bible as it stands:
+${listing}
+
+Rewrite only the parts marked (rewrite):
+${asked.map((part) => `- ${PART_ASK[part]}`).join("\n")}
+The parts marked (fixed) are the player's own and stay exactly as they are: every rewritten part must agree with them. Follow the player's note. Write in ${languageName(input.language)}.
+Reply ONLY in this format, the parts in this order:
+${format}
+@@end`,
+    },
+    {
+      role: "user",
+      content:
+        input.note.trim() === ""
+          ? "No note: write fresh versions of the parts to rewrite."
+          : `Player's note: ${input.note.slice(0, 300)}`,
+    },
+  ];
+}
+
+/** Reads a reply of several `@@<part>` blocks; every asked part must be there and valid. */
+export function parseBibleCards(
+  parts: readonly BiblePart[],
+  reply: string,
+): Result<Partial<BibleFields>> {
+  let fields: Partial<BibleFields> = {};
+  for (const part of parts) {
+    const one = parseBibleCard(part, reply);
+    if (!one.ok) return one;
+    fields = { ...fields, ...one.value };
+  }
+  return ok(fields);
+}

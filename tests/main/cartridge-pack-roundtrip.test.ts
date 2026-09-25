@@ -4,14 +4,17 @@
 //   1. Import republishes only manifest, rules, scenes and assets: the bible, the story and the baked
 //      dialogues are dropped, so the imported revision is another world with the same name.
 //   2. Importing the same pack twice is refused as a version conflict instead of being a no-op.
+//   3. The world's look picture (`assets/look.png`, rev 6 D2) changes or disappears on the way:
+//      the import has another hash, or `readLookPicture` hands later pictures no reference.
 
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { installCartridgePack } from "@main/cartridges/install";
+import { readLookPicture } from "@main/cartridges/look";
 import { packCartridge } from "@main/cartridges/pack";
 import { publishCartridgeRevision, readCartridgeRevision } from "@main/cartridges/store";
-import type { PublishCartridgeInput } from "@shared/cartridge";
+import { LOOK_PICTURE_ASSET, type PublishCartridgeInput } from "@shared/cartridge";
 import { episodePlaces, type StoryPlan } from "@shared/story";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { v2CartridgeWithVoices } from "../fixtures/v2";
@@ -90,5 +93,34 @@ describe("a .cartridge export and import", () => {
     expect(unwrap(await installCartridgePack(target, bytes)).contentHash).toBe(
       published.contentHash,
     );
+  });
+
+  it("keeps the look picture byte for byte, and reads it back as the reference (3)", async () => {
+    const source = join(root, "a");
+    const target = join(root, "b");
+    // A PNG signature and a few arbitrary bytes: the path is what is under test, not the image.
+    const look = new Uint8Array([
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 1, 2, 250, 255,
+    ]);
+    const withLook = fullWorld();
+    const published = unwrap(
+      await publishCartridgeRevision(source, {
+        ...withLook,
+        assets: { ...withLook.assets, [LOOK_PICTURE_ASSET]: look },
+      }),
+    );
+    expect(published.files.some((file) => file.path === `assets/${LOOK_PICTURE_ASSET}`)).toBe(true);
+    const revision = unwrap(
+      await readCartridgeRevision(source, published.cartridgeId, published.version),
+    );
+    const imported = unwrap(await installCartridgePack(target, unwrap(packCartridge(revision))));
+    expect(imported.contentHash).toBe(published.contentHash);
+    const back = unwrap(await readLookPicture(imported.cartridgeId, imported.version, target));
+    expect(back).toEqual(look);
+
+    const without = unwrap(await publishCartridgeRevision(join(root, "c"), fullWorld()));
+    expect(
+      unwrap(await readLookPicture(without.cartridgeId, without.version, join(root, "c"))),
+    ).toBeNull();
   });
 });

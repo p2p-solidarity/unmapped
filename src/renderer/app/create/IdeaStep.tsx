@@ -1,5 +1,6 @@
 // Create a game, page 1: what the world is and how it is played. Everything here is the player's
-// own words or a choice between things the game can really do; nothing is generated yet.
+// own words or a choice between things the game can really do; nothing is generated yet. Only the
+// words are needed: a blank name is taken from them when the world is written.
 
 import { contentLanguage, languageLabel, type StringKey, useT } from "@renderer/i18n";
 import type { PlayStyle } from "@renderer/narrative/openLandCartridge";
@@ -40,19 +41,19 @@ export function IdeaStep({
   return (
     <>
       <TextField
-        label={t("create.worldName")}
-        value={idea.name}
-        maxLength={60}
-        disabled={busy}
-        autoFocus
-        onChange={(event) => set("name", event.target.value)}
-      />
-      <TextField
         label={t("create.intent")}
         value={idea.intent}
         maxLength={400}
         disabled={busy}
+        autoFocus
         onChange={(event) => set("intent", event.target.value)}
+      />
+      <TextField
+        label={t("create.worldNameOptional")}
+        value={idea.name}
+        maxLength={60}
+        disabled={busy}
+        onChange={(event) => set("name", event.target.value)}
       />
       <TextField
         label={t("create.story")}

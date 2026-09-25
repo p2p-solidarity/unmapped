@@ -434,4 +434,16 @@ export const CARTRIDGE_ERRORS: Record<string, ErrorText> = {
       ja: "インストール済みの素材パックで生成し直してください。",
     },
   },
+  "cartridge-look-invalid": {
+    message: {
+      en: "This world's look picture is not a PNG within 4 MB.",
+      "zh-TW": "這個世界的外觀圖片不是 4 MB 以內的 PNG。",
+      ja: "この世界の見た目の絵は 4 MB 以内の PNG ではありません。",
+    },
+    hint: {
+      en: "Its pictures are drawn without a reference.",
+      "zh-TW": "它的圖片會在沒有參考圖的情況下繪製。",
+      ja: "この世界の絵は参考画像なしで描かれます。",
+    },
+  },
 };

@@ -1,27 +1,22 @@
-// Create a game: durable idea → reviewed world → reviewed story → Build. Only Build publishes.
-import { contentLanguage, type StringKey, useT } from "@renderer/i18n";
+// Create a game: a few words → world cards → look → story → a quote → Build. Only Build publishes.
+// Foreground model calls go through `run` (one at a time, a stage label, a preview, Cancel); the
+// look pictures (useLookPictures) and the story plan written ahead (useStoryAhead) run beside it.
+import { contentLanguage, useT } from "@renderer/i18n";
 import { useUsageScope } from "@renderer/llm";
-import { buildWorld, type NewWorldStage } from "@renderer/narrative/newWorld";
+import { buildWorld } from "@renderer/narrative/newWorld";
 import { PEACEFUL } from "@renderer/narrative/openLandCartridge";
 import { generationEventLabel } from "@renderer/narrative/sceneGeneration";
-import {
-  rewriteBiblePart,
-  rewriteChapter,
-  rewriteUnlocked,
-  writeBible,
-  writeChapterAt,
-  writeStory,
-} from "@renderer/narrative/worldDraft";
+import { rewriteBiblePart, rewriteBibleParts, writeBible } from "@renderer/narrative/worldDraft";
 import { useInferenceStore, useSessionStore } from "@renderer/state";
-import { type BiblePart, flattenBible } from "@shared/bible";
-import type { CreateDraft, CreateDraftEntry, CreateStep, DraftChapter } from "@shared/createDraft";
+import { BIBLE_PARTS, type BibleFields, type BiblePart, flattenBible } from "@shared/bible";
+import type { CreateDraft, CreateDraftEntry, DraftWorld } from "@shared/createDraft";
 import { type AppError, fail, type Loadable, type Result } from "@shared/result";
-import { STORY_LIMITS } from "@shared/story";
 import { useEffect, useRef, useState } from "react";
 import { useRefreshProbe } from "../inferenceSync";
 import { openInstance } from "../useInstanceLoader";
 import {
-  editContext,
+  lockedParts,
+  nameFromWords,
   storyBasis,
   storyPlan,
   storyStale,
@@ -29,37 +24,14 @@ import {
   worldReady,
 } from "./draftState";
 import type { Idea } from "./IdeaStep";
+import { CARD_LABEL, type Run, STEPS, type Stage } from "./stages";
+import { useLookPictures } from "./useLookPictures";
+import { useStoryActions } from "./useStoryActions";
+import { useStoryAhead } from "./useStoryAhead";
 import { patchBible } from "./WorldStep";
 
-export const STEPS: readonly CreateStep[] = ["idea", "world", "story", "build"];
 /** Characters of streamed text kept for the live preview: a whole story plan fits. */
 const STREAM_KEEP = 24_000;
-export const STEP_LABEL: Record<CreateStep, StringKey> = {
-  idea: "create.stepIdea",
-  world: "create.stepWorld",
-  story: "create.stepStory",
-  build: "create.stepBuild",
-};
-type Stage = "world" | "card" | "story" | "chapter" | "insert" | "note" | NewWorldStage;
-export const STAGE_LABEL: Record<Stage, StringKey> = {
-  world: "create.stageWorld",
-  card: "create.stageCard",
-  story: "create.stageStory",
-  chapter: "create.stageChapter",
-  insert: "create.stageInsert",
-  note: "create.stageNote",
-  origin: "create.stageOrigin",
-  publish: "create.stagePublish",
-};
-const CARD_LABEL: Record<BiblePart, StringKey> = {
-  premise: "create.partPremise",
-  tone: "create.partTone",
-  rules: "create.partRules",
-  taboos: "create.partTaboos",
-  naming: "create.partNaming",
-  voice: "create.partVoice",
-  look: "create.partLook",
-};
 const cancelled = (error: AppError): boolean =>
   error.code === "cancelled" || error.code === "request-aborted";
 const initialIdea = (): Idea => ({
@@ -69,6 +41,14 @@ const initialIdea = (): Idea => ({
   language: contentLanguage(),
   play: PEACEFUL,
 });
+
+/** New fields from the model, with every locked card kept as the player had it. */
+function keepLocked(world: DraftWorld | null, fields: BibleFields): BibleFields {
+  if (world === null) return fields;
+  let next = fields;
+  for (const part of lockedParts(world)) next = patchBible(next, part, world.fields[part]);
+  return next;
+}
 
 export function useCreateController() {
   const t = useT();
@@ -145,8 +125,14 @@ export function useCreateController() {
     });
   };
   const update = (change: (current: CreateDraft) => CreateDraft): void => {
-    if (latest.current !== null) keep(change(latest.current));
+    if (latest.current === null) return;
+    const next = change(latest.current);
+    if (next !== latest.current) keep(next);
   };
+
+  const looks = useLookPictures(draft?.draftId ?? null, latest, saves, update);
+  const ahead = useStoryAhead(draft, latest, update);
+
   const start = async (): Promise<void> => {
     setError(null);
     const created = await window.seed.createDrafts.create(initialIdea());
@@ -191,11 +177,11 @@ export function useCreateController() {
     update((one) => ({ ...one, step: STEPS[STEPS.indexOf(one.step) - 1] ?? "idea" }));
   };
 
-  const run = async <T>(
+  async function runStage<T>(
     at: Stage,
     work: (signal: AbortSignal, onDelta: (text: string) => void) => Promise<Result<T>>,
     arg: Record<string, string | number> = {},
-  ): Promise<Result<T>> => {
+  ): Promise<Result<T>> {
     setError(null);
     setProgress(null);
     setStageArg(arg);
@@ -219,27 +205,54 @@ export function useCreateController() {
       setStage(null);
       setProgress(null);
     }
-  };
+  }
+  const run: Run = runStage;
+  const story = useStoryActions(latest, update, run);
+
+  // While the look step is shown the story plan is written ahead, if the draft has none that fits.
+  const step = draft?.step ?? null;
+  const draftKey = draft?.draftId ?? null;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: start reads the latest draft itself
+  useEffect(() => {
+    if (step === "look") ahead.start();
+  }, [step, draftKey]);
+
+  /** The name alone: a rename never makes the world stale. */
+  const rename = (name: string): void =>
+    update((one) => ({ ...one, idea: { ...one.idea, name: name.slice(0, 60) } }));
 
   const writeWorld = async (): Promise<void> => {
     const current = latest.current;
-    if (current === null || current.idea.name.trim() === "" || current.idea.intent.trim() === "")
-      return;
-    const result = await run("world", (signal, onDelta) =>
-      writeBible(current.idea, { signal, onDelta }),
-    );
+    if (current === null || current.idea.intent.trim() === "") return;
+    // Only the words are needed: a blank name is taken from their first clause, and stays editable.
+    const named = current.idea.name.trim() !== "";
+    const idea = named
+      ? current.idea
+      : { ...current.idea, name: nameFromWords(current.idea.intent) };
+    if (!named) rename(idea.name);
+    const result = await run("world", (signal, onDelta) => writeBible(idea, { signal, onDelta }));
     if (!result.ok) return;
-    update((one) => ({
-      ...one,
-      step: "world",
-      world: {
-        fields: result.value,
-        edited: [],
-        basis: worldBasis(one.idea),
-        rev: (one.world?.rev ?? 0) + 1,
-      },
-    }));
+    update((one) => {
+      const locked = one.world === null ? [] : lockedParts(one.world);
+      return {
+        ...one,
+        step: "world",
+        world: {
+          fields: keepLocked(one.world, result.value),
+          edited: (one.world?.edited ?? []).filter((part) => locked.includes(part)),
+          basis: worldBasis(one.idea),
+          rev: (one.world?.rev ?? 0) + 1,
+          locked: [...locked],
+        },
+      };
+    });
   };
+  const keepWorld = (): void =>
+    update((one) =>
+      one.world === null
+        ? one
+        : { ...one, world: { ...one.world, basis: worldBasis(one.idea), rev: one.world.rev + 1 } },
+    );
   const cardEdit = (part: BiblePart, value: string | string[]): void =>
     update((one) =>
       one.world === null
@@ -254,184 +267,112 @@ export function useCreateController() {
             },
           },
     );
+  const cardLock = (part: BiblePart): void =>
+    update((one) => {
+      if (one.world === null) return one;
+      const locked = lockedParts(one.world);
+      const next = locked.includes(part)
+        ? locked.filter((item) => item !== part)
+        : BIBLE_PARTS.filter((item) => item === part || locked.includes(item));
+      return { ...one, world: { ...one.world, locked: next } };
+    });
+  /** Model-written parts land only on cards that are still unlocked when the reply arrives. */
+  const landCards = (value: Partial<BibleFields>, parts: readonly BiblePart[]): void =>
+    update((one) => {
+      if (one.world === null) return one;
+      const locked = lockedParts(one.world);
+      const landing = parts.filter((part) => !locked.includes(part) && value[part] !== undefined);
+      if (landing.length === 0) return one;
+      let fields = one.world.fields;
+      for (const part of landing) {
+        fields = patchBible(fields, part, value[part] as string | string[]);
+      }
+      return {
+        ...one,
+        world: {
+          ...one.world,
+          fields,
+          edited: one.world.edited.filter((item) => !landing.includes(item)),
+          rev: one.world.rev + 1,
+        },
+      };
+    });
   const cardRewrite = async (part: BiblePart, note: string): Promise<void> => {
     const current = latest.current;
     if (current === null || current.world === null) return;
+    if (lockedParts(current.world).includes(part)) return;
     const fields = current.world.fields;
     const result = await run(
       "card",
       (signal, onDelta) => rewriteBiblePart(current.idea, fields, part, note, { signal, onDelta }),
       { part: t(CARD_LABEL[part]) },
     );
-    if (!result.ok) return;
-    const value = result.value[part];
-    if (value === undefined) return;
-    update((one) =>
-      one.world === null
-        ? one
-        : {
-            ...one,
-            world: {
-              ...one.world,
-              fields: patchBible(one.world.fields, part, value),
-              edited: one.world.edited.filter((item) => item !== part),
-              rev: one.world.rev + 1,
-            },
-          },
-    );
+    if (result.ok) landCards(result.value, [part]);
   };
-  const writeTheStory = async (): Promise<void> => {
+  const cardsRewrite = async (note: string): Promise<void> => {
     const current = latest.current;
-    if (current === null || current.world === null || !worldReady(current)) return;
+    if (current === null || current.world === null) return;
+    const locked = lockedParts(current.world);
+    const parts = BIBLE_PARTS.filter((part) => !locked.includes(part));
+    if (parts.length === 0) return;
     const fields = current.world.fields;
-    const result = await run("story", (signal, onDelta) =>
-      writeStory(current.idea, fields, { signal, onDelta }),
+    const result = await run("cards", (signal, onDelta) =>
+      rewriteBibleParts(current.idea, fields, parts, note, { signal, onDelta }),
     );
-    if (!result.ok) return;
+    if (result.ok) landCards(result.value, parts);
+  };
+
+  /** World → look: the first visit draws the pictures (the story starts writing beside them). */
+  const toLook = (): void => {
+    const first = latest.current?.look === undefined;
+    update((one) => ({ ...one, step: "look" }));
+    if (first) void looks.draw();
+  };
+  /** Look → story, with the chosen picture or, when none is chosen, recorded as going without. */
+  const toStory = (): void => {
+    update((one) => {
+      const look = one.look ?? { pictures: [], chosen: null };
+      return { ...one, step: "story", look: { ...look, skipped: look.chosen === null } };
+    });
+    ahead.start();
+  };
+  const keepStory = (): void =>
     update((one) => {
       const basis = storyBasis(one);
-      if (basis === null) return one;
-      return {
-        ...one,
-        step: "story",
-        story: {
-          logline: result.value.logline,
-          loglineEdited: false,
-          chapters: result.value.chapters.map((text) => ({
-            ...text,
-            key: crypto.randomUUID().replaceAll("-", "").slice(0, 16),
-            locked: false,
-            edited: false,
-          })),
-          basis,
-        },
-      };
+      return one.story === null || basis === null
+        ? one
+        : { ...one, story: { ...one.story, basis } };
     });
-  };
-  const editChapter = (index: number, patch: Partial<DraftChapter>): void =>
-    update((one) =>
-      one.story === null
-        ? one
-        : {
-            ...one,
-            story: {
-              ...one.story,
-              chapters: one.story.chapters.map((ch, at) =>
-                at === index ? { ...ch, ...patch } : ch,
-              ),
-            },
-          },
-    );
-  const rewriteOne = async (index: number, note: string): Promise<void> => {
-    const current = latest.current;
-    if (current === null) return;
-    const ctx = editContext(current);
-    const key = current.story?.chapters[index]?.key;
-    if (ctx === null || key === undefined || current.story?.chapters[index]?.locked) return;
-    const result = await run(
-      "chapter",
-      (signal, onDelta) => rewriteChapter(ctx, index, note, { signal, onDelta }),
-      { n: index + 1 },
-    );
-    if (!result.ok) return;
-    update((one) =>
-      one.story === null
-        ? one
-        : {
-            ...one,
-            story: {
-              ...one.story,
-              chapters: one.story.chapters.map((ch) =>
-                ch.key === key && !ch.locked ? { ...ch, ...result.value, edited: false } : ch,
-              ),
-            },
-          },
-    );
-  };
-  const insert = async (index: number): Promise<void> => {
-    const current = latest.current;
-    if (
-      current === null ||
-      current.story === null ||
-      current.story.chapters.length >= STORY_LIMITS.maxEpisodes
-    )
-      return;
-    const ctx = editContext(current);
-    if (ctx === null) return;
-    const result = await run(
-      "insert",
-      (signal, onDelta) => writeChapterAt(ctx, index, { signal, onDelta }),
-      { n: index + 1 },
-    );
-    if (!result.ok) return;
-    update((one) =>
-      one.story === null
-        ? one
-        : {
-            ...one,
-            story: {
-              ...one.story,
-              chapters: [
-                ...one.story.chapters.slice(0, index),
-                {
-                  ...result.value,
-                  key: crypto.randomUUID().replaceAll("-", "").slice(0, 16),
-                  locked: false,
-                  edited: false,
-                },
-                ...one.story.chapters.slice(index),
-              ],
-            },
-          },
-    );
-  };
-  const revise = async (note: string): Promise<void> => {
-    const current = latest.current;
-    if (current === null || current.story === null) return;
-    const ctx = editContext(current);
-    if (ctx === null) return;
-    const unlocked = current.story.chapters.flatMap((one, index) => (one.locked ? [] : [index]));
-    if (unlocked.length === 0) return;
-    const chapters = current.story.chapters;
-    const keys = unlocked
-      .map((index) => chapters[index]?.key)
-      .filter((key): key is string => key !== undefined);
-    const result = await run("note", (signal, onDelta) =>
-      rewriteUnlocked(ctx, unlocked, note, { signal, onDelta }),
-    );
-    if (!result.ok) return;
-    update((one) =>
-      one.story === null
-        ? one
-        : {
-            ...one,
-            story: {
-              ...one.story,
-              chapters: one.story.chapters.map((ch) => {
-                const at = keys.indexOf(ch.key);
-                const target = unlocked[at];
-                const replacement = target === undefined ? undefined : result.value.get(target);
-                return replacement === undefined || ch.locked
-                  ? ch
-                  : { ...ch, ...replacement, edited: false };
-              }),
-            },
-          },
-    );
-  };
+
   const build = async (): Promise<void> => {
     const current = latest.current;
     if (current === null || !worldReady(current) || storyStale(current) || current.world === null)
       return;
-    const story = storyPlan(current);
-    if (story === null) return;
+    const plan = storyPlan(current);
+    if (plan === null) return;
+    const chosen = current.look?.chosen ?? null;
+    const look = looks.chosenPng(current);
+    if (chosen !== null && look === null) {
+      setError({
+        code: "create-look-missing",
+        message: "The chosen picture could not be read.",
+        hint: "Pick another picture, or go on without one.",
+      });
+      return;
+    }
+    // A name cleared after the world was written is taken from the words again.
+    const idea =
+      current.idea.name.trim() === ""
+        ? { ...current.idea, name: nameFromWords(current.idea.intent) }
+        : current.idea;
+    if (idea !== current.idea) rename(idea.name);
     await saves.current;
     if (saveFailed.current) return;
     const fields = current.world.fields;
     const result = await run("origin", (signal) =>
       buildWorld(
-        current.idea,
-        { bible: flattenBible(fields), story },
+        idea,
+        { bible: flattenBible(fields), story: plan, look },
         (next) => setStage(next),
         (event) => setProgress(generationEventLabel(event)),
         signal,
@@ -469,14 +410,21 @@ export function useCreateController() {
     remove,
     back,
     update,
+    rename,
     writeWorld,
+    keepWorld,
     cardEdit,
+    cardLock,
     cardRewrite,
-    writeTheStory,
-    editChapter,
-    rewriteOne,
-    insert,
-    revise,
+    cardsRewrite,
+    toLook,
+    toStory,
+    keepStory,
+    looks,
+    ahead,
+    story,
     build,
   };
 }
+
+export type CreateController = ReturnType<typeof useCreateController>;

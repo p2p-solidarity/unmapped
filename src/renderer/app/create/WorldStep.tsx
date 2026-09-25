@@ -9,6 +9,7 @@ import {
 } from "@shared/bible";
 import type { DraftWorld } from "@shared/createDraft";
 import { type JSX, useState } from "react";
+import { lockedParts } from "./draftState";
 
 const LABELS: Record<BiblePart, StringKey> = {
   premise: "create.partPremise",
@@ -20,27 +21,36 @@ const LABELS: Record<BiblePart, StringKey> = {
   look: "create.partLook",
 };
 
+interface CardActions {
+  onEdit(part: BiblePart, value: string | string[]): void;
+  onRewrite(part: BiblePart, note: string): void;
+  onLock(part: BiblePart): void;
+}
+
 function WorldCard({
   part,
   world,
   busy,
   onEdit,
   onRewrite,
-}: {
-  part: BiblePart;
-  world: DraftWorld;
-  busy: boolean;
-  onEdit(part: BiblePart, value: string | string[]): void;
-  onRewrite(part: BiblePart, note: string): void;
-}): JSX.Element {
+  onLock,
+}: CardActions & { part: BiblePart; world: DraftWorld; busy: boolean }): JSX.Element {
   const t = useT();
   const [note, setNote] = useState("");
   const value = world.fields[part];
   const list = isListPart(part);
+  const locked = lockedParts(world).includes(part);
   const shown = Array.isArray(value) ? value.join("\n") : value;
   return (
     <Surface variant="inset" padding="md" style={{ gap: space.sm }}>
-      <Text variant="label">{t(LABELS[part])}</Text>
+      <div style={{ display: "flex", gap: space.xs, alignItems: "center", flexWrap: "wrap" }}>
+        <Text variant="label" style={{ flex: "1 1 auto" }}>
+          {t(LABELS[part])}
+        </Text>
+        <Button variant="chip" active={locked} disabled={busy} onClick={() => onLock(part)}>
+          {t(locked ? "create.unlockChapter" : "create.lockChapter")}
+        </Button>
+      </div>
       <TextField
         label={list ? t("create.onePerLine") : undefined}
         value={shown}
@@ -59,42 +69,80 @@ function WorldCard({
           )
         }
       />
-      <div style={{ display: "flex", gap: space.sm, flexWrap: "wrap" }}>
-        <div style={{ flex: "1 1 250px" }}>
-          <TextField
-            label={t("create.cardNote")}
-            value={note}
-            maxLength={300}
-            disabled={busy}
-            onChange={(event) => setNote(event.target.value)}
-          />
+      {locked ? (
+        <Text variant="caption" tone="dim">
+          {t("create.cardLocked")}
+        </Text>
+      ) : (
+        <div style={{ display: "flex", gap: space.sm, flexWrap: "wrap" }}>
+          <div style={{ flex: "1 1 250px" }}>
+            <TextField
+              label={t("create.cardNote")}
+              value={note}
+              maxLength={300}
+              disabled={busy}
+              onChange={(event) => setNote(event.target.value)}
+            />
+          </div>
+          <Button disabled={busy} onClick={() => onRewrite(part, note)}>
+            {t("create.rewriteCard")}
+          </Button>
         </div>
-        <Button disabled={busy} onClick={() => onRewrite(part, note)}>
-          {t("create.rewriteCard")}
-        </Button>
-      </div>
+      )}
     </Surface>
   );
 }
 
 export function WorldStep({
   world,
+  name,
   busy,
-  onEdit,
-  onRewrite,
-}: {
+  onRename,
+  onRewriteUnlocked,
+  ...actions
+}: CardActions & {
   world: DraftWorld;
+  name: string;
   busy: boolean;
-  onEdit(part: BiblePart, value: string | string[]): void;
-  onRewrite(part: BiblePart, note: string): void;
+  onRename(name: string): void;
+  onRewriteUnlocked(note: string): void;
 }): JSX.Element {
   const t = useT();
+  const [note, setNote] = useState("");
+  const locked = lockedParts(world);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: space.md }}>
       <Text variant="title" as="h2">
         {t("create.worldReview")}
       </Text>
       <Text tone="muted">{t("create.worldReviewNote")}</Text>
+      <TextField
+        label={t("create.worldName")}
+        value={name}
+        maxLength={60}
+        disabled={busy}
+        onChange={(event) => onRename(event.target.value)}
+      />
+      <Text variant="caption" tone="dim">
+        {t("create.worldNameNote")}
+      </Text>
+      <div style={{ display: "flex", gap: space.sm, flexWrap: "wrap", alignItems: "flex-end" }}>
+        <div style={{ flex: "1 1 320px" }}>
+          <TextField
+            label={t("create.cardsNote")}
+            value={note}
+            maxLength={300}
+            disabled={busy}
+            onChange={(event) => setNote(event.target.value)}
+          />
+        </div>
+        <Button
+          disabled={busy || locked.length >= BIBLE_PARTS.length}
+          onClick={() => onRewriteUnlocked(note)}
+        >
+          {t("create.rewriteUnlockedCards", { n: BIBLE_PARTS.length - locked.length })}
+        </Button>
+      </div>
       <div
         style={{
           display: "grid",
@@ -103,14 +151,9 @@ export function WorldStep({
         }}
       >
         {BIBLE_PARTS.map((part) => (
-          <WorldCard
-            key={part}
-            part={part}
-            world={world}
-            busy={busy}
-            onEdit={onEdit}
-            onRewrite={onRewrite}
-          />
+          <div key={part} data-card={part} style={{ display: "flex", flexDirection: "column" }}>
+            <WorldCard part={part} world={world} busy={busy} {...actions} />
+          </div>
         ))}
       </div>
     </div>

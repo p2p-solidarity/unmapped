@@ -10,7 +10,8 @@ import { STORY_LIMITS } from "./story";
 
 export const CREATE_DRAFT_FORMAT = 1 as const;
 
-export const CREATE_STEPS = ["idea", "world", "story", "build"] as const;
+// `look` sits between the world and the story (rev 6 phase 2); a draft saved before it still reads.
+export const CREATE_STEPS = ["idea", "world", "look", "story", "build"] as const;
 export type CreateStep = (typeof CREATE_STEPS)[number];
 
 export const DRAFT_ID = /^[a-z0-9]{8,32}$/;
@@ -31,7 +32,11 @@ export const draftIdeaSchema = z
   .strict();
 export type DraftIdea = z.infer<typeof draftIdeaSchema>;
 
-/** The parts of the idea a world was written from; a change to any makes it "needs updating". */
+/**
+ * The parts of the idea a world was written from. A change to the intent, the material, the
+ * language or the play style makes it "needs updating"; the name is kept (older drafts have it)
+ * but never compared — renaming a world does not make it stale.
+ */
 const worldBasisSchema = z
   .object({
     name: z.string().max(60),
@@ -51,9 +56,39 @@ const draftWorldSchema = z
     basis: worldBasisSchema,
     /** Bumped each time the whole world is written again; a story remembers the one it fits. */
     rev: z.number().int().min(1).max(1_000_000),
+    /** Cards the model never overwrites. Absent in drafts saved before locks: none locked. */
+    locked: z.array(z.enum(BIBLE_PARTS)).max(BIBLE_PARTS.length).optional(),
   })
   .strict();
 export type DraftWorld = z.infer<typeof draftWorldSchema>;
+
+/** One concept picture's id: its file is `looks/<id>.png` in the draft's workspace folder. */
+export const LOOK_PICTURE_ID = /^[a-f0-9]{16}$/;
+/** Pictures a draft keeps at once: a redraw discards every one but the chosen. */
+export const LOOK_PICTURES_MAX = 12;
+/** How many concept pictures one "draw" asks for. */
+export const LOOK_DRAWS = 3;
+/** Bytes of one concept picture (a PNG); larger files are refused on write and on read. */
+export const LOOK_PICTURE_MAX_BYTES = 4 * 1024 * 1024;
+
+export const draftLookSchema = z
+  .object({
+    pictures: z.array(z.string().regex(LOOK_PICTURE_ID)).max(LOOK_PICTURES_MAX),
+    chosen: z.string().regex(LOOK_PICTURE_ID).nullable(),
+    /** The player went on without a picture; the world is then published with none. */
+    skipped: z.boolean().optional(),
+  })
+  .strict()
+  .refine((look) => look.chosen === null || look.pictures.includes(look.chosen), {
+    message: "The chosen picture is not one of the draft's pictures.",
+  });
+export type DraftLook = z.infer<typeof draftLookSchema>;
+
+/** A concept picture as the renderer sees it: its id and a data URL, never a file path (Rule 6). */
+export interface LookPicture {
+  id: string;
+  dataUrl: string;
+}
 
 export const draftChapterSchema = z
   .object({
@@ -99,6 +134,8 @@ export const createDraftSchema = z
     idea: draftIdeaSchema,
     world: draftWorldSchema.nullable(),
     story: draftStorySchema.nullable(),
+    /** The look step's concept pictures. Absent in drafts saved before it. */
+    look: draftLookSchema.optional(),
     createdAt: z.string().max(40),
     updatedAt: z.string().max(40),
   })

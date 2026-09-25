@@ -10,9 +10,11 @@ import { resolveApiKey } from "@main/inference/keyStore";
 import { PROVIDER_PRESETS } from "@shared/llm";
 import { err, ok, type Result } from "@shared/result";
 import { nativeImage } from "electron";
-import OpenAI, { APIUserAbortError } from "openai";
+import OpenAI, { APIUserAbortError, toFile } from "openai";
 
 export const IMAGE_SIDE = 256;
+/** A concept picture (Create's look step) is a whole scene: kept larger than an asset. */
+export const CONCEPT_SIDE = 512;
 
 export interface GeneratedImage {
   png: Uint8Array;
@@ -21,6 +23,23 @@ export interface GeneratedImage {
   elapsedMs: number;
   inputTokens: number | null;
   outputTokens: number | null;
+  /** The provider's own request, for the log (the OpenAI provider: "images.edit" over a reference). */
+  call?: string;
+}
+
+export interface ImageOptions {
+  /**
+   * A picture the new one must match in look (a world's `assets/look.png`, rev 6 D2). The OpenAI
+   * provider then draws with `images.edit`, the reference as its input image.
+   */
+  reference?: Uint8Array;
+  /** "low" for quick concept pictures; absent = OPENAI_IMAGE_QUALITY, else medium. */
+  quality?: "low" | "medium";
+  /**
+   * "asset" (the default): one subject on a transparent background, kept at IMAGE_SIDE.
+   * "concept": a whole opaque scene, kept at CONCEPT_SIDE.
+   */
+  kind?: "asset" | "concept";
 }
 
 /** One image model. Swapping the model is swapping this object, nothing else. */
@@ -28,7 +47,11 @@ export interface ImageProvider {
   readonly id: string;
   /** The model it will draw with, known before any request (the usage ledger needs it). */
   readonly model: string;
-  generate(prompt: string, signal: AbortSignal): Promise<Result<GeneratedImage>>;
+  generate(
+    prompt: string,
+    signal: AbortSignal,
+    options?: ImageOptions,
+  ): Promise<Result<GeneratedImage>>;
 }
 
 export interface AssetPromptInput {
@@ -39,6 +62,8 @@ export interface AssetPromptInput {
   description: string | null;
   /** True when the world already draws library pictures, which are pixel art. */
   usesLibrary: boolean;
+  /** True when the picture is drawn over the look picture of the world it is written in. */
+  reference?: boolean;
 }
 
 /**
@@ -52,6 +77,9 @@ export function assetPrompt(input: AssetPromptInput): string {
       : `The world's maker described it as: "${input.description.slice(0, 400)}". Draw in the look that description implies.`,
     input.usesLibrary
       ? "Match the pixel-art look of the library pictures this world already uses."
+      : null,
+    input.reference === true
+      ? "The input picture is the look of the land this world opens from: match its palette, light and brushwork, but draw only the subject."
       : null,
     "Keep one consistent look with this world's other pictures.",
   ].filter((line) => line !== null);
@@ -71,8 +99,8 @@ export function openAiImageProvider(): ImageProvider {
   return {
     id: "openai",
     model,
-    async generate(prompt, signal) {
-      // The same lookup chat uses: the key saved in System → Model, else OPENAI_API_KEY from .env.
+    async generate(prompt, signal, options = {}) {
+      // The same lookup chat uses: the key saved in Settings → Model, else OPENAI_API_KEY from .env.
       const resolved = await resolveApiKey({ ...PROVIDER_PRESETS.openai, sidecar: null });
       if (!resolved.ok) return resolved;
       const key = resolved.value;
@@ -80,34 +108,47 @@ export function openAiImageProvider(): ImageProvider {
         return err(
           "no-api-key",
           "No OpenAI key is set.",
-          "Enter one in System → Model (Cloud API → OpenAI), or add OPENAI_API_KEY to .env.",
+          "Enter one in Settings → Model (Cloud API → OpenAI), or add OPENAI_API_KEY to .env.",
         );
       }
       if (signal.aborted) return aborted();
-      const quality = (process.env.OPENAI_IMAGE_QUALITY || "medium") as "low" | "medium" | "high";
+      const quality =
+        options.quality ??
+        ((process.env.OPENAI_IMAGE_QUALITY || "medium") as "low" | "medium" | "high");
+      const concept = options.kind === "concept";
+      const side = concept ? CONCEPT_SIDE : IMAGE_SIDE;
+      const shape = {
+        model,
+        prompt: prompt.slice(0, 4_000),
+        size: "1024x1024",
+        quality,
+        background: concept ? ("opaque" as const) : ("transparent" as const),
+        output_format: "png" as const,
+        n: 1,
+      };
       const started = performance.now();
       try {
         // Explicit, so an OPENAI_BASE_URL in the environment cannot redirect the key.
         const client = new OpenAI({ apiKey: key.key, baseURL: PROVIDER_PRESETS.openai.baseUrl });
-        const response = await client.images.generate(
-          {
-            model,
-            prompt: prompt.slice(0, 4_000),
-            size: "1024x1024",
-            quality,
-            background: "transparent",
-            output_format: "png",
-            n: 1,
-          },
-          { signal },
-        );
+        const response =
+          options.reference === undefined
+            ? await client.images.generate(shape, { signal })
+            : await client.images.edit(
+                {
+                  ...shape,
+                  image: await toFile(Buffer.from(options.reference), "look.png", {
+                    type: "image/png",
+                  }),
+                },
+                { signal },
+              );
         if (signal.aborted) return aborted();
         const b64 = response.data?.[0]?.b64_json;
         if (b64 === undefined) return err("image-empty", "The image service returned no image.");
         // Worlds draw assets scaled up; 256 px keeps the asset small without losing the look.
         const png = nativeImage
           .createFromBuffer(Buffer.from(b64, "base64"))
-          .resize({ width: IMAGE_SIDE, height: IMAGE_SIDE, quality: "good" })
+          .resize({ width: side, height: side, quality: "good" })
           .toPNG();
         return ok({
           png: new Uint8Array(png),
@@ -116,6 +157,7 @@ export function openAiImageProvider(): ImageProvider {
           elapsedMs: Math.round(performance.now() - started),
           inputTokens: response.usage?.input_tokens ?? null,
           outputTokens: response.usage?.output_tokens ?? null,
+          call: options.reference === undefined ? "images.generate" : "images.edit",
         });
       } catch (error) {
         if (signal.aborted || error instanceof APIUserAbortError) return aborted();

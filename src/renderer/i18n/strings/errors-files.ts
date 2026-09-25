@@ -421,4 +421,85 @@ export const FILE_ERRORS: Record<string, ErrorText> = {
       ja: "これは UNMAPPED アプリの中でのみ使えます。",
     },
   },
+  // ── Create a game: look pictures and the quote ─────────────────────────────────────────────
+  "create-look-no-card": {
+    message: {
+      en: "The world has no look card yet.",
+      "zh-TW": "這個世界還沒有外觀風格卡。",
+      ja: "この世界にはまだ見た目のカードがありません。",
+    },
+    hint: {
+      en: "Write the look card on the world step first.",
+      "zh-TW": "請先在「世界」步驟寫好外觀風格卡。",
+      ja: "先に「世界」の段階で見た目のカードを書いてください。",
+    },
+  },
+  "create-look-full": {
+    message: {
+      en: "This draft already keeps as many pictures as it can.",
+      "zh-TW": "這份草稿保存的圖片已經到上限。",
+      ja: "この下書きに保存できる絵はもう上限です。",
+    },
+    hint: {
+      en: "Draw again: it replaces every picture but the one you chose.",
+      "zh-TW": "按「重新繪製」：除了已選的那張，其他圖片都會被換掉。",
+      ja: "「描き直す」を押すと、選んだ一枚以外の絵がすべて置き換わります。",
+    },
+  },
+  "create-look-invalid": {
+    message: {
+      en: "The picture is not a PNG within 4 MB.",
+      "zh-TW": "這張圖片不是 4 MB 以內的 PNG。",
+      ja: "この絵は 4 MB 以内の PNG ではありません。",
+    },
+    hint: HINT.tryAgain,
+  },
+  "create-look-missing": {
+    message: {
+      en: "The chosen picture could not be read.",
+      "zh-TW": "讀不到已選的圖片。",
+      ja: "選んだ絵を読み込めませんでした。",
+    },
+    hint: {
+      en: "Pick another picture, or go on without one.",
+      "zh-TW": "請改選另一張，或不選圖片繼續。",
+      ja: "別の絵を選ぶか、絵なしで進んでください。",
+    },
+  },
+  "create-look-write-failed": {
+    message: {
+      en: "The picture could not be saved with the draft.",
+      "zh-TW": "無法把圖片存進草稿。",
+      ja: "絵を下書きに保存できませんでした。",
+    },
+    hint: HINT.disk,
+  },
+  "create-look-read-failed": {
+    message: {
+      en: "The draft's pictures could not be read.",
+      "zh-TW": "讀不到草稿的圖片。",
+      ja: "下書きの絵を読み込めませんでした。",
+    },
+    hint: HINT.readable,
+  },
+  "create-look-remove-failed": {
+    message: {
+      en: "The old pictures could not be removed.",
+      "zh-TW": "無法移除舊的圖片。",
+      ja: "古い絵を削除できませんでした。",
+    },
+    hint: HINT.disk,
+  },
+  "create-quote-failed": {
+    message: {
+      en: "The estimate could not be worked out.",
+      "zh-TW": "無法算出預估。",
+      ja: "見積もりを計算できませんでした。",
+    },
+    hint: {
+      en: "You can still build; the usage panel shows what it really used.",
+      "zh-TW": "仍然可以建立；實際用量會顯示在用量面板。",
+      ja: "作成はできます。実際の使用量は使用量パネルに表示されます。",
+    },
+  },
 };

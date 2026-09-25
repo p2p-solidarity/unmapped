@@ -22,20 +22,24 @@ import {
 import { err, fail, ok, type Result, toError } from "@shared/result";
 
 const PREFIX = "create.";
-const FILE = "draft.json";
+export const DRAFT_FILE = "draft.json";
+const FILE = DRAFT_FILE;
 
 export function isCreateDraftDir(name: string): boolean {
   return name.startsWith(PREFIX);
 }
 
-function draftDir(workspacesDir: string, draftId: string): string {
+export function draftDir(workspacesDir: string, draftId: string): string {
   return join(workspacesDir, `${PREFIX}${draftId}`);
 }
 
 const queues = new Map<string, Promise<unknown>>();
 
-/** Runs `work` after every earlier write to the same draft has settled. */
-function serialized<T>(key: string, work: () => Promise<T>): Promise<T> {
+/**
+ * Runs `work` after every earlier write to the same draft has settled. Keyed by the draft's
+ * directory; the look pictures (./createLooks.ts) queue here too, so a delete is never undone.
+ */
+export function serialized<T>(key: string, work: () => Promise<T>): Promise<T> {
   const next = (queues.get(key) ?? Promise.resolve()).then(work, work);
   const tail = next.then(
     () => undefined,

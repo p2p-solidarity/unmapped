@@ -21,7 +21,7 @@ import type {
   PublishOnChainInput,
   WitnessOnChainInput,
 } from "@shared/chain";
-import type { CreateDraft, CreateDraftEntry, DraftIdea } from "@shared/createDraft";
+import type { CreateDraft, CreateDraftEntry, DraftIdea, LookPicture } from "@shared/createDraft";
 import type { ClaimNameResult, EnsNamesConfig } from "@shared/ensNames";
 import type { DataKeyWrappingRecord } from "@shared/identity";
 import type {
@@ -286,6 +286,12 @@ const api: SeedApi = {
     read: (draftId: string) => invoke<Result<CreateDraft>>(IPC.createDrafts.read, draftId),
     save: (draft: CreateDraft) => invoke<Result<CreateDraft>>(IPC.createDrafts.save, draft),
     remove: (draftId: string) => invoke<Result<void>>(IPC.createDrafts.remove, draftId),
+    looks: (draftId: string) => invoke<Result<LookPicture[]>>(IPC.createDrafts.looks, draftId),
+    drawLook: (draftId: string, view: number, requestId: string) =>
+      invoke<Result<LookPicture>>(IPC.createDrafts.drawLook, draftId, view, requestId),
+    cancelLook: (requestId: string) => invoke<Result<void>>(IPC.createDrafts.cancelLook, requestId),
+    discardLooks: (draftId: string, keep: string[]) =>
+      invoke<Result<void>>(IPC.createDrafts.discardLooks, draftId, keep),
   },
 };
 

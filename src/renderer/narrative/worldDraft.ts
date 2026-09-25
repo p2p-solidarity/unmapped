@@ -1,6 +1,6 @@
 // The model calls of Create a game before Build, each small and each stopping for review: the
-// world bible (a Bible program, parsed into its six parts), one bible part again after a note,
-// the story from the reviewed world, one chapter again, one new chapter between two others, and
+// world bible (a Bible program, parsed into its seven parts), one bible part again after a note,
+// every unlocked part again in one call (the locked ones as fixed context), the story from the reviewed world, one chapter again, one new chapter between two others, and
 // every unlocked chapter after a note on the whole story. Every call is aborted by its signal and
 // repaired at most twice (Rule 7); none returns anything the model did not write.
 
@@ -9,8 +9,10 @@ import {
   type BibleFields,
   type BiblePart,
   bibleCardMessages,
+  bibleCardsMessages,
   flattenBible,
   parseBibleCard,
+  parseBibleCards,
 } from "@shared/bible";
 import { ok, type Result } from "@shared/result";
 import { type EpisodeText, parseStoryReply, storyMessages } from "@shared/story";
@@ -34,6 +36,8 @@ function checkedChapter(parsed: Result<EpisodeText>, combat: boolean): Result<Ep
 
 /** Tokens for one chapter in the @@ protocol, as the land's next-chapter call uses. */
 const CHAPTER_TOKENS = 700;
+/** Tokens per bible card in the @@ protocol. */
+const CARD_TOKENS = 600;
 
 export async function writeBible(idea: WorldIdea, io: CallIo): Promise<Result<BibleFields>> {
   const bible = await generateProgram<BibleFields>({
@@ -78,7 +82,37 @@ export function rewriteBiblePart(
         note,
       }),
       parse: (reply) => parseBibleCard(part, reply),
-      maxTokens: 600,
+      maxTokens: CARD_TOKENS,
+    },
+    io,
+  );
+}
+
+/**
+ * Every part in `parts` (the unlocked cards) again after one note, in one call; the other parts
+ * go in as fixed context and are never read back from the reply, so a locked card cannot change.
+ */
+export function rewriteBibleParts(
+  idea: WorldIdea,
+  fields: BibleFields,
+  parts: readonly BiblePart[],
+  note: string,
+  io: CallIo,
+): Promise<Result<Partial<BibleFields>>> {
+  return askInLines(
+    {
+      task: "bible",
+      messages: bibleCardsMessages({
+        name: idea.name,
+        intent: idea.intent,
+        language: idea.language,
+        fights: idea.play.fights,
+        fields,
+        parts,
+        note,
+      }),
+      parse: (reply) => parseBibleCards(parts, reply),
+      maxTokens: Math.min(2_400, CARD_TOKENS * parts.length),
     },
     io,
   );

@@ -1,7 +1,8 @@
 // Create a game: the drafts, the idea, the progress of every model call, building the world. The
-// world and story steps keep their own tables (create-world.ts, create-story.ts) in the same
-// `create.` namespace.
+// world, look and story steps keep their own tables (create-world.ts, create-look.ts,
+// create-story.ts) in the same `create.` namespace.
 
+import { CREATE_LOOK } from "./create-look";
 import { CREATE_STORY } from "./create-story";
 import { CREATE_WORLD } from "./create-world";
 import type { Phrase } from "./phrase";
@@ -58,6 +59,11 @@ const CREATE_FRAME = {
     en: "Rewriting the {part} card…",
     "zh-TW": "正在重寫「{part}」卡…",
     ja: "「{part}」のカードを書き直しています…",
+  },
+  stageCards: {
+    en: "Rewriting the unlocked cards…",
+    "zh-TW": "正在重寫未鎖定的卡片…",
+    ja: "ロックしていないカードを書き直しています…",
   },
   stageStory: {
     en: "Writing the story and its chapters…",
@@ -133,10 +139,10 @@ const CREATE_FRAME = {
     ja: "新しいワールドはモデルが書きますが、前回の確認でモデルが応答しませんでした。",
   },
   offlineHint: {
-    en: "Start a model or choose one in System → Model. You can still try: a real failure says what went wrong.",
+    en: "Start a model or choose one in Settings → Model. You can still try: a real failure says what went wrong.",
     "zh-TW":
-      "請啟動模型，或到「系統 → 模型」選擇模型。你還是可以直接試試看：真的失敗時會說明原因。",
-    ja: "モデルを起動するか、「システム → モデル」でモデルを選んでください。このまま試すこともできます。失敗したときは原因が表示されます。",
+      "請啟動模型，或到「設定 → 模型」選擇模型。你還是可以直接試試看：真的失敗時會說明原因。",
+    ja: "モデルを起動するか、「設定 → モデル」でモデルを選んでください。このまま試すこともできます。失敗したときは原因が表示されます。",
   },
   checkModel: { en: "Check the model again", "zh-TW": "重新檢查模型", ja: "モデルを再確認" },
   modelReadiness: {
@@ -169,10 +175,10 @@ const CREATE_FRAME = {
   backToTitle: { en: "Back to the title", "zh-TW": "回到標題畫面", ja: "タイトルに戻る" },
   replace: { en: "Replace", "zh-TW": "取代", ja: "置き換える" },
   keepMine: { en: "Keep mine", "zh-TW": "保留我的", ja: "自分のを残す" },
-  needsName: {
-    en: "Give the world a name and one sentence first.",
-    "zh-TW": "請先替世界取名，並用一句話描述它。",
-    ja: "まずワールドの名前とひとことを書いてください。",
+  needsWords: {
+    en: "Say in a few words what this land is first.",
+    "zh-TW": "請先用幾個字說說這片大地是什麼樣的地方。",
+    ja: "まず、この大地がどんな場所かを少し書いてください。",
   },
   needsChoice: {
     en: "Choose above first: update it, or keep it as it is.",
@@ -182,6 +188,11 @@ const CREATE_FRAME = {
 
   // ── Step 1: the idea ───────────────────────────────────────────────────────────────────────
   worldName: { en: "World name", "zh-TW": "世界名稱", ja: "ワールド名" },
+  worldNameOptional: {
+    en: "World name (optional: taken from your words when blank)",
+    "zh-TW": "世界名稱（選填：留白時從你的描述取名）",
+    ja: "ワールド名（任意：空欄ならあなたの言葉から付けます）",
+  },
   intent: {
     en: "In one sentence, what is this land?",
     "zh-TW": "用一句話說說，這片大地是什麼樣的地方？",
@@ -256,5 +267,6 @@ const CREATE_FRAME = {
 export const CREATE = {
   ...CREATE_FRAME,
   ...CREATE_WORLD,
+  ...CREATE_LOOK,
   ...CREATE_STORY,
 } as const satisfies Record<string, Phrase>;

@@ -25,10 +25,12 @@ export interface WorldIdea extends NewWorldContext {
   play: PlayStyle;
 }
 
-/** What the player reviewed and kept: the bible as published, and the chapters. */
+/** What the player reviewed and kept: the bible as published, the chapters, the chosen look. */
 export interface WorldPlan {
   bible: WorldBible;
   story: StoryPlan | null;
+  /** The chosen concept picture (PNG bytes), published as `assets/look.png`; null = none. */
+  look: Uint8Array | null;
 }
 
 const aborted = () => fail({ code: "request-aborted", message: "World generation was cancelled." });
@@ -47,7 +49,7 @@ export async function buildWorld(
     if (!kinds.ok) return kinds;
   }
   onStage("origin");
-  // The selected System → Model route writes this scene, including non-Apple chat providers.
+  // The selected Settings → Model route writes this scene, including non-Apple chat providers.
   const origin = await generateOrigin({
     world: ctx,
     bible: plan.bible,
@@ -74,6 +76,7 @@ export async function buildWorld(
     ...(story === undefined ? {} : { story }),
     createdAt: new Date().toISOString(),
     play: ctx.play,
+    ...(plan.look === null ? {} : { look: plan.look }),
   });
   if (!input.ok) return input;
   const published = await window.seed.cartridges.publish(input.value);

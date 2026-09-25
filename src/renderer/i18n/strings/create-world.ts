@@ -3,9 +3,30 @@ import type { Phrase } from "./phrase";
 export const CREATE_WORLD = {
   worldReview: { en: "Review the world", "zh-TW": "審查世界", ja: "ワールドを確認" },
   worldReviewNote: {
-    en: "Edit each card or ask the model to rewrite just that card. Your other cards stay as they are.",
-    "zh-TW": "可以直接修改各張卡片，或請模型只重寫其中一張；其他卡片會保留。",
-    ja: "カードを編集するか、そのカードだけ書き直せます。他のカードは残ります。",
+    en: "Edit each card, ask the model to rewrite just that card, or lock the cards you like and rewrite the rest at once. A locked card is never overwritten.",
+    "zh-TW":
+      "可以直接修改各張卡片、請模型只重寫其中一張，或鎖定喜歡的卡片後一次重寫其餘的。鎖定的卡片絕不會被覆寫。",
+    ja: "カードを編集したり、そのカードだけ書き直したり、気に入ったカードをロックして残りをまとめて書き直せます。ロックしたカードは上書きされません。",
+  },
+  worldNameNote: {
+    en: "Renaming the world keeps every card as it is.",
+    "zh-TW": "改名不會影響任何卡片。",
+    ja: "名前を変えてもカードはそのままです。",
+  },
+  cardsNote: {
+    en: "Note for every unlocked card (optional)",
+    "zh-TW": "給所有未鎖定卡片的備註（選填）",
+    ja: "ロックしていないカード全体への指示（任意）",
+  },
+  rewriteUnlockedCards: {
+    en: "Rewrite the {n} unlocked {n|card|cards}",
+    "zh-TW": "重寫 {n} 張未鎖定的卡片",
+    ja: "ロックしていない {n} 枚を書き直す",
+  },
+  cardLocked: {
+    en: "Locked: the model keeps this card exactly as it is.",
+    "zh-TW": "已鎖定：模型會完全保留這張卡片。",
+    ja: "ロック中：モデルはこのカードをそのまま残します。",
   },
   partPremise: { en: "Premise", "zh-TW": "世界前提", ja: "前提" },
   partTone: { en: "Tone", "zh-TW": "氛圍", ja: "雰囲気" },

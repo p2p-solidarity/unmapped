@@ -22,7 +22,7 @@ import type {
   PublishOnChainInput,
   WitnessOnChainInput,
 } from "./chain";
-import type { CreateDraft, CreateDraftEntry, DraftIdea } from "./createDraft";
+import type { CreateDraft, CreateDraftEntry, DraftIdea, LookPicture } from "./createDraft";
 import type { ClaimNameResult, EnsNamesConfig } from "./ensNames";
 import type { DataKeyWrappingRecord } from "./identity";
 import type {
@@ -204,6 +204,10 @@ export const IPC = {
     read: "create-drafts:read",
     save: "create-drafts:save",
     remove: "create-drafts:remove",
+    looks: "create-drafts:looks",
+    drawLook: "create-drafts:draw-look",
+    cancelLook: "create-drafts:cancel-look",
+    discardLooks: "create-drafts:discard-looks",
   },
 } as const;
 
@@ -504,5 +508,15 @@ export interface SeedApi {
     /** Replaces the draft whole (autosave); main stamps `updatedAt`. */
     save(draft: CreateDraft): Promise<Result<CreateDraft>>;
     remove(draftId: string): Promise<Result<void>>;
+    /** The draft's concept pictures, as data URLs (never paths). */
+    looks(draftId: string): Promise<Result<LookPicture[]>>;
+    /**
+     * Draws one concept picture from the draft's saved Look card (view 0–2 picks what it shows) and
+     * keeps it with the draft. `requestId` names the call so `cancelLook` can abort it in flight.
+     */
+    drawLook(draftId: string, view: number, requestId: string): Promise<Result<LookPicture>>;
+    cancelLook(requestId: string): Promise<Result<void>>;
+    /** Deletes every picture of the draft but `keep`. */
+    discardLooks(draftId: string, keep: string[]): Promise<Result<void>>;
   };
 }

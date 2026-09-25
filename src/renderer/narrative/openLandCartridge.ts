@@ -8,7 +8,7 @@
 import { parseRules, parseScene, serializeRules } from "@dsl";
 import { type CapabilityRequirement, compileCapabilities } from "@shared/capabilities";
 import { BUILTIN_MODULES } from "@shared/capability-modules";
-import type { PublishCartridgeInput, WorldBible } from "@shared/cartridge";
+import { LOOK_PICTURE_ASSET, type PublishCartridgeInput, type WorldBible } from "@shared/cartridge";
 import { hashText } from "@shared/content-hash";
 import { rulesFor } from "@shared/forge";
 import type { GameplayRules } from "@shared/gameplay";
@@ -66,6 +66,11 @@ export interface OpenLandInput {
   createdAt: string;
   /** Peaceful when absent (the built-in game). */
   play?: PlayStyle;
+  /**
+   * The concept picture the maker chose (a PNG): published as `assets/look.png`, hashed with every
+   * other file, and the reference for the world's later pictures. Absent = the world has none.
+   */
+  look?: Uint8Array;
 }
 
 export async function openLandCartridge(
@@ -164,6 +169,9 @@ export async function openLandCartridge(
     manifest: { ...built.value.manifest, version: input.version, createdAt: input.createdAt },
     bible: input.bible,
     ...(input.story === undefined ? {} : { story: input.story }),
+    ...(input.look === undefined
+      ? {}
+      : { assets: { ...built.value.assets, [LOOK_PICTURE_ASSET]: input.look } }),
   });
 }
 

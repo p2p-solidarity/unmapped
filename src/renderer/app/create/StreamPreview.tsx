@@ -5,7 +5,7 @@
 
 import { type StringKey, useT } from "@renderer/i18n";
 import { Surface, Text } from "@renderer/ui";
-import { BIBLE_PARTS, type BiblePart } from "@shared/bible";
+import { BIBLE_PARTS, type BiblePart, isListPart } from "@shared/bible";
 import { PLAY_KINDS, type PlayKind } from "@shared/chapter";
 import { readStoryBlocks } from "@shared/story";
 import type { JSX } from "react";
@@ -64,6 +64,44 @@ export function readBibleStream(text: string): BibleStream {
   return { parts, open: part };
 }
 
+/**
+ * Reads the `@@<part>` blocks of "rewrite the unlocked cards" as far as they have arrived; the last
+ * block is still being written until `@@end` or the next header. A repair round starts again.
+ */
+export function readCardStream(text: string): BibleStream {
+  const parts: BibleStream["parts"] = {};
+  let open: BiblePart | null = null;
+  let lines: string[] = [];
+  const close = (): void => {
+    if (open === null) return;
+    const body = lines.map((line) => line.trim()).filter((line) => line !== "");
+    parts[open] = isListPart(open)
+      ? body.map((line) => line.replace(/^(?:[-*•・]|\d{1,2}[.)、．])\s*/, ""))
+      : body.join(" ");
+  };
+  for (const line of text.replace(/\r\n?/g, "\n").split("\n")) {
+    const header = /^\s*@@\s*([a-z]+)/i.exec(line);
+    if (header === null) {
+      if (open !== null) lines.push(line);
+      continue;
+    }
+    close();
+    const name = header[1]?.toLowerCase() ?? "";
+    // A repair round writes every block again: what came before it no longer counts.
+    if (
+      open === null &&
+      (BIBLE_PARTS as readonly string[]).includes(name) &&
+      parts[name as BiblePart] !== undefined
+    ) {
+      for (const key of Object.keys(parts)) delete parts[key as BiblePart];
+    }
+    open = (BIBLE_PARTS as readonly string[]).includes(name) ? (name as BiblePart) : null;
+    lines = [];
+  }
+  close();
+  return { parts, open };
+}
+
 const CARD: Record<BiblePart, StringKey> = {
   premise: "create.partPremise",
   tone: "create.partTone",
@@ -91,9 +129,9 @@ function Writing(): JSX.Element {
   );
 }
 
-function BiblePreview({ text }: { text: string }): JSX.Element {
+function BiblePreview({ stream }: { stream: BibleStream }): JSX.Element {
   const t = useT();
-  const { parts, open } = readBibleStream(text);
+  const { parts, open } = stream;
   const shown = BIBLE_PARTS.filter((part) => parts[part] !== undefined);
   if (shown.length === 0) return <Writing />;
   return (
@@ -167,7 +205,8 @@ function StoryPreview({ text, single }: { text: string; single: boolean }): JSX.
 
 /** The live preview for a Create stage; plain text for the stages that stream prose. */
 export function StreamPreview({ stage, text }: { stage: string; text: string }): JSX.Element {
-  if (stage === "world") return <BiblePreview text={text} />;
+  if (stage === "world") return <BiblePreview stream={readBibleStream(text)} />;
+  if (stage === "cards") return <BiblePreview stream={readCardStream(text)} />;
   if (stage === "story" || stage === "note") return <StoryPreview text={text} single={false} />;
   if (stage === "chapter" || stage === "insert") return <StoryPreview text={text} single />;
   return (

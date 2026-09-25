@@ -147,6 +147,13 @@ export interface WorldBible {
 
 export const BIBLE_FILES = { core: "bible/core.md", style: "bible/style.md" } as const;
 
+/**
+ * The world's chosen concept picture (rev 6 phase 2, D2): a PNG published in the cartridge's
+ * `assets` as `assets/look.png`, hashed with every other file, and the reference every later picture
+ * of the world is drawn from. Absent when the maker went on without one.
+ */
+export const LOOK_PICTURE_ASSET = "look.png";
+
 /** A world made by the minimal Create names its language on the first line of style.md. */
 export function bibleLanguage(bible: WorldBible | null): string | null {
   const match =

@@ -1,6 +1,6 @@
-// The four Create steps and the draft picker. State and model calls live in useCreateController.
+// The five Create steps and the draft picker. State and model calls live in useCreateController;
+// the look step, the story written ahead and the quote live in their own components.
 import { formatDateTime, useT } from "@renderer/i18n";
-import { playRules } from "@renderer/narrative/openLandCartridge";
 import { type BuildReadiness, buildReadiness } from "@renderer/narrative/originScene";
 import { Button, ErrorBlock, StatePanel, Surface, space, Text } from "@renderer/ui";
 import { bibleProblems } from "@shared/bible";
@@ -9,21 +9,85 @@ import { checkPlayKinds } from "@shared/storyEdits";
 import { type JSX, useEffect, useState } from "react";
 import { UsageLine } from "../hud/UsagePanel";
 import { GameShell } from "../shell/GameShell";
+import { BuildStep } from "./BuildStep";
 import {
   canKeepStory,
   canKeepWorld,
-  storyBasis,
   storyPlan,
   storyStale,
-  worldBasis,
   worldReady,
   worldStale,
 } from "./draftState";
 import { IdeaStep } from "./IdeaStep";
+import { LookStep, StoryAheadPanel } from "./LookStep";
 import { StoryStep } from "./StoryStep";
 import { StreamPreview } from "./StreamPreview";
-import { STAGE_LABEL, STEP_LABEL, STEPS, useCreateController } from "./useCreateController";
+import { STAGE_LABEL, STEP_LABEL, STEPS } from "./stages";
+import { type CreateController, useCreateController } from "./useCreateController";
 import { WorldStep } from "./WorldStep";
+
+function DraftPicker({ c }: { c: CreateController }): JSX.Element {
+  const t = useT();
+  return (
+    <>
+      <Text variant="label">{t("create.draftsTitle")}</Text>
+      <Text tone="muted">{t("create.draftsNote")}</Text>
+      <Button variant="primary" onClick={() => void c.start()}>
+        {t("create.startNew")}
+      </Button>
+      <StatePanel state={c.entries} loadingText={t("create.draftsLoading")}>
+        {(items) =>
+          items.map((entry) => (
+            <Surface key={entry.draftId} variant="inset" padding="md" style={{ gap: space.sm }}>
+              {entry.broken ? (
+                <Text tone="danger">{t("create.draftBroken", { problem: entry.problem })}</Text>
+              ) : (
+                <>
+                  <Text variant="label">{entry.name.trim() || t("create.untitled")}</Text>
+                  <Text variant="caption" tone="dim">
+                    {t("create.draftLine", {
+                      step: t(STEP_LABEL[entry.step]),
+                      n: entry.chapters,
+                      when: formatDateTime(entry.updatedAt),
+                    })}
+                  </Text>
+                  <Button onClick={() => void c.open(entry.draftId)}>
+                    {t("create.continueDraft")}
+                  </Button>
+                </>
+              )}
+              {c.deleteId === entry.draftId ? (
+                <>
+                  <Text tone="danger">
+                    {t("create.confirmDeleteDraft", {
+                      name: entry.broken
+                        ? t("create.untitled")
+                        : entry.name || t("create.untitled"),
+                    })}
+                  </Text>
+                  <Button variant="destructive" onClick={() => void c.remove(entry.draftId)}>
+                    {t("common.remove")}
+                  </Button>
+                  <Button variant="ghost" onClick={() => c.setDeleteId(null)}>
+                    {t("create.keep")}
+                  </Button>
+                </>
+              ) : (
+                <Button variant="ghost" onClick={() => c.setDeleteId(entry.draftId)}>
+                  {t("common.remove")}
+                </Button>
+              )}
+            </Surface>
+          ))
+        }
+      </StatePanel>
+      {c.error !== null && <ErrorBlock error={c.error} />}
+      <Button variant="ghost" onClick={() => c.setScreen("worlds")}>
+        {t("create.backToTitle")}
+      </Button>
+    </>
+  );
+}
 
 export function CreateGameScreen(): JSX.Element {
   const t = useT();
@@ -38,37 +102,8 @@ export function CreateGameScreen(): JSX.Element {
       alive = false;
     };
   }, []);
-  const {
-    entries,
-    draft,
-    saving,
-    error,
-    deleteId,
-    setDeleteId,
-    stage,
-    stageArg,
-    progress,
-    elapsed,
-    controller,
-    offline,
-    busy,
-    refreshProbe,
-    setScreen,
-    start,
-    open,
-    remove,
-    back,
-    update,
-    writeWorld,
-    cardEdit,
-    cardRewrite,
-    writeTheStory,
-    editChapter,
-    rewriteOne,
-    insert,
-    revise,
-    build,
-  } = useCreateController();
+  const c = useCreateController();
+  const { draft, busy } = c;
   const step = draft?.step ?? "idea";
   const story = draft === null ? null : storyPlan(draft);
   // A chapter the land cannot play (a fight without fighting, a kind the game has not got) stops
@@ -78,13 +113,26 @@ export function CreateGameScreen(): JSX.Element {
       ? null
       : checkPlayKinds(draft.story.chapters, draft.idea.play.fights !== "none");
   const kindProblem = kinds !== null && !kinds.ok ? kinds.error.code : null;
+  const writingStory = c.ahead.writing !== null;
+  const chosen = draft?.look?.chosen ?? null;
+  const lookUrl =
+    chosen === null || c.looks.pictures.status !== "ready"
+      ? null
+      : (c.looks.pictures.value[chosen] ?? null);
+  // A chosen picture that is not readable (yet) never builds as "no picture".
+  const lookMissing = chosen !== null && lookUrl === null;
   const buildReady =
-    draft !== null && worldReady(draft) && !storyStale(draft) && story !== null && !kindProblem;
-  const rules = draft === null ? null : playRules(draft.idea.play);
+    draft !== null &&
+    worldReady(draft) &&
+    !storyStale(draft) &&
+    story !== null &&
+    !kindProblem &&
+    !writingStory &&
+    !lookMissing;
   return (
     <GameShell
       hints={[
-        { keys: ["Esc"], label: t("common.back"), onPress: busy ? undefined : () => void back() },
+        { keys: ["Esc"], label: t("common.back"), onPress: busy ? undefined : () => void c.back() },
       ]}
     >
       <div
@@ -109,70 +157,7 @@ export function CreateGameScreen(): JSX.Element {
             {t("create.title")}
           </Text>
           {draft === null ? (
-            <>
-              <Text variant="label">{t("create.draftsTitle")}</Text>
-              <Text tone="muted">{t("create.draftsNote")}</Text>
-              <Button variant="primary" onClick={() => void start()}>
-                {t("create.startNew")}
-              </Button>
-              <StatePanel state={entries} loadingText={t("create.draftsLoading")}>
-                {(items) =>
-                  items.map((entry) => (
-                    <Surface
-                      key={entry.draftId}
-                      variant="inset"
-                      padding="md"
-                      style={{ gap: space.sm }}
-                    >
-                      {entry.broken ? (
-                        <Text tone="danger">
-                          {t("create.draftBroken", { problem: entry.problem })}
-                        </Text>
-                      ) : (
-                        <>
-                          <Text variant="label">{entry.name.trim() || t("create.untitled")}</Text>
-                          <Text variant="caption" tone="dim">
-                            {t("create.draftLine", {
-                              step: t(STEP_LABEL[entry.step]),
-                              n: entry.chapters,
-                              when: formatDateTime(entry.updatedAt),
-                            })}
-                          </Text>
-                          <Button onClick={() => void open(entry.draftId)}>
-                            {t("create.continueDraft")}
-                          </Button>
-                        </>
-                      )}
-                      {deleteId === entry.draftId ? (
-                        <>
-                          <Text tone="danger">
-                            {t("create.confirmDeleteDraft", {
-                              name: entry.broken
-                                ? t("create.untitled")
-                                : entry.name || t("create.untitled"),
-                            })}
-                          </Text>
-                          <Button variant="destructive" onClick={() => void remove(entry.draftId)}>
-                            {t("common.remove")}
-                          </Button>
-                          <Button variant="ghost" onClick={() => setDeleteId(null)}>
-                            {t("create.keep")}
-                          </Button>
-                        </>
-                      ) : (
-                        <Button variant="ghost" onClick={() => setDeleteId(entry.draftId)}>
-                          {t("common.remove")}
-                        </Button>
-                      )}
-                    </Surface>
-                  ))
-                }
-              </StatePanel>
-              {error !== null && <ErrorBlock error={error} />}
-              <Button variant="ghost" onClick={() => setScreen("worlds")}>
-                {t("create.backToTitle")}
-              </Button>
-            </>
+            <DraftPicker c={c} />
           ) : (
             <>
               <div style={{ display: "flex", gap: space.md, flexWrap: "wrap" }}>
@@ -188,7 +173,7 @@ export function CreateGameScreen(): JSX.Element {
                 <>
                   <IdeaStep
                     idea={draft.idea}
-                    onChange={(idea) => update((one) => ({ ...one, idea }))}
+                    onChange={(idea) => c.update((one) => ({ ...one, idea }))}
                     busy={busy}
                   />
                   {draft.world !== null && <Text tone="muted">{t("create.ideaWritten")}</Text>}
@@ -200,26 +185,10 @@ export function CreateGameScreen(): JSX.Element {
                     <Surface variant="inset" padding="md" style={{ gap: space.sm }}>
                       <Text tone="danger">{t("create.worldStale")}</Text>
                       <div style={{ display: "flex", gap: space.sm }}>
-                        <Button disabled={busy} onClick={() => void writeWorld()}>
+                        <Button disabled={busy} onClick={() => void c.writeWorld()}>
                           {t("create.updateWorld")}
                         </Button>
-                        <Button
-                          disabled={busy || !canKeepWorld(draft)}
-                          onClick={() =>
-                            update((one) =>
-                              one.world === null
-                                ? one
-                                : {
-                                    ...one,
-                                    world: {
-                                      ...one.world,
-                                      basis: worldBasis(one.idea),
-                                      rev: one.world.rev + 1,
-                                    },
-                                  },
-                            )
-                          }
-                        >
+                        <Button disabled={busy || !canKeepWorld(draft)} onClick={c.keepWorld}>
                           {t("create.keepWorld")}
                         </Button>
                       </div>
@@ -227,92 +196,79 @@ export function CreateGameScreen(): JSX.Element {
                   )}
                   <WorldStep
                     world={draft.world}
+                    name={draft.idea.name}
                     busy={busy}
-                    onEdit={cardEdit}
-                    onRewrite={(part, note) => void cardRewrite(part, note)}
+                    onRename={c.rename}
+                    onEdit={c.cardEdit}
+                    onLock={c.cardLock}
+                    onRewrite={(part, note) => void c.cardRewrite(part, note)}
+                    onRewriteUnlocked={(note) => void c.cardsRewrite(note)}
                   />
                   {bibleProblems(draft.world.fields).length > 0 && (
                     <Text tone="danger">{t("create.worldIncomplete")}</Text>
                   )}
                 </>
               )}
-              {step === "story" && draft.story !== null && (
+              {step === "look" && draft.world !== null && (
                 <>
-                  {storyStale(draft) && (
+                  <LookStep
+                    look={draft.look}
+                    looks={c.looks}
+                    lookCard={draft.world.fields.look}
+                    busy={busy}
+                  />
+                  <StoryAheadPanel ahead={c.ahead} story={storyStale(draft) ? null : draft.story} />
+                  {c.ahead.error !== null && <ErrorBlock error={c.ahead.error} />}
+                </>
+              )}
+              {step === "story" && (
+                <>
+                  <StoryAheadPanel ahead={c.ahead} />
+                  {draft.story === null && !writingStory && (
+                    <>
+                      {c.ahead.error !== null && <ErrorBlock error={c.ahead.error} />}
+                      <Button disabled={busy || !worldReady(draft)} onClick={() => c.ahead.start()}>
+                        {t("create.writeStory")}
+                      </Button>
+                    </>
+                  )}
+                  {draft.story !== null && storyStale(draft) && !writingStory && (
                     <Surface variant="inset" padding="md" style={{ gap: space.sm }}>
                       <Text tone="danger">{t("create.storyStale")}</Text>
+                      {c.ahead.error !== null && <ErrorBlock error={c.ahead.error} />}
                       <div style={{ display: "flex", gap: space.sm }}>
                         <Button
                           disabled={busy || !worldReady(draft)}
-                          onClick={() => void writeTheStory()}
+                          onClick={() => c.ahead.start()}
                         >
                           {t("create.updateStory")}
                         </Button>
                         <Button
                           disabled={busy || !worldReady(draft) || !canKeepStory(draft)}
-                          onClick={() =>
-                            update((one) =>
-                              one.story === null
-                                ? one
-                                : storyBasis(one) === null
-                                  ? one
-                                  : {
-                                      ...one,
-                                      story: {
-                                        ...one.story,
-                                        basis: storyBasis(one) ?? one.story.basis,
-                                      },
-                                    },
-                            )
-                          }
+                          onClick={c.keepStory}
                         >
                           {t("create.keepStory")}
                         </Button>
                       </div>
                     </Surface>
                   )}
-                  <StoryStep
-                    story={draft.story}
-                    combat={draft.idea.play.fights !== "none"}
-                    busy={busy}
-                    onLogline={(value) =>
-                      update((one) =>
-                        one.story === null
-                          ? one
-                          : {
-                              ...one,
-                              story: { ...one.story, logline: value, loglineEdited: true },
-                            },
-                      )
-                    }
-                    onEdit={editChapter}
-                    onRewrite={(index, note) => void rewriteOne(index, note)}
-                    onInsert={(index) => void insert(index)}
-                    onRemove={(index) =>
-                      update((one) =>
-                        one.story === null
-                          ? one
-                          : {
-                              ...one,
-                              story: {
-                                ...one.story,
-                                chapters: one.story.chapters.filter((_, at) => at !== index),
-                              },
-                            },
-                      )
-                    }
-                    onMove={(index, delta) =>
-                      update((one) => {
-                        if (one.story === null) return one;
-                        const chapters = [...one.story.chapters];
-                        const [item] = chapters.splice(index, 1);
-                        if (item) chapters.splice(index + delta, 0, item);
-                        return { ...one, story: { ...one.story, chapters } };
-                      })
-                    }
-                    onRevise={(note) => void revise(note)}
-                  />
-                  {story === null && <Text tone="danger">{t("create.storyIncomplete")}</Text>}
+                  {draft.story !== null && (
+                    <StoryStep
+                      story={draft.story}
+                      combat={draft.idea.play.fights !== "none"}
+                      busy={busy || writingStory}
+                      onLogline={c.story.editLogline}
+                      onEdit={c.story.editChapter}
+                      onRewrite={(index, note) => void c.story.rewriteOne(index, note)}
+                      onInsert={(index) => void c.story.insert(index)}
+                      onRemove={c.story.removeChapter}
+                      onMove={c.story.moveChapter}
+                      onRevise={(note) => void c.story.revise(note)}
+                    />
+                  )}
+                  {draft.story !== null && story === null && (
+                    <Text tone="danger">{t("create.storyIncomplete")}</Text>
+                  )}
                   {kindProblem !== null && (
                     <Text tone="danger">
                       {t(
@@ -325,41 +281,14 @@ export function CreateGameScreen(): JSX.Element {
                 </>
               )}
               {step === "build" && (
-                <>
-                  <Text variant="title" as="h2">
-                    {draft.idea.name}
-                  </Text>
-                  <Text>{t("create.buildWhat")}</Text>
-                  <Text variant="caption">
-                    {t("create.buildLanguage")}: {draft.idea.language}
-                  </Text>
-                  <Text variant="caption">
-                    {t("create.buildChapters", { n: draft.story?.chapters.length ?? 0 })}
-                  </Text>
-                  {rules?.ok && (
-                    <Text variant="caption">
-                      {t("create.rules")}:{" "}
-                      {draft.idea.play.fights === "none"
-                        ? t("create.rulesPeaceful")
-                        : t("create.rulesFighting", {
-                            weapon:
-                              draft.idea.play.weapon.trim() ||
-                              t(
-                                draft.idea.play.fights === "gun"
-                                  ? "create.defaultGun"
-                                  : "create.defaultBlade",
-                              ),
-                            hp: rules.value.combat?.playerHp ?? 0,
-                            damage: rules.value.weapons[0]?.damage ?? 0,
-                            range: rules.value.weapons[0]?.range ?? 0,
-                            base: rules.value.combat?.monsterHpBase ?? 0,
-                            per: rules.value.combat?.monsterHpPerLevel ?? 0,
-                          })}
-                    </Text>
-                  )}
-                </>
+                <BuildStep
+                  draft={draft}
+                  readiness={readiness}
+                  lookUrl={lookUrl}
+                  lookMissing={lookMissing}
+                />
               )}
-              {offline !== null && <ErrorBlock error={offline} />}
+              {c.offline !== null && <ErrorBlock error={c.offline} />}
               {readiness.status === "ready" && readiness.value.reachable && (
                 <div style={{ display: "flex", flexDirection: "column", gap: space.xs }}>
                   <Text variant="caption" tone="success">
@@ -386,91 +315,30 @@ export function CreateGameScreen(): JSX.Element {
                   )}
                 </div>
               )}
-              <UsageLine scope={{ kind: "create", id: draft.draftId }} draft />
-              {error !== null && <ErrorBlock error={error} />}
-              {saving && (
+              {step !== "build" && (
+                <UsageLine scope={{ kind: "create", id: draft.draftId }} draft />
+              )}
+              {c.error !== null && <ErrorBlock error={c.error} />}
+              {c.saving && (
                 <Text variant="caption" tone="dim">
                   {t("create.saving")}
                 </Text>
               )}
-              {stage !== null && (
+              {c.stage !== null && (
                 <Surface variant="inset" padding="md" style={{ gap: space.xs }}>
                   <Text tone="accent">
-                    {t(STAGE_LABEL[stage], stageArg)} · {t("create.elapsed", { s: elapsed })}
+                    {t(STAGE_LABEL[c.stage], c.stageArg)} · {t("create.elapsed", { s: c.elapsed })}
                   </Text>
-                  {progress && <StreamPreview stage={stage} text={progress} />}
+                  {c.progress && <StreamPreview stage={c.stage} text={c.progress} />}
                 </Surface>
               )}
-              <div style={{ display: "flex", gap: space.sm, flexWrap: "wrap" }}>
-                {busy ? (
-                  <Button variant="destructive" onClick={() => controller.current?.abort()}>
-                    {t("common.cancel")}
-                  </Button>
-                ) : (
-                  <>
-                    {step === "idea" && (
-                      <>
-                        <Button
-                          variant="primary"
-                          disabled={
-                            draft.idea.name.trim() === "" || draft.idea.intent.trim() === ""
-                          }
-                          onClick={() =>
-                            draft.world === null
-                              ? void writeWorld()
-                              : update((one) => ({ ...one, step: "world" }))
-                          }
-                        >
-                          {draft.world === null ? t("create.writeWorld") : t("create.toWorld")}
-                        </Button>
-                        {(draft.idea.name.trim() === "" || draft.idea.intent.trim() === "") && (
-                          <Text tone="danger">{t("create.needsName")}</Text>
-                        )}
-                      </>
-                    )}
-                    {step === "world" && (
-                      <Button
-                        variant="primary"
-                        disabled={!worldReady(draft)}
-                        onClick={() =>
-                          draft.story === null
-                            ? void writeTheStory()
-                            : update((one) => ({ ...one, step: "story" }))
-                        }
-                      >
-                        {t("create.toStory")}
-                      </Button>
-                    )}
-                    {step === "story" && (
-                      <Button
-                        variant="primary"
-                        disabled={!buildReady}
-                        onClick={() => update((one) => ({ ...one, step: "build" }))}
-                      >
-                        {t("create.toBuild")}
-                      </Button>
-                    )}
-                    {step === "build" && (
-                      <Button
-                        variant="primary"
-                        disabled={!buildReady || saving}
-                        onClick={() => void build()}
-                      >
-                        {t("create.buildAndPlay")}
-                      </Button>
-                    )}
-                    <Button variant="ghost" onClick={() => void back()}>
-                      {step === "idea" ? t("create.backToTitle") : t("common.back")}
-                    </Button>
-                  </>
-                )}
-              </div>
-              {offline !== null && (
+              <StepActions c={c} buildReady={buildReady} />
+              {c.offline !== null && (
                 <Button
                   variant="ghost"
                   disabled={busy}
                   onClick={() => {
-                    refreshProbe();
+                    c.refreshProbe();
                     setReadiness(loading());
                     void buildReadiness().then((result) => setReadiness(fromResult(result)));
                   }}
@@ -483,5 +351,83 @@ export function CreateGameScreen(): JSX.Element {
         </Surface>
       </div>
     </GameShell>
+  );
+}
+
+/** The step's buttons: forward, Back, or Cancel while a call runs. */
+function StepActions({
+  c,
+  buildReady,
+}: {
+  c: CreateController;
+  buildReady: boolean;
+}): JSX.Element | null {
+  const t = useT();
+  const draft = c.draft;
+  if (draft === null) return null;
+  const step = draft.step;
+  const words = draft.idea.intent.trim() !== "";
+  return (
+    <div style={{ display: "flex", gap: space.sm, flexWrap: "wrap" }}>
+      {c.busy ? (
+        <Button variant="destructive" onClick={() => c.controller.current?.abort()}>
+          {t("common.cancel")}
+        </Button>
+      ) : (
+        <>
+          {step === "idea" && (
+            <>
+              <Button
+                variant="primary"
+                disabled={!words}
+                onClick={() =>
+                  draft.world === null
+                    ? void c.writeWorld()
+                    : c.update((one) => ({ ...one, step: "world" }))
+                }
+              >
+                {draft.world === null ? t("create.writeWorld") : t("create.toWorld")}
+              </Button>
+              {!words && <Text tone="danger">{t("create.needsWords")}</Text>}
+            </>
+          )}
+          {step === "world" && (
+            <Button variant="primary" disabled={!worldReady(draft)} onClick={c.toLook}>
+              {t("create.toLook")}
+            </Button>
+          )}
+          {step === "look" && (
+            <Button variant="primary" disabled={!worldReady(draft)} onClick={c.toStory}>
+              {draft.look?.chosen != null
+                ? t("create.toStory")
+                : c.looks.drawing > 0
+                  ? t("create.lookContinueDrawing")
+                  : t("create.lookSkip")}
+            </Button>
+          )}
+          {step === "story" && (
+            <Button
+              variant="primary"
+              disabled={!buildReady}
+              onClick={() => c.update((one) => ({ ...one, step: "build" }))}
+            >
+              {t("create.toBuild")}
+            </Button>
+          )}
+          {step === "build" && (
+            <Button
+              variant="primary"
+              disabled={!buildReady || c.saving}
+              onClick={() => void c.build()}
+            >
+              {t("create.buildAndPlay")}
+            </Button>
+          )}
+          <Button variant="ghost" onClick={() => void c.back()}>
+            {step === "idea" ? t("create.backToTitle") : t("common.back")}
+          </Button>
+        </>
+      )}
+    </div>
   );
 }

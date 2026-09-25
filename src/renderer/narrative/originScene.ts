@@ -1,4 +1,4 @@
-// The place the player wakes in, written when Create builds a world. It follows System → Model:
+// The place the player wakes in, written when Create builds a world. It follows Settings → Model:
 // with Apple on-device selected and its Foundation Models bridge available, the bridge writes a
 // structured scene (main's SceneArtifactService); with anything else the chat model writes the
 // Scene DSL through `generateProgram` and `originPrompt`. Both paths hold the scene to the same
@@ -29,7 +29,10 @@ import { generateSceneArtifact } from "./sceneGeneration";
 export type OriginRoute = "apple-bridge" | "chat";
 
 /** A floor's budget; on a small local context main lowers it, or refuses below 40 % of it. */
-const ORIGIN_MAX_TOKENS = 2200;
+export const ORIGIN_MAX_TOKENS = 2200;
+/** The chat route's user turn (Create's quote measures the same text). */
+export const ORIGIN_USER =
+  "Write the Scene program for the place the player wakes in. Output the program only.";
 const ORIGIN_TEMPERATURE = 0.9;
 
 const aborted = (): Result<never> =>
@@ -134,7 +137,7 @@ async function viaChat(config: InferenceConfig, input: OriginInput): Promise<Res
   };
   const program = await generateProgram<SceneGraph>({
     system: originPrompt(input.world, input.bible),
-    user: "Write the Scene program for the place the player wakes in. Output the program only.",
+    user: ORIGIN_USER,
     purpose: "scene",
     task: "origin",
     language: input.world.language,
