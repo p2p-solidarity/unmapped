@@ -1,0 +1,258 @@
+// Syncing an attached world (rev 6 phase 3, D9, D11): "after my n, with a chain check". On a ready
+// socket main opens every world it syncs there with its head; the service answers `opened` and then
+// pushes `entries`. Every entry is verified against this device's chain and receipt schedule
+// before it is appended — a service whose history is not this device's (less of it, another chain,
+// a receipt that does not verify) stops the sync for that world with `history-diverged`, persisted
+// in link.json. Nothing is ever merged silently, and the local log is never rewritten here.
+//
+// The outbox is (re)submitted whenever the world opens and whenever an event is queued; a duplicate
+// submit is harmless (ids are content addresses). A `rejected` own event moves from the outbox to
+// refused.jsonl, where it stays listed until the player dismisses it.
+
+import { verifyLog } from "@shared/history/log";
+import type { StoredEvent } from "@shared/history/types";
+import { PHYSICS_SUPPORTED } from "@shared/physics";
+import { type AppError, err, ok, type Result } from "@shared/result";
+import { WORLD_IPC, type WorldPresenceEvent, type WorldStreamEvent } from "@shared/worldApi";
+import { type FromService, WORLD_PROTOCOL } from "@shared/worldProtocol";
+import type { HostCore } from "./core";
+import { appendVerified, type LoadedWorld } from "./loaded";
+import { appendRefused, writeLink, writeOutbox } from "./logStore";
+import { receiveWorks } from "./receive";
+import { framesOf, SUBMIT_BATCH } from "./sync";
+
+const DIVERGED_HINT =
+  "Sync with this service stopped so nothing merges silently. Keep playing here; ask the world's owner which history is right.";
+
+function urlOf(world: LoadedWorld): string | null {
+  return world.link?.url ?? world.now.sequencer?.url ?? null;
+}
+
+/** Starts syncing `world` (it must be attached): wants its socket and opens it once ready. */
+export function startSync(core: HostCore, world: LoadedWorld): void {
+  const url = urlOf(world);
+  if (url === null || world.link?.diverged != null) return;
+  if (!core.sync.has(world.id)) core.setSync(world.id, { url, link: "connecting", error: null });
+  core.hub.want(url, world.id);
+  if (core.hub.state(url) === "ready") sendOpen(core, world);
+}
+
+export function stopSync(core: HostCore, world: LoadedWorld): void {
+  const url = urlOf(world);
+  core.sync.delete(world.id);
+  if (url === null) return;
+  core.hub.send(url, { t: "close", world: world.id });
+  core.hub.unwant(url, world.id);
+}
+
+export function sendOpen(core: HostCore, world: LoadedWorld): void {
+  const url = urlOf(world);
+  if (url === null) return;
+  const sent = core.hub.send(url, {
+    t: "open",
+    world: world.id,
+    have: world.cursor.n,
+    chain: world.cursor.n === 0 ? null : world.cursor.chain,
+    protocol: WORLD_PROTOCOL,
+    physics: [...PHYSICS_SUPPORTED],
+  });
+  core.setSync(world.id, {
+    url,
+    link: sent.ok ? "connecting" : "offline",
+    error: sent.ok ? null : sent.error,
+  });
+}
+
+/** Sends `events` (default: the whole outbox) when the world is online. */
+export function submit(core: HostCore, world: LoadedWorld, events?: readonly StoredEvent[]): void {
+  const url = urlOf(world);
+  const info = core.sync.get(world.id);
+  if (url === null || info?.link !== "online") return;
+  const list = events ?? world.outbox.map((pending) => pending.event);
+  if (list.length === 0) return;
+  const frames = framesOf(list, SUBMIT_BATCH, (chunk) => ({
+    t: "submit",
+    world: world.id,
+    events: chunk,
+  }));
+  if (!frames.ok) return;
+  for (const frame of frames.value) core.hub.send(url, frame);
+}
+
+/** Stops syncing with `history-diverged`; persisted so a restart does not resume silently. */
+async function diverge(core: HostCore, world: LoadedWorld, why: string): Promise<void> {
+  const error: AppError = { code: "history-diverged", message: why, hint: DIVERGED_HINT };
+  if (world.link !== null) {
+    world.link = { ...world.link, diverged: error };
+    await writeLink(world.dir, world.link);
+  }
+  const url = urlOf(world);
+  if (url !== null) core.hub.unwant(url, world.id);
+  core.setSync(world.id, { url: url ?? "", link: "diverged", error });
+  await core.emitStatus(world);
+}
+
+async function onOpened(
+  core: HostCore,
+  world: LoadedWorld,
+  frame: Extract<FromService, { t: "opened" }>,
+): Promise<void> {
+  if (frame.genesis.id !== world.id) {
+    await diverge(core, world, "The service opened another world under this world's id.");
+    return;
+  }
+  if (frame.head.n < world.cursor.n) {
+    await diverge(core, world, "The service has less of this world's history than this device.");
+    return;
+  }
+  if (frame.head.n === world.cursor.n && frame.head.chain !== world.cursor.chain) {
+    await diverge(
+      core,
+      world,
+      "The service's history ends on a different chain than this device's.",
+    );
+    return;
+  }
+  core.setSync(world.id, { url: urlOf(world) ?? "", link: "online", error: null });
+  await core.emitStatus(world);
+  submit(core, world);
+}
+
+async function onEntries(
+  core: HostCore,
+  world: LoadedWorld,
+  frame: Extract<FromService, { t: "entries" }>,
+): Promise<void> {
+  const fresh = frame.entries.filter((entry) => entry.n > world.cursor.n);
+  if (fresh.length === 0) {
+    if (frame.head.n < world.cursor.n) {
+      await diverge(core, world, "The service has less of this world's history than this device.");
+    }
+    return;
+  }
+  if (fresh[0]?.n !== world.cursor.n + 1) {
+    sendOpen(core, world);
+    return;
+  }
+  const check = verifyLog(world.id, fresh, {
+    from: world.cursor,
+    owner: world.owner,
+    schedule: world.schedule,
+  });
+  if (!check.ok) {
+    await diverge(
+      core,
+      world,
+      `The service's entries do not follow this device's: ${check.error.message}`,
+    );
+    return;
+  }
+  const added = await appendVerified(world, fresh, check.value.schedule, core.verdictOf);
+  core.emitEntries(world, added);
+  await core.emitStatus(world);
+  void receiveWorks(core, world);
+}
+
+async function onRejected(
+  core: HostCore,
+  world: LoadedWorld,
+  frame: Extract<FromService, { t: "rejected" }>,
+): Promise<void> {
+  const pending = world.outbox.find((one) => one.event.id === frame.id);
+  if (pending === undefined) return;
+  world.outbox = world.outbox.filter((one) => one !== pending);
+  await appendRefused(world.dir, [{ event: pending.event, error: frame.error, at: core.nowIso() }]);
+  await writeOutbox(
+    world.dir,
+    world.outbox.map((one) => one.event),
+  );
+  core.emitEntries(world, []);
+  await core.emitStatus(world);
+}
+
+/** Every frame for a world this device syncs; frames for other worlds are ignored. */
+export async function onFrame(core: HostCore, url: string, frame: FromService): Promise<void> {
+  if (frame.t === "challenge" || frame.t === "claimed") return;
+  if (frame.t === "refused") {
+    const worlds = [...core.sync.entries()].filter(
+      ([id, info]) => info.url === url && (frame.world === "" || id === frame.world),
+    );
+    for (const [id, info] of worlds) {
+      core.setSync(id, { ...info, link: "refused", error: frame.error });
+      const world = core.worlds.get(id);
+      if (world !== undefined) await core.emitStatus(world);
+    }
+    return;
+  }
+  if (core.sync.get(frame.world)?.url !== url) return;
+  if (frame.t === "stream") {
+    const { t: _t, ...event } = frame;
+    core.deps.broadcast(WORLD_IPC.stream, event satisfies WorldStreamEvent);
+    return;
+  }
+  if (frame.t === "presence") {
+    const { t: _t, ...event } = frame;
+    core.deps.broadcast(WORLD_IPC.presence, event satisfies WorldPresenceEvent);
+    return;
+  }
+  await core.withWorld(frame.world, async (world) => {
+    if (world.link?.diverged != null) return ok(undefined);
+    if (frame.t === "opened") await onOpened(core, world, frame);
+    else if (frame.t === "entries") await onEntries(core, world, frame);
+    else if (frame.t === "rejected") await onRejected(core, world, frame);
+    return ok(undefined);
+  });
+}
+
+/** A socket is authenticated: open every world synced over it. */
+export function onReady(core: HostCore, url: string): void {
+  for (const [id, info] of core.sync) {
+    const world = core.worlds.get(id);
+    if (info.url === url && world !== undefined) sendOpen(core, world);
+  }
+}
+
+export function onDown(core: HostCore, url: string, error: AppError, fatal: boolean): void {
+  for (const [id, info] of core.sync) {
+    if (info.url !== url || info.link === "diverged") continue;
+    core.setSync(id, { url, link: fatal ? "refused" : "offline", error: fatal ? error : null });
+    const world = core.worlds.get(id);
+    if (world !== undefined) void core.emitStatus(world);
+  }
+}
+
+/** D15: asks the service who writes `target`; 1.5 s at most. */
+export async function claimOnline(
+  core: HostCore,
+  world: LoadedWorld,
+  message: { t: "claim" | "release"; target: string },
+): Promise<Result<Extract<FromService, { t: "claimed" }> | null>> {
+  const url = urlOf(world);
+  if (url === null || core.sync.get(world.id)?.link !== "online") {
+    return err(
+      "claim-offline",
+      "The world's service is not connected.",
+      "Writing goes ahead here.",
+    );
+  }
+  const target = message.target as Extract<FromService, { t: "claimed" }>["target"];
+  if (message.t === "release") {
+    const sent = core.hub.send(url, { t: "release", world: world.id, target });
+    return sent.ok ? ok(null) : sent;
+  }
+  const answer = core.hub.waitFor(
+    url,
+    (frame) => frame.t === "claimed" && frame.world === world.id && frame.target === target,
+    1_500,
+  );
+  const sent = core.hub.send(url, { t: "claim", world: world.id, target });
+  if (!sent.ok) return sent;
+  const frame = await answer;
+  return frame?.t === "claimed"
+    ? ok(frame)
+    : err(
+        "claim-offline",
+        "The world's service did not answer in time.",
+        "Writing goes ahead here.",
+      );
+}
