@@ -34,6 +34,19 @@ import type {
   SceneArtifact,
   SceneGenerationRequest,
 } from "./scene-generation";
+import type {
+  CandidateMetrics,
+  DraftCandidate,
+  PlayChange,
+  WorkCodeFile,
+  WorkDraft,
+  WorkManifest,
+  WorkPlay,
+  WorkRef,
+  WorkSession,
+  WorkSessionSource,
+  WorkText,
+} from "./works";
 import type { Genesis, WorldFile, WorldMeta } from "./world";
 
 export const IPC = {
@@ -122,6 +135,24 @@ export const IPC = {
     remove: "mods:remove",
     changed: "mods:changed",
   },
+  works: {
+    list: "works:list",
+    plays: "works:plays",
+    drafts: "works:drafts",
+    createDraft: "works:create-draft",
+    readDraft: "works:read-draft",
+    readCandidate: "works:read-candidate",
+    writeCandidate: "works:write-candidate",
+    settleCandidate: "works:settle-candidate",
+    revertDraft: "works:revert-draft",
+    publishDraft: "works:publish-draft",
+    replaceAsset: "works:replace-asset",
+    createPlay: "works:create-play",
+    readPlay: "works:read-play",
+    changePlay: "works:change-play",
+    openSession: "works:open-session",
+    closeSession: "works:close-session",
+  },
   app: {
     info: "app:info",
     openExternal: "app:open-external",
@@ -204,6 +235,35 @@ export interface SaveFileInput {
   defaultName: string;
   /** Base64 payload; kept as string so it crosses the bridge without structured-clone surprises. */
   base64: string;
+}
+
+export interface WriteWorkCandidateInput {
+  draftId: string;
+  parent: string | null;
+  kind: "generate" | "edit" | "repair";
+  request: string;
+  summary: string;
+  text: WorkText;
+  changed: WorkCodeFile[];
+  metrics: CandidateMetrics | null;
+}
+
+export interface SettleWorkCandidateInput {
+  draftId: string;
+  candidateId: string;
+  outcome: "playable" | "failed" | "cancelled";
+  error: string | null;
+  expectedHead: string | null;
+}
+
+export interface CreateWorkPlayInput {
+  title: string;
+  worlds: WorkRef[];
+}
+
+export interface WrittenCandidate {
+  draft: WorkDraft;
+  candidate: DraftCandidate;
 }
 
 export interface SeedApi {
@@ -320,6 +380,31 @@ export interface SeedApi {
     onChanged(
       listener: (event: { name: string; kind: "add" | "change" | "unlink" }) => void,
     ): () => void;
+  };
+  /** AI-written HTML/CSS/JS worlds (`interactive-web@1`) and the sandboxed player around them. */
+  works: {
+    /** Published immutable revisions, newest version first per world. */
+    list(): Promise<Result<WorkManifest[]>>;
+    plays(): Promise<Result<WorkPlay[]>>;
+    drafts(): Promise<Result<WorkDraft[]>>;
+    createDraft(title: string): Promise<Result<WorkDraft>>;
+    readDraft(draftId: string): Promise<Result<WorkDraft>>;
+    readCandidate(draftId: string, candidateId: string): Promise<Result<WorkText>>;
+    /** Stores an attempt as `pending`; it only becomes current through `settleCandidate`. */
+    writeCandidate(input: WriteWorkCandidateInput): Promise<Result<WrittenCandidate>>;
+    /** Compare-and-set: a playable result lands only if head still equals `expectedHead`. */
+    settleCandidate(input: SettleWorkCandidateInput): Promise<Result<WorkDraft>>;
+    revertDraft(draftId: string, candidateId: string): Promise<Result<WorkDraft>>;
+    publishDraft(draftId: string): Promise<Result<{ draft: WorkDraft; manifest: WorkManifest }>>;
+    /** Picks an image file for one asset id of head; null when the picker was cancelled. */
+    replaceAsset(draftId: string, assetId: string): Promise<Result<WrittenCandidate | null>>;
+    createPlay(input: CreateWorkPlayInput): Promise<Result<WorkPlay>>;
+    readPlay(playId: string): Promise<Result<WorkPlay>>;
+    changePlay(playId: string, change: PlayChange): Promise<Result<WorkPlay>>;
+    /** Builds the sandboxed page for a journey's current world or a draft candidate. */
+    openSession(source: WorkSessionSource): Promise<Result<WorkSession>>;
+    /** Forgets a session; `kill` also stops its frame process (a hung world). */
+    closeSession(token: string, kill: boolean): Promise<Result<void>>;
   };
   app: {
     info(): Promise<AppInfo>;

@@ -131,6 +131,16 @@ Mods (`<userData>/mods/<name>/mod.yml`) contribute sections, declarative tools (
 and skills. No mod ever ships JavaScript; no plugin bypasses `ctx.effects`. Every registration
 is a reversible `ctx.effect()` so mods can be mounted/unmounted while a world is open.
 
+### Rule 12. AI worlds (`interactive-web@1`) are code — only inside the work sandbox
+Rule 7 and Rule 11 still hold for cartridges, the Scene DSL and mods. The one place a model may
+write JavaScript is an `interactive-web@1` world (`docs/plans/interactive-web-player.md`), and it
+runs **only** in `<iframe sandbox="allow-scripts">` served by main from a fresh
+`ulwork://<token>/` host with the nonce CSP in `src/main/works/frame.ts`. Never add
+`allow-same-origin`, never serve a world from the app origin, never pass `window.seed`, paths or
+secrets into a frame, and treat every frame message as untrusted (`src/renderer/works/frameGuard.ts`).
+Worlds are stored beside cartridges, not inside them: `works/` (immutable, hashed),
+`work-plays/` (pinned progress), `work-drafts/` (candidates; head moves only by compare-and-set).
+
 ## Module contracts (what each module MUST export)
 
 ### `src/harness` (framework-agnostic; `@deepseek-ai/cordis` + zod + js-yaml; no React/Electron)
@@ -246,6 +256,18 @@ export function resolveEnsSeed(name: string): Promise<Result<{ address: string; 
   recovery wrapper and says so in a toast — an accepted same-machine trade-off (plan §七 wants
   more than one way back in). Records carry no AAD and new ciphertext still uses the `ASP1`
   header; both are known follow-ups, not guarantees.
+
+### `src/renderer/works` + `src/main/works` (AI worlds, Rule 12)
+```ts
+export function WorksScreen(): JSX.Element;   // title → "AI Worlds": new world, drafts, saved worlds, journeys
+// WorkFrame: one sandboxed session; validates messages, heartbeat watchdog (kills a hung frame's pid), "check" mode
+// runAttempt(draft, "generate" | "edit", request, deps): model reply → @@ line protocol (src/shared/workEdits.ts)
+//   → pending candidate → player check (fresh + resume-from-save) → ≤ 2 repairs → settle (compare-and-set)
+// window.seed.works.*: list/plays/drafts, createDraft, readCandidate, writeCandidate, settleCandidate,
+//   revertDraft, publishDraft, replaceAsset, createPlay/readPlay/changePlay, openSession/closeSession
+```
+The model-facing contract is `WORK_CONTRACT` in `src/shared/workPrompt.ts`; the host API a world sees
+is exactly `host.{root, carry, load, save, complete, status, asset}`.
 
 ### `src/renderer/net`
 ```ts

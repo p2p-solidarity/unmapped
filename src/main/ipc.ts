@@ -17,6 +17,7 @@ import { registerInstancesIpc } from "./instances/ipc";
 import { registerModsIpc } from "./mods/ipc";
 import { registerSeedIpc } from "./seeds/ipc";
 import { registerVaultIpc } from "./vault/ipc";
+import { registerWorksIpc } from "./works/ipc";
 import { registerWorkspacesIpc } from "./workspaces/ipc";
 import { registerWorldsIpc } from "./worlds/ipc";
 
@@ -34,4 +35,5 @@ export function registerIpc(ctx: MainContext): void {
   registerAppIpc(ctx);
   registerInferenceIpc(ctx);
   registerModsIpc(ctx);
+  registerWorksIpc(ctx);
 }

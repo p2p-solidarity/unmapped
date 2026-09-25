@@ -21,6 +21,7 @@ import type {
   AppInfo,
   CheckpointInstanceInput,
   CreateInstanceInput,
+  CreateWorkPlayInput,
   CreateWorkspaceInput,
   CreateWorldInput,
   PickFileOptions,
@@ -28,9 +29,12 @@ import type {
   SaveFileInput,
   SeedApi,
   SeedExport,
+  SettleWorkCandidateInput,
   WorldChangedEvent,
+  WriteWorkCandidateInput,
   WriteWorkspaceRulesInput,
   WriteWorkspaceSceneInput,
+  WrittenCandidate,
 } from "@shared/ipc";
 import { IPC } from "@shared/ipc";
 import type {
@@ -41,11 +45,6 @@ import type {
   WitnessedChunk,
 } from "@shared/land";
 import type {
-  GenerationEvent,
-  SceneArtifact,
-  SceneGenerationRequest,
-} from "@shared/scene-generation";
-import type {
   ChatEvent,
   ChatRequest,
   InferenceConfig,
@@ -54,6 +53,20 @@ import type {
 } from "@shared/llm";
 import type { ModBundle, ModSummary } from "@shared/mods";
 import type { Result } from "@shared/result";
+import type {
+  GenerationEvent,
+  SceneArtifact,
+  SceneGenerationRequest,
+} from "@shared/scene-generation";
+import type {
+  PlayChange,
+  WorkDraft,
+  WorkManifest,
+  WorkPlay,
+  WorkSession,
+  WorkSessionSource,
+  WorkText,
+} from "@shared/works";
 import type { WorldFile, WorldMeta } from "@shared/world";
 import { contextBridge, type IpcRendererEvent, ipcRenderer } from "electron";
 
@@ -169,8 +182,7 @@ const api: SeedApi = {
       subscribe<ChatEvent>(IPC.inference.event, listener),
     generateScene: (request: SceneGenerationRequest) =>
       invoke<Result<SceneArtifact>>(IPC.inference.sceneGenerate, request),
-    cancelScene: (requestId: string) =>
-      invoke<Result<void>>(IPC.inference.sceneCancel, requestId),
+    cancelScene: (requestId: string) => invoke<Result<void>>(IPC.inference.sceneCancel, requestId),
     onSceneEvent: (listener: (event: GenerationEvent) => void) =>
       subscribe<GenerationEvent>(IPC.inference.sceneEvent, listener),
     sidecarStart: () => invoke<Result<SidecarStatus>>(IPC.inference.sidecarStart),
@@ -196,6 +208,34 @@ const api: SeedApi = {
     remove: (name: string) => invoke<Result<void>>(IPC.mods.remove, name),
     onChanged: (listener: (event: { name: string; kind: "add" | "change" | "unlink" }) => void) =>
       subscribe<{ name: string; kind: "add" | "change" | "unlink" }>(IPC.mods.changed, listener),
+  },
+  works: {
+    list: () => invoke<Result<WorkManifest[]>>(IPC.works.list),
+    plays: () => invoke<Result<WorkPlay[]>>(IPC.works.plays),
+    drafts: () => invoke<Result<WorkDraft[]>>(IPC.works.drafts),
+    createDraft: (title: string) => invoke<Result<WorkDraft>>(IPC.works.createDraft, title),
+    readDraft: (draftId: string) => invoke<Result<WorkDraft>>(IPC.works.readDraft, draftId),
+    readCandidate: (draftId: string, candidateId: string) =>
+      invoke<Result<WorkText>>(IPC.works.readCandidate, draftId, candidateId),
+    writeCandidate: (input: WriteWorkCandidateInput) =>
+      invoke<Result<WrittenCandidate>>(IPC.works.writeCandidate, input),
+    settleCandidate: (input: SettleWorkCandidateInput) =>
+      invoke<Result<WorkDraft>>(IPC.works.settleCandidate, input),
+    revertDraft: (draftId: string, candidateId: string) =>
+      invoke<Result<WorkDraft>>(IPC.works.revertDraft, draftId, candidateId),
+    publishDraft: (draftId: string) =>
+      invoke<Result<{ draft: WorkDraft; manifest: WorkManifest }>>(IPC.works.publishDraft, draftId),
+    replaceAsset: (draftId: string, assetId: string) =>
+      invoke<Result<WrittenCandidate | null>>(IPC.works.replaceAsset, draftId, assetId),
+    createPlay: (input: CreateWorkPlayInput) =>
+      invoke<Result<WorkPlay>>(IPC.works.createPlay, input),
+    readPlay: (playId: string) => invoke<Result<WorkPlay>>(IPC.works.readPlay, playId),
+    changePlay: (playId: string, change: PlayChange) =>
+      invoke<Result<WorkPlay>>(IPC.works.changePlay, playId, change),
+    openSession: (source: WorkSessionSource) =>
+      invoke<Result<WorkSession>>(IPC.works.openSession, source),
+    closeSession: (token: string, kill: boolean) =>
+      invoke<Result<void>>(IPC.works.closeSession, token, kill),
   },
   app: {
     info: () => invoke<AppInfo>(IPC.app.info),

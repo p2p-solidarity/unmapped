@@ -170,7 +170,7 @@ export function validateWorkspace(workspace: WorkspaceRecord): WorkspacePreview 
   const reachable = reachableScenes(meta.entrySceneId, routes, contracts);
   const reachesEnding = [...reachable].some((id) => terminals.has(id));
   if (!reachesEnding) endingMessages.push("No terminal scene is reachable from the entry scene.");
-  if (definition !== null && definition.scenePlan.endingSceneIds.some((id) => !terminals.has(id))) {
+  if (definition?.scenePlan.endingSceneIds.some((id) => !terminals.has(id))) {
     endingMessages.push("A declared v2 ending scene is not terminal.");
   }
 

@@ -5,11 +5,7 @@ import { parseScene } from "@dsl";
 import { CAPABILITY_KEYS } from "@shared/capabilities";
 import type { ContentHash } from "@shared/cartridge";
 import { fail, ok, type Result } from "@shared/result";
-import type {
-  SceneGenerationRequest,
-  SceneIntent,
-  SceneState,
-} from "@shared/scene-generation";
+import type { SceneGenerationRequest, SceneIntent, SceneState } from "@shared/scene-generation";
 import { ITEM_KINDS } from "@shared/world";
 import { z } from "zod";
 

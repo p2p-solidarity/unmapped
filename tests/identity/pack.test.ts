@@ -99,6 +99,7 @@ describe("packFiles / unpackFiles", () => {
       inference: {} as SeedApi["inference"],
       vault: {} as SeedApi["vault"],
       mods: {} as SeedApi["mods"],
+      works: {} as SeedApi["works"],
       app: {} as SeedApi["app"],
     } as SeedApi;
     const previous = globalThis.window;
@@ -157,6 +158,7 @@ describe("packFiles / unpackFiles", () => {
       inference: {} as SeedApi["inference"],
       vault: {} as SeedApi["vault"],
       mods: {} as SeedApi["mods"],
+      works: {} as SeedApi["works"],
       app: {} as SeedApi["app"],
     } as SeedApi;
     const previous = globalThis.window;

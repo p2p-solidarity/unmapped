@@ -12,12 +12,19 @@ import {
 } from "./inference/appleLocalHelper";
 import { registerIpc } from "./ipc";
 import { applyCsp, createWindow } from "./window";
+import { registerWorkScheme } from "./works/ipc";
 
 loadEnv();
+// Custom schemes must be declared before the app is ready.
+registerWorkScheme();
 
 // Isolated development smoke tests never open the player's real cartridge library.
 if (!app.isPackaged && process.env.AETHER_TEST_USER_DATA) {
   app.setPath("userData", resolve(process.env.AETHER_TEST_USER_DATA));
+  // Smoke tests drive a window that is usually covered. Keep occluded windows and their
+  // out-of-process frames (sandboxed worlds) rendering, so animation frames keep arriving.
+  app.commandLine.appendSwitch("disable-backgrounding-occluded-windows");
+  app.commandLine.appendSwitch("disable-renderer-backgrounding");
 }
 
 type Cleanup = () => Promise<void> | void;

@@ -3,8 +3,8 @@
 // screen says so and offers nothing prebuilt (Rule 2). The full authoring flow lives behind Remix.
 
 import worldForgeArt from "@renderer/assets/generated/world-forge.png";
-import { generationEventLabel } from "@renderer/narrative/sceneGeneration";
 import { makeWorld, type NewWorldStage } from "@renderer/narrative/newWorld";
+import { generationEventLabel } from "@renderer/narrative/sceneGeneration";
 import { useInferenceStore, useSessionStore } from "@renderer/state";
 import { Button, ErrorBlock, Surface, space, Text, TextField } from "@renderer/ui";
 import type { AppError } from "@shared/result";

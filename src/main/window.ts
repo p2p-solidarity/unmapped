@@ -3,6 +3,7 @@
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { WORK_SCHEME } from "@shared/works";
 import { app, BrowserWindow, session, shell } from "electron";
 import { isHttpUrl } from "./app/url";
 
@@ -58,18 +59,35 @@ export function cspHeader(dev: boolean): string {
     "img-src 'self' data: blob:",
     "connect-src 'self' ws: wss: http://127.0.0.1:* http://localhost:* https:",
     "worker-src 'self' blob:",
+    // AI-written worlds run only in sandboxed frames on the work scheme; nothing else may be framed.
+    `frame-src ${WORK_SCHEME}:`,
   ].join("; ");
 }
 
 export function applyCsp(target = session.defaultSession): void {
   const policy = cspHeader(isDev());
   target.webRequest.onHeadersReceived((details, callback) => {
+    // A world page carries its own, much stricter policy; the app policy must not replace it.
+    if (details.url.startsWith(`${WORK_SCHEME}:`)) {
+      callback({});
+      return;
+    }
     const headers: Record<string, string | string[]> = { ...details.responseHeaders };
     for (const key of Object.keys(headers)) {
       if (key.toLowerCase() === "content-security-policy") delete headers[key];
     }
     headers["Content-Security-Policy"] = [policy];
     callback({ responseHeaders: headers });
+  });
+  // Worlds get no permissions at all (camera, notifications, clipboard, …). Everything else keeps
+  // Electron's existing behaviour.
+  const fromWork = (url: string | undefined): boolean =>
+    url?.startsWith(`${WORK_SCHEME}:`) === true;
+  target.setPermissionRequestHandler((_contents, _permission, callback, details) => {
+    callback(!fromWork(details.requestingUrl));
+  });
+  target.setPermissionCheckHandler((_contents, _permission, _origin, details) => {
+    return !fromWork(details.requestingUrl);
   });
 }
 
@@ -88,6 +106,9 @@ export function createWindow(): BrowserWindow {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      // Isolated dev smoke tests drive a window that is usually covered; keep its timers and
+      // animation frames running like a visible window. Players keep Chromium's default.
+      backgroundThrottling: !(isDev() && process.env.AETHER_TEST_USER_DATA),
     },
   });
 
@@ -111,6 +132,13 @@ export function createWindow(): BrowserWindow {
       process.stderr.write(`[renderer] process gone: ${details.reason}\n`);
     });
   }
+
+  // Second layer behind the host CSP's frame-src: a subframe may only ever show a world page.
+  window.webContents.on("will-frame-navigate", (details) => {
+    if (!details.isMainFrame && !details.url.startsWith(`${WORK_SCHEME}://`)) {
+      details.preventDefault();
+    }
+  });
 
   window.webContents.setWindowOpenHandler(({ url }) => {
     if (isHttpUrl(url)) void shell.openExternal(url);

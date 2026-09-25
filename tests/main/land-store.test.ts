@@ -1,13 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-  CHUNK_EXAMPLE,
-  parseChunk,
-  serializeDialogue,
-  serializeErrands,
-  serializeScene,
-} from "@dsl/index";
+import { CHUNK_EXAMPLE, parseChunk, serializeDialogue, serializeScene } from "@dsl/index";
 import { publishCartridgeRevision } from "@main/cartridges/store";
 import { appendNote, readLand, witnessChunk } from "@main/instances/land";
 import { createInstance } from "@main/instances/store";

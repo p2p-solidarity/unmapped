@@ -3,12 +3,7 @@
 // an open-land cartridge (tps_exploration@1) with the bible hashed in, and a save is created. With
 // no model there is no world — the caller shows the error and its hint, never a prebuilt world.
 
-import {
-  biblePrompt,
-  type NewWorldContext,
-  originIssues,
-  parseBible,
-} from "@dsl";
+import { biblePrompt, type NewWorldContext, originIssues, parseBible } from "@dsl";
 import { dslError } from "@dsl/parse/program";
 import type { InstanceMeta, WorldBible } from "@shared/cartridge";
 import { fail, ok, type Result } from "@shared/result";

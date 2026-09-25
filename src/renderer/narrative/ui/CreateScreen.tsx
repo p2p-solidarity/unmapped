@@ -1,7 +1,7 @@
 import { GameShell } from "@renderer/app/shell/GameShell";
 import worldForgeArt from "@renderer/assets/generated/world-forge.png";
 import { useAuthoringStore } from "@renderer/state";
-import { Button, ErrorBlock, StatePanel, Surface, space, Text, TextField } from "@renderer/ui";
+import { Button, ErrorBlock, StatePanel, space, Text, TextField } from "@renderer/ui";
 import { type CapabilitySpec, SUBSTITUTIONS } from "@shared/capabilities";
 import type { InstanceMeta } from "@shared/cartridge";
 import { answerQuestion, decideSuggestion, reviewStatus } from "@shared/design-review";
@@ -9,12 +9,7 @@ import { applyPatch, type GameDefinitionDraft } from "@shared/game-definition";
 import { EMPTY_MODE_SELECTION, type ModeSelection, selectedModeIds } from "@shared/mode-catalog";
 import type { AppError } from "@shared/result";
 import type { SceneBase } from "@shared/scene-bases";
-import {
-  type AuthoringSnapshot,
-  markGalleryStale,
-  replaceCandidates,
-  selectCandidate,
-} from "@shared/scene-gallery";
+import { type AuthoringSnapshot, markGalleryStale } from "@shared/scene-gallery";
 import { type JSX, useEffect, useMemo, useState } from "react";
 import { generateDesignReview } from "../designInterview";
 import { CapabilityReport } from "./CapabilityReport";

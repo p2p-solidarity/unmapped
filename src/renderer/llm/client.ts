@@ -20,11 +20,19 @@ export async function abortChat(id: string): Promise<void> {
   await window.seed.inference.abort(id);
 }
 
+export interface ChatOptions {
+  /** Aborting stops the provider stream and resolves with a `cancelled` error. */
+  signal?: AbortSignal;
+  timeoutMs?: number;
+}
+
 export function chat(
   request: Omit<ChatRequest, "id">,
   onDelta?: (text: string) => void,
+  options: ChatOptions = {},
 ): Promise<Result<ChatCompletion>> {
   const id = crypto.randomUUID();
+  const timeoutMs = options.timeoutMs ?? CHAT_TIMEOUT_MS;
   useInferenceStore.getState().beginRequest();
 
   return new Promise<Result<ChatCompletion>>((resolve) => {
@@ -33,10 +41,16 @@ export function chat(
     let unsubscribe: (() => void) | null = null;
     let timer: ReturnType<typeof setTimeout> | null = null;
 
+    const onAbort = (): void => {
+      void abortChat(id);
+      finish(fail({ code: "cancelled", message: "The request was cancelled." }));
+    };
+
     function finish(result: Result<ChatCompletion>): void {
       if (settled) return;
       settled = true;
       if (timer !== null) clearTimeout(timer);
+      options.signal?.removeEventListener("abort", onAbort);
       unsubscribe?.();
       useInferenceStore.getState().endRequest();
       resolve(result);
@@ -47,11 +61,16 @@ export function chat(
       finish(
         fail({
           code: "timeout",
-          message: `The model produced nothing usable within ${CHAT_TIMEOUT_MS / 1000}s.`,
+          message: `The model produced nothing usable within ${timeoutMs / 1000}s.`,
           hint: "try a smaller model, a shorter context, or check the provider in Settings",
         }),
       );
-    }, CHAT_TIMEOUT_MS);
+    }, timeoutMs);
+    if (options.signal?.aborted === true) {
+      onAbort();
+      return;
+    }
+    options.signal?.addEventListener("abort", onAbort, { once: true });
 
     unsubscribe = window.seed.inference.onEvent((event: ChatEvent) => {
       if (event.id !== id) return;

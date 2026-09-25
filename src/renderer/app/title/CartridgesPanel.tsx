@@ -33,17 +33,17 @@ function entries(library: LibraryData): Entry[] {
   return [
     ...library.instances.map((instance) => ({
       kind: "save" as const,
-      key: "save:" + instance.instanceId,
+      key: `save:${instance.instanceId}`,
       instance,
     })),
     ...library.cartridges.map((manifest) => ({
       kind: "cartridge" as const,
-      key: "cart:" + manifest.cartridgeId + "@" + manifest.version,
+      key: `cart:${manifest.cartridgeId}@${manifest.version}`,
       manifest,
     })),
     ...library.workspaces.map((workspace) => ({
       kind: "draft" as const,
-      key: "draft:" + workspace.workspaceId,
+      key: `draft:${workspace.workspaceId}`,
       workspace,
     })),
   ];
@@ -118,7 +118,7 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
       const result = await window.seed.instances.create({
         cartridgeId: manifest.cartridgeId,
         version: manifest.version,
-        name: manifest.name + " run",
+        name: `${manifest.name} run`,
       });
       setBusy(false);
       if (!result.ok) return toast("danger", result.error.message);
@@ -139,8 +139,8 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
     if (entry?.kind !== "cartridge") return;
     setRemix({
       source: entry.manifest,
-      targetCartridgeId: entry.manifest.cartridgeId + "-remix",
-      name: entry.manifest.name + " Remix",
+      targetCartridgeId: `${entry.manifest.cartridgeId}-remix`,
+      name: `${entry.manifest.name} Remix`,
       author: "",
     });
   };

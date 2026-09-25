@@ -205,7 +205,11 @@ export function registerInferenceIpc(ctx: MainContext): void {
           // The provider reports its own terminal state before artifact validation. Main owns the
           // public terminal event so the UI only sees completed after every gate passed.
           onEvent: (payload) => {
-            if (payload.type === "completed" || payload.type === "error" || payload.type === "cancelled") {
+            if (
+              payload.type === "completed" ||
+              payload.type === "error" ||
+              payload.type === "cancelled"
+            ) {
               return;
             }
             send(payload);

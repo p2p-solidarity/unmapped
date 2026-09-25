@@ -6,6 +6,7 @@ import { useLandSync } from "@renderer/net/landSync";
 import { useActiveRoom } from "@renderer/net/lifecycle";
 import { leaveActiveRoom, useRoomSync } from "@renderer/net/sync";
 import { useSessionStore } from "@renderer/state";
+import { WorksScreen } from "@renderer/works";
 import { useEffect, useMemo, useRef } from "react";
 import { hotkeyAction, isTypingTarget } from "./hotkeys";
 import { type InferenceSync, InferenceSyncContext } from "./inferenceSync";
@@ -83,6 +84,8 @@ function Screens() {
       return <PlayScreen />;
     case "workspace":
       return <WorkspaceScreen />;
+    case "works":
+      return <WorksScreen />;
   }
 }
 

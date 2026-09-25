@@ -17,7 +17,7 @@ import { openInstance } from "./useInstanceLoader";
 type PanelId = "join" | "cartridges" | "system" | "archive";
 
 interface MenuItem {
-  id: "continue" | "new" | "create" | PanelId;
+  id: "continue" | "new" | "create" | "worlds" | PanelId;
   label: string;
   disabled: boolean;
 }
@@ -35,6 +35,7 @@ export function WorldsScreen() {
     { id: "continue", label: "Continue", disabled: latest === null },
     { id: "new", label: "New Game", disabled: false },
     { id: "create", label: "Create a game", disabled: false },
+    { id: "worlds", label: "AI Worlds", disabled: false },
     { id: "join", label: "Join", disabled: false },
     { id: "cartridges", label: "Cartridges", disabled: false },
     { id: "system", label: "System", disabled: false },
@@ -54,6 +55,7 @@ export function WorldsScreen() {
     }
     if (item.id === "new") setScreen("seed");
     else if (item.id === "create") setScreen("remix");
+    else if (item.id === "worlds") setScreen("works");
     else setPanel(item.id);
   };
 

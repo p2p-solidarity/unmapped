@@ -4,13 +4,7 @@
 // what that place is. A visitor's note enters the document and the host keeps it in notes.jsonl.
 // Positions travel through awareness, never the document.
 
-import {
-  parseErrands,
-  parseScene,
-  serializeDialogue,
-  serializeErrands,
-  serializeScene,
-} from "@dsl";
+import { parseErrands, parseScene, serializeErrands, serializeScene } from "@dsl";
 import { recordNote, setNotePublisher } from "@renderer/app/land/notes";
 import { openInstance } from "@renderer/app/useInstanceLoader";
 import { samplePlayer } from "@renderer/engine/playerProbe";

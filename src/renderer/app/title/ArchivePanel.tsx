@@ -26,7 +26,7 @@ export function ArchivePanel({ data, refresh, onClose }: ArchivePanelProps) {
       if (!isCancelled(result.error.code)) toast("danger", result.error.message);
       return;
     }
-    toast("success", "Exported to " + result.value.path);
+    toast("success", `Exported to ${result.value.path}`);
   };
 
   const remove = async (id: string): Promise<void> => {
@@ -42,7 +42,7 @@ export function ArchivePanel({ data, refresh, onClose }: ArchivePanelProps) {
       if (!isCancelled(result.error.code)) toast("danger", result.error.message);
       return;
     }
-    toast("success", "Imported " + result.value.name);
+    toast("success", `Imported ${result.value.name}`);
     await refresh();
   };
 
