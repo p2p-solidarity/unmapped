@@ -49,7 +49,7 @@ AETHER_TEST_USER_DATA="$TMPDIR/demo-b" bun run dev --remoteDebuggingPort 9334
 | --- | --- |
 | A 先建好一個世界（同樣輸入「沙漠裡的鐘錶城」）並走出原點一次 | 第 1 幕的備援：模型慢就直接「繼續」 |
 | 留一個方向不要走 | 第 2 幕要走進還沒見證的霧 |
-| B 用「新遊戲」開內建世界，等原點顯影完成 | 第 3 幕 B 要有自己的世界才能加入大陸 |
+| B 用「新遊戲」→「開始」開內建世界，等 HUD 顯示「已記 · 〈地名〉」（排練 6.9 秒） | 第 3 幕 B 要有自己的世界才能加入大陸 |
 | 兩個視窗並排、字體放大 | 台下看得到 HUD 的「已連線 · 1 位夥伴」 |
 | 開好 Sepolia 的 Etherscan 分頁（合約地址見 `contracts/README.md`） | 第 4 幕、鏈上版的備援 |
 | 市場：根世界 `aether-land.unmapped.eth` 已經拍賣完成、池子已開 | ENSv2 那邊負責，見 `docs/demo/lineage-market.md` |

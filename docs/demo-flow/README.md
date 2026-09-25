@@ -36,7 +36,7 @@
 | README 指到合約與行號（Uniswap 必要） | 進行中 | ENSv2 session |
 | ENS 的 live demo 連結 | 進行中（唯讀鏈上瀏覽頁，或 Etherscan＋影片） | ENSv2 session |
 | 市場畫面實機 E2E（發行、出價、買賣、領權利金） | 進行中 | ENSv2 session |
-| 總體版排練紀錄 | 進行中：`docs/e2e/milestone-demo-flow/` | 本資料夾 |
+| 總體版排練紀錄 | 完成（f98de40，第二段之前）：[`milestone-demo-flow`](../e2e/milestone-demo-flow/result.md)；第 2–4 幕照腳本通過，第 1 幕要先填名稱 | 第二段上線後重跑 |
 
 ## 第二段上線後要改的地方
 

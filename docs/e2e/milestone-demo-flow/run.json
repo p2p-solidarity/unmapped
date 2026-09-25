@@ -1,0 +1,757 @@
+{
+  "env": {
+    "build": "f98de40 (fix(keys): .env stays the fallback when a saved key no longer reads) in a clean detached worktree ($TMPDIR/unmapped-demo), before rev6 phase 2. bun install --frozen-lockfile; the Electron 44.3.0 binary was copied from the main checkout (bun skipped electron's postinstall); the repo's .env copied in (OPENAI_API_KEY, never printed) and deleted afterwards",
+    "signaling": "PORT=4454 node node_modules/y-webrtc/bin/server.js; both apps set it through title → 系統 → 信令伺服器 (replace the list with ws://127.0.0.1:4454 → 測試連線 → 儲存到這台裝置), phase `signaling`",
+    "hostA": "AETHER_TEST_USER_DATA=$TMPDIR/ud-demo-a (empty) bun run dev --remoteDebuggingPort 9443",
+    "guestB": "AETHER_TEST_USER_DATA=$TMPDIR/ud-demo-b (empty) bun run dev --remoteDebuggingPort 9444",
+    "logs": "each app's stdout piped through a perl filter that prefixes HH:MM:SS.mmm (local time), so every [inference] line carries a wall-clock",
+    "locale": "zh-TW (system default)",
+    "window": "1440 × 868 CSS px at launch (captures are 2×)",
+    "doorNumber": "A's door number comes from its instance id (random), so it differs per run: this run got 8NSWGS. Steps marked {\"doorNumber\": true} type it; replace 8NSWGS with the number `act3A` prints.",
+    "routes": "A's land is written by the model, so the walking routes in act2 / act3A / act3B are the ones that worked on this run's land (a pillar blocked B once; see result.md). On a replay, read the `eval` positions and adjust the holds.",
+    "order": "signaling (A, then B) → act1 (A) → act2 (A) → act3NewGame (B) → act3A (A) → act3Join (B) → together (B holds a key while A captures; run the two lines of a step at once) → act3Note (B) → act3NoteA (A) → act4 (B) → shell checks. A = CDP_PORT=9443, B = CDP_PORT=9444. Run the driver from the build's checkout."
+  },
+  "model": "openai · gpt-5.4-mini (System → 模型: 雲端 API · OpenAI, 'API 金鑰：金鑰來自 .env'; nothing saved in System). /usr/bin/fm exists on this Mac; OpenAI is selected, so the Apple bridge is never asked.",
+  "signaling": [
+    {
+      "clickText": "系統"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "eval": "JSON.stringify([...document.querySelectorAll(\"input,textarea\")].map(e=>({label:e.closest(\"label\")?.innerText?.slice(0,40),value:e.type===\"password\"?\"(hidden)\":e.value})))"
+    },
+    {
+      "eval": "(()=>{const t=document.querySelector(\"textarea\");t.focus();t.select();return t.value})()"
+    },
+    {
+      "type": "ws://127.0.0.1:4454"
+    },
+    {
+      "wait": 300
+    },
+    {
+      "clickText": "測試連線"
+    },
+    {
+      "wait": 2500
+    },
+    {
+      "clickText": "儲存到這台裝置"
+    },
+    {
+      "wait": 800
+    },
+    {
+      "eval": "JSON.stringify({sig:localStorage.getItem(\"unwritten.signaling\"),panel:document.body.innerText.split(\"信令伺服器\\n\")[1].slice(0,260)})"
+    },
+    {
+      "clickText": "返回"
+    },
+    {
+      "wait": 800
+    }
+  ],
+  "act1": [
+    {
+      "eval": "new Date().toTimeString().slice(0,8)+\".\"+String(Date.now()%1000).padStart(3,\"0\")"
+    },
+    {
+      "clickText": "創作遊戲"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "eval": "document.body.innerText.slice(0,800)"
+    },
+    {
+      "clickText": "開始新的遊戲"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "eval": "JSON.stringify([...document.querySelectorAll(\"input,textarea\")].map(e=>({tag:e.tagName,label:e.closest(\"label\")?.innerText?.split(\"\\n\")[0],value:e.value})))"
+    },
+    {
+      "eval": "document.querySelectorAll(\"input\")[1].focus()"
+    },
+    {
+      "type": "沙漠裡的鐘錶城"
+    },
+    {
+      "wait": 600
+    },
+    {
+      "eval": "JSON.stringify({btn:[...document.querySelectorAll(\"button\")].filter(b=>/撰寫世界/.test(b.innerText)).map(b=>({text:b.innerText,disabled:b.disabled})),msg:(document.body.innerText.match(/請先[^\\n]*/)||[null])[0]})"
+    },
+    {
+      "shot": "docs/e2e/milestone-demo-flow/01-idea-no-name.jpg"
+    },
+    {
+      "clickText": "撰寫世界"
+    },
+    {
+      "wait": 2000
+    },
+    {
+      "eval": "JSON.stringify({btn:[...document.querySelectorAll(\"button\")].filter(b=>/撰寫世界/.test(b.innerText)).map(b=>({text:b.innerText,disabled:b.disabled})),msg:(document.body.innerText.match(/請先[^\\n]*/)||[null])[0],streaming:!!document.querySelector(\"[data-stream-preview]\")})"
+    },
+    {
+      "note": "FAILED as scripted: no name → 撰寫世界 stays disabled. Moving on with the shortest name taken from the idea."
+    },
+    {
+      "eval": "document.querySelectorAll(\"input\")[0].focus()"
+    },
+    {
+      "type": "鐘錶城"
+    },
+    {
+      "wait": 500
+    },
+    {
+      "eval": "window.__t={};window.__t.writeWorld=Date.now();new Date().toTimeString().slice(0,8)+\".\"+String(Date.now()%1000).padStart(3,\"0\")"
+    },
+    {
+      "clickText": "撰寫世界"
+    },
+    {
+      "wait": 2200
+    },
+    {
+      "eval": "(document.querySelector(\"[data-stream-preview]\")?.innerText.slice(0,700) ?? \"no preview\")+\" @\"+(Date.now()-window.__t.writeWorld)"
+    },
+    {
+      "shot": "docs/e2e/milestone-demo-flow/02-world-streaming.jpg"
+    },
+    {
+      "eval": "(async()=>{for(let i=0;i<240;i++){const b=[...document.querySelectorAll(\"button\")].find(x=>x.innerText.trim()===\"繼續寫故事\");if(b&&!b.disabled){window.__t.worldDone=Date.now();return \"cards done @\"+(Date.now()-window.__t.writeWorld)+\" ms\";}await new Promise(r=>setTimeout(r,250));}return \"not done: \"+document.body.innerText.slice(0,400);})()"
+    },
+    {
+      "wait": 400
+    },
+    {
+      "eval": "document.querySelector(\"[data-usage-line]\")?.innerText"
+    },
+    {
+      "eval": "JSON.stringify([...document.querySelectorAll(\"textarea,input\")].map(e=>(e.closest(\"label\")?.innerText.split(\"\\n\")[0]??\"\")+\": \"+e.value))"
+    },
+    {
+      "shot": "docs/e2e/milestone-demo-flow/03-world-cards.jpg"
+    },
+    {
+      "eval": "window.__t.writeStory=Date.now();new Date().toTimeString().slice(0,8)+\".\"+String(Date.now()%1000).padStart(3,\"0\")"
+    },
+    {
+      "clickText": "繼續寫故事"
+    },
+    {
+      "eval": "(async()=>{for(let i=0;i<120;i++){const p=document.querySelector(\"[data-stream-preview]\");if(p&&p.innerText.length>60){p.scrollIntoView({block:\"center\"});return \"preview @\"+(Date.now()-window.__t.writeStory)+\" ms\";}await new Promise(r=>setTimeout(r,100));}return \"no preview\";})()"
+    },
+    {
+      "wait": 1200
+    },
+    {
+      "eval": "(document.querySelector(\"[data-stream-preview]\")?.innerText.slice(0,900) ?? \"no preview\")+\" @\"+(Date.now()-window.__t.writeStory)"
+    },
+    {
+      "eval": "(()=>{const p=document.querySelector(\"[data-stream-preview]\");p?.scrollIntoView({block:\"center\"});return (document.body.innerText.match(/正在[^\\n]*/)||[\"\"])[0]})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-demo-flow/04-story-streaming.jpg"
+    },
+    {
+      "eval": "(async()=>{for(let i=0;i<360;i++){const b=[...document.querySelectorAll(\"button\")].find(x=>x.innerText.trim()===\"前往建立\");if(b&&!b.disabled){window.__t.storyDone=Date.now();return \"story done @\"+(Date.now()-window.__t.writeStory)+\" ms\";}await new Promise(r=>setTimeout(r,250));}return \"not done\";})()"
+    },
+    {
+      "wait": 400
+    },
+    {
+      "eval": "document.querySelector(\"[data-usage-line]\")?.innerText"
+    },
+    {
+      "eval": "window.scrollTo(0,0);[...document.querySelectorAll(\"*\")].forEach(e=>{if(e.scrollTop>0)e.scrollTop=0});document.body.innerText.slice(0,2500)"
+    },
+    {
+      "shot": "docs/e2e/milestone-demo-flow/05-story.jpg"
+    },
+    {
+      "eval": "JSON.stringify([...document.querySelectorAll(\"input,textarea\")].map(e=>e.value).filter(v=>v).slice(0,20).map(v=>v.slice(0,60)))"
+    },
+    {
+      "clickText": "前往建立"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "eval": "document.body.innerText.slice(0,1800)"
+    },
+    {
+      "shot": "docs/e2e/milestone-demo-flow/06-build-review.jpg"
+    },
+    {
+      "eval": "window.__t.build=Date.now();new Date().toTimeString().slice(0,8)+\".\"+String(Date.now()%1000).padStart(3,\"0\")"
+    },
+    {
+      "clickText": "建立並開始玩"
+    },
+    {
+      "eval": "(async()=>{const t0=window.__t.build;const seen=[];let last=\"\";for(let i=0;i<600;i++){const m=(document.body.innerText.match(/正在[^\\n]*|顯影中[^\\n]*|已記 ·[^\\n]*/)||[\"\"])[0];if(m&&m!==last){seen.push((Date.now()-t0)+\" \"+m);last=m;}if(/顯影中|已記 ·/.test(document.body.innerText)){window.__t.land=Date.now();return JSON.stringify({landAt:Date.now()-t0,seen});}await new Promise(r=>setTimeout(r,100));}return JSON.stringify({notLand:document.body.innerText.slice(0,500),seen});})()"
+    },
+    {
+      "eval": "(async()=>{const p=await import(\"/engine/playerProbe.ts\");const s=p.samplePlayer();return JSON.stringify({ms:Date.now()-window.__t.build,sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},hud:(document.body.innerText.match(/顯影中[^\\n]*|已記 ·[^\\n]*/)||[\"\"])[0]})})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-demo-flow/07-land-first-frame.jpg"
+    },
+    {
+      "hold": "KeyD",
+      "ms": 700
+    },
+    {
+      "eval": "(async()=>{const p=await import(\"/engine/playerProbe.ts\");const s=p.samplePlayer();return JSON.stringify({ms:Date.now()-window.__t.build,sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},hud:(document.body.innerText.match(/顯影中[^\\n]*|已記 ·[^\\n]*/)||[\"\"])[0]})})()"
+    },
+    {
+      "eval": "(async()=>{for(let i=0;i<400;i++){const m=document.body.innerText.match(/已記 ·[^\\n]*/);if(m)return JSON.stringify({writtenAt:Date.now()-window.__t.build,hud:m[0]});await new Promise(r=>setTimeout(r,100));}return document.body.innerText.slice(0,500);})()"
+    },
+    {
+      "wait": 500
+    },
+    {
+      "eval": "document.body.innerText.slice(0,900)"
+    },
+    {
+      "shot": "docs/e2e/milestone-demo-flow/08-origin-witnessed.jpg"
+    },
+    {
+      "clickText": "用量"
+    },
+    {
+      "wait": 1200
+    },
+    {
+      "eval": "document.body.innerText.split(\"AI 用量\")[1]?.slice(0,1500)"
+    },
+    {
+      "shot": "docs/e2e/milestone-demo-flow/09-usage-panel.jpg"
+    },
+    {
+      "clickText": "關閉"
+    },
+    {
+      "wait": 500
+    }
+  ],
+  "act2": [
+    {
+      "eval": "(async()=>{const p=await import(\"/engine/playerProbe.ts\");const st=await import(\"/state/index.ts\");window.__rec=[];window.__t0=Date.now();clearInterval(window.__recId);window.__recId=setInterval(()=>{const s=p.samplePlayer();const c=st.useEngineStore.getState().chunk;const h=(document.body.innerText.match(/顯影中[^\\n]*|已記 ·[^\\n]*|未書寫[^\\n]*/)||[\"\"])[0];window.__rec.push([Date.now()-window.__t0,s?+s.x.toFixed(2):null,s?+s.z.toFixed(2):null,c?c.cx+\",\"+c.cz:null,h]);},250);return new Date().toTimeString().slice(0,8)+\".\"+String(Date.now()%1000).padStart(3,\"0\")})()"
+    },
+    {
+      "hold": [
+        "KeyW",
+        "ShiftLeft"
+      ],
+      "ms": 2500
+    },
+    {
+      "wait": 300
+    },
+    {
+      "eval": "JSON.stringify(window.__rec.slice(-14))"
+    },
+    {
+      "note": "the next steps ran in a second driver call that started after the 6.6 s witness had finished, so shot 10 shows the place already written; the redo below keeps the shots in the same call"
+    },
+    {
+      "eval": "(async()=>{for(let i=0;i<600;i++){const m=document.body.innerText.match(/已記 ·[^\\n]*/);if(m)return JSON.stringify({at:Date.now()-window.__t0,hud:m[0]});await new Promise(r=>setTimeout(r,100));}return \"still: \"+document.body.innerText.slice(0,300);})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-demo-flow/10-first-walk-out-witnessed.jpg"
+    },
+    {
+      "eval": "clearInterval(window.__recId);JSON.stringify(window.__rec.filter((r,i,a)=>i===0||r[4]!==a[i-1][4]||i%4===0))"
+    },
+    {
+      "eval": "(async()=>{const p=await import(\"/engine/playerProbe.ts\");const st=await import(\"/state/index.ts\");window.__rec=[];window.__t0=Date.now();clearInterval(window.__recId);window.__recId=setInterval(()=>{const s=p.samplePlayer();const c=st.useEngineStore.getState().chunk;const h=(document.body.innerText.match(/顯影中[^\\n]*|已記 ·[^\\n]*|未書寫[^\\n]*/)||[\"\"])[0];window.__rec.push([Date.now()-window.__t0,s?+s.x.toFixed(2):null,s?+s.z.toFixed(2):null,c?c.cx+\",\"+c.cz:null,h]);},250);return new Date().toTimeString().slice(0,8)+\".\"+String(Date.now()%1000).padStart(3,\"0\")})()"
+    },
+    {
+      "hold": [
+        "KeyW",
+        "ShiftLeft"
+      ],
+      "ms": 3200
+    },
+    {
+      "shot": "docs/e2e/milestone-demo-flow/11-witnessing-while-walking.jpg"
+    },
+    {
+      "hold": "KeyA",
+      "ms": 1200
+    },
+    {
+      "shot": "docs/e2e/milestone-demo-flow/12-still-witnessing-after-moving.jpg"
+    },
+    {
+      "eval": "JSON.stringify(window.__rec)"
+    },
+    {
+      "eval": "(async()=>{for(let i=0;i<600;i++){const m=document.body.innerText.match(/已記 ·[^\\n]*/);if(m)return JSON.stringify({at:Date.now()-window.__t0,hud:m[0]});await new Promise(r=>setTimeout(r,100));}return \"still: \"+document.body.innerText.slice(0,300);})()"
+    },
+    {
+      "wait": 600
+    },
+    {
+      "eval": "document.body.innerText.slice(0,200)"
+    },
+    {
+      "shot": "docs/e2e/milestone-demo-flow/13-witnessed-new-place.jpg"
+    },
+    {
+      "eval": "clearInterval(window.__recId);JSON.stringify(window.__rec.filter((r,i,a)=>i===0||r[4]!==a[i-1][4]||i%4===0))"
+    }
+  ],
+  "act3NewGame": [
+    {
+      "clickText": "新遊戲"
+    },
+    {
+      "wait": 2500
+    },
+    {
+      "eval": "JSON.stringify([...document.querySelectorAll(\"input\")].map(e=>({label:e.closest(\"label\")?.innerText.split(\"\\n\")[0],value:e.value})))"
+    },
+    {
+      "note": "the seed field was prefilled with the random seed 47SJ-NT59 and left as it was; to replay the same land, focus the field and type 47SJ-NT59"
+    },
+    {
+      "eval": "window.__t={start:Date.now()};new Date().toTimeString().slice(0,8)+\".\"+String(Date.now()%1000).padStart(3,\"0\")"
+    },
+    {
+      "clickText": "開始"
+    },
+    {
+      "eval": "(async()=>{let land=null;for(let i=0;i<900;i++){const t=document.body.innerText;if(land===null&&/顯影中|已記 ·/.test(t))land=Date.now()-window.__t.start;const m=t.match(/已記 ·[^\\n]*/);if(m)return JSON.stringify({land,written:Date.now()-window.__t.start,hud:m[0]});await new Promise(r=>setTimeout(r,100));}return document.body.innerText.slice(0,400);})()"
+    },
+    {
+      "wait": 500
+    },
+    {
+      "shot": "docs/e2e/milestone-demo-flow/14-B-own-origin-witnessed.jpg"
+    }
+  ],
+  "act3A": [
+    {
+      "note": "walk home from chunk 0 · -2 to the door at about (10.5, 8.5); these holds fit this run's land"
+    },
+    {
+      "hold": [
+        "KeyD",
+        "ShiftLeft"
+      ],
+      "ms": 700
+    },
+    {
+      "eval": "(async()=>{const p=await import(\"/engine/playerProbe.ts\");const st=await import(\"/state/index.ts\");const s=p.samplePlayer();return JSON.stringify({x:s&&+s.x.toFixed(2),z:s&&+s.z.toFixed(2),chunk:st.useEngineStore.getState().chunk,e:(document.body.innerText.match(/E · [^\\n]*/)||[null])[0]})})()"
+    },
+    {
+      "hold": [
+        "KeyS",
+        "ShiftLeft"
+      ],
+      "ms": 6300
+    },
+    {
+      "eval": "(async()=>{const p=await import(\"/engine/playerProbe.ts\");const st=await import(\"/state/index.ts\");const s=p.samplePlayer();return JSON.stringify({x:s&&+s.x.toFixed(2),z:s&&+s.z.toFixed(2),chunk:st.useEngineStore.getState().chunk,e:(document.body.innerText.match(/E · [^\\n]*/)||[null])[0]})})()"
+    },
+    {
+      "hold": "KeyS",
+      "ms": 500
+    },
+    {
+      "hold": "KeyA",
+      "ms": 1600
+    },
+    {
+      "eval": "(async()=>{const p=await import(\"/engine/playerProbe.ts\");const st=await import(\"/state/index.ts\");const s=p.samplePlayer();return JSON.stringify({x:s&&+s.x.toFixed(2),z:s&&+s.z.toFixed(2),chunk:st.useEngineStore.getState().chunk,e:(document.body.innerText.match(/E · [^\\n]*/)||[null])[0]})})()"
+    },
+    {
+      "hold": "KeyS",
+      "ms": 450
+    },
+    {
+      "hold": "KeyA",
+      "ms": 800
+    },
+    {
+      "eval": "(async()=>{const p=await import(\"/engine/playerProbe.ts\");const st=await import(\"/state/index.ts\");const s=p.samplePlayer();return JSON.stringify({x:s&&+s.x.toFixed(2),z:s&&+s.z.toFixed(2),chunk:st.useEngineStore.getState().chunk,e:(document.body.innerText.match(/E · [^\\n]*/)||[null])[0]})})()"
+    },
+    {
+      "hold": "KeyE",
+      "ms": 80
+    },
+    {
+      "wait": 1200
+    },
+    {
+      "eval": "document.body.innerText.slice(document.body.innerText.indexOf(\"大陸\")-40).slice(0,1500)"
+    },
+    {
+      "shot": "docs/e2e/milestone-demo-flow/15-A-door-panel.jpg"
+    },
+    {
+      "eval": "window.__tdoor=Date.now();new Date().toTimeString().slice(0,8)+\".\"+String(Date.now()%1000).padStart(3,\"0\")"
+    },
+    {
+      "clickText": "向夥伴敞開我的門"
+    },
+    {
+      "wait": 2500
+    },
+    {
+      "eval": "JSON.stringify({ms:Date.now()-window.__tdoor,lines:document.body.innerText.match(/大陸[^\\n]*|已連線[^\\n]*|這個世界的門牌[^\\n]*/g)})"
+    },
+    {
+      "shot": "docs/e2e/milestone-demo-flow/16-A-door-open.jpg"
+    },
+    {
+      "clickText": "關閉"
+    },
+    {
+      "wait": 500
+    }
+  ],
+  "act3Join": [
+    {
+      "clickText": "← 主頁"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "clickText": "加入大陸"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "eval": "document.body.innerText.slice(0,1200)"
+    },
+    {
+      "clickText": "無界之地 · 47SJ-NT59"
+    },
+    {
+      "wait": 500
+    },
+    {
+      "eval": "(()=>{const all=[...document.querySelectorAll(\"input\")];all[all.length-1].focus();return all.length})()"
+    },
+    {
+      "type": "8NSWGS",
+      "doorNumber": true
+    },
+    {
+      "wait": 300
+    },
+    {
+      "shot": "docs/e2e/milestone-demo-flow/17-B-join-continent.jpg"
+    },
+    {
+      "eval": "window.__tj=Date.now();new Date().toTimeString().slice(0,8)+\".\"+String(Date.now()%1000).padStart(3,\"0\")"
+    },
+    {
+      "clickText": "穿過這扇門"
+    },
+    {
+      "eval": "(async()=>{const seen=[];let last=\"\";for(let i=0;i<200;i++){const m=(document.body.innerText.match(/大陸 8NSWGS[^\\n]*/)||[\"\"])[0];if(m&&m!==last){seen.push((Date.now()-window.__tj)+\" \"+m);last=m;}if(/1 位夥伴/.test(m))return JSON.stringify(seen);await new Promise(r=>setTimeout(r,100));}return JSON.stringify({seen});})()",
+      "doorNumber": true
+    },
+    {
+      "wait": 1000
+    },
+    {
+      "A": {
+        "eval": "JSON.stringify(document.body.innerText.match(/大陸 8NSWGS[^\\n]*/g))",
+        "doorNumber": true
+      }
+    },
+    {
+      "hold": "KeyE",
+      "ms": 80
+    },
+    {
+      "wait": 1200
+    },
+    {
+      "shot": "docs/e2e/milestone-demo-flow/18-B-door-panel-other-worlds.jpg"
+    },
+    {
+      "eval": "window.__tv=Date.now();new Date().toTimeString().slice(0,8)+\".\"+String(Date.now()%1000).padStart(3,\"0\")"
+    },
+    {
+      "clickText": "前往他們的門"
+    },
+    {
+      "wait": 3000
+    },
+    {
+      "eval": "(async()=>{const p=await import(\"/engine/playerProbe.ts\");const st=await import(\"/state/index.ts\");const s=p.samplePlayer();const c=st.useContinentStore.getState();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},visiting:s?p.isVisiting(s):null,chunk:st.useEngineStore.getState().chunk,continent:c.status.kind+(c.status.code?(\" \"+c.status.code):\"\"),anchor:c.anchor,worlds:c.worlds.map(w=>({id:w.worldId,anchor:w.anchor,door:w.door,online:w.online})),chunks:Object.keys(c.chunks||{}).length})})()"
+    },
+    {
+      "eval": "document.body.innerText.slice(0,500)"
+    },
+    {
+      "shot": "docs/e2e/milestone-demo-flow/19-B-on-A-land.jpg"
+    },
+    {
+      "shell": "tail -n +<line count before 穿過這扇門> $TMPDIR/demo-b.log | grep '\\[inference\\]'   # expect nothing"
+    },
+    {
+      "eval": "(async()=>{const r=await import(\"/engine/remoteRoster.ts\");return JSON.stringify(r.getRemotePlayers())})()"
+    },
+    {
+      "hold": "KeyS",
+      "ms": 900
+    },
+    {
+      "wait": 600
+    },
+    {
+      "shot": "docs/e2e/milestone-demo-flow/20-B-sees-A-on-A-land.jpg"
+    },
+    {
+      "note": "walk north into A's chunk 0 · -1 (B-local -6 · -1); a pillar blocked the first try at x -179.27, so B went east to x -174.4 first"
+    },
+    {
+      "hold": "KeyS",
+      "ms": 300
+    },
+    {
+      "hold": "KeyD",
+      "ms": 1200
+    },
+    {
+      "eval": "(async()=>{const p=await import(\"/engine/playerProbe.ts\");const st=await import(\"/state/index.ts\");const s=p.samplePlayer();return JSON.stringify({x:s&&+s.x.toFixed(2),z:s&&+s.z.toFixed(2),chunk:st.useEngineStore.getState().chunk,e:(document.body.innerText.match(/E · [^\\n]*/)||[null])[0]})})()"
+    },
+    {
+      "hold": [
+        "KeyW",
+        "ShiftLeft"
+      ],
+      "ms": 2400
+    },
+    {
+      "wait": 800
+    },
+    {
+      "eval": "(async()=>{const p=await import(\"/engine/playerProbe.ts\");const st=await import(\"/state/index.ts\");const s=p.samplePlayer();return JSON.stringify({x:s&&+s.x.toFixed(2),z:s&&+s.z.toFixed(2),chunk:st.useEngineStore.getState().chunk,e:(document.body.innerText.match(/E · [^\\n]*/)||[null])[0]})})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-demo-flow/21-B-on-A-second-place.jpg"
+    },
+    {
+      "hold": [
+        "KeyS",
+        "ShiftLeft"
+      ],
+      "ms": 2000
+    },
+    {
+      "wait": 300
+    },
+    {
+      "eval": "(async()=>{const p=await import(\"/engine/playerProbe.ts\");const st=await import(\"/state/index.ts\");const s=p.samplePlayer();return JSON.stringify({x:s&&+s.x.toFixed(2),z:s&&+s.z.toFixed(2),chunk:st.useEngineStore.getState().chunk,e:(document.body.innerText.match(/E · [^\\n]*/)||[null])[0]})})()"
+    }
+  ],
+  "together": [
+    {
+      "A": {
+        "eval": "(async()=>{const r=await import(\"/engine/remoteRoster.ts\");const p=await import(\"/engine/playerProbe.ts\");const s=p.samplePlayer();return JSON.stringify({me:s&&{x:+s.x.toFixed(2),z:+s.z.toFixed(2)},remote:r.getRemotePlayers(),look:document.body.innerText.match(/畫面：[^\\n]*/)?.[0]})})()"
+      }
+    },
+    {
+      "B": {
+        "hold": "KeyA",
+        "ms": 2200
+      },
+      "A": [
+        {
+          "wait": 900
+        },
+        {
+          "eval": "(async()=>{const r=await import(\"/engine/remoteRoster.ts\");return JSON.stringify(r.getRemotePlayers().map(p=>({name:p.name,x:+p.x.toFixed(2),z:+p.z.toFixed(2),facing:p.facing,moving:p.moving})))})()"
+        },
+        {
+          "shot": "docs/e2e/milestone-demo-flow/22-A-sees-B-walking-hd2d.jpg"
+        }
+      ]
+    },
+    {
+      "A": [
+        {
+          "hold": "KeyV",
+          "ms": 80
+        },
+        {
+          "wait": 800
+        },
+        {
+          "eval": "document.body.innerText.match(/畫面：[^\\n]*/)?.[0]"
+        }
+      ]
+    },
+    {
+      "B": {
+        "hold": "KeyD",
+        "ms": 2000
+      },
+      "A": [
+        {
+          "wait": 800
+        },
+        {
+          "eval": "(async()=>{const r=await import(\"/engine/remoteRoster.ts\");return JSON.stringify(r.getRemotePlayers().map(p=>({name:p.name,x:+p.x.toFixed(2),z:+p.z.toFixed(2),facing:p.facing,moving:p.moving})))})()"
+        },
+        {
+          "shot": "docs/e2e/milestone-demo-flow/23-A-sees-B-walking-pixel.jpg"
+        }
+      ]
+    },
+    {
+      "A": [
+        {
+          "hold": "KeyV",
+          "ms": 80
+        },
+        {
+          "wait": 600
+        }
+      ]
+    }
+  ],
+  "act3Note": [
+    {
+      "eval": "(async()=>{const p=await import(\"/engine/playerProbe.ts\");const st=await import(\"/state/index.ts\");const s=p.samplePlayer();const c=st.useContinentStore.getState();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},visiting:s?p.isVisiting(s):null,chunk:st.useEngineStore.getState().chunk,continent:c.status.kind+(c.status.code?(\" \"+c.status.code):\"\"),anchor:c.anchor,worlds:c.worlds.map(w=>({id:w.worldId,anchor:w.anchor,door:w.door,online:w.online})),chunks:Object.keys(c.chunks||{}).length})})()"
+    },
+    {
+      "hold": "KeyN",
+      "ms": 80
+    },
+    {
+      "wait": 800
+    },
+    {
+      "eval": "(()=>{const f=document.querySelectorAll(\"input, textarea\");f[0].focus();return f[0].tagName+\" \"+f.length})()"
+    },
+    {
+      "type": "鐘塔下的沙比別處涼，路過的訪客在這裡歇了一會兒。"
+    },
+    {
+      "eval": "window.__tn=Date.now();new Date().toTimeString().slice(0,8)+\".\"+String(Date.now()%1000).padStart(3,\"0\")"
+    },
+    {
+      "clickText": "留下留言"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "eval": "document.body.innerText.slice(document.body.innerText.indexOf(\"留言 ·\")).slice(0,500)"
+    },
+    {
+      "shot": "docs/e2e/milestone-demo-flow/24-B-note-on-A-land.jpg"
+    },
+    {
+      "shell": "cat $TMPDIR/ud-demo-a/instances/*/saves/default/notes.jsonl; ls $TMPDIR/ud-demo-b/instances/*/saves/default/"
+    }
+  ],
+  "act3NoteA": [
+    {
+      "eval": "(async()=>{const p=await import(\"/engine/playerProbe.ts\");const st=await import(\"/state/index.ts\");const s=p.samplePlayer();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},chunk:st.useEngineStore.getState().chunk,landNotes:st.useLandStore.getState().notes.map(n=>({author:n.author,coord:n.coord,text:n.text.slice(0,20)}))})})()"
+    },
+    {
+      "hold": "KeyN",
+      "ms": 80
+    },
+    {
+      "wait": 900
+    },
+    {
+      "eval": "document.body.innerText.slice(document.body.innerText.lastIndexOf(\"留言 ·\")).slice(0,500)"
+    },
+    {
+      "shot": "docs/e2e/milestone-demo-flow/25-A-notes-panel.jpg"
+    },
+    {
+      "shell": "tail -2 $TMPDIR/ud-demo-a/instances/*/saves/default/karma.jsonl"
+    },
+    {
+      "clickText": "關閉"
+    },
+    {
+      "wait": 300
+    }
+  ],
+  "act4": [
+    {
+      "shell": "python3 -c \"import json,glob;d=json.load(open(glob.glob('$TMPDIR/ud-demo-b/instances/*/saves/default/save.json')[0]));print(d['position'],d['updatedAt'])\""
+    },
+    {
+      "clickText": "關閉"
+    },
+    {
+      "wait": 400
+    },
+    {
+      "eval": "(async()=>{const p=await import(\"/engine/playerProbe.ts\");const s=p.samplePlayer();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)}})})()"
+    },
+    {
+      "clickText": "← 主頁"
+    },
+    {
+      "wait": 2000
+    },
+    {
+      "eval": "window.__tc=Date.now();new Date().toTimeString().slice(0,8)+\".\"+String(Date.now()%1000).padStart(3,\"0\")"
+    },
+    {
+      "clickText": "繼續遊戲"
+    },
+    {
+      "eval": "(async()=>{for(let i=0;i<200;i++){const t=document.body.innerText;if(/已記 ·|顯影中/.test(t))return JSON.stringify({ms:Date.now()-window.__tc,hud:t.slice(0,300)});await new Promise(r=>setTimeout(r,100));}return document.body.innerText.slice(0,300);})()"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "eval": "(async()=>{const p=await import(\"/engine/playerProbe.ts\");const st=await import(\"/state/index.ts\");const s=p.samplePlayer();const c=st.useContinentStore.getState();return JSON.stringify({sample:s&&{sceneId:s.sceneId,x:+s.x.toFixed(2),z:+s.z.toFixed(2)},visiting:s?p.isVisiting(s):null,chunk:st.useEngineStore.getState().chunk,continent:c.status.kind+(c.status.code?(\" \"+c.status.code):\"\"),anchor:c.anchor,worlds:c.worlds.map(w=>({id:w.worldId,anchor:w.anchor,door:w.door,online:w.online})),chunks:Object.keys(c.chunks||{}).length})})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-demo-flow/26-B-continued-own-land.jpg"
+    },
+    {
+      "wait": 6000
+    },
+    {
+      "eval": "(document.body.innerText.match(/已記 ·[^\\n]*|顯影中[^\\n]*|大陸[^\\n]*/g)||[]).join(\" | \")"
+    },
+    {
+      "shell": "python3 -c \"...same as above...\"; tail -n +<line count before ← 主頁> $TMPDIR/demo-b.log | grep '\\[inference\\]'; ls $TMPDIR/ud-demo-b/instances/*/saves/default/chunks"
+    },
+    {
+      "A": {
+        "eval": "(async()=>{const r=await import(\"/engine/remoteRoster.ts\");return JSON.stringify({hud:(document.body.innerText.match(/大陸[^\\n]*/)||[\"\"])[0],remote:r.getRemotePlayers().length})})()"
+      }
+    }
+  ],
+  "checks": [
+    {
+      "shell": "grep -c 'renderer:ERR' $TMPDIR/demo-a.log $TMPDIR/demo-b.log; grep '\\[inference\\] done\\|\\[inference\\] fail' $TMPDIR/demo-a.log $TMPDIR/demo-b.log"
+    },
+    {
+      "shell": "wc -l $TMPDIR/ud-demo-a/usage.jsonl; ls $TMPDIR/ud-demo-a/instances/*/saves/default/chunks"
+    }
+  ]
+}
