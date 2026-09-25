@@ -5,6 +5,8 @@ import type { SaveState } from "./cartridge";
 import type { ChunkCoord } from "./chunks";
 import { seedFromText } from "./endless";
 import type { LoreNode } from "./lore";
+import type { EpisodeProgress } from "./story";
+import type { Json } from "./works";
 import type { ItemSpec } from "./world";
 
 /**
@@ -58,6 +60,10 @@ export interface LandProgress {
   errands: Record<string, ErrandStage>;
   home: HomeState;
   door: (DoorSlot | null)[];
+  /** Story episodes played so far, keyed by episode id; absent until the first one is opened. */
+  episodes?: Record<string, EpisodeProgress>;
+  /** What the player carries from episode to episode (merged from each world's `complete`). */
+  storyCarry?: Json | null;
 }
 
 export const DOOR_SLOTS = 4;

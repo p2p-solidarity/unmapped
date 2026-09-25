@@ -5,12 +5,34 @@
 // would be a gauge with nothing behind it (Rule 2). A real player identity arrives with
 // PlayerProfile once the capability modules say a game needs one (plan.md §0.4).
 
-import { useEngineStore, useRunStore, useSessionStore, useWorldStore } from "@renderer/state";
+import {
+  useEngineStore,
+  useLandStore,
+  useRunStore,
+  useSessionStore,
+  useWorldStore,
+} from "@renderer/state";
 import { colors, font, radius, StatePanel, Surface, space, Text } from "@renderer/ui";
 import { formatSeedCode } from "@shared/seedCode";
+import { nextEpisode } from "@shared/story";
 import type { JSX } from "react";
 import { LandStatus } from "./LandStatus";
 import type { HudSummary } from "./summary";
+
+/** The story this world was made from: how far along it is and which gate is next. */
+function StoryLine(): JSX.Element | null {
+  const plan = useSessionStore((state) => state.activeInstance?.cartridge.story ?? null);
+  const episodes = useLandStore((state) => state.progress?.episodes ?? null);
+  if (plan === null) return null;
+  const done = plan.episodes.filter((episode) => episodes?.[episode.id]?.cleared === true).length;
+  const next = nextEpisode(plan, episodes ?? {});
+  return (
+    <Text variant="caption" tone="accent">
+      Story {done}/{plan.episodes.length}
+      {next === null ? " · complete" : ` · next: ${next.title} (${next.place})`}
+    </Text>
+  );
+}
 
 function QuestList(): JSX.Element {
   const scene = useWorldStore((state) => state.scene);
@@ -143,6 +165,7 @@ export function PlayerCard({ summary }: { summary: HudSummary }): JSX.Element {
         )}
       </div>
 
+      <StoryLine />
       <QuestList />
     </Surface>
   );

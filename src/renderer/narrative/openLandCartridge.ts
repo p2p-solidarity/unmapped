@@ -11,6 +11,7 @@ import { hashText } from "@shared/content-hash";
 import { type ModeSelection, requirementsFor } from "@shared/mode-catalog";
 import { err, ok, type Result } from "@shared/result";
 import type { AuthoringSnapshot } from "@shared/scene-gallery";
+import type { StoryPlan } from "@shared/story";
 import { buildCartridge } from "./forge";
 
 const ORIGIN_SLOT = "origin";
@@ -29,6 +30,8 @@ export interface OpenLandInput {
   premise: string;
   originSource: string;
   bible: WorldBible;
+  /** Episodes the player's story became; the built-in game has none. */
+  story?: StoryPlan;
   /** Fixed for the built-in game so its content hash is stable; now for a new world. */
   createdAt: string;
 }
@@ -124,5 +127,6 @@ export async function openLandCartridge(
     ...built.value,
     manifest: { ...built.value.manifest, version: input.version, createdAt: input.createdAt },
     bible: input.bible,
+    ...(input.story === undefined ? {} : { story: input.story }),
   });
 }

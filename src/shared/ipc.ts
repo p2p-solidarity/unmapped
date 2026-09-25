@@ -37,6 +37,7 @@ import type {
 import type {
   CandidateMetrics,
   DraftCandidate,
+  Json,
   PlayChange,
   WorkCodeFile,
   WorkDraft,
@@ -147,6 +148,7 @@ export const IPC = {
     revertDraft: "works:revert-draft",
     publishDraft: "works:publish-draft",
     replaceAsset: "works:replace-asset",
+    generateAsset: "works:generate-asset",
     createPlay: "works:create-play",
     readPlay: "works:read-play",
     changePlay: "works:change-play",
@@ -259,6 +261,8 @@ export interface SettleWorkCandidateInput {
 export interface CreateWorkPlayInput {
   title: string;
   worlds: WorkRef[];
+  /** What the player brings into the first world (a story's carried state); null by default. */
+  carry?: Json | null;
 }
 
 export interface WrittenCandidate {
@@ -398,6 +402,8 @@ export interface SeedApi {
     publishDraft(draftId: string): Promise<Result<{ draft: WorkDraft; manifest: WorkManifest }>>;
     /** Picks an image file for one asset id of head; null when the picker was cancelled. */
     replaceAsset(draftId: string, assetId: string): Promise<Result<WrittenCandidate | null>>;
+    /** Asks the image model for one asset of head (main-side key); the result is a pending candidate. */
+    generateAsset(draftId: string, assetId: string): Promise<Result<WrittenCandidate>>;
     createPlay(input: CreateWorkPlayInput): Promise<Result<WorkPlay>>;
     readPlay(playId: string): Promise<Result<WorkPlay>>;
     changePlay(playId: string, change: PlayChange): Promise<Result<WorkPlay>>;

@@ -7,6 +7,7 @@ import {
 } from "@shared/cartridge";
 import { DOOR_SLOTS } from "@shared/land";
 import { SEED_PATTERN } from "@shared/seedCode";
+import { DRAFT_ID, jsonBytes, jsonSchema, PLAY_ID, WORK_ID, WORK_LIMITS } from "@shared/works";
 import { BIOMES } from "@shared/world";
 import { z } from "zod";
 import {
@@ -97,6 +98,34 @@ export const landProgressSchema = z
           .nullable(),
       )
       .length(DOOR_SLOTS),
+    episodes: z
+      .record(
+        z.string().regex(/^e[1-9][0-9]?$/),
+        z
+          .object({
+            draftId: z.string().regex(DRAFT_ID).nullable(),
+            work: z
+              .object({
+                workId: z.string().regex(WORK_ID),
+                version: z.string().max(40),
+                contentHash: contentHashSchema,
+              })
+              .strict()
+              .nullable(),
+            playId: z.string().regex(PLAY_ID).nullable(),
+            cleared: z.boolean(),
+            summary: z.string().max(WORK_LIMITS.summaryChars).nullable(),
+          })
+          .strict(),
+      )
+      .optional(),
+    storyCarry: jsonSchema
+      .nullable()
+      .refine(
+        (value) => (jsonBytes(value) ?? Infinity) <= WORK_LIMITS.carryBytes,
+        "carry too large",
+      )
+      .optional(),
   })
   .strict();
 

@@ -9,15 +9,8 @@ import type { AppError } from "@shared/result";
 import { assetMapSchema, type Json, type WorkAssetMap, type WorkDraft } from "@shared/works";
 import { type JSX, useCallback, useEffect, useRef, useState } from "react";
 import { type AttemptReport, runAttempt } from "./author";
-import type { CheckOutcome } from "./frameGuard";
+import { useChecker } from "./useChecker";
 import { type FrameEvent, WorkFrame } from "./WorkFrame";
-
-interface PendingCheck {
-  candidateId: string;
-  /** null for a fresh start; otherwise the state saved by the first pass (resume check). */
-  state: Json | null;
-  resolve: (outcome: CheckOutcome) => void;
-}
 
 interface Running {
   controller: AbortController;
@@ -62,7 +55,11 @@ export function WorkshopView({
   const [draft, setDraft] = useState<WorkDraft | null>(null);
   const [error, setError] = useState<AppError | null>(null);
   const [running, setRunning] = useState<Running | null>(null);
-  const [check, setCheck] = useState<PendingCheck | null>(null);
+  const { checkCandidate: checkIn, checker } = useChecker();
+  const checkCandidate = useCallback(
+    (candidateId: string) => checkIn(draftId, candidateId),
+    [checkIn, draftId],
+  );
   const [reports, setReports] = useState<AttemptReport[]>([]);
   const [request, setRequest] = useState("");
   const [previewKey, setPreviewKey] = useState(0);
@@ -103,33 +100,6 @@ export function WorkshopView({
     return () => clearInterval(timer);
   }, [running]);
 
-  const runCheck = useCallback(
-    (candidateId: string, state: Json | null) =>
-      new Promise<CheckOutcome>((resolve) => {
-        setCheck({ candidateId, state, resolve });
-      }),
-    [],
-  );
-
-  // Fresh start first; if the world saved anything, it must also come back from that save —
-  // worlds often save only part of what their loop needs, which breaks every later resume.
-  const checkCandidate = useCallback(
-    async (candidateId: string): Promise<CheckOutcome> => {
-      const fresh = await runCheck(candidateId, null);
-      if (!fresh.passed || fresh.savedState === null) return fresh;
-      const resumed = await runCheck(candidateId, fresh.savedState);
-      if (resumed.passed) return fresh;
-      return {
-        ...resumed,
-        problems: resumed.problems.map((problem) => ({
-          ...problem,
-          message: `After reloading the state it saved with host.save: ${problem.message}. host.load() must restore everything main.js needs.`,
-        })),
-      };
-    },
-    [runCheck],
-  );
-
   const attempt = useCallback(
     async (kind: "generate" | "edit", words: string, base: WorkDraft) => {
       const controller = new AbortController();
@@ -143,7 +113,6 @@ export function WorkshopView({
           setRunning((current) => (current === null ? current : { ...current, stage })),
       });
       setRunning(null);
-      setCheck(null);
       const fresh = await reload();
       if (!result.ok) {
         setNotice(`${result.error.code}: ${result.error.message}`);
@@ -180,12 +149,6 @@ export function WorkshopView({
     });
   }, [attempt, initialRequest, reload]);
 
-  const onCheckEvent = (event: FrameEvent): void => {
-    if (event.kind !== "checked" || check === null) return;
-    check.resolve(event.outcome);
-    setCheck(null);
-  };
-
   const onPreviewEvent = (event: FrameEvent): void => {
     if (event.kind === "opened") {
       setMissing(event.session.missingAssets);
@@ -202,17 +165,28 @@ export function WorkshopView({
     }
   };
 
-  const replaceAsset = async (assetId: string): Promise<void> => {
+  /** Both ways to change one image land in the same place: a candidate that must pass the check. */
+  const swapAsset = async (assetId: string, how: "pick" | "generate"): Promise<void> => {
     if (draft === null) return;
     const expectedHead = draft.head;
-    const written = await window.seed.works.replaceAsset(draftId, assetId);
+    const controller = new AbortController();
+    if (how === "generate") {
+      setRunning({ controller, stage: `Drawing "${assetId}"…`, startedAt: Date.now() });
+    }
+    const written =
+      how === "pick"
+        ? await window.seed.works.replaceAsset(draftId, assetId)
+        : await window.seed.works.generateAsset(draftId, assetId);
     if (!written.ok) {
-      setNotice(written.error.message);
+      setRunning(null);
+      setNotice(`${written.error.code}: ${written.error.message}`);
       return;
     }
-    if (written.value === null) return;
+    if (written.value === null) {
+      setRunning(null);
+      return;
+    }
     const candidateId = written.value.candidate.id;
-    const controller = new AbortController();
     setRunning({ controller, stage: "Checking the new image…", startedAt: Date.now() });
     const outcome = await checkCandidate(candidateId);
     setRunning(null);
@@ -395,31 +369,7 @@ export function WorkshopView({
           </Text>
         )}
 
-        {check === null ? null : (
-          <Surface variant="outlined" padding="sm">
-            <Text variant="caption" tone="muted">
-              Checking {check.candidateId} in a separate sandbox (
-              {check.state === null
-                ? "fresh start, keys + click replayed"
-                : "resuming from its save"}
-              )
-            </Text>
-            <div style={{ height: 220 }}>
-              <WorkFrame
-                source={{
-                  kind: "draft",
-                  draftId,
-                  candidateId: check.candidateId,
-                  state: check.state,
-                  carry: null,
-                }}
-                runKey={check.state === null ? 0 : 1}
-                mode="check"
-                onEvent={onCheckEvent}
-              />
-            </div>
-          </Surface>
-        )}
+        {checker}
 
         {Object.keys(assets).length === 0 ? null : (
           <Surface padding="sm">
@@ -438,7 +388,14 @@ export function WorkshopView({
                     {entry.note}
                   </Text>
                 </div>
-                <Button variant="chip" disabled={busy} onClick={() => void replaceAsset(id)}>
+                <Button
+                  variant="chip"
+                  disabled={busy}
+                  onClick={() => void swapAsset(id, "generate")}
+                >
+                  Generate
+                </Button>
+                <Button variant="chip" disabled={busy} onClick={() => void swapAsset(id, "pick")}>
                   Replace…
                 </Button>
               </div>

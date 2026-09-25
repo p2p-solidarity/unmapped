@@ -5,18 +5,53 @@
 
 import { biblePrompt, type NewWorldContext, originIssues, parseBible } from "@dsl";
 import { dslError } from "@dsl/parse/program";
+import { chat } from "@renderer/llm";
 import type { InstanceMeta, WorldBible } from "@shared/cartridge";
 import { fail, ok, type Result } from "@shared/result";
 import type { GenerationEvent, SceneGenerationRequest } from "@shared/scene-generation";
+import { parseStoryReply, type StoryPlan, storyMessages } from "@shared/story";
 import { openLandCartridge } from "./openLandCartridge";
 import { generateProgram } from "./pipeline";
 import { generateSceneArtifact } from "./sceneGeneration";
 import { cartridgeIdFor } from "./ui/createModel";
 
-export type NewWorldStage = "bible" | "origin" | "publish";
+export type NewWorldStage = "bible" | "story" | "origin" | "publish";
+
+const STORY_REPAIRS = 2;
+
+/**
+ * The player's story → a plan of episodes placed on the map. The model answers in the @@ line
+ * protocol; a malformed plan goes back with the reason, at most twice. No story, no plan: a world
+ * made from one sentence simply has no episodes.
+ */
+async function planStory(
+  story: string,
+  bible: WorldBible,
+  language: string,
+  signal?: AbortSignal,
+): Promise<Result<StoryPlan>> {
+  const messages = storyMessages({ story, core: bible.core, style: bible.style, language });
+  for (let attempt = 0; ; attempt += 1) {
+    const reply = await chat(
+      { messages, maxTokens: 4_000, temperature: 0.7, grammar: null, stop: [], tools: [] },
+      undefined,
+      signal === undefined ? {} : { signal },
+    );
+    if (!reply.ok) return reply;
+    const plan = parseStoryReply(reply.value.text);
+    if (plan.ok || attempt >= STORY_REPAIRS) return plan;
+    messages.push(
+      { role: "assistant", content: reply.value.text.slice(0, 20_000) },
+      {
+        role: "user",
+        content: `${plan.error.message} ${plan.error.hint ?? ""} Answer again in the exact format.`,
+      },
+    );
+  }
+}
 
 export async function makeWorld(
-  ctx: NewWorldContext,
+  ctx: NewWorldContext & { story?: string },
   onStage: (stage: NewWorldStage) => void,
   onGenerationEvent?: (event: GenerationEvent) => void,
   signal?: AbortSignal,
@@ -34,6 +69,14 @@ export async function makeWorld(
   if (!bible.ok) return bible;
   if (signal?.aborted) {
     return fail({ code: "request-aborted", message: "World generation was cancelled." });
+  }
+
+  let story: StoryPlan | undefined;
+  if (ctx.story !== undefined && ctx.story.trim().length > 0) {
+    onStage("story");
+    const planned = await planStory(ctx.story, bible.value.graph, ctx.language, signal);
+    if (!planned.ok) return planned;
+    story = planned.value;
   }
 
   onStage("origin");
@@ -98,6 +141,7 @@ export async function makeWorld(
       core: bible.value.graph.core,
       style: `Language: ${ctx.language}\n${bible.value.graph.style}`,
     },
+    ...(story === undefined ? {} : { story }),
     createdAt: new Date().toISOString(),
   });
   if (!input.ok) return input;

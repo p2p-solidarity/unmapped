@@ -11,7 +11,9 @@ export type TargetKind =
   /** Open land: the tile a resident's lost thing lies on, once their errand is accepted. */
   | "search"
   /** Open land: the door at home. */
-  | "door";
+  | "door"
+  /** Open land: the gate of a story episode (an AI-written world). */
+  | "episode";
 
 export interface NearbyTarget {
   kind: TargetKind;

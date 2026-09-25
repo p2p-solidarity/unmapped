@@ -10,6 +10,7 @@ import { compareCartridgeVersions } from "@shared/cartridge";
 import { err, ok, type Result } from "@shared/result";
 import {
   assetMapSchema,
+  type Json,
   jsonBytes,
   jsonSchema,
   PLAY_ID,
@@ -337,9 +338,13 @@ export async function listPlays(dirs: WorkDirs): Promise<Result<WorkPlay[]>> {
 /** A journey pins exact revisions; each must be installed and still match its hash. */
 export async function createPlay(
   dirs: WorkDirs,
-  input: { title: string; worlds: WorkRef[] },
+  input: { title: string; worlds: WorkRef[]; carry?: Json | null },
   now = new Date(),
 ): Promise<Result<WorkPlay>> {
+  const carryBytes = jsonBytes(input.carry ?? null);
+  if (carryBytes === null || carryBytes > WORK_LIMITS.carryBytes) {
+    return err("carry-too-large", `Starting carry is ${carryBytes ?? "?"} bytes.`);
+  }
   for (const ref of input.worlds) {
     const revision = await readRevision(dirs, ref.workId, ref.version);
     if (!revision.ok) return revision;
@@ -355,7 +360,7 @@ export async function createPlay(
     worlds: input.worlds,
     current: 0,
     states: input.worlds.map(() => null),
-    carry: null,
+    carry: input.carry ?? null,
     completions: [],
     createdAt: stamp,
     updatedAt: stamp,

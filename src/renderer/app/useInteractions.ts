@@ -8,6 +8,7 @@ import { sendRoomInteraction } from "@renderer/net/sync";
 import { useEncounterStore, useEngineStore, useSessionStore, useWorldStore } from "@renderer/state";
 import { endlessObjectiveOf } from "@shared/endless";
 import type { NearbyTarget } from "@shared/events";
+import { parseEpisodeTarget } from "@shared/story";
 import type { SceneGraph } from "@shared/world";
 import { useEffect, useRef } from "react";
 import { makeKarmaEntry } from "./karmaFile";
@@ -164,6 +165,11 @@ function dispatch(target: NearbyTarget, handlers: Handlers): void {
       if (document.pointerLockElement !== null) document.exitPointerLock();
       session().openDoor();
       return;
+    case "episode": {
+      const id = parseEpisodeTarget(target.id);
+      if (id !== null) session().openEpisode(id);
+      return;
+    }
   }
 }
 

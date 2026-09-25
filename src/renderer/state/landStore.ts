@@ -13,6 +13,8 @@ import {
 import type { LoreNode } from "@shared/lore";
 import type { AppError, Loadable } from "@shared/result";
 import { idle } from "@shared/result";
+import type { EpisodeProgress } from "@shared/story";
+import type { Json } from "@shared/works";
 import type { SceneGraph } from "@shared/world";
 import { create } from "zustand";
 
@@ -65,6 +67,9 @@ export interface LandState {
   setDoorSlot(index: number, slot: DoorSlot | null): void;
   /** Moves a carried keepsake onto the home shelf; the caller removes it from the inventory. */
   placeKeepsake(item: LandProgress["home"]["keepsakes"][number]): void;
+  /** Updates one story episode's progress (created on first use). */
+  setEpisode(id: string, patch: Partial<EpisodeProgress>): void;
+  setStoryCarry(carry: Json | null): void;
   reset(): void;
 }
 
@@ -134,6 +139,23 @@ export const useLandStore = create<LandState>()((set) => ({
               home: { ...state.progress.home, keepsakes: [...state.progress.home.keepsakes, item] },
             },
           },
+    ),
+  setEpisode: (id, patch) =>
+    set((state) => {
+      if (state.progress === null) return state;
+      const before = state.progress.episodes?.[id] ?? {
+        draftId: null,
+        work: null,
+        playId: null,
+        cleared: false,
+        summary: null,
+      };
+      const episodes = { ...state.progress.episodes, [id]: { ...before, ...patch } };
+      return { progress: { ...state.progress, episodes } };
+    }),
+  setStoryCarry: (carry) =>
+    set((state) =>
+      state.progress === null ? state : { progress: { ...state.progress, storyCarry: carry } },
     ),
   reset: () =>
     set({ instanceId: null, load: idle(), chunks: {}, lore: [], notes: [], progress: null }),

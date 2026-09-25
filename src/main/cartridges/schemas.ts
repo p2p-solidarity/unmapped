@@ -10,6 +10,7 @@ import {
 } from "@shared/cartridge";
 import type { GameDefinition } from "@shared/game-definition";
 import { GAME_DEFINITION_FORMAT_VERSION } from "@shared/game-definition";
+import { storyPlanSchema } from "@shared/story";
 import { z } from "zod";
 import { genesisSchema } from "../worlds/schemas";
 
@@ -349,5 +350,6 @@ export const publishCartridgeInputSchema: z.ZodType<PublishCartridgeInput> = z
       .object({ core: z.string().max(BIBLE_MAX_CHARS), style: z.string().max(BIBLE_MAX_CHARS) })
       .strict()
       .optional(),
+    story: storyPlanSchema.optional(),
   })
   .strict();

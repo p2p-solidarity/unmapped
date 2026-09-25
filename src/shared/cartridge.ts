@@ -5,6 +5,7 @@ import type { GameplayKitId } from "./gameplay";
 import type { LandProgress } from "./land";
 import type { ModLock } from "./mods";
 import type { PartyState, PlayerState } from "./player";
+import type { StoryPlan } from "./story";
 import type { Genesis, Inventory, KarmaEntry, WorldMutation } from "./world";
 
 export * from "./gameplay";
@@ -187,6 +188,8 @@ export interface PublishCartridgeInput {
   assets?: Record<string, Uint8Array>;
   /** Present for worlds made to be witnessed; older cartridges have none. */
   bible?: WorldBible;
+  /** Episodes a story was turned into (`bible/story.json`); absent for worlds made without one. */
+  story?: StoryPlan;
 }
 
 export interface CartridgeRevision {
@@ -197,6 +200,8 @@ export interface CartridgeRevision {
   dialogues: Record<string, string>;
   assets: Record<string, Uint8Array>;
   bible: WorldBible | null;
+  /** Optional so revisions built before stories existed still type-check; null or absent = none. */
+  story?: StoryPlan | null;
 }
 
 export interface RuntimePin {

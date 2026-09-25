@@ -227,6 +227,8 @@ const api: SeedApi = {
       invoke<Result<{ draft: WorkDraft; manifest: WorkManifest }>>(IPC.works.publishDraft, draftId),
     replaceAsset: (draftId: string, assetId: string) =>
       invoke<Result<WrittenCandidate | null>>(IPC.works.replaceAsset, draftId, assetId),
+    generateAsset: (draftId: string, assetId: string) =>
+      invoke<Result<WrittenCandidate>>(IPC.works.generateAsset, draftId, assetId),
     createPlay: (input: CreateWorkPlayInput) =>
       invoke<Result<WorkPlay>>(IPC.works.createPlay, input),
     readPlay: (playId: string) => invoke<Result<WorkPlay>>(IPC.works.readPlay, playId),

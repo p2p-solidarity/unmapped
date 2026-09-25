@@ -9,6 +9,7 @@ import {
   dialogueKeyOfFile,
 } from "@shared/cartridge";
 import { err, fail, ok, type Result, toError } from "@shared/result";
+import { parseStoryText, STORY_FILE, type StoryPlan, storyText } from "@shared/story";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { validateArchiveEntryNames } from "../archive";
 import { cartridgeContentHash, fileIntegrity, manifestCore, sha256 } from "./integrity";
@@ -45,6 +46,9 @@ export function packCartridge(revision: CartridgeRevision): Result<Uint8Array> {
   if (revision.bible !== null) {
     entries[BIBLE_FILES.core] = strToU8(revision.bible.core);
     entries[BIBLE_FILES.style] = strToU8(revision.bible.style);
+  }
+  if (revision.story !== null && revision.story !== undefined) {
+    entries[STORY_FILE] = strToU8(storyText(revision.story));
   }
   try {
     return ok(zipSync(entries, { level: ZIP_LEVEL }));
@@ -85,6 +89,7 @@ export function unpackCartridge(bytes: Uint8Array): Result<CartridgeRevision> {
   let manifestText: string | null = null;
   let rules: string | null = null;
   const bibleText = new Map<string, string>();
+  let storyRaw: string | null = null;
   for (const [name, raw] of Object.entries(unzipped)) {
     if (unsafeEntry(name)) {
       return err("cartridge-pack-unsafe", `Refusing archive entry ${name}.`, SHAPE_HINT);
@@ -104,6 +109,8 @@ export function unpackCartridge(bytes: Uint8Array): Result<CartridgeRevision> {
     else if (name === RULES_FILE) rules = strFromU8(raw);
     else if (name === BIBLE_FILES.core || name === BIBLE_FILES.style) {
       bibleText.set(name, strFromU8(raw));
+    } else if (name === STORY_FILE) {
+      storyRaw = strFromU8(raw);
     } else if (name.startsWith("assets/")) {
       const relative = name.slice("assets/".length);
       if (!/^[a-z0-9][a-z0-9_./-]{0,239}$/.test(relative) || relative.includes("..")) {
@@ -184,6 +191,13 @@ export function unpackCartridge(bytes: Uint8Array): Result<CartridgeRevision> {
   }
   const bible = core === undefined || style === undefined ? null : { core, style };
   files.push(...bibleIntegrity(bible));
+  let story: StoryPlan | null = null;
+  if (storyRaw !== null) {
+    const parsed = parseStoryText(storyRaw);
+    if (!parsed.ok) return parsed;
+    story = parsed.value;
+    files.push(fileIntegrity(STORY_FILE, storyRaw));
+  }
   files.sort((a, b) => a.path.localeCompare(b.path));
   const declaredFiles = [...manifest.files].sort((a, b) => a.path.localeCompare(b.path));
   const hash = cartridgeContentHash(manifestCore(manifest), files);
@@ -194,5 +208,5 @@ export function unpackCartridge(bytes: Uint8Array): Result<CartridgeRevision> {
       "The archive was modified after export; ask for a fresh export.",
     );
   }
-  return ok({ manifest, rules, scenes, dialogues, assets: packedAssets, bible });
+  return ok({ manifest, rules, scenes, dialogues, assets: packedAssets, bible, story });
 }

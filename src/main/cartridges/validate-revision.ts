@@ -24,6 +24,7 @@ import {
 import { kitFor } from "@shared/forge";
 import type { SceneContract } from "@shared/gameplay";
 import { err, ok, type Result } from "@shared/result";
+import { parseStoryText, STORY_FILE, type StoryPlan, storyText } from "@shared/story";
 import type { SceneGraph } from "@shared/world";
 import { prepareDialogues } from "./dialogue-files";
 import { cartridgeContentHash, fileIntegrity, runtimePinForManifest, sha256 } from "./integrity";
@@ -485,6 +486,9 @@ export function prepare(input: PublishCartridgeInput): Result<CartridgeRevision>
   const bible = prepareBible(input.bible);
   if (!bible.ok) return bible;
   files.push(...bibleIntegrity(bible.value));
+  const story = prepareStory(input.story);
+  if (!story.ok) return story;
+  files.push(...storyIntegrity(story.value));
   const integrity = [...files].sort((a, b) => a.path.localeCompare(b.path));
   const contentHash = cartridgeContentHash(manifest, integrity);
   const revision = {
@@ -494,6 +498,7 @@ export function prepare(input: PublishCartridgeInput): Result<CartridgeRevision>
     dialogues: dialogues.value.dialogues,
     assets,
     bible: bible.value,
+    story: story.value,
   };
   const pin = runtimePinForManifest(revision.manifest);
   return pin.ok ? ok(revision) : pin;
@@ -517,6 +522,17 @@ export function prepareBible(bible: WorldBible | undefined): Result<WorldBible |
     }
   }
   return ok({ core, style });
+}
+
+/** A story plan re-validated before it is hashed into a cartridge. */
+export function prepareStory(story: StoryPlan | undefined): Result<StoryPlan | null> {
+  if (story === undefined) return ok(null);
+  return parseStoryText(storyText(story));
+}
+
+/** Integrity entry for a story plan, over the exact bytes `storyText` writes. */
+export function storyIntegrity(story: StoryPlan | null | undefined): CartridgeFileIntegrity[] {
+  return story === null || story === undefined ? [] : [fileIntegrity(STORY_FILE, storyText(story))];
 }
 
 /** Integrity entries for a bible, in path order. */

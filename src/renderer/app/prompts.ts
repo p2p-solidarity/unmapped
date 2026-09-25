@@ -28,5 +28,7 @@ export function nearbyPrompt(target: NearbyTarget | null): string | null {
       return `${PREFIX}Search here`;
     case "door":
       return `${PREFIX}Open the door`;
+    case "episode":
+      return `${PREFIX}${label.length > 0 ? `Enter · ${label}` : "Enter"}`;
   }
 }

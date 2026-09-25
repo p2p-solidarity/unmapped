@@ -57,6 +57,7 @@ const RUNTIME = `(() => {
   let pending = null;
   let timer = null;
   let completed = false;
+  const unknownAssets = new Set();
   let lastStatus = null;
   let queuedStatus = null;
   let statusTimer = null;
@@ -89,7 +90,14 @@ const RUNTIME = `(() => {
       queuedStatus = String(text ?? "").slice(0, 200);
       if (statusTimer === null) statusTimer = setTimeout(sendStatus, 250);
     },
-    asset: (id) => (Object.prototype.hasOwnProperty.call(boot.assets, id) ? boot.assets[id] : null),
+    asset: (id) => {
+      if (Object.prototype.hasOwnProperty.call(boot.assets, id)) return boot.assets[id];
+      if (!unknownAssets.has(String(id))) {
+        unknownAssets.add(String(id));
+        post({ type: "error", message: ("host.asset(" + JSON.stringify(String(id)) + ") is neither an id in assets.json nor a library path.").slice(0, 2000), file: "runtime", line: null, column: null });
+      }
+      return null;
+    },
   });
   Object.defineProperty(window, "host", { value: host, writable: false, configurable: false });
   setInterval(() => post({ type: "heartbeat" }), ${WORK_LIMITS.heartbeatMs});

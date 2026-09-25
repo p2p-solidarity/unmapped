@@ -68,7 +68,7 @@ export function useInputLock(): void {
   const dialogueOpen = useSessionStore((state) => state.dialogue !== null);
   // The door at home is a modal like the altar: it owns the keys while it is open.
   const altarOpen = useSessionStore(
-    (state) => state.altarOpen || state.doorOpen || state.notesOpen,
+    (state) => state.altarOpen || state.doorOpen || state.notesOpen || state.episodeOpen !== null,
   );
   const busy = useSessionStore((state) => state.busy);
   const floorFailed = useSessionStore((state) => state.floorFailure !== null);

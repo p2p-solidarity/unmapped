@@ -2,6 +2,7 @@ import { mkdir, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { BIBLE_FILES, type CartridgeRevision, dialogueFile } from "@shared/cartridge";
 import { fail, ok, type Result, toError } from "@shared/result";
+import { STORY_FILE, storyText } from "@shared/story";
 import { cartridgeScenePath } from "./paths";
 
 const MANIFEST_FILE = "manifest.json";
@@ -46,6 +47,10 @@ export async function writeRevisionFiles(
       await mkdir(join(staging, "bible"), { recursive: true });
       await writeFile(join(staging, BIBLE_FILES.core), revision.bible.core, "utf8");
       await writeFile(join(staging, BIBLE_FILES.style), revision.bible.style, "utf8");
+    }
+    if (revision.story !== null && revision.story !== undefined) {
+      await mkdir(join(staging, "bible"), { recursive: true });
+      await writeFile(join(staging, STORY_FILE), storyText(revision.story), "utf8");
     }
     for (const [path, bytes] of Object.entries(revision.assets)) {
       const target = join(staging, "assets", path);

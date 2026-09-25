@@ -12,6 +12,7 @@ import {
   type SpriteAsset,
 } from "./assetCatalog";
 import { cachedTerrain, landTileAt } from "./landModel";
+import { drawStoryCompass, type StoryView, storyMarkers } from "./storyLayer";
 
 export type SpriteAtlases = Record<AtlasId, HTMLImageElement>;
 
@@ -34,6 +35,8 @@ export interface LandFrame {
   chunks: Readonly<Record<string, ChunkStatus>>;
   progress: LandProgress | null;
   notes: readonly LandNote[];
+  /** The world's story, when it was made from one; null for the base game. */
+  story: StoryView | null;
   now: number;
 }
 
@@ -70,6 +73,7 @@ export function renderLandFrame(frame: LandFrame): void {
   items.sort((a, b) => a.z - b.z);
   for (const item of items) item.draw();
   drawVignette(ctx, width, height);
+  if (frame.story !== null) drawStoryCompass(ctx, width, height, tileSize, player, frame.story);
 }
 
 function drawGround(frame: LandFrame, transform: ScreenTransform): void {
@@ -184,6 +188,18 @@ function collectScenery(frame: LandFrame, transform: ScreenTransform): DrawItem[
     const [x, z] = doorPosition(frame.scene, frame.progress.home);
     pushMarker(items, frame, transform, x, z, LAND_2D_PALETTE.door, "門");
   }
+  for (const marker of frame.story === null ? [] : storyMarkers(frame.story)) {
+    pushMarker(
+      items,
+      frame,
+      transform,
+      marker.x,
+      marker.z,
+      marker.color,
+      marker.glyph,
+      marker.label,
+    );
+  }
   return items;
 }
 
@@ -282,6 +298,7 @@ function pushMarker(
   z: number,
   color: string,
   glyph: string,
+  label = "",
 ): void {
   if (!visible(transform, x, z, 2)) return;
   items.push({
@@ -299,6 +316,10 @@ function pushMarker(
       frame.ctx.textAlign = "center";
       frame.ctx.textBaseline = "middle";
       frame.ctx.fillText(glyph, cx, cy + 1);
+      if (label !== "") {
+        frame.ctx.font = `${Math.round(transform.tileSize * 0.3)}px sans-serif`;
+        frame.ctx.fillText(label, cx, cy - size * 0.95);
+      }
     },
   });
 }

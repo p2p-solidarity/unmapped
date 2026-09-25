@@ -27,6 +27,7 @@ import { isSprinting, matchesAction, moveAxis, useKeys } from "../engine/useKeys
 import type { AtlasId } from "./assetCatalog";
 import { renderLandFrame, type SpriteAtlases } from "./canvasRenderer";
 import { blockedByProps, cachedTerrain, walkableAt } from "./landModel";
+import { type StoryView, storyTargets } from "./storyLayer";
 
 const TILE_SIZE = 48;
 const PLAYER_RADIUS = 0.22;
@@ -95,9 +96,14 @@ export function LandView2D({
     const resolved = resolveSceneKit(gameplayRules, graph);
     return resolved.ok ? resolved.value : LEGACY_TPS_KIT;
   }, [gameplayRules, graph]);
+  const plan = useSessionStore((state) => state.activeInstance?.cartridge.story ?? null);
+  const story: StoryView | null = useMemo(
+    () => (plan === null ? null : { plan, progress: progress?.episodes ?? {} }),
+    [plan, progress],
+  );
   const extraTargets = useMemo(
-    () => landTargets(chunks, progress, graph),
-    [chunks, progress, graph],
+    () => [...landTargets(chunks, progress, graph), ...(story === null ? [] : storyTargets(story))],
+    [chunks, progress, graph, story],
   );
   const targets = useMemo(
     () => [...sceneTargets(graph, opened), ...extraTargets],
@@ -162,8 +168,18 @@ export function LandView2D({
   // Everything the loop reads that can change while walking. Witnessed chunks, notes and targets
   // update often; routing them through a ref keeps one long-lived rAF loop instead of tearing it
   // down (and blanking the HUD's chunk/nearby state) on every write.
-  const live = useRef({ chunks, gameplayRules, graph, kit, landSeed, notes, progress, targets });
-  live.current = { chunks, gameplayRules, graph, kit, landSeed, notes, progress, targets };
+  const live = useRef({
+    chunks,
+    gameplayRules,
+    graph,
+    kit,
+    landSeed,
+    notes,
+    progress,
+    story,
+    targets,
+  });
+  live.current = { chunks, gameplayRules, graph, kit, landSeed, notes, progress, story, targets };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -225,6 +241,7 @@ export function LandView2D({
         chunks: state.chunks,
         progress: state.progress,
         notes: state.notes,
+        story: state.story,
         now,
       });
 
@@ -297,8 +314,11 @@ function updatePlayer(
   if (Math.abs(dx) > Math.abs(dz)) player.facing = dx > 0 ? "east" : "west";
   else player.facing = dz > 0 ? "south" : "north";
   player.yaw = Math.atan2(dx, dz);
-  if (canMove(player.x + dx, player.z)) player.x += dx;
-  if (canMove(player.x, player.z + dz)) player.z += dz;
+  // Someone already standing inside a collider (a prop that appeared under them, a restored
+  // position) must be able to walk out, or every direction is refused forever.
+  const trapped = !canMove(player.x, player.z);
+  if (trapped || canMove(player.x + dx, player.z)) player.x += dx;
+  if (trapped || canMove(player.x, player.z + dz)) player.z += dz;
 }
 
 function canStand(

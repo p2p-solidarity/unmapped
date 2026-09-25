@@ -8,6 +8,7 @@ import {
   isLibraryPath,
   type Json,
   type LibraryPath,
+  WORK_LIBRARY,
   type WorkSession,
   type WorkSessionSource,
 } from "@shared/works";
@@ -38,6 +39,12 @@ export async function resolveAssets(
   const urls: Record<string, string | null> = {};
   const missing: string[] = [];
   if (!parsed.success) return { urls, missing };
+  // Every library image is also reachable by its path: models keep calling host.asset with the
+  // path instead of an id, and that should draw the picture rather than a "missing" box.
+  for (const entry of WORK_LIBRARY) {
+    const bytes = await readLibrary(entry.path);
+    if (bytes !== null) urls[entry.path] = dataUrl(entry.path, bytes);
+  }
   for (const [id, entry] of Object.entries(parsed.data)) {
     let bytes: Uint8Array | null = null;
     if (entry.src !== null && isLibraryPath(entry.src)) bytes = await readLibrary(entry.src);

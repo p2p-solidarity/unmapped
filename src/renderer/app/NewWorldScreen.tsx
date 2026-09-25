@@ -15,6 +15,7 @@ import { openInstance } from "./useInstanceLoader";
 
 const STAGES: Record<NewWorldStage, string> = {
   bible: "Writing the world bible…",
+  story: "Turning your story into episodes on the map…",
   origin: "Writing the place you wake in…",
   publish: "Publishing the world…",
 };
@@ -28,6 +29,7 @@ export function NewWorldScreen(): JSX.Element {
   const probe = useInferenceStore((state) => state.probe);
   const [name, setName] = useState("");
   const [intent, setIntent] = useState("");
+  const [story, setStory] = useState("");
   const [language, setLanguage] = useState(navigator.language);
   const [stage, setStage] = useState<NewWorldStage | null>(null);
   const [error, setError] = useState<AppError | null>(null);
@@ -61,7 +63,7 @@ export function NewWorldScreen(): JSX.Element {
     const controller = new AbortController();
     generation.current = controller;
     void makeWorld(
-      { name, intent, language },
+      { name, intent, language, story },
       setStage,
       (event) => setGenerationProgress(generationEventLabel(event)),
       controller.signal,
@@ -109,6 +111,14 @@ export function NewWorldScreen(): JSX.Element {
             onKeyDown={(event) => {
               if (event.key === "Enter" && ready) make();
             }}
+          />
+          <TextField
+            label="Your story (optional): who you are, what happens, how it ends — it becomes episodes on the map"
+            value={story}
+            rows={6}
+            maxLength={4_000}
+            disabled={busy}
+            onChange={(event) => setStory(event.target.value)}
           />
           <Text variant="caption" tone="dim">
             Language

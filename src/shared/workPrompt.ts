@@ -19,7 +19,7 @@ Runtime (an isolated sandbox page; the global \`host\` is the only API):
 - host.save(state): save JSON progress after meaningful changes (not every frame).
 - host.carry: JSON object carried in from the previous world (read-only, may be null), e.g. {"coins":3,"items":["key"]}.
 - host.complete(summary, carry): call once when the world is won or finished; pass the carry for the next world (keep what came in, add what was earned).
-- host.asset(id): data URL for an id in assets.json, or null when that image is missing.
+- host.asset(id): data URL for an id in assets.json (null when that image is missing); a library path such as "library/heart.png" also works directly.
 - host.status(text): short status line shown by the player shell.
 - Not available: network, fetch, storage, eval, new Function, workers, popups, the parent page.
 - Keyboard: listen on window for keydown/keyup (arrows, WASD, Space, Enter). Mouse: events inside host.root.

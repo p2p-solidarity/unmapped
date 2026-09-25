@@ -59,6 +59,8 @@ export interface SessionState {
   doorOpen: boolean;
   /** True while the notes of the chunk underfoot are open (open land). */
   notesOpen: boolean;
+  /** Id of the story episode whose gate is open (its world is played in a panel); null when shut. */
+  episodeOpen: string | null;
   altarResult: Loadable<ItemSpec>;
   /** Identity: which key unlocked saves this session. */
   unlock: { method: "prf" | "keychain"; credentialId: string | null } | null;
@@ -89,6 +91,8 @@ export interface SessionState {
   toggleTweak(open?: boolean): void;
   openDoor(): void;
   closeDoor(): void;
+  openEpisode(id: string): void;
+  closeEpisode(): void;
   toggleNotes(open?: boolean): void;
   closeTweak(): void;
   setAltarResult(state: Loadable<ItemSpec>): void;
@@ -122,6 +126,7 @@ export const useSessionStore = create<SessionState>()((set) => ({
   altarOpen: false,
   tweakOpen: false,
   doorOpen: false,
+  episodeOpen: null,
   notesOpen: false,
   altarResult: idle(),
   unlock: null,
@@ -142,7 +147,14 @@ export const useSessionStore = create<SessionState>()((set) => ({
     set(
       screen === "play"
         ? { screen }
-        : { screen, ending: null, changeProposals: [], doorOpen: false, notesOpen: false },
+        : {
+            screen,
+            ending: null,
+            changeProposals: [],
+            doorOpen: false,
+            notesOpen: false,
+            episodeOpen: null,
+          },
     ),
   setEnding: (ending) => set({ ending }),
   toggleConsole: (open) => set((state) => ({ consoleOpen: open ?? !state.consoleOpen })),
@@ -163,6 +175,8 @@ export const useSessionStore = create<SessionState>()((set) => ({
   closeTweak: () => set({ tweakOpen: false }),
   openDoor: () => set({ doorOpen: true }),
   closeDoor: () => set({ doorOpen: false }),
+  openEpisode: (episodeOpen) => set({ episodeOpen }),
+  closeEpisode: () => set({ episodeOpen: null }),
   toggleNotes: (open) => set((state) => ({ notesOpen: open ?? !state.notesOpen })),
   setAltarResult: (altarResult) => set({ altarResult }),
   closeAltar: () => set({ altarOpen: false, altarResult: idle() }),

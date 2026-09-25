@@ -5,7 +5,7 @@
 
 import { Button, colors, ErrorBlock, space, Text } from "@renderer/ui";
 import type { AppError } from "@shared/result";
-import type { WorkPlay } from "@shared/works";
+import type { Json, WorkPlay } from "@shared/works";
 import { type JSX, useCallback, useEffect, useRef, useState } from "react";
 import { type FrameEvent, WorkFrame } from "./WorkFrame";
 
@@ -16,9 +16,12 @@ interface Completed {
 export function PlayerView({
   playId,
   onExit,
+  onComplete,
 }: {
   playId: string;
   onExit: () => void;
+  /** Called once a world reports completion, with the carry it handed on. */
+  onComplete?: (summary: string, carry: Json) => void;
 }): JSX.Element {
   const [play, setPlay] = useState<WorkPlay | null>(null);
   const [error, setError] = useState<AppError | null>(null);
@@ -74,6 +77,7 @@ export function PlayerView({
         carry: message.carry,
       });
       setCompleted({ summary: message.summary });
+      onComplete?.(message.summary, message.carry);
     }
   };
 

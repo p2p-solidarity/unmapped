@@ -9,6 +9,7 @@ import {
   type WorldBible,
 } from "@shared/cartridge";
 import { err, fail, ok, type Result, toError } from "@shared/result";
+import { parseStoryText, STORY_FILE, type StoryPlan } from "@shared/story";
 import {
   cartridgeContentHash,
   fileIntegrity,
@@ -136,6 +137,14 @@ export async function readCartridgeRevision(
       };
       files.push(...bibleIntegrity(bible));
     }
+    let story: StoryPlan | null = null;
+    if (manifest.files.some((file) => file.path === STORY_FILE)) {
+      const raw = await readFile(join(revisionDir, STORY_FILE), "utf8");
+      const parsed = parseStoryText(raw);
+      if (!parsed.ok) return parsed;
+      story = parsed.value;
+      files.push(fileIntegrity(STORY_FILE, raw));
+    }
     const declared = [...manifest.files].sort((a, b) => a.path.localeCompare(b.path));
     const actualIntegrity = [...files].sort((a, b) => a.path.localeCompare(b.path));
     const expectedPaths = [MANIFEST_FILE, ...actualIntegrity.map((file) => file.path)].sort();
@@ -160,7 +169,7 @@ export async function readCartridgeRevision(
     }
     const pin = runtimePinForManifest(manifest);
     if (!pin.ok) return pin;
-    return ok({ manifest, rules, scenes, dialogues, assets, bible });
+    return ok({ manifest, rules, scenes, dialogues, assets, bible, story });
   } catch (error) {
     return fail(toError(error, "cartridge-read-failed"));
   }

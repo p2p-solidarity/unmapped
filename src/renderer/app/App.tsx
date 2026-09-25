@@ -28,7 +28,8 @@ function useGlobalKeys(): void {
       const action = hotkeyAction(event.code, {
         screen: state.screen,
         consoleOpen: state.consoleOpen,
-        altarOpen: state.altarOpen || state.doorOpen || state.notesOpen,
+        altarOpen:
+          state.altarOpen || state.doorOpen || state.notesOpen || state.episodeOpen !== null,
         dialogueOpen: state.dialogue !== null,
         typing: isTypingTarget(event.target),
       });
@@ -45,6 +46,7 @@ function useGlobalKeys(): void {
           state.closeAltar();
           state.closeDoor();
           state.toggleNotes(false);
+          state.closeEpisode();
           return;
         case "close-dialogue":
           state.closeDialogue();
