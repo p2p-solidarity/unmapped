@@ -10,10 +10,12 @@ import type { DialogueGraph, ItemSpec, SceneGraph } from "@shared/world";
 import { create } from "zustand";
 
 /**
- * `seed` is New Game: a new land of the one game. `create` (a whole new game written by the model)
- * and `remix` (the full authoring flow) are advanced entries.
+ * `worlds` is the title (Continue · Worlds · Create World · Settings). `library` is its Worlds
+ * screen: New game on the built-in world, every save, cartridges, continent, the legacy archive.
+ * `create` writes a whole new world with the model; `workspace` edits a remix or revision draft.
+ * `works` (AI Worlds) has no title entry any more; it stays until otherworld places replace it.
  */
-export type Screen = "worlds" | "seed" | "create" | "play" | "workspace" | "works";
+export type Screen = "worlds" | "library" | "create" | "play" | "workspace" | "works";
 
 export interface Toast {
   id: number;

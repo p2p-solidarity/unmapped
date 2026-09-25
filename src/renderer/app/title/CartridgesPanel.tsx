@@ -1,28 +1,27 @@
-// Cartridges sub-menu: saved runs, published cartridges and draft workspaces in one list.
-// ↑↓ picks, Enter plays / resumes / opens, R starts a remix of the selected cartridge. A cartridge
-// also shows its ENS name, and a name can be followed back to the revision it points at.
+// Worlds → Cartridges: published cartridges and draft workspaces in one list (saves have their own
+// section). A row's focus selects it, pressing the selected row plays / opens it, R starts a remix
+// of the selected cartridge. A cartridge also shows its ENS name, and a name can be followed back
+// to the revision it points at. Import / export of .cartridge files live here.
 
-import { errorLine, formatDateTime, type StringKey, type Translate, useT } from "@renderer/i18n";
+import { errorLine, type StringKey, type Translate, useT } from "@renderer/i18n";
 import { useSessionStore } from "@renderer/state";
 import { Button, StatePanel, Text, TextField } from "@renderer/ui";
 import {
   type CartridgeLineage,
   type CartridgeManifest,
-  compareCartridgeVersions,
   ENGINE_API_VERSION,
-  type InstanceMeta,
   SAVE_SCHEMA_VERSION,
   type WorkspaceMeta,
 } from "@shared/cartridge";
-import type { Loadable } from "@shared/result";
-import { useState } from "react";
-import { cycle, useKeys } from "../shell/useKeys";
-import { hydrateInstance, openInstance } from "../useInstanceLoader";
+import { type JSX, useRef, useState } from "react";
+import { AUTOFOCUS, useArrowFocus } from "../library/focus";
+import type { SectionProps } from "../library/sections";
+import { useKeys } from "../shell/useKeys";
+import { hydrateInstance } from "../useInstanceLoader";
 import { CartridgeNameLine, OpenByEnsName, useEnsNames } from "./CartridgeName";
-import type { LibraryData } from "./useLibrary";
+import { isCancelled, type LibraryData } from "./useLibrary";
 
 type Entry =
-  | { kind: "save"; key: string; instance: InstanceMeta }
   | { kind: "cartridge"; key: string; manifest: CartridgeManifest }
   | { kind: "draft"; key: string; workspace: WorkspaceMeta };
 
@@ -35,11 +34,6 @@ interface RemixDraft {
 
 function entries(library: LibraryData): Entry[] {
   return [
-    ...library.instances.map((instance) => ({
-      kind: "save" as const,
-      key: `save:${instance.instanceId}`,
-      instance,
-    })),
     ...library.cartridges.map((manifest) => ({
       kind: "cartridge" as const,
       key: `cart:${manifest.cartridgeId}@${manifest.version}`,
@@ -54,7 +48,6 @@ function entries(library: LibraryData): Entry[] {
 }
 
 const KIND_LABEL: Record<Entry["kind"], StringKey> = {
-  save: "title.kindSave",
   cartridge: "title.kindCartridge",
   draft: "title.kindDraft",
 };
@@ -71,7 +64,6 @@ export function lineageLabel(kind: CartridgeLineage["kind"], t: Translate): stri
 }
 
 function entryTitle(entry: Entry): string {
-  if (entry.kind === "save") return entry.instance.name;
   if (entry.kind === "cartridge") return entry.manifest.name;
   return entry.workspace.name;
 }
@@ -90,26 +82,21 @@ function compatibilityLabel(manifest: CartridgeManifest, t: Translate): string {
   return t("title.compatible", { kits: kits.join(", ") });
 }
 
-function isCompatible(manifest: CartridgeManifest): boolean {
+export function isCompatible(manifest: CartridgeManifest): boolean {
   return (
     manifest.engineApiVersion <= ENGINE_API_VERSION &&
     manifest.saveSchemaVersion === SAVE_SCHEMA_VERSION
   );
 }
 
-interface CartridgesPanelProps {
-  data: Loadable<LibraryData>;
-  refresh(): Promise<void>;
-  onClose(): void;
-}
-
-export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps) {
+export function CartridgesPanel({ data, refresh, onClose }: SectionProps): JSX.Element {
   const t = useT();
   const toast = useSessionStore((state) => state.toast);
   const openWorkspace = useSessionStore((state) => state.openWorkspace);
   const [cursor, setCursor] = useState(0);
   const [remix, setRemix] = useState<RemixDraft | null>(null);
   const [busy, setBusy] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
   const ens = useEnsNames();
 
   const list = data.status === "ready" ? entries(data.value) : [];
@@ -121,17 +108,6 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
           (instance) => instance.cartridge.contentHash === selected.manifest.contentHash,
         )
       : [];
-  const upgradeTarget =
-    selected?.kind === "save" && library !== null
-      ? (library.cartridges
-          .filter(
-            (manifest) =>
-              manifest.cartridgeId === selected.instance.cartridge.cartridgeId &&
-              isCompatible(manifest) &&
-              compareCartridgeVersions(manifest.version, selected.instance.cartridge.version) > 0,
-          )
-          .sort((a, b) => compareCartridgeVersions(b.version, a.version))[0] ?? null)
-      : null;
 
   const newRun = (manifest: CartridgeManifest): void => {
     setBusy(true);
@@ -151,9 +127,9 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
 
   const confirm = (entry: Entry | undefined): void => {
     if (entry === undefined || busy) return;
-    if (entry.kind === "save") void openInstance(entry.instance.instanceId);
-    else if (entry.kind === "cartridge") newRun(entry.manifest);
-    else openWorkspace(entry.workspace.workspaceId);
+    if (entry.kind === "cartridge") {
+      if (isCompatible(entry.manifest)) newRun(entry.manifest);
+    } else openWorkspace(entry.workspace.workspaceId);
   };
 
   const startRemix = (entry: Entry | undefined): void => {
@@ -184,27 +160,18 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
     })();
   };
 
-  const exportSelected = (): void => {
-    if (selected === undefined) return;
+  const exportCartridge = (manifest: CartridgeManifest): void => {
     setBusy(true);
-    void (async () => {
-      const result =
-        selected.kind === "cartridge"
-          ? await window.seed.cartridges.exportPack(
-              selected.manifest.cartridgeId,
-              selected.manifest.version,
-            )
-          : selected.kind === "save"
-            ? await window.seed.instances.exportBackup(selected.instance.instanceId)
-            : null;
-      setBusy(false);
-      if (result === null) return;
-      if (!result.ok) {
-        if (result.error.code !== "cancelled") toast("danger", errorLine(result.error));
-        return;
-      }
-      toast("success", t("title.exportedTo", { path: result.value.path }));
-    })();
+    void window.seed.cartridges
+      .exportPack(manifest.cartridgeId, manifest.version)
+      .then((result) => {
+        setBusy(false);
+        if (!result.ok) {
+          if (!isCancelled(result.error.code)) toast("danger", errorLine(result.error));
+          return;
+        }
+        toast("success", t("title.exportedTo", { path: result.value.path }));
+      });
   };
 
   const importCartridge = (): void => {
@@ -212,7 +179,7 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
     void window.seed.cartridges.importPack().then(async (result) => {
       setBusy(false);
       if (!result.ok) {
-        if (result.error.code !== "cancelled") toast("danger", errorLine(result.error));
+        if (!isCancelled(result.error.code)) toast("danger", errorLine(result.error));
         return;
       }
       toast(
@@ -223,75 +190,37 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
     });
   };
 
-  const importBackup = (): void => {
-    setBusy(true);
-    void window.seed.instances.importBackup().then(async (result) => {
-      setBusy(false);
-      if (!result.ok) {
-        if (result.error.code !== "cancelled") toast("danger", errorLine(result.error));
-        return;
-      }
-      toast("success", t("title.restored", { name: result.value.instance.meta.name }));
-      await refresh();
-    });
-  };
-
-  const upgrade = (): void => {
-    if (selected?.kind !== "save" || upgradeTarget === null) return;
-    setBusy(true);
-    void window.seed.instances
-      .upgrade({ instanceId: selected.instance.instanceId, version: upgradeTarget.version })
-      .then(async (result) => {
-        setBusy(false);
-        if (!result.ok) return toast("danger", errorLine(result.error));
-        toast(
-          "success",
-          t("title.upgraded", { version: result.value.instance.meta.cartridge.version }),
-        );
-        await refresh();
-      });
-  };
-
   useKeys({
     Escape: () => (remix === null ? onClose() : setRemix(null)),
-    ...(remix === null
-      ? {
-          ArrowUp: () => setCursor((index) => cycle(index, -1, list.length)),
-          ArrowDown: () => setCursor((index) => cycle(index, 1, list.length)),
-          Enter: () => confirm(selected),
-          KeyR: () => startRemix(selected),
-        }
-      : {}),
+    ...(remix === null ? { KeyR: () => startRemix(selected) } : {}),
   });
+  useArrowFocus(listRef, { enabled: remix === null });
 
   return (
     <>
-      <h2 className="g-heading">{t("title.menuCartridges")}</h2>
-      {library !== null && library.oldSaves.length > 0 ? (
-        <Text variant="caption" tone="dim">
-          {t("title.oldSaves", {
-            n: library.oldSaves.length,
-            names: library.oldSaves.join(", "),
-          })}
-        </Text>
-      ) : null}
+      <h2 className="g-heading">{t("library.sectionCartridges")}</h2>
       <StatePanel state={data} loadingText={t("title.readingCartridges")}>
         {() =>
           list.length === 0 ? (
             <Text tone="dim">{t("title.noCartridges")}</Text>
           ) : (
-            <div className="carts g-scroll">
+            <div className="carts g-scroll" ref={listRef}>
               {list.map((entry, index) => (
                 <Button
                   key={entry.key}
-                  className="cart-row"
+                  className={index === 0 ? `cart-row ${AUTOFOCUS}` : "cart-row"}
                   variant="tile"
                   active={entry.key === selected?.key}
+                  onFocus={() => setCursor(index)}
                   onMouseEnter={() => setCursor(index)}
                   onClick={() => (entry.key === selected?.key ? confirm(entry) : setCursor(index))}
                 >
                   <strong>{entryTitle(entry)}</strong>
-                  <span className="g-meta">{t(KIND_LABEL[entry.kind])}</span>
+                  <span className="g-meta">
+                    {entry.kind === "cartridge"
+                      ? `${t(KIND_LABEL.cartridge)} · ${entry.manifest.version}`
+                      : t(KIND_LABEL.draft)}
+                  </span>
                 </Button>
               ))}
             </div>
@@ -339,12 +268,6 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
               <CartridgeNameLine manifest={selected.manifest} config={ens} />
             </>
           ) : null}
-          {selected.kind === "save" ? (
-            <span className="g-meta">
-              {selected.instance.cartridge.cartridgeId}@{selected.instance.cartridge.version} ·{" "}
-              {formatDateTime(selected.instance.updatedAt)}
-            </span>
-          ) : null}
           {selected.kind === "draft" ? (
             <span className="g-meta">
               {lineageLabel(selected.workspace.mode, t)} → {selected.workspace.targetCartridgeId}
@@ -358,30 +281,22 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
                 disabled={
                   busy || (selected.kind === "cartridge" && !isCompatible(selected.manifest))
                 }
-                hotkey="⏎"
                 onClick={() => confirm(selected)}
               >
-                {selected.kind === "save"
-                  ? t("common.resume")
-                  : selected.kind === "cartridge"
-                    ? t("common.play")
-                    : t("title.edit")}
+                {selected.kind === "cartridge" ? t("common.play") : t("title.edit")}
               </Button>
               {selected.kind === "cartridge" ? (
                 <Button disabled={busy} hotkey="R" onClick={() => startRemix(selected)}>
                   {t("title.remix")}
                 </Button>
               ) : null}
-              {selected.kind !== "draft" ? (
-                <Button variant="ghost" disabled={busy} onClick={exportSelected}>
-                  {selected.kind === "cartridge"
-                    ? t("title.exportCartridge")
-                    : t("title.backupSave")}
-                </Button>
-              ) : null}
-              {selected.kind === "save" && upgradeTarget !== null ? (
-                <Button disabled={busy} onClick={upgrade}>
-                  {t("title.upgradeTo", { version: upgradeTarget.version })}
+              {selected.kind === "cartridge" ? (
+                <Button
+                  variant="ghost"
+                  disabled={busy}
+                  onClick={() => exportCartridge(selected.manifest)}
+                >
+                  {t("title.exportCartridge")}
                 </Button>
               ) : null}
             </div>
@@ -423,9 +338,6 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
       <div className="row-actions">
         <Button variant="ghost" disabled={busy} onClick={importCartridge}>
           {t("title.importCartridge")}
-        </Button>
-        <Button variant="ghost" disabled={busy} onClick={importBackup}>
-          {t("title.restoreBackup")}
         </Button>
       </div>
       <OpenByEnsName

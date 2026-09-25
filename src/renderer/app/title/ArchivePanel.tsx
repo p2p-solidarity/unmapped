@@ -1,21 +1,17 @@
-// Archive sub-menu: legacy seed worlds (pre-cartridge format). Play, export, import, delete.
+// Worlds → Archive (shown only when there is one): legacy seed worlds (pre-cartridge format).
+// Play, export, import, migrate to a cartridge, delete.
 
 import { errorLine, formatDateTime, useT } from "@renderer/i18n";
 import { useSessionStore } from "@renderer/state";
 import { Button, StatePanel, Text } from "@renderer/ui";
-import type { Loadable } from "@shared/result";
-import { useState } from "react";
+import { type JSX, useState } from "react";
+import { AUTOFOCUS } from "../library/focus";
+import type { SectionProps } from "../library/sections";
 import { useKeys } from "../shell/useKeys";
 import { openWorld } from "../useWorldLoader";
-import { isCancelled, type LibraryData } from "./useLibrary";
+import { isCancelled } from "./useLibrary";
 
-interface ArchivePanelProps {
-  data: Loadable<LibraryData>;
-  refresh(): Promise<void>;
-  onClose(): void;
-}
-
-export function ArchivePanel({ data, refresh, onClose }: ArchivePanelProps) {
+export function ArchivePanel({ data, refresh, onClose }: SectionProps): JSX.Element {
   const t = useT();
   const toast = useSessionStore((state) => state.toast);
   const [confirmId, setConfirmId] = useState<string | null>(null);
@@ -62,11 +58,11 @@ export function ArchivePanel({ data, refresh, onClose }: ArchivePanelProps) {
 
   return (
     <>
-      <h2 className="g-heading">{t("title.menuArchive")}</h2>
+      <h2 className="g-heading">{t("library.sectionArchive")}</h2>
       <StatePanel state={data} loadingText={t("title.readingArchive")}>
         {(library) => (
           <div className="carts g-scroll">
-            {library.legacy.map((world) => (
+            {library.legacy.map((world, index) => (
               <div key={world.id} className="detail" style={{ paddingBlock: 12 }}>
                 <Text>{world.name}</Text>
                 <span className="g-meta">
@@ -77,7 +73,12 @@ export function ArchivePanel({ data, refresh, onClose }: ArchivePanelProps) {
                   })}
                 </span>
                 <div className="row-actions">
-                  <Button onClick={() => void openWorld(world.id)}>{t("common.play")}</Button>
+                  <Button
+                    className={index === 0 ? AUTOFOCUS : undefined}
+                    onClick={() => void openWorld(world.id)}
+                  >
+                    {t("common.play")}
+                  </Button>
                   <Button variant="ghost" onClick={() => void exportSeed(world.id)}>
                     {t("title.exportSeed")}
                   </Button>

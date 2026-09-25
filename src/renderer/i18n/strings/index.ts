@@ -10,6 +10,7 @@ import { HUD } from "./hud";
 import { IDENTITY } from "./identity";
 import { INPUT } from "./input";
 import { LAND } from "./land";
+import { LIBRARY } from "./library";
 import { MODEL } from "./model";
 import type { Phrase } from "./phrase";
 import { TITLE } from "./title";
@@ -26,6 +27,7 @@ export const STRINGS = {
   identity: IDENTITY,
   input: INPUT,
   land: LAND,
+  library: LIBRARY,
   model: MODEL,
   title: TITLE,
   usage: USAGE,

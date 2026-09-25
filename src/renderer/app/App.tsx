@@ -15,8 +15,8 @@ import { useEffect, useMemo, useRef } from "react";
 import { CreateGameScreen } from "./create/CreateGameScreen";
 import { hotkeyAction, isTypingTarget } from "./hotkeys";
 import { type InferenceSync, InferenceSyncContext } from "./inferenceSync";
+import { LibraryScreen } from "./library/LibraryScreen";
 import { PlayScreen } from "./PlayScreen";
-import { SeedScreen } from "./SeedScreen";
 import { Toasts } from "./Toasts";
 import { useInputLock } from "./useInputLock";
 import { usePersistWorld } from "./usePersistWorld";
@@ -79,8 +79,8 @@ function Screens() {
   switch (screen) {
     case "worlds":
       return <WorldsScreen />;
-    case "seed":
-      return <SeedScreen />;
+    case "library":
+      return <LibraryScreen />;
     case "create":
       return <CreateGameScreen />;
     case "play":
@@ -93,7 +93,7 @@ function Screens() {
 }
 
 /** Menus stand over one living land, kept across menu changes so its drift never restarts. */
-const LIVE_BACKDROP: ReadonlySet<string> = new Set(["worlds", "seed", "create", "workspace"]);
+const LIVE_BACKDROP: ReadonlySet<string> = new Set(["worlds", "library", "create", "workspace"]);
 
 function MenuBackdrop() {
   const screen = useSessionStore((state) => state.screen);

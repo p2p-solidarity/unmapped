@@ -1,49 +1,45 @@
-// Title screen: the logo and one vertical menu over the live HD-2D land (App's MenuBackdrop).
-// Picking CARTRIDGES / SYSTEM / ARCHIVE slides a panel in on the right; Esc closes it back.
+// Title screen: the logo and one vertical menu over the live HD-2D land (App's MenuBackdrop) —
+// Continue (the latest save) · Worlds (the library screen) · Create World · Settings. Settings
+// slides in on the right as a dialog layer (role="dialog", the menu behind it inert); Esc closes it.
+// The menu is driven by DOM focus: ↑/↓ (or a pad) move it, Enter / A presses the focused row.
 
 import { useT } from "@renderer/i18n";
 import { useSessionStore } from "@renderer/state";
 import { Button } from "@renderer/ui";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { focusButton, focusFirst, useArrowFocus, useInitialFocus } from "./library/focus";
 import { GameShell } from "./shell/GameShell";
-import { cycle, useKeys } from "./shell/useKeys";
-import { ArchivePanel } from "./title/ArchivePanel";
-import { CartridgesPanel } from "./title/CartridgesPanel";
-import { ContinentPanel } from "./title/ContinentPanel";
 import { SystemPanel } from "./title/SystemPanel";
 import { useLibrary } from "./title/useLibrary";
 import { openInstance } from "./useInstanceLoader";
 
-type PanelId = "continent" | "cartridges" | "system" | "archive";
-
 interface MenuItem {
-  id: "continue" | "new" | "create" | "worlds" | PanelId;
+  id: "continue" | "library" | "create" | "settings";
   label: string;
   disabled: boolean;
 }
 
+/** Row of Settings in the menu, where the focus returns when its dialog closes. */
+const SETTINGS_ROW = 3;
+
 export function WorldsScreen() {
   const t = useT();
   const setScreen = useSessionStore((state) => state.setScreen);
-  const { data, refresh } = useLibrary();
+  const { data } = useLibrary();
   const [cursor, setCursor] = useState(0);
-  const [panel, setPanel] = useState<PanelId | null>(null);
+  const [settings, setSettings] = useState(false);
+  const menuRef = useRef<HTMLElement>(null);
+  const dialogRef = useRef<HTMLElement>(null);
+  const settingsWasOpen = useRef(false);
 
-  const library = data.status === "ready" ? data.value : null;
-  const latest = library?.instances[0] ?? null;
+  const latest = data.status === "ready" ? (data.value.instances[0] ?? null) : null;
 
   const items: MenuItem[] = [
     { id: "continue", label: t("title.menuContinue"), disabled: latest === null },
-    { id: "new", label: t("title.menuNewGame"), disabled: false },
+    { id: "library", label: t("title.menuWorlds"), disabled: false },
     { id: "create", label: t("title.menuCreate"), disabled: false },
-    { id: "worlds", label: t("title.menuWorlds"), disabled: false },
-    { id: "continent", label: t("title.menuContinent"), disabled: false },
-    { id: "cartridges", label: t("title.menuCartridges"), disabled: false },
-    { id: "system", label: t("title.menuSystem"), disabled: false },
+    { id: "settings", label: t("title.menuSettings"), disabled: false },
   ];
-  if (library !== null && library.legacy.length > 0) {
-    items.push({ id: "archive", label: t("title.menuArchive"), disabled: false });
-  }
 
   // Never rest on a disabled row (e.g. Continue before the first save exists).
   const current = items[cursor]?.disabled ? items.findIndex((item) => !item.disabled) : cursor;
@@ -52,45 +48,34 @@ export function WorldsScreen() {
     if (item === undefined || item.disabled) return;
     if (item.id === "continue") {
       if (latest !== null) void openInstance(latest.instanceId);
-      return;
-    }
-    if (item.id === "new") setScreen("seed");
+    } else if (item.id === "library") setScreen("library");
     else if (item.id === "create") setScreen("create");
-    else if (item.id === "worlds") setScreen("works");
-    else setPanel(item.id);
+    else setSettings(true);
   };
 
-  const move = (delta: number): void => {
-    setCursor(() => {
-      let next = current;
-      for (let step = 0; step < items.length; step += 1) {
-        next = cycle(next, delta, items.length);
-        if (!items[next]?.disabled) return next;
-      }
-      return current;
-    });
-  };
+  // First focus waits for the saves, which decide whether Continue is the first enabled row.
+  useInitialFocus(menuRef, data.status === "ready" || data.status === "error");
+  useArrowFocus(menuRef, { enabled: !settings, claimIdle: true });
 
-  useKeys(
-    {
-      ArrowUp: () => move(-1),
-      KeyW: () => move(-1),
-      ArrowDown: () => move(1),
-      KeyS: () => move(1),
-      Enter: () => activate(items[current]),
-      Space: () => activate(items[current]),
-    },
-    panel === null,
-  );
-  useKeys({ Escape: () => setPanel(null) }, panel === "continent");
+  // Opening Settings moves focus into its layer; closing it gives the focus back to its row.
+  useEffect(() => {
+    if (settings) {
+      settingsWasOpen.current = true;
+      focusFirst(dialogRef.current);
+    } else if (settingsWasOpen.current) {
+      settingsWasOpen.current = false;
+      focusButton(menuRef.current, SETTINGS_ROW);
+    }
+  }, [settings]);
 
-  const closePanel = (): void => setPanel(null);
+  const closeSettings = (): void => setSettings(false);
 
   return (
     <GameShell
       hints={
-        panel === null
-          ? [
+        settings
+          ? [{ keys: ["Esc"], label: t("common.back"), onPress: closeSettings }]
+          : [
               { keys: ["↑", "↓"], label: t("title.hintSelect") },
               {
                 keys: ["Enter"],
@@ -98,31 +83,35 @@ export function WorldsScreen() {
                 onPress: () => activate(items[current]),
               },
             ]
-          : [{ keys: ["Esc"], label: t("common.back"), onPress: closePanel }]
       }
     >
       <div className="title">
-        <div className="title__left">
+        <div className="title__left" inert={settings}>
           <div className="title__crest">
             <h1 className="title__logo">UNMAPPED</h1>
             <div className="title__rule" aria-hidden="true" />
             <p className="title__sub">無界之地</p>
             <p className="title__tagline">{t("common.tagline")}</p>
           </div>
-          <nav className="title__menu" aria-label={t("title.mainMenu")}>
+          {/* While the saves load the pad leaves the menu alone, so its first focus is the one
+              useInitialFocus gives (Continue once there is a save), not the first row enabled so far. */}
+          <nav
+            ref={menuRef}
+            className="title__menu"
+            aria-label={t("title.mainMenu")}
+            data-nav-skip={data.status === "idle" || data.status === "loading" ? true : undefined}
+          >
             {items.map((item, index) => (
               <Button
                 key={item.id}
                 variant="menu"
-                active={panel === null ? current === index : panel === item.id}
+                active={settings ? item.id === "settings" : current === index}
                 disabled={item.disabled}
+                onFocus={() => setCursor(index)}
                 onMouseEnter={() => {
-                  if (panel === null && !item.disabled) setCursor(index);
+                  if (!settings && !item.disabled) focusButton(menuRef.current, index);
                 }}
-                onClick={() => {
-                  setCursor(index);
-                  activate(item);
-                }}
+                onClick={() => activate(item)}
               >
                 {item.label}
               </Button>
@@ -130,18 +119,17 @@ export function WorldsScreen() {
           </nav>
         </div>
 
-        {panel === null ? null : (
-          <section className="title__panel g-enter" key={panel}>
-            {panel === "cartridges" ? (
-              <CartridgesPanel data={data} refresh={refresh} onClose={closePanel} />
-            ) : null}
-            {panel === "system" ? <SystemPanel onClose={closePanel} /> : null}
-            {panel === "continent" ? <ContinentPanel data={data} /> : null}
-            {panel === "archive" ? (
-              <ArchivePanel data={data} refresh={refresh} onClose={closePanel} />
-            ) : null}
+        {settings ? (
+          <section
+            ref={dialogRef}
+            className="title__panel g-enter"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("title.menuSettings")}
+          >
+            <SystemPanel onClose={closeSettings} />
           </section>
-        )}
+        ) : null}
       </div>
     </GameShell>
   );

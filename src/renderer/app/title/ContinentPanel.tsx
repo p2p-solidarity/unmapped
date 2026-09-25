@@ -1,49 +1,61 @@
-// Join a continent from the title: choose which saved world to bring, then enter a friend's door
-// number. The selected save is opened before the room joins, so it keeps its own land and progress.
+// Worlds → Continent: choose which saved world to bring, then open its door to friends or enter a
+// friend's door number and walk through. The selected save is opened before the continent opens,
+// so it keeps its own land and progress.
 
 import { errorLine, useT } from "@renderer/i18n";
-import { normalizeRoomCode, ROOM_CODE_LENGTH } from "@renderer/net/codes";
-import { joinContinentByCode } from "@renderer/net/continentActions";
+import { normalizeRoomCode, plateOf, ROOM_CODE_LENGTH } from "@renderer/net/codes";
+import { joinContinentByCode, openMyDoor } from "@renderer/net/continentActions";
 import { useSessionStore } from "@renderer/state";
 import { Button, StatePanel, Text, TextField } from "@renderer/ui";
-import type { Loadable } from "@shared/result";
-import { useState } from "react";
+import type { Result } from "@shared/result";
+import { type JSX, useRef, useState } from "react";
+import { AUTOFOCUS, useArrowFocus } from "../library/focus";
+import type { SectionProps } from "../library/sections";
+import { useKeys } from "../shell/useKeys";
 import { openInstance } from "../useInstanceLoader";
-import type { LibraryData } from "./useLibrary";
 
-export function ContinentPanel({ data }: { data: Loadable<LibraryData> }) {
+export function ContinentPanel({ data, onClose }: SectionProps): JSX.Element {
   const t = useT();
   const [instanceId, setInstanceId] = useState("");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
 
-  const join = async (): Promise<void> => {
-    if (busy || instanceId === "" || code.length !== ROOM_CODE_LENGTH) return;
+  useKeys({ Escape: () => (busy ? undefined : onClose()) });
+  useArrowFocus(listRef);
+
+  /** Opens the chosen world, then (only if it really is the world in play) acts on its continent. */
+  const bring = async (act: () => Result<string>): Promise<void> => {
+    if (busy || instanceId === "") return;
     setBusy(true);
     await openInstance(instanceId);
+    const session = useSessionStore.getState();
     if (
-      useSessionStore.getState().screen === "play" &&
-      useSessionStore.getState().activeInstance?.instance.meta.instanceId === instanceId
+      session.screen === "play" &&
+      session.activeInstance?.instance.meta.instanceId === instanceId
     ) {
-      const joined = joinContinentByCode(code);
-      if (!joined.ok) useSessionStore.getState().toast("danger", errorLine(joined.error));
+      const done = act();
+      if (!done.ok) session.toast("danger", errorLine(done.error));
     }
     setBusy(false);
   };
 
+  const codeReady = code.length === ROOM_CODE_LENGTH;
+
   return (
     <>
-      <h2 className="g-heading">{t("title.menuContinent")}</h2>
-      <Text tone="muted">{t("title.continentIntro")}</Text>
-      <StatePanel state={data} loadingText={t("title.readingCartridges")}>
+      <h2 className="g-heading">{t("library.sectionContinent")}</h2>
+      <Text tone="muted">{t("library.continentIntro")}</Text>
+      <StatePanel state={data} loadingText={t("library.readingSaves")}>
         {(library) =>
           library.instances.length === 0 ? (
-            <Text tone="dim">{t("title.continentNoWorld")}</Text>
+            <Text tone="dim">{t("library.continentNoWorld")}</Text>
           ) : (
-            <div className="carts g-scroll">
-              {library.instances.map((instance) => (
+            <div className="carts g-scroll" ref={listRef}>
+              {library.instances.map((instance, index) => (
                 <Button
                   key={instance.instanceId}
+                  className={index === 0 ? AUTOFOCUS : undefined}
                   variant="tile"
                   active={instanceId === instance.instanceId}
                   disabled={busy}
@@ -56,6 +68,22 @@ export function ContinentPanel({ data }: { data: Loadable<LibraryData> }) {
           )
         }
       </StatePanel>
+      {instanceId === "" ? (
+        <Text variant="caption" tone="dim">
+          {t("library.continentPickWorld")}
+        </Text>
+      ) : (
+        <>
+          <Text variant="caption" tone="muted">
+            {t("continent.yourPlate", { code: plateOf(instanceId) })}
+          </Text>
+          <div className="row-actions">
+            <Button variant="secondary" disabled={busy} onClick={() => void bring(openMyDoor)}>
+              {t("continent.openDoor")}
+            </Button>
+          </div>
+        </>
+      )}
       <TextField
         label={t("land.friendDoorCode")}
         value={code}
@@ -63,13 +91,15 @@ export function ContinentPanel({ data }: { data: Loadable<LibraryData> }) {
         mono
         onChange={(event) => setCode(normalizeRoomCode(event.target.value))}
       />
-      <Button
-        variant="primary"
-        disabled={busy || instanceId === "" || code.length !== ROOM_CODE_LENGTH}
-        onClick={() => void join()}
-      >
-        {t("continent.walkThrough")}
-      </Button>
+      <div className="row-actions">
+        <Button
+          variant="primary"
+          disabled={busy || instanceId === "" || !codeReady}
+          onClick={() => void bring(() => joinContinentByCode(code))}
+        >
+          {t("continent.walkThrough")}
+        </Button>
+      </div>
     </>
   );
 }

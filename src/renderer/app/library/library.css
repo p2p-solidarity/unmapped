@@ -1,0 +1,68 @@
+/* The Worlds library (title → Worlds). Imported by LibraryScreen; palette from the --g-* variables
+   (ui/tokens.ts cssVars), no hex literals (Rule 3). The panel reuses .title__panel from game.css. */
+
+.library {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  gap: 56px;
+  height: 100%;
+}
+
+.library__side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 0;
+}
+
+.library__heading {
+  margin: 0;
+  font-family: var(--ui-display);
+  font-size: clamp(28px, 3vw, 40px);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: var(--g-text);
+  text-shadow: 0 3px 2px rgba(0, 0, 0, 0.75);
+}
+
+.library__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: -40px;
+}
+
+/* The diamond marks the open section; the row holding keyboard / pad focus gets the soft band. */
+.library__nav .ui-btn[data-variant="menu"]:focus-visible::after {
+  opacity: 0.6;
+}
+
+.library__count {
+  margin-left: 12px;
+  font-family: var(--ui-mono);
+  font-size: 12px;
+  letter-spacing: 0;
+  color: var(--g-dim);
+}
+
+/* The panel scrolls as a whole, so its lists keep their height instead of being squeezed. */
+.library__panel {
+  align-self: start;
+  width: min(760px, 100%);
+}
+
+.library__panel > * {
+  flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+  .library {
+    grid-template-columns: 1fr;
+    height: auto;
+    gap: 28px;
+  }
+
+  .library__nav {
+    margin-left: -24px;
+  }
+}

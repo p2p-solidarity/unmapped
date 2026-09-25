@@ -1,5 +1,6 @@
-// System sub-menu: real readings of this machine (build, storage, model endpoint, signaling
-// servers) and save protection. Only reached on purpose — the title screen itself stays quiet.
+// Settings (title → Settings, a dialog over the title): real readings of this machine (build,
+// storage, model endpoint, signaling servers) and save protection. Only reached on purpose — the
+// title screen itself stays quiet.
 
 import { LANGUAGE_LABEL, UI_LANGUAGES, useLanguageStore, useT } from "@renderer/i18n";
 import { UnlockPanel } from "@renderer/identity";
@@ -42,7 +43,7 @@ export function SystemPanel({ onClose }: { onClose(): void }) {
 
   return (
     <div className="g-scroll" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      <h2 className="g-heading">{t("title.menuSystem")}</h2>
+      <h2 className="g-heading">{t("title.menuSettings")}</h2>
 
       <section style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <h3 className="g-heading" style={{ fontSize: 13 }}>

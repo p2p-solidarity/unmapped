@@ -1,28 +1,15 @@
-// The title screen and its sub-menus: worlds, cartridges, archive, system, seeds, workspace.
+// The title screen (Continue · Worlds · Create World · Settings), the Settings panel, and the lines
+// the Worlds library shows for New Game, cartridges, the archive and ENS names; also the workspace.
 
 import type { Phrase } from "./phrase";
 
 export const TITLE = {
   // ── Main menu ──────────────────────────────────────────────────────────────────────────────
   mainMenu: { en: "Main menu", "zh-TW": "主選單", ja: "メインメニュー" },
-  menuContinue: { en: "Continue", "zh-TW": "繼續遊戲", ja: "つづきから" },
-  menuNewGame: { en: "New Game", "zh-TW": "新遊戲", ja: "はじめから" },
-  menuCreate: { en: "Create a game", "zh-TW": "創作遊戲", ja: "ゲームをつくる" },
-  menuWorlds: { en: "AI Worlds", "zh-TW": "AI 世界", ja: "AI ワールド" },
-  menuContinent: { en: "Join a continent", "zh-TW": "加入大陸", ja: "大陸に参加" },
-  continentIntro: {
-    en: "Choose the saved world you will bring, then enter a friend's door number.",
-    "zh-TW": "選擇要帶來的存檔世界，再輸入夥伴的門牌。",
-    ja: "持ち寄るセーブ済みの世界を選び、仲間の扉番号を入力してください。",
-  },
-  continentNoWorld: {
-    en: "No saved world yet. Create or start a game first.",
-    "zh-TW": "尚無存檔世界。請先創作或開始遊戲。",
-    ja: "セーブ済みの世界がありません。先にゲームを始めてください。",
-  },
-  menuCartridges: { en: "Cartridges", "zh-TW": "卡帶", ja: "カートリッジ" },
-  menuSystem: { en: "System", "zh-TW": "系統", ja: "システム" },
-  menuArchive: { en: "Archive", "zh-TW": "封存", ja: "アーカイブ" },
+  menuContinue: { en: "Continue", "zh-TW": "繼續", ja: "つづきから" },
+  menuWorlds: { en: "Worlds", "zh-TW": "世界", ja: "ワールド" },
+  menuCreate: { en: "Create World", "zh-TW": "創造世界", ja: "世界をつくる" },
+  menuSettings: { en: "Settings", "zh-TW": "設定", ja: "設定" },
   hintSelect: { en: "Select", "zh-TW": "選擇", ja: "選択" },
   hintConfirm: { en: "Confirm", "zh-TW": "確定", ja: "決定" },
   leaveRoomFailed: {
@@ -57,11 +44,6 @@ export const TITLE = {
   },
   openingLand: { en: "Opening the land…", "zh-TW": "正在開啟大地…", ja: "大地を開いています…" },
   start: { en: "Start", "zh-TW": "開始", ja: "始める" },
-  createFromStory: {
-    en: "Or create your own game from a story",
-    "zh-TW": "或從故事創作你自己的遊戲",
-    ja: "または、ストーリーから自分のゲームをつくる",
-  },
 
   // ── Cartridges ─────────────────────────────────────────────────────────────────────────────
   readingCartridges: {
@@ -79,7 +61,6 @@ export const TITLE = {
     "zh-TW": "有 {n} 個舊版存檔無法由這個版本開啟，已原封不動保留：{names}",
     ja: "旧バージョンのセーブ {n} 件はこのバージョンでは開けないため、そのまま残してあります：{names}",
   },
-  kindSave: { en: "Save", "zh-TW": "存檔", ja: "セーブ" },
   kindCartridge: { en: "Cartridge", "zh-TW": "卡帶", ja: "カートリッジ" },
   kindDraft: { en: "Draft", "zh-TW": "草稿", ja: "下書き" },
   needsEngine: {
@@ -166,28 +147,8 @@ export const TITLE = {
   version: { en: "Version", "zh-TW": "版本", ja: "バージョン" },
   platform: { en: "Platform", "zh-TW": "平台", ja: "動作環境" },
   worldsFolder: { en: "Worlds", "zh-TW": "世界資料夾", ja: "ワールド保存先" },
-  probeOnline: {
-    en: "online · {ms} ms · {n} {n|model|models}",
-    "zh-TW": "連線中 · {ms} ms · {n} 個模型",
-    ja: "オンライン · {ms} ms · モデル {n} 件",
-  },
-  offlineBecause: {
-    en: "offline — {reason}",
-    "zh-TW": "離線 — {reason}",
-    ja: "オフライン — {reason}",
-  },
-  offlineAppleFm: {
-    en: "offline — run `sudo fm license` in Terminal once, then Probe again",
-    "zh-TW": "離線 — 請在「終端機」執行一次 `sudo fm license`，再按「重新偵測」",
-    ja: "オフライン — ターミナルで `sudo fm license` を一度実行してから「再確認」を押してください",
-  },
-  offlineLocal: {
-    en: "offline — start llama-server / ollama, or change provider in F12 → Inference",
-    "zh-TW": "離線 — 請啟動 llama-server / ollama，或按 F12 在主控台更換供應商",
-    ja: "オフライン — llama-server / ollama を起動するか、F12 のコンソールでプロバイダーを変更してください",
-  },
 
-  // ── System → Signaling servers (a per-device preference) ──────────────────────────────────
+  // ── Settings → Signaling servers (a per-device preference) ──────────────────────────────────
   signalingHeading: {
     en: "Signaling servers",
     "zh-TW": "信令伺服器",

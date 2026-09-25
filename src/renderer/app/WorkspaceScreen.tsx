@@ -25,7 +25,7 @@ export function WorkspaceScreen() {
 
   useEffect(() => {
     if (workspaceId === null) {
-      setScreen("worlds");
+      setScreen("library");
       return;
     }
     setWorkspace(loading());
@@ -82,7 +82,7 @@ export function WorkspaceScreen() {
         "success",
         t("title.published", { ref: `${result.value.cartridgeId}@${result.value.version}` }),
       );
-      setScreen("worlds");
+      setScreen("library");
     })();
   }, [save, setScreen, t, toast, version, workspaceId]);
 
@@ -106,11 +106,11 @@ export function WorkspaceScreen() {
     setSource(nextId === RULES_FILE ? record.rules : (record.scenes[nextId] ?? ""));
   };
 
-  useKeys({ Escape: () => setScreen("worlds") }, !busy);
+  useKeys({ Escape: () => setScreen("library") }, !busy);
 
   return (
     <GameShell
-      hints={[{ keys: ["Esc"], label: t("common.back"), onPress: () => setScreen("worlds") }]}
+      hints={[{ keys: ["Esc"], label: t("common.back"), onPress: () => setScreen("library") }]}
     >
       <StatePanel state={workspace} loadingText={t("title.openingWorkspace")}>
         {(record) => (
