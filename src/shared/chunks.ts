@@ -8,7 +8,16 @@
 // This is ground, water and vegetation — never people, names or stories (Rule 2). Whoever lives on
 // a chunk is written by the model, once, when someone first walks there; that is not this file.
 
-import type { FloorSpec, PatchSpec, PropKind, PropSpec, SceneGraph, Tile } from "./world";
+import type {
+  FloorSpec,
+  MonsterKind,
+  MonsterSpec,
+  PatchSpec,
+  PropKind,
+  PropSpec,
+  SceneGraph,
+  Tile,
+} from "./world";
 
 /** Tiles per chunk edge. Equal to LIMITS.floor.max, so an authored scene always fits in one chunk. */
 export const CHUNK_SIZE = 32;
@@ -286,4 +295,63 @@ export function chunkTerrain(input: ChunkTerrainInput): ChunkTerrain {
     props,
     hole,
   };
+}
+
+// ── Wild monsters ────────────────────────────────────────────────────────────────────────────
+//
+// Only for a cartridge whose rules declare combat: the land's wildlife, like its trees — a kind and
+// a level from the seed and the place, never a name, a line or a story. Home (the origin chunk) and
+// the fords stay clear, and the further from home, the stronger.
+
+const WILD_SEED = 0x6a09e667;
+const WILD_KINDS: Partial<Record<Tile, readonly MonsterKind[]>> = {
+  grass: ["slime", "fox_spirit", "wisp"],
+  stone: ["golem", "skeleton"],
+  sand: ["serpent", "slime"],
+  snow: ["wisp", "shade"],
+  wood: ["drone", "skeleton"],
+};
+/** Most chunks hold a small pack; some are quiet. */
+const WILD_PACKS = [0, 1, 1, 2, 2, 3] as const;
+export const WILD_LEVEL_MAX = 30;
+
+/** Wild monsters of one chunk, in world tile coordinates; empty at home. */
+export function wildMonsters(
+  seed: number,
+  coord: ChunkCoord,
+  origin: Pick<SceneGraph, "floor">,
+): MonsterSpec[] {
+  if (coord.cx === 0 && coord.cz === 0) return [];
+  const count =
+    WILD_PACKS[Math.floor(unit(seed ^ WILD_SEED, coord.cx, coord.cz) * WILD_PACKS.length)] ?? 0;
+  const level = Math.min(
+    WILD_LEVEL_MAX,
+    1 + Math.floor(chunkDistance(coord, { cx: 0, cz: 0 }) * 1.5),
+  );
+  const props = new Set(
+    chunkTerrain({ seed, coord, origin }).props.map((prop) => `${prop.x},${prop.z}`),
+  );
+  const monsters: MonsterSpec[] = [];
+  for (let attempt = 0; attempt < 24 && monsters.length < count; attempt += 1) {
+    const x = Math.floor(unit(seed ^ WILD_SEED, coord.cx * 97 + attempt, coord.cz) * CHUNK_SIZE);
+    const z = Math.floor(unit(seed ^ WILD_SEED, coord.cx, coord.cz * 89 + attempt) * CHUNK_SIZE);
+    const wx = coord.cx * CHUNK_SIZE + x;
+    const wz = coord.cz * CHUNK_SIZE + z;
+    if (isFord(wx, wz) || props.has(`${x},${z}`)) continue;
+    const kinds = WILD_KINDS[groundAt(seed, wx, wz, origin.floor.tile)];
+    if (kinds === undefined || kinds.length === 0) continue;
+    const kind = kinds[Math.floor(unit(seed ^ WILD_SEED, wx, wz) * kinds.length)] ?? kinds[0];
+    if (kind === undefined) continue;
+    monsters.push({
+      id: `wild_${coord.cx}_${coord.cz}_${monsters.length}`.replace(/-/g, "m"),
+      kind,
+      x: wx,
+      z: wz,
+      level,
+      weakness: "",
+      size: 1,
+      color: null,
+    });
+  }
+  return monsters;
 }

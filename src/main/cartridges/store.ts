@@ -175,6 +175,24 @@ export async function readCartridgeRevision(
   }
 }
 
+/** Versions already published for one cartridge (directory names only; nothing is read). */
+export async function cartridgeVersions(
+  cartridgesDir: string,
+  cartridgeId: string,
+): Promise<string[]> {
+  if (!isCartridgeId(cartridgeId)) return [];
+  try {
+    const entries = await readdir(cartridgeDir(cartridgesDir, cartridgeId), {
+      withFileTypes: true,
+    });
+    return entries
+      .filter((entry) => entry.isDirectory() && isCartridgeVersion(entry.name))
+      .map((entry) => entry.name);
+  } catch {
+    return [];
+  }
+}
+
 export async function listCartridgeRevisions(
   cartridgesDir: string,
 ): Promise<Result<CartridgeManifest[]>> {

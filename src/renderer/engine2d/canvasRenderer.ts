@@ -3,7 +3,7 @@ import { CHUNK_SIZE, chunkKey } from "@shared/chunks";
 import type { LandNote, LandProgress } from "@shared/land";
 import type { PropSpec, SceneGraph } from "@shared/world";
 import { doorPosition } from "../engine/home";
-import { LAND_2D_PALETTE } from "../engine/palette";
+import { LAND_2D_PALETTE, MONSTER_LOOK } from "../engine/palette";
 import {
   ACTOR_ASSETS,
   type AtlasId,
@@ -13,6 +13,7 @@ import {
 } from "./assetCatalog";
 import { cachedTerrain, landTileAt } from "./landModel";
 import { drawStoryCompass, type StoryView, storyMarkers } from "./storyLayer";
+import type { Foe, ShotTrace } from "./useLandCombat";
 
 export type SpriteAtlases = Record<AtlasId, HTMLImageElement>;
 
@@ -37,8 +38,14 @@ export interface LandFrame {
   notes: readonly LandNote[];
   /** The world's story, when it was made from one; null for the base game. */
   story: StoryView | null;
+  /** Living hostiles when the cartridge has combat (they replace the scene's monster marks). */
+  foes?: readonly Foe[] | null;
+  shot?: ShotTrace | null;
   now: number;
 }
+
+/** How long a shot's streak stays on screen. */
+export const SHOT_TRACE_MS = 160;
 
 interface ScreenTransform {
   left: number;
@@ -72,6 +79,7 @@ export function renderLandFrame(frame: LandFrame): void {
   items.push({ z: player.z, draw: () => drawPlayer(frame, transform) });
   items.sort((a, b) => a.z - b.z);
   for (const item of items) item.draw();
+  drawShot(frame, transform);
   drawVignette(ctx, width, height);
   if (frame.story !== null) drawStoryCompass(ctx, width, height, tileSize, player, frame.story);
 }
@@ -168,15 +176,29 @@ function collectScenery(frame: LandFrame, transform: ScreenTransform): DrawItem[
   for (const exit of frame.scene.exits) {
     pushMarker(items, frame, transform, exit.x + 0.5, exit.z + 0.5, LAND_2D_PALETTE.exit, "↥");
   }
-  for (const monster of frame.scene.monsters) {
+  if (frame.foes === null || frame.foes === undefined) {
+    for (const monster of frame.scene.monsters) {
+      pushMarker(
+        items,
+        frame,
+        transform,
+        monster.x + 0.5,
+        monster.z + 0.5,
+        LAND_2D_PALETTE.monster,
+        "◆",
+      );
+    }
+  }
+  for (const foe of frame.foes ?? []) {
     pushMarker(
       items,
       frame,
       transform,
-      monster.x + 0.5,
-      monster.z + 0.5,
-      LAND_2D_PALETTE.monster,
+      foe.x,
+      foe.z,
+      MONSTER_LOOK[foe.kind]?.color ?? LAND_2D_PALETTE.monster,
       "◆",
+      `Lv ${foe.level} · ${foe.hp}/${foe.maxHp}`,
     );
   }
   for (const note of frame.notes) {
@@ -402,4 +424,21 @@ function drawVignette(ctx: CanvasRenderingContext2D, width: number, height: numb
   gradient.addColorStop(1, LAND_2D_PALETTE.vignetteEdge);
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, width, height);
+}
+
+function drawShot(frame: LandFrame, transform: ScreenTransform): void {
+  const shot = frame.shot;
+  if (shot === null || shot === undefined || frame.now - shot.at > SHOT_TRACE_MS) return;
+  const [x0, y0] = toScreen(transform, shot.x0, shot.z0);
+  const [x1, y1] = toScreen(transform, shot.x1, shot.z1);
+  const ctx = frame.ctx;
+  ctx.save();
+  ctx.globalAlpha = 1 - (frame.now - shot.at) / SHOT_TRACE_MS;
+  ctx.strokeStyle = shot.hit ? LAND_2D_PALETTE.shotHit : LAND_2D_PALETTE.shotMiss;
+  ctx.lineWidth = Math.max(2, transform.tileSize / 12);
+  ctx.beginPath();
+  ctx.moveTo(x0, y0);
+  ctx.lineTo(x1, y1);
+  ctx.stroke();
+  ctx.restore();
 }

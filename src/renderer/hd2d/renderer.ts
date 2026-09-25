@@ -6,7 +6,8 @@
 import { chunkKey } from "@shared/chunks";
 import * as THREE from "three";
 import { HD2D_PALETTE } from "../engine/palette";
-import type { Player2D, SpriteAtlases } from "../engine2d/canvasRenderer";
+import { type Player2D, SHOT_TRACE_MS, type SpriteAtlases } from "../engine2d/canvasRenderer";
+import type { ShotTrace } from "../engine2d/useLandCombat";
 import { ACTOR_COLUMN, ACTOR_FRAME, WALK_FRAMES } from "./assets";
 import { createCloudShade } from "./clouds";
 import {
@@ -29,6 +30,8 @@ export interface Hd2dFrame extends LandSource {
   /** What the camera looks at; the player when there is one. */
   focus: { x: number; z: number };
   player: Player2D | null;
+  /** The last shot, drawn as a brief streak of light. */
+  shot?: ShotTrace | null;
   now: number;
 }
 
@@ -108,6 +111,8 @@ export function createHd2dRenderer(
   scene.add(player.mesh, player.shadow);
   const motes = moteField();
   scene.add(motes.points);
+  const streak = shotStreak();
+  scene.add(streak.mesh);
 
   const ground = new Map<string, GroundChunk>();
   let groundSeed: string | null = null;
@@ -164,7 +169,12 @@ export function createHd2dRenderer(
   };
 
   const syncContent = (frame: Hd2dFrame, coords: ReturnType<typeof chunksAround>): void => {
-    const key = coords.map(chunkKey).join("|");
+    // Foes move nowhere between frames; only who is still standing changes what is drawn.
+    const foes =
+      frame.foes === null || frame.foes === undefined
+        ? "off"
+        : frame.foes.map((foe) => foe.id).join(",");
+    const key = `${coords.map(chunkKey).join("|")}#${foes}`;
     const refs = [frame.origin, frame.chunks, frame.progress, frame.notes, frame.story, frame.seed];
     if (key === contentKey && refs.every((ref, index) => ref === contentRefs[index])) return;
     contentKey = key;
@@ -214,6 +224,7 @@ export function createHd2dRenderer(
       markers.animate(seconds);
       clouds.time.value = seconds;
       motes.drift(target, seconds);
+      streak.show(frame.shot ?? null, frame.now);
       for (const material of Object.values(materials.sunken)) {
         const map = (material as THREE.MeshStandardMaterial).map;
         if (map !== null) map.offset.set(seconds * 0.05, seconds * 0.03);
@@ -232,6 +243,7 @@ export function createHd2dRenderer(
           size,
           labels,
           compass === null ? null : { ...compass, label: `${compass.label} · ${distance}` },
+          frame.foes ?? [],
         );
       }
     },
@@ -244,6 +256,7 @@ export function createHd2dRenderer(
       markers.dispose();
       player.dispose();
       motes.dispose();
+      streak.dispose();
       for (const material of Object.values(materials.sunken)) material.dispose();
       materials.bank.dispose();
       clouds.dispose();
@@ -434,6 +447,46 @@ function moteField(): Motes {
       geometry.dispose();
       material.dispose();
       map.dispose();
+    },
+  };
+}
+
+interface Streak {
+  mesh: THREE.Mesh;
+  show(shot: ShotTrace | null, now: number): void;
+  dispose(): void;
+}
+
+/** A shot as a thin bar of light from the player to where it landed, fading out. */
+function shotStreak(): Streak {
+  const geometry = new THREE.BoxGeometry(1, 0.06, 0.06);
+  geometry.translate(0.5, 0, 0);
+  const material = new THREE.MeshBasicMaterial({
+    color: HD2D_PALETTE.shotHit,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    toneMapped: false,
+  });
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.visible = false;
+  return {
+    mesh,
+    show(shot, now) {
+      const age = shot === null ? Number.POSITIVE_INFINITY : now - shot.at;
+      mesh.visible = shot !== null && age <= SHOT_TRACE_MS;
+      if (shot === null || !mesh.visible) return;
+      const dx = shot.x1 - shot.x0;
+      const dz = shot.z1 - shot.z0;
+      mesh.position.set(shot.x0, 0.75, shot.z0);
+      mesh.rotation.set(0, -Math.atan2(dz, dx), 0);
+      mesh.scale.set(Math.max(0.1, Math.hypot(dx, dz)), 1, 1);
+      material.color.set(shot.hit ? HD2D_PALETTE.shotHit : HD2D_PALETTE.shotMiss);
+      material.opacity = 1 - age / SHOT_TRACE_MS;
+    },
+    dispose() {
+      geometry.dispose();
+      material.dispose();
     },
   };
 }

@@ -111,6 +111,15 @@ export interface ScenePatch {
     | { type: "move_asset"; assetId: string; x: number; z: number }
     | { type: "set_objective"; text: string }
     | { type: "set_contract"; contract: import("./gameplay").SceneContract }
+    | {
+        type: "add_monster";
+        kind: import("./world").MonsterKind;
+        x: number;
+        z: number;
+        level: number;
+        /** What defeats it, in the player's language. */
+        weakness: string;
+      }
   >;
 }
 export type ModOperation =

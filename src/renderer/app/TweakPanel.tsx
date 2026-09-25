@@ -2,17 +2,7 @@ import { SandboxPreview } from "@renderer/engine/SandboxPreview";
 import { ScenePreviewCanvas } from "@renderer/engine/ScenePreviewCanvas";
 import { generateModProposal } from "@renderer/narrative/modProposal";
 import { useSessionStore, useWorldStore } from "@renderer/state";
-import {
-  Button,
-  colors,
-  ErrorBlock,
-  StatePanel,
-  Surface,
-  space,
-  Text,
-  TextField,
-  zIndex,
-} from "@renderer/ui";
+import { Button, colors, StatePanel, Surface, space, Text, TextField, zIndex } from "@renderer/ui";
 import type { CartridgeManifest } from "@shared/cartridge";
 import type { ModProposalPreview } from "@shared/mods";
 import { errored, idle, type Loadable, loading } from "@shared/result";
@@ -110,8 +100,9 @@ export function TweakPanel(): JSX.Element | null {
           Create a mod revision
         </Text>
         <Text variant="caption" tone="dim">
-          Describe a weapon, timing or scene change. Review the proposal, then publish a new
-          cartridge version. Your current run stays on its original version.
+          Describe a weapon, monsters, pacing, a squad or a scene change. Anything the cartridge
+          lacks for it is added for you. Review the proposal, then publish a new cartridge version;
+          your current run stays on its original version.
         </Text>
         {origin?.kind !== "instance" ? (
           <Text variant="body">Open a published v2 cartridge to create a mod revision.</Text>
@@ -121,7 +112,7 @@ export function TweakPanel(): JSX.Element | null {
               label="Requested change"
               value={wish}
               maxLength={2000}
-              placeholder="Add a gun / change the timing to revolver"
+              placeholder="Add a gun and three slimes / make fights turn-based"
               onChange={(event) => setWish(event.target.value)}
             />
             <StatePanel
@@ -152,8 +143,16 @@ export function TweakPanel(): JSX.Element | null {
                           : op.type === "change_timing"
                             ? `Timing: ${op.change.from} → ${op.change.to} · ${op.change.resolution}`
                             : op.type === "add_capability_module"
-                              ? `Module: ${op.moduleId}@${op.version}`
-                              : `Scene ${op.sceneId}: ${op.type}`}
+                              ? `Module: ${op.moduleId}`
+                              : op.type === "scene_patch"
+                                ? `Scene ${op.sceneId}: ${op.patch.operations
+                                    .map((one) =>
+                                      one.type === "add_monster"
+                                        ? `${one.kind} (level ${one.level}) at ${one.x}, ${one.z}`
+                                        : one.type.replace("_", " "),
+                                    )
+                                    .join(" · ")}`
+                                : `Scene ${op.sceneId}: ${op.type}`}
                       </Text>
                     ))}
                     {value.compatibility.reasons.map((reason) => (
@@ -197,7 +196,6 @@ export function TweakPanel(): JSX.Element | null {
                 </>
               )}
             </StatePanel>
-            {preview.status === "error" ? <ErrorBlock error={preview.error} /> : null}
             {published ? (
               <Text variant="body" tone="accent">
                 Published {published.name} {published.version}. The original cartridge and save are

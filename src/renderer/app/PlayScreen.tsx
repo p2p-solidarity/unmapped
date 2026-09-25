@@ -76,6 +76,9 @@ export function PlayScreen() {
     (state) => (state.activeInstance?.cartridge.story ?? null) !== null,
   );
   const use2DLand = scene.status === "ready" && isOpenLand2D(scene.value, gameplayRules);
+  const instanceId = useSessionStore(
+    (state) => state.activeInstance?.instance.meta.instanceId ?? null,
+  );
 
   useInteractions({ onAdvanceFloor: advance, onDescend: descend });
   usePositionAutosave();
@@ -93,7 +96,9 @@ export function PlayScreen() {
     <div style={{ position: "relative", height: "100%", width: "100%", overflow: "hidden" }}>
       {use2DLand && scene.status === "ready" ? (
         <LandView2D
-          key={scene.value.contract?.sceneId ?? scene.value.name}
+          // Another save (a new version of the same cartridge) is another walk: remount, so the
+          // player starts where that save stands rather than where the last one left off.
+          key={`${instanceId ?? "none"}:${scene.value.contract?.sceneId ?? scene.value.name}`}
           rawGraph={scene.value}
           gameplayRules={gameplayRules}
         />

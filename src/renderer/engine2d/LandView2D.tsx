@@ -1,5 +1,6 @@
 import {
   type ChunkStatus,
+  useEncounterStore,
   useEngineStore,
   useLandStore,
   useRunStore,
@@ -25,11 +26,24 @@ import type { SpriteAtlases } from "./canvasRenderer";
 import { blockedByProps, cachedTerrain, walkableAt } from "./landModel";
 import { hd2dSurface, type LandSurface, pixelSurface } from "./landSurface";
 import { type StoryView, storyTargets } from "./storyLayer";
+import { useLandCombat } from "./useLandCombat";
 
 const PLAYER_RADIUS = 0.22;
 const MAX_DELTA = 0.05;
 const FPS_INTERVAL = 0.5;
 const INTERACT_KEYS = ["KeyE"] as const;
+/**
+ * On flat land there is nothing to jump onto and no dark to light, so the keys bound to jump and
+ * the flashlight pull the trigger too (as does fire's own binding, a click by default). The shot
+ * flies the way the player faces.
+ */
+function firesOnLand(code: string, bindings: GameplayRules["bindings"] | undefined): boolean {
+  return (
+    matchesAction(code, bindings, "fire", ["MouseLeft"]) ||
+    matchesAction(code, bindings, "jump", ["Space"]) ||
+    matchesAction(code, bindings, "flashlight", ["KeyF"])
+  );
+}
 
 interface PlayerState {
   x: number;
@@ -116,8 +130,27 @@ export function LandView2D({
     [graph, opened, extraTargets],
   );
 
+  const combat = useLandCombat({ graph, rules: gameplayRules, seed: landSeed, player });
+  const combatRef = useRef(combat);
+  combatRef.current = combat;
+
   const onPress = useCallback(
     (code: string) => {
+      const bindings = gameplayRules?.bindings;
+      if (combatRef.current.armed()) {
+        if (firesOnLand(code, bindings)) {
+          combatRef.current.fire(performance.now());
+          return;
+        }
+        if (matchesAction(code, bindings, "end_turn", ["KeyR"])) {
+          combatRef.current.passTurn();
+          return;
+        }
+        if (matchesAction(code, bindings, "pause", ["KeyP"])) {
+          useEncounterStore.getState().togglePause();
+          return;
+        }
+      }
       if (code === "KeyN") {
         useSessionStore.getState().toggleNotes(true);
         return;
@@ -127,7 +160,7 @@ export function LandView2D({
         engine.setLandLook(engine.landLook === "hd2d" ? "pixel" : "hd2d");
         return;
       }
-      if (!matchesAction(code, gameplayRules?.bindings, "interact", INTERACT_KEYS)) return;
+      if (!matchesAction(code, bindings, "interact", INTERACT_KEYS)) return;
       const target = useEngineStore.getState().nearby;
       if (target !== null) useEngineStore.getState().interact(target);
     },
@@ -224,6 +257,15 @@ export function LandView2D({
     const observer = new ResizeObserver(resize);
     observer.observe(canvas);
     resize();
+    // A click on the land is the trigger (the keys go through useKeys).
+    const onPointerDown = (event: PointerEvent): void => {
+      if (event.button !== 0 || useEngineStore.getState().inputLocked) return;
+      const fight = combatRef.current;
+      if (!fight.armed()) return;
+      if (!firesOnLand("MouseLeft", live.current.gameplayRules?.bindings)) return;
+      fight.fire(performance.now());
+    };
+    canvas.addEventListener("pointerdown", onPointerDown);
 
     const tick = (now: number): void => {
       const state = live.current;
@@ -250,6 +292,8 @@ export function LandView2D({
         useEngineStore.getState().interact(triggerTarget(trigger, position.x, position.z));
       }
 
+      if (!useEngineStore.getState().inputLocked) combatRef.current.step(delta);
+
       draw.draw({
         width: bounds.width,
         height: bounds.height,
@@ -260,6 +304,8 @@ export function LandView2D({
         progress: state.progress,
         notes: state.notes,
         story: state.story,
+        foes: combatRef.current.foes(),
+        shot: combatRef.current.shot.current,
         now,
       });
 
@@ -276,6 +322,7 @@ export function LandView2D({
     return () => {
       cancelAnimationFrame(frameId);
       observer.disconnect();
+      canvas.removeEventListener("pointerdown", onPointerDown);
       draw.dispose();
       useEngineStore.getState().setChunk(null);
       useEngineStore.getState().setNearby(null);

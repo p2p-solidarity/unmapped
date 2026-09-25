@@ -7,6 +7,7 @@ import {
   groundAt,
   isFord,
   MAX_CHUNK_PROPS,
+  wildMonsters,
 } from "@shared/chunks";
 import { describe, expect, it } from "vitest";
 
@@ -121,5 +122,24 @@ describe("chunks", () => {
     ]);
     const untouched = { ...scene, walls: [], props: [scene.props[1]] } as typeof scene;
     expect(clearFords(untouched, { cx: 0, cz: 0 })).toBe(untouched);
+  });
+
+  it("puts wild monsters out on the land, never at home or on a ford, stronger further out", () => {
+    const home = wildMonsters(42, { cx: 0, cz: 0 }, origin);
+    expect(home).toEqual([]);
+    const near: number[] = [];
+    const far: number[] = [];
+    for (const coord of chunksAround({ cx: 0, cz: 0 }, 2)) {
+      const pack = wildMonsters(42, coord, origin);
+      expect(wildMonsters(42, coord, origin)).toEqual(pack);
+      for (const monster of pack) {
+        expect(isFord(monster.x, monster.z)).toBe(false);
+        expect(Math.floor(monster.x / CHUNK_SIZE)).toBe(coord.cx);
+        (Math.max(Math.abs(coord.cx), Math.abs(coord.cz)) === 1 ? near : far).push(monster.level);
+      }
+    }
+    expect(near.length + far.length).toBeGreaterThan(0);
+    if (near.length > 0 && far.length > 0)
+      expect(Math.min(...far)).toBeGreaterThan(Math.max(...near));
   });
 });

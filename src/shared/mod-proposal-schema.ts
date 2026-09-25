@@ -3,6 +3,7 @@ import { WEAPON_KINDS } from "./combat";
 import { GAMEPLAY_KIT_IDS, INVENTORY_POLICIES } from "./gameplay";
 import type { SeedModProposal } from "./mods";
 import { TIMING_SYSTEMS, TURN_RESOLUTIONS } from "./timing";
+import { MONSTER_KINDS } from "./world";
 
 const id = z.string().regex(/^[a-z0-9][a-z0-9_-]{0,79}$/);
 const hash = z.string().regex(/^sha256:[a-f0-9]{64}$/);
@@ -98,6 +99,16 @@ export const modOperationSchema = z.discriminatedUnion("type", [
                   })
                   .strict(),
                 z.object({ type: z.literal("set_contract"), contract }).strict(),
+                z
+                  .object({
+                    type: z.literal("add_monster"),
+                    kind: z.enum(MONSTER_KINDS),
+                    x: z.number().min(0).max(127),
+                    z: z.number().min(0).max(127),
+                    level: z.number().int().min(1).max(99),
+                    weakness: z.string().trim().min(1).max(120),
+                  })
+                  .strict(),
               ]),
             )
             .min(1)

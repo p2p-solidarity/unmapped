@@ -255,6 +255,22 @@ export function GameCanvas(): JSX.Element;   // full-viewport R3F canvas; reads 
 - Proximity (≤ 2 tiles) publishes `setNearby`; interact publishes `interact(target)`.
 - `mutationSeq` change → 0.5 s shader dissolve/crossfade of palette + fog (hot-swap).
 
+### `src/renderer/engine2d` + `src/renderer/hd2d` (open land as players see it today)
+```ts
+export function LandView2D(props): JSX.Element;   // movement, collision, targets, story gates; draws through a LandSurface
+export function createHd2dRenderer(canvas, overlay, atlases, view?): { render(frame: Hd2dFrame): void; dispose(): void };
+export function TitleDiorama({ seedText }): JSX.Element;   // App's MenuBackdrop: the land behind every menu
+```
+- Two looks of the same land, switched by `V` / the dock's Look button (`engineStore.landLook`,
+  a device preference): `hd2d` (three.js diorama: painted chunk floors, plateaus/basins, upright
+  shadow-casting sprites, bloom + tilt-shift, all from `three/examples` — no postprocessing dep) and
+  `pixel` (the 16-bit canvas). Only the drawing differs; never put game rules in a renderer.
+  Colours: `engine/palette/hd2d.ts`. Sheet rects: `hd2d/assets.ts` (a test keeps them inside the sheets).
+- Reachability is the host's: every chunk's centre row/column is a ford (`isFord` in
+  `@shared/chunks` — water there is sand, nothing grows) and the origin chunk is dry; written chunks
+  pass through `clearFords` when they enter the land store. Story gates stand at chunk centres, so
+  spawn and every gate are always joined by land. Don't place gates anywhere else.
+
 ### `src/renderer/identity`
 ```ts
 export function unlock(): Promise<Result<UnlockedKey>>;   // PRF/keychain derives a wrapping key, then unwraps or creates the random Data Key

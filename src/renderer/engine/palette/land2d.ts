@@ -15,4 +15,7 @@ export const LAND_2D_PALETTE = {
   compassSurface: "rgba(12, 14, 12, 0.78)",
   vignetteClear: "rgba(9, 13, 10, 0)",
   vignetteEdge: "rgba(9, 13, 10, 0.42)",
+  /** A shot's streak: warm when it connects, pale when it flies wide. */
+  shotHit: "#ffd27a",
+  shotMiss: "#d9e4ea",
 } as const;

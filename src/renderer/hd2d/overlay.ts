@@ -4,6 +4,7 @@
 import type * as THREE from "three";
 import { Vector3 } from "three";
 import { HD2D_PALETTE } from "../engine/palette";
+import type { Foe } from "../engine2d/useLandCombat";
 
 export interface OverlayLabel {
   x: number;
@@ -26,6 +27,7 @@ export function drawOverlay(
   size: { width: number; height: number; ratio: number },
   labels: readonly OverlayLabel[],
   compass: { x: number; z: number; label: string } | null,
+  foes: readonly Foe[] = [],
 ): void {
   const ctx = canvas.getContext("2d");
   if (ctx === null) return;
@@ -44,6 +46,26 @@ export function drawOverlay(
     ctx.fillStyle = HD2D_PALETTE.label;
     ctx.fillText(label.text, at.x * width, at.y * height);
     ctx.shadowBlur = 0;
+  }
+
+  // A foe's level, and its health once it has been hurt.
+  for (const foe of foes) {
+    const at = project(camera, foe.x, 1.9, foe.z);
+    if (at.behind || at.x < -0.05 || at.x > 1.05 || at.y < -0.05 || at.y > 1.05) continue;
+    const x = at.x * width;
+    const y = at.y * height;
+    ctx.font = `600 12px ${SERIF}`;
+    ctx.shadowColor = HD2D_PALETTE.labelShadow;
+    ctx.shadowBlur = 4;
+    ctx.fillStyle = HD2D_PALETTE.label;
+    ctx.fillText(`Lv ${foe.level}`, x, y - 10);
+    ctx.shadowBlur = 0;
+    if (foe.hp < foe.maxHp) {
+      ctx.fillStyle = HD2D_PALETTE.foeHealthBack;
+      ctx.fillRect(x - 20, y - 2, 40, 5);
+      ctx.fillStyle = HD2D_PALETTE.foeHealth;
+      ctx.fillRect(x - 19, y - 1, 38 * (foe.hp / Math.max(1, foe.maxHp)), 3);
+    }
   }
 
   if (compass === null) return;

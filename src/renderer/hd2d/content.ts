@@ -8,9 +8,10 @@ import type { LandNote, LandProgress } from "@shared/land";
 import { episodeGate, nextEpisode } from "@shared/story";
 import type { FloorSpec, PropSpec, SceneGraph, Tile } from "@shared/world";
 import { doorPosition } from "../engine/home";
-import { LAND_2D_PALETTE } from "../engine/palette";
+import { LAND_2D_PALETTE, MONSTER_LOOK } from "../engine/palette";
 import { cachedTerrain, landTileAt } from "../engine2d/landModel";
 import { type StoryView, storyMarkers } from "../engine2d/storyLayer";
+import type { Foe } from "../engine2d/useLandCombat";
 import { type Billboard, pickBoard, SUNKEN, TILE_HEIGHT } from "./assets";
 import type { BlockInstance, BoardInstance, MarkerInstance } from "./layers";
 
@@ -24,6 +25,8 @@ export interface LandSource {
   progress: LandProgress | null;
   notes: readonly LandNote[];
   story: StoryView | null;
+  /** Living hostiles when the cartridge has combat; they replace the scene's own monster marks. */
+  foes?: readonly Foe[] | null;
 }
 
 export function floorOf(source: Pick<LandSource, "origin">): FloorSpec {
@@ -77,10 +80,23 @@ export function collectContent(source: LandSource, coords: readonly ChunkCoord[]
     }
     const written = source.chunks[chunkKey(coord)];
     if (written?.status !== "written") continue;
-    pushScene(content, height, written.scene, ox, oz);
+    pushScene(content, height, written.scene, ox, oz, true);
   }
+  const fighting = source.foes !== null && source.foes !== undefined;
   if (source.origin !== null && coords.some((c) => c.cx === 0 && c.cz === 0)) {
-    pushScene(content, height, source.origin, 0, 0);
+    pushScene(content, height, source.origin, 0, 0, !fighting);
+  }
+  for (const foe of source.foes ?? []) {
+    content.markers.push({
+      key: `foe:${foe.id}`,
+      x: foe.x,
+      y: height(foe.x, foe.z),
+      z: foe.z,
+      color: MONSTER_LOOK[foe.kind]?.color ?? LAND_2D_PALETTE.monster,
+      glyph: "◆",
+      label: "",
+      beam: false,
+    });
   }
   content.markers.push(...collectMarkers(source, height));
   return content;
@@ -92,6 +108,8 @@ function pushScene(
   scene: SceneGraph,
   ox: number,
   oz: number,
+  /** False while a fight owns the monsters (they are drawn from the roster instead). */
+  withMonsters: boolean,
 ): void {
   for (const wall of scene.walls) {
     for (let offset = 0; offset < Math.max(1, Math.round(wall.width)); offset += 1) {
@@ -131,7 +149,7 @@ function pushScene(
   for (const exit of scene.exits) {
     marker(`exit:${ox},${oz}:${exit.x},${exit.z}`, exit.x, exit.z, LAND_2D_PALETTE.exit, "↥");
   }
-  for (const monster of scene.monsters) {
+  for (const monster of withMonsters ? scene.monsters : []) {
     marker(`monster:${ox},${oz}:${monster.id}`, monster.x, monster.z, LAND_2D_PALETTE.monster, "◆");
   }
 }

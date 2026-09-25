@@ -1,6 +1,7 @@
 // Open land remembers where the player stood. Walking is per-frame state, so it is sampled here on
 // a slow clock and written through the ordinary instance checkpoint — only after the player has
-// actually moved, and once more when they leave Play.
+// actually moved, once more when they leave Play, and when the window hides or is closed (so the
+// last few seconds before quitting are kept too; a killed process can still lose them).
 
 import { useSessionStore } from "@renderer/state";
 import type { SavedPosition } from "@shared/cartridge";
@@ -41,8 +42,23 @@ export function usePositionAutosave(): void {
       write();
     };
     const timer = setInterval(tick, SAMPLE_MS);
+    // Leaving the window is not leaving Play: keep any step since the last sample.
+    const flush = (): void => {
+      const now = currentPosition();
+      if (now === null || saved === null) return;
+      if (Math.hypot(now.x - saved.x, now.z - saved.z) < 0.05) return;
+      saved = now;
+      write();
+    };
+    const onHidden = (): void => {
+      if (document.visibilityState === "hidden") flush();
+    };
+    window.addEventListener("beforeunload", flush);
+    document.addEventListener("visibilitychange", onHidden);
     return () => {
       clearInterval(timer);
+      window.removeEventListener("beforeunload", flush);
+      document.removeEventListener("visibilitychange", onHidden);
       const now = currentPosition();
       if (now !== null && (saved === null || travelled(saved, now))) write();
     };

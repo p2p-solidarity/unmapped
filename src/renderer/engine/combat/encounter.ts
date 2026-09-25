@@ -95,9 +95,12 @@ export interface BuiltEncounter {
 export function buildEncounter(
   graph: SceneGraph,
   rules: GameplayRules | null,
+  /** Open land: an armed player is ready to fight even when nothing hostile is near yet. */
+  options: { armedAlone?: boolean } = {},
 ): BuiltEncounter | null {
   if (rules === null || rules.combat === null) return null;
-  if (graph.monsters.length === 0) return null;
+  const alone = options.armedAlone === true && rules.weapons.length > 0;
+  if (graph.monsters.length === 0 && !alone) return null;
 
   // Every combatant position is in world units (spawnPoint already is), never tile coordinates.
   const [spawnX, , spawnZ] = spawnPoint(graph);

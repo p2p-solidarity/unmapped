@@ -31,11 +31,11 @@ function sprite(id: string, atlas: AtlasId, sx: number, sy: number, sw = 16, sh 
 export const GROUND_ASSETS: Record<Tile, SpriteAsset> = {
   grass: sprite("ground.grass", "floor", 32, 176),
   stone: sprite("ground.stone", "floor", 224, 256),
-  sand: sprite("ground.sand", "floor", 32, 16),
+  sand: sprite("ground.sand", "floor", 176, 80),
   snow: sprite("ground.snow", "floor", 32, 224),
   wood: sprite("ground.wood", "floor", 208, 96),
   lava: sprite("ground.lava", "floor", 208, 384),
-  water: sprite("ground.water", "floor", 32, 352),
+  water: sprite("ground.water", "floor", 16, 352),
   void: sprite("ground.void", "floor", 336, 400),
 };
 

@@ -16,11 +16,14 @@ import type { ModProposalPreview, SeedModProposal } from "@shared/mods";
 import { err, ok, type Result } from "@shared/result";
 import type { SceneGraph } from "@shared/world";
 import { canonicalJson, sha256 } from "../cartridges/integrity";
+import { activateModule, installedModule, installedModuleList, lockModule } from "./modules";
 
 /** Validated trusted base -> immutable publication input. Never writes a live save. */
 export function previewModProposal(
   base: CartridgeRevision,
   input: SeedModProposal,
+  /** Versions this cartridge already has; the default new version skips them. */
+  taken: readonly string[] = [],
 ): Result<ModProposalPreview> {
   const parsed = seedModProposalSchema.safeParse(input);
   if (!parsed.success)
@@ -58,39 +61,38 @@ export function previewModProposal(
   let runtimeChanged = false;
   for (const op of proposal.operations) {
     if (op.type === "add_weapon") {
-      if (rules.combat === null)
-        return err(
-          "mod-combat-required",
-          "This cartridge has no combat module.",
-          "Choose a cartridge with combat enabled.",
-        );
-      if (rules.weapons.some((w) => w.id === op.weapon.weaponId))
-        return err("mod-weapon-exists", `Weapon ${op.weapon.weaponId} already exists.`);
-      const ref = definition.assetPacks
-        .flatMap((pack) => pack.assets)
-        .find((asset) => asset.assetId === op.weapon.assetId);
-      if (ref === undefined)
-        return err(
-          "mod-asset-missing",
-          `Weapon asset ${op.weapon.assetId} is not declared.`,
-          "Choose a declared cartridge asset.",
-        );
-      const valid = validateAssetRef(ref);
-      if (!valid.ok) return valid;
+      // A weapon needs combat: a cartridge without it gets the combat module, not a refusal.
+      const combat = installedModule("shooter_combat");
+      if (rules.combat === null && combat !== null) {
+        const turned = activateModule(rules, definition, combat);
+        rules = turned.rules;
+        reasons.push(...turned.notes);
+      }
       const w = op.weapon;
+      // Two weapons may share a name, never an id: a clash gets the next free suffix.
+      let weaponId = w.weaponId;
+      for (let n = 2; rules.weapons.some((one) => one.id === weaponId); n += 1) {
+        weaponId = `${w.weaponId}_${n}`.slice(0, 80);
+      }
+      // A look the cartridge cannot draw is dropped, not a reason to refuse the weapon.
+      const declared = definition.assetPacks
+        .flatMap((pack) => pack.assets)
+        .some((asset) => asset.assetId === w.assetId);
+      const assetId = declared || builtinAssetKind(w.assetId) !== null ? w.assetId : undefined;
+      if (assetId === undefined) reasons.push(`${w.name} uses the default weapon look.`);
       // New weapon is equipped on the new run; the previous version keeps its original loadout.
       rules = {
         ...rules,
         weapons: [
           {
-            id: w.weaponId,
+            id: weaponId,
             name: w.name,
             kind: w.kind,
             damage: w.damage,
             range: w.range,
             cooldownMs: w.cooldownMs,
             magazine: w.magazine,
-            assetId: w.assetId,
+            ...(assetId === undefined ? {} : { assetId }),
           },
           ...rules.weapons,
         ],
@@ -98,13 +100,16 @@ export function previewModProposal(
       runtimeChanged = true;
       reasons.push(`Adds ${w.name}; a new run starts with this weapon equipped.`);
     } else if (op.type === "change_timing") {
+      // The model's idea of the current pacing does not matter; the rules say what it is.
       const current = rules.timing?.system ?? "realtime";
-      if (current !== op.change.from)
-        return err("mod-timing-stale", `Timing is ${current}, not ${op.change.from}.`);
       const spec: CapabilitySpec = `timing:${op.change.to}`;
       const module = BUILTIN_MODULES.find((m) => m.provides.includes(spec));
       if (module === undefined)
-        return err("mod-module-missing", `No installed module provides ${spec}.`);
+        return err(
+          "mod-module-missing",
+          `This engine has no module that provides ${spec}.`,
+          `Installed: ${installedModuleList()}.`,
+        );
       rules = {
         ...rules,
         timing:
@@ -122,27 +127,24 @@ export function previewModProposal(
           { key: "timing", value: op.change.to, moduleId: module.moduleId },
         ];
       }
-      if (!definition.moduleLock.entries.some((m) => m.moduleId === module.moduleId))
-        definition.moduleLock.entries.push(structuredClone(module));
+      const locked = lockModule(definition, module);
+      if (locked.length > 0) reasons.push(`Adds ${locked.join(", ")} to the cartridge.`);
       runtimeChanged = true;
       reasons.push(
         `Changes timing from ${current} to ${op.change.to}; existing saves remain on the old rules.`,
       );
     } else if (op.type === "add_capability_module") {
-      const module = BUILTIN_MODULES.find(
-        (m) => m.moduleId === op.moduleId && m.version === op.version,
-      );
-      if (!module)
-        return err("mod-module-missing", `Module ${op.moduleId}@${op.version} is not installed.`);
-      if (definition.moduleLock.entries.some((m) => m.moduleId === op.moduleId))
-        return err("mod-module-exists", `${op.moduleId} is already locked.`);
-      if (
-        module.requires.some((id) => !definition.moduleLock.entries.some((m) => m.moduleId === id))
-      )
-        return err("mod-dependency-missing", "Add required modules before their dependent module.");
-      definition.moduleLock.entries.push(structuredClone(module));
-      runtimeChanged = true;
-      reasons.push(`Locks installed module ${module.moduleId}@${module.version}.`);
+      const module = installedModule(op.moduleId, op.version);
+      if (module === null)
+        return err(
+          "mod-module-missing",
+          `This engine has no module called ${op.moduleId}.`,
+          `Installed: ${installedModuleList()}.`,
+        );
+      const turned = activateModule(rules, definition, module);
+      rules = turned.rules;
+      reasons.push(...turned.notes);
+      if (turned.changed) runtimeChanged = true;
     } else {
       const graph = graphs[op.sceneId];
       if (!graph) return err("mod-scene-missing", `Scene ${op.sceneId} does not exist.`);
@@ -184,6 +186,32 @@ export function previewModProposal(
                 ? { ...p, kind, assetId: change.toAssetId }
                 : p,
             );
+          }
+          if (change.type === "add_monster") {
+            // A monster with no combat to fight it would only stand there: combat comes with it.
+            const combat = installedModule("shooter_combat");
+            if (rules.combat === null && combat !== null) {
+              const turned = activateModule(rules, definition, combat);
+              rules = turned.rules;
+              reasons.push(...turned.notes);
+              runtimeChanged = true;
+            }
+            let n = graph.monsters.length + 1;
+            while (graph.monsters.some((m) => m.id === `monster_${n}`)) n += 1;
+            graph.monsters = [
+              ...graph.monsters,
+              {
+                id: `monster_${n}`,
+                kind: change.kind,
+                x: Math.min(change.x, Math.max(0, graph.floor.width - 1)),
+                z: Math.min(change.z, Math.max(0, graph.floor.depth - 1)),
+                level: change.level,
+                weakness: change.weakness,
+                size: 1,
+                color: null,
+              },
+            ];
+            reasons.push(`Places a level ${change.level} ${change.kind} in ${op.sceneId}.`);
           }
           if (change.type === "move_asset") {
             if (change.x >= graph.floor.width || change.z >= graph.floor.depth)
@@ -236,9 +264,11 @@ export function previewModProposal(
   definition.modLock.entries.push(entry);
   definition.modLock.lockHash = sha256(canonicalJson(definition.modLock.entries));
   const [major, minor, patch] = manifest.version.split(/[.+-]/).slice(0, 3).map(Number);
-  const defaultVersion = runtimeChanged
-    ? `${(major ?? 0) + 1}.0.0`
-    : `${major}.${minor}.${(patch ?? 0) + 1}`;
+  let bump = 1;
+  const next = (): string =>
+    runtimeChanged ? `${(major ?? 0) + bump}.0.0` : `${major}.${minor}.${(patch ?? 0) + bump}`;
+  while (taken.includes(next())) bump += 1;
+  const defaultVersion = next();
   const version = proposal.targetVersion ?? defaultVersion;
   if (
     compareCartridgeVersions(version, manifest.version) <= 0 ||
@@ -261,6 +291,12 @@ export function previewModProposal(
     },
     rules: serializeRules(rules),
     scenes,
+    // Everything a mod does not touch travels with the revision: the world bible and its story
+    // (without them the land could no longer be witnessed), baked dialogues and packed assets.
+    dialogues: base.dialogues,
+    assets: base.assets,
+    ...(base.bible === null ? {} : { bible: base.bible }),
+    ...(base.story === null || base.story === undefined ? {} : { story: base.story }),
   };
   return ok({
     proposal,

@@ -7,6 +7,7 @@ import type { SceneGraph } from "@shared/world";
 import { createHd2dRenderer } from "../hd2d/renderer";
 import { type Player2D, renderLandFrame, type SpriteAtlases } from "./canvasRenderer";
 import type { StoryView } from "./storyLayer";
+import type { Foe, ShotTrace } from "./useLandCombat";
 
 export interface SurfaceFrame {
   width: number;
@@ -18,6 +19,10 @@ export interface SurfaceFrame {
   progress: LandProgress | null;
   notes: readonly LandNote[];
   story: StoryView | null;
+  /** Living hostiles near the player, or null when the cartridge has no combat. */
+  foes: readonly Foe[] | null;
+  /** The last shot, drawn for a moment after it is fired. */
+  shot: ShotTrace | null;
   now: number;
 }
 
@@ -68,6 +73,8 @@ export function hd2dSurface(
         progress: frame.progress,
         notes: frame.notes,
         story: frame.story,
+        foes: frame.foes,
+        shot: frame.shot,
         focus: frame.player,
         player: frame.player,
         now: frame.now,

@@ -31,6 +31,11 @@ export const HD2D_PALETTE = {
   /** Ground tile tint jitter: dark and light ends of a per-tile wash. */
   tileShade: "rgba(34, 52, 18, 0.34)",
   tileLight: "rgba(255, 236, 170, 0.16)",
+  /** A shot's streak of light: warm on a hit, pale when it flies wide; foe health bars. */
+  shotHit: "#ffe08a",
+  shotMiss: "#cfe3ff",
+  foeHealth: "#e0605a",
+  foeHealthBack: "rgba(20, 12, 8, 0.75)",
   /** Beam over an open story gate. */
   gateBeam: "#ffd27a",
   /** Label text, its shadow and the compass surface drawn over the scene. */
