@@ -1,0 +1,23 @@
+{
+  "flow": "lineage market on Sepolia — chain only; no app screen changed, so there are no cdp-drive actions",
+  "command": "bun run lineage:market --dry-run",
+  "build": "bun run contracts:build (solc 0.8.37, optimizer 200, evmVersion cancun) → contracts/LineageMarket.json",
+  "env": {
+    "UNWRITTEN_ENS_RPC_URL": "unset → https://ethereum-sepolia-rpc.publicnode.com",
+    "UNWRITTEN_PRIVATE_KEY": "unset — the dry run acts as a throwaway account funded by a state override"
+  },
+  "chain": {
+    "network": "Sepolia (11155111)",
+    "method": "eth_simulateV1: every call replayed as simulated blocks on the Sepolia block the run started from; nothing sent",
+    "ens": "ENSv2 ens_v2_sepolia_20260916 (ensdomains/contracts-v2@366de741)",
+    "uniswap": {
+      "poolManager": "0xE03A1074c86CFeDd5C142C4F04F1a1536e203543",
+      "positionManager": "0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4",
+      "lbpStrategy": "0x96641d91e223c766F45b19d09494F5925C3cE000 (liquidity-launcher v3.1.0)",
+      "ccaFactory": "0x000000001F26a0044BaA66024e7b6599c61963F8 (continuous-clearing-auction v2.1.0)",
+      "stateView": "0xE1Dd9c3fA50EDB962E442f60DfBc432e24537E4C",
+      "permit2": "0x000000000022D473030F116dDEE9F6B43aC78BA3"
+    }
+  },
+  "model": null
+}

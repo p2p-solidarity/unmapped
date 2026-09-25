@@ -400,6 +400,24 @@ window.seed.chain.claimName(cartridgeId, version)   // main re-reads the revisio
 - Title → Cartridges shows each cartridge's name live (unclaimed / this version / another version,
   claim on a keyed machine) and "Open by ENS name" follows a name back to a revision in the library.
 
+### Lineage market (`contracts/src/lineage`, `src/main/chain/lineageCalls.ts`, Sepolia; docs/plans/lineage-market.md)
+```ts
+LineageRegistry.launch({ label, parent, owner, cartridgeId, version, contentHash, supply, lpReserve, auctionBlocks, floorPriceQ96, tickSpacingQ96, requiredCurrencyRaised })
+// → ENS name under the parent world's name + remix registry + WorldToken + Uniswap CCA (LBPStrategy) priced in the parent's token
+LineageHook   // v4: only LBPStrategy opens world pools; afterSwap 1% royalty, 50/30/20 up the line; claim() pays the ENS name holder
+LineageRouter // buy/sell along pathTo(world) in one unlock
+```
+- The registry keeps only `REGISTRAR | SET_PARENT` on every registry it makes, so every world name is an
+  emancipated ENSv2 token (safe transfer works). Never grant it, or anyone, a role from
+  `UNEMANCIPATED_ROLE_BITMAP`; a world's remix registry is made at launch for this reason.
+- Worlds live under their own `<label>.eth` (the registry's root registry), not the `ens:setup` parent.
+- `bun run contracts:build` rebuilds `contracts/LineageMarket.json` (`scripts/build-lineage.mjs`); the
+  structs in `LaunchTypes.sol` mirror liquidity-launcher v3.1.0 / CCA v2.1.0 field for field.
+- `bun run lineage:market --dry-run` is the check: it simulates deploy → three generations of
+  launch/auction/graduation → swaps → royalties → name transfer → refusals on Sepolia's real contracts
+  (the failure list is at the top of `scripts/lineage-market.ts`). A live deploy is run by a person.
+- Not wired into the app yet: no IPC or screen launches or trades.
+
 ### `src/renderer/net` + `src/shared/continent.ts` (open land is shared as a continent)
 ```ts
 export function openContinent({ code, worldId, name }): Result<Continent>;   // y-webrtc room per continent; no host

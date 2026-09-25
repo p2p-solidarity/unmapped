@@ -21,9 +21,10 @@
     "eval:afm-main": "node scripts/build-afm-bridge.mjs debug && electron-vite build && node scripts/eval-afm-main.mjs",
     "afm:build": "node scripts/build-afm-bridge.mjs debug",
     "dist": "node scripts/build-afm-bridge.mjs release && electron-vite build && electron-builder",
-    "contracts:build": "node scripts/build-contracts.mjs",
+    "contracts:build": "node scripts/build-contracts.mjs && node scripts/build-lineage.mjs",
     "contracts:deploy": "node scripts/deploy-ledger.mjs",
-    "ens:setup": "bun scripts/ens-setup.ts"
+    "ens:setup": "bun scripts/ens-setup.ts",
+    "lineage:market": "bun scripts/lineage-market.ts"
   },
   "dependencies": {
     "@deepseek-ai/cordis": "^4.0.2",
@@ -51,11 +52,14 @@
     "@ethereumjs/common": "^10.1.3",
     "@ethereumjs/evm": "^10.1.3",
     "@ethereumjs/util": "^10.1.3",
+    "@openzeppelin/contracts": "5.6.1",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@types/three": "^0.186.0",
+    "@uniswap/v4-core": "1.0.2",
+    "@uniswap/v4-periphery": "1.0.3",
     "@vitejs/plugin-react": "^6.1.1",
     "electron": "^44.3.0",
     "electron-builder": "^26.15.3",

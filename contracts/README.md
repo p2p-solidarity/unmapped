@@ -32,3 +32,29 @@ bun run contracts:deploy       # prints UNWRITTEN_LEDGER_ADDRESS=0x…
 
 Put the printed address in `.env` as `UNWRITTEN_LEDGER_ADDRESS`. Reading provenance needs only the
 RPC URL and the address; publishing also needs the key.
+
+## Lineage market (`src/lineage/`, Ethereum Sepolia)
+
+A world's ENS name hangs under its parent world's name (`mushroom.zelda.<label>.eth`); its token is
+sold in a Uniswap Continuous Clearing Auction priced in the parent's token and graduates into a v4
+pool whose hook pays a 1% royalty up the family line to whoever holds each name. Design and
+decisions: `docs/plans/lineage-market.md`.
+
+| File | Contract |
+| --- | --- |
+| `lineage/LineageRegistry.sol` | `launch` (ENS name + remix registry + token + CCA via LBPStrategy), records, `revise`, `graduate` |
+| `lineage/LineageHook.sol` | v4 hook: only LBPStrategy opens world pools; `afterSwap` royalty 50 / 30 / 20 up the line; `claim` pays the name holder |
+| `lineage/LineageRouter.sol` | exact-input `buy` / `sell` along the family line in one unlock |
+| `lineage/WorldToken.sol` | fixed-supply ERC-20 |
+| `lineage/LaunchTypes.sol`, `lineage/EnsTypes.sol` | the Uniswap launcher / CCA and ENSv2 layouts these call |
+
+Uniswap v4 (PoolManager `0xE03A1074c86CFeDd5C142C4F04F1a1536e203543`), LBPStrategy v3.1.0
+(`0x96641d91e223c766F45b19d09494F5925C3cE000`) and the CCA factory v2.1.0
+(`0x000000001F26a0044BaA66024e7b6599c61963F8`) are Uniswap's own Sepolia deployments; the full list
+is in `src/main/chain/lineageCalls.ts`.
+
+```bash
+bun run contracts:build                                    # also → contracts/LineageMarket.json
+bun run lineage:market --dry-run                           # deploy + launch + auctions + swaps, simulated
+UNWRITTEN_PRIVATE_KEY=0x… bun run lineage:market <label>   # real deploy (gas) under <label>.eth
+```
