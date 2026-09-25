@@ -1,6 +1,6 @@
 {
   "env": {
-    "build": "f98de40 (fix(keys): .env stays the fallback when a saved key no longer reads) in a clean detached worktree ($TMPDIR/unmapped-demo), before rev6 phase 2. bun install --frozen-lockfile; the Electron 44.3.0 binary was copied from the main checkout (bun skipped electron's postinstall); the repo's .env copied in (OPENAI_API_KEY, never printed) and deleted afterwards",
+    "build": "1a10a9d, formerly f98de40 before the 2026-09-26 rewrite of main (fix(keys): .env stays the fallback when a saved key no longer reads) in a clean detached worktree ($TMPDIR/unmapped-demo), before rev6 phase 2. bun install --frozen-lockfile; the Electron 44.3.0 binary was copied from the main checkout (bun skipped electron's postinstall); the repo's .env copied in (OPENAI_API_KEY, never printed) and deleted afterwards",
     "signaling": "PORT=4454 node node_modules/y-webrtc/bin/server.js; both apps set it through title → 系統 → 信令伺服器 (replace the list with ws://127.0.0.1:4454 → 測試連線 → 儲存到這台裝置), phase `signaling`",
     "hostA": "AETHER_TEST_USER_DATA=$TMPDIR/ud-demo-a (empty) bun run dev --remoteDebuggingPort 9443",
     "guestB": "AETHER_TEST_USER_DATA=$TMPDIR/ud-demo-b (empty) bun run dev --remoteDebuggingPort 9444",

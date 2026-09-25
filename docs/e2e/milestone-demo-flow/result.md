@@ -13,7 +13,7 @@ was checked for the first time in this run.
 ## Replay
 
 ```bash
-git worktree add --detach "$TMPDIR/unmapped-demo" f98de40
+git worktree add --detach "$TMPDIR/unmapped-demo" 1a10a9d   # = f98de40 before main was rewritten on 2026-09-26
 cd "$TMPDIR/unmapped-demo" && bun install --frozen-lockfile
 # bun skips electron's postinstall: run `node node_modules/electron/install.js`, or copy
 # node_modules/electron/{dist,path.txt} from a checkout that has the same 44.3.0 (this run copied)
@@ -39,7 +39,7 @@ The screenshot paths in `run.json` are relative, so run the driver from a direct
 
 ## Environment
 
-- **Build:** f98de40 in a clean worktree, before rev6 phase 2. It is a detached `git worktree`
+- **Build:** f98de40 (now 1a10a9d: main was rewritten on 2026-09-26 and only 18 test files' date strings changed, so the app code is identical) in a clean worktree, before rev6 phase 2. It is a detached `git worktree`
   with `bun install --frozen-lockfile`. None of the uncommitted work in the main tree was in it.
 - **OS and window:** macOS (Darwin 27.0.0), `bun run dev` (electron-vite, Electron 44.3.0). UI
   locale zh-TW. Window 1440 × 868 CSS px at launch; the captures are 2×.
@@ -154,7 +154,7 @@ B 02:58:53.936 done · witness · openai gpt-5.4-mini ·  6229 ms · max 3200 ·
 
 ## Found
 
-1. **A name is required to write a world (at f98de40).** The demo line "type only a few words, no
+1. **A name is required to write a world (at f98de40 / 1a10a9d).** The demo line "type only a few words, no
    name" cannot be done on this build. Its screen shows the red "請先替世界取名，並用一句話描述它。"
    and a disabled 撰寫世界 (`01`). Either type a name on stage or run a build that drops the
    requirement.
@@ -168,7 +168,7 @@ B 02:58:53.936 done · witness · openai gpt-5.4-mini ·  6229 ms · max 3200 ·
    only the provider and the model list).
 4. **A visitor's note becomes a karma entry on the host.** A's HUD reads "上次選擇：player-WDSK"
    and 因果 goes up by one. The stored effect is the English literal "left a note".
-5. **In the 16-bit look, some props are grey squares** labelled "we" and "pi" (`23`). At f98de40,
+5. **In the 16-bit look, some props are grey squares** labelled "we" and "pi" (`23`). At f98de40 (1a10a9d),
    `canvasRenderer.ts` `drawFallback` draws a prop with no pixel sprite as a square showing the
    first two letters of its kind: well, and pillar or pipe_stack. HD-2D draws the same props as
    sprites.
