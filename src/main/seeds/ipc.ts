@@ -14,7 +14,7 @@ import { parseMetaText, worldIdSchema } from "../worlds/schemas";
 import { importWorldFiles, readWorldFile } from "../worlds/store";
 import { packWorld, unpackSeed } from "./pack";
 
-const SEED_FILTER = [{ name: "Aether Spire seed", extensions: ["seed"] }];
+const SEED_FILTER = [{ name: "Unwritten Land seed", extensions: ["seed"] }];
 const CANCEL_HINT = "Choose a file to continue, or pick the action again when you are ready.";
 
 async function defaultSeedName(ctx: MainContext, worldId: string): Promise<string> {

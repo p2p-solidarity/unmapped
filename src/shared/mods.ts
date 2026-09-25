@@ -70,3 +70,73 @@ export interface ModSummary {
   sectionCount: number;
   skillCount: number;
 }
+
+export interface ModLockEntry {
+  name: string;
+  version: string;
+  contentHash: import("./cartridge").ContentHash;
+  affectsRuntime: boolean;
+  provides: string[];
+}
+export interface ModLock {
+  entries: ModLockEntry[];
+  lockHash: import("./cartridge").ContentHash;
+}
+/** SHA-256 of the canonical empty ordered entries array. */
+export const EMPTY_MOD_LOCK: ModLock = {
+  entries: [],
+  lockHash: "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+};
+
+export interface WeaponDefinition {
+  weaponId: string;
+  name: string;
+  kind: import("./combat").WeaponKind;
+  damage: number;
+  range: number;
+  cooldownMs: number;
+  ammoType: string | null;
+  magazine: number | null;
+  assetId: string;
+}
+export interface TimingChange {
+  from: import("./timing").TimingSystemId;
+  to: import("./timing").TimingSystemId;
+  resolution: import("./timing").TurnResolution;
+  turnDurationMs: number | null;
+}
+export interface ScenePatch {
+  operations: Array<
+    | { type: "replace_asset"; fromAssetId: string; toAssetId: string }
+    | { type: "move_asset"; assetId: string; x: number; z: number }
+    | { type: "set_objective"; text: string }
+    | { type: "set_contract"; contract: import("./gameplay").SceneContract }
+  >;
+}
+export type ModOperation =
+  | { type: "add_weapon"; weapon: WeaponDefinition }
+  | { type: "change_timing"; change: TimingChange }
+  | { type: "add_capability_module"; moduleId: string; version: string }
+  | { type: "scene_patch"; sceneId: string; patch: ScenePatch }
+  | { type: "asset_patch"; sceneId: string; assets: import("./assets").AssetRef[] };
+export interface SeedModProposal {
+  /** Optional author-selected version, validated again when publishing. */
+  targetVersion?: string;
+  proposalId: string;
+  base: import("./cartridge").CartridgeRef;
+  authorPrompt: string;
+  operations: ModOperation[];
+  generatedAt: string;
+}
+export interface ModCompatibilityResult {
+  status: "compatible" | "needs_decision" | "needs_migration" | "incompatible";
+  reasons: string[];
+  affectedScenes: string[];
+  saveImpact: "none" | "migration" | "new_instance";
+  networkImpact: "none" | "new_effective_hash" | "incompatible";
+}
+export interface ModProposalPreview {
+  proposal: SeedModProposal;
+  compatibility: ModCompatibilityResult;
+  revision: import("./cartridge").PublishCartridgeInput;
+}

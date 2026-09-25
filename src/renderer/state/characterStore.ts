@@ -1,66 +1,44 @@
+// Per-device appearance preference for the player's avatar. Rule 2: localStorage is for device
+// preferences only, and a colour theme is exactly that.
+//
+// There is deliberately no class/archetype here. plan.md §0.4: the character is not the centre of
+// a game definition, and which fields a player even has is decided by the capability modules the
+// cartridge selected — so a hardcoded VRMMO class list at app level was describing a game this
+// engine does not implement. Real player/party state lands with `team_party@1` and PlayerProfile.
+
 import { create } from "zustand";
 
-export type CharacterClassId = "swordsman" | "mage" | "gunner" | "paladin";
-export type ColorTheme = "cyan" | "gold" | "crimson" | "purple" | "emerald";
+export const COLOR_THEMES = ["cyan", "gold", "crimson", "purple", "emerald"] as const;
+export type ColorTheme = (typeof COLOR_THEMES)[number];
 
 export interface CharacterState {
-  classId: CharacterClassId;
   colorTheme: ColorTheme;
-  showWeapon: boolean;
-  showAura: boolean;
-  isCustomizing: boolean;
-  setClassId: (classId: CharacterClassId) => void;
   setColorTheme: (colorTheme: ColorTheme) => void;
-  setShowWeapon: (show: boolean) => void;
-  setShowAura: (show: boolean) => void;
-  setIsCustomizing: (open: boolean) => void;
 }
 
 const STORAGE_KEY = "aether_spire_character_config";
+const DEFAULT_THEME: ColorTheme = "cyan";
 
-function loadInitial(): { classId: CharacterClassId; colorTheme: ColorTheme } {
+function loadTheme(): ColorTheme {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      return {
-        classId: parsed.classId ?? "swordsman",
-        colorTheme: parsed.colorTheme ?? "cyan",
-      };
-    }
+    if (raw === null) return DEFAULT_THEME;
+    const parsed: unknown = JSON.parse(raw);
+    const theme = (parsed as { colorTheme?: unknown } | null)?.colorTheme;
+    return COLOR_THEMES.includes(theme as ColorTheme) ? (theme as ColorTheme) : DEFAULT_THEME;
   } catch {
-    // fallback
+    return DEFAULT_THEME;
   }
-  return { classId: "swordsman", colorTheme: "cyan" };
 }
 
-const initial = loadInitial();
-
 export const useCharacterStore = create<CharacterState>()((set) => ({
-  classId: initial.classId,
-  colorTheme: initial.colorTheme,
-  showWeapon: true,
-  showAura: true,
-  isCustomizing: false,
-  setClassId: (classId) => {
-    set({ classId });
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ classId }));
-    } catch {
-      // ignore
-    }
-  },
+  colorTheme: loadTheme(),
   setColorTheme: (colorTheme) => {
     set({ colorTheme });
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const parsed = raw ? JSON.parse(raw) : {};
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...parsed, colorTheme }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ colorTheme }));
     } catch {
-      // ignore
+      // A blocked storage quota must not break play; the theme just resets next launch.
     }
   },
-  setShowWeapon: (showWeapon) => set({ showWeapon }),
-  setShowAura: (showAura) => set({ showAura }),
-  setIsCustomizing: (isCustomizing) => set({ isCustomizing }),
 }));

@@ -12,7 +12,14 @@ import { TILE_TINT } from "./palette";
 const JITTER_FLOOR = 0.9;
 const JITTER_RANGE = 0.16;
 
-export function Walls({ walls }: { walls: readonly WallSpec[] }): JSX.Element | null {
+export function Walls({
+  walls,
+  solid = true,
+}: {
+  walls: readonly WallSpec[];
+  /** False for distant chunks: drawn, but nothing can reach them to collide. */
+  solid?: boolean;
+}): JSX.Element | null {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const boxes = useMemo(() => walls.map((wall) => wallBox(wall)), [walls]);
   const count = boxes.length;
@@ -53,16 +60,18 @@ export function Walls({ walls }: { walls: readonly WallSpec[] }): JSX.Element | 
         receiveShadow
         frustumCulled={false}
       />
-      <RigidBody type="fixed" colliders={false}>
-        {boxes.map((box, index) => (
-          <CuboidCollider
-            // biome-ignore lint/suspicious/noArrayIndexKey: colliders map 1:1 onto the wall array
-            key={`wall-collider-${index}`}
-            args={box.half}
-            position={box.center}
-          />
-        ))}
-      </RigidBody>
+      {solid ? (
+        <RigidBody type="fixed" colliders={false}>
+          {boxes.map((box, index) => (
+            <CuboidCollider
+              // biome-ignore lint/suspicious/noArrayIndexKey: colliders map 1:1 onto the wall array
+              key={`wall-collider-${index}`}
+              args={box.half}
+              position={box.center}
+            />
+          ))}
+        </RigidBody>
+      ) : null}
     </>
   );
 }

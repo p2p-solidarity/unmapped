@@ -1,18 +1,16 @@
-// Left HUD card: who you are (characterStore), where you are (worldStore.floor + the parsed
-// biome), what you have done (karma) and what this floor asks of you (scene.quests).
+// Left HUD card: where you are (worldStore.floor + the parsed biome), what you have done (karma),
+// what you carry, and what this floor asks of you (scene.quests).
+//
+// There is no avatar portrait or class name here: the engine has no class system, so showing one
+// would be a gauge with nothing behind it (Rule 2). A real player identity arrives with
+// PlayerProfile once the capability modules say a game needs one (plan.md §0.4).
 
-import { ASSETS } from "@renderer/assets";
-import { type CharacterClassId, useCharacterStore, useWorldStore } from "@renderer/state";
+import { useEngineStore, useRunStore, useSessionStore, useWorldStore } from "@renderer/state";
 import { colors, font, radius, StatePanel, Surface, space, Text } from "@renderer/ui";
+import { formatSeedCode } from "@shared/seedCode";
 import type { JSX } from "react";
+import { LandStatus } from "./LandStatus";
 import type { HudSummary } from "./summary";
-
-export const CLASS_NAMES: Record<CharacterClassId, string> = {
-  swordsman: "Dual Blade Swordsman",
-  mage: "Aether Mage Caster",
-  gunner: "Cyber Gunner Ranger",
-  paladin: "Rune Paladin Guardian",
-};
 
 function QuestList(): JSX.Element {
   const scene = useWorldStore((state) => state.scene);
@@ -69,9 +67,13 @@ function Readout({
 }
 
 export function PlayerCard({ summary }: { summary: HudSummary }): JSX.Element {
-  const classId = useCharacterStore((state) => state.classId);
-  const setIsCustomizing = useCharacterStore((state) => state.setIsCustomizing);
-  const className = CLASS_NAMES[classId];
+  // An endless cartridge regenerates in place, so its depth is the run's, not the save's.
+  const runFloor = useRunStore((state) => state.floor);
+  const floor = Math.max(summary.floor, runFloor);
+  // Only set while the scene plays on open land; a bounded scene has no coordinates to show.
+  const chunk = useEngineStore((state) => state.chunk);
+  // Which land of the one game this is; shared with a friend, it is the same land for them.
+  const seed = useSessionStore((state) => state.activeInstance?.instance.save.seed);
 
   return (
     <Surface
@@ -85,37 +87,13 @@ export function PlayerCard({ summary }: { summary: HudSummary }): JSX.Element {
         gap: space.xs,
       }}
     >
-      <div style={{ display: "flex", gap: space.sm, alignItems: "center" }}>
-        <button
-          type="button"
-          onClick={() => setIsCustomizing(true)}
-          title="Click to customize avatar and class"
-          style={{
-            position: "relative",
-            width: 52,
-            height: 52,
-            borderRadius: "50%",
-            padding: 0,
-            border: `2px solid ${colors.accent}`,
-            boxShadow: `0 0 12px ${colors.accentSoft}`,
-            cursor: "pointer",
-            overflow: "hidden",
-            background: colors.bg,
-            flexShrink: 0,
-          }}
-        >
-          <img
-            src={ASSETS.classes[classId]}
-            alt={className}
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          />
-        </button>
-
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 3 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <Text variant="label" tone="accent" style={{ fontWeight: font.weight.bold }}>
-              {className}
-            </Text>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 3 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Text variant="label" tone="accent" style={{ fontWeight: font.weight.bold }}>
+            {summary.worldName ?? "No world loaded"}
+          </Text>
+          {/* Open land has no tower and no floors: where you are is the LAND readout below. */}
+          {chunk !== null ? null : (
             <div
               style={{
                 padding: "1px 6px",
@@ -125,13 +103,18 @@ export function PlayerCard({ summary }: { summary: HudSummary }): JSX.Element {
               }}
             >
               <Text variant="caption" tone="accent" mono>
-                {`FLOOR ${summary.floor}`}
+                {`FLOOR ${floor}`}
               </Text>
             </div>
-          </div>
-          <Readout label="KARMA" value={`${summary.karmaCount} entries`} accent />
-          <Readout label="CARRIED" value={`${summary.items} items · ${summary.materials} mats`} />
+          )}
         </div>
+        {chunk === null || seed === undefined ? null : (
+          <Readout label="SEED" value={formatSeedCode(seed)} accent />
+        )}
+        {chunk === null ? null : <Readout label="LAND" value={`${chunk.cx} · ${chunk.cz}`} />}
+        <LandStatus />
+        <Readout label="KARMA" value={`${summary.karmaCount} entries`} accent />
+        <Readout label="CARRIED" value={`${summary.items} items · ${summary.materials} mats`} />
       </div>
 
       {summary.lastChoice === null ? null : (
@@ -151,7 +134,7 @@ export function PlayerCard({ summary }: { summary: HudSummary }): JSX.Element {
         }}
       >
         <Text variant="caption" tone="muted">
-          {summary.worldName ?? "No world loaded"}
+          {summary.biome === null ? "Scene not parsed" : "Biome"}
         </Text>
         {summary.biome === null ? null : (
           <Text variant="caption" tone="accent" mono>

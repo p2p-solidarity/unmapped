@@ -69,8 +69,9 @@ function lock(overrides: Partial<LockInput> = {}): LockInput {
     floorFailed: false,
     endingOpen: false,
     proposalOpen: false,
-    editorOpen: false,
-    customizing: false,
+    runEnded: false,
+    paused: false,
+    tweakOpen: false,
     sceneReady: true,
     ...overrides,
   };
@@ -82,7 +83,7 @@ describe("derivedLock", () => {
   });
 
   it("locks on every screen that is not the running world", () => {
-    for (const screen of ["worlds", "genesis"] as const) {
+    for (const screen of ["worlds", "create"] as const) {
       expect(derivedLock(lock({ screen }))).toBe(true);
     }
   });
@@ -91,9 +92,10 @@ describe("derivedLock", () => {
     expect(derivedLock(lock({ consoleOpen: true }))).toBe(true);
     expect(derivedLock(lock({ dialogueOpen: true }))).toBe(true);
     expect(derivedLock(lock({ altarOpen: true }))).toBe(true);
-    expect(derivedLock(lock({ editorOpen: true }))).toBe(true);
-    expect(derivedLock(lock({ customizing: true }))).toBe(true);
     expect(derivedLock(lock({ proposalOpen: true }))).toBe(true);
+    expect(derivedLock(lock({ runEnded: true }))).toBe(true);
+    expect(derivedLock(lock({ paused: true }))).toBe(true);
+    expect(derivedLock(lock({ tweakOpen: true }))).toBe(true);
   });
 
   it("locks while a floor is being written and while its failure is on screen", () => {

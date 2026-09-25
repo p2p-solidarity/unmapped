@@ -5,11 +5,15 @@
 // (Rule 2).
 
 import type { Context } from "@deepseek-ai/cordis";
+import { activate, regionalTone } from "@shared/lore";
 import { type HarnessPlugin, unwind } from "../events";
 import { ORDER } from "../order";
-import type { WorldSnapshot } from "../types";
+import type { AssembleContext, WorldSnapshot } from "../types";
 
-/** How much of the log the model sees: enough for continuity, not enough to drown the context. */
+/**
+ * A bounded scene's continuity: the last few ledger lines. Open land does not use this — its
+ * continuity is the lore graph, activated around the chunk the turn is about (plan.md §5).
+ */
 const KARMA_WINDOW = 12;
 
 function block(tag: string, lines: readonly string[]): string {
@@ -18,7 +22,8 @@ function block(tag: string, lines: readonly string[]): string {
 }
 
 function floorText(world: WorldSnapshot): string {
-  const parts = [`floor ${world.floor}`, `archetype ${world.genesis.archetype}`];
+  const parts = [`scene progress ${world.floor}`];
+  if ("archetype" in world.genesis) parts.push(`archetype ${world.genesis.archetype}`);
   if (world.scene !== null) {
     parts.push(`biome ${world.scene.biome}`, `scene "${world.scene.name}"`);
   }
@@ -65,7 +70,27 @@ function flagText(world: WorldSnapshot): string {
   );
 }
 
-function karmaText(world: WorldSnapshot): string {
+function loreText(
+  world: WorldSnapshot,
+  lore: NonNullable<WorldSnapshot["lore"]>,
+  a: AssembleContext,
+): string {
+  const coord = a.coord ?? world.coord;
+  if (coord === null || coord === undefined) return "";
+  const hot = activate(lore, { coord, karma: world.karma });
+  const tone = regionalTone(hot);
+  const lines = hot.map(
+    ({ node }) =>
+      `- ${node.id} [${node.kind}] ${node.label} — ${node.text} (chunk ${node.coord.cx},${node.coord.cz}; tone ${node.tone.toFixed(1)})`,
+  );
+  return block("lore", [
+    `hot lore around chunk ${coord.cx},${coord.cz}, hottest first; regional tone ${tone.toFixed(2)}`,
+    ...(lines.length === 0 ? ["- nothing witnessed nearby yet"] : lines),
+  ]);
+}
+
+function karmaText(world: WorldSnapshot, a: AssembleContext): string {
+  if (world.lore !== undefined) return loreText(world, world.lore, a);
   const recent = world.karma.slice(-KARMA_WINDOW);
   return block(
     "karma",
@@ -86,17 +111,24 @@ function inventoryText(world: WorldSnapshot): string {
   return block("inventory", lines);
 }
 
+type Render = (world: WorldSnapshot, assemble: AssembleContext) => string;
+
+/** The authored scene's cast is not the cast of a chunk being witnessed somewhere else. */
+const sceneBound =
+  (render: (world: WorldSnapshot) => string): Render =>
+  (world, a) =>
+    a.purpose === "chunk" ? "" : render(world);
+
 /** Each section renders from the snapshot, or contributes nothing at all. */
-const SECTIONS: readonly { name: string; offset: number; render: (w: WorldSnapshot) => string }[] =
-  [
-    { name: "world:floor", offset: 0, render: floorText },
-    { name: "world:npcs", offset: 1, render: npcText },
-    { name: "world:monsters", offset: 2, render: monsterText },
-    { name: "world:quests", offset: 3, render: questText },
-    { name: "world:flags", offset: 4, render: flagText },
-    { name: "world:karma", offset: 5, render: karmaText },
-    { name: "world:inventory", offset: 6, render: inventoryText },
-  ];
+const SECTIONS: readonly { name: string; offset: number; render: Render }[] = [
+  { name: "world:floor", offset: 0, render: sceneBound(floorText) },
+  { name: "world:npcs", offset: 1, render: sceneBound(npcText) },
+  { name: "world:monsters", offset: 2, render: sceneBound(monsterText) },
+  { name: "world:quests", offset: 3, render: sceneBound(questText) },
+  { name: "world:flags", offset: 4, render: flagText },
+  { name: "world:karma", offset: 5, render: karmaText },
+  { name: "world:inventory", offset: 6, render: inventoryText },
+];
 
 export const worldContext: HarnessPlugin = {
   name: "builtin:world-context",
@@ -107,9 +139,9 @@ export const worldContext: HarnessPlugin = {
         ctx.systemPrompt.section({
           name: section.name,
           order: ORDER.CONTEXT + section.offset,
-          text: () => {
+          text: (assemble: AssembleContext) => {
             const world = ctx.world.get();
-            return world === null ? "" : section.render(world);
+            return world === null ? "" : section.render(world, assemble);
           },
           // World text is data, not a template: an NPC named "{{" must not break assembly.
           interpolate: false,

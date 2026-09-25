@@ -18,6 +18,7 @@ export function ModsPanel() {
   const [confirming, setConfirming] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const meta = useWorldStore((state) => state.meta);
+  const pinned = useWorldStore((state) => state.origin?.kind === "instance");
   const enabled = meta?.mods ?? [];
 
   const refresh = useCallback(async () => {
@@ -62,7 +63,7 @@ export function ModsPanel() {
 
   const toggle = useCallback(async (name: string) => {
     const current = useWorldStore.getState().meta;
-    if (current === null) return;
+    if (current === null || useWorldStore.getState().origin?.kind === "instance") return;
     const next = current.mods.includes(name)
       ? current.mods.filter((mod) => mod !== name)
       : [...current.mods, name];
@@ -82,6 +83,12 @@ export function ModsPanel() {
         open world.
       </Text>
 
+      {pinned ? (
+        <Text variant="caption" tone="dim">
+          This run uses its cartridge’s locked rules. Use Create a mod revision to review and
+          publish gameplay changes.
+        </Text>
+      ) : null}
       <div style={columnStyle}>
         <StatePanel
           state={mods}
@@ -101,7 +108,7 @@ export function ModsPanel() {
                     mod={mod}
                     busy={busy}
                     enabled={enabled.includes(mod.name)}
-                    canToggle={meta !== null}
+                    canToggle={meta !== null && !pinned}
                     confirming={confirming === mod.name}
                     onToggle={() => void toggle(mod.name)}
                     onRemove={() => setConfirming(mod.name)}

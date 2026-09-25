@@ -3,11 +3,14 @@
 // (Rule 2 / Rule 7). The transition lives in the session store (`busy` + `floorFailure`) so the
 // input lock and the overlay read the same value instead of each re-deriving it.
 
+import { translate } from "@renderer/i18n";
 import { generateScene } from "@renderer/narrative";
-import { useEngineStore, useSessionStore, useWorldStore } from "@renderer/state";
+import { requestRoomTransition } from "@renderer/net/sync";
+import { useEngineStore, useRunStore, useSessionStore, useWorldStore } from "@renderer/state";
 import { ready } from "@shared/result";
 import { WORLD_FILES } from "@shared/world";
 import { useCallback } from "react";
+import { hasDepths } from "./endlessScene";
 import { makeKarmaEntry } from "./karmaFile";
 import { hydrateInstance } from "./useInstanceLoader";
 import { checkpointCurrentInstance } from "./usePersistWorld";
@@ -20,6 +23,8 @@ export interface FloorAdvanceApi {
   advance(to: string, targetSceneId: string | null): void;
   retry(): void;
   stay(): void;
+  /** Below the ending: the next generated floor of the endless depths. */
+  descend(): void;
 }
 
 export function busyLabel(floor: number): string {
@@ -32,6 +37,10 @@ export function busyLabel(floor: number): string {
  */
 function advanceInstance(instanceId: string, to: string, targetSceneId: string | null): void {
   const session = useSessionStore.getState();
+  if (session.networkRole === "peer" && requestRoomTransition(targetSceneId)) {
+    session.setBusy(targetSceneId === null ? "Waiting for host…" : "Host is loading next scene…");
+    return;
+  }
   session.setFloorFailure(null);
   session.setBusy(targetSceneId === null ? "Reaching the ending…" : "Loading next scene…");
   void (async () => {
@@ -70,8 +79,61 @@ function advanceInstance(instanceId: string, to: string, targetSceneId: string |
           effect: "cartridge complete",
         }),
       );
-      active.setEnding({ name: manifest.name, finale: manifest.story.finale });
+      active.setEnding({
+        name: manifest.name,
+        finale:
+          manifest.formatVersion === 2
+            ? manifest.definition.narrative.finale
+            : manifest.story.finale,
+        depths: hasDepths(result.value.cartridge),
+      });
     }
+  })();
+}
+
+/** One floor deeper. Main only records the depth; the floor is regenerated from it on hydrate. */
+function descendInstance(): void {
+  const session = useSessionStore.getState();
+  const world = useWorldStore.getState();
+  if (session.busy !== null || world.origin?.kind !== "instance") return;
+  if (session.networkRole === "peer") {
+    session.toast("info", "Only the host can take a room into the depths.");
+    return;
+  }
+  const { instanceId } = world.origin;
+  const depth = (session.activeInstance?.instance.save.endless?.depth ?? 0) + 1;
+  session.setEnding(null);
+  session.setFloorFailure(null);
+  session.setBusy(translate("descending", { depth }));
+  void (async () => {
+    const checkpoint = await checkpointCurrentInstance();
+    const result = checkpoint.ok ? await window.seed.instances.descend(instanceId) : checkpoint;
+    const active = useSessionStore.getState();
+    active.setBusy(null);
+    if (!result.ok) {
+      active.toast(
+        "danger",
+        `${result.error.message}${result.error.hint ? ` — ${result.error.hint}` : ""}`,
+      );
+      return;
+    }
+    // The run carries on: score, kills and level stay, and a cleared floor is running again.
+    useRunStore.getState().descend();
+    const hydrated = hydrateInstance(result.value);
+    if (!hydrated.ok) {
+      active.toast("danger", hydrated.error.message);
+      return;
+    }
+    const store = useWorldStore.getState();
+    store.appendKarma(
+      makeKarmaEntry({
+        floor: store.floor,
+        action: "floor",
+        choice: translate("reachedDepth", { depth }),
+        effect: "endless depth",
+      }),
+    );
+    active.toast("success", translate("reachedDepth", { depth }));
   })();
 }
 
@@ -84,7 +146,7 @@ function start(to: string, targetSceneId: string | null): void {
     return;
   }
   const { meta, genesis } = world;
-  if (meta === null || genesis === null) {
+  if (meta === null || genesis === null || !("archetype" in genesis)) {
     session.toast("danger", "No world is loaded.");
     return;
   }
@@ -135,5 +197,7 @@ export function useFloorAdvance(): FloorAdvanceApi {
     useSessionStore.getState().setFloorFailure(null);
   }, []);
 
-  return { advance, retry, stay };
+  const descend = useCallback(() => descendInstance(), []);
+
+  return { advance, retry, stay, descend };
 }

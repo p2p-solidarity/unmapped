@@ -1,3 +1,5 @@
+import { builtinAssetKind } from "@shared/assets";
+import { propError } from "./program";
 // Readers for everything the player walks on or bumps into: the floor plane, the tile patches
 // painted over it, the platforms raised above it, walls and props.
 
@@ -72,11 +74,23 @@ export function readWall(child: ChildNode, scope: SceneScope): WallSpec | null {
 export function readProp(child: ChildNode, scope: SceneScope): PropSpec | null {
   const p = readProps(SCENE_PROPS.Prop, child, scope.issues);
   if (p === null) return null;
+  if (p.assetId != null && builtinAssetKind(p.assetId) !== p.kind) {
+    scope.issues.push(
+      propError(
+        "Prop",
+        `Asset ${p.assetId} is missing or does not match ${p.kind}.`,
+        "Use the installed asset ID for this prop kind.",
+      ),
+    );
+    return null;
+  }
   return {
+    ...(p.assetId == null ? {} : { assetId: p.assetId }),
     kind: p.kind,
     x: scope.x(p.x),
     z: scope.z(p.z),
     scale: p.scale === null || p.scale === undefined ? 1 : clampFloat(p.scale, LIMITS.scale),
     tint: p.tint === null || p.tint === undefined ? null : toHex(p.tint),
+    dynamic: p.dynamic === true,
   };
 }

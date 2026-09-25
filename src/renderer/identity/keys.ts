@@ -25,6 +25,10 @@ export interface UnlockedKey {
 
 // Keep the original info label: this derived key now wraps the random Data Key, and retaining the
 // label also lets the migration path decrypt ASP1 files written before wrapping records existed.
+/**
+ * Frozen for the life of the format: this string is mixed into every save key, so renaming it
+ * makes every existing encrypted save undecryptable. It is not a product name.
+ */
 export const HKDF_INFO = "aether-spire/save";
 export const SECRET_BYTES = 32;
 const HKDF_SALT = new Uint8Array(32);

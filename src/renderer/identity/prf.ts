@@ -11,12 +11,15 @@
 import { type AppError, err, fail, ok, type Result } from "@shared/result";
 import { type Bytes, fromBase64, randomBytes, toBase64Url, toBytes } from "./bytes";
 
+/** Frozen: renaming the key loses the pointer to the passkey this device already enrolled. */
 export const CREDENTIAL_STORAGE_KEY = "aether.credentialId";
 /** The PRF salt is SHA-256 of this string; changing it changes every derived key. */
+/** Frozen: the PRF evaluation point. Renaming it orphans every passkey-wrapped Data Key. */
 export const PRF_SALT_SOURCE = "aether-spire/v1";
 export const PRF_SECRET_BYTES = 32;
 
-const RP_NAME = "Aether Spire";
+const RP_NAME = "Unwritten Land";
+/** Frozen: part of the credential identity; a different value enrols a different passkey. */
 const USER_NAME = "aether-spire-player";
 const ES256 = -7;
 const RS256 = -257;

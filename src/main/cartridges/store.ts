@@ -1,16 +1,21 @@
-import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
-import { parseRules, parseScene } from "@dsl/index";
-import type {
-  CartridgeFileIntegrity,
-  CartridgeManifest,
-  CartridgeRevision,
-  PublishCartridgeInput,
+import { readdir, readFile } from "node:fs/promises";
+import { join } from "node:path";
+import {
+  BIBLE_FILES,
+  type CartridgeManifest,
+  type CartridgeRevision,
+  dialogueKeyOfFile,
+  type PublishCartridgeInput,
+  type WorldBible,
 } from "@shared/cartridge";
-import { ENGINE_API_VERSION, SAVE_SCHEMA_VERSION } from "@shared/cartridge";
-import type { SceneContract } from "@shared/gameplay";
 import { err, fail, ok, type Result, toError } from "@shared/result";
-import { cartridgeContentHash, fileIntegrity, manifestCore } from "./integrity";
+import {
+  cartridgeContentHash,
+  fileIntegrity,
+  manifestCore,
+  runtimePinForManifest,
+  sha256,
+} from "./integrity";
 import {
   cartridgeDir,
   cartridgeRevisionDir,
@@ -19,264 +24,19 @@ import {
   isCartridgeVersion,
   isSceneId,
 } from "./paths";
-import { reachableScenes } from "./routes";
-import { cartridgeManifestCoreSchema, cartridgeManifestSchema } from "./schemas";
+import { listRevisionFiles, writeRevisionFiles } from "./revision-files";
+import { cartridgeManifestSchema } from "./schemas";
+import {
+  bibleIntegrity,
+  cartridgeCompatibility,
+  exists,
+  MANIFEST_FILE,
+  prepare,
+  RULES_FILE,
+  validateIdentity,
+} from "./validate-revision";
 
-const MANIFEST_FILE = "manifest.json";
-const RULES_FILE = "rules.oui";
-
-function normaliseSource(source: string): string {
-  const lf = source.replace(/\r\n?/g, "\n").replace(/\n*$/, "");
-  return `${lf}\n`;
-}
-
-async function exists(path: string): Promise<boolean> {
-  try {
-    await stat(path);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function validateIdentity(cartridgeId: string, version: string): Result<void> {
-  if (!isCartridgeId(cartridgeId)) {
-    return err(
-      "cartridge-id-invalid",
-      `Invalid cartridge id: ${cartridgeId}`,
-      "Use lowercase letters, digits, and hyphens.",
-    );
-  }
-  if (!isCartridgeVersion(version)) {
-    return err(
-      "cartridge-version-invalid",
-      `Invalid cartridge version: ${version}`,
-      "Use a strict SemVer such as 1.0.0.",
-    );
-  }
-  return ok(undefined);
-}
-
-export function cartridgeCompatibility(manifest: CartridgeManifest): Result<void> {
-  if (manifest.engineApiVersion > ENGINE_API_VERSION) {
-    return err(
-      "cartridge-engine-unsupported",
-      `${manifest.cartridgeId}@${manifest.version} needs engine API ${manifest.engineApiVersion}; this build has ${ENGINE_API_VERSION}.`,
-      "Update Aether Spire to play this cartridge.",
-    );
-  }
-  if (manifest.saveSchemaVersion !== SAVE_SCHEMA_VERSION) {
-    return err(
-      "cartridge-save-unsupported",
-      `${manifest.cartridgeId}@${manifest.version} needs save schema ${manifest.saveSchemaVersion}; this build has ${SAVE_SCHEMA_VERSION}.`,
-      "Use a compatible Aether Spire build to play this cartridge.",
-    );
-  }
-  return ok(undefined);
-}
-
-function prepare(input: PublishCartridgeInput): Result<CartridgeRevision> {
-  const parsed = cartridgeManifestCoreSchema.safeParse(input.manifest);
-  if (!parsed.success) {
-    return err(
-      "cartridge-manifest-invalid",
-      parsed.error.issues[0]?.message ?? "Invalid manifest",
-      "Fix the cartridge manifest before publishing.",
-    );
-  }
-  const manifest = parsed.data;
-  const identity = validateIdentity(manifest.cartridgeId, manifest.version);
-  if (!identity.ok) return identity;
-
-  const ids = manifest.scenes.map((scene) => scene.id);
-  if (new Set(ids).size !== ids.length || ids.some((id) => !isSceneId(id))) {
-    return err(
-      "cartridge-scenes-invalid",
-      "Scene ids must be unique safe identifiers.",
-      "Use lowercase letters, digits, underscores, or hyphens.",
-    );
-  }
-  if (!ids.includes(manifest.entrySceneId)) {
-    return err(
-      "cartridge-entry-missing",
-      `Entry scene ${manifest.entrySceneId} is not declared.`,
-      "Choose one of the manifest scene ids.",
-    );
-  }
-  const sourceIds = Object.keys(input.scenes).sort();
-  const declaredIds = [...ids].sort();
-  const storyIds = manifest.story.scenes.map((scene) => scene.id).sort();
-  if (JSON.stringify(storyIds) !== JSON.stringify(declaredIds)) {
-    return err(
-      "cartridge-story-mismatch",
-      "The story outline and scene catalog must describe the same scene ids.",
-    );
-  }
-  if (JSON.stringify(sourceIds) !== JSON.stringify(declaredIds)) {
-    return err(
-      "cartridge-scenes-mismatch",
-      "Declared scenes and supplied scene sources do not match.",
-      "Supply exactly one source for every declared scene id.",
-    );
-  }
-  if (input.rules.trim().length === 0) {
-    return err(
-      "cartridge-rules-empty",
-      "rules.oui is empty.",
-      "A cartridge must declare its gameplay rules.",
-    );
-  }
-
-  const rules = normaliseSource(input.rules);
-  const parsedRules = parseRules(rules);
-  if (!parsedRules.ok) {
-    return err(
-      "cartridge-rules-invalid",
-      `rules.oui could not be parsed: ${parsedRules.error.message}`,
-      parsedRules.error.hint,
-    );
-  }
-  const declaredRuleKits = new Set(parsedRules.value.kits.map((kit) => kit.id));
-  if (manifest.requiredKits.some((kit) => !declaredRuleKits.has(kit))) {
-    return err(
-      "cartridge-kit-missing",
-      "The manifest requires a gameplay kit that rules.oui does not configure.",
-      "Declare every required kit exactly once in rules.oui.",
-    );
-  }
-  const scenes: Record<string, string> = {};
-  const targets = new Map<string, string[]>();
-  const terminalScenes = new Set<string>();
-  const contracts = new Map<string, SceneContract>();
-  for (const id of ids) {
-    const source = normaliseSource(input.scenes[id] ?? "");
-    const scene = parseScene(source);
-    if (!scene.ok) {
-      return err(
-        "cartridge-scene-invalid",
-        `${id}.oui could not be parsed: ${scene.error.message}`,
-        scene.error.hint,
-      );
-    }
-    const contract = scene.value.contract;
-    if (contract === null || contract.sceneId !== id) {
-      return err(
-        "cartridge-contract-invalid",
-        `${id}.oui must declare Contract("${id}", ...).`,
-        "A published scene needs one stable contract matching its manifest id.",
-      );
-    }
-    contracts.set(id, contract);
-    if (!manifest.requiredKits.includes(contract.kit) || !declaredRuleKits.has(contract.kit)) {
-      return err(
-        "cartridge-kit-missing",
-        `${id}.oui selects unavailable kit ${contract.kit}.`,
-        "Add the kit to manifest.requiredKits and configure it in rules.oui.",
-      );
-    }
-    const exits: string[] = [];
-    let endingGates = 0;
-    for (const exit of scene.value.exits) {
-      if (exit.targetSceneId === null) {
-        // An Exit with no target is the ending gate: allowed only where the contract is terminal.
-        if (!contract.terminal) {
-          return err(
-            "cartridge-route-invalid",
-            `${id}.oui has an exit without a declared target scene.`,
-            "Set Exit.targetSceneId to one of the manifest scene ids.",
-          );
-        }
-        endingGates += 1;
-        continue;
-      }
-      if (!ids.includes(exit.targetSceneId)) {
-        return err(
-          "cartridge-route-invalid",
-          `${id}.oui exits to undeclared scene ${exit.targetSceneId}.`,
-          "Set Exit.targetSceneId to one of the manifest scene ids.",
-        );
-      }
-      exits.push(exit.targetSceneId);
-    }
-    if (contract.terminal && endingGates === 0) {
-      return err(
-        "cartridge-ending-missing",
-        `${id}.oui is terminal but has no ending gate.`,
-        "Give the finale one Exit with no targetSceneId; reaching it completes the cartridge.",
-      );
-    }
-    targets.set(id, exits);
-    if (contract.terminal) terminalScenes.add(id);
-    scenes[id] = source;
-  }
-  const grantedFlags = new Set([...contracts.values()].flatMap((contract) => contract.grantsFlags));
-  for (const [id, contract] of contracts) {
-    if (contract.requiresItems.length > 0) {
-      return err(
-        "cartridge-prerequisite-invalid",
-        `${id}.oui requires items that this cartridge cannot grant deterministically: ${contract.requiresItems.join(", ")}.`,
-        "Use declarative save flags for offline progression until item grants are part of the cartridge format.",
-      );
-    }
-    const missing = contract.requiresFlags.filter((flag) => !grantedFlags.has(flag));
-    if (missing.length > 0) {
-      return err(
-        "cartridge-prerequisite-invalid",
-        `${id}.oui requires flags no scene grants: ${missing.join(", ")}.`,
-        "Grant every required flag from a reachable earlier scene.",
-      );
-    }
-  }
-  if (!canReachTerminal(manifest.entrySceneId, targets, terminalScenes, contracts)) {
-    return err(
-      "cartridge-route-invalid",
-      "No terminal scene is reachable from the entry scene.",
-      "Connect the scene contracts with stable Exit.targetSceneId values.",
-    );
-  }
-  const files: CartridgeFileIntegrity[] = [fileIntegrity(RULES_FILE, rules)];
-  for (const id of [...ids].sort()) files.push(fileIntegrity(`scenes/${id}.oui`, scenes[id] ?? ""));
-  const contentHash = cartridgeContentHash(manifest, files);
-  return ok({ manifest: { ...manifest, contentHash, files }, rules, scenes });
-}
-
-function canReachTerminal(
-  entry: string,
-  targets: ReadonlyMap<string, string[]>,
-  terminals: ReadonlySet<string>,
-  contracts: ReadonlyMap<string, SceneContract>,
-): boolean {
-  return [...reachableScenes(entry, targets, contracts)].some((id) => terminals.has(id));
-}
-
-async function writeRevision(
-  destination: string,
-  revision: CartridgeRevision,
-): Promise<Result<void>> {
-  const parent = dirname(destination);
-  await mkdir(parent, { recursive: true });
-  const staging = join(
-    parent,
-    `.staging-${revision.manifest.version}-${process.pid}-${Date.now()}`,
-  );
-  try {
-    await mkdir(join(staging, "scenes"), { recursive: true });
-    await writeFile(
-      join(staging, MANIFEST_FILE),
-      `${JSON.stringify(revision.manifest, null, 2)}\n`,
-      "utf8",
-    );
-    await writeFile(join(staging, RULES_FILE), revision.rules, "utf8");
-    for (const [id, source] of Object.entries(revision.scenes)) {
-      await writeFile(cartridgeScenePath(staging, id), source, "utf8");
-    }
-    await rename(staging, destination);
-    return ok(undefined);
-  } catch (error) {
-    await rm(staging, { recursive: true, force: true }).catch(() => undefined);
-    return fail(toError(error, "cartridge-publish-failed"));
-  }
-}
+export { cartridgeCompatibility };
 
 export async function publishCartridgeRevision(
   cartridgesDir: string,
@@ -298,19 +58,13 @@ export async function publishCartridgeRevision(
       "Publish a new SemVer; immutable revisions are never overwritten.",
     );
   }
-  const written = await writeRevision(destination, revision);
-  return written.ok ? ok(revision.manifest) : written;
-}
-
-async function listActualFiles(revisionDir: string): Promise<string[]> {
-  const root = (await readdir(revisionDir, { withFileTypes: true }))
-    .filter((entry) => entry.isFile())
-    .map((entry) => entry.name);
-  const sceneEntries = await readdir(join(revisionDir, "scenes"), { withFileTypes: true });
-  return [
-    ...root,
-    ...sceneEntries.filter((entry) => entry.isFile()).map((entry) => `scenes/${entry.name}`),
-  ].sort();
+  const written = await writeRevisionFiles(destination, revision);
+  if (written.ok) return ok(revision.manifest);
+  // Someone published the same revision a moment earlier: identical bytes are not a conflict.
+  const raced = await readCartridgeRevision(cartridgesDir, cartridgeId, version);
+  return raced.ok && raced.value.manifest.contentHash === contentHash
+    ? ok(raced.value.manifest)
+    : written;
 }
 
 export async function readCartridgeRevision(
@@ -342,21 +96,55 @@ export async function readCartridgeRevision(
       );
     }
     const rules = await readFile(join(revisionDir, RULES_FILE), "utf8");
+    const sceneIds =
+      manifest.formatVersion === 1
+        ? manifest.scenes.map((scene) => scene.id)
+        : manifest.definition.scenePlan.orderedSceneIds;
     const scenes: Record<string, string> = {};
-    for (const scene of manifest.scenes) {
-      if (!isSceneId(scene.id))
-        return err("cartridge-scene-invalid", `Invalid scene id: ${scene.id}`);
-      scenes[scene.id] = await readFile(cartridgeScenePath(revisionDir, scene.id), "utf8");
+    for (const id of sceneIds) {
+      if (!isSceneId(id)) return err("cartridge-scene-invalid", `Invalid scene id: ${id}`);
+      scenes[id] = await readFile(cartridgeScenePath(revisionDir, id), "utf8");
     }
     const files = [fileIntegrity(RULES_FILE, rules)];
-    for (const id of manifest.scenes.map((scene) => scene.id).sort()) {
+    for (const id of [...sceneIds].sort()) {
       files.push(fileIntegrity(`scenes/${id}.oui`, scenes[id] ?? ""));
     }
+    const dialogues: Record<string, string> = {};
+    for (const declaredFile of manifest.files) {
+      const key = dialogueKeyOfFile(declaredFile.path);
+      if (key === null) continue;
+      const source = await readFile(join(revisionDir, declaredFile.path), "utf8");
+      dialogues[key] = source;
+      files.push(fileIntegrity(declaredFile.path, source));
+    }
+    const assets: Record<string, Uint8Array> = {};
+    for (const declaredFile of manifest.files) {
+      if (!declaredFile.path.startsWith("assets/")) continue;
+      const relative = declaredFile.path.slice("assets/".length);
+      if (!/^[a-z0-9][a-z0-9_./-]{0,239}$/.test(relative) || relative.includes("..")) {
+        return err("cartridge-asset-path-invalid", `Unsafe asset path: ${relative}`);
+      }
+      const bytes = await readFile(join(revisionDir, declaredFile.path));
+      assets[relative] = bytes;
+      files.push({ path: declaredFile.path, bytes: bytes.byteLength, contentHash: sha256(bytes) });
+    }
+    let bible: WorldBible | null = null;
+    if (manifest.files.some((file) => file.path === BIBLE_FILES.core)) {
+      bible = {
+        core: await readFile(join(revisionDir, BIBLE_FILES.core), "utf8"),
+        style: await readFile(join(revisionDir, BIBLE_FILES.style), "utf8"),
+      };
+      files.push(...bibleIntegrity(bible));
+    }
     const declared = [...manifest.files].sort((a, b) => a.path.localeCompare(b.path));
-    const expectedPaths = [MANIFEST_FILE, ...files.map((file) => file.path)].sort();
-    const actualPaths = await listActualFiles(revisionDir);
-    const hash = cartridgeContentHash(manifestCore(manifest), files);
-    if (JSON.stringify(files) !== JSON.stringify(declared) || hash !== manifest.contentHash) {
+    const actualIntegrity = [...files].sort((a, b) => a.path.localeCompare(b.path));
+    const expectedPaths = [MANIFEST_FILE, ...actualIntegrity.map((file) => file.path)].sort();
+    const actualPaths = await listRevisionFiles(revisionDir);
+    const hash = cartridgeContentHash(manifestCore(manifest), actualIntegrity);
+    if (
+      JSON.stringify(actualIntegrity) !== JSON.stringify(declared) ||
+      hash !== manifest.contentHash
+    ) {
       return err(
         "cartridge-integrity-failed",
         `${cartridgeId}@${version} does not match its content hash.`,
@@ -370,7 +158,9 @@ export async function readCartridgeRevision(
         "Reinstall the cartridge from a trusted package.",
       );
     }
-    return ok({ manifest, rules, scenes });
+    const pin = runtimePinForManifest(manifest);
+    if (!pin.ok) return pin;
+    return ok({ manifest, rules, scenes, dialogues, assets, bible });
   } catch (error) {
     return fail(toError(error, "cartridge-read-failed"));
   }

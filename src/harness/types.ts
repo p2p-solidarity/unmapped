@@ -1,8 +1,11 @@
+import type { NarrativeContext } from "@shared/world";
 // Harness vocabulary. Framework-agnostic: this file (and everything under src/harness) must run
 // in the renderer, in the Electron main process and in vitest, so it never touches React, the
 // DOM or Electron.
 
+import type { ChunkCoord } from "@shared/chunks";
 import type { ChatMessage, ChatRequest, ChatUsage, ToolCall } from "@shared/llm";
+import type { LoreNode } from "@shared/lore";
 import type { Result } from "@shared/result";
 import type { Genesis, Inventory, KarmaEntry, SceneGraph, WorldMeta } from "@shared/world";
 import type { ZodType } from "zod";
@@ -17,13 +20,15 @@ export type JsonValue =
   | { [key: string]: JsonValue };
 
 /** Why the prompt is being assembled; sections and tools may render differently per purpose. */
-export type PromptPurpose = "scene" | "dialogue" | "resolve" | "item" | "free";
+export type PromptPurpose = "scene" | "dialogue" | "resolve" | "item" | "chunk" | "free";
 
 /** Everything one assembly (and the turn it belongs to) knows about itself. */
 export interface AssembleContext {
   purpose: PromptPurpose;
   /** BCP-47 tag from `genesis.language` — the model answers in it (Babel, Rule 10). */
   language: string;
+  /** The chunk of open land this turn is about; hot lore is activated around it. */
+  coord?: ChunkCoord;
   signal?: AbortSignal;
 }
 
@@ -110,12 +115,16 @@ export interface SkillProvider {
 
 /** Everything a prompt section or tool may read about the world that is currently loaded. */
 export interface WorldSnapshot {
-  genesis: Genesis;
+  genesis: Genesis | NarrativeContext;
   meta: WorldMeta;
   scene: SceneGraph | null;
   karma: KarmaEntry[];
   inventory: Inventory;
   floor: number;
+  /** The lore graph of open land; absent for a bounded scene, which keeps the karma window. */
+  lore?: LoreNode[];
+  /** Chunk the player stands on, when the scene is open land. */
+  coord?: ChunkCoord | null;
 }
 
 // ── Turn ─────────────────────────────────────────────────────────────────────────────────────

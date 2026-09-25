@@ -8,6 +8,7 @@ import type { CartridgeRef, InstanceRecord, ResolvedInstance } from "@shared/car
 import { err, fail, ok, type Result, toError } from "@shared/result";
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { validateArchiveEntryNames } from "../archive";
+import { verifyRuntimePin } from "../cartridges/integrity";
 import { cartridgeCompatibility, readCartridgeRevision } from "../cartridges/store";
 import { parseKarmaText } from "../worlds/schemas";
 import { instanceDir, isInstanceId, isSaveId } from "./paths";
@@ -76,7 +77,7 @@ export function unpackInstanceBackup(bytes: Uint8Array): Result<InstanceRecord> 
     return err(
       "backup-unreadable",
       "That file is not a readable .spire-backup archive.",
-      `Export it again from Aether Spire. (${toError(error).message})`,
+      `Export it again from Unwritten Land. (${toError(error).message})`,
     );
   }
   const saves = new Map<string, { save?: string; karma?: string }>();
@@ -151,7 +152,13 @@ export function unpackInstanceBackup(bytes: Uint8Array): Result<InstanceRecord> 
     return err("save-invalid", parsedSave.error.issues[0]?.message ?? "Invalid save.json");
   }
   const save = parsedSave.data;
-  if (save.instanceId !== meta.instanceId || !sameRef(meta.cartridge, save.cartridge)) {
+  if (
+    save.instanceId !== meta.instanceId ||
+    !sameRef(meta.cartridge, save.cartridge) ||
+    !sameRef(meta.runtimePin.cartridge, meta.cartridge) ||
+    !sameRef(save.runtimePin.cartridge, save.cartridge) ||
+    JSON.stringify(meta.runtimePin) !== JSON.stringify(save.runtimePin)
+  ) {
     return err(
       "save-identity-mismatch",
       "The save does not belong to this instance and cartridge.",
@@ -193,6 +200,10 @@ export async function restoreInstanceBackup(
   }
   const compatibility = cartridgeCompatibility(revision.value.manifest);
   if (!compatibility.ok) return compatibility;
+  const metaPin = verifyRuntimePin(revision.value.manifest, record.meta.runtimePin);
+  if (!metaPin.ok) return metaPin;
+  const savePin = verifyRuntimePin(revision.value.manifest, record.save.runtimePin);
+  if (!savePin.ok) return savePin;
   if (record.save.saveSchemaVersion !== revision.value.manifest.saveSchemaVersion) {
     return err(
       "save-schema-mismatch",

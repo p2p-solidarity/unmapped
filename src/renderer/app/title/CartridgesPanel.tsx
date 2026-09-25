@@ -68,7 +68,7 @@ function compatibilityLabel(manifest: CartridgeManifest): string {
   if (manifest.saveSchemaVersion !== SAVE_SCHEMA_VERSION) {
     return `incompatible · needs save schema ${manifest.saveSchemaVersion}`;
   }
-  return `compatible · ${manifest.requiredKits.join(", ")}`;
+  return `compatible · ${(manifest.formatVersion === 1 ? manifest.requiredKits : manifest.definition.capabilityProfile.contexts.map((context) => context.contextId)).join(", ")}`;
 }
 
 function isCompatible(manifest: CartridgeManifest): boolean {
@@ -240,6 +240,11 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
   return (
     <>
       <h2 className="g-heading">Cartridges</h2>
+      {library !== null && library.oldSaves.length > 0 ? (
+        <Text variant="caption" tone="dim">
+          {`${library.oldSaves.length} saves from an older build can't be opened by this build and were left untouched: ${library.oldSaves.join(", ")}`}
+        </Text>
+      ) : null}
       <StatePanel state={data} loadingText="Reading cartridges…">
         {() =>
           list.length === 0 ? (
@@ -270,7 +275,13 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
             <>
               <Text tone="muted">{selected.manifest.description}</Text>
               <div className="route">
-                {selected.manifest.story.scenes.map((scene) => (
+                {(selected.manifest.formatVersion === 1
+                  ? selected.manifest.story.scenes
+                  : selected.manifest.definition.narrative.scenes.map((scene) => ({
+                      id: scene.sceneId,
+                      title: scene.title,
+                    }))
+                ).map((scene) => (
                   <span key={scene.id}>{scene.title}</span>
                 ))}
               </div>
@@ -280,7 +291,7 @@ export function CartridgesPanel({ data, refresh, onClose }: CartridgesPanelProps
               </span>
               <span className="g-meta">{compatibilityLabel(selected.manifest)}</span>
               <span className="g-meta">
-                {selected.manifest.lineage === null
+                {selected.manifest.lineage?.parent == null
                   ? "original revision"
                   : `${selected.manifest.lineage.kind} of ${selected.manifest.lineage.parent.cartridgeId}@${selected.manifest.lineage.parent.version}`}
               </span>

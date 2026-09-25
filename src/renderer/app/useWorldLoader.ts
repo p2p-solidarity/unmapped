@@ -3,7 +3,7 @@
 // world.oui becomes an `error` scene the console can show (Rule 2 / Rule 5).
 
 import { parseScene } from "@dsl/index";
-import { useSessionStore, useWorldStore } from "@renderer/state";
+import { useLandStore, useSessionStore, useWorldStore } from "@renderer/state";
 import { errored, type Loadable, ok, type Result, ready } from "@shared/result";
 import {
   type Inventory,
@@ -84,6 +84,7 @@ export async function loadWorld(worldId: string): Promise<Result<WorldMeta>> {
   const sceneSource = sceneRaw.value;
   const scene = sceneFrom(sceneSource);
   const store = useWorldStore.getState();
+  useLandStore.getState().reset();
   store.loadWorld({
     meta: meta.value,
     genesis: genesis.value,

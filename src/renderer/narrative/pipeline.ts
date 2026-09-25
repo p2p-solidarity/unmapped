@@ -11,10 +11,11 @@ import type { DslError } from "@dsl";
 import { normalizeOutput, repairPrompt } from "@dsl";
 import { ORDER, type PromptPurpose } from "@harness";
 import { useInferenceStore } from "@renderer/state/inferenceStore";
+import type { ChunkCoord } from "@shared/chunks";
 import type { ChatMessage } from "@shared/llm";
 import { fail, ok, type Result } from "@shared/result";
 import { type Program, type ProgramChat, runProgram } from "./program";
-import { DSL_SECTION, runNarrativeTurn } from "./turn";
+import { DSL_SECTION, runNarrativeTurn, type TurnSection } from "./turn";
 
 /**
  * GBNF is a llama.cpp sampler feature. Sending it anywhere else is at best ignored and at worst a
@@ -33,7 +34,11 @@ function isSystem(message: ChatMessage): boolean {
  * repair rounds re-register the same text, which is what "for that turn" means when a turn takes
  * more than one completion.
  */
-function harnessChat(purpose: PromptPurpose, language: string): ProgramChat {
+function harnessChat(
+  purpose: PromptPurpose,
+  language: string,
+  extra: { sections?: readonly TurnSection[]; coord?: ChunkCoord } = {},
+): ProgramChat {
   return async (request, onDelta) => {
     const spec = request.messages
       .filter(isSystem)
@@ -44,6 +49,7 @@ function harnessChat(purpose: PromptPurpose, language: string): ProgramChat {
       language,
       messages: request.messages.filter((message) => !isSystem(message)),
       section: { name: DSL_SECTION, order: ORDER.DSL_SPEC, text: spec },
+      ...extra,
       useTools: false,
       maxTokens: request.maxTokens,
       temperature: request.temperature,
@@ -64,6 +70,9 @@ export interface GenerateProgramInput<T> {
   /** `genesis.language` — the model writes in the player's language (Rule 10). */
   language: string;
   parse(source: string): Result<T, DslError>;
+  /** Extra prompt sections for this program's turns only. */
+  sections?: readonly TurnSection[];
+  coord?: ChunkCoord;
   grammar?: string | null;
   maxTokens?: number;
   temperature?: number;
@@ -71,7 +80,11 @@ export interface GenerateProgramInput<T> {
 }
 
 export function generateProgram<T>(input: GenerateProgramInput<T>): Promise<Result<Program<T>>> {
-  return runProgram<T, DslError>(harnessChat(input.purpose, input.language), {
+  const extra = {
+    ...(input.sections === undefined ? {} : { sections: input.sections }),
+    ...(input.coord === undefined ? {} : { coord: input.coord }),
+  };
+  return runProgram<T, DslError>(harnessChat(input.purpose, input.language, extra), {
     ...input,
     normalize: normalizeOutput,
     repair: repairPrompt,

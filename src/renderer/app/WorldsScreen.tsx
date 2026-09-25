@@ -17,7 +17,7 @@ import { openInstance } from "./useInstanceLoader";
 type PanelId = "join" | "cartridges" | "system" | "archive";
 
 interface MenuItem {
-  id: "continue" | "new" | PanelId;
+  id: "continue" | "new" | "create" | PanelId;
   label: string;
   disabled: boolean;
 }
@@ -34,6 +34,7 @@ export function WorldsScreen() {
   const items: MenuItem[] = [
     { id: "continue", label: "Continue", disabled: latest === null },
     { id: "new", label: "New Game", disabled: false },
+    { id: "create", label: "Create a game", disabled: false },
     { id: "join", label: "Join", disabled: false },
     { id: "cartridges", label: "Cartridges", disabled: false },
     { id: "system", label: "System", disabled: false },
@@ -51,7 +52,8 @@ export function WorldsScreen() {
       if (latest !== null) void openInstance(latest.instanceId);
       return;
     }
-    if (item.id === "new") setScreen("genesis");
+    if (item.id === "new") setScreen("seed");
+    else if (item.id === "create") setScreen("remix");
     else setPanel(item.id);
   };
 
@@ -96,9 +98,9 @@ export function WorldsScreen() {
       <div className="title">
         <div className="title__left">
           <h1 className="title__logo">
-            Aether
+            Unwritten
             <br />
-            Spire
+            Land
           </h1>
           <nav className="title__menu" aria-label="Main menu">
             {items.map((item, index) => (

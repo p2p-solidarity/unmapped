@@ -9,6 +9,7 @@ import {
   type Inventory,
   type ItemSpec,
   type KarmaEntry,
+  type NarrativeContext,
   type SceneGraph,
   type WorldMeta,
   type WorldMutation,
@@ -18,7 +19,7 @@ import { create } from "zustand";
 export interface WorldState {
   origin: { kind: "legacy"; worldId: string } | { kind: "instance"; instanceId: string } | null;
   meta: WorldMeta | null;
-  genesis: Genesis | null;
+  genesis: (Genesis | NarrativeContext) | null;
   /** Raw `world.oui` source currently on disk / in the editor. */
   sceneSource: string;
   scene: Loadable<SceneGraph>;
@@ -45,7 +46,7 @@ export interface WorldState {
   loadInstance(input: {
     instanceId: string;
     meta: WorldMeta;
-    genesis: Genesis;
+    genesis: Genesis | NarrativeContext;
     sceneSource: string;
     scene: Loadable<SceneGraph>;
     karma: KarmaEntry[];
@@ -64,6 +65,8 @@ export interface WorldState {
   addMaterials(materials: string[]): void;
   consumeMaterials(materials: string[]): void;
   /** Replaces the whole inventory — used when inventory.json changed on disk. */
+  /** Session-scoped rules change from an approved tweak; never written to the cartridge. */
+  setGameplayRules(rules: GameplayRules): void;
   setInventory(inventory: Inventory): void;
   /** Replaces the metadata — used when meta.json changed on disk. */
   setMeta(meta: WorldMeta): void;
@@ -156,6 +159,7 @@ export const useWorldStore = create<WorldState>()((set) => ({
 
   setKarma: (karma) => set({ karma }),
 
+  setGameplayRules: (gameplayRules) => set({ gameplayRules }),
   setInventory: (inventory) => set({ inventory }),
 
   setMeta: (meta) => set({ meta }),

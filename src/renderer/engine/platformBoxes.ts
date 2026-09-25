@@ -1,18 +1,12 @@
-// Platform maths, shared by the renderer and the character controller. Two sources feed it:
+// Platform maths, shared by the renderer and the character controller. Platforms come from one
+// place only: `SceneGraph.platforms`, parsed from world.oui (Rule 7, the DSL is the truth).
 //
-//   baked  — `SceneGraph.platforms`, parsed from world.oui. Solid, opaque, permanent.
-//   draft  — `usePlatformStore.drafts`, unsaved editor previews. Translucent, but they still get
-//            colliders so the player can test-jump them before pressing Apply.
-//
-// Both use the same geometry contract as PlatformSpec: (x, z) is the tile corner, `y` is the
-// elevation of the *underside* above the floor top and `height` is the thickness.
+// The geometry contract matches PlatformSpec: (x, z) is the tile corner, `y` is the elevation of
+// the *underside* above the floor top and `height` is the thickness.
 
-import type { Platform } from "@renderer/state";
 import type { PlatformSpec, Tile } from "@shared/world";
 import { type BoxSpec, TILE_TOP } from "./colliders";
 
-/** Draft platforms are see-through so the editor never lies about what is saved. */
-export const DRAFT_OPACITY = 0.45;
 /** Vertical slack when deciding whether the player is standing on a pad, in world units. */
 export const PAD_TOLERANCE = 0.3;
 /** Horizontal slack, so stepping on the very lip of a pad still launches the player. */
@@ -27,10 +21,6 @@ export interface PlatformBody {
   box: BoxSpec;
   tile: Tile;
   bounce: boolean;
-  /** True for an unsaved editor draft. */
-  draft: boolean;
-  /** Editor label, or null for a baked platform (the scene graph carries no names). */
-  name: string | null;
 }
 
 /** Cuboid for a platform placed with the PlatformSpec contract. */
@@ -51,25 +41,12 @@ export function platformBox(
   };
 }
 
-export function bakedPlatformBodies(specs: readonly PlatformSpec[]): PlatformBody[] {
+export function platformBodies(specs: readonly PlatformSpec[]): PlatformBody[] {
   return specs.map((spec, index) => ({
-    id: `baked-${index}-${spec.x}-${spec.z}`,
+    id: `platform-${index}-${spec.x}-${spec.z}`,
     box: platformBox(spec.x, spec.z, spec.width, spec.depth, spec.y, spec.height),
     tile: spec.tile,
     bounce: spec.bounce,
-    draft: false,
-    name: null,
-  }));
-}
-
-export function draftPlatformBodies(drafts: readonly Platform[]): PlatformBody[] {
-  return drafts.map((draft) => ({
-    id: draft.id,
-    box: platformBox(draft.x, draft.z, draft.width, draft.depth, draft.y, draft.height),
-    tile: draft.tile,
-    bounce: draft.isBounce,
-    draft: true,
-    name: draft.name,
   }));
 }
 
@@ -104,27 +81,4 @@ export function bouncePadAt(
     return body;
   }
   return null;
-}
-
-/** Geometry identity of a block, ignoring which list it came from. */
-export function platformShapeKey(body: PlatformBody): string {
-  return `${body.box.center.join(",")}|${body.box.half.join(",")}|${body.tile}|${body.bounce}`;
-}
-
-/**
- * Every platform the physics world knows about: baked first, drafts on top.
- *
- * The editor seeds its drafts from the scene it is editing, so a draft the player has not touched
- * yet is the *same* block as its baked original — it is dropped here rather than drawn (and
- * collided with) twice. The moment the player moves or resizes it, the draft differs and both
- * appear: the solid block the world still holds, and the translucent preview of the edit.
- */
-export function allPlatformBodies(
-  specs: readonly PlatformSpec[],
-  drafts: readonly Platform[],
-): PlatformBody[] {
-  const baked = bakedPlatformBodies(specs);
-  const seen = new Set(baked.map(platformShapeKey));
-  const previews = draftPlatformBodies(drafts).filter((body) => !seen.has(platformShapeKey(body)));
-  return [...baked, ...previews];
 }

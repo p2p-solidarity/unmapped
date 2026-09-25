@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readdir, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { packCartridge, unpackCartridge } from "@main/cartridges/pack";
@@ -210,10 +210,17 @@ describe("immutable cartridge revisions", () => {
   it("rejects a terminal scene without an ending gate and a non-terminal exit without a target", async () => {
     const noGate = await publishCartridgeRevision(
       cartridgesDir,
-      cartridgeInput(undefined, scene("ending", "tps_exploration@1", null, false)),
+      cartridgeInput(undefined, scene("ending", "fps_puzzle@1", null, false)),
     );
     expect(noGate.ok).toBe(false);
     if (!noGate.ok) expect(noGate.error.code).toBe("cartridge-ending-missing");
+
+    // Open land has no finale: its terminal scene needs no gate.
+    const openLand = await publishCartridgeRevision(
+      cartridgesDir,
+      cartridgeInput(undefined, scene("ending", "tps_exploration@1", null, false)),
+    );
+    expect(openLand.ok ? "ok" : openLand.error.code).toBe("ok");
 
     const untargeted = [
       'root = Scene("entrance", "meadow", [contract, ground, exit])',
@@ -471,6 +478,63 @@ describe("pinned instances", () => {
     expect(reloaded.instance.save.inventory.materials).toEqual(["brass"]);
     expect(reloaded.instance.karma).toHaveLength(1);
     expect(reloaded.cartridge.manifest.contentHash).toBe(manifest.contentHash);
+  });
+
+  it("hashes the world bible with the content and keeps it through pack and unpack", async () => {
+    const bible = {
+      core: "A quiet coast where maps stopped.",
+      style: "Short sentences. Plain names.",
+    };
+    const plain = unwrap(await publishCartridgeRevision(cartridgesDir, cartridgeInput()));
+    const input = cartridgeInput(undefined, undefined, "1.1.0");
+    const withBible = unwrap(await publishCartridgeRevision(cartridgesDir, { ...input, bible }));
+    expect(withBible.files.map((file) => file.path)).toContain("bible/core.md");
+    expect(withBible.contentHash).not.toBe(plain.contentHash);
+
+    const read = unwrap(await readCartridgeRevision(cartridgesDir, "salt-marsh", "1.1.0"));
+    // Bible text is normalised like every source: LF endings and one trailing newline.
+    expect(read.bible).toEqual({ core: `${bible.core}\n`, style: `${bible.style}\n` });
+    expect(unwrap(await readCartridgeRevision(cartridgesDir, "salt-marsh", "1.0.0")).bible).toBe(
+      null,
+    );
+    const unpacked = unwrap(unpackCartridge(unwrap(packCartridge(read))));
+    expect(unpacked.bible).toEqual(read.bible);
+
+    await writeFile(join(cartridgesDir, "salt-marsh", "1.1.0", "bible", "core.md"), "edited");
+    const tampered = await readCartridgeRevision(cartridgesDir, "salt-marsh", "1.1.0");
+    expect(tampered.ok ? "ok" : tampered.error.code).toBe("cartridge-integrity-failed");
+  });
+
+  it("remembers the open-land position and keeps it when a checkpoint has none", async () => {
+    const manifest = unwrap(await publishCartridgeRevision(cartridgesDir, cartridgeInput()));
+    const instance = unwrap(await createInstance(instancesDir, manifest, "Walker"));
+    const position = { sceneId: "entrance", x: -140.5, y: 0.93, z: 77.25, yaw: 1.2 };
+    const moved = unwrap(
+      await checkpointInstance(instancesDir, {
+        instanceId: instance.meta.instanceId,
+        expectedUpdatedAt: instance.meta.updatedAt,
+        flags: {},
+        inventory: { items: [], materials: [] },
+        mutation: null,
+        karma: [],
+        position,
+      }),
+    );
+    unwrap(
+      await checkpointInstance(instancesDir, {
+        instanceId: instance.meta.instanceId,
+        expectedUpdatedAt: moved.updatedAt,
+        flags: { talked: true },
+        inventory: { items: [], materials: [] },
+        mutation: null,
+        karma: [],
+      }),
+    );
+    const reloaded = unwrap(
+      await resolveInstance(cartridgesDir, instancesDir, instance.meta.instanceId),
+    );
+    expect(reloaded.instance.save.position).toEqual(position);
+    expect(reloaded.instance.save.flags.talked).toBe(true);
   });
 
   it("snapshots the save before explicitly re-pinning to a compatible revision", async () => {

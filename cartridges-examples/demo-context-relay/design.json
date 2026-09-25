@@ -1,0 +1,63 @@
+{
+  "cartridgeId": "demo-context-relay",
+  "version": "1.0.0",
+  "name": "三段接力",
+  "author": "Unwritten Land Demo",
+  "createdAt": "2026-09-16T00:10:00.000Z",
+  "notes": [
+    "plan.md §0.9: one cartridge, several Capability Contexts that scenes switch between.",
+    "冒險角色扮演 (third_person), 平台和快跑 (side) and 第一人稱射擊 (first_person) disagree on camera, so the compiler splits three contexts instead of reporting a conflict.",
+    "Each scene is frozen to one context; leaving a scene emits a scene_exit context transition.",
+    "The 2.5D slot is laid out along the spawn row (z = 4) because side movement never changes z."
+  ],
+  "modes": ["adventure_rpg", "platformer", "first_person_shooter", "sci_fi"],
+  "scenes": [
+    {
+      "slotId": "spore_hub",
+      "role": "hub",
+      "title": "孢子穹頂",
+      "mode": "adventure_rpg",
+      "baseId": "spore_canopy"
+    },
+    {
+      "slotId": "sky_scaffold",
+      "role": "puzzle",
+      "title": "浮空棧架",
+      "mode": "platformer",
+      "baseId": "sky_scaffold"
+    },
+    {
+      "slotId": "reactor_breach",
+      "role": "ending",
+      "title": "反應爐缺口",
+      "mode": "first_person_shooter",
+      "baseId": "reactor_deck"
+    }
+  ],
+  "endings": ["reactor_breach"],
+  "narrative": {
+    "required": true,
+    "premise": "孢子穹頂的菌絲網路感應到遠方反應爐的裂縫。吟遊詩人米菈把一張路線圖交給你：先走過浮空棧架，再從缺口進入反應爐。",
+    "finale": "缺口前的無人機被清空，菌絲沿著管線長回反應爐，裂縫慢慢被綠光封住。",
+    "scenes": [
+      {
+        "sceneId": "spore_hub",
+        "title": "孢子穹頂",
+        "summary": "發光的蕈傘下，村人聚在井邊討論遠方的震動。",
+        "objective": "和米菈談談，拿到棧架的路線圖。"
+      },
+      {
+        "sceneId": "sky_scaffold",
+        "title": "浮空棧架",
+        "summary": "斷裂的橋面只剩一排木板與彈跳墊，側面是無盡的藍。",
+        "objective": "沿著棧架跳過斷牆，抵達另一端。"
+      },
+      {
+        "sceneId": "reactor_breach",
+        "title": "反應爐缺口",
+        "summary": "裂縫邊緣的防衛無人機仍在巡邏。",
+        "objective": "清除缺口前的無人機，封住裂縫。"
+      }
+    ]
+  }
+}

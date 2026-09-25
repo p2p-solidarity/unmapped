@@ -8,6 +8,7 @@ import { mainnet } from "viem/chains";
 import { normalize } from "viem/ens";
 import type { Bytes } from "./bytes";
 
+/** Frozen: an on-chain text-record key. Renaming it would ignore every record already set. */
 export const ENS_SEED_KEY = "aether.seed";
 export const MAX_SEED_BYTES = 20 * 1024 * 1024;
 export const SEED_FETCH_TIMEOUT_MS = 10_000;

@@ -1,6 +1,6 @@
 # onsen-festival — an example mod
 
-This folder is **developer sample content**, not installed content. Aether Spire never installs it
+This folder is **developer sample content**, not installed content. Unwritten Land never installs it
 automatically, and nothing in the app reads `mods-examples/`: it lives in the repo so you have a
 working manifest to copy. Installed mods live in `<userData>/mods/<name>/`.
 

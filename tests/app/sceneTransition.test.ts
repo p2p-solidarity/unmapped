@@ -13,14 +13,23 @@ const cartridge = {
 
 function save(): SaveState {
   return {
-    formatVersion: 1,
+    formatVersion: 2,
     instanceId: "run-1",
     cartridge,
+    runtimePin: {
+      cartridge,
+      moduleLock: { entries: [] },
+      modLock: { entries: [], lockHash: `sha256:${"b".repeat(64)}` },
+      profileHash: `sha256:${"c".repeat(64)}`,
+      effectiveHash: `sha256:${"d".repeat(64)}`,
+    },
     saveSchemaVersion: 1,
     currentSceneId: "entrance",
     flags: {},
     inventory: { items: [], materials: [] },
     mutation: null,
+    player: null,
+    party: null,
     completedSceneIds: [],
     updatedAt: "2026-09-26T00:00:00.000Z",
   };

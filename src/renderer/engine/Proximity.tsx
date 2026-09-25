@@ -10,7 +10,15 @@ import type * as THREE from "three";
 import { TILE_TOP } from "./colliders";
 import { DEBUG_RING, standardMaterial } from "./geometry";
 import { ENTITY_PALETTE } from "./palette";
-import { nearestTarget, sceneTargets, triggersWithin, triggerTarget } from "./targets";
+import {
+  nearestTarget,
+  sceneTargets,
+  type TargetPoint,
+  triggersWithin,
+  triggerTarget,
+} from "./targets";
+
+const NO_TARGETS: readonly TargetPoint[] = [];
 
 /** Debug rings for the otherwise invisible trigger volumes: append `?debug` to the renderer URL. */
 export function isDebugEnabled(): boolean {
@@ -22,13 +30,16 @@ export function Proximity({
   graph,
   player,
   radius,
+  extra = NO_TARGETS,
 }: {
   graph: SceneGraph;
   player: RefObject<THREE.Vector3>;
   radius?: number;
+  /** Targets outside the scene graph — residents of witnessed open land. */
+  extra?: readonly TargetPoint[];
 }): JSX.Element | null {
   const opened = useEngineStore((state) => state.openedTreasures);
-  const targets = useMemo(() => sceneTargets(graph, opened), [graph, opened]);
+  const targets = useMemo(() => [...sceneTargets(graph, opened), ...extra], [graph, opened, extra]);
   const lastKey = useRef<string | null>(null);
   const fired = useRef<Set<string>>(new Set());
   const debug = useMemo(() => isDebugEnabled(), []);

@@ -79,7 +79,7 @@ const karmaSchema = z.object({
   effect: z.string(),
 });
 
-const CORRUPT_HINT = "The file decrypted, but it is not a zip of an Aether Spire world.";
+const CORRUPT_HINT = "The file decrypted, but it is not a zip of an Unwritten Land world.";
 
 export function packFiles(files: WorldFiles): Bytes {
   const entries: Zippable = {};

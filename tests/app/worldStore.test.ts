@@ -111,3 +111,22 @@ describe("worldStore hydration", () => {
     expect(useWorldStore.getState().meta?.name).toBe("Renamed");
   });
 });
+
+describe("land store", () => {
+  it("keeps the notes it was loaded with", async () => {
+    const { useLandStore } = await import("@renderer/state/landStore");
+    const note = {
+      id: "note-0001-aaaa",
+      author: "Rin",
+      at: "2026-09-26T08:00:00.000Z",
+      coord: { cx: 0, cz: 0, x: 1, z: 1 },
+      anchors: [],
+      text: "here",
+      contests: null,
+    };
+    useLandStore.getState().beginLoad("walker");
+    useLandStore.getState().loaded("walker", {}, [], [note]);
+    expect(useLandStore.getState().notes).toEqual([note]);
+    useLandStore.getState().reset();
+  });
+});

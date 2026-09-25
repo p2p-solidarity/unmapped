@@ -1,13 +1,21 @@
 // Heads-up display: The Seed VRMMO aesthetic, but every readout is a store value (Rule 2).
 // Layout only — the three cards live in ./hud, the numbers in ./hud/summary.ts.
 
-import { useEngineStore, useInferenceStore, useSessionStore, useWorldStore } from "@renderer/state";
+import {
+  useEncounterStore,
+  useEngineStore,
+  useInferenceStore,
+  useSessionStore,
+  useWorldStore,
+} from "@renderer/state";
 import { colors, radius, space, Text, zIndex } from "@renderer/ui";
 import { type JSX, useMemo } from "react";
 import { ActionDock, NearbyPrompt } from "./hud/ActionDock";
 import { PlayerCard } from "./hud/PlayerCard";
+import { Reticle } from "./hud/Reticle";
 import { SystemPanel } from "./hud/SystemPanel";
 import { type HudSummary, hudSummary } from "./hud/summary";
+import { TurnPanel } from "./hud/TurnPanel";
 
 function useHudSummary(): HudSummary {
   const meta = useWorldStore((state) => state.meta);
@@ -35,9 +43,14 @@ function useHudSummary(): HudSummary {
 export function Hud(): JSX.Element {
   const summary = useHudSummary();
   const cameraMode = useEngineStore((state) => state.cameraMode);
-  const controls =
-    cameraMode === "fps"
-      ? "WASD Move · F Flashlight · E Interact"
+  const armed = useEncounterStore((state) => state.weapon !== null);
+  const openLand = useEngineStore((state) => state.chunk !== null);
+  const controls = openLand
+    ? "WASD Move · Shift Sprint · Space Jump · E Interact · N Notes · V Camera"
+    : cameraMode === "fps"
+      ? armed
+        ? "WASD Move · LMB Fire · R End turn · F Flashlight · E Interact"
+        : "WASD Move · F Flashlight · E Interact"
       : cameraMode === "side"
         ? "A/D Move · Space Jump · E Interact"
         : cameraMode === "topdown"
@@ -66,43 +79,11 @@ export function Hud(): JSX.Element {
         }}
       >
         <PlayerCard summary={summary} />
+        <TurnPanel />
         <SystemPanel summary={summary} />
       </div>
 
-      {cameraMode === "fps" ? (
-        <div
-          aria-hidden="true"
-          style={{
-            position: "absolute",
-            left: "50%",
-            top: "50%",
-            width: 18,
-            height: 18,
-            transform: "translate(-50%, -50%)",
-          }}
-        >
-          <span
-            style={{
-              position: "absolute",
-              left: 8,
-              top: 2,
-              width: 2,
-              height: 14,
-              background: colors.text,
-            }}
-          />
-          <span
-            style={{
-              position: "absolute",
-              left: 2,
-              top: 8,
-              width: 14,
-              height: 2,
-              background: colors.text,
-            }}
-          />
-        </div>
-      ) : null}
+      {cameraMode === "fps" ? <Reticle /> : null}
 
       <div
         style={{

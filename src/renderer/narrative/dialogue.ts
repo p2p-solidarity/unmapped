@@ -1,3 +1,4 @@
+import type { NarrativeContext } from "@shared/world";
 // NPC encounters. `generateDialogue` is the pure generator; `startDialogue` is the flow the HUD
 // calls when the player interacts with an NPC — it owns the session-store transitions so the card
 // is always in exactly one of loading / error / ready (Rule 2).
@@ -5,6 +6,7 @@
 import { dialoguePrompt, parseDialogue } from "@dsl";
 import { useSessionStore } from "@renderer/state/sessionStore";
 import { useWorldStore } from "@renderer/state/worldStore";
+import { dialogueKey } from "@shared/cartridge";
 import { errored, type Result, ready } from "@shared/result";
 import type {
   DialogueGraph,
@@ -23,7 +25,7 @@ export const DIALOGUE_TEMPERATURE = 0.95;
 export interface GenerateDialogueInput {
   npc: NpcSpec;
   scene: SceneGraph;
-  genesis: Genesis;
+  genesis: Genesis | NarrativeContext;
   karma: KarmaEntry[];
   inventory: Inventory;
 }
@@ -87,6 +89,20 @@ export async function startDialogue(
     );
     return;
   }
+  // A forged cartridge carries its people's words with it: when this NPC was written at author
+  // time, the conversation is read from the pinned revision and no model is asked (plan §1.4).
+  const active = useSessionStore.getState().activeInstance;
+  const baked =
+    active === null
+      ? undefined
+      : active.cartridge.dialogues[dialogueKey(active.instance.save.currentSceneId, npcId)];
+  if (baked !== undefined) {
+    const parsed = parseDialogue(baked);
+    if (useSessionStore.getState().dialogueNpcId !== npcId) return;
+    useSessionStore.getState().setDialogue(parsed.ok ? ready(parsed.value) : errored(parsed.error));
+    return;
+  }
+
   if (world.genesis === null) {
     session.setDialogue(
       errored({ code: "no-genesis", message: "This world has no covenant loaded." }),

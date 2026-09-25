@@ -4,6 +4,10 @@
 //
 // Torch point lights are NOT placed here: they share the scene's capped point-light budget and
 // are emitted by <Atmosphere> through `lights.ts`.
+//
+// Only static props reach this file. A `dynamic` prop is a free rigid body and is drawn by
+// `sandbox/PhysicsProps.tsx` instead — it needs its own transform every frame, which is the one
+// thing an instanced batch with baked matrices cannot give it.
 
 import { useFrame } from "@react-three/fiber";
 import { CylinderCollider, RigidBody } from "@react-three/rapier";
@@ -16,7 +20,15 @@ import { PROP_SHAPE, type PropPart } from "./palette";
 
 const YAW_JITTER = 0.7;
 
-export function Props({ props: specs }: { props: readonly PropSpec[] }): JSX.Element | null {
+export function Props({
+  props: all,
+  solid = true,
+}: {
+  props: readonly PropSpec[];
+  /** False for distant chunks: drawn, but nothing can reach them to collide. */
+  solid?: boolean;
+}): JSX.Element | null {
+  const specs = useMemo(() => all.filter((spec) => !spec.dynamic), [all]);
   const byKind = useMemo(() => groupByKind(specs), [specs]);
   const colliders = useMemo(() => propColliders(specs), [specs]);
   const appliedPulse = useRef(0);
@@ -42,7 +54,7 @@ export function Props({ props: specs }: { props: readonly PropSpec[] }): JSX.Ele
       {[...byKind].map(([kind, items]) => (
         <KindInstances key={kind} kind={kind} items={items} />
       ))}
-      {colliders.length > 0 && (
+      {solid && colliders.length > 0 && (
         <RigidBody type="fixed" colliders={false}>
           {colliders.map((collider) => (
             <CylinderCollider

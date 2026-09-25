@@ -4,13 +4,16 @@
 //   orbit — third-person follow, drag to rotate, wheel to zoom (4–14)
 //   iso   — fixed 45° yaw / 35° pitch from above, no rotation
 //   fps   — first person, pointer lock on canvas click
+//
+// A scene's kit decides its camera. Open land is the one exception: there the player walks the
+// world however they like, so V swaps between orbit and fps.
 
 import { useFrame, useThree } from "@react-three/fiber";
-import { useEngineStore } from "@renderer/state";
+import { useEncounterStore, useEngineStore, useSessionStore } from "@renderer/state";
 import type { GameplayKitRules, GameplayRules } from "@shared/gameplay";
-import { type JSX, type RefObject, useEffect, useRef } from "react";
+import { type JSX, type RefObject, useCallback, useEffect, useRef } from "react";
 import * as THREE from "three";
-import { matchesAction } from "./useKeys";
+import { matchesAction, useKeys } from "./useKeys";
 
 export interface RigState {
   /** Rotation about +Y. The player moves relative to this. */
@@ -33,9 +36,19 @@ const DRAG_SPEED = 0.005;
 const FOLLOW_RESPONSE = 10;
 const EYE_HEIGHT = 0.6;
 const ORBIT_TARGET_HEIGHT = 0.9;
+const ORBIT_PITCH_DEFAULT = 0.65;
+/** Swaps the camera on open land. */
+export const CAMERA_SWITCH_KEY = "KeyV";
+/** Opens the notes left where the player stands, on open land. */
+const NOTES_KEY = "KeyN";
 
 export function defaultRig(): RigState {
-  return { yaw: ISO_YAW, pitch: 0.65, distance: 9 };
+  return { yaw: ISO_YAW, pitch: ORBIT_PITCH_DEFAULT, distance: 9 };
+}
+
+/** The camera a switchable scene moves to from `mode`. */
+export function switchedCamera(mode: string): "orbit" | "fps" {
+  return mode === "fps" ? "orbit" : "fps";
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -46,11 +59,14 @@ export function CameraRig({
   player,
   rig,
   kit,
+  switchable = false,
   bindings,
 }: {
   player: RefObject<THREE.Vector3>;
   rig: RefObject<RigState>;
   kit: GameplayKitRules;
+  /** The player may swap orbit ↔ fps (open land only). */
+  switchable?: boolean;
   bindings?: GameplayRules["bindings"];
 }): JSX.Element | null {
   const camera = useThree((state) => state.camera);
@@ -60,6 +76,22 @@ export function CameraRig({
   const dragging = useRef(false);
   const target = useRef(new THREE.Vector3());
   const desired = useRef(new THREE.Vector3());
+
+  const onPress = useCallback(
+    (code: string) => {
+      if (!switchable) return;
+      if (code === NOTES_KEY) {
+        if (document.pointerLockElement !== null) document.exitPointerLock();
+        useSessionStore.getState().toggleNotes(true);
+        return;
+      }
+      if (code !== CAMERA_SWITCH_KEY) return;
+      const engine = useEngineStore.getState();
+      engine.setCameraMode(switchedCamera(engine.cameraMode));
+    },
+    [switchable],
+  );
+  useKeys(onPress);
 
   useEffect(() => {
     const state = rig.current;
@@ -74,8 +106,12 @@ export function CameraRig({
       if (engine.inputLocked) return;
       if (engine.cameraMode === "fps" && document.pointerLockElement === canvas) {
         const code = event.button === 0 ? "MouseLeft" : event.button === 2 ? "MouseRight" : null;
+        // With a weapon in hand the same button is the trigger (CombatControl owns it), so
+        // inspecting must not also fire off the click.
+        const armed = useEncounterStore.getState().weapon !== null;
         if (
           code !== null &&
+          !armed &&
           matchesAction(code, bindings, "inspect", ["MouseLeft"]) &&
           engine.nearby !== null
         ) {
@@ -148,13 +184,23 @@ export function CameraRig({
     if (kit.cameraDistance > 0) rig.current.distance = kit.cameraDistance;
   }, [camera, kit.cameraDistance, kit.cameraFov, rig]);
 
+  // The rig's default pitch is the orbit camera's elevation above the player. Read as a first-person
+  // look angle it points the eyes 37° into the floor, so entering fps starts level instead.
+  useEffect(() => {
+    if (mode === "fps") rig.current.pitch = 0;
+  }, [mode, rig]);
+
   // Pointer lock belongs to fps mode only, and is released the moment a dialogue takes the keys.
   useEffect(() => {
     if ((inputLocked || mode !== "fps") && document.pointerLockElement === canvas) {
       document.exitPointerLock();
     }
     if (mode === "orbit") {
-      rig.current.pitch = clamp(rig.current.pitch, ORBIT_PITCH_MIN, ORBIT_PITCH_MAX);
+      // Coming back from first person the look angle is near level; lift the orbit back up.
+      rig.current.pitch =
+        rig.current.pitch < ORBIT_PITCH_MIN
+          ? ORBIT_PITCH_DEFAULT
+          : clamp(rig.current.pitch, ORBIT_PITCH_MIN, ORBIT_PITCH_MAX);
     }
   }, [inputLocked, mode, canvas, rig]);
 
@@ -166,6 +212,16 @@ export function CameraRig({
     if (mode === "fps") {
       camera.position.set(position.x, position.y + EYE_HEIGHT, position.z);
       camera.rotation.set(-state.pitch, state.yaw, 0, "YXZ");
+      return;
+    }
+
+    // A fixed camera holds one framing of the whole floor. It does not follow, because the point
+    // of the mode is that the player is not walking around.
+    if (mode === "fixed") {
+      const height = Math.max(6, state.distance);
+      camera.position.set(position.x, position.y + height * 0.55, position.z + height);
+      target.current.set(position.x, position.y + ORBIT_TARGET_HEIGHT, position.z);
+      camera.lookAt(target.current);
       return;
     }
 

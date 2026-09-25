@@ -95,6 +95,9 @@ export function readContract(child: ChildNode, issues: OpenUIError[]): SceneCont
     inventoryPolicy: p.inventoryPolicy,
     grantsFlags: [...new Set(p.grantsFlags)],
     terminal: p.terminal,
+    ...(p.requiredProfileId == null ? {} : { requiredProfileId: p.requiredProfileId }),
+    ...(p.requiredContextId == null ? {} : { requiredContextId: p.requiredContextId }),
+    ...(p.requiredModules == null ? {} : { requiredModules: p.requiredModules }),
   };
 }
 

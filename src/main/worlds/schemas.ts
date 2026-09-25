@@ -11,6 +11,7 @@ import {
   type Inventory,
   ITEM_KINDS,
   type KarmaEntry,
+  LEDGER_ACTIONS,
   PHYSICS_MODES,
   WORLD_FILE_NAMES,
   WORLD_FILES,
@@ -19,7 +20,7 @@ import {
 } from "@shared/world";
 import { z } from "zod";
 
-const KARMA_ACTIONS = [...CHOICE_ACTIONS, "wish", "genesis", "floor"] as const;
+const KARMA_ACTIONS = [...CHOICE_ACTIONS, ...LEDGER_ACTIONS] as const;
 
 export const itemSpecSchema = z.object({
   id: z.string(),
@@ -76,6 +77,8 @@ export const karmaEntrySchema = z.object({
   choice: z.string(),
   action: z.enum(KARMA_ACTIONS),
   effect: z.string(),
+  cx: z.number().int().min(-40_000).max(40_000).optional(),
+  cz: z.number().int().min(-40_000).max(40_000).optional(),
 });
 
 export const inventorySchema = z.object({

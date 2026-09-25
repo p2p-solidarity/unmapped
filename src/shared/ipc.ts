@@ -1,3 +1,6 @@
+import type { ModProposalPreview, SeedModProposal } from "./mods";
+import type { PlayerProfile, PlayerProfileInput } from "./player";
+import type { AuthoringSnapshot } from "./scene-gallery";
 // The single IPC contract. Preload exposes `window.seed` implementing SeedApi; main registers
 // handlers for every channel in IPC. Never invent a channel outside this file.
 
@@ -15,6 +18,13 @@ import type {
   WorkspaceRecord,
 } from "./cartridge";
 import type { DataKeyWrappingRecord } from "./identity";
+import type {
+  AppendNoteInput,
+  LandNote,
+  LandRecord,
+  WitnessChunkInput,
+  WitnessedChunk,
+} from "./land";
 import type { ChatEvent, ChatRequest, InferenceConfig, ProbeResult, SidecarStatus } from "./llm";
 import type { ModBundle, ModSummary } from "./mods";
 import type { Result } from "./result";
@@ -39,18 +49,35 @@ export const IPC = {
     exportPack: "cartridges:export-pack",
     importPack: "cartridges:import-pack",
   },
+  game: {
+    base: "game:base",
+  },
   instances: {
     list: "instances:list",
+    listLegacy: "instances:list-legacy",
     create: "instances:create",
     resolve: "instances:resolve",
     transition: "instances:transition",
     complete: "instances:complete",
+    descend: "instances:descend",
     checkpoint: "instances:checkpoint",
     upgrade: "instances:upgrade",
     exportBackup: "instances:export-backup",
     importBackup: "instances:import-backup",
+    readLand: "instances:read-land",
+    witness: "instances:witness",
+    appendNote: "instances:append-note",
+  },
+  profiles: {
+    list: "profiles:list",
+    read: "profiles:read",
+    upsert: "profiles:upsert",
+    remove: "profiles:remove",
   },
   workspaces: {
+    createAuthoring: "workspaces:create-authoring",
+    readAuthoring: "workspaces:read-authoring",
+    writeAuthoring: "workspaces:write-authoring",
     list: "workspaces:list",
     create: "workspaces:create",
     read: "workspaces:read",
@@ -77,6 +104,8 @@ export const IPC = {
     putWrappingRecord: "vault:put-wrapping-record",
   },
   mods: {
+    previewProposal: "mods:preview-proposal",
+    publishProposal: "mods:publish-proposal",
     list: "mods:list",
     read: "mods:read",
     install: "mods:install",
@@ -102,6 +131,8 @@ export interface CreateInstanceInput {
   cartridgeId: string;
   version: string;
   name: string;
+  /** World seed of an open-land game; omitted for cartridges that have none. */
+  seed?: string;
 }
 
 export type CheckpointInstanceInput = InstanceProgressInput;
@@ -193,13 +224,22 @@ export interface SeedApi {
     /** Picks a `.cartridge`, verifies its hash and installs it; same bytes twice is a no-op. */
     importPack(): Promise<Result<CartridgeManifest>>;
   };
+  game: {
+    /** Installs (once) and returns the one game every world seed is a land of. */
+    base(): Promise<Result<CartridgeManifest>>;
+  };
   instances: {
+    /** Saves this build can open. Saves from an older build are skipped here… */
     list(): Promise<Result<InstanceMeta[]>>;
+    /** …and named here, so the library can say they exist and were left untouched. */
+    listLegacy(): Promise<Result<string[]>>;
     create(input: CreateInstanceInput): Promise<Result<ResolvedInstance>>;
     resolve(instanceId: string): Promise<Result<ResolvedInstance>>;
     transition(instanceId: string, targetSceneId: string): Promise<Result<ResolvedInstance>>;
     /** Ends the cartridge from its terminal scene; the checkpoint stays in that scene. */
     complete(instanceId: string): Promise<Result<ResolvedInstance>>;
+    /** After the ending: one generated floor deeper. Only the depth is saved, never the floor. */
+    descend(instanceId: string): Promise<Result<ResolvedInstance>>;
     checkpoint(input: CheckpointInstanceInput): Promise<Result<InstanceMeta>>;
     /** Re-pins to another installed version of the same cartridge after snapshotting the save. */
     upgrade(input: UpgradeInstanceInput): Promise<Result<ResolvedInstance>>;
@@ -207,8 +247,23 @@ export interface SeedApi {
     exportBackup(instanceId: string): Promise<Result<SeedExport>>;
     /** Restores a `.spire-backup`; fails with `cartridge-missing` unless the exact revision is installed. */
     importBackup(): Promise<Result<ResolvedInstance>>;
+    /** Every witnessed chunk and the lore graph of the active save. */
+    readLand(instanceId: string): Promise<Result<LandRecord>>;
+    /** Writes one chunk once; `chunk-already-witnessed` if somebody got there first. */
+    witness(input: WitnessChunkInput): Promise<Result<WitnessedChunk>>;
+    /** Appends one player-written note to the active save's notes.jsonl. */
+    appendNote(input: AppendNoteInput): Promise<Result<LandNote>>;
+  };
+  profiles: {
+    list(): Promise<Result<PlayerProfile[]>>;
+    read(profileId: string): Promise<Result<PlayerProfile>>;
+    upsert(input: PlayerProfileInput): Promise<Result<PlayerProfile>>;
+    remove(profileId: string): Promise<Result<void>>;
   };
   workspaces: {
+    createAuthoring(input: { name: string; author: string }): Promise<Result<AuthoringSnapshot>>;
+    readAuthoring(workspaceId: string): Promise<Result<AuthoringSnapshot>>;
+    writeAuthoring(snapshot: AuthoringSnapshot): Promise<Result<AuthoringSnapshot>>;
     list(): Promise<Result<WorkspaceMeta[]>>;
     create(input: CreateWorkspaceInput): Promise<Result<WorkspaceRecord>>;
     read(workspaceId: string): Promise<Result<WorkspaceRecord>>;
@@ -238,6 +293,8 @@ export interface SeedApi {
     putWrappingRecord(record: DataKeyWrappingRecord): Promise<Result<void>>;
   };
   mods: {
+    previewProposal(proposal: SeedModProposal): Promise<Result<ModProposalPreview>>;
+    publishProposal(proposal: SeedModProposal): Promise<Result<CartridgeManifest>>;
     /** Installed mods under `<userData>/mods/<name>/mod.yml`, manifest-validated. */
     list(): Promise<Result<ModSummary[]>>;
     /** Full bundle (manifest + referenced prompt/skill files) for mounting in the renderer. */

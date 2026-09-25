@@ -1,0 +1,64 @@
+{
+  "cartridgeId": "demo-reactor-squad",
+  "version": "1.0.0",
+  "name": "反應爐小隊",
+  "author": "Unwritten Land Demo",
+  "createdAt": "2026-09-16T00:00:00.000Z",
+  "notes": [
+    "plan.md §10 benchmark: 第一人稱射擊 + 回合制 + 團隊 + 科幻.",
+    "團隊 asks for network:session; the design interview answer 'NPC squad' is the override network=offline.",
+    "No mode disagrees on camera/physics/timing/party, so the compiler keeps one context: main.",
+    "Scenes gate each other with contract flags: deck_secured → coolant_vented → reactor_shutdown."
+  ],
+  "modes": ["first_person_shooter", "turn_based", "team", "sci_fi"],
+  "overrides": { "network": "offline" },
+  "scenes": [
+    {
+      "slotId": "reactor_deck",
+      "role": "opening",
+      "title": "反應爐甲板",
+      "mode": "first_person_shooter",
+      "baseId": "reactor_deck"
+    },
+    {
+      "slotId": "coolant_spine",
+      "role": "encounter",
+      "title": "冷卻脊管",
+      "mode": "first_person_shooter",
+      "baseId": "frost_vault"
+    },
+    {
+      "slotId": "core_chamber",
+      "role": "boss",
+      "title": "核心室",
+      "mode": "first_person_shooter",
+      "baseId": "reactor_deck"
+    }
+  ],
+  "endings": ["core_chamber"],
+  "narrative": {
+    "required": true,
+    "premise": "軌道電站的反應爐失控，自動防衛系統把維修班當成入侵者。你帶著兩名隊員，一回合一回合地推進到核心，手動停機。",
+    "finale": "核心守衛倒下，反應爐的警報轉為安靜的藍光。小隊在停機紀錄上簽下名字。",
+    "scenes": [
+      {
+        "sceneId": "reactor_deck",
+        "title": "反應爐甲板",
+        "summary": "巡邏無人機占據了甲板，掩體之間只有一條安全路線。",
+        "objective": "肅清甲板上的無人機，與小隊會合。"
+      },
+      {
+        "sceneId": "coolant_spine",
+        "title": "冷卻脊管",
+        "summary": "狹長的冷卻管道兩側結霜，守衛在排氣閥前等著。",
+        "objective": "穿過脊管，打開通往核心的排氣閥。"
+      },
+      {
+        "sceneId": "core_chamber",
+        "title": "核心室",
+        "summary": "熔融的核心下方，巨大的守衛機體擋住停機台。",
+        "objective": "擊倒核心守衛，手動停機。"
+      }
+    ]
+  }
+}

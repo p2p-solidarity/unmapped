@@ -1,16 +1,26 @@
 // One place decides whether the engine may read the keyboard. Anything that owns text or a modal
-// (console, dialogue, altar, the character sheet, the platform editor), any blocking operation
+// (console, dialogue, altar, a pending change proposal), any blocking operation
 // (`session.busy`), and any screen that is not a playable world locks it.
 
 import {
   type Screen,
-  useCharacterStore,
+  useEncounterStore,
   useEngineStore,
-  usePlatformStore,
+  useRunStore,
   useSessionStore,
   useWorldStore,
 } from "@renderer/state";
+import type { RunOutcome } from "@shared/progression";
 import { useEffect } from "react";
+
+/**
+ * Whether a decided fight ends play on this floor. Defeat always does. A cleared floor only does
+ * when there is nowhere left to go: with stairs or a next scene still ahead, clearing it is the
+ * objective met, and locking the keys would strand the player next to the exit.
+ */
+export function runBlocksPlay(outcome: RunOutcome, exits: number): boolean {
+  return outcome === "defeated" || (outcome === "cleared" && exits === 0);
+}
 
 export interface LockInput {
   screen: Screen;
@@ -25,8 +35,12 @@ export interface LockInput {
   endingOpen: boolean;
   /** True while a model-authored change waits for an explicit player decision. */
   proposalOpen: boolean;
-  editorOpen: boolean;
-  customizing: boolean;
+  /** True while the run-over overlay is up: the fight is decided, the keys are not yours. */
+  runEnded: boolean;
+  /** True while a `real_time_with_pause` cartridge is paused. */
+  paused: boolean;
+  /** True while the mechanics tweaker owns the keyboard. */
+  tweakOpen: boolean;
   sceneReady: boolean;
 }
 
@@ -41,8 +55,9 @@ export function derivedLock(input: LockInput): boolean {
     input.floorFailed ||
     input.endingOpen ||
     input.proposalOpen ||
-    input.editorOpen ||
-    input.customizing ||
+    input.runEnded ||
+    input.paused ||
+    input.tweakOpen ||
     !input.sceneReady
   );
 }
@@ -51,13 +66,20 @@ export function useInputLock(): void {
   const screen = useSessionStore((state) => state.screen);
   const consoleOpen = useSessionStore((state) => state.consoleOpen);
   const dialogueOpen = useSessionStore((state) => state.dialogue !== null);
-  const altarOpen = useSessionStore((state) => state.altarOpen);
+  // The door at home is a modal like the altar: it owns the keys while it is open.
+  const altarOpen = useSessionStore(
+    (state) => state.altarOpen || state.doorOpen || state.notesOpen,
+  );
   const busy = useSessionStore((state) => state.busy);
   const floorFailed = useSessionStore((state) => state.floorFailure !== null);
   const endingOpen = useSessionStore((state) => state.ending !== null);
   const proposalOpen = useSessionStore((state) => state.changeProposals.length > 0);
-  const editorOpen = usePlatformStore((state) => state.editorOpen);
-  const customizing = useCharacterStore((state) => state.isCustomizing);
+  const exits = useWorldStore((state) =>
+    state.scene.status === "ready" ? state.scene.value.exits.length : 0,
+  );
+  const runEnded = useRunStore((state) => runBlocksPlay(state.outcome, exits));
+  const paused = useEncounterStore((state) => state.paused);
+  const tweakOpen = useSessionStore((state) => state.tweakOpen);
   const sceneReady = useWorldStore((state) => state.scene.status === "ready");
 
   const locked = derivedLock({
@@ -69,8 +91,9 @@ export function useInputLock(): void {
     floorFailed,
     endingOpen,
     proposalOpen,
-    editorOpen,
-    customizing,
+    runEnded,
+    paused,
+    tweakOpen,
     sceneReady,
   });
 

@@ -59,7 +59,7 @@ export interface ChatBody {
   /** Omitted for GPT-5 family: any value but the default returns 400 "Unsupported parameter". */
   temperature?: number;
   /** GPT-5 family only; "low" keeps DSL generation fast. */
-  reasoning_effort?: "low" | "medium" | "high";
+  reasoning_effort?: "none" | "low" | "medium" | "high";
   /** llama.cpp only: GBNF grammar that constrains the sampler to our DSL. */
   grammar?: string;
   /** llama.cpp / ollama only: stops Qwen-style servers emitting a <think> block. */
@@ -68,8 +68,11 @@ export interface ChatBody {
 
 /** Reasoning models (GPT-5 family, o-series) take `max_completion_tokens` and reject `temperature`. */
 export function usesReasoningParams(config: InferenceConfig): boolean {
-  if (config.kind === "openai" || config.kind === "openui-gateway") return true;
-  // Gateways namespace the model ("openai/gpt-5"), so match the last path segment.
+  // Local runtimes never take these fields, whatever the model is called.
+  if (config.kind === "llamacpp" || config.kind === "ollama" || config.kind === "vllm")
+    return false;
+  // Gateways namespace the model ("openai/gpt-5"), so match the last path segment. The OpenAI
+  // preset is included on purpose: switching its model to gpt-4o must not send reasoning fields.
   const model = (config.model.split("/").pop() ?? "").toLowerCase();
   return /^gpt-5/.test(model) || /^o[1-9]/.test(model);
 }
@@ -127,7 +130,10 @@ export function buildChatBody(config: InferenceConfig, request: ChatRequest): Ch
 
   if (usesReasoningParams(config)) {
     body.max_completion_tokens = request.maxTokens;
-    body.reasoning_effort = "low";
+    // GPT-5 Chat Completions rejects function tools when reasoning is enabled. Keep reasoning for
+    // plain generation, but explicitly turn it off for tool turns instead of making the provider
+    // return a 400 (the Responses API is not part of this OpenAI-compatible client contract).
+    body.reasoning_effort = withTools ? "none" : "low";
   } else {
     body.max_tokens = request.maxTokens;
     body.temperature = request.temperature;

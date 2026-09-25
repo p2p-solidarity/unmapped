@@ -1,6 +1,7 @@
 // Low-frequency engine state. Positions and camera transforms live in refs inside the engine;
 // only "what can the player interact with right now" and mode switches cross into React.
 
+import type { ChunkCoord } from "@shared/chunks";
 import type { CameraMode, NearbyTarget } from "@shared/events";
 import { create } from "zustand";
 
@@ -15,6 +16,12 @@ export interface EngineState {
   /** Ids the player already opened this floor so the engine renders them as empty. */
   openedTreasures: string[];
   fps: number;
+  /** Body the physics gun is carrying, or null. Changes only on grab and release. */
+  heldBodyId: string | null;
+  /** Chunk of open land the player stands on; null in a bounded scene. Changes on crossing only. */
+  chunk: ChunkCoord | null;
+  /** One-shot move request (the door); `seq` bumps so the same spot twice still travels. */
+  teleport: { x: number; z: number; seq: number } | null;
 
   setNearby(target: NearbyTarget | null): void;
   setCameraMode(mode: CameraMode): void;
@@ -22,6 +29,9 @@ export interface EngineState {
   interact(target: NearbyTarget): void;
   markTreasureOpened(id: string): void;
   setFps(fps: number): void;
+  setHeldBody(id: string | null): void;
+  setChunk(chunk: ChunkCoord | null): void;
+  requestTeleport(x: number, z: number): void;
   resetFloor(): void;
 }
 
@@ -33,6 +43,9 @@ export const useEngineStore = create<EngineState>()((set) => ({
   lastInteract: null,
   openedTreasures: [],
   fps: 0,
+  heldBodyId: null,
+  chunk: null,
+  teleport: null,
 
   setNearby: (target) =>
     set((state) => (sameTarget(state.nearby, target) ? state : { nearby: target })),
@@ -42,7 +55,12 @@ export const useEngineStore = create<EngineState>()((set) => ({
     set((state) => ({ interactSeq: state.interactSeq + 1, lastInteract: target })),
   markTreasureOpened: (id) => set((state) => ({ openedTreasures: [...state.openedTreasures, id] })),
   setFps: (fps) => set({ fps }),
-  resetFloor: () => set({ nearby: null, lastInteract: null, openedTreasures: [] }),
+  setHeldBody: (heldBodyId) => set({ heldBodyId }),
+  setChunk: (chunk) => set({ chunk }),
+  requestTeleport: (x, z) =>
+    set((state) => ({ teleport: { x, z, seq: (state.teleport?.seq ?? 0) + 1 } })),
+  resetFloor: () =>
+    set({ nearby: null, lastInteract: null, openedTreasures: [], heldBodyId: null }),
 }));
 
 function sameTarget(a: NearbyTarget | null, b: NearbyTarget | null): boolean {

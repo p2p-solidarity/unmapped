@@ -209,3 +209,24 @@ scene starts, and input remains locked under dialogue/editor overlays.
 
 The directory and manifest formats leave seams for these features, but Phase A does not pretend
 they already work.
+
+## Status — 2026-09-16
+
+Slices 1–7 are implemented and reviewed (Standards + Spec, four independent passes). Verified by
+`bun run check` (64 files, 526 tests), `bun run build`, and in-app smoke of Join, Cartridges,
+Play, Archive, Remix → workspace, plus a scripted Validate → Publish gate run on a real workspace.
+
+Accepted trade-offs (documented, not bugs):
+
+- `writeInstanceSave` renames `save.json` then `instance.json`; a crash between the two leaves a
+  pin mismatch that `readInstance` refuses as `save-identity-mismatch` (fail-safe, manual repair).
+- Data Key wrapping records carry no AAD and new ciphertext keeps the `ASP1` header; the wrong key
+  fails AES-GCM authentication either way.
+- `inspect` (mouse) is currently an alias of `interact`; kit jump/sprint policy is keyed by kit id.
+
+Deferred to later scoped slices:
+
+- `PropSpec` stable ids + physics declarations before FPS pick-up / rotate / drop (format change).
+- Cross-device transfer of wrapping records and an encrypted `.spire-backup` container.
+- No 2.5D combat hitbox: the project has no combat system.
+

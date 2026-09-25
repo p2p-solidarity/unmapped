@@ -1,12 +1,18 @@
 // Screen routing + transient UI state for the running session.
 
+import type { ResolvedInstance } from "@shared/cartridge";
 import type { ChangeProposal } from "@shared/effects";
+import type { PlayerProfile } from "@shared/player";
 import type { AppError, Loadable } from "@shared/result";
 import { idle } from "@shared/result";
 import type { DialogueGraph, ItemSpec } from "@shared/world";
 import { create } from "zustand";
 
-export type Screen = "worlds" | "genesis" | "play" | "workspace";
+/**
+ * `seed` is New Game: a new land of the one game. `create` (a whole new game written by the model)
+ * and `remix` (the full authoring flow) are advanced entries.
+ */
+export type Screen = "worlds" | "seed" | "create" | "remix" | "play" | "workspace";
 
 export interface Toast {
   id: number;
@@ -28,6 +34,8 @@ export interface CartridgeEnding {
   name: string;
   /** The story's finale text, in the player's language. */
   finale: string;
+  /** The cartridge has a walkable scene, so generated floors can continue below the ending. */
+  depths: boolean;
 }
 
 export interface SessionState {
@@ -37,8 +45,20 @@ export interface SessionState {
   /** Active NPC encounter; null when no dialogue card is on screen. */
   dialogue: Loadable<DialogueGraph> | null;
   dialogueNpcId: string | null;
+  /**
+   * The words were written when the place was witnessed. Such a dialogue is read, never
+   * generated or resolved by a model (plan.md §1.4); `dialogueSpeaker` is who says it.
+   */
+  dialogueWitnessed: boolean;
+  dialogueSpeaker: string | null;
   /** Active altar (wish) session; null when closed. */
   altarOpen: boolean;
+  /** True while the mechanics tweaker is open. */
+  tweakOpen: boolean;
+  /** True while the door at home is open (open land). */
+  doorOpen: boolean;
+  /** True while the notes of the chunk underfoot are open (open land). */
+  notesOpen: boolean;
   altarResult: Loadable<ItemSpec>;
   /** Identity: which key unlocked saves this session. */
   unlock: { method: "prf" | "keychain"; credentialId: string | null } | null;
@@ -52,14 +72,25 @@ export interface SessionState {
   peerCount: number;
   activeWorkspaceId: string | null;
   changeProposals: ChangeProposal[];
+  /** Last main-verified instance. Runtime sessions may only use this exact pin. */
+  activeInstance: ResolvedInstance | null;
+  playerProfile: PlayerProfile | null;
+  networkRole: "solo" | "host" | "peer";
 
   setScreen(screen: Screen): void;
   setEnding(ending: CartridgeEnding | null): void;
   toggleConsole(open?: boolean): void;
   openDialogue(npcId: string): void;
+  /** Opens a stored dialogue; it is already ready or already an error — nothing is loading. */
+  showWitnessedDialogue(npcId: string, speaker: string, dialogue: Loadable<DialogueGraph>): void;
   setDialogue(state: Loadable<DialogueGraph>): void;
   closeDialogue(): void;
   openAltar(): void;
+  toggleTweak(open?: boolean): void;
+  openDoor(): void;
+  closeDoor(): void;
+  toggleNotes(open?: boolean): void;
+  closeTweak(): void;
   setAltarResult(state: Loadable<ItemSpec>): void;
   closeAltar(): void;
   setUnlock(unlock: SessionState["unlock"]): void;
@@ -73,6 +104,9 @@ export interface SessionState {
   addChangeProposal(proposal: ChangeProposal): void;
   removeChangeProposal(proposalId: string): void;
   clearChangeProposals(): void;
+  setActiveInstance(instance: ResolvedInstance | null): void;
+  setPlayerProfile(profile: PlayerProfile | null): void;
+  setNetworkRole(role: SessionState["networkRole"]): void;
 }
 
 let toastSeq = 0;
@@ -83,7 +117,12 @@ export const useSessionStore = create<SessionState>()((set) => ({
   consoleOpen: false,
   dialogue: null,
   dialogueNpcId: null,
+  dialogueWitnessed: false,
+  dialogueSpeaker: null,
   altarOpen: false,
+  tweakOpen: false,
+  doorOpen: false,
+  notesOpen: false,
   altarResult: idle(),
   unlock: null,
   toasts: [],
@@ -93,17 +132,38 @@ export const useSessionStore = create<SessionState>()((set) => ({
   peerCount: 0,
   activeWorkspaceId: null,
   changeProposals: [],
+  activeInstance: null,
+  playerProfile: null,
+  networkRole: "solo",
 
   // Leaving the play screen drops the finale overlay with it.
   // Leaving Play drops the finale overlay and any unapproved proposals with it.
   setScreen: (screen) =>
-    set(screen === "play" ? { screen } : { screen, ending: null, changeProposals: [] }),
+    set(
+      screen === "play"
+        ? { screen }
+        : { screen, ending: null, changeProposals: [], doorOpen: false, notesOpen: false },
+    ),
   setEnding: (ending) => set({ ending }),
   toggleConsole: (open) => set((state) => ({ consoleOpen: open ?? !state.consoleOpen })),
-  openDialogue: (npcId) => set({ dialogueNpcId: npcId, dialogue: { status: "loading" } }),
+  openDialogue: (npcId) =>
+    set({
+      dialogueNpcId: npcId,
+      dialogue: { status: "loading" },
+      dialogueWitnessed: false,
+      dialogueSpeaker: null,
+    }),
+  showWitnessedDialogue: (npcId, speaker, dialogue) =>
+    set({ dialogueNpcId: npcId, dialogue, dialogueWitnessed: true, dialogueSpeaker: speaker }),
   setDialogue: (dialogue) => set({ dialogue }),
-  closeDialogue: () => set({ dialogue: null, dialogueNpcId: null }),
+  closeDialogue: () =>
+    set({ dialogue: null, dialogueNpcId: null, dialogueWitnessed: false, dialogueSpeaker: null }),
   openAltar: () => set({ altarOpen: true, altarResult: idle() }),
+  toggleTweak: (open) => set((state) => ({ tweakOpen: open ?? !state.tweakOpen })),
+  closeTweak: () => set({ tweakOpen: false }),
+  openDoor: () => set({ doorOpen: true }),
+  closeDoor: () => set({ doorOpen: false }),
+  toggleNotes: (open) => set((state) => ({ notesOpen: open ?? !state.notesOpen })),
   setAltarResult: (altarResult) => set({ altarResult }),
   closeAltar: () => set({ altarOpen: false, altarResult: idle() }),
   setUnlock: (unlock) => set({ unlock }),
@@ -125,4 +185,7 @@ export const useSessionStore = create<SessionState>()((set) => ({
       ),
     })),
   clearChangeProposals: () => set({ changeProposals: [] }),
+  setActiveInstance: (activeInstance) => set({ activeInstance }),
+  setPlayerProfile: (playerProfile) => set({ playerProfile }),
+  setNetworkRole: (networkRole) => set({ networkRole }),
 }));

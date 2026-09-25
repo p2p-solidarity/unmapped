@@ -2,12 +2,17 @@
 // consequence. Everything it reports comes from the parsed scene — when the scene has no such
 // entity we say so instead of inventing loot or a line.
 
+import { translate } from "@renderer/i18n";
 import { startDialogue } from "@renderer/narrative";
-import { useEngineStore, useSessionStore, useWorldStore } from "@renderer/state";
+import { sendRoomInteraction } from "@renderer/net/sync";
+import { useEncounterStore, useEngineStore, useSessionStore, useWorldStore } from "@renderer/state";
+import { endlessObjectiveOf } from "@shared/endless";
 import type { NearbyTarget } from "@shared/events";
 import type { SceneGraph } from "@shared/world";
 import { useEffect, useRef } from "react";
 import { makeKarmaEntry } from "./karmaFile";
+import { searchAt } from "./land/errands";
+import { talkOnLand } from "./land/talk";
 
 export interface InteractionHandlers {
   /**
@@ -15,6 +20,8 @@ export interface InteractionHandlers {
    * is the stable destination of a cartridge exit; null means the ending gate (or a legacy exit).
    */
   onAdvanceFloor(to: string, targetSceneId: string | null): void;
+  /** Stairs on a generated floor below the ending: one depth further down. */
+  onDescend(): void;
 }
 
 function session() {
@@ -80,24 +87,56 @@ function pullTrigger(target: NearbyTarget, scene: SceneGraph | null): void {
   session().toast("info", trigger.event);
 }
 
-type Advance = InteractionHandlers["onAdvanceFloor"];
+type Handlers = Pick<InteractionHandlers, "onAdvanceFloor" | "onDescend">;
 
-function descend(target: NearbyTarget, scene: SceneGraph | null, advance: Advance): void {
+/** How much of a generated floor's objective is still undone; 0 lets the stairs open. */
+function objectiveLeft(scene: SceneGraph): number {
+  const objective = endlessObjectiveOf(scene);
+  if (objective === "clear") {
+    return useEncounterStore
+      .getState()
+      .combatants.filter((one) => one.side === "hostile" && one.hp > 0).length;
+  }
+  if (objective === "loot") {
+    const opened = useEngineStore.getState().openedTreasures;
+    return scene.treasures.filter((one) => !opened.includes(one.id)).length;
+  }
+  return 0;
+}
+
+function descend(target: NearbyTarget, scene: SceneGraph | null, handlers: Handlers): void {
   const exit =
     scene?.exits.find((item) => item.to === target.id) ??
     scene?.exits.find((item) => item.to === target.label);
+
+  // A floor of the endless depths: its stairs lead one depth down once its objective is done.
+  if (scene !== null && useSessionStore.getState().activeInstance?.instance.save.endless) {
+    const left = objectiveLeft(scene);
+    if (left > 0) {
+      session().toast("info", translate("objectiveUnmet", { left }));
+      return;
+    }
+    handlers.onDescend();
+    return;
+  }
+
   const to = exit?.to ?? target.label.trim();
   if (to.length === 0) {
     session().toast("danger", "This exit has no destination label.");
     return;
   }
-  advance(to, exit?.targetSceneId ?? null);
+  handlers.onAdvanceFloor(to, exit?.targetSceneId ?? null);
 }
 
-function dispatch(target: NearbyTarget, advance: Advance): void {
+function dispatch(target: NearbyTarget, handlers: Handlers): void {
   const scene = currentScene();
   switch (target.kind) {
     case "npc":
+      // Open land: every word was written when the place was witnessed; nothing is generated now.
+      if (useEngineStore.getState().chunk !== null) {
+        talkOnLand(target.id);
+        return;
+      }
       startDialogue(target.id).catch((error: unknown) => {
         const message = error instanceof Error ? error.message : String(error);
         session().toast("danger", `Dialogue failed: ${message}`);
@@ -110,7 +149,7 @@ function dispatch(target: NearbyTarget, advance: Advance): void {
       openTreasure(target, scene);
       return;
     case "exit":
-      descend(target, scene, advance);
+      descend(target, scene, handlers);
       return;
     case "monster":
       inspectMonster(target, scene);
@@ -118,14 +157,21 @@ function dispatch(target: NearbyTarget, advance: Advance): void {
     case "trigger":
       pullTrigger(target, scene);
       return;
+    case "search":
+      searchAt(target.id);
+      return;
+    case "door":
+      if (document.pointerLockElement !== null) document.exitPointerLock();
+      session().openDoor();
+      return;
   }
 }
 
-export function useInteractions({ onAdvanceFloor }: InteractionHandlers): void {
-  const advanceRef = useRef(onAdvanceFloor);
+export function useInteractions({ onAdvanceFloor, onDescend }: InteractionHandlers): void {
+  const handlersRef = useRef<Handlers>({ onAdvanceFloor, onDescend });
   useEffect(() => {
-    advanceRef.current = onAdvanceFloor;
-  }, [onAdvanceFloor]);
+    handlersRef.current = { onAdvanceFloor, onDescend };
+  }, [onAdvanceFloor, onDescend]);
 
   useEffect(() => {
     let seen = useEngineStore.getState().interactSeq;
@@ -134,7 +180,16 @@ export function useInteractions({ onAdvanceFloor }: InteractionHandlers): void {
       seen = state.interactSeq;
       const target = state.lastInteract;
       if (target === null) return;
-      dispatch(target, (to, targetSceneId) => advanceRef.current(to, targetSceneId));
+      // A visitor reads open-land words from the mirrored land; only other interactions go to the host.
+      const readsLocally = target.kind === "npc" && useEngineStore.getState().chunk !== null;
+      if (
+        !readsLocally &&
+        useSessionStore.getState().networkRole === "peer" &&
+        sendRoomInteraction(target)
+      ) {
+        return;
+      }
+      dispatch(target, handlersRef.current);
     });
   }, []);
 }

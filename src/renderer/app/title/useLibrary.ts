@@ -12,6 +12,8 @@ export interface LibraryData {
   instances: InstanceMeta[];
   workspaces: WorkspaceMeta[];
   legacy: WorldMeta[];
+  /** Saves from an older build that this build cannot open (left untouched on disk). */
+  oldSaves: string[];
 }
 
 export function useLibrary(): { data: Loadable<LibraryData>; refresh(): Promise<void> } {
@@ -19,22 +21,25 @@ export function useLibrary(): { data: Loadable<LibraryData>; refresh(): Promise<
 
   const refresh = useCallback(async () => {
     setData(loading());
-    const [cartridges, instances, workspaces, legacy] = await Promise.all([
+    const [cartridges, instances, workspaces, legacy, oldSaves] = await Promise.all([
       window.seed.cartridges.list(),
       window.seed.instances.list(),
       window.seed.workspaces.list(),
       window.seed.worlds.list(),
+      window.seed.instances.listLegacy(),
     ]);
     if (!cartridges.ok) return setData(errored(cartridges.error));
     if (!instances.ok) return setData(errored(instances.error));
     if (!workspaces.ok) return setData(errored(workspaces.error));
     if (!legacy.ok) return setData(errored(legacy.error));
+    if (!oldSaves.ok) return setData(errored(oldSaves.error));
     setData(
       ready({
         cartridges: cartridges.value,
         instances: [...instances.value].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
         workspaces: workspaces.value,
         legacy: legacy.value,
+        oldSaves: oldSaves.value,
       }),
     );
   }, []);

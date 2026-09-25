@@ -16,16 +16,24 @@ const LABEL_GAP = 0.42;
 export function Npc({
   npc,
   player = null,
+  offset = [0, 0],
 }: {
   npc: NpcSpec;
   player?: RefObject<THREE.Vector3> | null;
+  /** World offset of the chunk this NPC's tiles are local to; the villager faces in world space. */
+  offset?: readonly [number, number];
 }): JSX.Element {
   const [x, z] = tileToWorld(npc.x, npc.z);
   const height = humanoidHeight(BODY_PROPORTION[npc.body]);
 
   return (
     <group position={[x, TILE_TOP, z]}>
-      <Humanoid look={npc} origin={[x, z]} player={player} phase={hash2(npc.x, npc.z)} />
+      <Humanoid
+        look={npc}
+        origin={[x + offset[0], z + offset[1]]}
+        player={player}
+        phase={hash2(npc.x + offset[0], npc.z + offset[1])}
+      />
       <Label text={npc.name} y={height + LABEL_GAP} />
     </group>
   );

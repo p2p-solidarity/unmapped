@@ -1,27 +1,14 @@
-// Platforms — the jump-puzzle blocks. Two lists render through the same component:
-//
-//   baked  — `SceneGraph.platforms`, solid and permanent (the DSL is the truth).
-//   draft  — `usePlatformStore.drafts`, the editor's unsaved previews: translucent at
-//            DRAFT_OPACITY with an accent lip (brighter while selected), but fully collidable so
-//            they can be test-jumped before "Apply" bakes them into world.oui.
-//
-// A draft that still matches its baked original is dropped by `allPlatformBodies`, so opening the
-// editor never doubles the world. The engine never reads localStorage; drafts arrive through the
-// store, baked ones through props.
+// Platforms — the jump-puzzle blocks, rendered straight from `SceneGraph.platforms`. They are
+// solid and permanent: the parsed DSL is the only source (Rule 7), so there is nothing translucent
+// to preview here.
 
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
-import { usePlatformStore } from "@renderer/state";
 import type { PlatformSpec } from "@shared/world";
 import { type JSX, useMemo } from "react";
 import { TILE_TOP } from "./colliders";
-import { standardMaterial, translucentMaterial, UNIT_BOX, UNIT_OCTA } from "./geometry";
+import { standardMaterial, UNIT_BOX, UNIT_OCTA } from "./geometry";
 import { ENTITY_PALETTE, TILE_TINT } from "./palette";
-import {
-  allPlatformBodies,
-  DRAFT_OPACITY,
-  type PlatformBody,
-  platformBottomY,
-} from "./platformBoxes";
+import { type PlatformBody, platformBodies, platformBottomY } from "./platformBoxes";
 
 const BOUNCE_RESTITUTION = 1.4;
 const LIP_THICKNESS = 0.02;
@@ -31,29 +18,23 @@ const STRUT_WIDTH = 0.15;
 const STRUT_MIN_HEIGHT = 0.6;
 
 export function Platforms({ platforms }: { platforms: readonly PlatformSpec[] }): JSX.Element {
-  const drafts = usePlatformStore((state) => state.drafts);
-  const selectedId = usePlatformStore((state) => state.selectedId);
-  const bodies = useMemo(() => allPlatformBodies(platforms, drafts), [platforms, drafts]);
+  const bodies = useMemo(() => platformBodies(platforms), [platforms]);
 
   return (
     <group>
       {bodies.map((body) => (
-        <PlatformBlock key={body.id} body={body} selected={body.draft && body.id === selectedId} />
+        <PlatformBlock key={body.id} body={body} />
       ))}
     </group>
   );
 }
 
-function PlatformBlock({ body, selected }: { body: PlatformBody; selected: boolean }): JSX.Element {
+function PlatformBlock({ body }: { body: PlatformBody }): JSX.Element {
   const { center, half } = body.box;
   const size: [number, number, number] = [half[0] * 2, half[1] * 2, half[2] * 2];
   const tint = TILE_TINT[body.tile];
-  const lip = selected
-    ? ENTITY_PALETTE.platformSelected
-    : body.bounce
-      ? ENTITY_PALETTE.platformBounce
-      : ENTITY_PALETTE.platformEdge;
-  const lipGlow = selected ? 2.8 : body.bounce ? 2.5 : 1.2;
+  const lip = body.bounce ? ENTITY_PALETTE.platformBounce : ENTITY_PALETTE.platformEdge;
+  const lipGlow = body.bounce ? 2.5 : 1.2;
   const strutHeight = platformBottomY(body) - TILE_TOP;
 
   return (
@@ -67,16 +48,12 @@ function PlatformBlock({ body, selected }: { body: PlatformBody; selected: boole
       </RigidBody>
 
       <mesh
-        castShadow={!body.draft}
-        receiveShadow={!body.draft}
+        castShadow
+        receiveShadow
         position={center}
         scale={size}
         geometry={UNIT_BOX}
-        material={
-          body.draft
-            ? translucentMaterial(tint, DRAFT_OPACITY, body.bounce ? 0.4 : 0.15)
-            : standardMaterial(tint, body.bounce ? 0.4 : 0)
-        }
+        material={standardMaterial(tint, body.bounce ? 0.4 : 0)}
       />
 
       {/* Glowing lip along the walkable face. */}

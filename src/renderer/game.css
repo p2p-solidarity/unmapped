@@ -88,7 +88,7 @@
 }
 
 .g-meta {
-  font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-family: var(--ui-font);
   font-size: 11px;
   color: var(--g-dim);
   overflow-wrap: anywhere;
@@ -212,7 +212,7 @@
 .info-list dd {
   margin: 0;
   color: var(--g-muted);
-  font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-family: var(--ui-font);
   font-size: 12px;
   overflow-wrap: anywhere;
 }
@@ -252,7 +252,7 @@
   cursor: pointer;
 }
 
-.forge-step[data-current="true"] {
+.forge-step[data-active="true"] {
   color: var(--g-text);
   border-bottom-color: var(--g-text);
 }
@@ -360,7 +360,7 @@
   border: 1px solid var(--g-border);
   background: rgba(8, 8, 10, 0.86);
   color: var(--g-text);
-  font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-family: var(--ui-font);
   font-size: 13px;
   line-height: 1.55;
   tab-size: 2;
@@ -420,5 +420,23 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Scene editor ──────────────────────────────────────────────────────────
+   Palette on the left, the level itself filling the rest. The canvas is the
+   interface, so it gets the space. */
+.editor {
+  display: grid;
+  grid-template-columns: minmax(200px, 250px) minmax(0, 1fr);
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 900px) {
+  .editor {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(320px, 1fr);
   }
 }

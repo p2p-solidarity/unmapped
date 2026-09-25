@@ -2,8 +2,11 @@
 // binds its meshes to. One library per generation call keeps the prompts short.
 
 import { createLibrary, type Library } from "@openuidev/lang-core";
+import { BIBLE_COMPONENTS } from "./schemas/bible";
+import { CHUNK_COMPONENTS } from "./schemas/chunk";
 import { DIALOGUE_COMPONENTS } from "./schemas/dialogue";
-import { ITEM_COMPONENTS } from "./schemas/item";
+import { Deliver, Errands, Find, Guide } from "./schemas/errand";
+import { ITEM_COMPONENTS, Item } from "./schemas/item";
 import { RULE_COMPONENTS } from "./schemas/rules";
 import { SCENE_COMPONENTS } from "./schemas/scene";
 import type { ComponentSpec } from "./types";
@@ -30,7 +33,7 @@ const SCENE_GROUPS = [
 
 /** What the parser accepts: every Scene component, Contract included. */
 export const sceneLibrary: Library = createLibrary({
-  id: "aether-spire/scene",
+  id: "unwritten-land/scene",
   root: "Scene",
   components: [...SCENE_COMPONENTS],
   componentGroups: SCENE_GROUPS,
@@ -41,26 +44,50 @@ export const sceneLibrary: Library = createLibrary({
  * written by the model, so it is left out of the prompt (it also keeps a 4B model's budget).
  */
 export const scenePromptLibrary: Library = createLibrary({
-  id: "aether-spire/scene-prompt",
+  id: "unwritten-land/scene-prompt",
   root: "Scene",
   components: SCENE_COMPONENTS.filter((component) => component.name !== "Contract"),
   componentGroups: SCENE_GROUPS,
 });
 
 export const dialogueLibrary: Library = createLibrary({
-  id: "aether-spire/dialogue",
+  id: "unwritten-land/dialogue",
   root: "Dialogue",
   components: [...DIALOGUE_COMPONENTS],
 });
 
 export const itemLibrary: Library = createLibrary({
-  id: "aether-spire/item",
+  id: "unwritten-land/item",
   root: "Item",
   components: [...ITEM_COMPONENTS],
 });
 
+export const chunkLibrary: Library = createLibrary({
+  id: "unwritten-land/chunk",
+  root: "Chunk",
+  components: [...CHUNK_COMPONENTS],
+  componentGroups: [
+    { name: "What stands here", components: ["Prop", "Wall"] },
+    { name: "Who lives here", components: ["NPC", "Talk", "Choice"] },
+    { name: "What it remembers", components: ["Lore"] },
+    { name: "What someone asks", components: ["Find", "Deliver", "Guide", "Item"] },
+  ],
+});
+
+export const errandsLibrary: Library = createLibrary({
+  id: "unwritten-land/errands",
+  root: "Errands",
+  components: [Errands, Find, Deliver, Guide, Item],
+});
+
+export const bibleLibrary: Library = createLibrary({
+  id: "unwritten-land/bible",
+  root: "Bible",
+  components: [...BIBLE_COMPONENTS],
+});
+
 export const rulesLibrary: Library = createLibrary({
-  id: "aether-spire/rules",
+  id: "unwritten-land/rules",
   root: "Rules",
   components: [...RULE_COMPONENTS],
 });

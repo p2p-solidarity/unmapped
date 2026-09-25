@@ -16,7 +16,7 @@ describe("hotkeyAction", () => {
   });
 
   it("does not open the console outside the play screen", () => {
-    for (const screen of ["worlds", "genesis"] as const) {
+    for (const screen of ["worlds", "create"] as const) {
       expect(hotkeyAction("F12", { ...base, screen })).toBeNull();
       expect(hotkeyAction("Backquote", { ...base, screen })).toBeNull();
     }

@@ -2,11 +2,11 @@
 // bounded here: a 4B local model has to read the whole system prompt on every generation, so the
 // covenant, the karma trail and the inventory can never grow it without limit.
 
-import type { Genesis } from "@shared/world";
+import type { Genesis, NarrativeContext } from "@shared/world";
 import { clampText, truncate } from "../limits";
 
 export const ROLE =
-  "You are the world-generator of the Babel tower in Aether Spire. Write ONLY an OpenUI Lang program using the components below: no prose, no markdown, no code fences, no comments. The first line is the root statement.";
+  "You are the world-generator of the Babel tower in Unwritten Land. Write ONLY an OpenUI Lang program using the components below: no prose, no markdown, no code fences, no comments. The first line is the root statement.";
 
 /** One "- item" per line, or `empty` when there is nothing to list. */
 export function bullets(lines: readonly string[], empty: string): string {
@@ -30,11 +30,13 @@ export function languageName(tag: string): string {
   }
 }
 
-export function languageRule(genesis: Genesis): string {
+export function languageRule(genesis: Genesis | NarrativeContext): string {
   return `Write every word the player reads — floor and NPC names, quest text, weaknesses, lines, labels — in ${languageName(genesis.language)}. Ids, event names, archetype words and mesh part names stay ascii snake_case.`;
 }
 
-export function covenant(genesis: Genesis): string {
+export function covenant(genesis: Genesis | NarrativeContext): string {
+  if (!("archetype" in genesis))
+    return `Language: ${languageName(genesis.language)}.\nGame premise: ${clampText(genesis.intent, 600)}`;
   return [
     `Archetype: ${genesis.archetype}. Physics: ${genesis.physics}. Language: ${languageName(genesis.language)}. Seed: ${genesis.seed}.`,
     `The covenant the player swore: "${clampText(genesis.intent, 180)}"`,

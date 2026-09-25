@@ -1,0 +1,40 @@
+{
+  "cartridgeId": "demo-deep-maze",
+  "version": "1.0.0",
+  "name": "深層迷宮",
+  "author": "Unwritten Land Demo",
+  "createdAt": "2026-09-16T00:30:00.000Z",
+  "notes": [
+    "迷宮探索（第一人稱走格子） pins camera:first_person + physics:grid_step + content:maze, so every scene plays on the dungeon_grid@1 kit.",
+    "類 Rogue adds content:procedural_runs + progression:run_based; rules.oui gets Generate(\"maze\", 0, 0, 18).",
+    "A scene only fixes its two ends: the spawn tile (floor centre) and the Exit. The maze between them is generated from the run seed with a guaranteed route.",
+    "Floors are odd-sized so the carving grid stays aligned."
+  ],
+  "modes": ["dungeon_crawler", "roguelike"],
+  "scenes": [
+    {
+      "slotId": "maze_upper",
+      "role": "opening",
+      "title": "上層迷宮",
+      "mode": "dungeon_crawler",
+      "baseId": "collapsed_keep"
+    },
+    {
+      "slotId": "maze_core",
+      "role": "ending",
+      "title": "迷宮核心",
+      "mode": "dungeon_crawler",
+      "baseId": "drowned_archive"
+    }
+  ],
+  "endings": ["maze_core"],
+  "narrative": {
+    "required": false,
+    "premise": "",
+    "finale": "",
+    "scenes": [
+      { "sceneId": "maze_upper", "title": "上層迷宮", "summary": "", "objective": "" },
+      { "sceneId": "maze_core", "title": "迷宮核心", "summary": "", "objective": "" }
+    ]
+  }
+}

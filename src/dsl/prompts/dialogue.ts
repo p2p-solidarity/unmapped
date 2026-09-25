@@ -13,12 +13,16 @@ c2 = Choice("Offer barley for a lantern", "trade", "Mira trades a paper lantern 
 c3 = Choice("Leave her to her work", "leave", "Mira nods and turns back to the fence.", [])
 shift = Mutation("#d9b06a", 0.06, null)`;
 
-/** What the traveller can see of this NPC before a word is said. */
+/**
+ * What the traveller can see of this NPC before a word is said. The hex colours are deliberately
+ * left out: handed one, a model recites it ("dusk soft on me like #d49a6c"). The engine already
+ * paints the colour; the words only need what it is.
+ */
 function lookLine(npc: NpcSpec): string {
-  const parts = [`a ${npc.body} build in ${npc.color}`];
+  const parts = [`a ${npc.body} build`];
   if (npc.hat !== "none") parts.push(`a ${npc.hat} on your head`);
   if (npc.held !== "none") parts.push(`a ${npc.held} in your hands`);
-  return `They see ${parts.join(", ")}, with ${npc.accent} trim. What you wear and hold is yours to use — the ${npc.held === "none" ? "work of your hands" : npc.held} can end up in the conversation — but never describe yourself like a list.`;
+  return `They see ${parts.join(", ")}. What you wear and hold is yours to use — the ${npc.held === "none" ? "work of your hands" : npc.held} can end up in the conversation — but never describe yourself like a list, and never say a colour code, an id or a prop name out loud.`;
 }
 
 function sceneSummary(scene: SceneGraph): string {

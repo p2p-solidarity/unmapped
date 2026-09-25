@@ -95,6 +95,15 @@ export const BIOME_PALETTE: Record<Biome, BiomePalette> = {
     fog: "#1a0d0a",
     sky: "#200d08",
   },
+  // Late-afternoon Shōwa countryside: dry grass, weathered wood, a pale warm sky.
+  countryside: {
+    ground: "#8c9a6a",
+    wall: "#8a7358",
+    accent: "#e39a4a",
+    ambient: "#c9c2b0",
+    fog: "#d9d4c4",
+    sky: "#b9cbd6",
+  },
 };
 
 /**
@@ -115,6 +124,13 @@ export const TILE_TINT: Record<Tile, string> = {
 // ── Entities that are not enum-keyed ─────────────────────────────────────────────────────────
 
 export const ENTITY_PALETTE = {
+  /** Distant landmarks drawn past the fog: a flat shape against the sky. */
+  farSilhouette: "#46505c",
+  /** Home: the door's weathered frame and panel, reused for keepsake pedestals. */
+  doorFrame: "#6b5440",
+  doorPanel: "#b3804e",
+  /** A note left on the land. */
+  notePaper: "#efe6cf",
   playerBody: "#f2efe6",
   playerHead: "#f0d9bd",
   npcHead: "#f0d9bd",
@@ -134,7 +150,6 @@ export const ENTITY_PALETTE = {
   /** Energy strut under a floating platform. */
   platformStrut: "#0b1224",
   /** Edge of the draft the platform editor currently has selected. */
-  platformSelected: "#ffd27a",
 } as const;
 
 /**
@@ -148,6 +163,15 @@ export const HUMANOID_PALETTE = {
   metal: "#9aa3b2",
   wood: "#7a5a3a",
   cloth: "#e6dcc2",
+} as const;
+
+/** Look of a `team_party@1` squad member: plain kit, no hat, sidearm in hand. */
+export const PARTY_LOOK = {
+  body: "slim",
+  hat: "none",
+  held: "none",
+  color: "#4a5a72",
+  accent: "#7fd4ff",
 } as const;
 
 export const CHARACTER_THEME_COLORS = {

@@ -1,21 +1,15 @@
-// Room UI: create or join, then show the code, the signaling servers in use and who is present.
-// Zero peers is a real ready state, not an empty placeholder — you are simply the only one here.
-
-import { useSessionStore, useWorldStore } from "@renderer/state";
+import { hydrateInstance } from "@renderer/app/useInstanceLoader";
+import { useSessionStore } from "@renderer/state";
 import { Button, ErrorBlock, StatePanel, Surface, space, Text, TextField } from "@renderer/ui";
-import { errored, idle, type Loadable, ready } from "@shared/result";
+import type { InstanceMeta, ResolvedInstance } from "@shared/cartridge";
+import type { PlayerProfile } from "@shared/player";
+import { errored, idle, type Loadable, loading, ready } from "@shared/result";
 import { type ChangeEvent, type CSSProperties, useCallback, useEffect, useState } from "react";
 import { normalizeRoomCode, ROOM_CODE_LENGTH } from "./codes";
+import { setActiveRoom, useActiveRoom } from "./lifecycle";
 import type { PeerInfo } from "./peers";
-import {
-  createRoom,
-  joinRoom,
-  playerName,
-  type Room,
-  type SignalingStatus,
-  setPlayerName,
-} from "./room";
-import { useRoomSync } from "./sync";
+import { createRoom, joinRoom, playerName, type SignalingStatus, setPlayerName } from "./room";
+import { leaveActiveRoom } from "./sync";
 
 const rowStyle: CSSProperties = { display: "flex", gap: space.sm, alignItems: "stretch" };
 
@@ -26,59 +20,80 @@ function statusLabel(status: SignalingStatus): string {
 
 function PeerList({ peers }: { peers: PeerInfo[] }) {
   if (peers.length === 0) {
-    return (
-      <Text variant="body" tone="dim">
-        Waiting for peers — share the code.
-      </Text>
-    );
+    return <Text tone="dim">Waiting for a player with the same cartridge revision.</Text>;
   }
   return (
     <>
       {peers.map((peer) => (
-        <Text key={peer.clientId} variant="body">
-          {peer.name} — floor {peer.floor}
+        <Text key={peer.clientId}>
+          {peer.name} — scene {peer.floor}
         </Text>
       ))}
     </>
   );
 }
 
+interface JoinData {
+  instances: InstanceMeta[];
+  profiles: PlayerProfile[];
+}
+
+async function loadJoinData(): Promise<Loadable<JoinData>> {
+  const [instances, profiles] = await Promise.all([
+    window.seed.instances.list(),
+    window.seed.profiles.list(),
+  ]);
+  if (!instances.ok) return errored(instances.error);
+  if (!profiles.ok) return errored(profiles.error);
+  return ready({ instances: instances.value, profiles: profiles.value });
+}
+
 export function RoomPanel() {
-  const worldId = useWorldStore((s) => s.meta?.id ?? null);
-  const [room, setRoom] = useState<Loadable<Room>>(idle());
+  const active = useActiveRoom();
+  const currentInstance = useSessionStore((state) => state.activeInstance);
+  const [data, setData] = useState<Loadable<JoinData>>(idle());
+  const [localError, setLocalError] = useState<Loadable<never>>(idle());
   const [peers, setPeers] = useState<PeerInfo[]>([]);
   const [status, setStatus] = useState<SignalingStatus[]>([]);
   const [name, setName] = useState(playerName);
   const [code, setCode] = useState("");
+  const [selectedInstanceId, setSelectedInstanceId] = useState(
+    currentInstance?.instance.meta.instanceId ?? "",
+  );
+  const [selectedProfileId, setSelectedProfileId] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const active = room.status === "ready" ? room.value : null;
-  useRoomSync(active);
+  useEffect(() => {
+    if (active !== null) return;
+    setData(loading());
+    void loadJoinData().then((next) => {
+      setData(next);
+      if (next.status !== "ready") return;
+      setSelectedInstanceId((value) => value || next.value.instances[0]?.instanceId || "");
+      const profile = next.value.profiles[0];
+      if (profile !== undefined) {
+        setSelectedProfileId((value) => value || profile.profileId);
+        setName(profile.displayName);
+      }
+    });
+  }, [active]);
 
-  // Publish room code + peer count to the session store so the HUD can show them (never faked:
-  // both are cleared on leave, and the HUD hides the peer count while no room is active).
   useEffect(() => {
     if (active === null) return;
-    const session = useSessionStore.getState();
-    const publish = (list: PeerInfo[]) => {
-      setPeers(list);
-      session.setPeerCount(list.length);
-    };
-    session.setRoomCode(active.code);
+    const publish = (list: PeerInfo[]) => setPeers(list);
     publish(active.peers());
     setStatus(active.signalingStatus());
     const offPeers = active.onPeers(publish);
     const offStatus = active.onStatus(setStatus);
+    const offError = active.onError((error) => {
+      setLocalError(errored(error));
+      if (!active.host) setActiveRoom(null);
+    });
     return () => {
       offPeers();
       offStatus();
-      useSessionStore.getState().setRoomCode(null);
+      offError();
     };
-  }, [active]);
-
-  // Leaving is not optional: an abandoned provider keeps a signaling socket and peers open.
-  useEffect(() => {
-    if (active === null) return;
-    return () => active.leave();
   }, [active]);
 
   const onName = useCallback((event: ChangeEvent<HTMLInputElement>) => {
@@ -88,27 +103,68 @@ export function RoomPanel() {
     setCode(normalizeRoomCode(event.target.value));
   }, []);
 
-  const create = useCallback(() => {
-    setPlayerName(name);
-    if (worldId === null) {
-      setRoom(
+  const prepare = useCallback(async (): Promise<{
+    instance: ResolvedInstance;
+    profile: PlayerProfile;
+  } | null> => {
+    if (selectedInstanceId === "") {
+      setLocalError(
         errored({
-          code: "room-no-world",
-          message: "No world is open.",
-          hint: "Open a world first — the host publishes its world.oui to the room.",
+          code: "room-instance-required",
+          message: "Choose a saved game before opening a room.",
+          hint: "Both players must choose an instance pinned to the same cartridge revision.",
         }),
       );
-      return;
+      return null;
     }
-    const result = createRoom(worldId);
-    setRoom(result.ok ? ready(result.value) : errored(result.error));
-  }, [name, worldId]);
+    setBusy(true);
+    const existingProfile =
+      data.status === "ready"
+        ? data.value.profiles.find((profile) => profile.profileId === selectedProfileId)
+        : undefined;
+    const [instance, profile] = await Promise.all([
+      window.seed.instances.resolve(selectedInstanceId),
+      window.seed.profiles.upsert({
+        ...(selectedProfileId === "" ? {} : { profileId: selectedProfileId }),
+        displayName: name,
+        appearance: existingProfile?.appearance ?? {},
+        controlPreferences: existingProfile?.controlPreferences ?? {},
+      }),
+    ]);
+    setBusy(false);
+    if (!instance.ok) {
+      setLocalError(errored(instance.error));
+      return null;
+    }
+    if (!profile.ok) {
+      setLocalError(errored(profile.error));
+      return null;
+    }
+    setPlayerName(profile.value.displayName);
+    useSessionStore.getState().setPlayerProfile(profile.value);
+    return { instance: instance.value, profile: profile.value };
+  }, [data, name, selectedInstanceId, selectedProfileId]);
+
+  const create = useCallback(() => {
+    void prepare().then((prepared) => {
+      if (prepared === null) return;
+      const opened = createRoom(prepared);
+      if (!opened.ok) return setLocalError(errored(opened.error));
+      const hydrated = hydrateInstance(prepared.instance);
+      if (!hydrated.ok) return setLocalError(errored(hydrated.error));
+      setActiveRoom(opened.value);
+      useSessionStore.getState().setScreen("play");
+    });
+  }, [prepare]);
 
   const join = useCallback(() => {
-    setPlayerName(name);
-    const result = joinRoom(code);
-    setRoom(result.ok ? ready(result.value) : errored(result.error));
-  }, [code, name]);
+    void prepare().then((prepared) => {
+      if (prepared === null) return;
+      const opened = joinRoom(code, prepared);
+      if (!opened.ok) return setLocalError(errored(opened.error));
+      setActiveRoom(opened.value);
+    });
+  }, [code, prepare]);
 
   const copy = useCallback(() => {
     if (active === null) return;
@@ -119,13 +175,6 @@ export function RoomPanel() {
         const message = cause instanceof Error ? cause.message : String(cause);
         useSessionStore.getState().toast("danger", `Could not copy: ${message}`);
       });
-  }, [active]);
-
-  const leave = useCallback(() => {
-    if (active !== null) active.leave();
-    setPeers([]);
-    setStatus([]);
-    setRoom(idle());
   }, [active]);
 
   if (active !== null) {
@@ -140,11 +189,22 @@ export function RoomPanel() {
         <Text variant="titleLarge" mono tone="accent">
           {active.code}
         </Text>
+        <Text tone="dim">
+          {active.instance.cartridge.manifest.name} · {active.host ? "host" : "joined"} ·{" "}
+          {active.profile.displayName}
+        </Text>
         <div style={rowStyle}>
           <Button variant="secondary" onClick={copy}>
             Copy code
           </Button>
-          <Button variant="destructive" onClick={leave}>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              void leaveActiveRoom().then((result) => {
+                if (!result.ok) setLocalError(errored(result.error));
+              });
+            }}
+          >
             Leave
           </Button>
         </div>
@@ -158,24 +218,74 @@ export function RoomPanel() {
             error={{
               code: "signaling-unreachable",
               message: "No signaling server answered.",
-              hint: "Peers can only find each other through a signaling server. Check your network, or pass your own server to createRoom/joinRoom.",
+              hint: "Check the network connection and try again.",
             }}
           />
         ) : null}
         <Text variant="label" tone="muted">
-          peers
+          players
         </Text>
-        <StatePanel state={ready(peers)}>{(list) => <PeerList peers={list} />}</StatePanel>
+        <PeerList peers={peers} />
+        {localError.status === "error" ? <ErrorBlock error={localError.error} /> : null}
       </Surface>
     );
   }
 
   return (
     <Surface padding="lg">
-      <Text variant="title">Play together</Text>
-      <TextField label="your name" value={name} onChange={onName} spellCheck={false} mono />
-      <Button variant="primary" fullWidth onClick={create}>
-        Create room
+      <Text variant="title">Choose a game, then join</Text>
+      <Text tone="dim">
+        The room opens only after the local cartridge and runtime hashes are verified.
+      </Text>
+      <StatePanel state={data} idleText="Loading saved games…" loadingText="Loading saved games…">
+        {(value) => (
+          <>
+            <Text variant="label" tone="muted">
+              saved game
+            </Text>
+            {value.instances.length === 0 ? (
+              <Text tone="dim">Create an instance from Cartridges first.</Text>
+            ) : (
+              value.instances.map((instance) => (
+                <Button
+                  key={instance.instanceId}
+                  variant="secondary"
+                  active={selectedInstanceId === instance.instanceId}
+                  onClick={() => setSelectedInstanceId(instance.instanceId)}
+                  fullWidth
+                >
+                  {instance.name} · {instance.cartridge.version}
+                </Button>
+              ))
+            )}
+            <Text variant="label" tone="muted">
+              player profile
+            </Text>
+            {value.profiles.map((profile) => (
+              <Button
+                key={profile.profileId}
+                variant="secondary"
+                active={selectedProfileId === profile.profileId}
+                onClick={() => {
+                  setSelectedProfileId(profile.profileId);
+                  setName(profile.displayName);
+                }}
+                fullWidth
+              >
+                {profile.displayName}
+              </Button>
+            ))}
+          </>
+        )}
+      </StatePanel>
+      <TextField label="display name" value={name} onChange={onName} spellCheck={false} mono />
+      <Button
+        variant="primary"
+        fullWidth
+        disabled={busy || selectedInstanceId === "" || name.trim() === ""}
+        onClick={create}
+      >
+        Host this game
       </Button>
       <Text variant="label" tone="muted">
         or join with a code
@@ -192,11 +302,15 @@ export function RoomPanel() {
           maxLength={ROOM_CODE_LENGTH}
           mono
         />
-        <Button variant="secondary" disabled={code.length === 0} onClick={join}>
+        <Button
+          variant="secondary"
+          disabled={busy || code.length !== ROOM_CODE_LENGTH || selectedInstanceId === ""}
+          onClick={join}
+        >
           Join
         </Button>
       </div>
-      {room.status === "error" ? <ErrorBlock error={room.error} /> : null}
+      {localError.status === "error" ? <ErrorBlock error={localError.error} /> : null}
     </Surface>
   );
 }

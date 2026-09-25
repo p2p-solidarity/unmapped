@@ -42,7 +42,7 @@ export function wall(x: number, z: number, width = 1, height = 2): WallSpec {
 }
 
 export function prop(kind: PropSpec["kind"], x: number, z: number, scale = 1): PropSpec {
-  return { kind, x, z, scale, tint: null };
+  return { kind, x, z, scale, tint: null, dynamic: false };
 }
 
 export function npc(

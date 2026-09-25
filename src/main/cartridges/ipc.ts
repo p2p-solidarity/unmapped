@@ -12,7 +12,7 @@ import { listCartridgeRevisions, publishCartridgeRevision, readCartridgeRevision
 
 const cartridgeIdSchema = z.string().regex(/^[a-z0-9][a-z0-9-]{0,79}$/);
 const versionSchema = z.string().min(1).max(128);
-const PACK_FILTER = [{ name: "Aether Spire cartridge", extensions: ["cartridge"] }];
+const PACK_FILTER = [{ name: "Unwritten Land cartridge", extensions: ["cartridge"] }];
 const CANCEL_HINT = "Choose a file to continue, or pick the action again when you are ready.";
 
 async function exportPack(
@@ -64,6 +64,7 @@ async function importPack(ctx: MainContext) {
     manifest: manifestCore(unpacked.value.manifest),
     rules: unpacked.value.rules,
     scenes: unpacked.value.scenes,
+    assets: unpacked.value.assets,
   });
 }
 

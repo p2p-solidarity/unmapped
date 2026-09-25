@@ -49,10 +49,16 @@ export const cssVars = {
   "--g-success": colors.success,
 } as const;
 
+const MONO_STACK =
+  '"JetBrains Mono", "SF Mono", Menlo, "Noto Sans Mono CJK TC", "Noto Sans TC", "Zen Kaku Gothic New", monospace';
+
 export const font = {
-  family:
-    '"Rajdhani", "Zen Kaku Gothic New", "Noto Sans JP", "Noto Sans TC", "Inter", system-ui, -apple-system, sans-serif',
-  mono: '"JetBrains Mono", "SF Mono", Menlo, monospace',
+  // The whole interface is monospaced: this is a console for building games, and a fixed advance
+  // keeps ids, hashes, coordinates and the capability report aligned with the prose around them.
+  // CJK faces are in the stack because a mono list without them falls back to a proportional face
+  // exactly where the UI is most likely to be Chinese or Japanese.
+  family: MONO_STACK,
+  mono: MONO_STACK,
   size: {
     caption: 12,
     label: 13,

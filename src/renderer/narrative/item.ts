@@ -1,3 +1,4 @@
+import type { NarrativeContext } from "@shared/world";
 // The wish altar. Materials are the cost; the wish is the prompt. The DSL prompt encodes the
 // rule that a wish with nothing to spend comes back cursed — we never fabricate an item here.
 
@@ -14,7 +15,7 @@ export const ITEM_TEMPERATURE = 1;
 export interface GenerateItemInput {
   wish: string;
   materials: string[];
-  genesis: Genesis;
+  genesis: Genesis | NarrativeContext;
   inventory: Inventory;
   floor: number;
 }

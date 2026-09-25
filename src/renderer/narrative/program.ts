@@ -90,9 +90,12 @@ function exhausted(last: AppError | null, rounds: number): AppError {
       hint: "try again, or switch to a larger model in Settings",
     };
   }
+  // A DSL error carries the statement-level complaints; the first one is what the player (and
+  // whoever reads the log) needs to see — "1 problem" on its own says nothing.
+  const first = (last as { errors?: { message?: string }[] }).errors?.[0]?.message;
   return {
     code: last.code,
-    message: `${last.message} (still invalid after ${rounds} repair ${
+    message: `${last.message}${first === undefined ? "" : ` ${first}`} (still invalid after ${rounds} repair ${
       rounds === 1 ? "round" : "rounds"
     })`,
     hint: last.hint ?? "try again, or switch to a larger model in Settings",

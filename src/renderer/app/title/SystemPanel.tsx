@@ -1,6 +1,7 @@
 // System sub-menu: real readings of this machine (build, storage, model endpoint) and save
 // protection. Only reached on purpose — the title screen itself stays quiet.
 
+import { LANGUAGE_LABEL, UI_LANGUAGES, useLanguageStore, useT } from "@renderer/i18n";
 import { UnlockPanel } from "@renderer/identity";
 import { useInferenceStore } from "@renderer/state";
 import { Button, StatePanel, Text } from "@renderer/ui";
@@ -31,16 +32,41 @@ function useAppInfo(): Loadable<AppInfo> {
 }
 
 export function SystemPanel({ onClose }: { onClose(): void }) {
+  const t = useT();
   const info = useAppInfo();
   const config = useInferenceStore((state) => state.config);
   const probe = useInferenceStore((state) => state.probe);
+  const sidecar = useInferenceStore((state) => state.sidecar);
   const refreshProbe = useRefreshProbe();
 
   useKeys({ Escape: onClose });
 
+  const language = useLanguageStore((state) => state.language);
+  const setLanguage = useLanguageStore((state) => state.setLanguage);
+
   return (
     <div className="g-scroll" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <h2 className="g-heading">System</h2>
+
+      <section style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <h3 className="g-heading" style={{ fontSize: 13 }}>
+          {t("language")}
+        </h3>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {UI_LANGUAGES.map((option) => (
+            <Button
+              key={option}
+              variant="chip"
+              active={language === option}
+              onClick={() => setLanguage(option)}
+              style={{ minHeight: 34 }}
+            >
+              {LANGUAGE_LABEL[option]}
+            </Button>
+          ))}
+        </div>
+        <span className="g-meta">{t("languageNote")}</span>
+      </section>
 
       <StatePanel state={info} loadingText="Reading build…">
         {(value) => (
@@ -70,7 +96,11 @@ export function SystemPanel({ onClose }: { onClose(): void }) {
                 </Text>
               ) : (
                 <Text variant="caption" tone="danger" mono>
-                  offline — start llama-server / ollama, or change provider in F12 → Inference
+                  {sidecar?.state === "error" && sidecar.message !== null
+                    ? `offline — ${sidecar.message}`
+                    : config?.kind === "apple-fm"
+                      ? "offline — run `sudo fm license` in Terminal once, then Probe again"
+                      : "offline — start llama-server / ollama, or change provider in F12 → Inference"}
                 </Text>
               )
             }

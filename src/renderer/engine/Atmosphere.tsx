@@ -6,7 +6,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useWorldStore } from "@renderer/state";
 import type { LightSpec, SceneGraph, WorldMutation } from "@shared/world";
-import { type JSX, useEffect, useMemo, useRef } from "react";
+import { type JSX, type RefObject, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { floorCenter } from "./colliders";
 import { emissivePulse, groundMaterial, wallMaterial } from "./geometry";
@@ -16,6 +16,18 @@ import { BIOME_PALETTE } from "./palette";
 const FADE_SECONDS = 0.5;
 const DEFAULT_FOG_DENSITY = 0.035;
 const FALLBACK_AMBIENT_INTENSITY = 0.45;
+/**
+ * Open land is drawn two chunks (64 tiles) out. Fog at least this dense has swallowed the ground
+ * by then, so the rim of the streamed chunks is never a visible edge.
+ */
+const OPEN_FOG_FLOOR = 0.024;
+/**
+ * A scene written as a night interior has no sun. Out on open land that leaves the ground nearly
+ * black, so a weak light from above travels with the player — the author's sky stays, the land
+ * just stops being invisible.
+ */
+const SKYLIGHT_INTENSITY = 5;
+const SKYLIGHT_HEIGHT = 30;
 
 interface AtmosphereValues {
   fog: THREE.Color;
@@ -101,11 +113,23 @@ function smooth(t: number): number {
   return t * t * (3 - 2 * t);
 }
 
-export function Atmosphere({ graph }: { graph: SceneGraph }): JSX.Element {
+export function Atmosphere({
+  graph,
+  follow = null,
+}: {
+  graph: SceneGraph;
+  /** Open land: the sun and its shadow frustum travel with this position instead of the floor. */
+  follow?: RefObject<THREE.Vector3> | null;
+}): JSX.Element {
   const threeScene = useThree((state) => state.scene);
   const mutationSeq = useWorldStore((state) => state.mutationSeq);
   const mutation = useWorldStore((state) => state.meta?.mutation ?? null);
-  const target = useMemo(() => atmosphereOf(graph, mutation), [graph, mutation]);
+  const open = follow !== null;
+  const target = useMemo(() => {
+    const values = atmosphereOf(graph, mutation);
+    if (open) values.fogDensity = Math.max(values.fogDensity, OPEN_FOG_FLOOR);
+    return values;
+  }, [graph, mutation, open]);
   const palette = BIOME_PALETTE[graph.biome];
   const centre = useMemo(() => floorCenter(graph.floor), [graph.floor]);
 
@@ -173,6 +197,7 @@ export function Atmosphere({ graph }: { graph: SceneGraph }): JSX.Element {
   });
 
   const hasAmbient = graph.lights.some((light) => light.kind === "ambient");
+  const hasSun = graph.lights.some((light) => light.kind === "sun");
 
   return (
     <>
@@ -187,8 +212,10 @@ export function Atmosphere({ graph }: { graph: SceneGraph }): JSX.Element {
           centre={centre}
           span={Math.max(graph.floor.width, graph.floor.depth)}
           primary={entry.primary}
+          follow={follow}
         />
       ))}
+      {follow !== null && !hasSun ? <Skylight color={palette.ambient} follow={follow} /> : null}
       {points.map((point) => (
         <pointLight
           key={point.key}
@@ -203,24 +230,59 @@ export function Atmosphere({ graph }: { graph: SceneGraph }): JSX.Element {
   );
 }
 
+function Skylight({
+  color,
+  follow,
+}: {
+  color: string;
+  follow: RefObject<THREE.Vector3>;
+}): JSX.Element {
+  const ref = useRef<THREE.DirectionalLight>(null);
+  useFrame(() => {
+    const light = ref.current;
+    if (light === null) return;
+    const { x, z } = follow.current;
+    light.position.set(x + SKYLIGHT_HEIGHT * 0.3, SKYLIGHT_HEIGHT, z + SKYLIGHT_HEIGHT * 0.2);
+    light.target.position.set(x, 0, z);
+    light.target.updateMatrixWorld();
+  });
+  return <directionalLight ref={ref} color={color} intensity={SKYLIGHT_INTENSITY} />;
+}
+
 function SceneLight({
   light,
   centre,
   span,
   primary,
+  follow,
 }: {
   light: LightSpec;
   centre: [number, number, number];
   span: number;
   primary: boolean;
+  follow: RefObject<THREE.Vector3> | null;
 }): JSX.Element | null {
+  const sunRef = useRef<THREE.DirectionalLight>(null);
+  const reach = Math.max(span, 8);
+
+  // Whole-tile steps, so the shadow map does not shimmer as the player walks.
+  useFrame(() => {
+    const sun = sunRef.current;
+    if (sun === null || follow === null) return;
+    const x = Math.round(follow.current.x);
+    const z = Math.round(follow.current.z);
+    sun.position.set(x + reach * 0.6, reach * 1.1, z + reach * 0.45);
+    sun.target.position.set(x, 0, z);
+    sun.target.updateMatrixWorld();
+  });
+
   if (light.kind === "ambient") {
     return <ambientLight color={light.color} intensity={light.intensity} />;
   }
   if (light.kind === "sun") {
-    const reach = Math.max(span, 8);
     return (
       <directionalLight
+        ref={sunRef}
         color={light.color}
         intensity={light.intensity}
         castShadow={primary}

@@ -112,6 +112,8 @@ const propLine = (prop: PropSpec): string =>
     [
       tail(num(prop.scale), prop.scale === 1),
       tail(prop.tint === null ? "null" : str(prop.tint), prop.tint === null),
+      tail(prop.dynamic ? "true" : "false", !prop.dynamic),
+      tail(prop.assetId === undefined ? "null" : str(prop.assetId), prop.assetId === undefined),
     ],
   );
 
@@ -170,15 +172,32 @@ const exitLine = (exit: ExitSpec): string =>
   );
 
 const contractLine = (contract: SceneContract): string =>
-  call("Contract", [
-    str(contract.sceneId),
-    str(contract.kit),
-    list(contract.requiresFlags),
-    list(contract.requiresItems),
-    str(contract.inventoryPolicy),
-    list(contract.grantsFlags),
-    contract.terminal ? "true" : "false",
-  ]);
+  call(
+    "Contract",
+    [
+      str(contract.sceneId),
+      str(contract.kit),
+      list(contract.requiresFlags),
+      list(contract.requiresItems),
+      str(contract.inventoryPolicy),
+      list(contract.grantsFlags),
+      contract.terminal ? "true" : "false",
+    ],
+    [
+      tail(
+        contract.requiredProfileId === undefined ? "null" : str(contract.requiredProfileId),
+        contract.requiredProfileId === undefined,
+      ),
+      tail(
+        contract.requiredContextId === undefined ? "null" : str(contract.requiredContextId),
+        contract.requiredContextId === undefined,
+      ),
+      tail(
+        contract.requiredModules === undefined ? "null" : list(contract.requiredModules),
+        contract.requiredModules === undefined,
+      ),
+    ],
+  );
 
 const triggerLine = (trigger: TriggerSpec): string =>
   call("Trigger", [

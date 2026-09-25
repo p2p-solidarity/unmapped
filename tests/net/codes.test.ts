@@ -51,6 +51,6 @@ describe("room codes", () => {
   });
 
   it("namespaces the y-webrtc room", () => {
-    expect(roomName("ABC23D")).toBe("aether-spire:ABC23D");
+    expect(roomName("ABC23D")).toBe("unwritten-land:ABC23D");
   });
 });

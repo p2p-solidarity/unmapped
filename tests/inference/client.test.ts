@@ -23,9 +23,15 @@ const config = (over: Partial<InferenceConfig>): InferenceConfig => ({
 });
 
 describe("usesReasoningParams", () => {
-  it("is true for the openai and gateway providers", () => {
+  it("is true for the openai and gateway presets, which default to GPT-5 models", () => {
     expect(usesReasoningParams(config({ ...PROVIDER_PRESETS.openai }))).toBe(true);
     expect(usesReasoningParams(config({ ...PROVIDER_PRESETS["openui-gateway"] }))).toBe(true);
+  });
+
+  it("is false when the openai preset is pointed at a non-reasoning model", () => {
+    expect(usesReasoningParams(config({ ...PROVIDER_PRESETS.openai, model: "gpt-4o" }))).toBe(
+      false,
+    );
   });
 
   it("is true for a gpt-5 or o-series model on a custom endpoint", () => {

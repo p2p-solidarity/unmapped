@@ -1,12 +1,20 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, MouseEventHandler, ReactNode } from "react";
 import { colors, font, HIT_TARGET, space } from "./tokens";
 
 /**
  * primary/secondary/ghost/destructive — actions.
  * menu — a row in a vertical game menu (▶ marker when `active`).
- * tile — a selectable card (material, kit, cartridge); light frame when `active`.
+ * tile — a selectable card (scene base, cartridge); light frame when `active`.
+ * chip — a compact multi-select tag (genre, timing, setting); filled when `active`.
  */
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "destructive" | "menu" | "tile";
+export type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "ghost"
+  | "destructive"
+  | "menu"
+  | "tile"
+  | "chip";
 
 export interface ButtonProps {
   className?: string;
@@ -15,7 +23,7 @@ export interface ButtonProps {
   active?: boolean;
   disabled?: boolean;
   fullWidth?: boolean;
-  onClick?: () => void;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
   onFocus?: () => void;
   onMouseEnter?: () => void;
   type?: "button" | "submit";
@@ -55,11 +63,21 @@ const variantStyle: Record<ButtonVariant, CSSProperties> = {
     alignItems: "stretch",
     padding: space.lg,
   },
+  chip: {
+    background: "transparent",
+    color: colors.textMuted,
+    borderColor: colors.surfaceBorder,
+    fontSize: font.size.caption,
+    padding: `${space.xs}px ${space.md}px`,
+    justifyContent: "flex-start",
+    gap: space.xs,
+  },
 };
 
 const activeStyle: Partial<Record<ButtonVariant, CSSProperties>> = {
   menu: { color: colors.text },
   tile: { color: colors.text, borderColor: colors.accent, background: colors.surface },
+  chip: { color: colors.accentInk, background: colors.accent, borderColor: colors.accent },
 };
 
 export function Button({

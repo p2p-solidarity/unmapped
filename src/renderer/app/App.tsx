@@ -1,12 +1,17 @@
 // Root of the renderer: screen routing, the global keyboard, and the four cross-cutting hooks
 // (inference sync, input lock, world hot-reload, world persistence).
 
-import { GenesisScreen, useInferenceSync } from "@renderer/narrative";
+import { CreateScreen, useInferenceSync } from "@renderer/narrative";
+import { useLandSync } from "@renderer/net/landSync";
+import { useActiveRoom } from "@renderer/net/lifecycle";
+import { leaveActiveRoom, useRoomSync } from "@renderer/net/sync";
 import { useSessionStore } from "@renderer/state";
 import { useEffect, useMemo, useRef } from "react";
 import { hotkeyAction, isTypingTarget } from "./hotkeys";
 import { type InferenceSync, InferenceSyncContext } from "./inferenceSync";
+import { NewWorldScreen } from "./NewWorldScreen";
 import { PlayScreen } from "./PlayScreen";
+import { SeedScreen } from "./SeedScreen";
 import { Toasts } from "./Toasts";
 import { useInputLock } from "./useInputLock";
 import { openInstance } from "./useInstanceLoader";
@@ -22,7 +27,7 @@ function useGlobalKeys(): void {
       const action = hotkeyAction(event.code, {
         screen: state.screen,
         consoleOpen: state.consoleOpen,
-        altarOpen: state.altarOpen,
+        altarOpen: state.altarOpen || state.doorOpen || state.notesOpen,
         dialogueOpen: state.dialogue !== null,
         typing: isTypingTarget(event.target),
       });
@@ -37,6 +42,8 @@ function useGlobalKeys(): void {
           return;
         case "close-altar":
           state.closeAltar();
+          state.closeDoor();
+          state.toggleNotes(false);
           return;
         case "close-dialogue":
           state.closeDialogue();
@@ -59,13 +66,17 @@ function Screens() {
   switch (screen) {
     case "worlds":
       return <WorldsScreen />;
-    case "genesis":
+    case "seed":
+      return <SeedScreen />;
+    case "create":
+      return <NewWorldScreen />;
+    case "remix":
       return (
-        <GenesisScreen
+        <CreateScreen
+          onCancel={() => setScreen("worlds")}
           onCreated={(meta) => {
             void openInstance(meta.instanceId);
           }}
-          onCancel={() => setScreen("worlds")}
         />
       );
     case "play":
@@ -75,8 +86,25 @@ function Screens() {
   }
 }
 
+function useLeaveRoomAfterPlay(): void {
+  const screen = useSessionStore((state) => state.screen);
+  const previous = useRef(screen);
+  useEffect(() => {
+    const wasPlaying = previous.current === "play";
+    previous.current = screen;
+    if (!wasPlaying || screen === "play") return;
+    void leaveActiveRoom().then((result) => {
+      if (result.ok) return;
+      const session = useSessionStore.getState();
+      session.toast("danger", `Could not leave the hosted room: ${result.error.message}`);
+      session.setScreen("play");
+    });
+  }, [screen]);
+}
+
 export function App() {
   const sync = useInferenceSync();
+  const activeRoom = useActiveRoom();
   const syncRef = useRef(sync);
   useEffect(() => {
     syncRef.current = sync;
@@ -95,6 +123,9 @@ export function App() {
   useGlobalKeys();
   useWorldSync();
   usePersistWorld();
+  useRoomSync(activeRoom);
+  useLandSync(activeRoom);
+  useLeaveRoomAfterPlay();
 
   return (
     <InferenceSyncContext.Provider value={syncValue}>

@@ -1,6 +1,7 @@
 // The player: a Rapier kinematic capsule driven by a character controller. Movement is camera
-// relative (WASD + arrows, Shift to sprint, Space to jump) and is clamped to the floor rectangle.
-// Detailed multi-class 3D character avatar with procedural locomotion and jump physics.
+// relative (WASD + arrows, Shift to sprint, Space to jump) and is clamped to the floor rectangle,
+// unless the kit plays on open land.
+// The avatar is one parametric humanoid with procedural locomotion; there is no class system.
 
 import { useFrame } from "@react-three/fiber";
 import {
@@ -10,7 +11,7 @@ import {
   RigidBody,
   useRapier,
 } from "@react-three/rapier";
-import { useCharacterStore, useEngineStore, usePlatformStore } from "@renderer/state";
+import { useCharacterStore, useEngineStore } from "@renderer/state";
 import type { GameplayKitRules, GameplayRules } from "@shared/gameplay";
 import type { SceneGraph } from "@shared/world";
 import { type JSX, type RefObject, useCallback, useEffect, useMemo, useRef } from "react";
@@ -22,12 +23,21 @@ import {
   PLAYER_FOOT_OFFSET,
   PLAYER_HALF_HEIGHT,
   PLAYER_RADIUS,
-  spawnPoint,
   TILE_TOP,
+  tileToWorld,
   type Vec3,
 } from "./colliders";
+import {
+  FACING_YAW,
+  type Facing,
+  type GridTile,
+  shortestTurn,
+  startTile,
+  stepTarget,
+  turn,
+} from "./gridStep";
 import type { GameplayKitBehavior } from "./kits/registry";
-import { allPlatformBodies, bouncePadAt } from "./platformBoxes";
+import { bouncePadAt, platformBodies } from "./platformBoxes";
 import { isActionPressed, isSprinting, matchesAction, moveAxis, useKeys } from "./useKeys";
 
 const BOUNCE_SPEED = 13.0;
@@ -42,16 +52,22 @@ const CEILING_EPSILON = 1e-4;
 export function Player({
   graph,
   player,
+  facing,
   rig,
   kit,
   behavior,
+  spawn: start,
   bindings,
 }: {
   graph: SceneGraph;
   player: RefObject<THREE.Vector3>;
+  /** Written every frame: the yaw the body is facing, for modes where the camera is not the aim. */
+  facing: RefObject<number>;
   rig: RefObject<RigState>;
   kit: GameplayKitRules;
   behavior: GameplayKitBehavior;
+  /** Where the body appears when the floor loads: the scene's spawn, or a saved open-land spot. */
+  spawn: Vec3;
   bindings?: GameplayRules["bindings"];
 }): JSX.Element {
   const { world } = useRapier();
@@ -64,19 +80,18 @@ export function Player({
   const mode = useEngineStore((state) => state.cameraMode);
   const floorKey = graph.name;
 
-  // Bounce pads come from both sources: baked scene platforms and unsaved editor drafts. The list
-  // only changes when the scene or the editor does, so the frame loop just reads it.
-  const drafts = usePlatformStore((state) => state.drafts);
+  // Bounce pads change only when the scene does, so the frame loop just reads the memo.
   const pads = useMemo(
-    () => allPlatformBodies(graph.platforms, drafts).filter((body) => body.bounce),
-    [graph.platforms, drafts],
+    () => platformBodies(graph.platforms).filter((body) => body.bounce),
+    [graph.platforms],
   );
 
-  // Character preferences
-  const charClass = useCharacterStore((state) => state.classId);
   const charTheme = useCharacterStore((state) => state.colorTheme);
-  const showWeapon = useCharacterStore((state) => state.showWeapon);
-  const showAura = useCharacterStore((state) => state.showAura);
+
+  // Grid movement state: which tile we stand on, which way we face, and the tile we are sliding to.
+  const gridFacing = useRef<Facing>(0);
+  const tile = useRef<GridTile>(startTile(graph.floor));
+  const gridTarget = useRef<GridTile>(startTile(graph.floor));
 
   // Animation states
   const isMovingRef = useRef(false);
@@ -87,20 +102,53 @@ export function Player({
   const spawnFloor = useRef<string | null>(null);
   if (spawnFloor.current !== floorKey) {
     spawnFloor.current = floorKey;
-    spawnRef.current = spawnPoint(graph);
+    spawnRef.current = start;
   }
-  const spawn = spawnRef.current ?? spawnPoint(graph);
+  const spawn = spawnRef.current ?? start;
 
   const onPress = useCallback(
     (code: string) => {
       const engine = useEngineStore.getState();
       if (engine.inputLocked) return;
+      if (behavior.movement === "grid") {
+        const settled =
+          tile.current.x === gridTarget.current.x && tile.current.z === gridTarget.current.z;
+        if (matchesAction(code, bindings, "move_left", ["KeyA", "ArrowLeft"])) {
+          gridFacing.current = turn(gridFacing.current, -1);
+          return;
+        }
+        if (matchesAction(code, bindings, "move_right", ["KeyD", "ArrowRight"])) {
+          gridFacing.current = turn(gridFacing.current, 1);
+          return;
+        }
+        // One step at a time: a key pressed mid-slide is ignored rather than queued.
+        if (settled && matchesAction(code, bindings, "move_forward", ["KeyW", "ArrowUp"])) {
+          gridTarget.current = stepTarget(
+            tile.current,
+            gridFacing.current,
+            1,
+            graph.floor,
+            graph.walls,
+          );
+          return;
+        }
+        if (settled && matchesAction(code, bindings, "move_backward", ["KeyS", "ArrowDown"])) {
+          gridTarget.current = stepTarget(
+            tile.current,
+            gridFacing.current,
+            -1,
+            graph.floor,
+            graph.walls,
+          );
+          return;
+        }
+      }
       if (matchesAction(code, bindings, "interact", ["KeyE"])) {
         if (engine.nearby !== null) engine.interact(engine.nearby);
         return;
       }
     },
-    [bindings],
+    [bindings, behavior.movement, graph.floor, graph.walls],
   );
 
   const keys = useKeys(onPress);
@@ -133,6 +181,24 @@ export function Player({
     useEngineStore.getState().resetFloor();
   }, [floorKey, player]);
 
+  // The door moves the player across open land in one step; nothing else teleports.
+  useEffect(
+    () =>
+      useEngineStore.subscribe((state, previous) => {
+        const request = state.teleport;
+        const body = bodyRef.current;
+        if (request === null || request === previous.teleport || body === null || !behavior.open) {
+          return;
+        }
+        const y = TILE_TOP + PLAYER_FOOT_OFFSET + 0.5;
+        body.setTranslation({ x: request.x, y, z: request.z }, true);
+        body.setNextKinematicTranslation({ x: request.x, y, z: request.z });
+        player.current.set(request.x, y, request.z);
+        verticalVelocity.current = 0;
+      }),
+    [behavior.open, player],
+  );
+
   useFrame((_, delta) => {
     const body = bodyRef.current;
     const collider = colliderRef.current;
@@ -143,6 +209,38 @@ export function Player({
     const engine = useEngineStore.getState();
     const held = keys.current;
     const axis = engine.inputLocked ? { forward: 0, strafe: 0 } : moveAxis(held, bindings);
+    // Grid and fixed modes do not use the free-movement controller at all: one slides between tile
+    // centres, the other never moves. Both still sit on the floor plane.
+    if (behavior.movement === "grid" || behavior.movement === "none") {
+      const groundY = TILE_TOP + PLAYER_FOOT_OFFSET;
+      const [targetX, targetZ] = tileToWorld(gridTarget.current.x, gridTarget.current.z);
+      const current = body.translation();
+      const alpha = Math.min(1, step * kit.moveSpeed * 2);
+      const nextX =
+        behavior.movement === "grid" ? current.x + (targetX - current.x) * alpha : current.x;
+      const nextZ =
+        behavior.movement === "grid" ? current.z + (targetZ - current.z) * alpha : current.z;
+
+      if (behavior.movement === "grid") {
+        // Close enough counts as arrived, so the next step is not blocked by a rounding tail.
+        if (Math.abs(targetX - nextX) < 0.02 && Math.abs(targetZ - nextZ) < 0.02) {
+          tile.current = gridTarget.current;
+        }
+        // The camera snaps to the quarter-turn the player chose.
+        const wanted = FACING_YAW[gridFacing.current];
+        rig.current.yaw += shortestTurn(rig.current.yaw, wanted) * Math.min(1, step * 12);
+        facingYaw.current = rig.current.yaw;
+        if (modelGroupRef.current) modelGroupRef.current.rotation.y = facingYaw.current;
+        facing.current = facingYaw.current;
+      }
+
+      isMovingRef.current = behavior.movement === "grid" && tile.current !== gridTarget.current;
+      isJumpingRef.current = false;
+      body.setNextKinematicTranslation({ x: nextX, y: groundY, z: nextZ });
+      player.current.set(nextX, groundY, nextZ);
+      return;
+    }
+
     const isMoving = !engine.inputLocked && (axis.forward !== 0 || axis.strafe !== 0);
     isMovingRef.current = isMoving;
 
@@ -177,6 +275,7 @@ export function Player({
     if (modelGroupRef.current) {
       modelGroupRef.current.rotation.y = facingYaw.current;
     }
+    facing.current = facingYaw.current;
 
     // Apply gravity
     verticalVelocity.current = Math.max(
@@ -189,12 +288,10 @@ export function Player({
     kinematic.computeColliderMovement(collider, { x: dx, y: dy, z: dz });
     const movement = kinematic.computedMovement();
     const current = body.translation();
-    const [clampedX, clampedZ] = clampToFloor(
-      graph.floor,
-      current.x + movement.x,
-      current.z + movement.z,
-      PLAYER_RADIUS,
-    );
+    // Open land has no edge: the ground simply continues into the next chunk.
+    const [clampedX, clampedZ] = behavior.open
+      ? [current.x + movement.x, current.z + movement.z]
+      : clampToFloor(graph.floor, current.x + movement.x, current.z + movement.z, PLAYER_RADIUS);
     let nextY = current.y + movement.y;
     const groundY = TILE_TOP + PLAYER_FOOT_OFFSET;
 
@@ -246,10 +343,7 @@ export function Player({
       <CapsuleCollider ref={colliderRef} args={[PLAYER_HALF_HEIGHT, PLAYER_RADIUS]} />
       <group ref={modelGroupRef} visible={mode !== "fps"}>
         <CharacterModel
-          classId={charClass}
           colorTheme={charTheme}
-          showWeapon={showWeapon}
-          showAura={showAura}
           isMoving={isMovingRef.current}
           isJumping={isJumpingRef.current}
         />

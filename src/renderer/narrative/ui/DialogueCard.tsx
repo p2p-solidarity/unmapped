@@ -5,13 +5,19 @@
 // only way it can change the world), then the choice's own bookkeeping — karma, materials,
 // atmosphere — is applied and the card closes. If the resolve turn fails, the card says so and the
 // player decides whether to take the choice anyway.
+//
+// On open land the words were written when the place was witnessed (`dialogueWitnessed`): the card
+// only reads them, and a choice is bookkeeping alone — no model is asked anything (plan.md §1.4).
 
+import { ErrandActions } from "@renderer/app/land/ErrandActions";
 import { startDialogue } from "@renderer/narrative/dialogue";
 import { persistProgress } from "@renderer/narrative/persist";
 import { resolveChoice } from "@renderer/narrative/resolve";
+import { useEngineStore } from "@renderer/state/engineStore";
 import { useSessionStore } from "@renderer/state/sessionStore";
 import { useWorldStore } from "@renderer/state/worldStore";
 import { Button, ErrorBlock, Surface, space, Text, zIndex } from "@renderer/ui";
+import { parseLandTarget } from "@shared/land";
 import type { AppError } from "@shared/result";
 import type { DialogueChoice, DialogueGraph, KarmaEntry, NpcSpec } from "@shared/world";
 import { useCallback, useEffect, useState } from "react";
@@ -23,6 +29,8 @@ export const MAX_CHOICES = HOTKEYS.length;
 export function DialogueCard() {
   const dialogue = useSessionStore((state) => state.dialogue);
   const npcId = useSessionStore((state) => state.dialogueNpcId);
+  const witnessed = useSessionStore((state) => state.dialogueWitnessed);
+  const speaker = useSessionStore((state) => state.dialogueSpeaker);
   const scene = useWorldStore((state) => state.scene);
   const [resolving, setResolving] = useState<DialogueChoice | null>(null);
   const [failure, setFailure] = useState<{ choice: DialogueChoice; error: AppError } | null>(null);
@@ -37,17 +45,21 @@ export function DialogueCard() {
     async (graph: DialogueGraph, choice: DialogueChoice) => {
       const session = useSessionStore.getState();
       const world = useWorldStore.getState();
+      // Where it happened: the witnessed chunk the resident lives on, or the chunk underfoot.
+      const land = npcId === null ? null : parseLandTarget(npcId);
+      const chunk = land?.coord ?? (witnessed ? useEngineStore.getState().chunk : null);
       const entry: KarmaEntry = {
         at: new Date().toISOString(),
         floor: world.floor,
-        npcId: npcId ?? graph.npcId,
+        npcId: land?.npcId ?? npcId ?? graph.npcId,
         choice: choice.label,
         action: choice.action,
         effect: choice.effect,
+        ...(chunk === null ? {} : { cx: chunk.cx, cz: chunk.cz }),
       };
       world.appendKarma(entry);
       if (choice.gives.length > 0) world.addMaterials(choice.gives);
-      if (graph.mutation !== null) world.applyMutation(graph.mutation);
+      if (graph.mutation !== null && !witnessed) world.applyMutation(graph.mutation);
 
       const written = await persistProgress();
       if (!written.ok) session.toast("danger", written.error.message);
@@ -55,14 +67,14 @@ export function DialogueCard() {
 
       setFailure(null);
       session.closeDialogue();
-      if (choice.action === "craft") session.openAltar();
+      if (choice.action === "craft" && !witnessed) session.openAltar();
     },
-    [npcId],
+    [npcId, witnessed],
   );
 
   const choose = useCallback(
     async (graph: DialogueGraph, choice: DialogueChoice) => {
-      if (npc === null) {
+      if (npc === null || witnessed) {
         await commit(graph, choice);
         return;
       }
@@ -82,7 +94,7 @@ export function DialogueCard() {
       }
       await commit(graph, choice);
     },
-    [commit, npc, npcId],
+    [commit, npc, npcId, witnessed],
   );
 
   const ready = dialogue?.status === "ready" ? dialogue.value : null;
@@ -107,7 +119,7 @@ export function DialogueCard() {
 
   if (dialogue === null || npcId === null) return null;
 
-  const name = npc?.name ?? npcId;
+  const name = speaker ?? npc?.name ?? npcId;
 
   return (
     <div
@@ -148,9 +160,11 @@ export function DialogueCard() {
           <div style={columnStyle}>
             <ErrorBlock error={dialogue.error} />
             <div style={{ display: "flex", gap: space.md }}>
-              <Button variant="primary" onClick={() => void startDialogue(npcId)}>
-                Retry
-              </Button>
+              {witnessed ? null : (
+                <Button variant="primary" onClick={() => void startDialogue(npcId)}>
+                  Retry
+                </Button>
+              )}
               <Button variant="ghost" onClick={() => useSessionStore.getState().closeDialogue()}>
                 Close
               </Button>
@@ -161,6 +175,7 @@ export function DialogueCard() {
         {ready !== null ? (
           <div style={columnStyle}>
             <Text variant="bodyLarge">{ready.line}</Text>
+            {witnessed ? <ErrandActions npcId={npcId} /> : null}
 
             {resolving !== null ? (
               <Text variant="body" tone="accent">

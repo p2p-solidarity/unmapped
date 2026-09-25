@@ -119,6 +119,15 @@ describe("buildChatBody with tools", () => {
     ]);
   });
 
+  it("disables reasoning when GPT-5 Chat Completions receives function tools", () => {
+    const body = buildChatBody(
+      config({ ...PROVIDER_PRESETS.openai, model: "gpt-5.4-mini" }),
+      request({ tools: [lightLanterns] }),
+    );
+    expect(body.reasoning_effort).toBe("none");
+    expect(body.max_completion_tokens).toBe(512);
+  });
+
   it("drops the grammar when tools are present, even on llama.cpp", () => {
     const withGrammar = request({ grammar: "root ::= scene" });
     expect(buildChatBody(config({ kind: "llamacpp" }), withGrammar).grammar).toBe("root ::= scene");

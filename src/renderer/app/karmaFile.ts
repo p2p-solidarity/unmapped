@@ -2,16 +2,11 @@
 // open it in a text editor, so parsing must survive garbage: bad lines are skipped and counted,
 // never thrown and never repaired into plausible-looking entries (Rule 2).
 
-import { CHOICE_ACTIONS, type KarmaEntry } from "@shared/world";
+import { CHOICE_ACTIONS, type KarmaEntry, LEDGER_ACTIONS } from "@shared/world";
 
 export type KarmaAction = KarmaEntry["action"];
 
-export const KARMA_ACTIONS: readonly KarmaAction[] = [
-  ...CHOICE_ACTIONS,
-  "wish",
-  "genesis",
-  "floor",
-];
+export const KARMA_ACTIONS: readonly KarmaAction[] = [...CHOICE_ACTIONS, ...LEDGER_ACTIONS];
 
 export interface KarmaParse {
   entries: KarmaEntry[];
@@ -36,14 +31,17 @@ export function parseKarmaLine(line: string): KarmaEntry | null {
     return null;
   }
   if (!isRecord(raw)) return null;
-  const { at, floor, npcId, choice, action, effect } = raw;
+  const { at, floor, npcId, choice, action, effect, cx, cz } = raw;
   if (typeof at !== "string" || typeof choice !== "string" || typeof effect !== "string") {
     return null;
   }
   if (typeof floor !== "number" || !Number.isFinite(floor)) return null;
   if (npcId !== null && typeof npcId !== "string") return null;
   if (typeof action !== "string" || !isKarmaAction(action)) return null;
-  return { at, floor, npcId, choice, action, effect };
+  const entry: KarmaEntry = { at, floor, npcId, choice, action, effect };
+  if (Number.isInteger(cx) && Number.isInteger(cz))
+    return { ...entry, cx: cx as number, cz: cz as number };
+  return entry;
 }
 
 export function parseKarmaJsonl(text: string): KarmaParse {
@@ -71,6 +69,8 @@ export interface KarmaDraft {
   effect: string;
   npcId?: string | null;
   at?: string;
+  /** Open-land chunk the entry happened on. */
+  chunk?: { cx: number; cz: number } | null;
 }
 
 export function makeKarmaEntry(draft: KarmaDraft): KarmaEntry {
@@ -81,5 +81,8 @@ export function makeKarmaEntry(draft: KarmaDraft): KarmaEntry {
     choice: draft.choice,
     action: draft.action,
     effect: draft.effect,
+    ...(draft.chunk === undefined || draft.chunk === null
+      ? {}
+      : { cx: draft.chunk.cx, cz: draft.chunk.cz }),
   };
 }

@@ -13,6 +13,7 @@ export const BIOMES = [
   "sky_isle",
   "snowfield",
   "lava_forge",
+  "countryside",
 ] as const;
 export type Biome = (typeof BIOMES)[number];
 
@@ -38,6 +39,16 @@ export const PROP_KINDS = [
   "pipe_stack",
   "crane",
   "reactor",
+  // The countryside of open land (plan.md §2).
+  "utility_pole",
+  "vending_machine",
+  "bus_stop",
+  "rail_track",
+  "chimney",
+  "steel_tower",
+  "windmill",
+  "breakwater",
+  "house",
 ] as const;
 export type PropKind = (typeof PROP_KINDS)[number];
 
@@ -136,12 +147,19 @@ export interface WallSpec {
   material: Tile;
 }
 export interface PropSpec {
+  /** Optional declared asset; legacy props retain their kind-only representation. */
+  assetId?: string;
   kind: PropKind;
   x: number;
   z: number;
   scale: number;
   /** Hex colour override or null for the biome default. */
   tint: string | null;
+  /**
+   * A free rigid body rather than scenery: it falls, collides, and can be grabbed and thrown
+   * (`rigid_body@1`). False props are baked into the instanced batch with a fixed collider.
+   */
+  dynamic: boolean;
 }
 export interface NpcSpec {
   id: string;
@@ -304,6 +322,12 @@ export type Archetype = (typeof ARCHETYPES)[number];
 export const PHYSICS_MODES = ["gentle", "destructible", "elemental"] as const;
 export type PhysicsMode = (typeof PHYSICS_MODES)[number];
 
+/** Narrative facts shared by new definitions and legacy covenants. */
+export interface NarrativeContext {
+  language: string;
+  intent: string;
+}
+
 export interface Genesis {
   archetype: Archetype;
   physics: PhysicsMode;
@@ -318,7 +342,7 @@ export interface Genesis {
 export interface WorldMeta {
   id: string;
   name: string;
-  archetype: Archetype;
+  archetype?: Archetype;
   createdAt: string;
   updatedAt: string;
   floor: number;
@@ -330,13 +354,19 @@ export interface WorldMeta {
   mods: string[];
 }
 
+/** Ledger actions beyond dialogue choices. `witness`, `request` and `note` belong to open land. */
+export const LEDGER_ACTIONS = ["wish", "genesis", "floor", "witness", "request", "note"] as const;
+
 export interface KarmaEntry {
   at: string;
   floor: number;
   npcId: string | null;
   choice: string;
-  action: ChoiceAction | "wish" | "genesis" | "floor";
+  action: ChoiceAction | (typeof LEDGER_ACTIONS)[number];
   effect: string;
+  /** The chunk of open land this happened on; absent in a bounded scene. */
+  cx?: number;
+  cz?: number;
 }
 
 export interface Inventory {

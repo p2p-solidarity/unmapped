@@ -10,6 +10,7 @@ import {
   type ResolvedInstance,
 } from "@shared/cartridge";
 import { err, fail, ok, type Result, toError } from "@shared/result";
+import { deriveRuntimePin } from "../cartridges/integrity";
 import { cartridgeCompatibility, readCartridgeRevision } from "../cartridges/store";
 import { instanceDir, saveDir } from "./paths";
 import { readInstance, writeInstanceSave } from "./store";
@@ -57,6 +58,15 @@ export async function upgradeInstance(
       "Finish or leave the current scene on the pinned version, then upgrade.",
     );
   }
+  const nextPin = deriveRuntimePin(manifest);
+  if (!nextPin.ok) return nextPin;
+  if (nextPin.value.profileHash !== meta.runtimePin.profileHash) {
+    return err(
+      "upgrade-runtime-migration-required",
+      `${current.cartridgeId}@${version} changes the pinned runtime contract.`,
+      "Create a fresh instance for this revision; no runtime migration is available.",
+    );
+  }
   const snapshot = join(
     instanceDir(instancesDir, instanceId),
     BACKUPS_DIR,
@@ -76,10 +86,18 @@ export async function upgradeInstance(
   const written = await writeInstanceSave(
     instancesDir,
     {
-      instance: { ...instance.value, meta: { ...meta, cartridge: next } },
+      instance: {
+        ...instance.value,
+        meta: { ...meta, cartridge: next, runtimePin: nextPin.value },
+      },
       cartridge: target.value,
     },
-    { ...save, cartridge: next, updatedAt: now.toISOString() },
+    {
+      ...save,
+      cartridge: next,
+      runtimePin: nextPin.value,
+      updatedAt: now.toISOString(),
+    },
   );
   return written.ok ? ok(written.value) : written;
 }

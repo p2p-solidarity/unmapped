@@ -6,7 +6,7 @@
 
 export const ROOM_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 export const ROOM_CODE_LENGTH = 6;
-export const ROOM_NAME_PREFIX = "aether-spire";
+export const ROOM_NAME_PREFIX = "unwritten-land";
 
 export function randomFromAlphabet(length: number): string {
   const bytes = new Uint8Array(length);

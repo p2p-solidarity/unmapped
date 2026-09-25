@@ -1,13 +1,8 @@
 // Bottom dock + the "press E" prompt. The prompt text is resolved by the engine (nearbyPrompt);
 // the dock is pure chrome — every button toggles state that already exists.
 
-import {
-  useCharacterStore,
-  useEngineStore,
-  usePlatformStore,
-  useSessionStore,
-  useWorldStore,
-} from "@renderer/state";
+import { switchedCamera } from "@renderer/engine/CameraRig";
+import { useEngineStore, useSessionStore } from "@renderer/state";
 import { Button, colors, font, radius, space, Text } from "@renderer/ui";
 import type { JSX } from "react";
 import { nearbyPrompt } from "../prompts";
@@ -51,13 +46,12 @@ export function NearbyPrompt(): JSX.Element | null {
 }
 
 export function ActionDock(): JSX.Element {
-  const setIsCustomizing = useCharacterStore((state) => state.setIsCustomizing);
-  const toggleEditor = usePlatformStore((state) => state.toggleEditor);
-  const draftCount = usePlatformStore((state) => state.drafts.length);
   const toggleConsole = useSessionStore((state) => state.toggleConsole);
+  const toggleTweak = useSessionStore((state) => state.toggleTweak);
   const setScreen = useSessionStore((state) => state.setScreen);
   const cameraMode = useEngineStore((state) => state.cameraMode);
-  const publishedRun = useWorldStore((state) => state.origin?.kind === "instance");
+  // Only open land lets the player choose the camera; every other scene's kit holds it.
+  const openLand = useEngineStore((state) => state.chunk !== null);
 
   return (
     <div
@@ -82,27 +76,42 @@ export function ActionDock(): JSX.Element {
       >
         ← 主頁
       </Button>
-      <Button variant="secondary" onClick={() => setIsCustomizing(true)} style={dockButton}>
-        Avatar Class / 職業
-      </Button>
-      <Button
-        variant="primary"
-        disabled={publishedRun}
-        onClick={() => toggleEditor()}
-        style={dockButton}
-      >
-        {publishedRun
-          ? "Remix to edit platforms"
-          : draftCount === 0
-            ? "Platform Editor / 平台編輯"
-            : `Platform Editor · ${draftCount} draft${draftCount === 1 ? "" : "s"}`}
+      <Button variant="secondary" onClick={() => toggleTweak()} style={dockButton}>
+        調整機制
       </Button>
       <Button variant="secondary" onClick={() => toggleConsole()} hotkey="F12" style={dockButton}>
         Console / 終端
       </Button>
-      <Button variant="secondary" disabled style={dockButton}>
-        {`Cam: ${cameraMode.toUpperCase()} · scene locked`}
-      </Button>
+      {openLand ? (
+        <Button
+          variant="secondary"
+          hotkey="N"
+          onClick={() => {
+            if (document.pointerLockElement !== null) document.exitPointerLock();
+            useSessionStore.getState().toggleNotes(true);
+          }}
+          style={dockButton}
+        >
+          手記 Notes
+        </Button>
+      ) : null}
+      {openLand ? (
+        <Button
+          variant="secondary"
+          hotkey="V"
+          onClick={() => {
+            const engine = useEngineStore.getState();
+            engine.setCameraMode(switchedCamera(engine.cameraMode));
+          }}
+          style={dockButton}
+        >
+          {`Cam: ${cameraMode.toUpperCase()}`}
+        </Button>
+      ) : (
+        <Button variant="secondary" disabled style={dockButton}>
+          {`Cam: ${cameraMode.toUpperCase()} · scene locked`}
+        </Button>
+      )}
     </div>
   );
 }

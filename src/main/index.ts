@@ -2,7 +2,7 @@
 // worlds directory is created, then the IPC surface is registered, then the window appears.
 
 import { mkdir } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { app, BrowserWindow } from "electron";
 import type { MainContext } from "./context";
 import { loadEnv } from "./env";
@@ -10,6 +10,11 @@ import { registerIpc } from "./ipc";
 import { applyCsp, createWindow } from "./window";
 
 loadEnv();
+
+// Isolated development smoke tests never open the player's real cartridge library.
+if (!app.isPackaged && process.env.AETHER_TEST_USER_DATA) {
+  app.setPath("userData", resolve(process.env.AETHER_TEST_USER_DATA));
+}
 
 type Cleanup = () => Promise<void> | void;
 
@@ -24,6 +29,7 @@ function createContext(): MainContext {
     cartridgesDir: join(userData, "cartridges"),
     instancesDir: join(userData, "instances"),
     workspacesDir: join(userData, "workspaces"),
+    profilesDir: join(userData, "profiles"),
     broadcast(channel, payload) {
       for (const window of BrowserWindow.getAllWindows()) {
         if (!window.isDestroyed()) window.webContents.send(channel, payload);
@@ -55,8 +61,8 @@ app.on("window-all-closed", () => {
 async function boot(): Promise<void> {
   const ctx = createContext();
   await Promise.all(
-    [ctx.worldsDir, ctx.cartridgesDir, ctx.instancesDir, ctx.workspacesDir].map((directory) =>
-      mkdir(directory, { recursive: true }),
+    [ctx.worldsDir, ctx.cartridgesDir, ctx.instancesDir, ctx.workspacesDir, ctx.profilesDir].map(
+      (directory) => mkdir(directory, { recursive: true }),
     ),
   );
   applyCsp();
@@ -70,6 +76,6 @@ async function boot(): Promise<void> {
 
 void app.whenReady().then(boot, (error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
-  process.stderr.write(`Aether Spire failed to start: ${message}\n`);
+  process.stderr.write(`Unwritten Land failed to start: ${message}\n`);
   app.quit();
 });

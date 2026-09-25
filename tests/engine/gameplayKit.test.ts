@@ -20,6 +20,12 @@ const rules: GameplayRules = {
     },
   ],
   bindings: {},
+  timing: null,
+  combat: null,
+  party: null,
+  generation: null,
+  progression: [],
+  weapons: [],
 };
 
 describe("gameplay kit registry", () => {
@@ -31,6 +37,7 @@ describe("gameplay kit registry", () => {
       sprint: true,
       flashlight: false,
       reticle: false,
+      open: true,
     });
     expect(behaviorForKit("fps_puzzle@1")).toEqual({
       camera: "fps",
@@ -39,6 +46,7 @@ describe("gameplay kit registry", () => {
       sprint: false,
       flashlight: true,
       reticle: true,
+      open: false,
     });
     expect(behaviorForKit("platformer_2_5d@1")).toEqual({
       camera: "side",
@@ -47,6 +55,7 @@ describe("gameplay kit registry", () => {
       sprint: true,
       flashlight: false,
       reticle: false,
+      open: false,
     });
     expect(behaviorForKit("topdown_puzzle@1")).toEqual({
       camera: "topdown",
@@ -55,6 +64,7 @@ describe("gameplay kit registry", () => {
       sprint: false,
       flashlight: false,
       reticle: false,
+      open: false,
     });
   });
 

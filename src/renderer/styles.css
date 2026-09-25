@@ -13,9 +13,18 @@ body,
   height: 100%;
 }
 
+/* One monospaced stack for the whole interface, inherited by everything that does not set its
+   own. CJK mono faces are listed so Chinese and Japanese chrome stays fixed-advance too. */
+:root {
+  --ui-font:
+    "JetBrains Mono", "SF Mono", Menlo, "Noto Sans Mono CJK TC", "Noto Sans TC",
+    "Zen Kaku Gothic New", monospace;
+}
+
 body {
   margin: 0;
   overflow: hidden;
+  font-family: var(--ui-font);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -99,7 +108,7 @@ select {
   padding: 0 5px;
   border: 1px solid currentColor;
   border-radius: 3px;
-  font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-family: var(--ui-font);
   font-size: 10px;
   line-height: 1;
   opacity: 0.7;

@@ -3,7 +3,7 @@
 
 import type { OpenUIError } from "@openuidev/lang-core";
 import type { AppError } from "@shared/result";
-import type { Genesis, NpcSpec, SceneGraph } from "@shared/world";
+import type { Genesis, NarrativeContext, NpcSpec, SceneGraph } from "@shared/world";
 import type { z } from "zod";
 
 /**
@@ -38,7 +38,7 @@ export interface ScenePromptContext {
 }
 
 export interface DialoguePromptContext {
-  genesis: Genesis;
+  genesis: Genesis | NarrativeContext;
   npc: NpcSpec;
   scene: SceneGraph;
   karmaSummary: string[];
@@ -46,7 +46,7 @@ export interface DialoguePromptContext {
 }
 
 export interface ItemPromptContext {
-  genesis: Genesis;
+  genesis: Genesis | NarrativeContext;
   /** The player's wish, verbatim. */
   wish: string;
   /** Material names burned at the altar. */

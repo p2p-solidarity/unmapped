@@ -32,3 +32,12 @@ describe("nearbyPrompt", () => {
     expect(nearbyPrompt(target("trigger", ""))).toBe("E · Examine");
   });
 });
+
+describe("errand bearings", () => {
+  it("names distance and compass direction with north as -z", async () => {
+    const { bearingOf } = await import("@renderer/app/land/errands");
+    expect(bearingOf(-12, -4)).toBe("about 13 tiles west");
+    expect(bearingOf(0, -5)).toBe("about 5 tiles north");
+    expect(bearingOf(3, 3)).toBe("about 4 tiles south-east");
+  });
+});

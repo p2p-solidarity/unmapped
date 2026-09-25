@@ -59,7 +59,14 @@ describe("parseScene", () => {
       x: 9,
       z: 6,
     });
-    expect(scene.props[1]).toEqual({ kind: "tree", x: 2, z: 11, scale: 1, tint: null });
+    expect(scene.props[1]).toEqual({
+      kind: "tree",
+      x: 2,
+      z: 11,
+      scale: 1,
+      tint: null,
+      dynamic: false,
+    });
     expect(scene.treasures[0]?.loot).toEqual(["folded towel", "brass key"]);
   });
 

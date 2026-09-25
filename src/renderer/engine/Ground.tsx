@@ -9,6 +9,7 @@
 
 import { useFrame } from "@react-three/fiber";
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
+import type { ChunkHole } from "@shared/chunks";
 import type { FloorSpec, PatchSpec, Tile } from "@shared/world";
 import { type JSX, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
@@ -31,13 +32,26 @@ const JITTER_RANGE = 0.2;
 export function Ground({
   floor,
   patches,
+  hole = null,
+  solid = true,
 }: {
   floor: FloorSpec;
   patches: readonly PatchSpec[];
+  /** Tiles an authored scene already draws; a generated chunk leaves them out (open land only). */
+  hole?: ChunkHole | null;
+  /** False for distant chunks: drawn, but nothing can reach them to collide. */
+  solid?: boolean;
 }): JSX.Element {
   const box = useMemo(() => floorBox(floor), [floor]);
   const tiles = useMemo(() => patchTiles(floor, patches), [floor, patches]);
-  const covered = useMemo(() => coveredKeys(tiles), [tiles]);
+  const covered = useMemo(() => {
+    const keys = coveredKeys(tiles);
+    if (hole === null) return keys;
+    for (let z = 0; z < hole.depth; z += 1) {
+      for (let x = 0; x < hole.width; x += 1) keys.add(patchKey(x, z));
+    }
+    return keys;
+  }, [tiles, hole]);
   const groups = useMemo(() => [...groupPatchTiles(tiles)], [tiles]);
   const liquids = useMemo(() => groups.map(([tile]) => tile), [groups]);
 
@@ -57,9 +71,11 @@ export function Ground({
       {groups.map(([tile, items]) => (
         <PatchInstances key={`patch-${tile}`} tile={tile} items={items} />
       ))}
-      <RigidBody type="fixed" colliders={false} position={box.center}>
-        <CuboidCollider args={box.half} friction={0.6} />
-      </RigidBody>
+      {solid ? (
+        <RigidBody type="fixed" colliders={false} position={box.center}>
+          <CuboidCollider args={box.half} friction={0.6} />
+        </RigidBody>
+      ) : null}
     </>
   );
 }

@@ -32,6 +32,13 @@ describe("provider presets", () => {
     expect(applyProviderPreset({ ...custom, sidecar: null }, "llamacpp").sidecar).toBeNull();
   });
 
+  it("gives Apple's model its fm serve sidecar", () => {
+    const next = applyProviderPreset(custom, "apple-fm");
+    expect(next.sidecar?.binaryPath).toBe("/usr/bin/fm");
+    expect(next.model).toBe("system");
+    expect(next.apiKeyEnv).toBeNull();
+  });
+
   it("does not mutate the current config", () => {
     const before = JSON.stringify(custom);
     applyProviderPreset(custom, "ollama");

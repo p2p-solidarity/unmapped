@@ -10,9 +10,9 @@ export function MultiplayerTab() {
         ROOM
       </Text>
       <Text variant="caption" tone="dim">
-        A room mirrors world.oui, the saved atmosphere overlay and karma.jsonl over WebRTC data
-        channels. It uses a public signaling service; this is a shared document room, not live
-        avatar gameplay.
+        A room compares the locally verified cartridge and runtime hashes before gameplay starts.
+        The host owns progress and scene transitions; published scene files never travel through the
+        room.
       </Text>
       <RoomPanel />
     </>

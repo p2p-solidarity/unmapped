@@ -80,7 +80,7 @@ export function createWindow(): BrowserWindow {
     minWidth: MIN_WIDTH,
     minHeight: MIN_HEIGHT,
     backgroundColor: BACKGROUND,
-    title: "Aether Spire",
+    title: "Unwritten Land",
     show: false,
     autoHideMenuBar: true,
     webPreferences: {

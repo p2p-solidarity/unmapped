@@ -15,7 +15,7 @@ const HEADER = Uint8Array.from([0x41, 0x53, 0x50, 0x31]);
 const IV_BYTES = 12;
 export const SEED_PREFIX_BYTES = HEADER.length + IV_BYTES;
 
-const HEADER_HINT = "That file is not an Aether Spire encrypted seed (.seed.enc).";
+const HEADER_HINT = "That file is not an Unwritten Land encrypted seed (.seed.enc).";
 const DECRYPT_HINT =
   "Wrong key or a damaged file. Unlock with the same passkey (or the same machine keychain) that produced it.";
 

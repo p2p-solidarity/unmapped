@@ -1,0 +1,63 @@
+{
+  "cartridgeId": "demo-onsen-letters",
+  "version": "1.0.0",
+  "name": "湯屋來信",
+  "author": "Unwritten Land Demo",
+  "createdAt": "2026-09-16T00:20:00.000Z",
+  "notes": [
+    "plan.md §2.6 story after scenes: the narrative layer is written against scenes that already exist and never moves geometry.",
+    "冒險角色扮演 walks the town in third person; 視覺小說 pins camera:fixed, so the finale is its own context.",
+    "解謎 and 懸疑 pin no camera, so their proximity prompt and flag gates are shared by both contexts.",
+    "The fixed-camera finale cannot walk: its NPC and exit sit within reach of the spawn tile."
+  ],
+  "modes": ["adventure_rpg", "visual_novel", "puzzle", "mystery"],
+  "scenes": [
+    {
+      "slotId": "onsen_street",
+      "role": "opening",
+      "title": "湯屋街",
+      "mode": "adventure_rpg",
+      "baseId": "onsen_terrace"
+    },
+    {
+      "slotId": "bath_attic",
+      "role": "puzzle",
+      "title": "湯屋閣樓",
+      "mode": "adventure_rpg",
+      "baseId": "onsen_terrace"
+    },
+    {
+      "slotId": "moonlit_bath",
+      "role": "ending",
+      "title": "月見湯",
+      "mode": "visual_novel",
+      "baseId": "onsen_terrace"
+    }
+  ],
+  "endings": ["moonlit_bath"],
+  "narrative": {
+    "required": true,
+    "premise": "每年初雪那天，湯屋都會收到三封沒有署名的信。今年女將千代請你在月亮升起前，找出寄信的人。",
+    "finale": "月見湯邊，三封信被交還給寫信的人。千代終於知道，那些信是十年前離開的妹妹寫給自己的。",
+    "scenes": [
+      {
+        "sceneId": "onsen_street",
+        "title": "湯屋街",
+        "summary": "蒸氣瀰漫的街上，每個人都對那三封信有不同的說法。",
+        "objective": "向街上的人打聽，找到第一封信。"
+      },
+      {
+        "sceneId": "bath_attic",
+        "title": "湯屋閣樓",
+        "summary": "堆滿舊行李的閣樓裡，藏著另外兩封信和一位不肯說名字的客人。",
+        "objective": "找到剩下的兩封信。"
+      },
+      {
+        "sceneId": "moonlit_bath",
+        "title": "月見湯",
+        "summary": "月光下的露天湯池，千代在池邊等你。",
+        "objective": "把三封信交還給寄信的人。"
+      }
+    ]
+  }
+}

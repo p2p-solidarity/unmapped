@@ -1,10 +1,10 @@
 # Aether Spire — Electron engine for player-owned, LLM-generated worlds
 
 Desktop-first (Electron) implementation of `plan.md`: the model writes a tiny **OpenUI Lang
-dialect** (our game DSL), a parser is the source of truth, Three.js renders it, the world lives as
-plain-text dotfiles the player owns, saves are encrypted with a passkey-derived key when WebAuthn
-PRF is available, and friends join a shared document room over WebRTC signaling. Read this file
-before editing anything.
+dialect** (our game DSL), a parser is the source of truth, Three.js renders it, published content
+lives in immutable cartridges, and progress lives in cartridge-pinned instances. A random Data Key
+encrypts portable player data and is wrapped by passkey PRF or the OS keychain. Friends join a
+shared document room over WebRTC signaling. Read this file before editing anything.
 
 ## Quick start
 
@@ -43,7 +43,7 @@ Split by responsibility (parser / prompt / repair), never by "part 1 / part 2".
 - HUD gauges and counters must be backed by real state (floor, karma, inventory, peers, fps).
   There is no HP/MP/combat system yet, so there are no HP/MP bars. No "starter" platforms,
   props or items seeded into a new world "so it feels alive" — the model generates the world.
-- World state lives only in the world's dotfiles (Rule 9). `localStorage` is for per-device
+- Durable state lives only in the cartridge / instance / workspace files in Rule 9. `localStorage` is for per-device
   preferences only (player name, character class/theme, credential id).
 
 ### Rule 3. UI primitives + tokens only
@@ -81,25 +81,23 @@ in main (zod) — the renderer is untrusted once mods/P2P exist.
 `shared ← dsl ← { main, renderer }`. `renderer` never imports `main`; `main` never imports
 `renderer`. `dsl` has no React/Electron imports (it must run in vitest and in main).
 
-### Rule 9. Dotfiles are the save format
-A world is a directory the player owns (`<userData>/worlds/<id>/`):
+### Rule 9. Cartridge content, instance progress, and workspaces have separate owners
 
-| file | content |
-| --- | --- |
-| `meta.json` | `WorldMeta` plus the current durable atmosphere mutation overlay |
-| `genesis.json` | `Genesis` (covenant answers, language, seed) |
-| `world.oui` | current floor as an OpenUI Lang `Scene` program |
-| `karma.jsonl` | one `KarmaEntry` per line — every choice, wish and floor change |
-| `inventory.json` | `Inventory` |
+- `<userData>/cartridges/<cartridgeId>/<version>/` is an immutable published revision:
+  `manifest.json`, `rules.oui`, and declared `scenes/<sceneId>.oui`. Its content hash is its exact
+  identity. Play and model tools never write here.
+- `<userData>/instances/<instanceId>/` owns `instance.json` plus the active
+  `saves/<saveId>/{save.json,karma.jsonl}`. The save pins an exact cartridge id, version, and hash;
+  flags, inventory, mutation, current scene, and completion live here.
+- `<userData>/workspaces/<workspaceId>/` is the mutable authoring copy. Structural scene/rule edits
+  go here, then full validation publishes a new immutable revision with explicit lineage.
+- `<userData>/worlds/<id>/` is the legacy five-dotfile format. Keep it readable and recoverable;
+  migration creates a cartridge plus pinned instance and never deletes the source automatically.
 
-`meta.json` also carries `mutation` (the persisted sky/fog/biome overlay), `flags` (tool-set
-switches) and `mods` (enabled mod names). Installed mods live outside worlds in
-`<userData>/mods/<name>/` (see docs/harness.md).
-
-Hand-editing mutable files in a text editor must hot-reload the game (chokidar → `worlds:changed`).
-`genesis.json` is the creation-time covenant and intentionally applies on the next world load.
-A `.seed` is a zip of that directory (fflate). An encrypted `.seed.enc` is AES-GCM with the
-passkey-PRF key when available (or the same-machine keychain fallback).
+A `.cartridge` contains content only. A `.spire-backup` contains one instance and active save only,
+and restore requires its exact cartridge revision. Encrypted portable data uses a random AES-GCM
+Data Key; PRF/keychain-derived keys only wrap that Data Key, with one validated wrapping record per
+credential. Installed mods remain outside saves in `<userData>/mods/<name>/` (docs/harness.md).
 
 ### Rule 10. Language is the player's (Babel)
 UI chrome is English. Everything the model says (NPC lines, choices, item names) is generated in
@@ -111,7 +109,7 @@ UI chrome is English. Everything the model says (NPC lines, choices, item names)
 src/
 ├── shared/        contracts — result.ts, world.ts (vocabulary + SceneGraph), llm.ts, ipc.ts, events.ts
 ├── dsl/           OpenUI Lang game dialect: schemas, libraries, prompts, parse, repair, grammar, limits
-├── main/          Electron main: index, ipc, worlds/ (dotfiles+watcher), vault/, seeds/, inference/
+├── main/          Electron main: cartridges/, instances/, workspaces/, legacy worlds/, vault/, inference/
 ├── preload/       contextBridge → window.seed (SeedApi)
 └── renderer/
     ├── app/       screens: App, Boot/Unlock, Worlds, Genesis (covenant), Play (HUD), Console (F12)
@@ -154,7 +152,7 @@ export const builtins: { persona, worldContext, worldTools, skillTool }: Plugin[
 
 ### `src/renderer/harness`
 ```ts
-export function useWorldHarness(): Harness | null;   // one instance per loaded world; mounts builtins + meta.mods bundles (read over IPC); effect provider bound to the stores + IPC persistence
+export function useWorldHarness(): Harness | null;   // one harness per loaded run; model effects become typed Change Proposals and approved save-owned effects checkpoint the instance. `narrate` is a toast and applies at once. A filed proposal answers the model `ok: true` with a "proposed, not applied" message; leaving Play discards unapproved proposals.
 export function ModsPanel(): JSX.Element;            // list/install/remove installed mods, toggle per-world enablement (writes meta.mods)
 ```
 
@@ -188,9 +186,11 @@ Components take **positional** args in zod key order (required first). Enums com
 ### `src/main`
 - `index.ts` creates the window, loads `.env` (dotenv) before anything else, registers all IPC via
   `registerIpc()` in `ipc.ts`, which calls `registerInferenceIpc()` from `main/inference/ipc.ts`.
-- `worlds/` implements every `SeedApi.worlds` method on disk + chokidar watcher → `worlds:changed`.
-- `vault/` returns/creates the 32-byte fallback key with `safeStorage` (stored encrypted in userData).
-- `seeds/` zips/unzips world dirs with fflate; `.seed` files carry `meta.json` at the root.
+- `cartridges/` publishes, verifies, lists, and imports/exports immutable content revisions.
+- `instances/` owns pinned progress, explicit compatible upgrades, and `.spire-backup` restore.
+- `workspaces/` owns mutable rules/scenes, full validation preview, and publishing with lineage.
+- `worlds/` is the legacy five-dotfile store + watcher and migration source; migration never deletes it.
+- `vault/` keeps the keychain fallback secret and validated Data Key wrapping records in userData.
 - `inference/` owns `InferenceConfig` persistence (`inference.json` in userData), the OpenAI-SDK
   client (`baseURL` from config, key from `process.env[apiKeyEnv]`), streaming → `inference:event`,
   abort, `/v1/models` probe, and the `llama-server` sidecar (spawn, health poll, kill on quit).
@@ -221,18 +221,25 @@ export function GameCanvas(): JSX.Element;   // full-viewport R3F canvas; reads 
 - `usePlatformStore.drafts` are unsaved editor **drafts**: rendered translucent (with colliders
   so they can be test-jumped) until the editor's "Apply" bakes them into the scene via
   `serializeScene`. The engine never reads world state from localStorage.
-- WASD/arrow movement (Rapier kinematic character), `E` interacts with `engineStore.nearby`,
-  `C` cycles `cameraMode` (orbit / iso / fps). Ignores input while `inputLocked`.
+- The scene contract locks the kit and camera: TPS orbit, FPS pointer-lock + reticle + flashlight,
+  2.5D side movement, and top-down board movement. Players cannot cycle away from the contract.
+- Movement and interaction ignore input while `inputLocked`.
 - Proximity (≤ 2 tiles) publishes `setNearby`; interact publishes `interact(target)`.
 - `mutationSeq` change → 0.5 s shader dissolve/crossfade of palette + fog (hot-swap).
 
 ### `src/renderer/identity`
 ```ts
-export function unlock(): Promise<Result<UnlockedKey>>;   // tries WebAuthn PRF (create/get with prf.eval salt "aether-spire/v1"); on `prf-unsupported` falls back to window.seed.vault.getKey()
-export function encryptBytes(key: UnlockedKey, bytes: Uint8Array): Promise<Uint8Array>;   // AES-GCM, 12-byte IV prefix, versioned header
+export function unlock(): Promise<Result<UnlockedKey>>;   // PRF/keychain derives a wrapping key, then unwraps or creates the random Data Key
+export function wrapDataKey(wrappingKey, dataKey, identity): Promise<DataKeyWrappingRecord>;
+export function encryptBytes(key: UnlockedKey, bytes: Uint8Array): Promise<Uint8Array>;   // AES-GCM with the unwrapped Data Key, 12-byte IV prefix, versioned header
 export function decryptBytes(key: UnlockedKey, bytes: Uint8Array): Promise<Result<Uint8Array>>;
 export function resolveEnsSeed(name: string): Promise<Result<{ address: string; seedUrl: string | null }>>;   // viem mainnet public client, text record "aether.seed"
 ```
+- Wrapping records are written one at a time (`vault.putWrappingRecord`, upsert by id); nothing
+  can replace the whole list. A passkey unlock also enrols this machine's OS keychain as a
+  recovery wrapper and says so in a toast — an accepted same-machine trade-off (plan §七 wants
+  more than one way back in). Records carry no AAD and new ciphertext still uses the `ASP1`
+  header; both are known follow-ups, not guarantees.
 
 ### `src/renderer/net`
 ```ts

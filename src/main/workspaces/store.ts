@@ -1,6 +1,7 @@
 import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { parseRules, parseScene } from "@dsl/index";
+import { assetsForScene } from "@shared/assets";
 import type {
   CartridgeManifest,
   CartridgeRef,
@@ -11,6 +12,7 @@ import type {
 } from "@shared/cartridge";
 import { WORKSPACE_FORMAT_VERSION } from "@shared/cartridge";
 import { err, fail, ok, type Result, toError } from "@shared/result";
+import { manifestCore, sha256 } from "../cartridges/integrity";
 import { isCartridgeId, isCartridgeVersion, isSceneId } from "../cartridges/paths";
 import { publishCartridgeRevision } from "../cartridges/store";
 import { isWorkspaceId, workspaceDir, workspaceScenePath } from "./paths";
@@ -63,6 +65,16 @@ export async function createWorkspaceFromRevision(
   const id = workspaceId(options.targetCartridgeId, now);
   const at = now.toISOString();
   const source = revision.manifest;
+  const sourceCore = manifestCore(source);
+  const sceneIds =
+    source.formatVersion === 1
+      ? source.scenes.map((scene) => scene.id)
+      : source.definition.scenePlan.orderedSceneIds;
+  const sceneTitles = new Map(
+    source.formatVersion === 1
+      ? source.scenes.map((scene) => [scene.id, scene.title])
+      : source.definition.narrative.scenes.map((scene) => [scene.sceneId, scene.title]),
+  );
   const meta: WorkspaceMeta = {
     formatVersion: WORKSPACE_FORMAT_VERSION,
     workspaceId: id,
@@ -74,11 +86,16 @@ export async function createWorkspaceFromRevision(
     author: options.author.trim(),
     engineApiVersion: source.engineApiVersion,
     saveSchemaVersion: source.saveSchemaVersion,
-    entrySceneId: source.entrySceneId,
-    story: source.story,
-    scenes: source.scenes,
-    requiredKits: source.requiredKits,
-    genesis: source.genesis,
+    sourceManifest: sourceCore,
+    entrySceneId:
+      source.formatVersion === 1 ? source.entrySceneId : source.definition.scenePlan.entrySceneId,
+    ...(source.formatVersion === 1
+      ? { story: source.story, requiredKits: source.requiredKits, genesis: source.genesis }
+      : {}),
+    scenes: sceneIds.map((sceneId) => ({
+      id: sceneId,
+      title: sceneTitles.get(sceneId) ?? sceneId,
+    })),
     createdAt: at,
     updatedAt: at,
   };
@@ -98,8 +115,18 @@ export async function createWorkspaceFromRevision(
     for (const [sceneId, scene] of Object.entries(revision.scenes)) {
       await writeFile(workspaceScenePath(staging, sceneId), scene, "utf8");
     }
+    for (const [path, bytes] of Object.entries(revision.assets)) {
+      const target = join(staging, "assets", path);
+      await mkdir(dirname(target), { recursive: true });
+      await writeFile(target, bytes);
+    }
     await rename(staging, destination);
-    return ok({ meta, rules: revision.rules, scenes: { ...revision.scenes } });
+    return ok({
+      meta,
+      rules: revision.rules,
+      scenes: { ...revision.scenes },
+      assets: { ...revision.assets },
+    });
   } catch (error) {
     await rm(staging, { recursive: true, force: true }).catch(() => undefined);
     return fail(toError(error, "workspace-create-failed"));
@@ -124,7 +151,19 @@ export async function readWorkspace(
     const scenes: Record<string, string> = {};
     for (const scene of meta.scenes)
       scenes[scene.id] = await readFile(workspaceScenePath(dir, scene.id), "utf8");
-    return ok({ meta, rules, scenes });
+    const assets: Record<string, Uint8Array> = {};
+    const assetsDir = join(dir, "assets");
+    if (await exists(assetsDir)) {
+      async function visit(path: string, prefix: string): Promise<void> {
+        for (const entry of await readdir(path, { withFileTypes: true })) {
+          const relative = `${prefix}${entry.name}`;
+          if (entry.isDirectory()) await visit(join(path, entry.name), `${relative}/`);
+          else if (entry.isFile()) assets[relative] = await readFile(join(path, entry.name));
+        }
+      }
+      await visit(assetsDir, "");
+    }
+    return ok({ meta, rules, scenes, assets });
   } catch (error) {
     return fail(toError(error, "workspace-read-failed"));
   }
@@ -152,7 +191,22 @@ export async function writeWorkspaceScene(
       scene.ok ? "Keep stable scene ids when editing a workspace." : scene.error.hint,
     );
   }
-  const meta = { ...workspace.value.meta, updatedAt: now.toISOString() };
+  let sourceManifest = workspace.value.meta.sourceManifest;
+  if (sourceManifest?.formatVersion === 2) {
+    const selected = sourceManifest.definition.scenes.find((scene) => scene.sceneId === sceneId);
+    if (selected === undefined) {
+      return err("workspace-scene-unknown", `Scene ${sceneId} is absent from the v2 definition.`);
+    }
+    sourceManifest = structuredClone(sourceManifest);
+    const nextSelected = sourceManifest.definition.scenes.find(
+      (scene) => scene.sceneId === sceneId,
+    );
+    if (nextSelected !== undefined) {
+      nextSelected.sourceHash = sha256(normalized);
+      nextSelected.assets = assetsForScene(scene.value);
+    }
+  }
+  const meta = { ...workspace.value.meta, sourceManifest, updatedAt: now.toISOString() };
   try {
     const dir = workspaceDir(workspacesDir, id);
     await writeFile(workspaceScenePath(dir, sceneId), normalized, "utf8");
@@ -175,7 +229,7 @@ export async function writeWorkspaceRules(
   const rules = parseRules(normalized);
   if (!rules.ok) return rules;
   const configured = new Set(rules.value.kits.map((kit) => kit.id));
-  if (workspace.value.meta.requiredKits.some((kit) => !configured.has(kit))) {
+  if ((workspace.value.meta.requiredKits ?? []).some((kit) => !configured.has(kit))) {
     return err(
       "workspace-kit-missing",
       "rules.oui must configure every kit required by this workspace.",
@@ -210,7 +264,42 @@ export async function publishWorkspace(
       "Run Validate & Preview and fix every failed check before publishing.",
     );
   }
-  const { meta, rules, scenes } = workspace.value;
+  const { meta, rules, scenes, assets } = workspace.value;
+  if (meta.sourceManifest?.formatVersion === 2) {
+    const source = meta.sourceManifest;
+    const definition = structuredClone(source.definition);
+    definition.gameId = meta.targetCartridgeId;
+    definition.title = meta.name;
+    definition.description = meta.description;
+    definition.author = meta.author;
+    definition.provenance = {
+      ...definition.provenance,
+      source: meta.mode === "remix" ? "remix" : definition.provenance.source,
+      parent: meta.base,
+    };
+    return publishCartridgeRevision(cartridgesDir, {
+      manifest: {
+        ...source,
+        cartridgeId: meta.targetCartridgeId,
+        version,
+        name: meta.name,
+        description: meta.description,
+        author: meta.author,
+        createdAt: meta.updatedAt,
+        definition,
+        lineage: { kind: meta.mode, parent: meta.base },
+      },
+      rules,
+      scenes,
+      assets,
+    });
+  }
+  if (meta.story === undefined || meta.requiredKits === undefined || meta.genesis === undefined) {
+    return err(
+      "workspace-source-invalid",
+      "The legacy workspace is missing its source definition.",
+    );
+  }
   return publishCartridgeRevision(cartridgesDir, {
     manifest: {
       formatVersion: 1,
@@ -233,6 +322,7 @@ export async function publishWorkspace(
     },
     rules,
     scenes,
+    assets,
   });
 }
 

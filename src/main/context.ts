@@ -12,6 +12,8 @@ export interface MainContext {
   instancesDir: string;
   /** Mutable revision/remix drafts. */
   workspacesDir: string;
+  /** Reusable player identities, kept separate from cartridge-specific save state. */
+  profilesDir: string;
   /** Sends an event to every open renderer window (`webContents.send`). */
   broadcast(channel: string, payload: unknown): void;
   /** Registers cleanup run on `before-quit` (kill sidecars, close watchers). */

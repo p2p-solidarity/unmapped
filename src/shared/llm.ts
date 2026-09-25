@@ -5,6 +5,7 @@ import type { AppError } from "./result";
 
 export const PROVIDER_KINDS = [
   "openai",
+  "apple-fm",
   "llamacpp",
   "ollama",
   "vllm",
@@ -39,6 +40,13 @@ export const PROVIDER_PRESETS: Record<ProviderKind, Omit<InferenceConfig, "sidec
     model: "gpt-5.4-mini",
     apiKeyEnv: "OPENAI_API_KEY",
   },
+  // Apple Foundation Models, on device: `fm serve` speaks Chat Completions; "system" is its only model.
+  "apple-fm": {
+    kind: "apple-fm",
+    baseUrl: "http://127.0.0.1:11535/v1",
+    model: "system",
+    apiKeyEnv: null,
+  },
   llamacpp: {
     kind: "llamacpp",
     baseUrl: "http://127.0.0.1:8080/v1",
@@ -59,6 +67,16 @@ export const PROVIDER_PRESETS: Record<ProviderKind, Omit<InferenceConfig, "sidec
     apiKeyEnv: "THESYS_API_KEY",
   },
   custom: { kind: "custom", baseUrl: "http://127.0.0.1:8080/v1", model: "", apiKeyEnv: null },
+};
+
+/** macOS ships the Apple Foundation Models CLI here; `fm serve` is its Chat Completions server. */
+export const APPLE_FM_BINARY = "/usr/bin/fm";
+
+export const APPLE_FM_SIDECAR: SidecarConfig = {
+  binaryPath: APPLE_FM_BINARY,
+  modelPath: "",
+  port: 11535,
+  ctxSize: 4096,
 };
 
 export type SidecarState = "stopped" | "starting" | "ready" | "error";

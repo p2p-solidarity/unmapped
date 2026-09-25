@@ -1,16 +1,26 @@
+import type { ModuleLock } from "./capabilities";
+import type { EndlessState } from "./endless";
+import type { GameDefinition } from "./game-definition";
 import type { GameplayKitId } from "./gameplay";
+import type { LandProgress } from "./land";
+import type { ModLock } from "./mods";
+import type { PartyState, PlayerState } from "./player";
 import type { Genesis, Inventory, KarmaEntry, WorldMutation } from "./world";
 
 export * from "./gameplay";
 
-export const CARTRIDGE_FORMAT_VERSION = 1 as const;
-export const INSTANCE_FORMAT_VERSION = 1 as const;
-export const SAVE_FORMAT_VERSION = 1 as const;
+export const LEGACY_CARTRIDGE_FORMAT_VERSION = 1 as const;
+export const CARTRIDGE_FORMAT_VERSION = 2 as const;
+export const LEGACY_INSTANCE_FORMAT_VERSION = 1 as const;
+export const INSTANCE_FORMAT_VERSION = 2 as const;
+export const LEGACY_SAVE_FORMAT_VERSION = 1 as const;
+export const SAVE_FORMAT_VERSION = 2 as const;
 export const WORKSPACE_FORMAT_VERSION = 1 as const;
 /** Runtime contract this build implements; a cartridge asking for more cannot be played here. */
 export const ENGINE_API_VERSION = 1 as const;
 /** Durable save shape this build writes; Phase A refuses to upgrade across a different one. */
 export const SAVE_SCHEMA_VERSION = 1 as const;
+export const NETWORK_PROTOCOL_VERSION = 1 as const;
 export const LEGACY_MIGRATION_FORMAT_VERSION = 1 as const;
 
 const SEMVER =
@@ -55,8 +65,8 @@ export interface CartridgeRef {
 }
 
 export interface CartridgeLineage {
-  kind: "revision" | "remix";
-  parent: CartridgeRef;
+  kind: "revision" | "remix" | "legacy-import";
+  parent: CartridgeRef | null;
 }
 
 export interface CartridgeSceneEntry {
@@ -83,8 +93,8 @@ export interface CartridgeFileIntegrity {
   contentHash: ContentHash;
 }
 
-export interface CartridgeManifestCore {
-  formatVersion: typeof CARTRIDGE_FORMAT_VERSION;
+export interface LegacyCartridgeManifestCore {
+  formatVersion: typeof LEGACY_CARTRIDGE_FORMAT_VERSION;
   cartridgeId: string;
   version: string;
   name: string;
@@ -101,10 +111,66 @@ export interface CartridgeManifestCore {
   lineage: CartridgeLineage | null;
 }
 
-export interface CartridgeManifest extends CartridgeManifestCore {
+export interface CartridgeManifestV2Core {
+  formatVersion: typeof CARTRIDGE_FORMAT_VERSION;
+  cartridgeId: string;
+  version: string;
+  name: string;
+  description: string;
+  author: string;
+  createdAt: string;
+  engineApiVersion: number;
+  saveSchemaVersion: number;
+  networkProtocolVersion: number;
+  definition: GameDefinition;
+  lineage: CartridgeLineage;
+}
+
+export type CartridgeManifestCore = LegacyCartridgeManifestCore | CartridgeManifestV2Core;
+
+export type CartridgeManifest = CartridgeManifestCore & {
   /** Root hash over the canonical manifest core and sorted file integrity table. */
   contentHash: ContentHash;
   files: CartridgeFileIntegrity[];
+};
+
+/**
+ * The world's fixed anchors (plan.md §5): `core` is the premise, rules, tone and taboos; `style` is
+ * naming, language, sentence length and voice. Written once when the world is made and injected
+ * verbatim into every witnessing prompt. Part of the immutable, hashed cartridge content.
+ */
+export interface WorldBible {
+  core: string;
+  style: string;
+}
+
+export const BIBLE_FILES = { core: "bible/core.md", style: "bible/style.md" } as const;
+
+/** A world made by the minimal Create names its language on the first line of style.md. */
+export function bibleLanguage(bible: WorldBible | null): string | null {
+  const match =
+    bible === null
+      ? null
+      : /^Language: ([A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*)\s*$/m.exec(bible.style);
+  return match?.[1] ?? null;
+}
+/** Characters per bible file — it is read on every witnessing turn, so it stays a page, not a book. */
+export const BIBLE_MAX_CHARS = 6000;
+
+/** Key of one baked NPC conversation inside a cartridge: `<sceneId>/<npcId>`. */
+export function dialogueKey(sceneId: string, npcId: string): string {
+  return `${sceneId}/${npcId}`;
+}
+
+/** Path of one baked NPC conversation inside a revision directory or a `.cartridge`. */
+export function dialogueFile(key: string): string {
+  return `dialogue/${key}.oui`;
+}
+
+/** Splits a `dialogue/<sceneId>/<npcId>.oui` path back into its key, or null when it is not one. */
+export function dialogueKeyOfFile(path: string): string | null {
+  const match = /^dialogue\/([a-z0-9][a-z0-9_-]{0,79}\/[a-z0-9][a-z0-9_-]{0,79})\.oui$/.exec(path);
+  return match?.[1] ?? null;
 }
 
 export interface PublishCartridgeInput {
@@ -112,16 +178,37 @@ export interface PublishCartridgeInput {
   rules: string;
   /** Scene source keyed by the stable ids declared in `manifest.scenes`. */
   scenes: Record<string, string>;
+  /**
+   * Baked NPC conversations keyed by `dialogueKey(sceneId, npcId)`. Written when the cartridge was
+   * forged so it can be played with no model; absent for cartridges whose NPCs speak at runtime.
+   */
+  dialogues?: Record<string, string>;
+  /** Packed asset bytes keyed by the safe path declared in the v2 definition. */
+  assets?: Record<string, Uint8Array>;
+  /** Present for worlds made to be witnessed; older cartridges have none. */
+  bible?: WorldBible;
 }
 
 export interface CartridgeRevision {
   manifest: CartridgeManifest;
   rules: string;
   scenes: Record<string, string>;
+  /** Baked NPC conversations keyed by `dialogueKey(sceneId, npcId)`; empty when none were baked. */
+  dialogues: Record<string, string>;
+  assets: Record<string, Uint8Array>;
+  bible: WorldBible | null;
 }
 
-export interface InstanceMeta {
-  formatVersion: typeof INSTANCE_FORMAT_VERSION;
+export interface RuntimePin {
+  cartridge: CartridgeRef;
+  moduleLock: ModuleLock;
+  modLock: ModLock;
+  profileHash: ContentHash;
+  effectiveHash: ContentHash;
+}
+
+export interface LegacyInstanceMeta {
+  formatVersion: typeof LEGACY_INSTANCE_FORMAT_VERSION;
   instanceId: string;
   name: string;
   cartridge: CartridgeRef;
@@ -131,8 +218,21 @@ export interface InstanceMeta {
   updatedAt: string;
 }
 
-export interface SaveState {
-  formatVersion: typeof SAVE_FORMAT_VERSION;
+export interface InstanceMeta {
+  formatVersion: typeof INSTANCE_FORMAT_VERSION;
+  instanceId: string;
+  name: string;
+  /** Compatibility index. Must equal runtimePin.cartridge when read. */
+  cartridge: CartridgeRef;
+  runtimePin: RuntimePin;
+  activeSaveId: string;
+  saveSchemaVersion: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LegacySaveState {
+  formatVersion: typeof LEGACY_SAVE_FORMAT_VERSION;
   instanceId: string;
   cartridge: CartridgeRef;
   saveSchemaVersion: number;
@@ -141,6 +241,44 @@ export interface SaveState {
   inventory: Inventory;
   mutation: WorldMutation | null;
   completedSceneIds: string[];
+  updatedAt: string;
+}
+
+/** Where the player stood on open land. Only honoured while the save is still in `sceneId`. */
+export interface SavedPosition {
+  sceneId: string;
+  x: number;
+  y: number;
+  z: number;
+  /** Camera yaw, so the view comes back facing the way the player left it. */
+  yaw: number;
+}
+
+export interface SaveState {
+  formatVersion: typeof SAVE_FORMAT_VERSION;
+  instanceId: string;
+  /** Compatibility index. Must equal runtimePin.cartridge when read. */
+  cartridge: CartridgeRef;
+  runtimePin: RuntimePin;
+  saveSchemaVersion: number;
+  currentSceneId: string;
+  flags: Record<string, string | number | boolean>;
+  inventory: Inventory;
+  player: PlayerState | null;
+  party: PartyState | null;
+  mutation: WorldMutation | null;
+  completedSceneIds: string[];
+  /** Present once the player has gone below the ending into generated floors. */
+  endless?: EndlessState;
+  /** Last place the player stood on open land; absent until they have walked somewhere. */
+  position?: SavedPosition;
+  /** Errands, home and door on open land; absent until the player has done any of it. */
+  land?: LandProgress;
+  /**
+   * The world seed (`seedCode.ts`): which land of the one game this save walks. Absent on saves
+   * made before seeds, whose land still comes from their cartridge id.
+   */
+  seed?: string;
   updatedAt: string;
 }
 
@@ -157,6 +295,10 @@ export interface InstanceProgressInput {
   inventory: Inventory;
   mutation: WorldMutation | null;
   karma: KarmaEntry[];
+  /** Omitted when the renderer has no open-land position to report; the saved one is kept. */
+  position?: SavedPosition;
+  /** Omitted when nothing on open land changed; the saved progress is kept. */
+  land?: LandProgress;
 }
 
 export interface ResolvedInstance {
@@ -175,11 +317,13 @@ export interface WorkspaceMeta {
   author: string;
   engineApiVersion: number;
   saveSchemaVersion: number;
+  /** Frozen source core. New workspaces use this to preserve v2 definitions during remixing. */
+  sourceManifest?: CartridgeManifestCore;
   entrySceneId: string;
-  story: StoryOutline;
+  story?: StoryOutline;
   scenes: CartridgeSceneEntry[];
-  requiredKits: GameplayKitId[];
-  genesis: Genesis;
+  requiredKits?: GameplayKitId[];
+  genesis?: Genesis;
   createdAt: string;
   updatedAt: string;
 }
@@ -188,6 +332,7 @@ export interface WorkspaceRecord {
   meta: WorkspaceMeta;
   rules: string;
   scenes: Record<string, string>;
+  assets: Record<string, Uint8Array>;
 }
 
 export interface WorkspaceValidationCheck {

@@ -1,4 +1,5 @@
 import { parseRules, parseScene } from "@dsl/index";
+import { assetsForScene, validateAssetRef } from "@shared/assets";
 import {
   ENGINE_API_VERSION,
   SAVE_SCHEMA_VERSION,
@@ -7,6 +8,7 @@ import {
   type WorkspaceValidationCheck,
 } from "@shared/cartridge";
 import type { SceneContract } from "@shared/gameplay";
+import { canonicalJson, sha256 } from "../cartridges/integrity";
 import { reachableScenes } from "../cartridges/routes";
 
 function check(
@@ -39,11 +41,25 @@ export function validateWorkspace(workspace: WorkspaceRecord): WorkspacePreview 
   for (const id of ids) if (sources[id] === undefined) catalog.push(`${id}.oui is missing.`);
   for (const id of Object.keys(sources))
     if (!idSet.has(id)) catalog.push(`${id}.oui is undeclared.`);
-  const storyIds = new Set(meta.story.scenes.map((scene) => scene.id));
-  if (storyIds.size !== meta.story.scenes.length) catalog.push("Story scene ids are not unique.");
-  for (const id of ids)
-    if (!storyIds.has(id)) catalog.push(`${id} is missing from the story outline.`);
-  for (const id of storyIds) if (!idSet.has(id)) catalog.push(`Story scene ${id} is undeclared.`);
+  if (meta.story !== undefined) {
+    const storyIds = new Set(meta.story.scenes.map((scene) => scene.id));
+    if (storyIds.size !== meta.story.scenes.length) catalog.push("Story scene ids are not unique.");
+    for (const id of ids)
+      if (!storyIds.has(id)) catalog.push(`${id} is missing from the story outline.`);
+    for (const id of storyIds) if (!idSet.has(id)) catalog.push(`Story scene ${id} is undeclared.`);
+  }
+  const definition =
+    meta.sourceManifest?.formatVersion === 2 ? meta.sourceManifest.definition : null;
+  if (definition !== null) {
+    const frozenIds = definition.scenePlan.orderedSceneIds;
+    if (canonicalJson(frozenIds) !== canonicalJson(ids)) {
+      catalog.push("The workspace scene order does not match its frozen v2 definition.");
+    }
+    const selectedIds = definition.scenes.map((scene) => scene.sceneId).sort();
+    if (canonicalJson(selectedIds) !== canonicalJson([...ids].sort())) {
+      catalog.push("The v2 selected scenes do not match the workspace scene catalog.");
+    }
+  }
 
   const parsedRules = parseRules(source);
   const ruleMessages = parsedRules.ok ? [] : [parsedRules.error.message];
@@ -58,7 +74,7 @@ export function validateWorkspace(workspace: WorkspaceRecord): WorkspacePreview 
   const contracts = new Map<string, SceneContract>();
 
   if (parsedRules.ok) {
-    for (const kit of meta.requiredKits) {
+    for (const kit of meta.requiredKits ?? []) {
       if (!configured.has(kit)) kitMessages.push(`${kit} is required but not configured.`);
     }
   }
@@ -76,8 +92,50 @@ export function validateWorkspace(workspace: WorkspaceRecord): WorkspacePreview 
       continue;
     }
     contracts.set(id, contract);
-    if (!meta.requiredKits.includes(contract.kit) || !configured.has(contract.kit)) {
+    if (
+      !configured.has(contract.kit) ||
+      (meta.requiredKits !== undefined && !meta.requiredKits.includes(contract.kit))
+    ) {
       kitMessages.push(`${id}.oui selects unavailable kit ${contract.kit}.`);
+    }
+    if (definition !== null) {
+      const selected = definition.scenes.find((item) => item.sceneId === id);
+      const contextIds = new Set(
+        definition.capabilityProfile.contexts.map((context) => context.contextId),
+      );
+      const moduleIds = new Set(definition.moduleLock.entries.map((module) => module.moduleId));
+      if (
+        selected === undefined ||
+        selected.requiredProfileId !== definition.capabilityProfile.profileId ||
+        !contextIds.has(selected.requiredContextId) ||
+        selected.requiredModules.some((moduleId) => !moduleIds.has(moduleId))
+      ) {
+        contractMessages.push(`${id}.oui has an invalid frozen capability context.`);
+      } else if (
+        contract.requiredProfileId !== selected.requiredProfileId ||
+        contract.requiredContextId !== selected.requiredContextId ||
+        canonicalJson(contract.requiredModules ?? []) !== canonicalJson(selected.requiredModules)
+      ) {
+        contractMessages.push(`${id}.oui does not match its frozen capability context.`);
+      }
+      if (selected !== undefined) {
+        if (
+          selected.sourceHash !== sha256(`${source.replace(/\r\n?/g, "\n").replace(/\n*$/, "")}\n`)
+        ) {
+          contractMessages.push(`${id}.oui does not match its frozen source hash.`);
+        }
+        const actualAssets = assetsForScene(scene.value);
+        const selectedAssets = [...selected.assets].sort((a, b) =>
+          a.assetId.localeCompare(b.assetId),
+        );
+        if (canonicalJson(actualAssets) !== canonicalJson(selectedAssets)) {
+          catalog.push(`${id}.oui asset references do not match its frozen definition.`);
+        }
+        for (const asset of selectedAssets) {
+          const valid = validateAssetRef(asset);
+          if (!valid.ok) catalog.push(valid.error.message);
+        }
+      }
     }
     const targets: string[] = [];
     let endingGate = false;
@@ -112,6 +170,9 @@ export function validateWorkspace(workspace: WorkspaceRecord): WorkspacePreview 
   const reachable = reachableScenes(meta.entrySceneId, routes, contracts);
   const reachesEnding = [...reachable].some((id) => terminals.has(id));
   if (!reachesEnding) endingMessages.push("No terminal scene is reachable from the entry scene.");
+  if (definition !== null && definition.scenePlan.endingSceneIds.some((id) => !terminals.has(id))) {
+    endingMessages.push("A declared v2 ending scene is not terminal.");
+  }
 
   const checks = [
     check("engine", "Engine API", engine),

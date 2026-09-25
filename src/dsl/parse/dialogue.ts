@@ -24,7 +24,8 @@ const dialect = createDialect(dialogueLibrary);
 
 const HEAD = DIALOGUE_PROPS.Dialogue.pick({ npcId: true, line: true });
 
-function readChoices(root: ElementNode, issues: OpenUIError[]): DialogueChoice[] {
+/** The distinct, clamped choices listed under `root.choices` (shared with the Chunk dialect). */
+export function readChoices(root: ElementNode, issues: OpenUIError[]): DialogueChoice[] {
   const seen = new Set<string>();
   const choices: DialogueChoice[] = [];
   for (const child of childrenOf(root, "choices")) {

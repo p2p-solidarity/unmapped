@@ -1,4 +1,4 @@
-// The Seed harness: how anything in Aether Spire talks to the model (Rule 11, docs/harness.md).
+// The Seed harness: how anything in Unwritten Land talks to the model (Rule 11, docs/harness.md).
 //
 // Framework-agnostic — it runs in the renderer, in the Electron main process and in vitest, and
 // imports no React, no Electron and no DOM. Five Cordis services hold everything a turn needs:

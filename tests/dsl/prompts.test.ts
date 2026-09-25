@@ -278,12 +278,13 @@ describe("dialoguePrompt", () => {
     expect(prompt).toContain("brass key");
   });
 
-  it("tells the NPC what the traveller can see of them", () => {
+  it("tells the NPC what the traveller can see of them, without the hex codes", () => {
     expect(prompt).toContain(npc.body);
-    expect(prompt).toContain(npc.color);
-    expect(prompt).toContain(npc.accent);
     if (npc.held !== "none") expect(prompt).toContain(npc.held);
     if (npc.hat !== "none") expect(prompt).toContain(npc.hat);
+    // Handed its own hex, a model reads it out loud ("dusk soft on me like #d49a6c").
+    expect(prompt).not.toContain(npc.color);
+    expect(prompt).toContain("never say a colour code");
   });
 
   it("keeps the NPC in the world and the mutation rare", () => {

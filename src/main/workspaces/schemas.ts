@@ -1,6 +1,6 @@
 import { GAMEPLAY_KIT_IDS, WORKSPACE_FORMAT_VERSION, type WorkspaceMeta } from "@shared/cartridge";
 import { z } from "zod";
-import { cartridgeRefSchema } from "../cartridges/schemas";
+import { cartridgeManifestCoreSchema, cartridgeRefSchema } from "../cartridges/schemas";
 import { genesisSchema } from "../worlds/schemas";
 
 export const workspaceMetaSchema: z.ZodType<WorkspaceMeta> = z
@@ -15,6 +15,7 @@ export const workspaceMetaSchema: z.ZodType<WorkspaceMeta> = z
     author: z.string().trim().min(1).max(120),
     engineApiVersion: z.number().int().min(1),
     saveSchemaVersion: z.number().int().min(1),
+    sourceManifest: cartridgeManifestCoreSchema.optional(),
     entrySceneId: z.string().min(1).max(80),
     story: z
       .object({
@@ -35,15 +36,16 @@ export const workspaceMetaSchema: z.ZodType<WorkspaceMeta> = z
           .min(1)
           .max(12),
       })
-      .strict(),
+      .strict()
+      .optional(),
     scenes: z
       .array(
         z.object({ id: z.string().min(1).max(80), title: z.string().min(1).max(160) }).strict(),
       )
       .min(1)
       .max(256),
-    requiredKits: z.array(z.enum(GAMEPLAY_KIT_IDS)).min(1).max(GAMEPLAY_KIT_IDS.length),
-    genesis: genesisSchema,
+    requiredKits: z.array(z.enum(GAMEPLAY_KIT_IDS)).min(1).max(GAMEPLAY_KIT_IDS.length).optional(),
+    genesis: genesisSchema.optional(),
     createdAt: z.string().min(1),
     updatedAt: z.string().min(1),
   })

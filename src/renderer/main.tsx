@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./app/App";
+import { SandboxApp } from "./engine/SandboxApp";
 import "./game.css";
 import "./styles.css";
 import { colors, cssVars, font } from "./ui";
@@ -17,6 +18,11 @@ for (const [name, value] of Object.entries(cssVars)) container.style.setProperty
 
 createRoot(container).render(
   <StrictMode>
-    <App />
+    {window.parent !== window &&
+    new URLSearchParams(window.location.search).get("sandbox") === "1" ? (
+      <SandboxApp />
+    ) : (
+      <App />
+    )}
   </StrictMode>,
 );

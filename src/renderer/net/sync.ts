@@ -1,180 +1,196 @@
-// Mirrors the world into the shared Y.Doc: `world.oui` as a Y.Text, karma as a Y.Array of JSON
-// lines. Positions and camera are per-frame data and deliberately stay out of the doc.
-//
-// Direction: the host owns world.oui (it is the machine running generation); every peer parses
-// what arrives and feeds worldStore. Karma flows both ways, deduped by `at + choice`.
-
-import { parseScene } from "@dsl/index";
-import { useWorldStore } from "@renderer/state";
-import { errored, ready } from "@shared/result";
-import { BIOMES, CHOICE_ACTIONS, type KarmaEntry, type WorldMutation } from "@shared/world";
+import { hydrateInstance } from "@renderer/app/useInstanceLoader";
+import { checkpointCurrentInstance } from "@renderer/app/usePersistWorld";
+import { useEngineStore, useSessionStore, useWorldStore } from "@renderer/state";
+import type { ResolvedInstance } from "@shared/cartridge";
+import type { NearbyTarget } from "@shared/events";
+import { fail, ok, type Result } from "@shared/result";
+import type { RuntimeSnapshot, SessionInput } from "@shared/session";
 import { useEffect } from "react";
-import type * as Y from "yjs";
-import { z } from "zod";
+import { getActiveRoom, setActiveRoom } from "./lifecycle";
 import type { Room } from "./room";
 
-/** Transaction origin for our own writes, so observers can ignore the echo. */
-const LOCAL_ORIGIN = "local";
-export const SCENE_KEY = "world.oui";
-export const KARMA_KEY = "karma";
-export const MUTATION_KEY = "world.mutation";
-
-const KARMA_ACTIONS = [...CHOICE_ACTIONS, "wish", "genesis", "floor"] as const;
-
-const karmaSchema = z.object({
-  at: z.string().min(1),
-  floor: z.number().int(),
-  npcId: z.string().nullable(),
-  choice: z.string(),
-  action: z.enum(KARMA_ACTIONS),
-  effect: z.string(),
-});
-const mutationSchema = z.object({
-  skyColor: z.string().nullable(),
-  fogDensity: z.number().nullable(),
-  biome: z.enum(BIOMES).nullable(),
-});
-
-/** Identity of a karma entry on the wire: the same choice at the same instant is the same event. */
-export function karmaKey(entry: Pick<KarmaEntry, "at" | "choice">): string {
-  return `${entry.at}|${entry.choice}`;
+function snapshotOf(room: Room, sequence: number): RuntimeSnapshot {
+  const world = useWorldStore.getState();
+  const save = room.instance.instance.save;
+  return {
+    sequence,
+    currentSceneId: save.currentSceneId,
+    flags: { ...(world.meta?.flags ?? save.flags) },
+    inventory: world.inventory,
+    karma: world.karma,
+    mutation: world.meta?.mutation ?? save.mutation,
+    player: save.player,
+    party: save.party,
+    completedSceneIds: [...save.completedSceneIds],
+    ...(save.seed === undefined ? {} : { seed: save.seed }),
+    updatedAt: world.meta?.updatedAt ?? save.updatedAt,
+  };
 }
 
-function decodeKarma(line: string): KarmaEntry | null {
-  try {
-    const parsed = karmaSchema.safeParse(JSON.parse(line));
-    return parsed.success ? parsed.data : null;
-  } catch {
-    return null;
+function resolvedFromSnapshot(room: Room, snapshot: RuntimeSnapshot): ResolvedInstance {
+  const current = room.instance;
+  // The visitor walks the host's land: never keep this machine's own world seed.
+  const { seed: _ownSeed, ...ownSave } = current.instance.save;
+  return {
+    cartridge: current.cartridge,
+    instance: {
+      meta: { ...current.instance.meta, updatedAt: snapshot.updatedAt },
+      karma: snapshot.karma,
+      save: {
+        ...ownSave,
+        currentSceneId: snapshot.currentSceneId,
+        flags: { ...snapshot.flags },
+        inventory: snapshot.inventory,
+        mutation: snapshot.mutation,
+        player: snapshot.player,
+        party: snapshot.party,
+        completedSceneIds: [...snapshot.completedSceneIds],
+        ...(snapshot.seed === undefined ? {} : { seed: snapshot.seed }),
+        updatedAt: snapshot.updatedAt,
+      },
+    },
+  };
+}
+
+type AppliedInput = "event" | "snapshot" | "transition";
+
+async function applyHostInput(room: Room, input: SessionInput): Promise<Result<AppliedInput>> {
+  if (!room.host) {
+    return fail({ code: "session-authority-violation", message: "Only the host can apply input." });
   }
-}
-
-function encodeMutation(mutation: WorldMutation | null): string {
-  return JSON.stringify(mutation);
-}
-
-function decodeMutation(source: string): WorldMutation | null | undefined {
-  try {
-    const raw: unknown = JSON.parse(source);
-    if (raw === null) return null;
-    const parsed = mutationSchema.safeParse(raw);
-    return parsed.success ? parsed.data : undefined;
-  } catch {
-    return undefined;
+  if (input.kind === "interact") {
+    useEngineStore.getState().interact(input.target);
+    return ok("snapshot");
   }
+  if (input.kind === "action") return ok("event");
+  const checkpoint = await checkpointCurrentInstance();
+  if (!checkpoint.ok) return fail(checkpoint.error);
+  const instanceId = room.instance.instance.meta.instanceId;
+  const transitioned =
+    input.kind === "complete"
+      ? await window.seed.instances.complete(instanceId)
+      : await window.seed.instances.transition(instanceId, input.targetSceneId);
+  if (!transitioned.ok) return fail(transitioned.error);
+  room.instance = transitioned.value;
+  const hydrated = hydrateInstance(transitioned.value);
+  if (!hydrated.ok) return fail(hydrated.error);
+  return ok("transition");
 }
 
+/** App-owned bridge between an active room and the running instance. */
 export function useRoomSync(room: Room | null): void {
   useEffect(() => {
     if (room === null) return;
+    const session = useSessionStore.getState();
+    let sequence = 0;
+    let applyingRemote = false;
+    session.setRoomCode(room.code);
+    session.setNetworkRole(room.host ? "host" : "peer");
+    session.setPlayerProfile(room.profile);
+    session.setActiveInstance(room.instance);
 
-    const text = room.doc.getText(SCENE_KEY);
-    const karma = room.doc.getArray<string>(KARMA_KEY);
-    const mutation = room.doc.getText(MUTATION_KEY);
-
-    const pushScene = (source: string) => {
-      if (source.length === 0 || text.toString() === source) return;
-      room.doc.transact(() => {
-        text.delete(0, text.length);
-        text.insert(0, source);
-      }, LOCAL_ORIGIN);
+    const publish = (transition = false) => {
+      if (!room.host || applyingRemote) return;
+      const snapshot = snapshotOf(room, ++sequence);
+      if (transition) room.broadcastTransition(snapshot);
+      else room.broadcastSnapshot(snapshot);
     };
-
-    const applyRemoteScene = () => {
-      const source = text.toString();
-      if (source.length === 0) return;
-      const store = useWorldStore.getState();
-      if (store.sceneSource === source) return;
-      const parsed = parseScene(source);
-      store.setScene(source, parsed.ok ? ready(parsed.value) : errored(parsed.error));
-    };
-
-    const pushMutation = (value: WorldMutation | null) => {
-      const encoded = encodeMutation(value);
-      if (mutation.toString() === encoded) return;
-      room.doc.transact(() => {
-        mutation.delete(0, mutation.length);
-        mutation.insert(0, encoded);
-      }, LOCAL_ORIGIN);
-    };
-
-    const applyRemoteMutation = () => {
-      const remote = decodeMutation(mutation.toString());
-      if (remote === undefined) return;
-      const local = useWorldStore.getState().meta?.mutation ?? null;
-      if (encodeMutation(local) === encodeMutation(remote)) return;
-      useWorldStore.getState().setMutationOverlay(remote);
-    };
-
-    const pushKarma = (entries: readonly KarmaEntry[]) => {
-      const known = new Set<string>();
-      for (const line of karma.toArray()) {
-        const entry = decodeKarma(line);
-        if (entry !== null) known.add(karmaKey(entry));
+    const offVerified = room.onVerified(() => {
+      session.setPeerCount(room.verifiedPeerCount());
+      if (room.host) publish();
+    });
+    const offError = room.onError((error) => {
+      session.toast("danger", `${error.message}${error.hint ? ` — ${error.hint}` : ""}`);
+    });
+    const offInput = room.onInput((input) => {
+      void applyHostInput(room, input).then((applied) => {
+        if (!applied.ok) {
+          session.toast("danger", applied.error.message);
+          return;
+        }
+        if (applied.value === "event" && input.kind === "action") {
+          room.broadcastEvent(
+            {
+              id: crypto.randomUUID(),
+              kind: input.action,
+              payload: { value: input.value ?? null },
+            },
+            ++sequence,
+          );
+        } else publish(applied.value === "transition");
+      });
+    });
+    const offSnapshot = room.onSnapshot((snapshot) => {
+      if (room.host) return;
+      applyingRemote = true;
+      const resolved = resolvedFromSnapshot(room, snapshot);
+      const hydrated = hydrateInstance(resolved);
+      if (hydrated.ok) {
+        room.instance = resolved;
+        useSessionStore.getState().setBusy(null);
+        useSessionStore.getState().setScreen("play");
+      } else {
+        session.toast("danger", hydrated.error.message);
       }
-      const additions = entries
-        .filter((entry) => !known.has(karmaKey(entry)))
-        .map((entry) => JSON.stringify(entry));
-      if (additions.length === 0) return;
-      room.doc.transact(() => {
-        karma.push(additions);
-      }, LOCAL_ORIGIN);
-    };
-
-    const applyRemoteKarma = () => {
-      const store = useWorldStore.getState();
-      const seen = new Set(store.karma.map(karmaKey));
-      for (const line of karma.toArray()) {
-        const entry = decodeKarma(line);
-        if (entry === null) continue;
-        const key = karmaKey(entry);
-        if (seen.has(key)) continue;
-        seen.add(key);
-        useWorldStore.getState().appendKarma(entry);
-      }
-    };
-
-    const onText = (_event: Y.YTextEvent, transaction: Y.Transaction) => {
-      if (transaction.origin === LOCAL_ORIGIN) return;
-      applyRemoteScene();
-    };
-    const onKarma = (_event: Y.YArrayEvent<string>, transaction: Y.Transaction) => {
-      if (transaction.origin === LOCAL_ORIGIN) return;
-      applyRemoteKarma();
-    };
-    const onMutation = (_event: Y.YTextEvent, transaction: Y.Transaction) => {
-      if (transaction.origin === LOCAL_ORIGIN) return;
-      applyRemoteMutation();
-    };
-    text.observe(onText);
-    karma.observe(onKarma);
-    mutation.observe(onMutation);
-
-    const initial = useWorldStore.getState();
-    if (room.host) pushScene(initial.sceneSource);
-    else applyRemoteScene();
-    if (room.host) pushMutation(initial.meta?.mutation ?? null);
-    else applyRemoteMutation();
-    pushKarma(initial.karma);
-    applyRemoteKarma();
-    room.provider.awareness.setLocalStateField("floor", initial.floor);
-
-    const unsubscribe = useWorldStore.subscribe((state, previous) => {
-      if (room.host && state.sceneSource !== previous.sceneSource) pushScene(state.sceneSource);
-      if (room.host && state.meta?.mutation !== previous.meta?.mutation) {
-        pushMutation(state.meta?.mutation ?? null);
-      }
-      if (state.karma !== previous.karma) pushKarma(state.karma);
-      if (state.floor !== previous.floor) {
-        room.provider.awareness.setLocalStateField("floor", state.floor);
+      applyingRemote = false;
+    });
+    const offPeers = room.onPeers(() => session.setPeerCount(room.verifiedPeerCount()));
+    const unsubscribeWorld = useWorldStore.subscribe((state, previous) => {
+      room.provider.awareness.setLocalStateField("floor", state.floor);
+      if (room.host && state.sceneSource !== previous.sceneSource) {
+        const active = useSessionStore.getState().activeInstance;
+        if (active !== null) room.instance = active;
+        publish(true);
+      } else if (
+        room.host &&
+        (state.inventory !== previous.inventory ||
+          state.karma !== previous.karma ||
+          state.meta?.flags !== previous.meta?.flags ||
+          state.meta?.mutation !== previous.meta?.mutation)
+      ) {
+        publish();
       }
     });
 
     return () => {
-      unsubscribe();
-      text.unobserve(onText);
-      karma.unobserve(onKarma);
-      mutation.unobserve(onMutation);
+      offVerified();
+      offError();
+      offInput();
+      offSnapshot();
+      offPeers();
+      unsubscribeWorld();
+      session.setRoomCode(null);
+      session.setNetworkRole("solo");
     };
   }, [room]);
+}
+
+export function requestRoomTransition(targetSceneId: string | null): boolean {
+  const room = getActiveRoom();
+  if (room === null || room.host) return false;
+  const result = room.sendInput(
+    targetSceneId === null ? { kind: "complete" } : { kind: "transition", targetSceneId },
+  );
+  if (!result.ok) useSessionStore.getState().toast("danger", result.error.message);
+  return true;
+}
+
+export function sendRoomInteraction(target: NearbyTarget): boolean {
+  const room = getActiveRoom();
+  if (room === null || room.host) return false;
+  const result = room.sendInput({ kind: "interact", target });
+  if (!result.ok) useSessionStore.getState().toast("danger", result.error.message);
+  return true;
+}
+
+/** Host departure is gated on a durable checkpoint; peers can disconnect immediately. */
+export async function leaveActiveRoom(): Promise<Result<void>> {
+  const room = getActiveRoom();
+  if (room === null) return ok(undefined);
+  if (room.host) {
+    const checkpoint = await checkpointCurrentInstance();
+    if (!checkpoint.ok) return checkpoint;
+  }
+  if (getActiveRoom() === room) setActiveRoom(null);
+  return ok(undefined);
 }

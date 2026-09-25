@@ -1,3 +1,6 @@
+import type { ModProposalPreview } from "@shared/mods";
+import type { PlayerProfile } from "@shared/player";
+import type { AuthoringSnapshot } from "@shared/scene-gallery";
 // The only bridge between the renderer and main (Rule 6). `window.seed` is typed as `SeedApi`, so
 // a missing or mistyped method is a compile error here rather than a runtime surprise in the UI.
 
@@ -30,6 +33,13 @@ import type {
   WriteWorkspaceSceneInput,
 } from "@shared/ipc";
 import { IPC } from "@shared/ipc";
+import type {
+  AppendNoteInput,
+  LandNote,
+  LandRecord,
+  WitnessChunkInput,
+  WitnessedChunk,
+} from "@shared/land";
 import type {
   ChatEvent,
   ChatRequest,
@@ -83,8 +93,12 @@ const api: SeedApi = {
       invoke<Result<SeedExport>>(IPC.cartridges.exportPack, cartridgeId, version),
     importPack: () => invoke<Result<CartridgeManifest>>(IPC.cartridges.importPack),
   },
+  game: {
+    base: () => invoke<Result<CartridgeManifest>>(IPC.game.base),
+  },
   instances: {
     list: () => invoke<Result<InstanceMeta[]>>(IPC.instances.list),
+    listLegacy: () => invoke<Result<string[]>>(IPC.instances.listLegacy),
     create: (input: CreateInstanceInput) =>
       invoke<Result<ResolvedInstance>>(IPC.instances.create, input),
     resolve: (instanceId: string) =>
@@ -93,6 +107,8 @@ const api: SeedApi = {
       invoke<Result<ResolvedInstance>>(IPC.instances.transition, instanceId, targetSceneId),
     complete: (instanceId: string) =>
       invoke<Result<ResolvedInstance>>(IPC.instances.complete, instanceId),
+    descend: (instanceId: string) =>
+      invoke<Result<ResolvedInstance>>(IPC.instances.descend, instanceId),
     checkpoint: (input: CheckpointInstanceInput) =>
       invoke<Result<InstanceMeta>>(IPC.instances.checkpoint, input),
     upgrade: (input: UpgradeInstanceInput) =>
@@ -100,8 +116,25 @@ const api: SeedApi = {
     exportBackup: (instanceId: string) =>
       invoke<Result<SeedExport>>(IPC.instances.exportBackup, instanceId),
     importBackup: () => invoke<Result<ResolvedInstance>>(IPC.instances.importBackup),
+    readLand: (instanceId: string) =>
+      invoke<Result<LandRecord>>(IPC.instances.readLand, instanceId),
+    witness: (input: WitnessChunkInput) =>
+      invoke<Result<WitnessedChunk>>(IPC.instances.witness, input),
+    appendNote: (input: AppendNoteInput) =>
+      invoke<Result<LandNote>>(IPC.instances.appendNote, input),
+  },
+  profiles: {
+    list: () => invoke<Result<PlayerProfile[]>>(IPC.profiles.list),
+    read: (id) => invoke<Result<PlayerProfile>>(IPC.profiles.read, id),
+    upsert: (input) => invoke<Result<PlayerProfile>>(IPC.profiles.upsert, input),
+    remove: (id) => invoke<Result<void>>(IPC.profiles.remove, id),
   },
   workspaces: {
+    createAuthoring: (input) =>
+      invoke<Result<AuthoringSnapshot>>(IPC.workspaces.createAuthoring, input),
+    readAuthoring: (id) => invoke<Result<AuthoringSnapshot>>(IPC.workspaces.readAuthoring, id),
+    writeAuthoring: (snapshot) =>
+      invoke<Result<AuthoringSnapshot>>(IPC.workspaces.writeAuthoring, snapshot),
     list: () => invoke<Result<WorkspaceMeta[]>>(IPC.workspaces.list),
     create: (input: CreateWorkspaceInput) =>
       invoke<Result<WorkspaceRecord>>(IPC.workspaces.create, input),
@@ -138,6 +171,10 @@ const api: SeedApi = {
       invoke<Result<void>>(IPC.vault.putWrappingRecord, record),
   },
   mods: {
+    previewProposal: (proposal) =>
+      invoke<Result<ModProposalPreview>>(IPC.mods.previewProposal, proposal),
+    publishProposal: (proposal) =>
+      invoke<Result<CartridgeManifest>>(IPC.mods.publishProposal, proposal),
     list: () => invoke<Result<ModSummary[]>>(IPC.mods.list),
     read: (name: string) => invoke<Result<ModBundle>>(IPC.mods.read, name),
     install: () => invoke<Result<ModSummary>>(IPC.mods.install),

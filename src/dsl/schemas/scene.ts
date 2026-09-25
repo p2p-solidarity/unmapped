@@ -82,6 +82,12 @@ export const Prop = defineComponent({
     z: tile("tile on the z axis"),
     scale: amount("size multiplier").nullable().optional(),
     tint: hexColor("colour override").nullable().optional(),
+    dynamic: z
+      .boolean()
+      .describe("free physics object — it falls, collides and can be grabbed")
+      .nullable()
+      .optional(),
+    assetId: z.string().max(160).nullable().optional().describe("installed asset ID matching kind"),
   }),
   component: "Prop",
 });
@@ -164,6 +170,9 @@ export const Contract = defineComponent({
     inventoryPolicy: z.enum(INVENTORY_POLICIES).describe("whether inventory crosses the boundary"),
     grantsFlags: z.array(identifier("flag set true on completion")).max(64),
     terminal: z.boolean().describe("this scene can complete the cartridge"),
+    requiredProfileId: z.string().max(160).nullable().optional(),
+    requiredContextId: z.string().max(160).nullable().optional(),
+    requiredModules: z.array(z.string().max(160)).max(64).nullable().optional(),
   }),
   component: "Contract",
 });

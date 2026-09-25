@@ -1,7 +1,9 @@
 // The world store is the live copy; the dotfiles are the save. Every karma/inventory/floor change
 // is written back through IPC, debounced so a burst of choices costs one write.
 
-import { useSessionStore, useWorldStore, type WorldState } from "@renderer/state";
+import { samplePlayer } from "@renderer/engine/playerProbe";
+import { useLandStore, useSessionStore, useWorldStore, type WorldState } from "@renderer/state";
+import type { SavedPosition } from "@shared/cartridge";
 import { ok, type Result } from "@shared/result";
 import type { Inventory, KarmaEntry, WorldMeta } from "@shared/world";
 import { WORLD_FILES } from "@shared/world";
@@ -67,12 +69,24 @@ async function writeMeta(meta: WorldMeta, floor: number): Promise<void> {
   if (!result.ok) toastError("meta.json", result.error.message);
 }
 
+/** The player's open-land position, only while it belongs to the scene this save is in. */
+export function currentPosition(): SavedPosition | null {
+  const sample = samplePlayer();
+  const active = useSessionStore.getState().activeInstance;
+  if (sample === null || active === null) return null;
+  return sample.sceneId === active.instance.save.currentSceneId ? sample : null;
+}
+
 async function performInstanceCheckpoint(): Promise<Result<void>> {
+  if (useSessionStore.getState().networkRole === "peer") return ok(undefined);
   const world = useWorldStore.getState();
   const origin = world.origin;
   const meta = world.meta;
   if (origin?.kind !== "instance" || meta === null) return ok(undefined);
   const expectedUpdatedAt = meta.updatedAt;
+  const position = currentPosition();
+  const land = useLandStore.getState();
+  const progress = land.instanceId === origin.instanceId ? land.progress : null;
   const result = await window.seed.instances.checkpoint({
     instanceId: origin.instanceId,
     expectedUpdatedAt,
@@ -80,6 +94,8 @@ async function performInstanceCheckpoint(): Promise<Result<void>> {
     inventory: world.inventory,
     mutation: meta.mutation,
     karma: world.karma,
+    ...(position === null ? {} : { position }),
+    ...(progress === null ? {} : { land: progress }),
   });
   if (!result.ok) return result;
   const latest = useWorldStore.getState();
@@ -110,8 +126,19 @@ export function checkpointCurrentInstance(): Promise<Result<void>> {
 export function usePersistWorld(): void {
   useEffect(() => {
     const debouncer = createDebouncer();
+    // Errands, home and door live in the land store but belong to the same save.
+    const unsubscribeLand = useLandStore.subscribe((state, previous) => {
+      if (state.progress === previous.progress || previous.progress === null) return;
+      if (state.instanceId !== previous.instanceId) return;
+      debouncer.schedule("land", WRITE_DEBOUNCE_MS, () => {
+        void checkpointCurrentInstance().then((result) => {
+          if (!result.ok) toastError("save.json", result.error.message);
+        });
+      });
+    });
     const unsubscribe = useWorldStore.subscribe((state, previous) => {
       if (state.origin?.kind === "instance" && previous.origin?.kind === "instance") {
+        if (useSessionStore.getState().networkRole === "peer") return;
         const sameInstance = state.origin.instanceId === previous.origin.instanceId;
         const progressChanged =
           state.karma !== previous.karma ||
@@ -157,6 +184,7 @@ export function usePersistWorld(): void {
       // Flush rather than cancel: the last choice of a session must still reach disk.
       debouncer.flushAll();
       unsubscribe();
+      unsubscribeLand();
     };
   }, []);
 }

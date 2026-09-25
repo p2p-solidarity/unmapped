@@ -17,11 +17,13 @@ export const LEGACY_TPS_KIT: GameplayKitRules = {
 
 export interface GameplayKitBehavior {
   camera: CameraMode;
-  movement: "camera" | "side" | "topdown";
+  movement: "camera" | "side" | "topdown" | "grid" | "none";
   jump: boolean;
   sprint: boolean;
   flashlight: boolean;
   reticle: boolean;
+  /** The scene is the middle of open land: no edge clamp, and chunks stream in around the player. */
+  open: boolean;
 }
 
 const BEHAVIORS: Record<GameplayKitRules["id"], GameplayKitBehavior> = {
@@ -32,6 +34,7 @@ const BEHAVIORS: Record<GameplayKitRules["id"], GameplayKitBehavior> = {
     sprint: true,
     flashlight: false,
     reticle: false,
+    open: true,
   },
   "fps_puzzle@1": {
     camera: "fps",
@@ -40,6 +43,7 @@ const BEHAVIORS: Record<GameplayKitRules["id"], GameplayKitBehavior> = {
     sprint: false,
     flashlight: true,
     reticle: true,
+    open: false,
   },
   "platformer_2_5d@1": {
     camera: "side",
@@ -48,6 +52,7 @@ const BEHAVIORS: Record<GameplayKitRules["id"], GameplayKitBehavior> = {
     sprint: true,
     flashlight: false,
     reticle: false,
+    open: false,
   },
   "topdown_puzzle@1": {
     camera: "topdown",
@@ -56,6 +61,27 @@ const BEHAVIORS: Record<GameplayKitRules["id"], GameplayKitBehavior> = {
     sprint: false,
     flashlight: false,
     reticle: false,
+    open: false,
+  },
+  // Visual novel / hidden object: the camera holds one framing and the player never walks.
+  "vn_fixed@1": {
+    camera: "fixed",
+    movement: "none",
+    jump: false,
+    sprint: false,
+    flashlight: false,
+    reticle: false,
+    open: false,
+  },
+  // Wizardry / Persona-dungeon maze: one tile per step, ninety degrees per turn.
+  "dungeon_grid@1": {
+    camera: "fps",
+    movement: "grid",
+    jump: false,
+    sprint: false,
+    flashlight: true,
+    reticle: true,
+    open: false,
   },
 };
 

@@ -14,7 +14,7 @@ import { modsDir } from "./paths";
 import { installFromDir, installFromZip, listMods, readModBundle, removeMod } from "./store";
 import { startModsWatcher } from "./watcher";
 
-const MOD_FILTER = [{ name: "Aether Spire mod", extensions: [MOD_PACK_EXTENSION] }];
+const MOD_FILTER = [{ name: "Unwritten Land mod", extensions: [MOD_PACK_EXTENSION] }];
 const CANCEL_HINT = "Pick a .mod file or a mod folder to continue.";
 
 const modNameSchema = z.string().min(1).max(64);

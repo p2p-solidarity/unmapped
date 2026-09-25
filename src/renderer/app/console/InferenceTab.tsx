@@ -14,6 +14,7 @@ import {
   Text,
 } from "@renderer/ui";
 import {
+  APPLE_FM_BINARY,
   type InferenceConfig,
   PROVIDER_KINDS,
   type SidecarConfig,
@@ -90,8 +91,9 @@ function SidecarFields({
         onChange={(ctx) => onChange({ ...sidecar, ctxSize: numberFromInput(ctx, sidecar.ctxSize) })}
       />
       <Text variant="caption" tone="dim">
-        `brew install llama.cpp` puts llama-server in your Homebrew bin directory; the model path is
-        any .gguf file you downloaded.
+        {sidecar.binaryPath === APPLE_FM_BINARY
+          ? "Apple's on-device model needs no model file. Accept its terms once with `sudo fm license` in Terminal."
+          : "`brew install llama.cpp` puts llama-server in your Homebrew bin directory; the model path is any .gguf file you downloaded."}
       </Text>
     </>
   );

@@ -74,8 +74,14 @@ export function clampInt(value: number, range: Range): number {
 }
 
 /** Clamp a float into `range`, keeping at most 3 decimals so the DSL round-trips cleanly. */
-export function clampFloat(value: number, range: Range): number {
-  return Math.round(clampNumber(value, range) * 1000) / 1000;
+/**
+ * Three decimals suits tile speeds and distances. Values whose whole useful range lives below that
+ * — look sensitivity runs 0.0001..0.02 — must pass a higher `decimals`, or rounding silently
+ * rewrites the number the author wrote.
+ */
+export function clampFloat(value: number, range: Range, decimals = 3): number {
+  const factor = 10 ** decimals;
+  return Math.round(clampNumber(value, range) * factor) / factor;
 }
 
 /** Clamp a tile coordinate into both LIMITS.coord and the floor's own extent. */

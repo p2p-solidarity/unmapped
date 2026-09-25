@@ -11,15 +11,19 @@ import type {
   SaveState,
 } from "@shared/cartridge";
 import { INSTANCE_FORMAT_VERSION, SAVE_FORMAT_VERSION } from "@shared/cartridge";
+import { endlessTemplate, seedFromText } from "@shared/endless";
 import { err, fail, ok, type Result, toError } from "@shared/result";
 import { completeScene, transitionScene } from "@shared/sceneTransition";
 import { EMPTY_INVENTORY, type SceneGraph } from "@shared/world";
+import { deriveRuntimePin, verifyRuntimePin } from "../cartridges/integrity";
 import { cartridgeCompatibility, readCartridgeRevision } from "../cartridges/store";
 import { parseKarmaText } from "../worlds/schemas";
 import { instanceDir, isInstanceId, isSaveId, saveDir } from "./paths";
 import { instanceMetaSchema, saveStateSchema } from "./schemas";
 
 const DEFAULT_SAVE_ID = "default";
+/** A save written by an older build (instance format 1). Listed separately, never modified. */
+export const LEGACY_INSTANCE_CODE = "instance-legacy-format";
 
 function slug(value: string): string {
   const cleaned = value
@@ -58,17 +62,22 @@ export async function createInstance(
   manifest: CartridgeManifest,
   name: string,
   now: Date = new Date(),
+  seed?: string,
 ): Promise<Result<InstanceRecord>> {
   const compatibility = cartridgeCompatibility(manifest);
   if (!compatibility.ok) return compatibility;
   const instanceId = makeInstanceId(name, now);
   const at = now.toISOString();
   const cartridge = refOf(manifest);
+  const pin = deriveRuntimePin(manifest);
+  if (!pin.ok) return pin;
+  const runtimePin = pin.value;
   const meta: InstanceMeta = {
     formatVersion: INSTANCE_FORMAT_VERSION,
     instanceId,
     name: name.trim(),
     cartridge,
+    runtimePin,
     activeSaveId: DEFAULT_SAVE_ID,
     saveSchemaVersion: manifest.saveSchemaVersion,
     createdAt: at,
@@ -78,12 +87,19 @@ export async function createInstance(
     formatVersion: SAVE_FORMAT_VERSION,
     instanceId,
     cartridge,
+    runtimePin,
     saveSchemaVersion: manifest.saveSchemaVersion,
-    currentSceneId: manifest.entrySceneId,
+    currentSceneId:
+      manifest.formatVersion === 1
+        ? manifest.entrySceneId
+        : manifest.definition.scenePlan.entrySceneId,
     flags: {},
     inventory: { items: [...EMPTY_INVENTORY.items], materials: [...EMPTY_INVENTORY.materials] },
+    player: null,
+    party: null,
     mutation: null,
     completedSceneIds: [],
+    ...(seed === undefined ? {} : { seed }),
     updatedAt: at,
   };
   const record: InstanceRecord = { meta, save, karma: [] };
@@ -130,6 +146,13 @@ export async function readInstance(
   try {
     const dir = instanceDir(instancesDir, instanceId);
     const rawMeta: unknown = JSON.parse(await readFile(join(dir, "instance.json"), "utf8"));
+    if ((rawMeta as { formatVersion?: unknown } | null)?.formatVersion === 1) {
+      return err(
+        LEGACY_INSTANCE_CODE,
+        `Save ${instanceId} was written by an older build (instance format 1).`,
+        "It is left untouched on disk; this build cannot open format 1 saves yet.",
+      );
+    }
     const parsedMeta = instanceMetaSchema.safeParse(rawMeta);
     if (!parsedMeta.success)
       return err(
@@ -149,7 +172,13 @@ export async function readInstance(
     if (!parsedSave.success)
       return err("save-invalid", parsedSave.error.issues[0]?.message ?? "Invalid save.json");
     const save = parsedSave.data;
-    if (save.instanceId !== instanceId || !sameRef(meta.cartridge, save.cartridge)) {
+    if (
+      save.instanceId !== instanceId ||
+      !sameRef(meta.cartridge, save.cartridge) ||
+      !sameRef(meta.runtimePin.cartridge, meta.cartridge) ||
+      !sameRef(save.runtimePin.cartridge, save.cartridge) ||
+      JSON.stringify(meta.runtimePin) !== JSON.stringify(save.runtimePin)
+    ) {
       return err(
         "save-identity-mismatch",
         "The save does not belong to this instance and cartridge.",
@@ -182,6 +211,13 @@ export async function resolveInstance(
       "Restore the exact cartridge revision used by this save.",
     );
   }
+  const verifiedPin = verifyRuntimePin(cartridge.value.manifest, instance.value.meta.runtimePin);
+  if (!verifiedPin.ok) return verifiedPin;
+  const verifiedSavePin = verifyRuntimePin(
+    cartridge.value.manifest,
+    instance.value.save.runtimePin,
+  );
+  if (!verifiedSavePin.ok) return verifiedSavePin;
   if (instance.value.save.saveSchemaVersion !== cartridge.value.manifest.saveSchemaVersion) {
     return err(
       "save-schema-mismatch",
@@ -258,6 +294,54 @@ export async function transitionInstance(
   return writeInstanceSave(instancesDir, resolved.value, transitioned.value);
 }
 
+/**
+ * Takes the stairs below a finished cartridge. The save keeps its authored checkpoint and gains an
+ * endless depth; the floor itself is regenerated from that depth, never stored (Rule 9).
+ */
+export async function descendInstance(
+  cartridgesDir: string,
+  instancesDir: string,
+  instanceId: string,
+  now: Date = new Date(),
+): Promise<Result<ResolvedInstance>> {
+  const resolved = await resolveInstance(cartridgesDir, instancesDir, instanceId);
+  if (!resolved.ok) return resolved;
+  const { save } = resolved.value.instance;
+  if (!save.completedSceneIds.includes(save.currentSceneId)) {
+    return err(
+      "endless-locked",
+      "The depths open only after this cartridge's ending.",
+      "Reach the ending gate first.",
+    );
+  }
+  const { manifest } = resolved.value.cartridge;
+  const sceneIds =
+    manifest.formatVersion === 1
+      ? manifest.scenes.map((scene) => scene.id)
+      : manifest.definition.scenePlan.orderedSceneIds;
+  const scenes = [];
+  for (const sceneId of sceneIds) {
+    const graph = pinnedScene(resolved.value, sceneId);
+    if (!graph.ok) return graph;
+    scenes.push({ sceneId, graph: graph.value });
+  }
+  if (endlessTemplate(scenes) === null) {
+    return err(
+      "endless-unavailable",
+      "This cartridge has no scene you can walk in, so it has no depths below it.",
+      "Endless floors continue from a scene whose kit lets the player move.",
+    );
+  }
+  return writeInstanceSave(instancesDir, resolved.value, {
+    ...save,
+    endless: {
+      seed: save.endless?.seed ?? seedFromText(save.instanceId),
+      depth: (save.endless?.depth ?? 0) + 1,
+    },
+    updatedAt: now.toISOString(),
+  });
+}
+
 /** Ends the cartridge from its terminal scene. The checkpoint stays there, marked completed. */
 export async function completeInstance(
   cartridgesDir: string,
@@ -294,6 +378,8 @@ export async function checkpointInstance(
     flags: { ...input.flags },
     inventory: input.inventory,
     mutation: input.mutation,
+    ...(input.position === undefined ? {} : { position: input.position }),
+    ...(input.land === undefined ? {} : { land: input.land }),
     updatedAt,
   };
   const meta: InstanceMeta = { ...current.value.meta, updatedAt };
@@ -333,11 +419,29 @@ export async function listInstances(instancesDir: string): Promise<Result<Instan
     for (const entry of entries) {
       if (!entry.isDirectory() || !isInstanceId(entry.name)) continue;
       const instance = await readInstance(instancesDir, entry.name);
+      // One old save must not hide every other save: format 1 saves are listed by listLegacyInstances.
+      if (!instance.ok && instance.error.code === LEGACY_INSTANCE_CODE) continue;
       if (!instance.ok) return instance;
       metas.push(instance.value.meta);
     }
     metas.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
     return ok(metas);
+  } catch (error) {
+    return fail(toError(error, "instance-list-failed"));
+  }
+}
+
+/** Ids of saves this build cannot open because an older build wrote them. */
+export async function listLegacyInstances(instancesDir: string): Promise<Result<string[]>> {
+  if (!(await exists(instancesDir))) return ok([]);
+  try {
+    const ids: string[] = [];
+    for (const entry of await readdir(instancesDir, { withFileTypes: true })) {
+      if (!entry.isDirectory() || !isInstanceId(entry.name)) continue;
+      const instance = await readInstance(instancesDir, entry.name);
+      if (!instance.ok && instance.error.code === LEGACY_INSTANCE_CODE) ids.push(entry.name);
+    }
+    return ok(ids.sort());
   } catch (error) {
     return fail(toError(error, "instance-list-failed"));
   }

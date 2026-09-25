@@ -3,6 +3,7 @@
 // table into instanced matrices, colours and colliders.
 
 import type { PropKind } from "@shared/world";
+import { RURAL_SHAPE } from "./rural";
 
 /** Primitive keys resolved to cached three geometries by `geometry.ts`. */
 export type GeoKey =
@@ -432,6 +433,7 @@ export const PROP_SHAPE: Record<PropKind, PropShape> = {
     colliderHeight: 2.5,
     light: null,
   },
+  ...RURAL_SHAPE,
 };
 
 // ── Monsters ─────────────────────────────────────────────────────────────────────────────────

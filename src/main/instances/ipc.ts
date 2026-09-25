@@ -1,6 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { IPC, type SeedExport } from "@shared/ipc";
 import { err, fail, ok, type Result, toError } from "@shared/result";
+import { SEED_PATTERN } from "@shared/seedCode";
 import { dialog } from "electron";
 import { z } from "zod";
 import { readCartridgeRevision } from "../cartridges/store";
@@ -8,12 +9,15 @@ import type { MainContext } from "../context";
 import { handle } from "../handle";
 import { inventorySchema, karmaEntrySchema, worldFlagsSchema } from "../worlds/schemas";
 import { packInstanceBackup, restoreInstanceBackup, unpackInstanceBackup } from "./backup";
-import { mutationSchema } from "./schemas";
+import { appendNote, appendNoteSchema, readLand, witnessChunk, witnessChunkSchema } from "./land";
+import { landProgressSchema, mutationSchema, savedPositionSchema } from "./schemas";
 import {
   checkpointInstance,
   completeInstance,
   createInstance,
+  descendInstance,
   listInstances,
+  listLegacyInstances,
   resolveInstance,
   transitionInstance,
 } from "./store";
@@ -26,6 +30,7 @@ const createInstanceSchema = z
     cartridgeId: z.string().regex(/^[a-z0-9][a-z0-9-]{0,79}$/),
     version: z.string().min(1).max(128),
     name: z.string().trim().min(1).max(120),
+    seed: z.string().regex(SEED_PATTERN).optional(),
   })
   .strict();
 const checkpointSchema = z
@@ -36,12 +41,14 @@ const checkpointSchema = z
     inventory: inventorySchema,
     mutation: mutationSchema.nullable(),
     karma: z.array(karmaEntrySchema).max(10_000),
+    position: savedPositionSchema.optional(),
+    land: landProgressSchema.optional(),
   })
   .strict();
 const upgradeSchema = z
   .object({ instanceId: instanceIdSchema, version: z.string().min(1).max(128) })
   .strict();
-const BACKUP_FILTER = [{ name: "Aether Spire save backup", extensions: ["spire-backup"] }];
+const BACKUP_FILTER = [{ name: "Unwritten Land save backup", extensions: ["spire-backup"] }];
 const CANCEL_HINT = "Choose a file to continue, or pick the action again when you are ready.";
 
 async function exportBackup(ctx: MainContext, instanceId: string): Promise<Result<SeedExport>> {
@@ -86,6 +93,7 @@ async function importBackup(ctx: MainContext) {
 
 export function registerInstancesIpc(ctx: MainContext): void {
   handle(IPC.instances.list, z.tuple([]), () => listInstances(ctx.instancesDir));
+  handle(IPC.instances.listLegacy, z.tuple([]), () => listLegacyInstances(ctx.instancesDir));
   handle(IPC.instances.create, z.tuple([createInstanceSchema]), async ([input]) => {
     const cartridge = await readCartridgeRevision(
       ctx.cartridgesDir,
@@ -93,7 +101,13 @@ export function registerInstancesIpc(ctx: MainContext): void {
       input.version,
     );
     if (!cartridge.ok) return cartridge;
-    const instance = await createInstance(ctx.instancesDir, cartridge.value.manifest, input.name);
+    const instance = await createInstance(
+      ctx.instancesDir,
+      cartridge.value.manifest,
+      input.name,
+      new Date(),
+      input.seed,
+    );
     return instance.ok ? ok({ instance: instance.value, cartridge: cartridge.value }) : instance;
   });
   handle(IPC.instances.resolve, z.tuple([instanceIdSchema]), ([instanceId]) =>
@@ -108,6 +122,9 @@ export function registerInstancesIpc(ctx: MainContext): void {
   handle(IPC.instances.complete, z.tuple([instanceIdSchema]), ([instanceId]) =>
     completeInstance(ctx.cartridgesDir, ctx.instancesDir, instanceId),
   );
+  handle(IPC.instances.descend, z.tuple([instanceIdSchema]), ([instanceId]) =>
+    descendInstance(ctx.cartridgesDir, ctx.instancesDir, instanceId),
+  );
   handle(IPC.instances.checkpoint, z.tuple([checkpointSchema]), ([input]) =>
     checkpointInstance(ctx.instancesDir, input),
   );
@@ -118,4 +135,13 @@ export function registerInstancesIpc(ctx: MainContext): void {
     exportBackup(ctx, instanceId),
   );
   handle(IPC.instances.importBackup, z.tuple([]), () => importBackup(ctx));
+  handle(IPC.instances.readLand, z.tuple([instanceIdSchema]), ([instanceId]) =>
+    readLand(ctx.instancesDir, instanceId),
+  );
+  handle(IPC.instances.witness, z.tuple([witnessChunkSchema]), ([input]) =>
+    witnessChunk(ctx.instancesDir, input),
+  );
+  handle(IPC.instances.appendNote, z.tuple([appendNoteSchema]), ([input]) =>
+    appendNote(ctx.instancesDir, input),
+  );
 }

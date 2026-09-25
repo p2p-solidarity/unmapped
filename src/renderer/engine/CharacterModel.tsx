@@ -1,24 +1,25 @@
+// The player's avatar: one parametric humanoid with procedural walk/jump motion, tinted by the
+// device's colour theme.
+//
+// It deliberately carries no weapon and no class silhouette. The engine has no class system and no
+// combat, so a sword on the back would be describing a game that does not exist (Rule 2). Held
+// equipment returns when `shooter_combat@1` lands and weapons are declared in rules.oui.
+
 import { useFrame } from "@react-three/fiber";
-import type { CharacterClassId, ColorTheme } from "@renderer/state";
+import type { ColorTheme } from "@renderer/state";
 import { type JSX, useRef } from "react";
 import type * as THREE from "three";
 import { standardMaterial, UNIT_BOX, UNIT_CYLINDER, UNIT_OCTA, UNIT_SPHERE } from "./geometry";
 import { CHARACTER_THEME_COLORS } from "./palette";
 
 export interface CharacterModelProps {
-  classId: CharacterClassId;
   colorTheme: ColorTheme;
-  showWeapon?: boolean;
-  showAura?: boolean;
   isMoving?: boolean;
   isJumping?: boolean;
 }
 
 export function CharacterModel({
-  classId,
   colorTheme,
-  showWeapon = true,
-  showAura = true,
   isMoving = false,
   isJumping = false,
 }: CharacterModelProps): JSX.Element {
@@ -28,8 +29,6 @@ export function CharacterModel({
   const leftLegRef = useRef<THREE.Group>(null);
   const rightLegRef = useRef<THREE.Group>(null);
   const scarfRef = useRef<THREE.Group>(null);
-  const weaponRef = useRef<THREE.Group>(null);
-  const haloRef = useRef<THREE.Group>(null);
 
   const colors = CHARACTER_THEME_COLORS[colorTheme] ?? CHARACTER_THEME_COLORS.cyan;
 
@@ -78,18 +77,6 @@ export function CharacterModel({
         ? 0.35 + Math.sin(t * 8) * 0.1
         : 0.1 + Math.sin(t * 2) * 0.05;
     }
-
-    if (weaponRef.current) {
-      weaponRef.current.position.y = Math.sin(t * 3) * 0.03;
-      if (classId === "mage") {
-        weaponRef.current.rotation.y = t * 1.5;
-      }
-    }
-
-    if (haloRef.current) {
-      haloRef.current.rotation.z = t * 1.2;
-      haloRef.current.rotation.y = Math.sin(t * 1.8) * 0.3;
-    }
   });
 
   return (
@@ -134,109 +121,21 @@ export function CharacterModel({
         />
       </group>
 
-      {/* ── Head & Class Headgear ── */}
+      {/* ── Head ── */}
       <group position={[0, 0.86, 0]}>
-        {/* Face / Base Head */}
         <mesh
           castShadow
           scale={[0.36, 0.38, 0.36]}
           geometry={UNIT_SPHERE}
           material={standardMaterial(colors.skin)}
         />
-
-        {/* Class Specific Head Details */}
-        {classId === "swordsman" && (
-          <>
-            {/* Hair */}
-            <mesh
-              position={[0, 0.08, -0.04]}
-              scale={[0.4, 0.32, 0.42]}
-              geometry={UNIT_SPHERE}
-              material={standardMaterial(colors.hair)}
-            />
-            {/* Cyber Headband */}
-            <mesh
-              position={[0, 0.04, 0.16]}
-              scale={[0.38, 0.07, 0.1]}
-              geometry={UNIT_BOX}
-              material={standardMaterial(colors.accent, 1.5)}
-            />
-          </>
-        )}
-
-        {classId === "mage" && (
-          <>
-            {/* Mage Circlet */}
-            <mesh
-              position={[0, 0.12, 0]}
-              scale={[0.4, 0.06, 0.4]}
-              geometry={UNIT_CYLINDER}
-              material={standardMaterial(colors.accent, 1.8)}
-            />
-            {/* Orbiting Halo */}
-            <group ref={haloRef} position={[0, 0.22, 0]}>
-              <mesh
-                rotation={[Math.PI / 2, 0, 0]}
-                scale={[0.5, 0.5, 0.03]}
-                geometry={UNIT_CYLINDER}
-                material={standardMaterial(colors.accent, 2.2)}
-              />
-            </group>
-          </>
-        )}
-
-        {classId === "gunner" && (
-          <>
-            {/* Targeting Cyber Visor */}
-            <mesh
-              position={[0.06, 0.02, 0.18]}
-              scale={[0.26, 0.1, 0.05]}
-              geometry={UNIT_BOX}
-              material={standardMaterial(colors.accent, 2.5)}
-            />
-            {/* Earpiece / Antenna */}
-            <mesh
-              position={[-0.2, 0.04, 0]}
-              scale={[0.04, 0.22, 0.04]}
-              geometry={UNIT_CYLINDER}
-              material={standardMaterial(colors.armor)}
-            />
-          </>
-        )}
-
-        {classId === "paladin" && (
-          <>
-            {/* Horned / Winged Helmet */}
-            <mesh
-              scale={[0.42, 0.42, 0.42]}
-              geometry={UNIT_BOX}
-              material={standardMaterial(colors.armor)}
-            />
-            {/* Visor T-Slit */}
-            <mesh
-              position={[0, 0.02, 0.22]}
-              scale={[0.22, 0.05, 0.02]}
-              geometry={UNIT_BOX}
-              material={standardMaterial(colors.accent, 2.0)}
-            />
-            {/* Left Horn */}
-            <mesh
-              position={[-0.24, 0.26, 0]}
-              rotation={[0, 0, 0.4]}
-              scale={[0.08, 0.3, 0.08]}
-              geometry={UNIT_CYLINDER}
-              material={standardMaterial(colors.accent, 1.2)}
-            />
-            {/* Right Horn */}
-            <mesh
-              position={[0.24, 0.26, 0]}
-              rotation={[0, 0, -0.4]}
-              scale={[0.08, 0.3, 0.08]}
-              geometry={UNIT_CYLINDER}
-              material={standardMaterial(colors.accent, 1.2)}
-            />
-          </>
-        )}
+        {/* Hair */}
+        <mesh
+          position={[0, 0.08, -0.04]}
+          scale={[0.4, 0.32, 0.42]}
+          geometry={UNIT_SPHERE}
+          material={standardMaterial(colors.hair)}
+        />
       </group>
 
       {/* ── Left Arm ── */}
@@ -261,22 +160,6 @@ export function CharacterModel({
           geometry={UNIT_BOX}
           material={standardMaterial(colors.accent)}
         />
-        {/* Paladin Shield */}
-        {classId === "paladin" && showWeapon && (
-          <group position={[-0.14, -0.2, 0.1]} rotation={[0, -0.3, 0]}>
-            <mesh
-              scale={[0.38, 0.65, 0.06]}
-              geometry={UNIT_BOX}
-              material={standardMaterial(colors.armor)}
-            />
-            <mesh
-              position={[0, 0, 0.04]}
-              scale={[0.26, 0.48, 0.02]}
-              geometry={UNIT_OCTA}
-              material={standardMaterial(colors.accent, 2.0)}
-            />
-          </group>
-        )}
       </group>
 
       {/* ── Right Arm ── */}
@@ -334,87 +217,6 @@ export function CharacterModel({
           material={standardMaterial(colors.armor)}
         />
       </group>
-
-      {/* ── Back Weapon Mounts ── */}
-      {showWeapon && (
-        <group ref={weaponRef} position={[0, 0.54, -0.2]}>
-          {classId === "swordsman" && (
-            <>
-              {/* Dual Cyber Swords Crossed on Back */}
-              <mesh
-                rotation={[0, 0, 0.65]}
-                scale={[0.07, 0.95, 0.04]}
-                geometry={UNIT_BOX}
-                material={standardMaterial(colors.weaponGlow, 2.0)}
-              />
-              <mesh
-                rotation={[0, 0, -0.65]}
-                scale={[0.07, 0.95, 0.04]}
-                geometry={UNIT_BOX}
-                material={standardMaterial(colors.weaponGlow, 2.0)}
-              />
-            </>
-          )}
-
-          {classId === "mage" && (
-            <group position={[0.25, 0.2, 0]} rotation={[0, 0, -0.25]}>
-              {/* Staff shaft */}
-              <mesh
-                scale={[0.05, 1.2, 0.05]}
-                geometry={UNIT_CYLINDER}
-                material={standardMaterial(colors.primary)}
-              />
-              {/* Floating gem on top */}
-              <mesh
-                position={[0, 0.68, 0]}
-                scale={[0.18, 0.24, 0.18]}
-                geometry={UNIT_OCTA}
-                material={standardMaterial(colors.accent, 2.5)}
-              />
-            </group>
-          )}
-
-          {classId === "gunner" && (
-            <group position={[0.2, 0.1, 0]} rotation={[0, 0, -0.45]}>
-              {/* Pulse Sniper Body */}
-              <mesh
-                scale={[0.09, 0.95, 0.14]}
-                geometry={UNIT_BOX}
-                material={standardMaterial(colors.armor)}
-              />
-              {/* Cyan Plasma Core */}
-              <mesh
-                position={[0, 0.1, 0.08]}
-                scale={[0.06, 0.45, 0.05]}
-                geometry={UNIT_BOX}
-                material={standardMaterial(colors.accent, 2.2)}
-              />
-            </group>
-          )}
-
-          {classId === "paladin" && (
-            <group position={[0, 0.1, 0]} rotation={[0, 0, 0.35]}>
-              {/* Heavy Broadsword on back */}
-              <mesh
-                scale={[0.16, 1.1, 0.05]}
-                geometry={UNIT_BOX}
-                material={standardMaterial(colors.weaponGlow, 1.5)}
-              />
-            </group>
-          )}
-        </group>
-      )}
-
-      {/* ── Floating Glowing Aura Ring ── */}
-      {showAura && (
-        <mesh
-          position={[0, -0.48, 0]}
-          rotation={[-Math.PI / 2, 0, 0]}
-          scale={[0.62, 0.62, 0.02]}
-          geometry={UNIT_CYLINDER}
-          material={standardMaterial(colors.accent, 1.6)}
-        />
-      )}
     </group>
   );
 }
