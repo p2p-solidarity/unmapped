@@ -1,0 +1,371 @@
+<title>無界之地圖解</title>
+<meta name="description" content="《無界之地》怎麼用 AI 自動生成世界、朋友的世界怎麼靠 CRDT 合在一起、鏈上放了什麼。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+  :root {
+    --ground: #eef0f3;
+    --panel: #fbfbf9;
+    --panel-2: #e4e7ee;
+    --text: #151a2e;
+    --muted: #4c5370;
+    --faint: #767c93;
+    --line: #cdd2dd;
+    --brass: #9c7231;
+    --gold: #8a6424;
+    --gold-soft: rgba(156, 114, 49, 0.12);
+    --good: #3b7446;
+    --drift: #a4452f;
+    --serif: "Noto Serif TC", "Songti TC", "Hiragino Mincho ProN", "Yu Mincho", Georgia, serif;
+    --sans: "Noto Sans TC", "PingFang TC", "Hiragino Sans", "Microsoft JhengHei", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground: #0b0d17;
+      --panel: #151a2c;
+      --panel-2: #1c2238;
+      --text: #f1e9d6;
+      --muted: #c2b79d;
+      --faint: #8d8574;
+      --line: #2c3249;
+      --brass: #7a6840;
+      --gold: #d9ae5f;
+      --gold-soft: rgba(217, 174, 95, 0.13);
+      --good: #8cc08f;
+      --drift: #e08a75;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground: #0b0d17;
+    --panel: #151a2c;
+    --panel-2: #1c2238;
+    --text: #f1e9d6;
+    --muted: #c2b79d;
+    --faint: #8d8574;
+    --line: #2c3249;
+    --brass: #7a6840;
+    --gold: #d9ae5f;
+    --gold-soft: rgba(217, 174, 95, 0.13);
+    --good: #8cc08f;
+    --drift: #e08a75;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--text);
+    font: 400 16px/1.85 var(--sans);
+    padding-inline: 20px;
+    padding-block: 0 80px;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 860px; margin: 0 auto; }
+  a { color: var(--gold); text-underline-offset: 3px; }
+  a:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+  h1, h2 { font-family: var(--serif); text-wrap: balance; line-height: 1.35; margin: 0; }
+  h1 { font-size: clamp(28px, 4.6vw, 42px); font-weight: 700; }
+  h2 { font-size: clamp(22px, 2.8vw, 27px); font-weight: 700; margin-bottom: 12px; }
+  p { margin: 0 0 14px; max-width: 42em; }
+  code { font-family: var(--mono); font-size: 0.84em; background: var(--panel-2); padding: 1px 5px; border-radius: 2px; overflow-wrap: anywhere; }
+  .eyebrow { font-size: 12px; letter-spacing: 0.16em; color: var(--gold); font-weight: 500; margin: 0 0 10px; }
+  header { padding-top: 56px; }
+  .lede { font-size: 17.5px; color: var(--muted); margin-top: 16px; }
+  .short {
+    margin: 28px 4px 0;
+    padding: 18px 22px;
+    background: var(--panel);
+    border: 1px solid var(--brass);
+    outline: 1px solid var(--brass);
+    outline-offset: 4px;
+    border-radius: 2px;
+  }
+  .short p { margin: 0; font-size: 15px; color: var(--muted); }
+  .short p + p { margin-top: 8px; }
+  .short b { color: var(--text); font-weight: 500; }
+  section { padding-top: 52px; }
+  section + section { border-top: 1px solid var(--line); margin-top: 52px; }
+  figure { margin: 22px 0; }
+  .fig-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .fig-scroll svg { display: block; width: 100%; min-width: 640px; height: auto; color: var(--text); }
+  figcaption { font-size: 13.5px; color: var(--faint); margin-top: 10px; max-width: 46em; }
+  .d-node { fill: var(--panel); stroke: currentColor; stroke-width: 1.2; }
+  .d-node.gold { stroke: var(--gold); stroke-width: 1.6; }
+  .d-node.warn { stroke: var(--drift); }
+  .d-page { fill: var(--panel-2); stroke: var(--line); stroke-width: 1; }
+  .d-page.new { fill: var(--gold-soft); stroke: var(--gold); }
+  .d-zone { fill: none; stroke: var(--line); stroke-dasharray: 4 4; }
+  .d-t { font: 600 13px var(--sans); fill: currentColor; }
+  .d-s { font: 400 11px var(--sans); fill: var(--muted); }
+  .d-m { font: 400 11px var(--mono); fill: currentColor; }
+  .d-l { font: 400 11px var(--sans); fill: var(--muted); }
+  .d-g { font: 500 11px var(--sans); fill: var(--gold); }
+  .d-w { font: 500 11px var(--sans); fill: var(--drift); }
+  .d-line { stroke: currentColor; stroke-width: 1.2; fill: none; }
+  .d-line.gold { stroke: var(--gold); stroke-width: 1.5; }
+  .d-line.warn { stroke: var(--drift); }
+  .d-line.dash { stroke-dasharray: 5 4; }
+  .d-head { fill: currentColor; }
+  .d-head.gold { fill: var(--gold); }
+  .d-head.warn { fill: var(--drift); }
+  pre {
+    margin: 18px 0 8px;
+    padding: 14px 16px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    overflow-x: auto;
+    font: 400 12.5px/1.7 var(--mono);
+  }
+  .src { font-size: 13px; color: var(--faint); margin: 0 0 14px; }
+  .facts { list-style: none; padding: 0; margin: 18px 0 0; display: grid; gap: 10px; max-width: 46em; }
+  .facts li { font-size: 14.5px; color: var(--muted); padding-left: 14px; border-left: 2px solid var(--brass); }
+  .facts b { color: var(--text); font-weight: 500; }
+  .num { font-variant-numeric: tabular-nums; }
+  .keys { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; margin: 16px 0 0; max-width: 46em; }
+  .keys div { display: grid; grid-template-columns: 2.2em minmax(0, 1fr); gap: 4px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14.5px; color: var(--muted); }
+  .keys span:first-child { font-family: var(--serif); font-weight: 700; color: var(--gold); }
+  footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 13.5px; color: var(--faint); }
+  footer p { margin: 0 0 6px; }
+  @media (max-width: 520px) { body { font-size: 15.5px; } .short { padding: 16px; } }
+</style>
+
+<main>
+  <header>
+    <p class="eyebrow">ETHGlobal Tokyo 2026 · Demo 圖解</p>
+    <h1>一個沒有地圖的世界，怎麼寫出來、怎麼分享</h1>
+    <p class="lede">《無界之地》（UNMAPPED）一開始什麼都沒有。你走到哪裡，AI 才把那裡寫出來；朋友的世界會和你的連成一片大陸。這頁用三張圖講三件事，不需要任何程式背景。</p>
+    <div class="short">
+      <p><b>AI 只是客人。</b>它只能寫我們定義的一小段語言，程式檢查過、數字夾在安全範圍內，才算數。走路永遠不等它。</p>
+      <p><b>沒有裁判也不會亂。</b>每個人有一本自己的冊子，每頁只寫一次；兩本碰面就互相補齊，最後一模一樣——這就是 CRDT。</p>
+      <p><b>鏈上只放名字和指紋。</b>內容不上鏈；把鏈整個關掉，遊戲照樣能玩。</p>
+    </div>
+  </header>
+
+  <section id="ai">
+    <p class="eyebrow">一 · AI 怎麼自動生成</p>
+    <h2>模型寫提案，程式決定算不算數</h2>
+    <p>你只要給幾個字，例如「沙漠裡的鐘錶城」。模型先寫七張世界設定卡和三到八章故事，邊寫邊顯示在畫面上。建立世界時，它用我們的小語言寫出起點；之後你每走進一塊還在霧裡的地，它再寫那一塊。</p>
+    <p>它寫的不是圖片、不是 JSON、也不是程式，而是一行一行的「元件」。程式把它解析成真正的場景：有錯，就把錯誤清單退回去，請它只修壞掉的那幾句；修兩次還不行，畫面就顯示錯誤——絕不塞一個假的場景給你。</p>
+
+    <figure>
+      <div class="fig-scroll">
+        <svg viewBox="0 0 760 230" role="img" aria-label="生成流程：玩家的幾個字交給模型，模型寫出小語言的提案，經過解析檢查與數值夾限才寫進世界；有錯最多退回修正兩次，仍失敗就顯示錯誤畫面。">
+          <defs>
+            <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="d-head" d="M0 0 L10 5 L0 10 z"/></marker>
+            <marker id="ah-gold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="d-head gold" d="M0 0 L10 5 L0 10 z"/></marker>
+            <marker id="ah-warn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="d-head warn" d="M0 0 L10 5 L0 10 z"/></marker>
+          </defs>
+
+          <text class="d-g" x="300" y="20" text-anchor="middle">有錯：退回錯誤清單，只修壞掉的句子（最多 2 次）</text>
+          <path class="d-line gold dash" d="M376 70 V32 H224 V66" marker-end="url(#ah-gold)"/>
+
+          <rect class="d-node" x="16" y="70" width="112" height="56" rx="2"/>
+          <text class="d-t" x="72" y="95" text-anchor="middle">幾個字</text>
+          <text class="d-s" x="72" y="113" text-anchor="middle">或：走進霧裡</text>
+
+          <rect class="d-node" x="168" y="70" width="112" height="56" rx="2"/>
+          <text class="d-t" x="224" y="95" text-anchor="middle">模型</text>
+          <text class="d-s" x="224" y="113" text-anchor="middle">寫一段小語言</text>
+
+          <rect class="d-node gold" x="320" y="70" width="112" height="56" rx="2"/>
+          <text class="d-t" x="376" y="95" text-anchor="middle">解析檢查</text>
+          <text class="d-s" x="376" y="113" text-anchor="middle">parser 是真相</text>
+
+          <rect class="d-node" x="472" y="70" width="112" height="56" rx="2"/>
+          <text class="d-t" x="528" y="95" text-anchor="middle">數值夾限</text>
+          <text class="d-s" x="528" y="113" text-anchor="middle">x = 9000 也不會壞</text>
+
+          <rect class="d-node" x="624" y="70" width="120" height="56" rx="2"/>
+          <text class="d-t" x="684" y="95" text-anchor="middle">寫進世界</text>
+          <text class="d-s" x="684" y="113" text-anchor="middle">卡帶或存檔</text>
+
+          <line class="d-line" x1="128" y1="98" x2="166" y2="98" marker-end="url(#ah)"/>
+          <line class="d-line" x1="280" y1="98" x2="318" y2="98" marker-end="url(#ah)"/>
+          <text class="d-l" x="300" y="90" text-anchor="middle">提案</text>
+          <line class="d-line" x1="432" y1="98" x2="470" y2="98" marker-end="url(#ah)"/>
+          <text class="d-l" x="452" y="90" text-anchor="middle">通過</text>
+          <line class="d-line" x1="584" y1="98" x2="622" y2="98" marker-end="url(#ah)"/>
+
+          <line class="d-line warn" x1="376" y1="126" x2="376" y2="164" marker-end="url(#ah-warn)"/>
+          <text class="d-w" x="386" y="150">修兩次還不行</text>
+          <rect class="d-node warn" x="320" y="166" width="112" height="50" rx="2"/>
+          <text class="d-t" x="376" y="188" text-anchor="middle">錯誤畫面</text>
+          <text class="d-s" x="376" y="205" text-anchor="middle">不給假內容</text>
+        </svg>
+      </div>
+      <figcaption>同一條路徑用在四個地方：世界設定、故事、起點、每一塊新見證的地。只有最右邊那一步會改變世界。</figcaption>
+    </figure>
+
+    <p>這是模型在排練時真的寫出來的起點（沙漠鐘錶城「醒沙地」），節錄四行：</p>
+    <pre><code>floor1 = Floor(16, 16, "sand")
+sky1   = Sky("#d8c29a", "#e6d6b8", 0.08)
+prop1  = Prop("steel_tower", 8, 2, 1.2, "#8a7f6a")
+a_shi  = NPC("a_shi", "阿時", 6, 7, "stranger", "calm", "#8a6a45", "slim", "headband", "lantern", "#c49a5c")</code></pre>
+    <p class="src">來源：<a href="https://github.com/p2p-solidarity/unmapped/blob/main/docs/e2e/milestone-rev6-create/result.md">milestone-rev6-create</a> 發布的卡帶 <code>scenes/origin.oui</code>。一塊沙地、一座鐵塔、一位提燈的陌生人「阿時」。</p>
+
+    <ul class="facts">
+      <li><b>走路不等 AI。</b>見證一塊新地要 <span class="num">5–8</span> 秒，你可以一直走；寫好的地方永遠不再問 AI。</li>
+      <li><b>邊寫邊看。</b>七張世界卡約 <span class="num">5</span> 秒寫完，章節一張張長出來，不用盯著轉圈圈。</li>
+      <li><b>每次呼叫都記帳。</b>用途、模型、輸入輸出 token、秒數都寫進用量紀錄，遊戲裡看得到這個世界花了多少。</li>
+    </ul>
+  </section>
+
+  <section id="crdt">
+    <p class="eyebrow">二 · 朋友的世界連成大陸</p>
+    <h2>CRDT：兩本只會變厚的冊子</h2>
+    <p>兩個人各自玩自己的世界。A 打開家門、給出一個六個字母的門牌；B 輸入門牌，兩個世界就並排成一片大陸。B 可以走到 A 的土地上，看到 A 見證過的地方——B 的電腦完全沒有呼叫模型，因為那些地方不是重新生成，而是從 A 那裡抄過來的。</p>
+    <p>沒有伺服器當裁判，靠的是冊子的寫法：</p>
+
+    <figure>
+      <div class="fig-scroll">
+        <svg viewBox="0 0 760 340" role="img" aria-label="A 與 B 各有一本冊子。先打招呼確認同一個門牌、協定與物理版本，再互相抄對方有、自己沒有的頁；合併後兩本冊子內容一樣。位置只即時廣播，不寫進冊子。">
+          <defs>
+            <marker id="bh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="d-head" d="M0 0 L10 5 L0 10 z"/></marker>
+            <marker id="bh-gold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="d-head gold" d="M0 0 L10 5 L0 10 z"/></marker>
+          </defs>
+
+          <text class="d-l" x="380" y="22" text-anchor="middle">位置・朝向：即時廣播，不寫進冊子</text>
+          <line class="d-line dash" x1="276" y1="34" x2="484" y2="34" marker-start="url(#bh)" marker-end="url(#bh)"/>
+
+          <rect class="d-node" x="16" y="46" width="260" height="150" rx="2"/>
+          <text class="d-t" x="30" y="70">A 的冊子</text>
+          <rect class="d-page" x="30" y="82" width="232" height="28" rx="2"/>
+          <text class="d-m" x="42" y="100">A｜名片（名字、位置、地形種子）</text>
+          <rect class="d-page" x="30" y="116" width="232" height="28" rx="2"/>
+          <text class="d-m" x="42" y="134">A｜0,0 醒沙地</text>
+          <rect class="d-page" x="30" y="150" width="232" height="28" rx="2"/>
+          <text class="d-m" x="42" y="168">A｜1,0 沙角</text>
+
+          <rect class="d-node" x="484" y="46" width="260" height="150" rx="2"/>
+          <text class="d-t" x="498" y="70">B 的冊子</text>
+          <rect class="d-page" x="498" y="82" width="232" height="28" rx="2"/>
+          <text class="d-m" x="510" y="100">B｜名片</text>
+          <rect class="d-page" x="498" y="116" width="232" height="28" rx="2"/>
+          <text class="d-m" x="510" y="134">B｜0,0 北田邊</text>
+          <rect class="d-page" x="498" y="150" width="232" height="28" rx="2"/>
+          <text class="d-m" x="510" y="168">A｜手記（B 留在 A 的地上）</text>
+
+          <rect class="d-node gold" x="300" y="68" width="160" height="58" rx="2"/>
+          <text class="d-t" x="380" y="91" text-anchor="middle">先打招呼</text>
+          <text class="d-s" x="380" y="109" text-anchor="middle">同門牌・同協定・同物理</text>
+          <text class="d-s" x="380" y="122" text-anchor="middle">沒通過：什麼都收不到</text>
+
+          <line class="d-line gold" x1="278" y1="152" x2="482" y2="152" marker-end="url(#bh-gold)"/>
+          <line class="d-line gold" x1="482" y1="176" x2="278" y2="176" marker-end="url(#bh-gold)"/>
+          <text class="d-g" x="380" y="146" text-anchor="middle">抄對方有、我沒有的頁</text>
+          <text class="d-g" x="380" y="192" text-anchor="middle">已經有的頁不覆蓋</text>
+
+          <line class="d-line" x1="146" y1="196" x2="146" y2="236" marker-end="url(#bh)"/>
+          <line class="d-line" x1="614" y1="196" x2="614" y2="236" marker-end="url(#bh)"/>
+          <text class="d-l" x="156" y="222">合併</text>
+          <text class="d-l" x="624" y="222">合併</text>
+
+          <rect class="d-node" x="16" y="238" width="728" height="96" rx="2"/>
+          <text class="d-t" x="30" y="260">碰面之後：兩本冊子一模一樣（聯集）</text>
+          <rect class="d-page" x="30" y="270" width="226" height="26" rx="2"/>
+          <text class="d-m" x="40" y="287">A｜名片</text>
+          <rect class="d-page" x="267" y="270" width="226" height="26" rx="2"/>
+          <text class="d-m" x="277" y="287">A｜0,0 醒沙地</text>
+          <rect class="d-page" x="504" y="270" width="226" height="26" rx="2"/>
+          <text class="d-m" x="514" y="287">A｜1,0 沙角</text>
+          <rect class="d-page new" x="30" y="302" width="226" height="26" rx="2"/>
+          <text class="d-m" x="40" y="319">B｜名片</text>
+          <rect class="d-page new" x="267" y="302" width="226" height="26" rx="2"/>
+          <text class="d-m" x="277" y="319">B｜0,0 北田邊</text>
+          <rect class="d-page new" x="504" y="302" width="226" height="26" rx="2"/>
+          <text class="d-m" x="514" y="319">A｜手記（B 留下）</text>
+        </svg>
+      </div>
+      <figcaption>每頁的名字以「是誰的世界｜哪裡」開頭。名片只有主人自己能改；地方頁只有那塊地的主人能寫，手記可以留在任何人的地上，而這兩種每一頁都只寫一次。</figcaption>
+    </figure>
+
+    <div class="keys">
+      <div><span>一</span><span><b>順序無關。</b>A 先收到還是 B 先收到，抄完都是同一疊頁。</span></div>
+      <div><span>二</span><span><b>重複無關。</b>同一頁收到兩次，第二次什麼都不改。</span></div>
+      <div><span>三</span><span><b>不會吵架。</b>同一頁只有一個作者、只寫一次，所以不存在「兩個版本誰贏」。</span></div>
+    </div>
+    <p style="margin-top:16px">這三點就是 CRDT（無衝突複製資料型別）要的性質。實作用的是 Yjs 的文件，外面再加一道門：沒打過招呼的一方送來的東西一律丟掉，已經存在的頁一律不讓覆蓋。</p>
+    <p>老實說目前的界線：兩個人要同時在線，大陸才連得起來；重新連上時，每個世界會把屬於自己的頁整批重送一次。朋友離線也能進你的世界，是下一段「共同歷史＋世界服務」的工作。</p>
+  </section>
+
+  <section id="chain">
+    <p class="eyebrow">三 · 鏈上放什麼</p>
+    <h2>名字指向指紋，改編長成一棵樹</h2>
+    <p>每次發布，整個世界的內容會算成一個 sha256 指紋。我們在 ENSv2（Sepolia）替這個版本取一個名字，名字上只有三筆紀錄：哪個世界、哪一版、哪個指紋。有人改編這個世界，新世界就是它底下的子名稱；新世界的代幣用 Uniswap 的連續清算拍賣定價，之後每筆交易抽 1%，沿著血緣往上分給每一代名字的持有人。</p>
+
+    <figure>
+      <div class="fig-scroll">
+        <svg viewBox="0 0 760 236" role="img" aria-label="世界版本算出 sha256 指紋並寫進 ENS 名字的紀錄；改編世界是子名稱，每一代經拍賣定價，交易抽成沿血緣往上付給名字持有人。">
+          <defs>
+            <marker id="ch" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="d-head" d="M0 0 L10 5 L0 10 z"/></marker>
+            <marker id="ch-gold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="d-head gold" d="M0 0 L10 5 L0 10 z"/></marker>
+          </defs>
+
+          <rect class="d-node" x="16" y="20" width="176" height="58" rx="2"/>
+          <text class="d-t" x="104" y="44" text-anchor="middle">世界的一個版本</text>
+          <text class="d-s" x="104" y="62" text-anchor="middle">內容留在玩家電腦</text>
+
+          <rect class="d-node" x="236" y="20" width="140" height="58" rx="2"/>
+          <text class="d-t" x="306" y="44" text-anchor="middle">sha256 指紋</text>
+          <text class="d-s" x="306" y="62" text-anchor="middle">誰都能重算比對</text>
+
+          <rect class="d-node gold" x="420" y="20" width="324" height="58" rx="2"/>
+          <text class="d-m" x="582" y="44" text-anchor="middle">aether-land.unmapped.eth</text>
+          <text class="d-s" x="582" y="62" text-anchor="middle">紀錄只有：哪個世界・哪一版・哪個指紋</text>
+
+          <line class="d-line" x1="192" y1="49" x2="234" y2="49" marker-end="url(#ch)"/>
+          <text class="d-l" x="213" y="41" text-anchor="middle">算出</text>
+          <line class="d-line" x1="376" y1="49" x2="418" y2="49" marker-end="url(#ch)"/>
+          <text class="d-l" x="397" y="41" text-anchor="middle">寫進</text>
+
+          <rect class="d-zone" x="16" y="104" width="728" height="124" rx="2"/>
+          <text class="d-l" x="30" y="124">改編＝子名稱（示意）</text>
+
+          <rect class="d-node" x="30" y="152" width="200" height="50" rx="2"/>
+          <text class="d-m" x="130" y="173" text-anchor="middle">aether-land…</text>
+          <text class="d-s" x="130" y="191" text-anchor="middle">根世界</text>
+
+          <rect class="d-node" x="280" y="152" width="200" height="50" rx="2"/>
+          <text class="d-m" x="380" y="173" text-anchor="middle">子.aether-land…</text>
+          <text class="d-s" x="380" y="191" text-anchor="middle">拍賣定價 → v4 池</text>
+
+          <rect class="d-node" x="530" y="152" width="200" height="50" rx="2"/>
+          <text class="d-m" x="630" y="173" text-anchor="middle">孫.子.aether-land…</text>
+          <text class="d-s" x="630" y="191" text-anchor="middle">拍賣定價 → v4 池</text>
+
+          <line class="d-line" x1="230" y1="186" x2="278" y2="186" marker-end="url(#ch)"/>
+          <line class="d-line" x1="480" y1="186" x2="528" y2="186" marker-end="url(#ch)"/>
+          <text class="d-l" x="254" y="214" text-anchor="middle">改編</text>
+          <text class="d-l" x="504" y="214" text-anchor="middle">改編</text>
+
+          <path class="d-line gold dash" d="M630 152 V136 H130 V150" marker-end="url(#ch-gold)"/>
+          <path class="d-line gold dash" d="M380 136 V150" marker-end="url(#ch-gold)"/>
+          <text class="d-g" x="455" y="130" text-anchor="middle">每筆交易抽 1%，往上分給每一代名字的持有人</text>
+        </svg>
+      </div>
+      <figcaption>名字可以轉手；權利金付給「現在」拿著名字的人。內容從不上鏈，只有指紋。</figcaption>
+    </figure>
+
+    <ul class="facts">
+      <li><b>鏈可以整個關掉。</b>沒有設定鏈時，創造、見證、大陸全部照常，畫面會直接說明還沒有設定帳本。</li>
+      <li><b>玩家不需要錢包（正在做）。</b>設計是簽名用 passkey（Touch ID），手續費由 app 的中繼帳號付。</li>
+      <li><b>目前的進度。</b>市場合約已部署到 Sepolia；三代的發行、拍賣、交易、分潤在真實合約上模擬通過；app 內的市場畫面正在做。</li>
+    </ul>
+  </section>
+
+  <section id="keys">
+    <p class="eyebrow">附 · 金鑰</p>
+    <h2>模型金鑰放在 .env 就好</h2>
+    <p>app 找金鑰只有一條規則：先用「系統 → 模型」裡存過的那把；沒有、或那把讀不出來，就用 repo 根目錄 <code>.env</code> 的 <code>OPENAI_API_KEY</code>。<code>.env</code> 永遠是預設的後備。全新安裝時看到 <code>.env</code> 有金鑰，就直接選 OpenAI；沒有才用 Apple 裝置端模型或本機的 llama.cpp。金鑰只在 app 的主行程裡，畫面拿不到。</p>
+  </section>
+
+  <footer>
+    <p>Demo 腳本：<a href="https://github.com/p2p-solidarity/unmapped/blob/main/docs/demo-flow/overall.md">總體版</a> · <a href="https://github.com/p2p-solidarity/unmapped/blob/main/docs/demo-flow/track-ens.md">ENS 聚焦版</a> · <a href="https://github.com/p2p-solidarity/unmapped/blob/main/docs/demo-flow/track-uniswap.md">Uniswap 聚焦版</a> · <a href="https://github.com/p2p-solidarity/unmapped/blob/main/docs/demo-flow/setup.md">上台前準備</a></p>
+    <p>數字都來自 <code>docs/e2e/</code> 的實機紀錄；程式碼：<a href="https://github.com/p2p-solidarity/unmapped">github.com/p2p-solidarity/unmapped</a></p>
+  </footer>
+</main>
