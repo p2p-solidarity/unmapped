@@ -14,6 +14,7 @@
 import { foreignAt, useEngineStore } from "@renderer/state";
 import type { SavedPosition } from "@shared/cartridge";
 import { chunkOf } from "@shared/chunks";
+import { carryPlayerHp } from "./combat/playerWounds";
 
 type Probe = () => SavedPosition;
 
@@ -57,6 +58,8 @@ export function samplePlayer(): SavedPosition | null {
  */
 export function clearPlayerSample(): void {
   last = null;
+  // A save loaded afresh starts whole: HP is not saved, so no fight's wounds carry into it.
+  carryPlayerHp(null);
   useEngineStore.setState({ teleport: null });
 }
 

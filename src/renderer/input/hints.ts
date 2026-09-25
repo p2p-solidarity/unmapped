@@ -11,6 +11,9 @@ const PAD_LINE: Partial<Record<StringKey, StringKey>> = {
   "hud.controlsSide": "input.padSide",
   "hud.controlsTopdown": "input.padTopdown",
   "hud.controlsTps": "input.padTps",
+  "placeView.hintSide": "input.padPlaceSide",
+  "placeView.hintSideArmed": "input.padPlaceSideArmed",
+  "placeView.hintDungeonArmed": "input.padPlaceDungeonArmed",
 };
 
 /** The pad's version of a HUD control line (the line itself when the pad has none). */

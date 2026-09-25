@@ -45,4 +45,19 @@ export const INPUT = {
     "zh-TW": "LS / ✚ 移動 · RB 衝刺 · B 跳躍 · A 互動 · Start 選單",
     ja: "LS / ✚ 移動 · RB ダッシュ · B ジャンプ · A 調べる · Start メニュー",
   },
+  padPlaceSide: {
+    en: "✚↓ Drop from a ledge",
+    "zh-TW": "✚↓ 從平台跳下",
+    ja: "✚↓ 足場から降りる",
+  },
+  padPlaceSideArmed: {
+    en: "X Fire · ✚↓ Drop from a ledge",
+    "zh-TW": "X 開火 · ✚↓ 從平台跳下",
+    ja: "X 射撃 · ✚↓ 足場から降りる",
+  },
+  padPlaceDungeonArmed: {
+    en: "X / B Fire",
+    "zh-TW": "X / B 開火",
+    ja: "X / B 射撃",
+  },
 } as const satisfies Record<string, Phrase>;

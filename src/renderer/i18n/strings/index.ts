@@ -13,6 +13,7 @@ import { LAND } from "./land";
 import { LIBRARY } from "./library";
 import { MODEL } from "./model";
 import type { Phrase } from "./phrase";
+import { PLACE_VIEW } from "./placeView";
 import { TITLE } from "./title";
 import { USAGE } from "./usage";
 import { WORKS } from "./works";
@@ -29,6 +30,7 @@ export const STRINGS = {
   land: LAND,
   library: LIBRARY,
   model: MODEL,
+  placeView: PLACE_VIEW,
   title: TITLE,
   usage: USAGE,
   works: WORKS,

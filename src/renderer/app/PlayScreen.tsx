@@ -2,7 +2,7 @@
 // session state (`busy` + `floorFailure`), so the same value drives this overlay and the input lock.
 
 import { GameCanvas } from "@renderer/engine";
-import { isOpenLand2D, LandView2D } from "@renderer/engine2d";
+import { isOpenLand2D, LandView2D, PlaceView2D } from "@renderer/engine2d";
 import { useWorldHarness } from "@renderer/harness";
 import { useT } from "@renderer/i18n";
 import { useUsageScope } from "@renderer/llm";
@@ -108,7 +108,13 @@ export function PlayScreen() {
   return (
     <div style={{ position: "relative", height: "100%", width: "100%", overflow: "hidden" }}>
       {place !== null ? (
-        <GameCanvas key={`place:${place.id}`} graph={place.graph} rules={place.rules} />
+        // A course or a dungeon is played on engine2d, like the land around it (rev6 D5).
+        <PlaceView2D
+          key={`place:${place.id}`}
+          graph={place.graph}
+          rules={place.rules}
+          title={place.title}
+        />
       ) : use2DLand && scene.status === "ready" ? (
         <LandView2D
           // Another save (a new version of the same cartridge) is another walk: remount, so the
@@ -119,6 +125,7 @@ export function PlayScreen() {
           gameplayRules={gameplayRules}
         />
       ) : (
+        // Frozen: only legacy bounded cartridges and legacy worlds still play in 3D.
         <GameCanvas />
       )}
       <Hud />
