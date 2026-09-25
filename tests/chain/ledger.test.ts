@@ -178,5 +178,6 @@ describe("UnwrittenLedger", () => {
       bytecode: string;
     };
     expect(fresh.bytecode).toBe(artifact.bytecode);
-  });
+    // solc-js compiles in-process: seconds when idle, well past vitest's 5 s default under load.
+  }, 60_000);
 });
