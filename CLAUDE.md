@@ -31,7 +31,7 @@ llama-server -m ~/models/Qwen3.5-4B-Q4_K_M.gguf --port 8080 --ctx-size 16384 --j
 
 Any OpenAI-compatible endpoint works (llama.cpp, Ollama `qwen3.5:4b`, vLLM serving
 `thesysdev/OUI-1`, OpenUI Gateway `https://api.thesys.dev/v1/embed`, OpenAI). Provider presets:
-`src/shared/llm.ts`. Keys entered in System → Model are encrypted with the OS keychain and only
+`src/shared/llm.ts`. Keys entered in Settings → Model are encrypted with the OS keychain and only
 read by the main process; `.env` keys are also read in main as a fallback.
 
 ## Rules (each one exists because the previous version of it caused a bug)
@@ -148,8 +148,10 @@ src/
 ├── main/          Electron main: cartridges/, instances/, workspaces/, legacy worlds/, vault/, inference/
 ├── preload/       contextBridge → window.seed (SeedApi)
 └── renderer/
-    ├── app/       screens: App, Boot/Unlock, Worlds, Genesis (covenant), Play (HUD), Console (F12)
-    ├── engine/    R3F scene: floor/walls/props/entities, camera modes, movement, proximity, dissolve
+    ├── app/       screens: title (WorldsScreen), library/ (Worlds), create/, Play (HUD), Console (F12)
+    ├── engine2d/  the land and places in 2D (the one engine players see); hd2d/ is the land's HD-2D look
+    ├── engine/    R3F scene (frozen: legacy bounded scenes only), shared targets, combat, keys, palettes
+    ├── input/     gamepad poller + focus navigation (one action map with the keyboard, @shared/input)
     ├── narrative/ generateScene / generateDialogue / generateItem (prompt → chat → parse → repair)
     ├── llm/       renderer-side streaming client over IPC
     ├── identity/  passkey PRF unlock + keychain fallback, AES-GCM, ENS resolve
@@ -171,7 +173,8 @@ is a reversible `ctx.effect()` so mods can be mounted/unmounted while a world is
 ### Rule 12. AI worlds (`interactive-web@1`) are code — only inside the work sandbox
 Rule 7 and Rule 11 still hold for cartridges, the Scene DSL and mods. The one place a model may
 write JavaScript is an `interactive-web@1` world (`docs/plans/interactive-web-player.md`), and it
-runs **only** in `<iframe sandbox="allow-scripts">` served by main from a fresh
+runs **only** in `<iframe sandbox="allow-scripts">` (plus the `allow="gamepad"` permissions policy
+on played frames — a permission, not a sandbox token) served by main from a fresh
 `ulwork://<token>/` host with the nonce CSP in `src/main/works/frame.ts`. Never add
 `allow-same-origin`, never serve a world from the app origin, never pass `window.seed`, paths or
 secrets into a frame, and treat every frame message as untrusted (`src/renderer/works/frameGuard.ts`).
@@ -268,8 +271,14 @@ Components take **positional** args in zod key order (required first). Enums com
   only, never a prompt, answer or key. A world's total folds in the Create draft linked to it.
 - `works/images.ts`: every picture goes through an `ImageProvider` (swap the model = swap the
   object); its look comes from the world (its maker's words, its library art), never a house style.
+  `generate(prompt, signal, { reference?, quality?, kind? })`: with a `reference` PNG the OpenAI
+  provider calls `images.edit`. Keys only through `resolveApiKey` (saved → `.env`), never
+  `process.env` directly. A world's look picture is the cartridge asset `assets/look.png`
+  (`LOOK_PICTURE_ASSET`); main reads it with `readLookPicture(cartridgeId, version)`
+  (`cartridges/look.ts`) and passes it as the reference for every picture that world asks for.
 - `game/base.ts` installs every shipped `aether-land-<version>.json`, oldest first; never drop one
-  (a save pinned to it must still open on a new machine). New Game starts on the newest.
+  (a save pinned to it must still open on a new machine). New Game starts on the newest (1.3.0: the
+  built-in world's gentle three-chapter story, meet / search / meet, no combat).
 
 ### `src/renderer/llm`
 ```ts
@@ -342,31 +351,52 @@ export function TitleDiorama({ seedText }): JSX.Element;   // App's MenuBackdrop
 ### Combat and mods (one combat model; mods never refuse a missing module)
 - `src/renderer/engine/combat/combatLoop.ts` is the only combat logic (trigger, cooldown, aim
   preview, turns, `strike`). `CombatControl` (3D) and `useLandCombat` (open land) only feed it an
-  aim and a clock. On land the roster is the origin's monsters + `wildMonsters` of the 3 × 3 chunks
-  around the player (only when `rules.combat !== null`; kind + level, never names or lines); an
-  endless roster never "clears" a run, only defeat ends it.
+  aim and a clock; places use `engine2d/place/usePlaceCombat.ts` the same way. On land the roster is
+  `wildMonsters` of the 3 × 3 chunks around the player plus the current chapter's foes (only when
+  `rules.combat !== null`; kind + level, never names or lines); an endless roster never "clears" a
+  run, only defeat ends it.
+- Home is safe (`@shared/safeGround`: `isSafeGround`, the origin chunk): no foe stands, walks or
+  pursues into it and no blow lands there. It lives at the roster / pursuit / strike layer, outside
+  the physics fingerprint (`wildMonsters` already returns nothing at home) — do not move it into
+  fingerprinted code without bumping `PHYSICS_VERSION`.
 - `src/main/mods/modules.ts`: a proposal that needs a capability the cartridge lacks gets the module
   (and its requirements) locked, its rules turned on with fresh tuning, and a reason line — never an
   error. The only refusal is a module the engine does not have. A mod revision carries the bible,
   story, dialogues and assets of its base unchanged.
 
 ### Places on the land (`@shared/places`, `app/land/places.ts`)
-- A place (side-scroller `platformer_2_5d@1` or grid dungeon `dungeon_grid@1`) is **save-owned**
-  (`land.places`), not a cartridge scene: adding one never makes a new version or a new run.
+- A place (side-scroller `platformer_2_5d@1`, grid dungeon `dungeon_grid@1`, or an otherworld 異界)
+  is **save-owned** (`land.places`, validated by `landPlaceSchema` — a union of `WrittenPlace` and
+  `OtherworldPlace`), not a cartridge scene: adding one never makes a new version or a new run.
 - The model writes only the life in it (`dsl/prompts/place.ts`); `buildPlace` builds the ground from
   the stored seed on every entry (course / `generateMaze`) and moves every entity onto open ground.
   Never trust model coordinates in a place, never store its walls in the program.
-- Entrances stand at chunk centres chosen by `placeSpot` (reachable thanks to the fords). A place is
-  played through `GameCanvas({ graph, rules })` while `sessionStore.place` is set; its exits call
-  `leavePlace` (far end = crossed) and the land resumes at the entrance via `landReturn`.
+- Entrances stand at chunk centres chosen by `placeSpot` (reachable thanks to the fords). A written
+  place (and a chapter's climb or maze) is played on engine2d by `PlaceView2D({ graph, rules, title })`
+  (`engine2d/place/`: pure `placeMotion.ts`, a side view and a top-down dungeon view in the 16-bit
+  look) while `sessionStore.place` is set; its exits call `leavePlace` (far end = crossed) and the
+  land resumes at the entrance via `landReturn`. Play never mounts `GameCanvas` for open land.
+- An otherworld (`OtherworldPlace`: `work` ref + optional `playId`) is an entrance into one published
+  AI world; placing one asks no model. Entering opens `OtherworldLayer` (the sandboxed `PlayerView`
+  over the land; it never sets `sessionStore.place`); leaving returns to the entrance; `host.complete`
+  marks it crossed, and the host writes the karma line from the stored title (frame text is untrusted).
+  The place maker (Tweak → Add a place → 異界) lists this device's AI worlds or opens the workshop.
 
 ### Create a game (`app/create/`, `narrative/newWorld.ts`)
-- Four steps: idea (world, optional story material, language, `PlayStyle`: fights none | gun | blade)
-  → world (seven editable bible cards, each independently rewritable; the seventh, the look, is the
-  world's own art direction) → story (3–8 editable chapters,
+- Five steps: idea (only the words are required — an empty name comes from their first clause and
+  renaming never makes the world stale; optional story material, language, `PlayStyle`: fights none
+  | gun | blade) → world (seven editable bible cards, each independently rewritable or **locked**; a
+  locked card is never overwritten, "rewrite the unlocked cards" is one call; the seventh, the look,
+  is the world's own art direction) → look (three low-quality concept pictures drawn in main, kept in
+  the draft folder `looks/`; pick one, draw again, or go on without one — the chosen picture is
+  published as `assets/look.png`; the story plan streams in the background meanwhile) → story (3–8
+  editable chapters,
   even without player story material; rewrite, insert, move, remove, lock, or revise the unlocked
-  chapters; ids and gates re-derived by `episodePlaces`) → `buildWorld` (origin scene,
-  `openLandCartridge` with play style as capability requirements, publish, new save). Only building
+  chapters; ids and gates re-derived by `episodePlaces`) → build, which first shows a quote (calls,
+  input tokens estimated from the real origin prompt, output cap, the draft's usage, money only from
+  the dated `@shared/pricing` table or "price unknown", local models free, chapter 1's background
+  call on its own line), then `buildWorld` (origin scene, `openLandCartridge` with play style as
+  capability requirements, publish, new save) and lets the player in at once. Only building
   publishes. Autosaved drafts live in `<userData>/workspaces/create.<draftId>/draft.json`, not in
   published cartridges. Changing the idea marks dependent world/story content stale.
 - Style is the world's (rev 6): prompts read the bible's `Look:` and `Props:` lines
@@ -375,7 +405,22 @@ export function TitleDiorama({ seedText }): JSX.Element;   // App's MenuBackdrop
   prompt names a period or genre of its own. Create's world and story steps stream into previews
   (`StreamPreview`); nothing streamed is kept.
 - The legacy six-step Create (scene bases, Genre Matrix, capability report, its authoring
-  workspaces and IPC) was deleted; do not bring it back. Offer no option the land cannot play
+  workspaces and IPC) was deleted; do not bring it back.
+
+### Title, Worlds and input (`app/WorldsScreen.tsx`, `app/library/`, `@shared/input`, `renderer/input/`)
+- The title has exactly four entries: Continue · Worlds · Create World · Settings (today's System
+  panel, a `role="dialog"` layer). Worlds is the `library` screen: sections New game (the built-in
+  world), Saves, Cartridges, Continent, and Archive when legacy worlds exist (`library/sections.ts`
+  — a new section is one entry there). Do not add title entries.
+- One action map for keys and pads (`@shared/input`: standard-mapping layout, dead zones, menu
+  actions). `useGamepad()` (mounted once in App) polls `navigator.getGamepads()`: in Play with no
+  layer open it makes the key each pad action is bound to count as held/pressed in the same
+  `engine/useKeys.ts` held set (A interact, B jump, X fire, Y notes, RB sprint, Start = Esc), so
+  engine code never reads pads; anywhere else it moves DOM focus spatially inside the top-most layer
+  (`[data-layer]`, `role="dialog"`), A clicks, B / Start send Escape. Mark new panels over Play with
+  `data-layer`, give screens one initial focus (`.g-autofocus` / `data-autofocus`), and never make
+  something needed to play reachable only by mouse. Hint rows show pad glyphs after a pad input.
+  `scripts/cdp-drive.ts` `{"pad": {buttons, axes, ms}}` installs a virtual pad for E2E. Offer no option the land cannot play
   (companions exist in the rules but are not drawn or followed on the land yet).
 
 ### `src/renderer/identity`
@@ -394,7 +439,7 @@ export function resolveEnsSeed(name: string, network?: EnsNetwork): Promise<Resu
 
 ### `src/renderer/works` + `src/main/works` (AI worlds, Rule 12)
 ```ts
-export function WorksScreen(): JSX.Element;   // title → "AI Worlds": new world, drafts, saved worlds, journeys
+export function WorksScreen(): JSX.Element;   // the AI worlds library (drafts, saved worlds, journeys), reached from the in-world place maker; players meet AI worlds as otherworld places
 // WorkFrame: one sandboxed session; validates messages, heartbeat watchdog (kills a hung frame's pid), "check" mode
 // runAttempt(draft, "generate" | "edit", request, deps): model reply → @@ line protocol (src/shared/workEdits.ts)
 //   → pending candidate → player check (fresh + resume-from-save) → ≤ 2 repairs → settle (compare-and-set)
@@ -432,7 +477,7 @@ window.seed.chain.claimName(cartridgeId, version)   // main re-reads the revisio
 - `ENSV2_SEPOLIA` (`ensCalls.ts`) is the deployment the Universal Resolver walks today
   (`ens_v2_sepolia_20260916`), not the older table in the ENS docs; this build's resolver takes
   DNS-encoded names. The setup script refuses to run if the live root no longer matches.
-- Title → Cartridges shows each cartridge's name live (unclaimed / this version / another version,
+- Worlds → Cartridges shows each cartridge's name live (unclaimed / this version / another version,
   claim on a keyed machine) and "Open by ENS name" follows a name back to a revision in the library.
 
 ### Lineage market (`contracts/src/lineage`, `src/main/chain/lineageCalls.ts`, Sepolia; docs/plans/lineage-market.md)
@@ -479,7 +524,7 @@ export function useContinentSync(continent): void;   // publish own world, read 
   land, and never overwrites a chunk or a note), then zod-checked and re-parsed by the DSL.
 - Signaling (`net/signaling.ts`): `signalingServers()` — the per-device list in localStorage
   `unwritten.signaling` (ws/wss URLs, e.g. y-webrtc's bundled server for a two-process E2E), else
-  `DEFAULT_SIGNALING`; title → System → Signaling servers views, tests (`probeSignaling`: a real
+  `DEFAULT_SIGNALING`; Settings → Signaling servers views, tests (`probeSignaling`: a real
   publish relayed between two sockets), saves and resets it. A continent retries a handshake stuck
   for 12 s (`retryStuckSignaling`) and, with no server and no verified peer for 20 s, shows the
   error `continent-signaling-unreachable` until one answers. Cartridge bytes, rules, story,

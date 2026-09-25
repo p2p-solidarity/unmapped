@@ -40,6 +40,9 @@ Storage mirrors Rule 9 with separate directories so no old cartridge reader ever
   media-src data: blob:; font-src data:; connect-src 'none'; frame-src 'none'; worker-src 'none';
   form-action 'none'; base-uri 'none'`. Assets are embedded as `data:` URLs.
 - The host CSP adds only `frame-src ulwork:`, which also stops a frame navigating itself away.
+- Played frames (rev 6 phase 2: otherworld places) also carry `allow="gamepad"`, the permissions
+  policy that lets a pad reach the world. It grants no host capability and is not a sandbox token;
+  the sandbox stays `allow-scripts` only.
   Preload runs only in the main frame, so `window.seed` does not exist in a work.
 - Spike results: `window.seed/require/process` undefined; parent DOM, localStorage, eval,
   `new Function`, fetch, WebSocket, external images, popups and injected inline scripts blocked;

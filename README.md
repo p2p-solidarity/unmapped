@@ -145,13 +145,13 @@ bun install        # also fetches the Electron binary
 bun run dev        # main + preload + renderer with HMR
 ```
 
-Next, open **Title → System → Model** and choose where the words come from.
+Next, open **Title → Settings → Model** and choose where the words come from.
 
 ### Choose a model
 
 | Provider | Default endpoint | Key | Verified end to end |
 | --- | --- | --- | --- |
-| OpenAI | `https://api.openai.com/v1` · `gpt-5.4-mini` | System → Model, or `OPENAI_API_KEY` in `.env` | ✅ Create, witnessing, chapters, places |
+| OpenAI | `https://api.openai.com/v1` · `gpt-5.4-mini` | Settings → Model, or `OPENAI_API_KEY` in `.env` | ✅ Create, witnessing, chapters, places |
 | llama.cpp | `http://127.0.0.1:8080/v1` | none | not yet |
 | Ollama | `http://127.0.0.1:11434/v1` · `qwen3.5:4b` | none | not yet (detection only) |
 | Apple Foundation Models | `fm serve` on `127.0.0.1:11535` | none (`sudo fm license` once) | not yet (detection only) |
@@ -159,7 +159,7 @@ Next, open **Title → System → Model** and choose where the words come from.
 | OpenUI Gateway | `https://api.thesys.dev/v1/embed` | `THESYS_API_KEY` | not yet |
 | Any OpenAI-compatible server | your URL | optional | — |
 
-A key entered in System → Model is encrypted with the OS keychain and read only by the Electron main
+A key entered in Settings → Model is encrypted with the OS keychain and read only by the Electron main
 process. It never reaches the renderer. `.env` keys are read in main as a fallback; see
 [`.env.example`](.env.example).
 
@@ -291,7 +291,7 @@ the nearest anchor.
   world and chunks, may leave notes on anyone's land, and can never overwrite a chunk or a note.
 - **Signaling:** public y-webrtc servers by default. You can run your own
   (`PORT=4444 node node_modules/y-webrtc/bin/server.js`) and add it under
-  **System → Signaling servers**, where it can be tested before you save.
+  **Settings → Signaling servers**, where it can be tested before you save.
 
 ## Mods
 

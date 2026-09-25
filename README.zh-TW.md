@@ -132,13 +132,13 @@ bun install        # 同時下載 Electron 執行檔
 bun run dev        # main + preload + renderer，支援 HMR
 ```
 
-接著打開 **標題畫面 → 系統 → 模型**，選擇文字要由哪個模型產生。
+接著打開 **標題畫面 → 設定 → 模型**，選擇文字要由哪個模型產生。
 
 ### 選擇模型
 
 | 提供者 | 預設端點 | 金鑰 | 端到端驗證 |
 | --- | --- | --- | --- |
-| OpenAI | `https://api.openai.com/v1` · `gpt-5.4-mini` | 系統 → 模型，或 `.env` 的 `OPENAI_API_KEY` | ✅ 創作、見證、章節、地點 |
+| OpenAI | `https://api.openai.com/v1` · `gpt-5.4-mini` | 設定 → 模型，或 `.env` 的 `OPENAI_API_KEY` | ✅ 創作、見證、章節、地點 |
 | llama.cpp | `http://127.0.0.1:8080/v1` | 不需要 | 尚未 |
 | Ollama | `http://127.0.0.1:11434/v1` · `qwen3.5:4b` | 不需要 | 尚未（僅驗證偵測） |
 | Apple Foundation Models | `fm serve`，位於 `127.0.0.1:11535` | 不需要（需先執行一次 `sudo fm license`） | 尚未（僅驗證偵測） |
@@ -146,7 +146,7 @@ bun run dev        # main + preload + renderer，支援 HMR
 | OpenUI Gateway | `https://api.thesys.dev/v1/embed` | `THESYS_API_KEY` | 尚未 |
 | 任何 OpenAI 相容伺服器 | 你的網址 | 選填 | — |
 
-在「系統 → 模型」輸入的金鑰會用作業系統鑰匙圈加密，只有 Electron 主程序讀得到，永遠不會送到 renderer。
+在「設定 → 模型」輸入的金鑰會用作業系統鑰匙圈加密，只有 Electron 主程序讀得到，永遠不會送到 renderer。
 主程序也會讀 `.env` 裡的金鑰當作備援，格式見 [`.env.example`](.env.example)。
 
 <details>
@@ -265,7 +265,7 @@ usage.jsonl                       每次模型呼叫一行：用途、模型、t
 - **信任：** 同伴的 hello 必須符合大陸代碼、協定版本和物理版本，雙方才開始交換資料。之後每一筆資料抵達時
   都會檢查：同伴只能寫自己的世界和區塊，可以在任何人的土地上留言，但永遠不能覆蓋已有的區塊或留言。
 - **信令：** 預設使用公開的 y-webrtc 伺服器。你也可以自己架一台
-  （`PORT=4444 node node_modules/y-webrtc/bin/server.js`），加到 **系統 → 信令伺服器**，那裡可以先測試再儲存。
+  （`PORT=4444 node node_modules/y-webrtc/bin/server.js`），加到 **設定 → 信令伺服器**，那裡可以先測試再儲存。
 
 ## Mod
 
