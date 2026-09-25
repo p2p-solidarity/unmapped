@@ -120,11 +120,20 @@ const registry = create2(
   ]),
   salt,
 );
-await exec.send({ to: registry.to, data: registry.data }, "deploy LineageRegistry");
+// A live deploy can be re-run after a failure: whatever is already on chain is left as it is.
+async function deployOnce(what: string, request: { to: Address; data: Hex; address: Address }) {
+  const code = dryRun ? undefined : await client.getCode({ address: request.address });
+  if (code !== undefined && code !== "0x") {
+    say(`  · ${what} already at ${request.address}`);
+    return;
+  }
+  await exec.send({ to: request.to, data: request.data }, `deploy ${what}`);
+}
+
+await deployOnce("LineageRegistry", registry);
 const hook = mineHook([UNISWAP_SEPOLIA.poolManager, UNISWAP_SEPOLIA.lbpStrategy, registry.address]);
 say(`  hook salt ${BigInt(hook.salt)} → ${hook.address}`);
-const hookDeploy = create2(hook.initCode, hook.salt);
-await exec.send({ to: hookDeploy.to, data: hookDeploy.data }, "deploy LineageHook");
+await deployOnce("LineageHook", create2(hook.initCode, hook.salt));
 const router = create2(
   encodeDeployData({
     abi: lineageRouter.abi,
@@ -133,8 +142,13 @@ const router = create2(
   }),
   salt,
 );
-await exec.send({ to: router.to, data: router.data }, "deploy LineageRouter");
-await exec.send(call(registry.address, registryAbi, "setHook", [hook.address]), "set the hook");
+await deployOnce("LineageRouter", router);
+const currentHook = (await read(exec, registry.address, registryAbi, "hook", [])) as Address;
+if (currentHook === zeroAddress) {
+  await exec.send(call(registry.address, registryAbi, "setHook", [hook.address]), "set the hook");
+} else if (currentHook.toLowerCase() !== hook.address.toLowerCase()) {
+  throw new Error(`the registry's hook is ${currentHook}, not ${hook.address}`);
+}
 const rootRegistry = (await read(
   exec,
   registry.address,
@@ -143,7 +157,18 @@ const rootRegistry = (await read(
   [],
 )) as Address;
 const resolver = (await read(exec, registry.address, registryAbi, "resolver", [])) as Address;
-await pointDotEth(exec, label, rootRegistry, resolver);
+const pointed = (await read(
+  exec,
+  ENSV2_SEPOLIA.ethRegistry,
+  ensRegistryAbi as Abi,
+  "getSubregistry",
+  [label],
+)) as Address;
+if (pointed.toLowerCase() === rootRegistry.toLowerCase()) {
+  say(`  · ${parentName} already points at the registry's root`);
+} else {
+  await pointDotEth(exec, label, rootRegistry, resolver);
+}
 
 if (!dryRun) {
   say("\n# add to .env:");

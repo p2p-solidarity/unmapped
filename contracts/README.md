@@ -53,6 +53,15 @@ Uniswap v4 (PoolManager `0xE03A1074c86CFeDd5C142C4F04F1a1536e203543`), LBPStrate
 (`0x000000001F26a0044BaA66024e7b6599c61963F8`) are Uniswap's own Sepolia deployments; the full list
 is in `src/main/chain/lineageCalls.ts`.
 
+Deployed on Sepolia under `unmapped.eth` (2026-09-26, `docs/e2e/milestone-lineage-market/`):
+
+| Contract | Address |
+| --- | --- |
+| LineageRegistry | `0x439F5982163D4D4AbA6FAB2bF494d866bD2B5237` |
+| LineageHook | `0x0f1167F421fD246c5C78cF88a26f225cb3336044` |
+| LineageRouter | `0x57C5Ea5F82a132c6F2f8FF42133c354027A1609C` |
+| root registry / resolver (made by the registry) | `0x6DE11Ad63229E1a2d269bAd0d1E6FBD5792f6aEb` / `0x3886fa704952a8B900B884b4A3C48dBD9696DEB7` |
+
 ```bash
 bun run contracts:build                                    # also → contracts/LineageMarket.json
 bun run lineage:market --dry-run                           # deploy + launch + auctions + swaps, simulated

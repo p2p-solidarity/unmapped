@@ -1,0 +1,18 @@
+Deploying the lineage market on Sepolia as 0x8eECf2cD24664EB2275BFd74E324D9E0541b51C3
+  ✓ deploy LineageRegistry  0xd7eb8fbc13a58fb23fd641e2e6264207f26b48e9a52163e8e1c1ec4503ae823f  (4,084,869 gas)
+  hook salt 7588 → 0x0f1167F421fD246c5C78cF88a26f225cb3336044
+  ✓ deploy LineageHook  0xe57cec2d918daefdd0e257441e17132dcbf835da1b6cc35f137653106fa27bb2  (1,351,265 gas)
+  ✓ deploy LineageRouter  0x60507ceddeabdecaf11106e70b209163f06cd872ebaa21b50b96a8ccd669023c  (1,132,625 gas)
+  ✓ set the hook  0x72a85d042ed1dcae72fefab26630c105c289d5464809c4b8554dae3f95279fd4  (44,199 gas)
+  price 8.000021 MockUSDC for 365 days
+  ✓ mint MockUSDC  0x73b64bd695d2b34fd5fc7a5473f64613119eb39886173521fd03cc882c2b9e0c  (51,369 gas)
+  ✓ approve registrar  0xd58b03f7d02f70c166d6f11cfc570f4fbbf450726fce4dea2c3b02a9f8b6eb25  (46,354 gas)
+  ✓ commit  0xd906b43ab03e5bb3087f534fb89fba2ec42ebee6e1c28b63fbc70db2eaf5b3e7  (45,426 gas)
+  waiting 62 s for the commitment to age…
+  ✓ register unmapped.eth  0x413eb85ea3038e23a3779e61c31e384f14ea25d154205b235653d1e974f25ded  (233,174 gas)
+
+# add to .env:
+UNWRITTEN_LINEAGE_PARENT=unmapped.eth
+UNWRITTEN_LINEAGE_REGISTRY=0x439F5982163D4D4AbA6FAB2bF494d866bD2B5237
+UNWRITTEN_LINEAGE_HOOK=0x0f1167F421fD246c5C78cF88a26f225cb3336044
+UNWRITTEN_LINEAGE_ROUTER=0x57C5Ea5F82a132c6F2f8FF42133c354027A1609C

@@ -416,7 +416,9 @@ LineageRouter // buy/sell along pathTo(world) in one unlock
 - `bun run lineage:market --dry-run` is the check: it simulates deploy → three generations of
   launch/auction/graduation → swaps → royalties → name transfer → refusals on Sepolia's real contracts
   (the failure list is at the top of `scripts/lineage-market.ts`). A live deploy is run by a person.
-- Not wired into the app yet: no IPC or screen launches or trades.
+- Deployed on Sepolia under `unmapped.eth` (addresses in `contracts/README.md`); `UNWRITTEN_LINEAGE_*`
+  in `.env` are main-only like every `UNWRITTEN_*` var. Not wired into the app yet: no IPC or screen
+  launches or trades.
 
 ### `src/renderer/net` + `src/shared/continent.ts` (open land is shared as a continent)
 ```ts

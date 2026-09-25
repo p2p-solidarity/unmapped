@@ -58,10 +58,42 @@ check does not hold.
 - `build-contracts.mjs` compiling both contract sets pushed an existing artifact test past 5 s under
   load. The lineage build is now `scripts/build-lineage.mjs`; `contracts:build` runs both.
 
+## Live deploy (Sepolia, 2026-09-26)
+
+After the dry run above, and a second dry run with the real label (`bun run lineage:market unmapped
+--dry-run`, passed), the market was deployed for real with a fresh key made for this project
+(`0x8eECf2cD24664EB2275BFd74E324D9E0541b51C3`). Output: `live-deploy.log`.
+
+```bash
+bun run lineage:market unmapped   # UNWRITTEN_PRIVATE_KEY in .env
+```
+
+| Contract | Address | Deploy tx | Gas |
+| --- | --- | --- | --- |
+| LineageRegistry | [`0x439F5982163D4D4AbA6FAB2bF494d866bD2B5237`](https://sepolia.etherscan.io/address/0x439F5982163D4D4AbA6FAB2bF494d866bD2B5237) | `0xd7eb8fbc…823f` | 4,084,869 |
+| LineageHook (salt 7588) | [`0x0f1167F421fD246c5C78cF88a26f225cb3336044`](https://sepolia.etherscan.io/address/0x0f1167F421fD246c5C78cF88a26f225cb3336044) | `0xe57cec2d…7bb2` | 1,351,265 |
+| LineageRouter | [`0x57C5Ea5F82a132c6F2f8FF42133c354027A1609C`](https://sepolia.etherscan.io/address/0x57C5Ea5F82a132c6F2f8FF42133c354027A1609C) | `0x60507ced…023c` | 1,132,625 |
+| Root registry (made by the registry) | `0x6DE11Ad63229E1a2d269bAd0d1E6FBD5792f6aEb` | — | — |
+| Resolver (made by the registry) | `0x3886fa704952a8B900B884b4A3C48dBD9696DEB7` | — | — |
+
+Then `setHook` (44,199 gas) and `unmapped.eth` through the ETH Registrar (8.000021 MockUSDC for 365
+days: mint, approve, commit, and after 62 s register, 233,174 gas). All eight transactions
+succeeded. They cost ≈ 0.0074 Sepolia ETH at about 0.97 gwei.
+
+Read back from the chain afterwards:
+- Every contract has code: 16,656 / 5,937 / 4,981 bytes, the same as the build.
+- The registry's `hook`, `lbpStrategy` and `rootCurrency` are the deployed hook, Uniswap's
+  LBPStrategy and MockUSDC.
+- The hook's `authorized` is LBPStrategy, its `registry` is the registry, and its address carries
+  flag bits `0x2044`.
+- The router's `registry` is the registry.
+- `unmapped.eth` is registered to the deploy key until 2027-09-25. Its subregistry is the
+  registry's root, which reports `isEmancipated() = true`, and its resolver is the registry's.
+
 ## Not verified
 
-- **No real transaction.** `bun run lineage:market <label>` needs a funded Sepolia key; none was
-  used. The dry run sends the same calldata, just not through `wallet.sendTransaction`.
+- **No world launched for real yet.** The deploy is live, but launch, the auctions, graduation,
+  swaps, royalties and the name transfer have only run in the dry run.
 - **The app does not launch or trade yet.** There is no IPC or screen for it. Cartridge names from
   `ens:setup` still use `claimCartridgeName` under their own parent.
 - **Only one bidder per auction.** The clearing price never rose above the floor. A failed

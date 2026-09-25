@@ -1,7 +1,10 @@
 # Lineage market — ENSv2 names the family tree, Uniswap prices it
 
-Status: contracts and a Sepolia dry run are done (`docs/e2e/milestone-lineage-market/result.md`).
-Nothing has been deployed for real, and the app does not launch or trade yet.
+Status: contracts are deployed on Sepolia under `unmapped.eth`: registry
+`0x439F5982163D4D4AbA6FAB2bF494d866bD2B5237`, hook `0x0f1167F421fD246c5C78cF88a26f225cb3336044`,
+router `0x57C5Ea5F82a132c6F2f8FF42133c354027A1609C`. The full flow has only been run as a dry run
+(`docs/e2e/milestone-lineage-market/result.md`). No world has been launched for real yet, and the
+app does not launch or trade.
 
 ## Product shape
 
