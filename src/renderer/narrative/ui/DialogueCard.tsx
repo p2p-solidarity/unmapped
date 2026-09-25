@@ -6,8 +6,9 @@
 // atmosphere — is applied and the card closes. If the resolve turn fails, the card says so and the
 // player decides whether to take the choice anyway.
 //
-// On open land the words were written when the place was witnessed (`dialogueWitnessed`): the card
-// only reads them, and a choice is bookkeeping alone — no model is asked anything (plan.md §1.4).
+// On open land and inside a place the words were written with the place (`dialogueWitnessed`): the
+// card only reads them, and a choice is bookkeeping alone — no model is asked anything (plan.md
+// §1.4). The model-resolved path above is left to bounded scenes and the legacy archive.
 
 import { ErrandActions } from "@renderer/app/land/ErrandActions";
 import { errorLine, useT } from "@renderer/i18n";
@@ -33,6 +34,8 @@ export function DialogueCard() {
   const npcId = useSessionStore((state) => state.dialogueNpcId);
   const witnessed = useSessionStore((state) => state.dialogueWitnessed);
   const speaker = useSessionStore((state) => state.dialogueSpeaker);
+  // Inside a place the words were written with it; its residents give no land errands.
+  const inPlace = useSessionStore((state) => state.place !== null);
   const scene = useWorldStore((state) => state.scene);
   const [resolving, setResolving] = useState<DialogueChoice | null>(null);
   const [failure, setFailure] = useState<{ choice: DialogueChoice; error: AppError } | null>(null);
@@ -69,7 +72,10 @@ export function DialogueCard() {
 
       setFailure(null);
       session.closeDialogue();
-      if (choice.action === "craft" && !witnessed) session.openAltar();
+      // The wish altar lives on only in the legacy archive; a cartridge world has none.
+      if (choice.action === "craft" && !witnessed && world.origin?.kind === "legacy") {
+        session.openAltar();
+      }
     },
     [npcId, witnessed],
   );
@@ -177,7 +183,7 @@ export function DialogueCard() {
         {ready !== null ? (
           <div style={columnStyle}>
             <Text variant="bodyLarge">{ready.line}</Text>
-            {witnessed ? <ErrandActions npcId={npcId} /> : null}
+            {witnessed && !inPlace ? <ErrandActions npcId={npcId} /> : null}
 
             {resolving !== null ? (
               <Text variant="body" tone="accent">

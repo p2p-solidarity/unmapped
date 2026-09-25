@@ -1,18 +1,36 @@
-// OpenAI-SDK client for any OpenAI-compatible endpoint. Lives in main only: the API key is read
-// from process.env here and never crosses the bridge (Rule 6). Every failure is mapped to an
-// AppError with a hint the player can act on (Rule 5).
+// OpenAI-SDK client for any OpenAI-compatible endpoint. Lives in main only: the caller resolves
+// the API key in main (`keyStore.resolveApiKey`) and it never crosses the bridge (Rule 6). Every
+// failure is mapped to an AppError with a hint the player can act on (Rule 5).
 
-import type { ChatMessage, ChatRequest, ChatUsage, InferenceConfig, ToolCall } from "@shared/llm";
+import type {
+  ChatMessage,
+  ChatRequest,
+  ChatUsage,
+  ContextWindow,
+  InferenceConfig,
+  ToolCall,
+} from "@shared/llm";
 import { fail, ok, type Result } from "@shared/result";
 import OpenAI, { APIConnectionError, APIError, APIUserAbortError } from "openai";
 import type { ChatCompletionCreateParamsStreaming } from "openai/resources/chat/completions";
+import { fitOutput } from "./budget";
 import { parseConfig } from "./config";
+import { createThinkFilter, stripThinking } from "./think";
 import { createToolCallAccumulator, type ToolCallDelta } from "./toolCalls";
 
 export interface ChatCompletionResult {
   text: string;
   toolCalls: ToolCall[];
   usage: ChatUsage | null;
+  /** The answer budget actually sent (lower than asked when a local context is small). */
+  maxTokens: number;
+}
+
+export interface StreamOptions {
+  /** Resolved in main; null for keyless local servers. */
+  apiKey: string | null;
+  /** The local model's window; null = a cloud API, sent as asked. */
+  context: ContextWindow | null;
 }
 
 /** OpenAI's wire shape for a tool call the assistant emitted. */
@@ -62,7 +80,7 @@ export interface ChatBody {
   reasoning_effort?: "none" | "low" | "medium" | "high";
   /** llama.cpp only: GBNF grammar that constrains the sampler to our DSL. */
   grammar?: string;
-  /** llama.cpp / ollama only: stops Qwen-style servers emitting a <think> block. */
+  /** llama.cpp / ollama / vLLM: stops Qwen-style chat templates opening a <think> block. */
   chat_template_kwargs?: { enable_thinking: boolean };
 }
 
@@ -82,9 +100,13 @@ export function usesReasoningParams(config: InferenceConfig): boolean {
   return /^gpt-5/.test(model) || /^o[1-9]/.test(model);
 }
 
-/** True for servers that speak llama.cpp's extra sampler fields. */
-function isLocalRuntime(config: InferenceConfig): boolean {
-  return config.kind === "llamacpp" || config.kind === "ollama";
+/**
+ * Local runtimes whose chat templates take `chat_template_kwargs` (unknown fields are ignored by
+ * all three). Apple's `fm serve` has no thinking mode and custom servers are unknown, so neither
+ * gets the field; the think filter below covers any model that reasons out loud anyway.
+ */
+function takesThinkingSwitch(config: InferenceConfig): boolean {
+  return config.kind === "llamacpp" || config.kind === "ollama" || config.kind === "vllm";
 }
 
 /** Maps one of our messages onto the provider's shape. Ollama and llama.cpp speak the same one. */
@@ -149,24 +171,30 @@ export function buildChatBody(config: InferenceConfig, request: ChatRequest): Ch
   if (request.grammar !== null && config.kind === "llamacpp" && !withTools) {
     body.grammar = request.grammar;
   }
-  if (isLocalRuntime(config)) body.chat_template_kwargs = { enable_thinking: false };
+  if (takesThinkingSwitch(config)) body.chat_template_kwargs = { enable_thinking: false };
   return body;
 }
 
-export function createClient(config: InferenceConfig): Result<OpenAI> {
+/** The presets that cannot answer without a key; custom and local servers may be keyless. */
+function needsKey(config: InferenceConfig): boolean {
+  return config.kind === "openai" || config.kind === "openui-gateway";
+}
+
+export function createClient(
+  config: InferenceConfig,
+  apiKey: string | null = null,
+): Result<OpenAI> {
   const trusted = parseConfig(config);
   if (!trusted.ok) return fail(trusted.error);
   const safeConfig = trusted.value;
-  const envName = safeConfig.apiKeyEnv;
-  if (envName !== null && !process.env[envName]) {
+  if (needsKey(safeConfig) && apiKey === null) {
     return fail({
       code: "no-api-key",
-      message: `${envName} is not set, but the ${safeConfig.kind} provider requires a key.`,
-      hint: "add OPENAI_API_KEY to .env or switch provider",
+      message: `The ${safeConfig.kind} provider needs an API key and none is set.`,
+      hint: `Enter a key in System → Model (Cloud API), or add ${safeConfig.apiKeyEnv ?? "the key"} to .env.`,
     });
   }
-  const apiKey = process.env[envName ?? ""] || "local";
-  return ok(new OpenAI({ baseURL: safeConfig.baseUrl, apiKey }));
+  return ok(new OpenAI({ baseURL: safeConfig.baseUrl, apiKey: apiKey ?? "local" }));
 }
 
 export async function streamChat(
@@ -174,13 +202,18 @@ export async function streamChat(
   request: ChatRequest,
   onDelta: (text: string) => void,
   signal: AbortSignal,
+  options: StreamOptions = { apiKey: null, context: null },
 ): Promise<Result<ChatCompletionResult>> {
-  const client = createClient(config);
+  const client = createClient(config, options.apiKey);
   if (!client.ok) return client;
+  const budget = fitOutput(request, options.context, `${config.kind} · ${config.model}`);
+  if (!budget.ok) return budget;
 
-  const body = buildChatBody(config, request) as unknown as ChatCompletionCreateParamsStreaming;
+  const fitted = { ...request, maxTokens: budget.value.maxTokens };
+  const body = buildChatBody(config, fitted) as unknown as ChatCompletionCreateParamsStreaming;
   const calls = createToolCallAccumulator();
-  let text = "";
+  const think = createThinkFilter();
+  let raw = "";
   let usage: ChatUsage | null = null;
   try {
     const stream = await client.value.chat.completions.create(body, { signal });
@@ -188,15 +221,23 @@ export async function streamChat(
       const delta = chunk.choices[0]?.delta;
       const content = delta?.content;
       if (typeof content === "string" && content.length > 0) {
-        text += content;
-        onDelta(content);
+        raw += content;
+        const visible = think.push(content);
+        if (visible.length > 0) onDelta(visible);
       }
       calls.push(delta?.tool_calls as ToolCallDelta[] | undefined);
       if (chunk.usage) {
         usage = { prompt: chunk.usage.prompt_tokens, completion: chunk.usage.completion_tokens };
       }
     }
-    return ok({ text, toolCalls: calls.toolCalls(), usage });
+    const tail = think.flush();
+    if (tail.length > 0) onDelta(tail);
+    return ok({
+      text: stripThinking(raw),
+      toolCalls: calls.toolCalls(),
+      usage,
+      maxTokens: fitted.maxTokens,
+    });
   } catch (e) {
     return mapProviderError(e, config, signal);
   }
@@ -218,8 +259,8 @@ export function mapProviderError(
         config.kind === "llamacpp"
           ? "start llama-server (llama-server -m <model>.gguf --port 8080 --jinja) or fix baseUrl"
           : config.kind === "apple-fm"
-            ? "start Apple's model from System → Inference (fm serve); run `sudo fm license` once first"
-            : `check baseUrl (${config.baseUrl}) and that the server is running`,
+            ? "select Apple on-device in System → Model (it starts fm serve); run `sudo fm license` once first"
+            : `check the endpoint (${config.baseUrl}) in System → Model and that the server is running`,
     });
   }
   if (e instanceof APIError) {
@@ -227,16 +268,14 @@ export function mapProviderError(
       return fail({
         code: "auth",
         message: `The provider rejected the credentials: ${e.message}`,
-        hint: config.apiKeyEnv
-          ? `check ${config.apiKeyEnv} in .env`
-          : "this endpoint needs a key — set apiKeyEnv in the inference config",
+        hint: "enter a valid key in System → Model (Cloud API)",
       });
     }
     if (e.status === 404) {
       return fail({
         code: "model-not-found",
         message: `${config.baseUrl} does not serve model "${config.model}".`,
-        hint: "run the provider probe to list the model ids this server offers",
+        hint: "pick one of the models the server lists in System → Model",
       });
     }
     return fail({

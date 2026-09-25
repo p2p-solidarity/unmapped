@@ -71,16 +71,20 @@ function readBody(body: unknown): { models: string[]; ownedBy: string | null } {
   return { models, ownedBy };
 }
 
+/** The context window is read separately (`context.ts`) and joined by the IPC handler. */
+export type Reachability = Omit<ProbeResult, "context">;
+
+/** `apiKey` comes from `keyStore.resolveApiKey`, which only returns one bound to this endpoint. */
 export async function probe(
   config: InferenceConfig,
+  apiKey: string | null = null,
   timeoutMs: number = PROBE_TIMEOUT_MS,
-): Promise<Result<ProbeResult>> {
+): Promise<Result<Reachability>> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   const startedAt = Date.now();
   const headers: Record<string, string> = { accept: "application/json" };
-  const key = config.apiKeyEnv === null ? undefined : process.env[config.apiKeyEnv];
-  if (key) headers.authorization = `Bearer ${key}`;
+  if (apiKey !== null) headers.authorization = `Bearer ${apiKey}`;
 
   try {
     const response = await fetch(modelsUrl(config.baseUrl), {

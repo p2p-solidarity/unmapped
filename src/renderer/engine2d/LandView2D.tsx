@@ -27,6 +27,7 @@ import { loadAtlases } from "./atlases";
 import type { SpriteAtlases } from "./canvasRenderer";
 import { chapterScene, readChapter } from "./chapterLayer";
 import { continentMarkers, continentTargets, mergeChunks, mergeNotes } from "./continentLayer";
+import { landLightAt } from "./landLight";
 import { canStandAt } from "./landModel";
 import { hd2dSurface, type LandSurface, pixelSurface } from "./landSurface";
 import { placeTargets } from "./placeLayer";
@@ -173,12 +174,12 @@ export function LandView2D({
       ...placeTargets(places),
       ...continentTargets(worlds),
       // Its foes are fought, not talked to: only its people and treasures are targets.
-      ...(chapter === null ? [] : sceneTargets({ ...chapter, monsters: [] })),
+      ...(chapter === null ? [] : sceneTargets({ ...chapter, monsters: [] }, [], false)),
     ],
     [chunks, progress, graph, story, places, chapter, worlds],
   );
   const targets = useMemo(
-    () => [...sceneTargets(graph, opened), ...extraTargets],
+    () => [...sceneTargets(graph, opened, false), ...extraTargets],
     [graph, opened, extraTargets],
   );
 
@@ -459,6 +460,7 @@ export function LandView2D({
         land: state.land,
         others: getRemotePlayers(),
         continent: state.continent,
+        light: landLightAt(position.x, position.z, now),
         now,
       });
 

@@ -3,6 +3,8 @@
 // the same draft → player check → compare-and-set path as a picked file, and its time and token
 // use are recorded. No key, no picture — the caller gets an actionable error, never a stand-in.
 
+import { resolveApiKey } from "@main/inference/keyStore";
+import { PROVIDER_PRESETS } from "@shared/llm";
 import { err, ok, type Result } from "@shared/result";
 import { nativeImage } from "electron";
 import OpenAI from "openai";
@@ -27,15 +29,21 @@ export function assetPrompt(input: { note: string; assetId: string; world: strin
 }
 
 export async function generateImage(prompt: string): Promise<Result<GeneratedImage>> {
-  const key = process.env.OPENAI_API_KEY;
-  if (!key) {
-    return err("no-api-key", "OPENAI_API_KEY is not set.", "Add it to .env to generate images.");
+  // The same lookup chat uses: the key saved in System → Model, else OPENAI_API_KEY from .env.
+  const key = await resolveApiKey({ ...PROVIDER_PRESETS.openai, sidecar: null });
+  if (key === null) {
+    return err(
+      "no-api-key",
+      "No OpenAI key is set.",
+      "Enter one in System → Model (Cloud API → OpenAI), or add OPENAI_API_KEY to .env.",
+    );
   }
   const model = process.env.OPENAI_IMAGE_MODEL || "gpt-image-1-mini";
   const quality = (process.env.OPENAI_IMAGE_QUALITY || "medium") as "low" | "medium" | "high";
   const started = performance.now();
   try {
-    const client = new OpenAI({ apiKey: key });
+    // Explicit, so an OPENAI_BASE_URL in the environment cannot redirect the key.
+    const client = new OpenAI({ apiKey: key.key, baseURL: PROVIDER_PRESETS.openai.baseUrl });
     const response = await client.images.generate({
       model,
       prompt: prompt.slice(0, 4_000),

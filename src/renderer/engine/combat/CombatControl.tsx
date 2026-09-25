@@ -16,13 +16,7 @@ import type { RigState } from "../CameraRig";
 import type { GameplayKitBehavior } from "../kits/registry";
 import { matchesAction, useKeys } from "../useKeys";
 import { type CombatAim, fireWeapon, newCombatClock, passTurn, stepCombat } from "./combatLoop";
-import {
-  buildEncounter,
-  carryWounds,
-  shotBlockers,
-  shotDirection,
-  shotOrigin,
-} from "./encounter";
+import { buildEncounter, carryWounds, shotBlockers, shotDirection, shotOrigin } from "./encounter";
 import { playerShove, showHostiles } from "./livePositions";
 import { sceneGround } from "./sceneGround";
 
@@ -100,7 +94,9 @@ export function CombatControl({
       // A grid walker moves tile to tile and a fixed one not at all: a blow does not slide them.
       ...(movement === "grid" || movement === "none"
         ? {}
-        : { shove: (dx: number, dz: number) => playerShove.push(dx, movement === "side" ? 0 : dz) }),
+        : {
+            shove: (dx: number, dz: number) => playerShove.push(dx, movement === "side" ? 0 : dz),
+          }),
     }),
     [player, rig, facing, movement, ground],
   );

@@ -3,13 +3,12 @@
 
 import { LANGUAGE_LABEL, UI_LANGUAGES, useLanguageStore, useT } from "@renderer/i18n";
 import { UnlockPanel } from "@renderer/identity";
-import { useInferenceStore } from "@renderer/state";
-import { Button, StatePanel, Text } from "@renderer/ui";
+import { Button, StatePanel } from "@renderer/ui";
 import type { AppInfo } from "@shared/ipc";
 import { errored, idle, type Loadable, loading, ready, toError } from "@shared/result";
 import { useEffect, useState } from "react";
-import { useRefreshProbe } from "../inferenceSync";
 import { useKeys } from "../shell/useKeys";
+import { ModelPanel } from "./ModelPanel";
 
 function useAppInfo(): Loadable<AppInfo> {
   const [info, setInfo] = useState<Loadable<AppInfo>>(idle());
@@ -34,10 +33,6 @@ function useAppInfo(): Loadable<AppInfo> {
 export function SystemPanel({ onClose }: { onClose(): void }) {
   const t = useT();
   const info = useAppInfo();
-  const config = useInferenceStore((state) => state.config);
-  const probe = useInferenceStore((state) => state.probe);
-  const sidecar = useInferenceStore((state) => state.sidecar);
-  const refreshProbe = useRefreshProbe();
 
   useKeys({ Escape: onClose });
 
@@ -68,6 +63,8 @@ export function SystemPanel({ onClose }: { onClose(): void }) {
         <span className="g-meta">{t("common.languageNote")}</span>
       </section>
 
+      <ModelPanel />
+
       <StatePanel state={info} loadingText={t("title.readingBuild")}>
         {(value) => (
           <dl className="info-list">
@@ -80,40 +77,6 @@ export function SystemPanel({ onClose }: { onClose(): void }) {
           </dl>
         )}
       </StatePanel>
-
-      <dl className="info-list">
-        <dt>{t("common.model")}</dt>
-        <dd>{config === null ? "…" : `${config.kind} · ${config.model}`}</dd>
-        <dt>{t("common.endpoint")}</dt>
-        <dd>{config === null ? "…" : config.baseUrl}</dd>
-        <dt>{t("common.status")}</dt>
-        <dd>
-          <StatePanel
-            state={probe}
-            idleText={t("common.notProbed")}
-            loadingText={t("common.probing")}
-          >
-            {(value) =>
-              value.reachable ? (
-                <Text variant="caption" tone="success" mono>
-                  {t("title.probeOnline", { ms: value.latencyMs, n: value.models.length })}
-                </Text>
-              ) : (
-                <Text variant="caption" tone="danger" mono>
-                  {sidecar?.state === "error" && sidecar.message !== null
-                    ? t("title.offlineBecause", { reason: sidecar.message })
-                    : config?.kind === "apple-fm"
-                      ? t("title.offlineAppleFm")
-                      : t("title.offlineLocal")}
-                </Text>
-              )
-            }
-          </StatePanel>
-        </dd>
-      </dl>
-      <div className="row-actions">
-        <Button onClick={refreshProbe}>{t("common.probeAgain")}</Button>
-      </div>
 
       <UnlockPanel onUnlocked={onClose} />
     </div>

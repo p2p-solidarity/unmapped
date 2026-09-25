@@ -5,17 +5,30 @@
 
 import type { MainContext } from "@main/context";
 import { IPC } from "@shared/ipc";
-import type { ChatEvent, ChatRequest, InferenceConfig, SidecarStatus } from "@shared/llm";
+import type {
+  ChatEvent,
+  ChatRequest,
+  ContextWindow,
+  InferenceConfig,
+  ProbeResult,
+  SidecarStatus,
+} from "@shared/llm";
 import { fail, ok, type Result, toError } from "@shared/result";
 import type { GenerationEvent, SceneArtifact } from "@shared/scene-generation";
 import { ipcMain } from "electron";
 import { z } from "zod";
 import { streamChat } from "./client";
 import { loadConfig, parseConfig, saveConfig } from "./config";
+import { readContextWindow } from "./context";
+import { initKeyStore, resolveApiKey } from "./keyStore";
+import { registerModelIpc } from "./modelIpc";
 import { probe } from "./probe";
 import { SceneArtifactService } from "./sceneArtifactService";
 import { parseSceneGenerationRequest } from "./sceneGenerationIpc";
 import { createSidecar } from "./sidecar";
+
+/** A context window read from a server is trusted this long before it is asked again. */
+const CONTEXT_TTL_MS = 60_000;
 
 const MAX_CONTENT = 200_000;
 
@@ -58,6 +71,7 @@ const chatRequestSchema = z.object({
   grammar: z.string().max(100_000).nullable(),
   stop: z.array(z.string()).max(8),
   tools: z.array(toolSchemaSchema).max(64),
+  minTokens: z.number().int().min(1).max(32_768).optional(),
 });
 
 function invalid(what: string): Result<never> {
@@ -76,10 +90,33 @@ export function registerInferenceIpc(ctx: MainContext): void {
     ctx.appleLocalProvider === null ? [] : [ctx.appleLocalProvider],
   );
   let cached: InferenceConfig | null = null;
+  let contextCache: { key: string; at: number; value: ContextWindow | null } | null = null;
+  initKeyStore(ctx.userData);
 
   async function currentConfig(): Promise<InferenceConfig> {
     if (cached === null) cached = await loadConfig(ctx.userData);
     return cached;
+  }
+
+  /** Apple's model reports its own window through the bridge; nothing else needs it. */
+  async function bridgeTokens(config: InferenceConfig): Promise<number | null> {
+    if (config.kind !== "apple-fm" || ctx.appleLocalProvider === null) return null;
+    const capabilities = await ctx.appleLocalProvider.capabilities();
+    return capabilities.ok ? capabilities.value.contextTokens : null;
+  }
+
+  async function contextFor(
+    config: InferenceConfig,
+    fresh: boolean,
+  ): Promise<ContextWindow | null> {
+    const key = JSON.stringify([config.kind, config.baseUrl, config.model, config.sidecar]);
+    const hit = contextCache !== null && contextCache.key === key;
+    if (!fresh && hit && contextCache !== null && Date.now() - contextCache.at < CONTEXT_TTL_MS) {
+      return contextCache.value;
+    }
+    const value = await readContextWindow(config, await bridgeTokens(config));
+    contextCache = { key, at: Date.now(), value };
+    return value;
   }
 
   function emit(event: ChatEvent): void {
@@ -87,15 +124,24 @@ export function registerInferenceIpc(ctx: MainContext): void {
   }
 
   async function runChat(request: ChatRequest, controller: AbortController): Promise<void> {
+    const started = Date.now();
     try {
       const config = await currentConfig();
+      const [key, context] = await Promise.all([resolveApiKey(config), contextFor(config, false)]);
       const result = await streamChat(
         config,
         request,
         (text) => emit({ id: request.id, type: "delta", text }),
         controller.signal,
+        { apiKey: key?.key ?? null, context },
       );
+      // Provider, time and budget only — never a prompt, an answer or a key.
+      const head = `[inference] ${result.ok ? "done" : "fail"} ${request.id} · ${config.kind} ${config.model} · ${Date.now() - started} ms`;
       if (result.ok) {
+        const { usage, maxTokens } = result.value;
+        process.stdout.write(
+          `${head} · max ${maxTokens}${usage === null ? "" : ` · ${usage.prompt}+${usage.completion} tokens`}${context === null ? "" : ` · ctx ${context.tokens}`}\n`,
+        );
         emit({
           id: request.id,
           type: "done",
@@ -104,6 +150,7 @@ export function registerInferenceIpc(ctx: MainContext): void {
           usage: result.value.usage,
         });
       } else {
+        process.stdout.write(`${head} · ${result.error.code}\n`);
         emit({ id: request.id, type: "error", error: result.error });
       }
     } catch (e) {
@@ -136,7 +183,10 @@ export function registerInferenceIpc(ctx: MainContext): void {
       const validated = parseConfig(raw);
       if (!validated.ok) return validated;
       const saved = await saveConfig(ctx.userData, validated.value);
-      if (saved.ok) cached = saved.value;
+      if (saved.ok) {
+        cached = saved.value;
+        contextCache = null;
+      }
       return saved;
     },
   );
@@ -144,14 +194,20 @@ export function registerInferenceIpc(ctx: MainContext): void {
   // Apple's model has no daemon of its own: a probe starts `fm serve` whenever it is not running.
   // Unaccepted terms make fm exit at once, so the renderer's offline re-probe notices
   // `sudo fm license` within one retry; the reason stays visible as the sidecar's error.
-  ipcMain.handle(IPC.inference.probe, async () => {
+  ipcMain.handle(IPC.inference.probe, async (): Promise<Result<ProbeResult>> => {
     const config = await currentConfig();
     const idle = sidecar.status().state === "stopped" || sidecar.status().state === "error";
     if (config.kind === "apple-fm" && config.sidecar !== null && idle) {
       await sidecar.start(config.sidecar);
     }
-    return probe(config);
+    const key = await resolveApiKey(config);
+    const reached = await probe(config, key?.key ?? null);
+    if (!reached.ok) return reached;
+    const context = reached.value.reachable ? await contextFor(config, true) : null;
+    return ok({ ...reached.value, context });
   });
+
+  registerModelIpc(ctx);
 
   ipcMain.handle(IPC.inference.chat, async (_event, raw: unknown): Promise<Result<void>> => {
     const parsed = chatRequestSchema.safeParse(raw);

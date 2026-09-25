@@ -5,16 +5,15 @@
 // chosen play style, and a save is created. With no model there is no world — the caller shows
 // the error and its hint, never a prebuilt world.
 
-import { biblePrompt, type NewWorldContext, originIssues, parseBible } from "@dsl";
-import { dslError } from "@dsl/parse/program";
+import { biblePrompt, type NewWorldContext, parseBible } from "@dsl";
 import { chat } from "@renderer/llm";
 import type { InstanceMeta, WorldBible } from "@shared/cartridge";
 import { fail, ok, type Result } from "@shared/result";
-import type { GenerationEvent, SceneGenerationRequest } from "@shared/scene-generation";
+import type { GenerationEvent } from "@shared/scene-generation";
 import { parseStoryReply, type StoryPlan, storyMessages } from "@shared/story";
 import { openLandCartridge, type PlayStyle } from "./openLandCartridge";
+import { generateOrigin } from "./originScene";
 import { generateProgram } from "./pipeline";
-import { generateSceneArtifact } from "./sceneGeneration";
 
 export type NewWorldStage = "bible" | "story" | "origin" | "publish";
 
@@ -82,6 +81,7 @@ export async function planWorld(
     parse: parseBible,
     maxTokens: 1400,
     temperature: 0.9,
+    ...(signal === undefined ? {} : { signal }),
   });
   if (!bible.ok) return bible;
   if (signal?.aborted) return aborted();
@@ -103,53 +103,14 @@ export async function buildWorld(
 ): Promise<Result<InstanceMeta>> {
   const story = plan.story ?? undefined;
   onStage("origin");
-  const initialBrief = [
-    `Create the open, walkable place where the player wakes in this world: ${ctx.intent.trim()}`,
-    `World core: ${plan.bible.core}`,
-    `Visual style: ${plan.bible.style}`,
-    "Use a countryside biome and a 12 to 24 tile grass or sand floor.",
-    "Place 1 to 3 residents, one sun light, and no exits, monsters, treasure, triggers, or platforms.",
-    "Keep the centre tile empty and every floor edge open.",
-  ]
-    .join("\n")
-    .slice(0, 2_000);
-  let currentSource: string | null = null;
-  let origin = await generateSceneArtifact(
-    sceneRequest("new-room", initialBrief, ctx.language, currentSource),
-    onGenerationEvent,
-    signal,
-  );
+  // Apple's bridge or the chat model, whichever System → Model selected (originScene.ts).
+  const origin = await generateOrigin({
+    world: ctx,
+    bible: plan.bible,
+    ...(onGenerationEvent === undefined ? {} : { onGenerationEvent }),
+    ...(signal === undefined ? {} : { signal }),
+  });
   if (!origin.ok) return origin;
-  let issues = originIssues(origin.value.graph);
-  for (let repair = 0; issues.length > 0 && repair < 2; repair += 1) {
-    currentSource = origin.value.source;
-    const diagnostics = issues
-      .map((issue) => `${issue.message}${issue.hint === undefined ? "" : ` (${issue.hint})`}`)
-      .join("\n")
-      .slice(0, 1_400);
-    origin = await generateSceneArtifact(
-      sceneRequest(
-        "repair-room",
-        `Repair the current origin scene so it is safe and open for play. Fix every issue:\n${diagnostics}`,
-        ctx.language,
-        currentSource,
-      ),
-      onGenerationEvent,
-      signal,
-    );
-    if (!origin.ok) return origin;
-    issues = originIssues(origin.value.graph);
-  }
-  if (issues.length > 0) {
-    return fail(
-      dslError({
-        code: "dsl-origin-unfit",
-        message: `${issues.length} problem(s) make this place unfit to start in.`,
-        hint: issues.map((issue) => `${issue.message} ${issue.hint ?? ""}`.trim()).join(" "),
-        errors: issues,
-      }),
-    );
-  }
 
   onStage("publish");
   // The world keeps the language it was made in, inside its hashed bible (Rule 10).
@@ -189,30 +150,4 @@ function cartridgeIdFor(name: string): string {
       .replace(/^-+|-+$/g, "")
       .slice(0, 60) || "cartridge";
   return `${stem}-${crypto.randomUUID().slice(0, 8)}`;
-}
-
-function sceneRequest(
-  purpose: "new-room" | "repair-room",
-  brief: string,
-  language: string,
-  currentSceneSource: string | null,
-): SceneGenerationRequest {
-  return {
-    intent: {
-      requestId: crypto.randomUUID(),
-      purpose,
-      brief: brief.slice(0, 2_000),
-      language,
-      sceneId: "origin",
-    },
-    state: {
-      worldPlan: null,
-      currentSceneSource,
-      flags: {},
-      inventory: [],
-      assetCatalog: [],
-      capabilityProfile: { entries: [] },
-    },
-    maxRepairAttempts: 2,
-  };
 }

@@ -16,6 +16,7 @@ export {
   ITEM_COMPONENT_NAMES,
   itemLibrary,
   itemSpecs,
+  placeLibrary,
   RULE_COMPONENT_NAMES,
   rulesLibrary,
   rulesSpecs,
@@ -51,6 +52,7 @@ export {
 export { parseDialogue, toDialogue } from "./parse/dialogue";
 export { type ErrandLand, parseErrands, readErrands } from "./parse/errand";
 export { parseItem, toItem } from "./parse/item";
+export { type PlaceContext, type PlaceDraft, parsePlace } from "./parse/place";
 export { parseRules } from "./parse/rules";
 export { parseScene, toSceneGraph } from "./parse/scene";
 export { ARCHETYPE_GUIDE } from "./prompts/archetypes";
@@ -75,6 +77,7 @@ export {
   originIssues,
   originPrompt,
 } from "./prompts/newWorld";
+export { PLACE_EXAMPLE } from "./prompts/place";
 export { SCENE_EXAMPLES, scenePrompt } from "./prompts/scene";
 export { repairPrompt } from "./repair";
 export { DIALOGUE_PROPS } from "./schemas/dialogue";

@@ -21,6 +21,7 @@ import {
 import { doorPosition } from "../engine/home";
 import { LAND_2D_PALETTE } from "../engine/palette";
 import { MONSTER_SPRITES, MONSTER_WIDTH, ROLE_SPRITES, ROLE_WIDTH } from "../engine2d/actorSprites";
+import { keepsakeSpots } from "../engine2d/keepsakes";
 import { cachedTerrain, landTileAt } from "../engine2d/landModel";
 import { placeMarkers } from "../engine2d/placeLayer";
 import { type StoryMarker, type StoryView, storyMarkers } from "../engine2d/storyLayer";
@@ -113,6 +114,32 @@ export function collectContent(source: LandSource, coords: readonly ChunkCoord[]
   for (const foe of source.foes ?? []) {
     const board = MONSTER_BOARDS[foe.kind];
     content.boards.push({ board, x: foe.x, y: height(foe.x, foe.z), z: foe.z, scale: 1 });
+  }
+  if (source.origin !== null) {
+    for (const item of keepsakeSpots(source.origin, source.progress)) {
+      if (
+        !coords.some(
+          (coord) =>
+            item.x >= coord.cx * CHUNK_SIZE &&
+            item.x < (coord.cx + 1) * CHUNK_SIZE &&
+            item.z >= coord.cz * CHUNK_SIZE &&
+            item.z < (coord.cz + 1) * CHUNK_SIZE,
+        )
+      )
+        continue;
+      const y = height(item.x, item.z);
+      content.blocks.push({ x: item.x, y, z: item.z, width: 0.56, height: 0.34 });
+      content.markers.push({
+        key: item.key,
+        x: item.x,
+        y: y + 0.34,
+        z: item.z,
+        color: LAND_2D_PALETTE.treasure,
+        glyph: "✦",
+        label: item.label,
+        beam: false,
+      });
+    }
   }
   content.markers.push(...collectMarkers(source, height));
   return content;

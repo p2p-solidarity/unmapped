@@ -9,6 +9,7 @@ import {
   APPLE_FM_BINARY,
   APPLE_FM_SIDECAR,
   type InferenceConfig,
+  LLAMA_SERVER_PATHS,
   PROVIDER_KINDS,
   PROVIDER_PRESETS,
   type SidecarConfig,
@@ -28,7 +29,13 @@ export const DEFAULT_SIDECAR: SidecarConfig = {
 
 export const sidecarConfigSchema = z.object({
   binaryPath: z.string(),
-  modelPath: z.string(),
+  // llama-server reads GGUF only; anything else is a mistyped path (empty = not chosen yet).
+  modelPath: z
+    .string()
+    .max(4096)
+    .refine((value) => value === "" || value.toLowerCase().endsWith(".gguf"), {
+      message: "must be a .gguf file",
+    }),
   port: z.number().int().min(1).max(65535),
   ctxSize: z.number().int().min(512).max(1_048_576),
 });
@@ -39,11 +46,7 @@ const TRUSTED_API_KEY_ENVS = {
 } as const;
 
 /** Main-owned Homebrew locations; a same-named executable elsewhere is not trusted. */
-const TRUSTED_SIDECAR_PATHS = new Set([
-  "/opt/homebrew/bin/llama-server",
-  "/usr/local/bin/llama-server",
-  APPLE_FM_BINARY,
-]);
+const TRUSTED_SIDECAR_PATHS = new Set<string>([...LLAMA_SERVER_PATHS, APPLE_FM_BINARY]);
 
 /**
  * `z.url()` happily accepts "localhost:8080" (it reads "localhost:" as the protocol), which then
@@ -81,7 +84,8 @@ function endpoint(value: string): URL | null {
   }
 }
 
-function sameEndpoint(left: string, right: string): boolean {
+/** Same scheme, host, port and path (a trailing slash does not count). */
+export function sameEndpoint(left: string, right: string): boolean {
   const a = endpoint(left);
   const b = endpoint(right);
   if (a === null || b === null) return false;
@@ -93,7 +97,7 @@ function sameEndpoint(left: string, right: string): boolean {
   );
 }
 
-function isLoopbackEndpoint(value: string): boolean {
+export function isLoopbackEndpoint(value: string): boolean {
   const parsed = endpoint(value);
   if (parsed === null) return false;
   return (
@@ -175,7 +179,7 @@ export function parseConfig(raw: unknown): Result<InferenceConfig> {
     return fail({
       code: "untrusted-config",
       message: "This inference endpoint or credential source is not trusted.",
-      hint: "Use the OpenAI or OpenUI preset, a loopback local server, or a keyless custom endpoint; sidecars must be llama-server or Apple's fm.",
+      hint: "Use the OpenAI or OpenUI preset, a loopback local server, or a custom endpoint whose key is entered in System → Model; sidecars must be llama-server or Apple's fm.",
     });
   }
   return ok(parsed.data);

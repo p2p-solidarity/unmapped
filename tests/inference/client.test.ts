@@ -85,14 +85,14 @@ describe("buildChatBody", () => {
     expect(buildChatBody(config({ ...PROVIDER_PRESETS.vllm }), request).grammar).toBeUndefined();
   });
 
-  it("sends chat_template_kwargs to ollama but not to vllm", () => {
+  it("switches thinking off for ollama and vllm, never for Apple's fm serve", () => {
+    for (const kind of ["ollama", "vllm"] as const) {
+      expect(
+        buildChatBody(config({ ...PROVIDER_PRESETS[kind] }), request).chat_template_kwargs,
+      ).toEqual({ enable_thinking: false });
+    }
     expect(
-      buildChatBody(config({ ...PROVIDER_PRESETS.ollama }), request).chat_template_kwargs,
-    ).toEqual({
-      enable_thinking: false,
-    });
-    expect(
-      buildChatBody(config({ ...PROVIDER_PRESETS.vllm }), request).chat_template_kwargs,
+      buildChatBody(config({ ...PROVIDER_PRESETS["apple-fm"] }), request).chat_template_kwargs,
     ).toBeUndefined();
   });
 });

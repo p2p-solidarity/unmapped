@@ -23,7 +23,7 @@ import { useEffect, useRef } from "react";
 import { makeKarmaEntry } from "./karmaFile";
 import { openChapterTreasure, talkChapter } from "./land/chapters";
 import { searchAt } from "./land/errands";
-import { enterPlace, leavePlace } from "./land/places";
+import { enterPlace, leavePlace, talkInPlace } from "./land/places";
 import { talkOnLand } from "./land/talk";
 
 export interface InteractionHandlers {
@@ -149,6 +149,11 @@ function dispatch(target: NearbyTarget, handlers: Handlers): void {
   const scene = currentScene();
   switch (target.kind) {
     case "npc":
+      // Inside a place (a chapter's climb or maze too): the words were written with the place.
+      if (session().place !== null) {
+        talkInPlace(target.id);
+        return;
+      }
       // Someone of the story's chapter: their words were written with the chapter.
       if (parseChapterTarget(target.id) !== null) {
         talkChapter(target.id);
@@ -165,7 +170,8 @@ function dispatch(target: NearbyTarget, handlers: Handlers): void {
       });
       return;
     case "altar":
-      session().openAltar();
+      // Wishing at an altar belongs to the legacy archive alone; a cartridge world's is scenery.
+      if (useWorldStore.getState().origin?.kind === "legacy") session().openAltar();
       return;
     case "treasure":
       if (parseChapterTarget(target.id) !== null) openChapterTreasure(target.id);
@@ -226,7 +232,9 @@ export function useInteractions({ onAdvanceFloor, onDescend }: InteractionHandle
       const target = state.lastInteract;
       if (target === null) return;
       // A visitor reads open-land words from the mirrored land; only other interactions go to the host.
-      const readsLocally = target.kind === "npc" && useEngineStore.getState().chunk !== null;
+      const readsLocally =
+        target.kind === "npc" &&
+        (useEngineStore.getState().chunk !== null || useSessionStore.getState().place !== null);
       if (
         !readsLocally &&
         useSessionStore.getState().networkRole === "peer" &&

@@ -3,6 +3,12 @@
 import type { Phrase } from "./phrase";
 
 export const WORKS = {
+  localContextWarning: {
+    en: "This local model has a {n} token context. AI Worlds may not fit; a task that cannot fit is stopped before it reaches the model. Choose a larger context or Cloud API in System → Model.",
+    "zh-TW":
+      "這個本地模型的上下文只有 {n} token，可能裝不下 AI Worlds。空間不足的任務會在送出前停止。請到「系統 → 模型」加大上下文或改用雲端 API。",
+    ja: "このローカルモデルのコンテキストは {n} トークンです。AI Worlds が収まらない場合、送信前に停止します。「システム → モデル」でコンテキストを増やすかクラウド API に切り替えてください。",
+  },
   // ── Library (WorksScreen) ──────────────────────────────────────────────────────────────────
   backToTitle: { en: "← Title", "zh-TW": "← 標題畫面", ja: "← タイトル" },
   heading: { en: "AI Worlds", "zh-TW": "AI 世界", ja: "AI ワールド" },

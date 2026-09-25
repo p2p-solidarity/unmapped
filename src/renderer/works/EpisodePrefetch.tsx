@@ -1,13 +1,21 @@
 // Writes the story ahead while the player walks: the next chapter's people, finds and foes (or its
 // climb or maze) are written in the background, so they already stand at its gate when the player
 // arrives. When every chapter so far is cleared the land first writes the next one (one
-// `@@episode`, up to STORY_CAP) and then its contents. One job at a time; none while a gate's card
-// is open (the card owns writing then — a job in flight is dropped and resumes after); a failure is
-// never retried on its own, because that burns tokens — the card says what failed and offers
-// Retry. Pausing is a per-device preference (localStorage, Rule 2).
+// `@@episode`, up to STORY_CAP) and then its contents. One job at a time. A chapter's write is the
+// shared job of `chapterJobs.ts`: a gate's card opened meanwhile adopts it rather than restarting
+// it, and no new job starts while a card is open. A failure is never retried on its own, because
+// that burns tokens — the card says what failed and offers Retry. Every stop aborts the model call
+// itself. Pausing is a per-device preference (localStorage, Rule 2).
 
 import { useRefreshProbe } from "@renderer/app/inferenceSync";
-import { CHAPTER_CANCELLED, writeChapter } from "@renderer/app/land/chapters";
+import {
+  type ChapterStop,
+  clearChapterFailure,
+  startChapterJob,
+  stopChapterJob,
+  useChapterJobs,
+} from "@renderer/app/land/chapterJobs";
+import { CHAPTER_CANCELLED } from "@renderer/app/land/chapters";
 import { contentLanguage, translate, useT } from "@renderer/i18n";
 import { useLandStore, useSessionStore, useWorldStore } from "@renderer/state";
 import { useInferenceStore } from "@renderer/state/inferenceStore";
@@ -38,13 +46,8 @@ function writePaused(paused: boolean): void {
   }
 }
 
-/** Why a job stopped early: only Cancel waits for Retry; the others resume on their own. */
-type StopReason = "cancel" | "pause" | "panel" | "unmount";
-
-interface Job {
-  /** What is being written, for the card. */
-  label: string;
-  stage: string;
+/** Writing the next chapter's entry (`@@episode`): this card's own job, not a chapter's write. */
+interface ContinueJob {
   stopping: boolean;
 }
 
@@ -95,12 +98,12 @@ export function EpisodePrefetch(): JSX.Element | null {
   const config = useInferenceStore((state) => state.config);
   const probe = useInferenceStore((state) => state.probe);
   const refreshProbe = useRefreshProbe();
+  const shared = useChapterJobs();
   const [paused, setPaused] = useState(readPaused);
-  const [job, setJob] = useState<Job | null>(null);
+  const [next, setNext] = useState<ContinueJob | null>(null);
   const [error, setError] = useState<AppError | null>(null);
   const controller = useRef<AbortController | null>(null);
-  const stopReason = useRef<StopReason | null>(null);
-  const running = useRef(false);
+  const stopReason = useRef<ChapterStop | null>(null);
   const mounted = useRef(true);
 
   const plan = active?.cartridge.story ?? null;
@@ -117,6 +120,13 @@ export function EpisodePrefetch(): JSX.Element | null {
   const wanted = step?.kind === "prepare" || step?.kind === "continue";
   const model = modelProblem(config, probe);
   const landReady = landInstance !== null && landInstance === active?.instance.meta.instanceId;
+  // A chapter that failed (or was cancelled) waits for Retry, here or on its gate's card.
+  const failed =
+    step?.kind === "prepare" &&
+    shared.failure?.instanceId === landInstance &&
+    shared.failure.episodeId === step.episode.id
+      ? shared.failure.error
+      : null;
   const canRun =
     wanted &&
     !paused &&
@@ -126,66 +136,55 @@ export function EpisodePrefetch(): JSX.Element | null {
     bible !== null &&
     model === null &&
     error === null &&
-    job === null;
+    failed === null &&
+    next === null &&
+    shared.job === null;
 
-  const stop = useCallback((reason: StopReason): void => {
+  const stop = useCallback((reason: ChapterStop): void => {
+    stopChapterJob(reason);
     if (controller.current === null) return;
     stopReason.current = reason;
     controller.current.abort();
-    setJob((current) => (current === null ? current : { ...current, stopping: true }));
+    setNext((current) => (current === null ? current : { stopping: true }));
   }, []);
 
-  /** One job: read the latest state, write the next episode's world or the next chapter. */
-  const run = async (): Promise<void> => {
-    if (running.current) return;
+  /** Writes the next chapter's entry onto the story's map (the `continue` step). */
+  const continueStory = async (): Promise<void> => {
+    if (controller.current !== null) return;
     const session = useSessionStore.getState().activeInstance;
     const land = useLandStore.getState();
     const story = session?.cartridge.story ?? null;
     const worldBible = session?.cartridge.bible ?? null;
     if (story === null || worldBible === null || land.progress === null) return;
     const all = storyEpisodes(story, land.progress.storyMore);
-    const next = storyStep(all, land.progress.episodes ?? {});
-    if (next.kind !== "prepare" && next.kind !== "continue") return;
-    running.current = true;
     const abort = new AbortController();
     controller.current = abort;
     stopReason.current = null;
     const instanceId = land.instanceId;
-    setJob({
-      label: next.kind === "prepare" ? next.episode.title : translate("works.landNextChapter"),
-      stage: translate("works.askingModel"),
-      stopping: false,
+    setNext({ stopping: false });
+    const written = await writeNextChapter({
+      logline: story.logline,
+      episodes: all,
+      progress: land.progress.episodes ?? {},
+      carry: land.progress.storyCarry ?? null,
+      language: languageOf(worldBible),
+      bible: worldBible,
+      combat: (useWorldStore.getState().gameplayRules?.combat ?? null) !== null,
+      signal: abort.signal,
     });
-    const toast = useSessionStore.getState().toast;
-    let problem: AppError | null = null;
-    if (next.kind === "prepare") {
-      const written = await writeChapter(next.episode, () => abort.signal.aborted);
-      if (written.ok)
-        toast("success", translate("works.chapterReady", { title: next.episode.title }));
-      else problem = written.error;
-    } else {
-      const written = await writeNextChapter({
-        logline: story.logline,
-        episodes: all,
-        progress: land.progress.episodes ?? {},
-        carry: land.progress.storyCarry ?? null,
-        language: languageOf(worldBible),
-        bible: worldBible,
-        combat: (useWorldStore.getState().gameplayRules?.combat ?? null) !== null,
-        signal: abort.signal,
-      });
-      const sameLand = useLandStore.getState().instanceId === instanceId;
-      if (written.ok && sameLand && stopReason.current !== "cancel") {
-        useLandStore.getState().addEpisode(written.value);
-        const { title, place } = written.value;
-        toast("success", translate("works.newChapterOnMap", { title, place }));
-      } else if (!written.ok) problem = written.error;
+    // A reply that made it back before a stop is kept: it is paid for, and resuming would ask again.
+    const sameLand = useLandStore.getState().instanceId === instanceId;
+    if (written.ok && sameLand) {
+      useLandStore.getState().addEpisode(written.value);
+      const { title, place } = written.value;
+      const line = translate("works.newChapterOnMap", { title, place });
+      useSessionStore.getState().toast("success", line);
     }
-    running.current = false;
     controller.current = null;
     const reason = stopReason.current;
     if (!mounted.current) return;
-    setJob(null);
+    setNext(null);
+    if (written.ok) return;
     if (abort.signal.aborted) {
       if (reason === "cancel") {
         setError({
@@ -196,58 +195,71 @@ export function EpisodePrefetch(): JSX.Element | null {
       }
       return;
     }
-    // A cancel without an abort means the save changed underneath: nothing to report here.
-    if (problem !== null && problem.code !== CHAPTER_CANCELLED) setError(problem);
+    setError(written.error);
   };
 
-  // Leaving play stops the job. (StrictMode's rehearsal unmount lands here too; the job it stops
-  // then ends like a pause and the next one starts on the real mount.)
+  /** One job: read the latest state, write the next chapter or the next chapter's entry. */
+  const run = (): void => {
+    const session = useSessionStore.getState().activeInstance;
+    const land = useLandStore.getState();
+    const story = session?.cartridge.story ?? null;
+    if (story === null || land.progress === null) return;
+    const now = storyStep(
+      storyEpisodes(story, land.progress.storyMore),
+      land.progress.episodes ?? {},
+    );
+    if (now.kind === "prepare") startChapterJob(now.episode);
+    else if (now.kind === "continue") void continueStory();
+  };
+
+  // Leaving play or switching saves stops the old job. (StrictMode's rehearsal unmount lands here
+  // too; the job it stops then ends like a pause and the next one starts on the real mount.)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: a save change deliberately runs this cleanup
   useEffect(() => {
     mounted.current = true;
     return () => {
       mounted.current = false;
+      stopChapterJob("unmount");
       stopReason.current = "unmount";
       controller.current?.abort();
     };
-  }, []);
+  }, [landInstance]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: run reads the latest stores itself; stepKey is the step's identity
   useEffect(() => {
-    if (canRun) void run();
+    if (canRun) run();
   }, [canRun, stepKey]);
 
-  // The gate's panel owns generation while it is open.
-  useEffect(() => {
-    if (episodeOpen !== null) stop("panel");
-  }, [episodeOpen, stop]);
-
-  const setPause = (next: boolean): void => {
-    writePaused(next);
-    setPaused(next);
-    if (next) stop("pause");
+  const setPause = (nextPaused: boolean): void => {
+    writePaused(nextPaused);
+    setPaused(nextPaused);
+    if (nextPaused) stop("pause");
   };
 
   const retry = (): void => {
     setError(null);
+    clearChapterFailure();
     refreshProbe();
   };
 
   if (plan === null || peer) return null;
 
-  if (job !== null) {
+  const job = shared.job;
+  if (job !== null || next !== null) {
+    const stopping = job?.stopping === true || next?.stopping === true;
     return (
       <Surface variant="overlay" padding="sm" style={card}>
         <Text variant="caption" tone="muted">
-          {t("works.writingAhead", { label: job.label })}
+          {t("works.writingAhead", { label: job?.title ?? t("works.landNextChapter") })}
         </Text>
         <Text variant="caption" tone="accent">
-          {job.stopping ? t("works.stopping") : job.stage}
+          {stopping ? t("works.stopping") : t("works.askingModel")}
         </Text>
         <div style={{ display: "flex", gap: space.sm }}>
-          <Button variant="secondary" disabled={job.stopping} onClick={() => setPause(true)}>
+          <Button variant="secondary" disabled={stopping} onClick={() => setPause(true)}>
             {t("works.pause")}
           </Button>
-          <Button variant="ghost" disabled={job.stopping} onClick={() => stop("cancel")}>
+          <Button variant="ghost" disabled={stopping} onClick={() => stop("cancel")}>
             {t("common.cancel")}
           </Button>
         </div>
@@ -270,7 +282,7 @@ export function EpisodePrefetch(): JSX.Element | null {
     );
   }
 
-  const shown = error ?? (model === "waiting" ? null : model);
+  const shown = error ?? failed ?? (model === "waiting" ? null : model);
   if (shown === null) return null;
   return (
     <Surface variant="overlay" padding="sm" style={card}>

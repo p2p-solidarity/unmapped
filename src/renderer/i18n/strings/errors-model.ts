@@ -16,6 +16,18 @@ const MODEL_SCENE: ErrorText = {
 
 export const MODEL_ERRORS: Record<string, ErrorText> = {
   // ── Reaching the model ──────────────────────────────────────────────────────────────────────
+  "model-context-too-small": {
+    message: {
+      en: "This task needs more room than the local model has.",
+      "zh-TW": "這項任務超過了本地模型的上下文容量。",
+      ja: "このタスクはローカルモデルのコンテキスト容量を超えています。",
+    },
+    hint: {
+      en: "Choose a larger context or Cloud API in System → Model.",
+      "zh-TW": "請到「系統 → 模型」加大上下文或改用雲端 API。",
+      ja: "「システム → モデル」でコンテキストを増やすかクラウド API に切り替えてください。",
+    },
+  },
   "connection-refused": {
     message: {
       en: "Could not reach the model.",
@@ -23,10 +35,10 @@ export const MODEL_ERRORS: Record<string, ErrorText> = {
       ja: "モデルに接続できません。",
     },
     hint: {
-      en: "Start the model server (llama-server, Ollama or Apple's fm), or check the endpoint in F12 → Inference.",
+      en: "Start the model server (llama-server, Ollama or Apple's fm), or check the endpoint in System → Model.",
       "zh-TW":
-        "請啟動模型伺服器（llama-server、Ollama 或 Apple 的 fm），或到「F12 → 推論」檢查端點。",
-      ja: "モデルのサーバー（llama-server・Ollama・Apple の fm）を起動するか、「F12 → 推論」でエンドポイントを確認してください。",
+        "請啟動模型伺服器（llama-server、Ollama 或 Apple 的 fm），或到「系統 → 模型」檢查端點。",
+      ja: "モデルのサーバー（llama-server・Ollama・Apple の fm）を起動するか、「システム → モデル」でエンドポイントを確認してください。",
     },
   },
   auth: {
@@ -36,9 +48,9 @@ export const MODEL_ERRORS: Record<string, ErrorText> = {
       ja: "モデルのプロバイダーが API キーを拒否しました。",
     },
     hint: {
-      en: "Check the key in the .env file, then restart Unwritten Land.",
-      "zh-TW": "請檢查 .env 檔案裡的金鑰，然後重新啟動 Unwritten Land。",
-      ja: ".env ファイルのキーを確認してから、Unwritten Land を再起動してください。",
+      en: "Enter a valid key in System → Model, or check the key in .env.",
+      "zh-TW": "請到「系統 → 模型」輸入有效金鑰，或檢查 .env 裡的金鑰。",
+      ja: "「システム → モデル」で有効なキーを入力するか、.env のキーを確認してください。",
     },
   },
   "no-api-key": {
@@ -48,9 +60,9 @@ export const MODEL_ERRORS: Record<string, ErrorText> = {
       ja: "API キーが設定されていません。",
     },
     hint: {
-      en: "Add the key to the .env file, then restart Unwritten Land.",
-      "zh-TW": "請把金鑰加進 .env 檔案，然後重新啟動 Unwritten Land。",
-      ja: ".env ファイルにキーを追加してから、Unwritten Land を再起動してください。",
+      en: "Enter a key in System → Model, or add it to .env.",
+      "zh-TW": "請到「系統 → 模型」輸入金鑰，或將金鑰加入 .env。",
+      ja: "「システム → モデル」でキーを入力するか、.env に追加してください。",
     },
   },
   "model-not-found": {
@@ -60,9 +72,9 @@ export const MODEL_ERRORS: Record<string, ErrorText> = {
       ja: "サーバーに選んだモデルがありません。",
     },
     hint: {
-      en: "Probe the endpoint in F12 → Inference and pick one of the models it lists.",
-      "zh-TW": "請到「F12 → 推論」重新偵測端點，並從列出的模型中選一個。",
-      ja: "「F12 → 推論」でエンドポイントを再確認し、表示されたモデルから選んでください。",
+      en: "Check the connection in System → Model and pick a model the server offers.",
+      "zh-TW": "請到「系統 → 模型」檢查連線，並選擇伺服器提供的模型。",
+      ja: "「システム → モデル」で接続を確認し、サーバーが提供するモデルを選んでください。",
     },
   },
   provider: {
@@ -80,9 +92,9 @@ export const MODEL_ERRORS: Record<string, ErrorText> = {
       ja: "モデルが時間内に応答しませんでした。",
     },
     hint: {
-      en: "Try a smaller model or a shorter context, or check the provider in F12 → Inference.",
-      "zh-TW": "請改用較小的模型或較短的上下文，或到「F12 → 推論」檢查供應商。",
-      ja: "小さいモデルや短いコンテキストを試すか、「F12 → 推論」でプロバイダーを確認してください。",
+      en: "Try a smaller model or a shorter context, or check the provider in System → Model.",
+      "zh-TW": "請改用較小的模型或較短的上下文，或到「系統 → 模型」檢查供應商。",
+      ja: "小さいモデルや短いコンテキストを試すか、「システム → モデル」でプロバイダーを確認してください。",
     },
   },
   "invalid-config": {
@@ -104,9 +116,9 @@ export const MODEL_ERRORS: Record<string, ErrorText> = {
       ja: "このエンドポイントやキーの取得元は使えません。",
     },
     hint: {
-      en: "Use a preset, a local server on this machine, or a custom endpoint that needs no key.",
-      "zh-TW": "請使用預設選項、這台電腦上的本機伺服器，或不需要金鑰的自訂端點。",
-      ja: "プリセット、このマシン上のローカルサーバー、またはキー不要のカスタムエンドポイントを使ってください。",
+      en: "Use a preset, a local server, or enter a custom endpoint's key in System → Model.",
+      "zh-TW": "請使用預設選項、本機伺服器，或到「系統 → 模型」輸入自訂端點的金鑰。",
+      ja: "プリセットかローカルサーバーを使うか、「システム → モデル」でカスタムエンドポイントのキーを入力してください。",
     },
   },
   "config-write-failed": {
@@ -151,9 +163,9 @@ export const MODEL_ERRORS: Record<string, ErrorText> = {
       ja: "設定したパスに .gguf モデルファイルがありません。",
     },
     hint: {
-      en: "Download a .gguf model and set it as the model path in F12 → Inference.",
-      "zh-TW": "請下載 .gguf 模型，並到「F12 → 推論」設為模型路徑。",
-      ja: ".gguf モデルをダウンロードし、「F12 → 推論」でモデルのパスに設定してください。",
+      en: "Download a .gguf model and choose its file in System → Model.",
+      "zh-TW": "請下載 .gguf 模型，並到「系統 → 模型」選擇模型檔案。",
+      ja: ".gguf モデルをダウンロードし、「システム → モデル」でファイルを選んでください。",
     },
   },
   "sidecar-exited": {
@@ -189,9 +201,9 @@ export const MODEL_ERRORS: Record<string, ErrorText> = {
       ja: "このシーンを書けるモデルがありません。",
     },
     hint: {
-      en: "Start Apple's on-device model or llama.cpp, or set up an OpenAI-compatible endpoint in F12 → Inference.",
-      "zh-TW": "請啟動 Apple 的裝置端模型或 llama.cpp，或到「F12 → 推論」設定相容 OpenAI 的端點。",
-      ja: "Apple のオンデバイスモデルか llama.cpp を起動するか、「F12 → 推論」で OpenAI 互換のエンドポイントを設定してください。",
+      en: "Start Apple's on-device model or llama.cpp, or set up an OpenAI-compatible endpoint in System → Model.",
+      "zh-TW": "請啟動 Apple 的裝置端模型或 llama.cpp，或到「系統 → 模型」設定相容 OpenAI 的端點。",
+      ja: "Apple のオンデバイスモデルか llama.cpp を起動するか、「システム → モデル」で OpenAI 互換のエンドポイントを設定してください。",
     },
   },
   "provider-generation-failed": {
@@ -444,9 +456,9 @@ export const MODEL_ERRORS: Record<string, ErrorText> = {
       ja: "モデルが設定されていないため、次の章は先に書かれません。",
     },
     hint: {
-      en: "Set up a provider in F12 → Inference. Walking and chapters already played still work.",
-      "zh-TW": "請到「F12 → 推論」設定供應商。走動和已玩過的章節仍然可以進行。",
-      ja: "「F12 → 推論」でプロバイダーを設定してください。歩き回ることと、プレイ済みの章はそのまま遊べます。",
+      en: "Set up a provider in System → Model. Walking and chapters already played still work.",
+      "zh-TW": "請到「系統 → 模型」設定供應商。走動和已玩過的章節仍然可以進行。",
+      ja: "「システム → モデル」でプロバイダーを設定してください。歩き回ることと、プレイ済みの章はそのまま遊べます。",
     },
   },
   "story-model-offline": {
@@ -456,9 +468,9 @@ export const MODEL_ERRORS: Record<string, ErrorText> = {
       ja: "モデルに接続できないため、次の章は先に書かれません。",
     },
     hint: {
-      en: "Start the model or check the provider in F12 → Inference, then press Retry.",
-      "zh-TW": "請啟動模型，或到「F12 → 推論」檢查供應商，然後按「重試」。",
-      ja: "モデルを起動するか「F12 → 推論」でプロバイダーを確認してから、「リトライ」を押してください。",
+      en: "Start the model or check the provider in System → Model, then press Retry.",
+      "zh-TW": "請啟動模型，或到「系統 → 模型」檢查供應商，然後按「重試」。",
+      ja: "モデルを起動するか「システム → モデル」でプロバイダーを確認してから、「リトライ」を押してください。",
     },
   },
 };

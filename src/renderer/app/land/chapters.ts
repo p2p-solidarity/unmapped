@@ -21,11 +21,11 @@ import {
   parseChapterMonster,
   parseChapterTarget,
 } from "@shared/chapter";
-import { err, errored, ok, type Result, ready } from "@shared/result";
+import { type AppError, err, errored, fail, ok, type Result, ready } from "@shared/result";
 import { episodeGate, mergeCarry, type StoryEpisode, storyEpisodes } from "@shared/story";
 import { makeKarmaEntry } from "../karmaFile";
 import { checkpointCurrentInstance } from "../usePersistWorld";
-import { playablePlace } from "./places";
+import { playablePlace, residentWords } from "./places";
 
 export const CHAPTER_CANCELLED = "chapter-cancelled";
 
@@ -40,6 +40,11 @@ function stageOf(id: string): ChapterStage | null {
   return useLandStore.getState().progress?.episodes?.[id]?.stage ?? null;
 }
 
+/** A failed call that was aborted is a cancellation, whatever the transport said about it. */
+function cancelledOr(error: AppError, signal: AbortSignal): Result<never> {
+  return signal.aborted ? err(CHAPTER_CANCELLED, "Cancelled; nothing was changed.") : fail(error);
+}
+
 export function chapterParts(draft: ChapterDraft): ChapterParts {
   return {
     npcs: draft.npcs.map((npc) => npc.id),
@@ -50,12 +55,14 @@ export function chapterParts(draft: ChapterDraft): ChapterParts {
 
 /**
  * Writes one chapter and stores it in the save: a Chapter program for the land, or a place's
- * Scene program for a climb or a maze. One model call (plus at most two repairs); nothing is
- * stored when it fails or when the save changed meanwhile.
+ * Scene program and its residents' words for a climb or a maze. One model call (plus at most two
+ * repairs); aborting `signal` stops the call itself. Nothing is stored when it fails, when the call
+ * was aborted before its reply or when the save changed meanwhile. Callers go through
+ * `chapterJobs.ts`, so one chapter is only ever written once at a time.
  */
 export async function writeChapter(
   episode: StoryEpisode,
-  cancelled: () => boolean,
+  signal: AbortSignal,
 ): Promise<Result<ChapterStage>> {
   const active = useSessionStore.getState().activeInstance;
   const land = useLandStore.getState();
@@ -70,6 +77,7 @@ export async function writeChapter(
   const kind = chapterKind(episode.kind);
   const place = chapterPlaceKind(kind);
   let source: string;
+  let dialogues: Record<string, string> | null = null;
   if (place === null) {
     const carry = land.progress.storyCarry ?? null;
     const written = await generateChapter({
@@ -82,8 +90,9 @@ export async function writeChapter(
       combat,
       language,
       bible,
+      signal,
     });
-    if (!written.ok) return written;
+    if (!written.ok) return cancelledOr(written.error, signal);
     source = `${written.value.source.replace(/\n*$/, "")}\n`;
   } else {
     const written = await generatePlace({
@@ -92,18 +101,31 @@ export async function writeChapter(
       combat,
       language,
       bible,
+      signal,
     });
-    if (!written.ok) return written;
-    source = `${serializeScene(written.value.graph).replace(/\n*$/, "")}\n`;
+    if (!written.ok) return cancelledOr(written.error, signal);
+    source = `${serializeScene(written.value.graph.graph).replace(/\n*$/, "")}\n`;
+    const words = residentWords(written.value.graph.dialogues);
+    if (!words.ok) return words;
+    dialogues = words.value;
   }
-  if (cancelled() || useLandStore.getState().instanceId !== instanceId) {
-    return err(CHAPTER_CANCELLED, "Cancelled; nothing was changed.");
+  // A chapter that made it back before a stop is kept: it is paid for, and a resume would ask again.
+  if (useLandStore.getState().instanceId !== instanceId) {
+    return err(CHAPTER_CANCELLED, "The save changed meanwhile; nothing was changed.");
   }
   if (source.length > CHAPTER_LIMITS.sourceChars) {
     return err("chapter-too-large", "The model wrote more than a chapter can hold.", "Retry.");
   }
   const seed = crypto.getRandomValues(new Uint32Array(1))[0] ?? 1;
-  const stage: ChapterStage = { kind, source, seed, found: [], felled: [], met: [] };
+  const stage: ChapterStage = {
+    kind,
+    source,
+    ...(dialogues === null ? {} : { dialogues }),
+    seed,
+    found: [],
+    felled: [],
+    met: [],
+  };
   useLandStore.getState().setEpisode(episode.id, { stage });
   void checkpointCurrentInstance();
   return ok(stage);

@@ -3,6 +3,7 @@
 // here; when a label is empty the prompt degrades to the verb alone.
 
 import { type StringKey, translate } from "@renderer/i18n";
+import { useWorldStore } from "@renderer/state";
 import type { NearbyTarget } from "@shared/events";
 import { PLACE_BACK, PLACE_GOAL } from "@shared/places";
 
@@ -28,7 +29,10 @@ export function nearbyPrompt(target: NearbyTarget | null): string | null {
       if (label === PLACE_GOAL) return `${PREFIX}${translate("hud.promptFinish")}`;
       return `${PREFIX}${translate("hud.promptDescend")}`;
     case "altar":
-      return `${PREFIX}${translate("hud.promptWish")}`;
+      // Only the legacy archive still wishes at altars; elsewhere an altar is scenery.
+      return useWorldStore.getState().origin?.kind === "legacy"
+        ? `${PREFIX}${translate("hud.promptWish")}`
+        : null;
     case "monster":
       return `${PREFIX}${named(label, "hud.promptInspectName", "hud.promptInspect")}`;
     case "trigger":

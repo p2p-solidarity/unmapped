@@ -116,7 +116,8 @@ export function PlayScreen() {
       )}
       <Hud />
       <DialogueCard />
-      <AltarPanel />
+      {/* The wish altar was cut from cartridge play (plan.md §9); the legacy archive keeps it. */}
+      {legacy ? <AltarPanel /> : null}
       <ChangeProposalPanel />
       <DoorPanel />
       <ForeignDoorCard />

@@ -227,7 +227,11 @@ export function stepHostile(
         walk(self, self.home, 0, speed * FOE_TUNING.returnFactor, delta, ground, others);
       }
       // Wedged on the way back: it slips home rather than standing lost in the field.
-      if (ground === null || distance(self, self.home) <= HOME || self.stuck > FOE_TUNING.giveUpSeconds) {
+      if (
+        ground === null ||
+        distance(self, self.home) <= HOME ||
+        self.stuck > FOE_TUNING.giveUpSeconds
+      ) {
         self.x = self.home.x;
         self.z = self.home.z;
         self.mode = "idle";

@@ -3,7 +3,7 @@
 // Triggers are separate: entering one fires `interact({ kind: "trigger" })` once per floor.
 
 import { useFrame } from "@react-three/fiber";
-import { useEngineStore } from "@renderer/state";
+import { useEngineStore, useWorldStore } from "@renderer/state";
 import type { SceneGraph } from "@shared/world";
 import { type JSX, type RefObject, useEffect, useMemo, useRef } from "react";
 import type * as THREE from "three";
@@ -39,7 +39,11 @@ export function Proximity({
   extra?: readonly TargetPoint[];
 }): JSX.Element | null {
   const opened = useEngineStore((state) => state.openedTreasures);
-  const targets = useMemo(() => [...sceneTargets(graph, opened), ...extra], [graph, opened, extra]);
+  const legacy = useWorldStore((state) => state.origin?.kind === "legacy");
+  const targets = useMemo(
+    () => [...sceneTargets(graph, opened, legacy), ...extra],
+    [graph, opened, legacy, extra],
+  );
   const lastKey = useRef<string | null>(null);
   const fired = useRef<Set<string>>(new Set());
   const debug = useMemo(() => isDebugEnabled(), []);

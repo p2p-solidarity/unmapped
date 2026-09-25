@@ -1,0 +1,322 @@
+UNWRITTEN
+LAND
+
+未記之地
+
+繼續遊戲
+新遊戲
+創作遊戲
+AI 世界
+加入房間
+加入大陸
+卡帶
+系統
+↑
+↓
+選擇
+Enter
+確定
+shot docs/e2e/2026-09-25-play-loop/01-title.jpg
+clicked "加入大陸" at 254,665
+UNWRITTEN
+LAND
+
+未記之地
+
+繼續遊戲
+新遊戲
+創作遊戲
+AI 世界
+加入房間
+加入大陸
+卡帶
+系統
+加入大陸
+選擇要帶來的存檔世界，再輸入夥伴的門牌。
+尚無存檔世界。請先創作或開始遊戲。
+夥伴的門牌代碼
+穿過這扇門
+Esc
+返回
+shot docs/e2e/2026-09-25-play-loop/02-continent-title.jpg
+clicked "新遊戲" at 254,453
+{"result":{"type":"undefined"}}
+"TEST-2E2E"
+clicked "開始" at 720,484
+未記之地 · TEST-2E2E
+種子
+TEST-2E2E
+大地
+0 · 0
+顯影中…
+因果
+0 筆
+背包
+道具 0 · 素材 0
+地貌
+COUNTRYSIDE
+這一層沒有進行中的任務。
+連線中
+openai · gpt-5.4-mini
+openai
+模型思考中…
+48 FPS
+E
+E · 開門
+WASD / 點擊 移動 · Shift 衝刺 · E 互動 · N 留言 · V 畫面
+← 主頁
+調整機制
+主控台
+F12
+留言
+N
+畫面：HD-2D
+V
+shot docs/e2e/2026-09-25-play-loop/03-land-hd2d.jpg
+未記之地 · TEST-2E2E
+種子
+TEST-2E2E
+大地
+0 · 0
+顯影中…
+因果
+0 筆
+背包
+道具 0 · 素材 0
+地貌
+COUNTRYSIDE
+這一層沒有進行中的任務。
+連線中
+openai · gpt-5.4-mini
+openai
+模型思考中…
+45 FPS
+E
+E · 開門
+WASD / 點擊 移動 · Shift 衝刺 · E 互動 · N 留言 · V 畫面
+← 主頁
+調整機制
+主控台
+F12
+留言
+N
+畫面：HD-2D
+V
+門
+轉盤 1
+— 空 —
+轉盤 2
+— 空 —
+轉盤 3
+— 空 —
+轉盤 4
+— 空 —
+把見證過的地點設定到轉盤 1
+還沒見證過其他地點。先出門走走，去看看別的地方吧。
+大陸
+這個世界的門牌：VTKEHX
+敞開你的門，每位穿過它的夥伴都會把自己的世界帶來，與你的世界連成一片大陸。
+向夥伴敞開我的門
+夥伴的門牌代碼
+設定到轉盤 1
+穿過這扇門
+你攜帶的紀念品
+沒有可以擺上架子的東西。完成委託後，居民會交給你紀念品。
+關閉
+shot docs/e2e/2026-09-25-play-loop/04-door.jpg
+clicked "關閉" at 720,713
+未記之地 · TEST-2E2E
+種子
+TEST-2E2E
+大地
+0 · 0
+顯影中…
+因果
+0 筆
+背包
+道具 0 · 素材 0
+地貌
+COUNTRYSIDE
+這一層沒有進行中的任務。
+連線中
+openai · gpt-5.4-mini
+openai
+模型思考中…
+60 FPS
+E
+E · 開門
+WASD / 點擊 移動 · Shift 衝刺 · E 互動 · N 留言 · V 畫面
+← 主頁
+調整機制
+主控台
+F12
+留言
+N
+畫面：16-bit
+V
+shot docs/e2e/2026-09-25-play-loop/05-land-pixel.jpg
+clicked "← 主頁" at 519,827
+clicked "加入大陸" at 254,665
+UNWRITTEN
+LAND
+
+未記之地
+
+繼續遊戲
+新遊戲
+創作遊戲
+AI 世界
+加入房間
+加入大陸
+卡帶
+系統
+加入大陸
+選擇要帶來的存檔世界，再輸入夥伴的門牌。
+未記之地 · TEST-2E2E
+夥伴的門牌代碼
+穿過這扇門
+Esc
+返回
+shot docs/e2e/2026-09-25-play-loop/06-title-saved-world.jpg
+clicked "未記之地 · TEST-2E2E" at 1008,598
+{"result":{"type":"undefined"}}
+clicked "穿過這扇門" at 1008,749
+未記之地 · TEST-2E2E
+種子
+TEST-2E2E
+大地
+0 · 0
+顯影中…
+大陸 ABCD23 · 已連線 · 0 位夥伴
+因果
+0 筆
+背包
+道具 0 · 素材 0
+地貌
+COUNTRYSIDE
+這一層沒有進行中的任務。
+連線中
+openai · gpt-5.4-mini
+openai
+模型思考中…
+60 FPS
+E
+E · 開門
+WASD / 點擊 移動 · Shift 衝刺 · E 互動 · N 留言 · V 畫面
+← 主頁
+調整機制
+主控台
+F12
+留言
+N
+畫面：16-bit
+V
+shot docs/e2e/2026-09-25-play-loop/07-continent-joined.jpg
+clicked "調整機制" at 593,827
+clicked "新增關卡" at 448,317
+clicked "地城" at 934,385
+{"result":{"type":"undefined"}}
+clicked "新增這個關卡" at 720,558
+未記之地 · TEST-2E2E
+種子
+TEST-2E2E
+大地
+0 · 0
+已記 · 石坡空地
+大陸 ABCD23 · 已連線 · 0 位夥伴
+因果
+1 筆
+背包
+道具 0 · 素材 0
+上次選擇：石坡空地
+地貌
+COUNTRYSIDE
+這一層沒有進行中的任務。
+連線中
+openai · gpt-5.4-mini
+openai
+60 FPS
+E
+E · 開門
+WASD / 點擊 移動 · Shift 衝刺 · E 互動 · N 留言 · V 畫面
+← 主頁
+調整機制
+主控台
+F12
+留言
+N
+畫面：16-bit
+V
+修改規則
+新增關卡
+在這片大地新增關卡
+一段橫向捲軸關卡或一座格子地城，現在就寫進這個存檔。從大地上的入口走進去，出來時回到原地，並帶著找到的東西。
+橫向捲軸
+沿著一條路奔跑跳躍、攀上平台，出口在最遠端。
+地城
+第一人稱的格子迷宮；終點藏在走廊的某處。
+這是什麼地方？（選填 — 寫上北／南／東／西可以指定方向）
+青苔洞窟
+入口已經出現在大地上（區塊 0, -1）。走到標記旁按 E。它屬於這個存檔，其他東西都沒有改變。
+新增這個關卡
+關閉
+["dungeon","青苔洞窟",["keeper_a"]]
+shot docs/e2e/2026-09-25-play-loop/08-place-generation.jpg
+clicked "關閉" at 329,650
+["p1",0,-1]
+未記之地 · TEST-2E2E
+第 1 層
+因果
+1 筆
+背包
+道具 0 · 素材 0
+上次選擇：石坡空地
+地貌
+COUNTRYSIDE
+這一層沒有進行中的任務。
+連線中
+openai · gpt-5.4-mini
+openai
+模型思考中…
+60 FPS
+E
+E · 回到大地
+WASD 移動 · F 手電筒 · E 互動
+← 主頁
+調整機制
+主控台
+F12
+鏡頭：FPS · 場景鎖定
+shot docs/e2e/2026-09-25-play-loop/09-place-entered.jpg
+"keeper_a"
+未記之地 · TEST-2E2E
+第 1 層
+因果
+1 筆
+背包
+道具 0 · 素材 0
+上次選擇：石坡空地
+地貌
+COUNTRYSIDE
+這一層沒有進行中的任務。
+連線中
+openai · gpt-5.4-mini
+openai
+模型思考中…
+60 FPS
+E
+E · 回到大地
+WASD 移動 · F 手電筒 · E 互動
+← 主頁
+調整機制
+主控台
+F12
+鏡頭：FPS · 場景鎖定
+守洞人
+外頭潮氣重。這洞裡的路，靠青苔記住腳步。
+我想往裡走
+1
+先在這裡看看
+2
+離開
+shot docs/e2e/2026-09-25-play-loop/10-place-resident.jpg

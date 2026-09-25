@@ -12,7 +12,14 @@ const config: InferenceConfig = {
 };
 
 function probe(value: Partial<ProbeResult> = {}): Loadable<ProbeResult> {
-  return ready({ reachable: true, models: [], latencyMs: 42.4, serverName: null, ...value });
+  return ready({
+    reachable: true,
+    models: [],
+    latencyMs: 42.4,
+    serverName: null,
+    context: null,
+    ...value,
+  });
 }
 
 function inference(overrides: Partial<InferenceSlice> = {}): InferenceSlice {

@@ -38,9 +38,14 @@ export function monsterLabel(kind: string, level: number): string {
 
 /**
  * Every point the player can interact with. `opened` treasure ids are dropped so a looted chest
- * stops offering a prompt. Quests are never targets — they live in the HUD.
+ * stops offering a prompt. Quests are never targets — they live in the HUD. Altar interaction is
+ * offered only to the legacy archive; in cartridge worlds the prop is scenery.
  */
-export function sceneTargets(scene: SceneGraph, opened: readonly string[] = []): TargetPoint[] {
+export function sceneTargets(
+  scene: SceneGraph,
+  opened: readonly string[] = [],
+  allowAltar = true,
+): TargetPoint[] {
   const points: TargetPoint[] = [];
   for (const npc of scene.npcs) {
     const [x, z] = tileToWorld(npc.x, npc.z);
@@ -67,7 +72,7 @@ export function sceneTargets(scene: SceneGraph, opened: readonly string[] = []):
     points.push({ kind: "exit", id: exitId(exit.x, exit.z), label: exit.to, x, z, reach: 0 });
   }
   for (const prop of scene.props) {
-    if (prop.kind !== "altar") continue;
+    if (!allowAltar || prop.kind !== "altar") continue;
     const [x, z] = tileToWorld(prop.x, prop.z);
     points.push({ kind: "altar", id: altarId(prop.x, prop.z), label: "Altar", x, z, reach: 0 });
   }

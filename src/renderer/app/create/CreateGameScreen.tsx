@@ -11,10 +11,11 @@ import {
   type WorldPlan,
 } from "@renderer/narrative/newWorld";
 import { PEACEFUL } from "@renderer/narrative/openLandCartridge";
+import { type BuildReadiness, buildReadiness } from "@renderer/narrative/originScene";
 import { generationEventLabel } from "@renderer/narrative/sceneGeneration";
 import { useInferenceStore, useSessionStore } from "@renderer/state";
 import { Button, ErrorBlock, Surface, space, Text } from "@renderer/ui";
-import type { AppError } from "@shared/result";
+import { type AppError, fromResult, idle, type Loadable, loading } from "@shared/result";
 import { storyPlanSchema } from "@shared/story";
 import { type JSX, useEffect, useRef, useState } from "react";
 import { useRefreshProbe } from "../inferenceSync";
@@ -70,11 +71,20 @@ export function CreateGameScreen(): JSX.Element {
   const [stage, setStage] = useState<NewWorldStage | null>(null);
   const [progress, setProgress] = useState<string | null>(null);
   const [error, setError] = useState<AppError | null>(null);
+  const [readiness, setReadiness] = useState<Loadable<BuildReadiness>>(idle());
   const controller = useRef<AbortController | null>(null);
 
   // The probe on screen may be from app start; look again the moment the player wants a world.
   useEffect(() => {
     refreshProbe();
+    let alive = true;
+    setReadiness(loading());
+    void buildReadiness().then((result) => {
+      if (alive) setReadiness(fromResult(result));
+    });
+    return () => {
+      alive = false;
+    };
   }, [refreshProbe]);
 
   const offline: AppError | null =
@@ -165,6 +175,32 @@ export function CreateGameScreen(): JSX.Element {
             />
           )}
           {offline === null ? null : <ErrorBlock error={offline} />}
+          {readiness.status === "ready" && readiness.value.reachable ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: space.xs }}>
+              <Text variant="caption" tone="success">
+                {t("create.modelReadiness", {
+                  provider: readiness.value.kind,
+                  model: readiness.value.model,
+                  ms: readiness.value.latencyMs,
+                })}
+              </Text>
+              <Text variant="caption" tone="dim">
+                {t(
+                  readiness.value.route === "apple-bridge"
+                    ? "create.modelRouteBridge"
+                    : "create.modelRouteChat",
+                )}
+              </Text>
+              {readiness.value.context === null ? null : (
+                <Text variant="caption" tone="dim">
+                  {t("create.modelContext", {
+                    n: readiness.value.context.tokens,
+                    source: readiness.value.context.source,
+                  })}
+                </Text>
+              )}
+            </div>
+          ) : null}
           {error === null ? null : <ErrorBlock error={error} />}
           {step === 1 && problem !== null ? <Text tone="danger">{problem}</Text> : null}
           {stage === null ? null : <Text tone="accent">{progress ?? t(STAGES[stage])}</Text>}

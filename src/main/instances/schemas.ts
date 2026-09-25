@@ -86,6 +86,12 @@ export const felledLedgerSchema = z
 /** Local ids of what a chapter's player has done: people met, treasures opened, foes felled. */
 const doneIds = z.array(z.string().max(64)).max(CHAPTER_LIMITS.doneIds);
 
+/** A place's residents' stored words: Dialogue programs keyed by NPC id (read by parseDialogue). */
+const residentWords = z
+  .record(z.string().min(1).max(64), z.string().min(1).max(PLACE_LIMITS.dialogueChars))
+  .refine((words) => Object.keys(words).length <= PLACE_LIMITS.residents, "too many residents")
+  .optional();
+
 export const landProgressSchema = z
   .object({
     errands: z.record(z.string().max(120), z.enum(["accepted", "reached", "done"])),
@@ -140,6 +146,7 @@ export const landProgressSchema = z
               .object({
                 kind: z.enum(CHAPTER_KINDS),
                 source: z.string().min(1).max(CHAPTER_LIMITS.sourceChars),
+                dialogues: residentWords,
                 seed: z.number().int().min(0).max(0xffffffff),
                 found: doneIds,
                 felled: doneIds,
@@ -171,6 +178,7 @@ export const landProgressSchema = z
             cz: z.number().int().min(-64).max(64),
             seed: z.number().int().min(0).max(0xffffffff),
             source: z.string().min(1).max(PLACE_LIMITS.sourceChars),
+            dialogues: residentWords,
             cleared: z.boolean(),
           })
           .strict(),

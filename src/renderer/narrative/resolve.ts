@@ -59,7 +59,7 @@ export async function resolveChoice(
     return err(
       "empty-resolution",
       `${npc.name} said nothing and did nothing.`,
-      "try again, or switch to a larger model in Settings",
+      "try again, or switch to a larger model in System → Model",
     );
   }
   return ok({ narration, toolResults: turn.value.toolResults });

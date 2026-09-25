@@ -8,6 +8,7 @@ import { CHUNK_COMPONENTS } from "./schemas/chunk";
 import { DIALOGUE_COMPONENTS } from "./schemas/dialogue";
 import { Deliver, Errands, Find, Guide } from "./schemas/errand";
 import { ITEM_COMPONENTS, Item } from "./schemas/item";
+import { PLACE_COMPONENTS } from "./schemas/place";
 import { RULE_COMPONENTS } from "./schemas/rules";
 import { SCENE_COMPONENTS } from "./schemas/scene";
 import type { ComponentSpec } from "./types";
@@ -83,6 +84,17 @@ export const chapterLibrary: Library = createLibrary({
     { name: "Who is here", components: ["NPC", "Talk", "Choice"] },
     { name: "What stands in the way", components: ["Monster"] },
     { name: "What can be found", components: ["Treasure"] },
+  ],
+});
+
+export const placeLibrary: Library = createLibrary({
+  id: "unwritten-land/place",
+  root: "Place",
+  components: [...PLACE_COMPONENTS],
+  componentGroups: [
+    { name: "Ground and air", components: ["Floor", "Sky", "Light", "Prop"] },
+    { name: "Who is here", components: ["NPC", "Talk", "Choice"] },
+    { name: "What waits", components: ["Monster", "Treasure", "Quest"] },
   ],
 });
 

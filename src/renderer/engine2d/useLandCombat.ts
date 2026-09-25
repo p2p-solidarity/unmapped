@@ -7,7 +7,13 @@
 // save until they respawn (`landFelled.ts`).
 
 import { translate } from "@renderer/i18n";
-import { useEncounterStore, useEngineStore, useLandStore, useRunStore, useSessionStore } from "@renderer/state";
+import {
+  useEncounterStore,
+  useEngineStore,
+  useLandStore,
+  useRunStore,
+  useSessionStore,
+} from "@renderer/state";
 import { chunkOf, wildMonsters } from "@shared/chunks";
 import type { TerritoryMap } from "@shared/continent";
 import { FOE_TUNING } from "@shared/foes";

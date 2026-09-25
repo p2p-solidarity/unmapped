@@ -3,32 +3,28 @@
 // onto the continent behind that friend's door (plan.md §8). Keepsakes carried home are set on the
 // shelf here.
 
-import { useT } from "@renderer/i18n";
+import { translate, useT } from "@renderer/i18n";
 import { normalizeRoomCode, ROOM_CODE_LENGTH } from "@renderer/net/codes";
 import { joinContinentByCode } from "@renderer/net/continentActions";
 import { useEngineStore, useLandStore, useSessionStore, useWorldStore } from "@renderer/state";
 import { Button, Surface, space, Text, TextField, zIndex } from "@renderer/ui";
-import { CHUNK_SIZE, type ChunkCoord, chunkKey } from "@shared/chunks";
 import type { DoorSlot } from "@shared/land";
 import { type JSX, useState } from "react";
 import { ContinentSection, continentOk } from "./ContinentSection";
-
-/** A walkable spot in a witnessed place: beside its first resident, else the chunk centre. */
-function arrival(coord: ChunkCoord): [number, number] {
-  const chunk = useLandStore.getState().chunks[chunkKey(coord)];
-  const npc = chunk?.status === "written" ? chunk.scene.npcs[0] : undefined;
-  const local = npc === undefined ? [CHUNK_SIZE / 2, CHUNK_SIZE / 2] : [npc.x + 1.5, npc.z + 0.5];
-  return [coord.cx * CHUNK_SIZE + (local[0] ?? 0), coord.cz * CHUNK_SIZE + (local[1] ?? 0)];
-}
+import { currentDoorArrival } from "./doorArrival";
 
 function travel(slot: DoorSlot): void {
   if (slot.kind === "room") {
     if (continentOk(joinContinentByCode(slot.code))) useSessionStore.getState().closeDoor();
     return;
   }
-  const [x, z] = arrival(slot);
+  const point = currentDoorArrival(slot, undefined, null);
+  if (point === null) {
+    useSessionStore.getState().toast("danger", translate("land.doorNoLanding"));
+    return;
+  }
   useSessionStore.getState().closeDoor();
-  useEngineStore.getState().requestTeleport(x, z);
+  useEngineStore.getState().requestTeleport(...point);
 }
 
 export function DoorPanel(): JSX.Element | null {

@@ -8,6 +8,7 @@ import * as THREE from "three";
 import { HD2D_PALETTE, LAND_2D_PALETTE } from "../engine/palette";
 import type { RemotePlayer } from "../engine/remoteRoster";
 import { type Player2D, SHOT_TRACE_MS, type SpriteAtlases } from "../engine2d/canvasRenderer";
+import type { DayLight, Rgb } from "../engine2d/dayClock";
 import type { ShotTrace } from "../engine2d/useLandCombat";
 import { ACTOR_COLUMN, ACTOR_FRAME, WALK_FRAMES } from "./assets";
 import { createCloudShade } from "./clouds";
@@ -19,6 +20,7 @@ import {
   standHeight,
   tileAtFor,
 } from "./content";
+import { createFarLayer } from "./farLayer";
 import { buildGroundChunk, type GroundChunk, type GroundMaterials } from "./groundChunk";
 import { type AtlasTextures, BlockLayer, BoardLayer, MarkerLayer } from "./layers";
 import { drawOverlay, type OverlayLabel } from "./overlay";
@@ -38,6 +40,7 @@ export interface Hd2dFrame extends LandSource {
   /** Other players on the continent, in this world's tiles. */
   others?: readonly RemotePlayer[];
   now: number;
+  light?: DayLight;
 }
 
 export interface Hd2dView {
@@ -82,7 +85,8 @@ export function createHd2dRenderer(
   const scene = new THREE.Scene();
   const haze = new THREE.Color(HD2D_PALETTE.haze);
   scene.background = haze;
-  scene.fog = new THREE.Fog(haze, view.distance + 4, view.distance + 40);
+  const fog = new THREE.Fog(haze, view.distance + 4, view.distance + 40);
+  scene.fog = fog;
   const camera = new THREE.PerspectiveCamera(view.fov, 1, 0.5, 200);
   const lens = createLens(renderer, scene, camera);
 
@@ -100,13 +104,15 @@ export function createHd2dRenderer(
   shadowCam.near = 1;
   shadowCam.far = 90;
   scene.add(sun, sun.target);
-  scene.add(new THREE.HemisphereLight(HD2D_PALETTE.skyFill, HD2D_PALETTE.groundFill, 0.85));
+  const fill = new THREE.HemisphereLight(HD2D_PALETTE.skyFill, HD2D_PALETTE.groundFill, 0.85);
+  scene.add(fill);
 
   const textures = atlasTextures(atlases);
   const clouds = createCloudShade();
   const materials = groundMaterials(textures, clouds.apply);
   const standing = new THREE.Group();
   scene.add(standing);
+  const far = createFarLayer(scene);
   const boards = new BoardLayer(standing, textures);
   const blocks = new BlockLayer(
     standing,
@@ -216,6 +222,19 @@ export function createHd2dRenderer(
   return {
     render(frame) {
       resize(frame.width, frame.height);
+      if (frame.light !== undefined) {
+        const light = frame.light;
+        const color = (out: THREE.Color, rgb: Rgb): void => {
+          out.setRGB(rgb[0], rgb[1], rgb[2], THREE.SRGBColorSpace);
+        };
+        color(sun.color, light.sun);
+        sun.intensity = light.sunIntensity;
+        color(fill.color, light.sky);
+        color(fill.groundColor, light.ground);
+        fill.intensity = light.fill;
+        color(haze, light.haze);
+        color(fog.color, light.haze);
+      }
       const seconds = frame.now / 1000;
       const delta = lastNow === null ? 0 : Math.min(0.1, (frame.now - lastNow) / 1000);
       lastNow = frame.now;
@@ -223,6 +242,7 @@ export function createHd2dRenderer(
       const coords = chunksAround(frame.focus.x, frame.focus.z, REACH);
       syncGround(frame, coords);
       syncContent(frame, coords);
+      far.sync(frame);
 
       // The camera eases after the focus so walking reads as a glide, not a locked grid.
       const follow = delta === 0 ? 1 : 1 - Math.exp(-delta * 7);
@@ -235,7 +255,11 @@ export function createHd2dRenderer(
         target.z + Math.cos(pitch) * view.distance,
       );
       camera.lookAt(target.x, 0.5, target.z);
-      sun.position.set(target.x - 14, 24, target.z + 12);
+      sun.position.set(
+        target.x + (frame.light?.sunDir[0] ?? -0.5) * 28,
+        (frame.light?.sunDir[1] ?? 0.85) * 28,
+        target.z + (frame.light?.sunDir[2] ?? 0.45) * 28,
+      );
       sun.target.position.set(target.x, 0, target.z);
 
       const tileAt = tileAtFor(frame);
@@ -311,6 +335,7 @@ export function createHd2dRenderer(
       boards.dispose();
       blocks.dispose();
       walls.dispose();
+      far.dispose();
       markers.dispose();
       player.dispose();
       for (const mesh of crowd) mesh.dispose();

@@ -62,7 +62,7 @@ export function chat(
         fail({
           code: "timeout",
           message: `The model produced nothing usable within ${timeoutMs / 1000}s.`,
-          hint: "try a smaller model, a shorter context, or check the provider in Settings",
+          hint: "try a smaller model, a shorter context, or check the provider in System → Model",
         }),
       );
     }, timeoutMs);

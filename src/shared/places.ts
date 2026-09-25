@@ -20,7 +20,14 @@ export const PLACE_KIT: Record<PlaceKind, GameplayKitId> = {
   dungeon: "dungeon_grid@1",
 };
 
-export const PLACE_LIMITS = { max: 64, sourceChars: 16_000, titleChars: 60 } as const;
+export const PLACE_LIMITS = {
+  max: 64,
+  sourceChars: 16_000,
+  titleChars: 60,
+  /** One resident's stored words (a Dialogue program), and how many residents keep words. */
+  dialogueChars: 4_000,
+  residents: 8,
+} as const;
 
 /** Exit labels inside a place: the way back to the land, and the far end that crosses it. */
 export const PLACE_BACK = "↩";
@@ -37,6 +44,11 @@ export interface LandPlace {
   seed: number;
   /** The model's Scene program: residents, loot, monsters, light and objective. */
   source: string;
+  /**
+   * What each resident says, as a Dialogue program keyed by NPC id — written with the place, so
+   * talking inside never asks the model. Absent on places written before words were kept.
+   */
+  dialogues?: Record<string, string>;
   cleared: boolean;
 }
 

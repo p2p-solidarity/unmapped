@@ -4,8 +4,10 @@
 
 import { errorLine, formatDateTime, useT } from "@renderer/i18n";
 import { useSessionStore } from "@renderer/state";
+import { useInferenceStore } from "@renderer/state/inferenceStore";
 import { Button, colors, StatePanel, Surface, space, Text, TextField } from "@renderer/ui";
 import { fromResult, type Loadable, loading } from "@shared/result";
+import { WORK_GENERATE_TOKENS } from "@shared/workPrompt";
 import type { WorkDraft, WorkManifest, WorkPlay, WorkRef } from "@shared/works";
 import { type JSX, useCallback, useEffect, useState } from "react";
 import { PlayerView } from "./PlayerView";
@@ -51,6 +53,7 @@ function refOf(manifest: WorkManifest): WorkRef {
 export function WorksScreen(): JSX.Element {
   const t = useT();
   const setScreen = useSessionStore((state) => state.setScreen);
+  const modelProbe = useInferenceStore((state) => state.probe);
   const [ledgerWorks, setLedgerWorks] = useState<WorkManifest[]>([]);
   const provenance = useProvenance(ledgerWorks);
   const [view, setView] = useState<View>({ kind: "library" });
@@ -136,6 +139,13 @@ export function WorksScreen(): JSX.Element {
             {t("works.generate")}
           </Button>
         </form>
+        {modelProbe.status === "ready" &&
+        modelProbe.value.context !== null &&
+        modelProbe.value.context.tokens < WORK_GENERATE_TOKENS ? (
+          <Text tone="danger">
+            {t("works.localContextWarning", { n: modelProbe.value.context.tokens })}
+          </Text>
+        ) : null}
         {problem === null ? null : <Text tone="danger">{problem}</Text>}
       </Surface>
 

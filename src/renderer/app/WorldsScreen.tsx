@@ -10,11 +10,12 @@ import { GameShell } from "./shell/GameShell";
 import { cycle, useKeys } from "./shell/useKeys";
 import { ArchivePanel } from "./title/ArchivePanel";
 import { CartridgesPanel } from "./title/CartridgesPanel";
+import { ContinentPanel } from "./title/ContinentPanel";
 import { SystemPanel } from "./title/SystemPanel";
 import { useLibrary } from "./title/useLibrary";
 import { openInstance } from "./useInstanceLoader";
 
-type PanelId = "join" | "cartridges" | "system" | "archive";
+type PanelId = "join" | "continent" | "cartridges" | "system" | "archive";
 
 interface MenuItem {
   id: "continue" | "new" | "create" | "worlds" | PanelId;
@@ -38,6 +39,7 @@ export function WorldsScreen() {
     { id: "create", label: t("title.menuCreate"), disabled: false },
     { id: "worlds", label: t("title.menuWorlds"), disabled: false },
     { id: "join", label: t("title.menuJoin"), disabled: false },
+    { id: "continent", label: t("title.menuContinent"), disabled: false },
     { id: "cartridges", label: t("title.menuCartridges"), disabled: false },
     { id: "system", label: t("title.menuSystem"), disabled: false },
   ];
@@ -140,6 +142,7 @@ export function WorldsScreen() {
             ) : null}
             {panel === "system" ? <SystemPanel onClose={closePanel} /> : null}
             {panel === "join" ? <RoomPanel /> : null}
+            {panel === "continent" ? <ContinentPanel data={data} /> : null}
             {panel === "archive" ? (
               <ArchivePanel data={data} refresh={refresh} onClose={closePanel} />
             ) : null}

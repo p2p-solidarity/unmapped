@@ -3,6 +3,11 @@
 import type { Phrase } from "./phrase";
 
 export const LAND = {
+  doorNoLanding: {
+    en: "No safe landing spot was found near that door. Witness the place and try again.",
+    "zh-TW": "那扇門附近找不到安全落點。請先見證該地，再試一次。",
+    ja: "その扉の近くに安全な到着地点がありません。土地を見届けてから、もう一度お試しください。",
+  },
   // ── A story gate's card ───────────────────────────────────────────────────────────────────
   chapterOf: {
     en: "Chapter {n} of {total}",

@@ -143,7 +143,9 @@ export async function runAttempt(
     report.modelMs += Math.round(callMs);
     if (!reply.ok) {
       if (deps.signal.aborted) return finish("cancelled");
-      report.problems = [`${reply.error.code}: ${reply.error.message}`];
+      report.problems = [
+        `${reply.error.code}: ${reply.error.message}${reply.error.hint ? ` ${reply.error.hint}` : ""}`,
+      ];
       return finish("failed");
     }
     report.promptTokens = add(report.promptTokens, reply.value.usage?.prompt);

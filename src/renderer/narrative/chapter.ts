@@ -12,7 +12,7 @@ import { generateProgram, type Program } from "./pipeline";
 export const CHAPTER_MAX_TOKENS = 2400;
 
 export function generateChapter(
-  ctx: ChapterPromptContext & { bible: WorldBible | null },
+  ctx: ChapterPromptContext & { bible: WorldBible | null; signal?: AbortSignal },
 ): Promise<Result<Program<ChapterDraft>>> {
   const bible = ctx.bible === null ? null : bibleSections(ctx.bible);
   return generateProgram<ChapterDraft>({
@@ -29,6 +29,7 @@ export function generateChapter(
             { name: "chapter:bible-style", order: ORDER.WORLD_RULES + 1, text: bible.style },
           ],
         }),
+    ...(ctx.signal === undefined ? {} : { signal: ctx.signal }),
     maxTokens: CHAPTER_MAX_TOKENS,
     temperature: 0.9,
   });

@@ -10,6 +10,17 @@ export const TITLE = {
   menuCreate: { en: "Create a game", "zh-TW": "創作遊戲", ja: "ゲームをつくる" },
   menuWorlds: { en: "AI Worlds", "zh-TW": "AI 世界", ja: "AI ワールド" },
   menuJoin: { en: "Join", "zh-TW": "加入房間", ja: "ルームに参加" },
+  menuContinent: { en: "Join a continent", "zh-TW": "加入大陸", ja: "大陸に参加" },
+  continentIntro: {
+    en: "Choose the saved world you will bring, then enter a friend's door number.",
+    "zh-TW": "選擇要帶來的存檔世界，再輸入夥伴的門牌。",
+    ja: "持ち寄るセーブ済みの世界を選び、仲間の扉番号を入力してください。",
+  },
+  continentNoWorld: {
+    en: "No saved world yet. Create or start a game first.",
+    "zh-TW": "尚無存檔世界。請先創作或開始遊戲。",
+    ja: "セーブ済みの世界がありません。先にゲームを始めてください。",
+  },
   menuCartridges: { en: "Cartridges", "zh-TW": "卡帶", ja: "カートリッジ" },
   menuSystem: { en: "System", "zh-TW": "系統", ja: "システム" },
   menuArchive: { en: "Archive", "zh-TW": "封存", ja: "アーカイブ" },

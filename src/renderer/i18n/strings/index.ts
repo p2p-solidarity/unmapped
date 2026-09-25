@@ -9,6 +9,7 @@ import { DEPTHS } from "./depths";
 import { HUD } from "./hud";
 import { IDENTITY } from "./identity";
 import { LAND } from "./land";
+import { MODEL } from "./model";
 import type { Phrase } from "./phrase";
 import { TITLE } from "./title";
 import { WORKS } from "./works";
@@ -22,6 +23,7 @@ export const STRINGS = {
   hud: HUD,
   identity: IDENTITY,
   land: LAND,
+  model: MODEL,
   title: TITLE,
   works: WORKS,
 } as const;

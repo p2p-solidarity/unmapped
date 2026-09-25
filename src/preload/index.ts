@@ -54,7 +54,11 @@ import type {
   ChatEvent,
   ChatRequest,
   InferenceConfig,
+  KeyProvider,
+  KeyStatusMap,
+  LocalDetection,
   ProbeResult,
+  SetApiKeyInput,
   SidecarStatus,
 } from "@shared/llm";
 import type { ModBundle, ModSummary } from "@shared/mods";
@@ -191,6 +195,13 @@ const api: SeedApi = {
     sidecarStatus: () => invoke<SidecarStatus>(IPC.inference.sidecarStatus),
     onSidecar: (listener: (status: SidecarStatus) => void) =>
       subscribe<SidecarStatus>(IPC.inference.sidecarEvent, listener),
+    keyStatus: () => invoke<Result<KeyStatusMap>>(IPC.inference.keyStatus),
+    setApiKey: (input: SetApiKeyInput) =>
+      invoke<Result<KeyStatusMap>>(IPC.inference.setApiKey, input),
+    clearApiKey: (provider: KeyProvider) =>
+      invoke<Result<KeyStatusMap>>(IPC.inference.clearApiKey, provider),
+    detectLocal: () => invoke<Result<LocalDetection>>(IPC.inference.detectLocal),
+    pickModelFile: () => invoke<Result<string | null>>(IPC.inference.pickModelFile),
   },
   vault: {
     getKey: () => invoke<Result<string>>(IPC.vault.getKey),

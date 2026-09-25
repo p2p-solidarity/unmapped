@@ -15,6 +15,8 @@ import {
   PROP_ASSETS,
   type SpriteAsset,
 } from "./assetCatalog";
+import type { DayLight, Rgb } from "./dayClock";
+import { keepsakeItems } from "./keepsakes";
 import { cachedTerrain, landTileAt } from "./landModel";
 import { placeMarkers } from "./placeLayer";
 import { drawStoryCompass, type StoryMarker, type StoryView, storyMarkers } from "./storyLayer";
@@ -59,7 +61,11 @@ export interface LandFrame {
   /** Offset markers and doors of the continent's worlds. */
   continent?: readonly StoryMarker[];
   now: number;
+  light?: DayLight;
 }
+
+const cssRgb = (color: Rgb): string =>
+  `rgb(${Math.round(color[0] * 255)} ${Math.round(color[1] * 255)} ${Math.round(color[2] * 255)})`;
 
 /** How long a shot's streak stays on screen. */
 export const SHOT_TRACE_MS = 160;
@@ -99,6 +105,13 @@ export function renderLandFrame(frame: LandFrame): void {
   for (const item of items) item.draw();
   drawShot(frame, transform);
   drawVignette(ctx, width, height);
+  if (frame.light !== undefined) {
+    ctx.save();
+    ctx.globalCompositeOperation = "multiply";
+    ctx.fillStyle = cssRgb(frame.light.wash);
+    ctx.fillRect(0, 0, width, height);
+    ctx.restore();
+  }
   if (frame.story !== null) drawStoryCompass(ctx, width, height, tileSize, player, frame.story);
 }
 
@@ -264,6 +277,7 @@ function collectScenery(frame: LandFrame, transform: ScreenTransform): DrawItem[
     const [x, z] = doorPosition(frame.scene, frame.progress.home);
     pushMarker(items, frame, transform, x, z, LAND_2D_PALETTE.door, "門");
   }
+  items.push(...keepsakeItems(frame, transform));
   const marks = [
     ...(frame.story === null ? [] : storyMarkers(frame.story)),
     ...placeMarkers(frame.places ?? []),

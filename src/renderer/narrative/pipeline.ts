@@ -37,7 +37,7 @@ function isSystem(message: ChatMessage): boolean {
 function harnessChat(
   purpose: PromptPurpose,
   language: string,
-  extra: { sections?: readonly TurnSection[]; coord?: ChunkCoord } = {},
+  extra: { sections?: readonly TurnSection[]; coord?: ChunkCoord; signal?: AbortSignal } = {},
 ): ProgramChat {
   return async (request, onDelta) => {
     const spec = request.messages
@@ -76,13 +76,18 @@ export interface GenerateProgramInput<T> {
   grammar?: string | null;
   maxTokens?: number;
   temperature?: number;
+  /** Aborting stops the model call in flight and every repair round after it. */
+  signal?: AbortSignal;
   onDelta?(text: string): void;
+  /** Aborts the model call in flight (`chat(..., { signal })`) and stops between repair rounds. */
+  signal?: AbortSignal;
 }
 
 export function generateProgram<T>(input: GenerateProgramInput<T>): Promise<Result<Program<T>>> {
   const extra = {
     ...(input.sections === undefined ? {} : { sections: input.sections }),
     ...(input.coord === undefined ? {} : { coord: input.coord }),
+    ...(input.signal === undefined ? {} : { signal: input.signal }),
   };
   return runProgram<T, DslError>(harnessChat(input.purpose, input.language, extra), {
     ...input,

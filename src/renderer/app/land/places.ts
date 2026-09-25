@@ -3,7 +3,7 @@
 // entrance is chosen by the host, the model writes only what lives inside (`generatePlace`), and the
 // ground is rebuilt from its seed every time it is entered (`buildPlace`).
 
-import { parseScene, serializeScene } from "@dsl";
+import { parseDialogue, parseScene, serializeDialogue, serializeScene } from "@dsl";
 import { contentLanguage, errorLine, translate } from "@renderer/i18n";
 import { generatePlace } from "@renderer/narrative/place";
 import {
@@ -27,8 +27,9 @@ import {
   placeSpot,
   wishedDirection,
 } from "@shared/places";
-import { err, ok, type Result } from "@shared/result";
+import { err, errored, ok, type Result, ready } from "@shared/result";
 import { storyEpisodes } from "@shared/story";
+import type { DialogueGraph } from "@shared/world";
 import { makeKarmaEntry } from "../karmaFile";
 import { checkpointCurrentInstance } from "../usePersistWorld";
 import { clearChapterById } from "./chapters";
@@ -70,8 +71,75 @@ export function playablePlace(place: LandPlace): Result<ActivePlace> {
 }
 
 /**
- * Asks the model for a place of `kind` and puts its entrance a short walk from the player. Costs
- * one model call; nothing is added when it fails.
+ * Each resident's words as the Dialogue programs a place keeps, keyed by NPC id; an error when one
+ * is more than a save holds (nothing is stored then).
+ */
+export function residentWords(dialogues: readonly DialogueGraph[]): Result<Record<string, string>> {
+  if (dialogues.length > PLACE_LIMITS.residents) {
+    return err(
+      "place-too-large",
+      "The place has more residents than the save can hold.",
+      "Ask again.",
+    );
+  }
+  const words: Record<string, string> = {};
+  for (const dialogue of dialogues) {
+    const source = serializeDialogue(dialogue);
+    if (source.length > PLACE_LIMITS.dialogueChars) {
+      return err("place-too-large", "The model wrote more than a place can hold.", "Ask again.");
+    }
+    words[dialogue.npcId] = source;
+  }
+  return ok(words);
+}
+
+const UNWRITTEN_HINT =
+  "This place was written before its residents' words were kept with it; talking never asks the model.";
+
+/**
+ * Talking to someone inside a place reads the words written with it — never the model (plan.md
+ * §1.4). A resident of a place written before words were kept says so, like one on the land.
+ */
+export function talkInPlace(npcId: string): void {
+  const session = useSessionStore.getState();
+  const place = session.place;
+  if (place === null) return;
+  const speaker = place.graph.npcs.find((npc) => npc.id === npcId)?.name ?? npcId;
+  const progress = useLandStore.getState().progress;
+  const words =
+    place.chapter === undefined
+      ? progress?.places?.find((one) => one.id === place.id)?.dialogues
+      : progress?.episodes?.[place.chapter]?.stage?.dialogues;
+  const source = words?.[npcId];
+  if (source === undefined) {
+    session.showWitnessedDialogue(
+      npcId,
+      speaker,
+      errored({
+        code: "dialogue-unwritten",
+        message: `What ${speaker} says has not been written yet.`,
+        hint: UNWRITTEN_HINT,
+      }),
+    );
+    return;
+  }
+  const dialogue = parseDialogue(source);
+  session.showWitnessedDialogue(
+    npcId,
+    speaker,
+    dialogue.ok
+      ? ready(dialogue.value)
+      : errored({
+          code: "dialogue-invalid",
+          message: `The stored words of ${speaker} no longer parse: ${dialogue.error.message}`,
+          hint: "Restore this save from a backup, or ask for a new place.",
+        }),
+  );
+}
+
+/**
+ * Asks the model for a place of `kind`, with what each resident says, and puts its entrance a
+ * short walk from the player. Costs one model call; nothing is added when it fails.
  */
 export async function createPlace(kind: PlaceKind, wish: string): Promise<Result<LandPlace>> {
   const active = useSessionStore.getState().activeInstance;
@@ -80,6 +148,7 @@ export async function createPlace(kind: PlaceKind, wish: string): Promise<Result
   if (active === null || progress === null) {
     return err("place-no-land", "Places are added to open land.", "Open a world with open land.");
   }
+  const instanceId = land.instanceId;
   const places = progress.places ?? [];
   if (places.length >= PLACE_LIMITS.max) {
     return err("place-full", `This land already has ${PLACE_LIMITS.max} places.`);
@@ -96,6 +165,15 @@ export async function createPlace(kind: PlaceKind, wish: string): Promise<Result
     bible,
   });
   if (!written.ok) return written;
+  if (
+    useLandStore.getState().instanceId !== instanceId ||
+    useSessionStore.getState().activeInstance?.instance.meta.instanceId !== instanceId
+  ) {
+    return err("place-save-changed", "The save changed while this place was being written.");
+  }
+  const { graph, dialogues } = written.value.graph;
+  const words = residentWords(dialogues);
+  if (!words.ok) return words;
 
   const plan = active.cartridge.story ?? null;
   const gates = plan === null ? [] : storyEpisodes(plan, progress.storyMore);
@@ -106,17 +184,18 @@ export async function createPlace(kind: PlaceKind, wish: string): Promise<Result
   let n = places.length + 1;
   while (places.some((one) => one.id === `p${n}`)) n += 1;
   const seed = crypto.getRandomValues(new Uint32Array(1))[0] ?? 1;
-  const source = `${serializeScene(written.value.graph).replace(/\n*$/, "")}\n`;
+  const source = `${serializeScene(graph).replace(/\n*$/, "")}\n`;
   if (source.length > PLACE_LIMITS.sourceChars) {
     return err("place-too-large", "The model wrote more than a place can hold.", "Ask again.");
   }
   const place: LandPlace = {
     id: `p${n}`,
     kind,
-    title: written.value.graph.name.slice(0, PLACE_LIMITS.titleChars) || kind,
+    title: graph.name.slice(0, PLACE_LIMITS.titleChars) || kind,
     ...spot,
     seed,
     source,
+    dialogues: words.value,
     cleared: false,
   };
   land.addPlace(place);

@@ -31,7 +31,17 @@ import type {
   WitnessChunkInput,
   WitnessedChunk,
 } from "./land";
-import type { ChatEvent, ChatRequest, InferenceConfig, ProbeResult, SidecarStatus } from "./llm";
+import type {
+  ChatEvent,
+  ChatRequest,
+  InferenceConfig,
+  KeyProvider,
+  KeyStatusMap,
+  LocalDetection,
+  ProbeResult,
+  SetApiKeyInput,
+  SidecarStatus,
+} from "./llm";
 import type { ModBundle, ModSummary } from "./mods";
 import type { Result } from "./result";
 import type {
@@ -124,6 +134,12 @@ export const IPC = {
     sidecarStop: "inference:sidecar-stop",
     sidecarStatus: "inference:sidecar-status",
     sidecarEvent: "inference:sidecar-event",
+    // System → Model: write-only keys and what runs on this computer.
+    keyStatus: "inference:key-status",
+    setApiKey: "inference:set-api-key",
+    clearApiKey: "inference:clear-api-key",
+    detectLocal: "inference:detect-local",
+    pickModelFile: "inference:pick-model-file",
   },
   vault: {
     getKey: "vault:get-key",
@@ -373,6 +389,14 @@ export interface SeedApi {
     sidecarStop(): Promise<Result<void>>;
     sidecarStatus(): Promise<SidecarStatus>;
     onSidecar(listener: (status: SidecarStatus) => void): () => void;
+    /** Whether each cloud provider has a key and where it comes from — never the key itself. */
+    keyStatus(): Promise<Result<KeyStatusMap>>;
+    /** Write-only: main encrypts the key; nothing ever reads it back to a renderer. */
+    setApiKey(input: SetApiKeyInput): Promise<Result<KeyStatusMap>>;
+    clearApiKey(provider: KeyProvider): Promise<Result<KeyStatusMap>>;
+    detectLocal(): Promise<Result<LocalDetection>>;
+    /** A main-side open dialog for a .gguf file; null when the player cancels. */
+    pickModelFile(): Promise<Result<string | null>>;
   };
   vault: {
     /** 32 random bytes (base64) persisted with Electron safeStorage. Fallback when PRF is unavailable. */

@@ -1,7 +1,8 @@
 // The card a story gate opens: which chapter this is, what it is about and how far the player has
 // got. The chapter itself is never played in here — on the land it stands around the gate, a
 // climb or a maze is entered from here. A chapter not written yet can be written from here (one
-// model call); without a model the card says why instead of inventing anything.
+// model call); one already being written ahead is adopted, never asked for again, and closing the
+// card leaves it running. Without a model the card says why instead of inventing anything.
 
 import { readChapter } from "@renderer/engine2d/chapterLayer";
 import { type Translate, useT } from "@renderer/i18n";
@@ -10,8 +11,9 @@ import { Button, ErrorBlock, Surface, space, Text } from "@renderer/ui";
 import { chapterLeft } from "@shared/chapter";
 import type { AppError } from "@shared/result";
 import { episodeUnlocked, storyEpisodes } from "@shared/story";
-import { type JSX, useEffect, useRef, useState } from "react";
-import { CHAPTER_CANCELLED, chapterParts, enterChapterPlace, writeChapter } from "./chapters";
+import { type JSX, useEffect, useState } from "react";
+import { startChapterJob, stopChapterJob, useChapterJobs } from "./chapterJobs";
+import { CHAPTER_CANCELLED, chapterParts, enterChapterPlace } from "./chapters";
 
 function todo(t: Translate, left: { talk: number; find: number; defeat: number }): string {
   const parts = [
@@ -28,16 +30,12 @@ export function ChapterPanel(): JSX.Element | null {
   const close = useSessionStore((state) => state.closeEpisode);
   const plan = useSessionStore((state) => state.activeInstance?.cartridge.story ?? null);
   const progress = useLandStore((state) => state.progress);
-  const [writing, setWriting] = useState(false);
+  const jobs = useChapterJobs();
   const [error, setError] = useState<AppError | null>(null);
-  const stopped = useRef(false);
 
-  // However the card closes, a chapter still being written is dropped with it.
+  // A closed card forgets what went wrong on it; a chapter being written keeps being written.
   useEffect(() => {
-    if (episodeId !== null) return;
-    stopped.current = true;
-    setWriting(false);
-    setError(null);
+    if (episodeId === null) setError(null);
   }, [episodeId]);
 
   if (episodeId === null) return null;
@@ -59,15 +57,22 @@ export function ChapterPanel(): JSX.Element | null {
   const cleared = record?.cleared === true;
   const unlocked = episodeUnlocked(episodes, progress.episodes ?? {}, episode.id);
   const draft = stage?.kind === "land" ? readChapter(stage.source) : null;
+  const instanceId = useLandStore.getState().instanceId;
+  // The write in flight: this chapter's (adopted as it is), or another's (this one waits for it).
+  const job = jobs.job;
+  const writing = job?.instanceId === instanceId && job.episodeId === episode.id;
+  const busyElsewhere = job !== null && !writing;
+  const failure =
+    jobs.failure?.instanceId === instanceId &&
+    jobs.failure.episodeId === episode.id &&
+    jobs.failure.error.code !== CHAPTER_CANCELLED
+      ? jobs.failure.error
+      : null;
+  const shown = error ?? failure;
 
-  const write = async (): Promise<void> => {
-    stopped.current = false;
-    setWriting(true);
+  const write = (): void => {
     setError(null);
-    const written = await writeChapter(episode, () => stopped.current);
-    if (stopped.current) return;
-    setWriting(false);
-    if (!written.ok && written.error.code !== CHAPTER_CANCELLED) setError(written.error);
+    startChapterJob(episode);
   };
 
   const enter = (): void => {
@@ -111,16 +116,24 @@ export function ChapterPanel(): JSX.Element | null {
           {stage.kind === "side" ? t("land.chapterSide") : t("land.chapterDungeon")}
         </Text>
       ) : null}
-      {writing ? <Text tone="accent">{t("land.chapterWriting")}</Text> : null}
-      {error === null ? null : <ErrorBlock error={error} />}
+      {writing ? (
+        <Text tone="accent">
+          {job?.stopping === true ? t("works.stopping") : t("land.chapterWriting")}
+        </Text>
+      ) : null}
+      {shown === null ? null : <ErrorBlock error={shown} />}
       <div style={{ display: "flex", gap: space.sm, flexWrap: "wrap" }}>
         {unlocked && !cleared && stage === null && !writing ? (
-          <Button variant="primary" onClick={() => void write()}>
+          <Button variant="primary" disabled={busyElsewhere} onClick={write}>
             {t("land.chapterWrite")}
           </Button>
         ) : null}
         {writing ? (
-          <Button variant="destructive" onClick={() => (stopped.current = true)}>
+          <Button
+            variant="destructive"
+            disabled={job?.stopping === true}
+            onClick={() => stopChapterJob("cancel")}
+          >
             {t("common.cancel")}
           </Button>
         ) : null}

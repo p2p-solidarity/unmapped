@@ -88,10 +88,12 @@ export async function runNarrativeTurn(input: NarrativeTurnInput): Promise<Resul
       }),
     );
 
+  const signal = input.signal;
   try {
     const result = await runTurn({
       ctx: borrowed.ctx,
-      chat,
+      // The signal also aborts the completion in flight, not only the steps after it.
+      chat: signal === undefined ? chat : (request, onDelta) => chat(request, onDelta, { signal }),
       messages: input.messages,
       assemble: {
         purpose: input.purpose,

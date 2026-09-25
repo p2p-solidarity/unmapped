@@ -21,6 +21,11 @@ export interface ChapterStage {
   kind: ChapterKind;
   /** `land`: a Chapter program. `side` / `dungeon`: a place's Scene program. */
   source: string;
+  /**
+   * `side` / `dungeon` only: each resident's words as a Dialogue program keyed by NPC id, written
+   * with the place (a land chapter keeps them in its Chapter program). Absent on older saves.
+   */
+  dialogues?: Record<string, string>;
   /** Where things stand around the gate (land) or how the ground is built (side / dungeon). */
   seed: number;
   /** Local ids of the treasures opened, the monsters defeated and the people talked to. */

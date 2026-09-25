@@ -2,7 +2,7 @@
 // opens the door to friends. Merged: the continent's code (the number to share), how the connection
 // stands, this world's offset, every other world on it with a way to its door, and a way back off.
 
-import { errorLine, useT } from "@renderer/i18n";
+import { errorLine, translate, useT } from "@renderer/i18n";
 import { leaveContinent, myPlate, openMyDoor } from "@renderer/net/continentActions";
 import {
   type ForeignWorld,
@@ -11,8 +11,10 @@ import {
   useSessionStore,
 } from "@renderer/state";
 import { Button, ErrorBlock, space, Text } from "@renderer/ui";
+import { chunkOf } from "@shared/chunks";
 import type { Result } from "@shared/result";
 import type { JSX } from "react";
+import { currentDoorArrival } from "./doorArrival";
 
 /** Toasts a continent action that failed; true when it went through. */
 export function continentOk(result: Result<string>): boolean {
@@ -22,8 +24,17 @@ export function continentOk(result: Result<string>): boolean {
 }
 
 function goToDoor(world: ForeignWorld): void {
+  const point = currentDoorArrival(
+    chunkOf(world.door.x, world.door.z),
+    [world.door.x + 1, world.door.z],
+    world.worldId,
+  );
+  if (point === null) {
+    useSessionStore.getState().toast("danger", translate("land.doorNoLanding"));
+    return;
+  }
   useSessionStore.getState().closeDoor();
-  useEngineStore.getState().requestTeleport(world.door.x, world.door.z);
+  useEngineStore.getState().requestTeleport(...point);
 }
 
 function WorldRow({ world }: { world: ForeignWorld }): JSX.Element {

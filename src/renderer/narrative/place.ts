@@ -1,31 +1,30 @@
-// Writing a place (地點): the model writes what lives in a course or a dungeon, against the world
-// bible, and the host builds the ground around it. Parse → issues → repair ≤ 2 rounds (Rule 7); a
-// place that never parses is an error, never a stand-in.
+// Writing a place (地點): the model writes what lives in a course or a dungeon, and what each of
+// its residents says, against the world bible; the host builds the ground around it. Parse → issues
+// → repair ≤ 2 rounds (Rule 7); a place that never parses is an error, never a stand-in.
 
-import { bibleSections, parseScene } from "@dsl";
+import { bibleSections, type PlaceDraft, parsePlace } from "@dsl";
 import { dslError } from "@dsl/parse/program";
 import { type PlacePromptContext, placeIssues, placePrompt } from "@dsl/prompts/place";
 import { ORDER } from "@harness";
 import type { WorldBible } from "@shared/cartridge";
 import type { Result } from "@shared/result";
-import type { SceneGraph } from "@shared/world";
 import { generateProgram, type Program } from "./pipeline";
 
 export const PLACE_MAX_TOKENS = 2400;
 
 export function generatePlace(
-  ctx: PlacePromptContext & { bible: WorldBible | null },
-): Promise<Result<Program<SceneGraph>>> {
+  ctx: PlacePromptContext & { bible: WorldBible | null; signal?: AbortSignal },
+): Promise<Result<Program<PlaceDraft>>> {
   const bible = ctx.bible === null ? null : bibleSections(ctx.bible);
-  return generateProgram<SceneGraph>({
+  return generateProgram<PlaceDraft>({
     system: placePrompt(ctx),
-    user: "Write the Scene program for this place now. Output the program only.",
+    user: "Write the Place program for this place now. Output the program only.",
     purpose: "scene",
     language: ctx.language,
     parse: (source) => {
-      const parsed = parseScene(source);
+      const parsed = parsePlace(source, { language: ctx.language });
       if (!parsed.ok) return parsed;
-      const issues = placeIssues(parsed.value, ctx);
+      const issues = placeIssues(parsed.value.graph, ctx);
       return issues.length === 0
         ? parsed
         : {
@@ -46,6 +45,7 @@ export function generatePlace(
             { name: "place:bible-style", order: ORDER.WORLD_RULES + 1, text: bible.style },
           ],
         }),
+    ...(ctx.signal === undefined ? {} : { signal: ctx.signal }),
     maxTokens: PLACE_MAX_TOKENS,
     temperature: 0.9,
   });

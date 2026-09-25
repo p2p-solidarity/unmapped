@@ -24,7 +24,8 @@ llama-server -m ~/models/Qwen3.5-4B-Q4_K_M.gguf --port 8080 --ctx-size 16384 --j
 
 Any OpenAI-compatible endpoint works (llama.cpp, Ollama `qwen3.5:4b`, vLLM serving
 `thesysdev/OUI-1`, OpenUI Gateway `https://api.thesys.dev/v1/embed`, OpenAI). Provider presets:
-`src/shared/llm.ts`. Keys are read from `.env` **in the main process only**.
+`src/shared/llm.ts`. Keys entered in System → Model are encrypted with the OS keychain and only
+read by the main process; `.env` keys are also read in main as a fallback.
 
 ## Rules (each one exists because the previous version of it caused a bug)
 ### Rule 0. Do not over-engineer, and test end to end

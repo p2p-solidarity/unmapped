@@ -78,6 +78,26 @@ export const CREATE = {
     ja: "モデルを起動するか、「システム → 推論」でプロバイダーを設定してください。このまま試すこともできます。失敗したときは原因が表示されます。",
   },
   checkModel: { en: "Check the model again", "zh-TW": "重新檢查模型", ja: "モデルを再確認" },
+  modelReadiness: {
+    en: "Using {provider} · {model} ({ms} ms)",
+    "zh-TW": "使用 {provider} · {model}（{ms} 毫秒）",
+    ja: "使用モデル：{provider} · {model}（{ms} ms）",
+  },
+  modelRouteBridge: {
+    en: "The starting place uses Apple's on-device scene model. The world plan and chapters use the selected chat model.",
+    "zh-TW": "起點場景使用 Apple 裝置端場景模型；世界規劃與章節使用目前選定的對話模型。",
+    ja: "開始地点には Apple のオンデバイスシーンモデルを使用し、世界プランと章には選択中のチャットモデルを使用します。",
+  },
+  modelRouteChat: {
+    en: "The world plan, chapters and starting place all use this model.",
+    "zh-TW": "世界規劃、章節與起點場景都使用這個模型。",
+    ja: "世界プラン、章、開始地点はすべてこのモデルを使用します。",
+  },
+  modelContext: {
+    en: "Local context: {n} tokens ({source}). Long stories may need a larger model or Cloud API.",
+    "zh-TW": "本地上下文：{n} token（{source}）。長篇故事可能需要更大的模型或雲端 API。",
+    ja: "ローカルのコンテキスト：{n} トークン（{source}）。長い物語には、より大きいモデルまたはクラウド API が必要な場合があります。",
+  },
 
   // ── Buttons ────────────────────────────────────────────────────────────────────────────────
   planWorld: { en: "Plan this world", "zh-TW": "規劃這個世界", ja: "プランを作る" },

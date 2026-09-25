@@ -7,6 +7,17 @@
 
 import type { Biome, Tile } from "@shared/world";
 
+export {
+  DAY_KEYS,
+  type DayKey,
+  LAMP_COLOR,
+  LAMP_GLOW_2D,
+  LANDMARK_MASK,
+  MOOD_SIGN_COLOR,
+  MOOD_SIGN_SHADOW,
+  MOOD_TINT,
+  WATER_LIGHT,
+} from "./daylight";
 export { HD2D_GRADE, HD2D_PALETTE } from "./hd2d";
 export { LAND_2D_PALETTE } from "./land2d";
 export { MONSTER_LOOK, type MonsterLook, type MonsterShape } from "./monsters";

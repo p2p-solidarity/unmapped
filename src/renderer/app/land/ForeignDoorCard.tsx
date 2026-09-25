@@ -2,26 +2,24 @@
 // shelf, and its dials. Turned from here, a place dial walks to that place on the shared land (its
 // coordinates shifted into this world's) and a door number brings this world onto that continent.
 
-import { type Translate, useT } from "@renderer/i18n";
+import { type Translate, translate, useT } from "@renderer/i18n";
 import { joinContinentByCode } from "@renderer/net/continentActions";
-import { type ForeignWorld, useContinentStore, useEngineStore } from "@renderer/state";
+import {
+  type ForeignWorld,
+  useContinentStore,
+  useEngineStore,
+  useSessionStore,
+} from "@renderer/state";
 import { Button, Surface, space, Text, zIndex } from "@renderer/ui";
-import { CHUNK_SIZE, type ChunkCoord, chunkKey } from "@shared/chunks";
+import type { ChunkCoord } from "@shared/chunks";
 import type { DoorSlot } from "@shared/land";
 import type { JSX } from "react";
 import { continentOk } from "./ContinentSection";
+import { currentDoorArrival } from "./doorArrival";
 
 /** One of their place dials, in this world's chunk coordinates. */
 function localChunk(slot: { cx: number; cz: number }, world: ForeignWorld): ChunkCoord {
   return { cx: slot.cx + world.shift.cx, cz: slot.cz + world.shift.cz };
-}
-
-/** A walkable spot in their witnessed place: beside its first resident, else the chunk centre. */
-function arrival(coord: ChunkCoord): [number, number] {
-  const chunk = useContinentStore.getState().chunks[chunkKey(coord)];
-  const npc = chunk?.status === "written" ? chunk.scene.npcs[0] : undefined;
-  const local = npc === undefined ? [CHUNK_SIZE / 2, CHUNK_SIZE / 2] : [npc.x + 1.5, npc.z + 0.5];
-  return [coord.cx * CHUNK_SIZE + (local[0] ?? 0), coord.cz * CHUNK_SIZE + (local[1] ?? 0)];
 }
 
 function travel(slot: DoorSlot, world: ForeignWorld): void {
@@ -30,9 +28,13 @@ function travel(slot: DoorSlot, world: ForeignWorld): void {
     if (continentOk(joinContinentByCode(slot.code))) continent.openDoorCard(null);
     return;
   }
-  const [x, z] = arrival(localChunk(slot, world));
+  const point = currentDoorArrival(localChunk(slot, world), undefined, world.worldId);
+  if (point === null) {
+    useSessionStore.getState().toast("danger", translate("land.doorNoLanding"));
+    return;
+  }
   continent.openDoorCard(null);
-  useEngineStore.getState().requestTeleport(x, z);
+  useEngineStore.getState().requestTeleport(...point);
 }
 
 function dialLabel(slot: DoorSlot, world: ForeignWorld, t: Translate): string {

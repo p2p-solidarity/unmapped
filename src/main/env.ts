@@ -32,11 +32,23 @@ function isPackaged(): boolean {
   }
 }
 
-/** Dev: the cwd is the repo root. Packaged: the app bundle first, then the cwd. */
+/** The app's own data folder — the one place a Finder-launched build can find a `.env`. */
+function userDataEnvPath(): string | null {
+  try {
+    return join(app.getPath("userData"), ".env");
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Dev: the cwd is the repo root. Packaged: the app bundle, the app's data folder, then the cwd.
+ * Keys typed in System → Model need none of these (`inference/keyStore.ts`).
+ */
 export function envCandidatePaths(): string[] {
   const fromCwd = join(process.cwd(), ".env");
   const fromApp = appEnvPath();
-  const ordered = isPackaged() ? [fromApp, fromCwd] : [fromCwd, fromApp];
+  const ordered = isPackaged() ? [fromApp, userDataEnvPath(), fromCwd] : [fromCwd, fromApp];
   const unique: string[] = [];
   for (const candidate of ordered) {
     if (candidate !== null && candidate.length > 0 && !unique.includes(candidate)) {

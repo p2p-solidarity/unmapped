@@ -93,6 +93,65 @@ export interface ProbeResult {
   latencyMs: number;
   /** e.g. "llama.cpp", "ollama", "vllm", "openai" when the server identifies itself. */
   serverName: string | null;
+  /** How much a local model holds (prompt + answer); null for cloud APIs, which are not clamped. */
+  context: ContextWindow | null;
+}
+
+/**
+ * A local model's context window. `sidecar`: the ctxSize the app started llama-server with;
+ * `server`: what the running server reported; `model`: fixed by the model (Apple's is 4096);
+ * `assumed`: the server did not say, so its documented default is used.
+ */
+export interface ContextWindow {
+  tokens: number;
+  source: "sidecar" | "server" | "model" | "assumed";
+}
+
+// ── Keys typed on screen (System → Model) ────────────────────────────────────────────────────
+// The renderer may hand main a key but never reads one back: it only ever sees a KeyStatus.
+
+/** Providers a player can give a key to; everything else runs on this machine without one. */
+export const KEY_PROVIDERS = ["openai", "openui-gateway", "custom"] as const;
+export type KeyProvider = (typeof KEY_PROVIDERS)[number];
+
+export interface KeyStatus {
+  set: boolean;
+  /** `saved`: encrypted in this computer's app data; `env`: from the .env file. */
+  source: "saved" | "env" | null;
+  /** The only base URL this key is ever sent to. */
+  boundTo: string | null;
+}
+export type KeyStatusMap = Record<KeyProvider, KeyStatus>;
+
+export interface SetApiKeyInput {
+  provider: KeyProvider;
+  key: string;
+  /** Required for `custom` (https or loopback only); the presets always use their own endpoint. */
+  baseUrl?: string;
+}
+
+// ── What runs on this computer ───────────────────────────────────────────────────────────────
+
+/** Where Homebrew puts llama-server; main only ever spawns one of these. */
+export const LLAMA_SERVER_PATHS = [
+  "/opt/homebrew/bin/llama-server",
+  "/usr/local/bin/llama-server",
+] as const;
+
+export const OLLAMA_ORIGIN = "http://127.0.0.1:11434";
+
+export interface LocalDetection {
+  apple: {
+    /** The app's Foundation Models bridge (writes structured scenes). */
+    bridge: boolean;
+    bridgeReason: string | null;
+    contextTokens: number | null;
+    /** `/usr/bin/fm`, whose `fm serve` answers every other chat. */
+    fmCli: boolean;
+  };
+  ollama: { reachable: boolean; models: string[]; latencyMs: number };
+  /** The first allowed llama-server that exists, or null when llama.cpp is not installed. */
+  llamacpp: { binaryPath: string | null };
 }
 
 export type ChatRole = "system" | "user" | "assistant" | "tool";
@@ -130,6 +189,11 @@ export interface ChatRequest {
   stop: string[];
   /** Tools the model may call this step; empty = plain completion. */
   tools: ToolSchema[];
+  /**
+   * The least output this task can use. On a small local context main lowers `maxTokens` to what
+   * fits and refuses (`model-context-too-small`) when even this much does not.
+   */
+  minTokens?: number;
 }
 
 export interface ChatUsage {

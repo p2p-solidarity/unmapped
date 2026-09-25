@@ -35,7 +35,11 @@ export interface ProgramSpec<T, E extends AppError> {
   maxTokens?: number;
   temperature?: number;
   maxRepairs?: number;
+  /** Checked before every round: an aborted program asks the model nothing more. */
+  signal?: AbortSignal;
   onDelta?(text: string): void;
+  /** Checked between repair rounds; the in-flight call is aborted by the chat it was given to. */
+  signal?: AbortSignal;
 }
 
 export interface Program<T> {
@@ -49,13 +53,17 @@ export async function runProgram<T, E extends AppError>(
   spec: ProgramSpec<T, E>,
 ): Promise<Result<Program<T>>> {
   const maxRepairs = spec.maxRepairs ?? MAX_REPAIRS;
-  const messages: ChatMessage[] = [
+  const opening: ChatMessage[] = [
     { role: "system", content: spec.system },
     { role: "user", content: spec.user },
   ];
+  let messages = opening;
   let last: E | null = null;
 
   for (let round = 0; round <= maxRepairs; round++) {
+    if (spec.signal?.aborted === true) {
+      return fail({ code: "request-aborted", message: "The request was cancelled." });
+    }
     const response = await chat(
       {
         messages: [...messages],
@@ -73,9 +81,14 @@ export async function runProgram<T, E extends AppError>(
     if (parsed.ok) return ok({ source, graph: parsed.value });
 
     last = parsed.error;
+    // Only the latest attempt goes back (the repair prompt quotes it again): earlier rounds would
+    // fill a small local context with programs that were already rejected.
     if (round < maxRepairs) {
-      messages.push({ role: "assistant", content: source });
-      messages.push({ role: "user", content: spec.repair(source, parsed.error) });
+      messages = [
+        ...opening,
+        { role: "assistant", content: source },
+        { role: "user", content: spec.repair(source, parsed.error) },
+      ];
     }
   }
 
@@ -87,7 +100,7 @@ function exhausted(last: AppError | null, rounds: number): AppError {
     return {
       code: "program-invalid",
       message: "The model never produced a parsable program.",
-      hint: "try again, or switch to a larger model in Settings",
+      hint: "try again, or switch to a larger model in System → Model",
     };
   }
   // A DSL error carries the statement-level complaints; the first one is what the player (and
@@ -98,6 +111,6 @@ function exhausted(last: AppError | null, rounds: number): AppError {
     message: `${last.message}${first === undefined ? "" : ` ${first}`} (still invalid after ${rounds} repair ${
       rounds === 1 ? "round" : "rounds"
     })`,
-    hint: last.hint ?? "try again, or switch to a larger model in Settings",
+    hint: last.hint ?? "try again, or switch to a larger model in System → Model",
   };
 }
