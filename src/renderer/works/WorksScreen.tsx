@@ -23,10 +23,13 @@ function useProvenance(works: WorkManifest[]): {
   known: Record<string, LedgerRevision | null>;
   note: string | null;
   register: (work: WorkManifest) => Promise<void>;
+  /** Content hash awaiting a confirming second click. */
+  asked: string | null;
 } {
   const [config, setConfig] = useState<LedgerConfig | null>(null);
   const [known, setKnown] = useState<Record<string, LedgerRevision | null>>({});
   const [note, setNote] = useState<string | null>(null);
+  const [asked, setAsked] = useState<string | null>(null);
   const hashes = works.map((work) => work.contentHash).join(",");
 
   useEffect(() => {
@@ -50,6 +53,15 @@ function useProvenance(works: WorkManifest[]): {
   }, [config?.readable, hashes]);
 
   const register = async (work: WorkManifest): Promise<void> => {
+    // Sending this costs gas, so the first click only asks.
+    if (asked !== work.contentHash) {
+      setAsked(work.contentHash);
+      setNote(
+        `Registering "${work.title}" sends a transaction and spends gas. Click again to confirm.`,
+      );
+      return;
+    }
+    setAsked(null);
     setNote(`Registering ${work.title}…`);
     const result = await window.seed.chain.publish({
       contentHash: work.contentHash,
@@ -66,7 +78,7 @@ function useProvenance(works: WorkManifest[]): {
     if (fresh.ok) setKnown((current) => ({ ...current, [work.contentHash]: fresh.value }));
   };
 
-  return { config, known, note, register };
+  return { config, known, note, register, asked };
 }
 
 type View =
@@ -255,8 +267,14 @@ export function WorksScreen(): JSX.Element {
                       <Button onClick={() => void startPlay([work])}>Play</Button>
                       {provenance.config?.writable === true &&
                       !provenance.known[work.contentHash] ? (
-                        <Button variant="chip" onClick={() => void provenance.register(work)}>
-                          Register on chain
+                        <Button
+                          variant="chip"
+                          active={provenance.asked === work.contentHash}
+                          onClick={() => void provenance.register(work)}
+                        >
+                          {provenance.asked === work.contentHash
+                            ? "Confirm · spends gas"
+                            : "Register on chain"}
                         </Button>
                       ) : null}
                       <Button

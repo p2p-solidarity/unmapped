@@ -56,9 +56,10 @@ export function Props({
       ))}
       {solid && colliders.length > 0 && (
         <RigidBody type="fixed" colliders={false}>
+          {/* Two props may stand on the same tile; identical colliders are dropped upstream. */}
           {colliders.map((collider) => (
             <CylinderCollider
-              key={`prop-collider-${collider.center[0]}-${collider.center[2]}`}
+              key={`prop-collider-${collider.center.join("_")}-${collider.radius}-${collider.halfHeight}`}
               args={[collider.halfHeight, collider.radius]}
               position={collider.center}
             />
@@ -81,7 +82,9 @@ function KindInstances({
     <>
       {PROP_SHAPE[kind].parts.map((part, index) => (
         <PartInstances
-          key={`${kind}-${part.geo}-${part.offset.join("_")}`}
+          // Parts of one recipe can share a shape and an offset (the gear's crossed spokes);
+          // the size tells those apart.
+          key={`${kind}-${part.geo}-${part.offset.join("_")}-${part.size.join("_")}`}
           kind={kind}
           part={part}
           partIndex={index}

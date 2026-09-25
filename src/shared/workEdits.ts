@@ -3,7 +3,7 @@
 //
 //   @@summary            one or two sentences for the player
 //   @@file main.js       the whole file
-//   @@edit main.js       SEARCH/REPLACE blocks against the current file
+//   @@edit main.js       SEARCH/REPLACE blocks against the current file (all a repair may use)
 //   @@end
 //
 // `applyWorkReply` turns a reply into the next WorkText. Every problem is returned as a sentence
@@ -208,6 +208,13 @@ export interface AppliedReply {
   summary: string;
 }
 
+/**
+ * What a reply is answering. A first generation writes whole files; an edit may use either form;
+ * a repair must patch with SEARCH/REPLACE, because a whole-file rewrite to fix one line is the most
+ * expensive thing a model does here (docs/experiments/interactive-works-acceptance-2026-09-23.md).
+ */
+export type WorkReplyMode = "generate" | "edit" | "repair";
+
 /** Validates what every stored candidate must satisfy, whoever wrote it. */
 export function checkWorkText(text: WorkText): string[] {
   const problems: string[] = [];
@@ -240,12 +247,17 @@ export function checkWorkText(text: WorkText): string[] {
 }
 
 /**
- * Applies a parsed reply on top of `base` (null for a first generation, which must then supply
- * all three files). Returns the new text and the list of files that actually changed.
+ * Builds the next text from a reply without validating it: `base` (null for a first generation,
+ * which must then supply main.js) plus whole files, then SEARCH/REPLACE blocks. In "repair" mode a
+ * whole file is refused for any file that already has content.
  */
-export function applyWorkReply(base: WorkText | null, reply: WorkReply): Result<AppliedReply> {
-  let next: WorkText | null = base;
-  if (next === null) {
+export function assembleWorkReply(
+  base: WorkText | null,
+  reply: WorkReply,
+  mode: WorkReplyMode,
+): Result<WorkText> {
+  let next: WorkText;
+  if (base === null) {
     const { files } = reply;
     if (files["main.js"] === undefined)
       return err("reply-incomplete", "A new world needs @@file main.js.");
@@ -255,9 +267,17 @@ export function applyWorkReply(base: WorkText | null, reply: WorkReply): Result<
       assets: files["assets.json"] ?? "{}",
     };
   } else {
+    next = base;
     for (const file of WORK_CODE_FILES) {
       const whole = reply.files[file];
-      if (whole !== undefined) next = withFile(next, file, whole);
+      if (whole === undefined) continue;
+      if (mode === "repair" && textOf(base, file).trim() !== "") {
+        return err(
+          "repair-whole-file",
+          `A repair must not resend ${file} with @@file. Answer with @@edit ${file} SEARCH/REPLACE blocks that change only the lines causing the problems.`,
+        );
+      }
+      next = withFile(next, file, whole);
     }
   }
   for (const file of WORK_CODE_FILES) {
@@ -267,11 +287,33 @@ export function applyWorkReply(base: WorkText | null, reply: WorkReply): Result<
       next = withFile(next, file, applied.value);
     }
   }
+  return ok(next);
+}
+
+/**
+ * Applies a parsed reply on top of `base` and validates the result. `changed` lists the files that
+ * differ from `parent` (the stored candidate this one will point at; defaults to `base`).
+ */
+export function applyWorkReply(
+  base: WorkText | null,
+  reply: WorkReply,
+  options: { mode?: WorkReplyMode; parent?: WorkText | null } = {},
+): Result<AppliedReply> {
+  const assembled = assembleWorkReply(
+    base,
+    reply,
+    options.mode ?? (base === null ? "generate" : "edit"),
+  );
+  if (!assembled.ok) return assembled;
+  const next = assembled.value;
   const problems = checkWorkText(next);
   if (problems.length > 0) return err("work-invalid", problems.join("\n"));
+  if (base !== null && WORK_CODE_FILES.every((file) => textOf(base, file) === textOf(next, file))) {
+    return err("reply-noop", "The reply left every file unchanged.");
+  }
+  const parent = options.parent === undefined ? base : options.parent;
   const changed = WORK_CODE_FILES.filter(
-    (file) => base === null || textOf(base, file) !== textOf(next, file),
+    (file) => parent === null || textOf(parent, file) !== textOf(next, file),
   );
-  if (changed.length === 0) return err("reply-noop", "The reply left every file unchanged.");
   return ok({ text: next, changed, summary: reply.summary });
 }

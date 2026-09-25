@@ -66,6 +66,9 @@ export function EpisodePanel(): JSX.Element | null {
     controller.current = signal;
     setError(null);
     setStage("Preparing the episode…");
+    // Cancel must hold between steps too: the model call is only one of several awaits.
+    const cancelled = (): boolean => signal.signal.aborted;
+    const stop = (): void => finish(fail("episode-cancelled", "Cancelled; nothing was changed."));
     let draftId = land.progress?.episodes?.[target.id]?.draftId ?? null;
     if (draftId === null) {
       const created = await window.seed.works.createDraft(target.title);
@@ -73,8 +76,10 @@ export function EpisodePanel(): JSX.Element | null {
       draftId = created.value.draftId;
       land.setEpisode(target.id, { draftId });
     }
+    if (cancelled()) return stop();
     const draft = await window.seed.works.readDraft(draftId);
     if (!draft.ok) return finish(draft.error);
+    if (cancelled()) return stop();
     if (draft.value.head === null) {
       const id = draftId;
       const report = await runAttempt(
@@ -104,9 +109,11 @@ export function EpisodePanel(): JSX.Element | null {
         );
       }
     }
+    if (cancelled()) return stop();
     setStage("Saving the episode as a version…");
     const published = await window.seed.works.publishDraft(draftId);
     if (!published.ok) return finish(published.error);
+    if (cancelled()) return stop();
     const { manifest } = published.value;
     const work = {
       workId: manifest.workId,
@@ -116,6 +123,7 @@ export function EpisodePanel(): JSX.Element | null {
     const carry = useLandStore.getState().progress?.storyCarry ?? null;
     const play = await window.seed.works.createPlay({ title: target.title, worlds: [work], carry });
     if (!play.ok) return finish(play.error);
+    if (cancelled()) return stop();
     useLandStore.getState().setEpisode(target.id, { work, playId: play.value.playId });
     finish(null);
     if (andPlay) setPlaying(true);

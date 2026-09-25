@@ -6,16 +6,24 @@
 import { chat } from "@renderer/llm";
 import type { ChatMessage } from "@shared/llm";
 import { err, ok, type Result } from "@shared/result";
-import { applyWorkReply, parseWorkReply } from "@shared/workEdits";
+import {
+  applyWorkReply,
+  assembleWorkReply,
+  parseWorkReply,
+  type WorkReply,
+  type WorkReplyMode,
+} from "@shared/workEdits";
 import {
   editWorkMessages,
   generateWorkMessages,
+  repairProblems,
   repairWorkMessages,
+  retryWorkMessages,
   WORK_EDIT_TOKENS,
   WORK_GENERATE_TOKENS,
   WORK_REPAIR_LIMIT,
 } from "@shared/workPrompt";
-import type { WorkDraft, WorkText } from "@shared/works";
+import { textOf, WORK_CODE_FILES, WORK_LIMITS, type WorkDraft, type WorkText } from "@shared/works";
 import { type CheckOutcome, describeProblem } from "./frameGuard";
 
 const MODEL_TIMEOUT_MS = 240_000;
@@ -48,6 +56,20 @@ export interface AttemptDeps {
 
 function add(total: number | null, value: number | undefined): number | null {
   return value === undefined ? total : (total ?? 0) + value;
+}
+
+/**
+ * A reply that assembled into files but failed validation (bad assets.json, an import line) is
+ * patched with edits from there, instead of asking for the whole world again.
+ */
+function salvage(base: WorkText | null, reply: WorkReply, mode: WorkReplyMode): WorkText | null {
+  const assembled = assembleWorkReply(base, reply, mode);
+  if (!assembled.ok) return null;
+  const text = assembled.value;
+  const oversized = WORK_CODE_FILES.some(
+    (file) => new TextEncoder().encode(textOf(text, file)).length > WORK_LIMITS.codeBytes,
+  );
+  return oversized ? null : text;
 }
 
 export async function runAttempt(
@@ -88,7 +110,12 @@ export async function runAttempt(
 
   let messages: ChatMessage[] =
     working === null ? generateWorkMessages(request) : editWorkMessages(working, request);
+  // The turn a retry repeats; a retry never stacks earlier failed exchanges on top of it.
+  let turn = messages;
+  let mode: WorkReplyMode = kind;
   let parent = expectedHead;
+  // Text of `parent`, so `changed` is right even when `working` is a salvaged, unstored reply.
+  let parentText: WorkText | null = working;
   let candidateKind: "generate" | "edit" | "repair" = kind;
   let candidateRequest = request;
 
@@ -104,8 +131,7 @@ export async function runAttempt(
     const reply = await chat(
       {
         messages,
-        maxTokens:
-          kind === "generate" && report.repairs === 0 ? WORK_GENERATE_TOKENS : WORK_EDIT_TOKENS,
+        maxTokens: mode === "generate" ? WORK_GENERATE_TOKENS : WORK_EDIT_TOKENS,
         temperature: 0.4,
         grammar: null,
         stop: [],
@@ -125,7 +151,9 @@ export async function runAttempt(
     report.completionTokens = add(report.completionTokens, reply.value.usage?.completion);
 
     const parsed = parseWorkReply(reply.value.text);
-    const applied = parsed.ok ? applyWorkReply(working, parsed.value) : parsed;
+    const applied = parsed.ok
+      ? applyWorkReply(working, parsed.value, { mode, parent: parentText })
+      : parsed;
     const written = applied.ok
       ? await window.seed.works.writeCandidate({
           draftId: draft.draftId,
@@ -150,20 +178,23 @@ export async function runAttempt(
     }
 
     if (!written.ok) {
-      // The reply could not even become a candidate (format, edit that does not match, invalid
-      // assets.json). The model gets the exact reason and the same base to try again.
+      // The reply could not even become a candidate (format, an edit that does not match, a
+      // whole-file repair, invalid assets.json). This counts as a repair attempt.
       report.problems = [written.error.message];
       if (report.repairs >= WORK_REPAIR_LIMIT) return finish("failed");
       report.repairs += 1;
-      const base = working === null ? generateWorkMessages(request) : messages;
-      messages = [
-        ...base,
-        { role: "assistant", content: reply.value.text.slice(0, 60_000) },
-        {
-          role: "user",
-          content: `That reply could not be used: ${written.error.message}\nReply again in the exact @@ format${working === null ? " with the complete world" : ""}.`,
-        },
-      ];
+      const salvaged =
+        parsed.ok && !applied.ok && applied.error.code === "work-invalid"
+          ? salvage(working, parsed.value, mode)
+          : null;
+      if (salvaged !== null) {
+        working = salvaged;
+        mode = "repair";
+        turn = repairWorkMessages(working, written.error.message.split("\n"));
+        messages = turn;
+      } else {
+        messages = retryWorkMessages(turn, reply.value.text, written.error.message, mode);
+      }
       continue;
     }
 
@@ -187,7 +218,7 @@ export async function runAttempt(
       return finish("playable");
     }
 
-    const problems = outcome.problems.map(describeProblem);
+    const problems = repairProblems(outcome.problems.map(describeProblem));
     report.problems = problems;
     const failed = await settle(
       draft.draftId,
@@ -201,10 +232,13 @@ export async function runAttempt(
     if (!applied.ok) return finish("failed");
     report.repairs += 1;
     working = applied.value.text;
+    parentText = working;
     parent = candidateId;
+    mode = "repair";
     candidateKind = "repair";
     candidateRequest = problems.join("\n");
-    messages = repairWorkMessages(working, problems);
+    turn = repairWorkMessages(working, problems);
+    messages = turn;
   }
 }
 

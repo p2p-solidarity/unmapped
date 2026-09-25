@@ -98,6 +98,13 @@ describe("propCollider", () => {
     expect(propColliders([prop("flower", 1, 1), prop("rock", 2, 2)])).toHaveLength(1);
   });
 
+  // Two props may stand on the same tile; a second identical collider adds nothing to the
+  // simulation and gave the two of them the same React key.
+  it("keeps one collider when two props on a tile produce the same shape", () => {
+    expect(propColliders([prop("rock", 2, 2), prop("rock", 2, 2)])).toHaveLength(1);
+    expect(propColliders([prop("rock", 2, 2), prop("rock", 2, 2, 2)])).toHaveLength(2);
+  });
+
   it("treats a non-positive scale as 1", () => {
     const collider = propCollider(prop("rock", 0, 0, 0));
     expect(collider?.radius).toBeCloseTo(0.4);

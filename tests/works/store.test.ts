@@ -146,6 +146,29 @@ describe("published worlds and journeys", () => {
     expect((await readRevision(dirs, "../etc", "1.0.0")).ok).toBe(false);
   });
 
+  it("merges what a world hands back over the carry it was given", async () => {
+    const draft = await playableDraft();
+    const manifest = unwrap(await publishDraft(dirs, draft.draftId)).manifest;
+    const ref = {
+      workId: manifest.workId,
+      version: manifest.version,
+      contentHash: manifest.contentHash,
+    };
+    const play = unwrap(
+      await createPlay(dirs, { title: "Story", worlds: [ref], carry: { coins: 3, wins: 3 } }),
+    );
+    // The world passes only what it earned (the maze in the acceptance run replaced everything).
+    const done = unwrap(
+      await changePlay(dirs, play.playId, {
+        kind: "complete",
+        world: 0,
+        summary: "escaped",
+        carry: { keys: 3, coins: 4 },
+      }),
+    );
+    expect(done.carry).toEqual({ coins: 4, wins: 3, keys: 3 });
+  });
+
   it("pins exact revisions, carries state between worlds and bounds sizes", async () => {
     const draft = await playableDraft();
     const manifest = unwrap(await publishDraft(dirs, draft.draftId)).manifest;

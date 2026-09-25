@@ -23,18 +23,29 @@ export function frameCsp(nonce: string): string {
 }
 
 /**
- * Runs before main.js. Exposes `window.host`, reports errors with main.js line numbers, sends a
- * heartbeat the host uses to detect a hung world, batches saves and status lines (worlds often
- * call them every frame), and — for the draft checker —
- * replays a few keys and a click so input handlers run once before a version is accepted.
+ * Runs before main.js. Exposes `window.host`, reports errors with main.js line numbers (each
+ * distinct error once — a world that throws every frame must not flood the host), sends a heartbeat
+ * the host uses to detect a hung world, and coalesces saves and status lines (worlds often call them
+ * every frame). It also carries the helpers for the mistakes models kept repeating: `load(fresh)`
+ * fills whatever a save lacks, `save` keeps Sets and Maps, `loop` hands out dt in seconds. For the
+ * draft checker it replays a few keys and a click so input handlers run once before a version is
+ * accepted. Newlines become spaces when it is embedded, so it must not contain `//` comments.
+ * Exported for tests only.
  */
-const RUNTIME = `(() => {
+export const FRAME_RUNTIME = `(() => {
   "use strict";
   const boot = JSON.parse(document.getElementById("ulw-boot").textContent);
   const root = document.getElementById("world");
   const clone = (value) => (value === undefined || value === null ? null : JSON.parse(JSON.stringify(value)));
   const post = (message) => {
     try { parent.postMessage(Object.assign({ ulw: ${WORK_PROTOCOL}, token: boot.token }, message), "*"); } catch (_) {}
+  };
+  const reported = new Set();
+  const report = (message, file, line, column) => {
+    const key = file + ":" + line + ":" + column + ":" + message.split("\\n")[0];
+    if (reported.has(key) || reported.size >= 20) return;
+    reported.add(key);
+    post({ type: "error", message: message.slice(0, 2000), file, line, column });
   };
   const where = (line) =>
     line >= boot.mainStart && line <= boot.mainEnd
@@ -43,18 +54,33 @@ const RUNTIME = `(() => {
   addEventListener("error", (event) => {
     const at = where(event.lineno || 0);
     const text = event.error && event.error.stack ? String(event.error.stack) : String(event.message || "error");
-    post({ type: "error", message: text.slice(0, 2000), file: at.file, line: at.line, column: event.colno || null });
+    report(text, at.file, at.line, event.colno || null);
   });
   addEventListener("unhandledrejection", (event) => {
     const reason = event.reason && event.reason.stack ? event.reason.stack : String(event.reason);
-    post({ type: "error", message: ("Unhandled rejection: " + reason).slice(0, 2000), file: "runtime", line: null, column: null });
+    report("Unhandled rejection: " + reason, "runtime", null, null);
   });
   const freeze = (value) => {
     if (value && typeof value === "object") { Object.values(value).forEach(freeze); Object.freeze(value); }
     return value;
   };
+  const plain = (value) => value !== null && typeof value === "object" && [null, Object.prototype].includes(Object.getPrototypeOf(value));
+  const keep = (key, value) => (value instanceof Set || value instanceof Map ? Array.from(value) : value);
+  const fill = (saved, fresh) => {
+    if (Array.isArray(fresh)) return Array.isArray(saved) ? saved : fresh;
+    if (fresh instanceof Set) return Array.isArray(saved) ? new Set(saved) : fresh;
+    if (fresh instanceof Map) return Array.isArray(saved) ? new Map(saved.filter(Array.isArray)) : fresh;
+    if (plain(fresh)) {
+      if (!plain(saved)) return fresh;
+      for (const key of Object.keys(fresh)) saved[key] = Object.prototype.hasOwnProperty.call(saved, key) ? fill(saved[key], fresh[key]) : fresh[key];
+      return saved;
+    }
+    if (fresh !== null && typeof fresh === "object") return fresh;
+    return saved === undefined ? fresh : saved;
+  };
   let state = clone(boot.state);
   let pending = null;
+  let sent = null;
   let timer = null;
   let completed = false;
   const unknownAssets = new Set();
@@ -69,19 +95,39 @@ const RUNTIME = `(() => {
     }
     queuedStatus = null;
   };
-  const flush = () => { timer = null; if (pending !== null) { post({ type: "save", state: pending.value }); pending = null; } };
+  const flush = () => {
+    timer = null;
+    if (pending !== null && pending !== sent) { sent = pending; post({ type: "save", state: JSON.parse(pending) }); }
+    pending = null;
+  };
   const host = Object.freeze({
     root,
     carry: freeze(clone(boot.carry)),
-    load: () => clone(state),
+    load: (fresh) => (fresh === undefined ? clone(state) : state === null ? fresh : fill(clone(state), fresh)),
     save: (value) => {
-      state = clone(value);
-      pending = { value: state };
+      const text = JSON.stringify(value === undefined ? null : value, keep);
+      pending = text === undefined ? "null" : text;
+      state = JSON.parse(pending);
       if (timer === null) timer = setTimeout(flush, 400);
+    },
+    loop: (fn) => {
+      if (typeof fn !== "function") throw new TypeError("host.loop(fn) needs a function");
+      let last = null;
+      let stopped = false;
+      const frame = (now) => {
+        if (stopped) return;
+        requestAnimationFrame(frame);
+        const dt = last === null ? 1 / 60 : Math.min(0.1, Math.max(0, (now - last) / 1000));
+        last = now;
+        fn(dt);
+      };
+      requestAnimationFrame(frame);
+      return () => { stopped = true; };
     },
     complete: (summary, carry) => {
       if (completed) return;
       completed = true;
+      if (timer !== null) clearTimeout(timer);
       flush();
       if (statusTimer !== null) { clearTimeout(statusTimer); sendStatus(); }
       post({ type: "complete", summary: String(summary ?? "").slice(0, ${WORK_LIMITS.summaryChars}), carry: carry === undefined ? clone(boot.carry) : clone(carry) });
@@ -94,7 +140,7 @@ const RUNTIME = `(() => {
       if (Object.prototype.hasOwnProperty.call(boot.assets, id)) return boot.assets[id];
       if (!unknownAssets.has(String(id))) {
         unknownAssets.add(String(id));
-        post({ type: "error", message: ("host.asset(" + JSON.stringify(String(id)) + ") is neither an id in assets.json nor a library path.").slice(0, 2000), file: "runtime", line: null, column: null });
+        report("host.asset(" + JSON.stringify(String(id)) + ") is neither an id in assets.json nor a library path.", "runtime", null, null);
       }
       return null;
     },
@@ -189,7 +235,7 @@ export function buildFramePage(input: FramePageInput): FramePage {
     [
       ...head,
       `<script type="application/json" id="ulw-boot">${JSON.stringify(boot(mainStart)).replace(/</g, "\\u003c")}</script>`,
-      `<script nonce="${nonce}">${RUNTIME.replace(/\n/g, " ")}</script>`,
+      `<script nonce="${nonce}">${FRAME_RUNTIME.replace(/\n/g, " ")}</script>`,
       `<script nonce="${nonce}">`,
     ].join("\n");
   // Error events report page lines; the shim maps them back to main.js. The user CSS can hold

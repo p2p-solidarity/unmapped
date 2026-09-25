@@ -1,4 +1,5 @@
 import { applyWorkReply, parseWorkReply } from "@shared/workEdits";
+import { repairWorkMessages, retryWorkMessages, WORK_ECHO_CHARS } from "@shared/workPrompt";
 import type { WorkText } from "@shared/works";
 import { describe, expect, it } from "vitest";
 
@@ -71,5 +72,66 @@ describe("work reply protocol", () => {
 
     expect(parseWorkReply("just prose, no sections").ok).toBe(false);
     expect(parseWorkReply("@@file ../main.js\nx\n@@end").ok).toBe(false);
+  });
+
+  it("a repair must patch with @@edit: a whole-file rewrite is refused, an edit applies", () => {
+    const rewrite = unwrap(
+      parseWorkReply("@@summary\nFixed.\n@@file main.js\nconst RULES = { target: 20 };\n@@end"),
+    );
+    const refused = applyWorkReply(BASE, rewrite, { mode: "repair" });
+    expect(refused.ok).toBe(false);
+    if (!refused.ok) {
+      expect(refused.error.code).toBe("repair-whole-file");
+      expect(refused.error.message).toContain("@@edit main.js");
+    }
+    // The same reply is fine outside a repair.
+    expect(applyWorkReply(BASE, rewrite, { mode: "edit" }).ok).toBe(true);
+
+    const patch = unwrap(
+      parseWorkReply(
+        "@@summary\nFixed.\n@@edit main.js\n<<<<<<< SEARCH\ntarget: 21\n=======\ntarget: 20\n>>>>>>> REPLACE\n@@end",
+      ),
+    );
+    const applied = unwrap(applyWorkReply(BASE, patch, { mode: "repair" }));
+    expect(applied.text.main).toContain("target: 20");
+    expect(applied.changed).toEqual(["main.js"]);
+
+    // An empty file has nothing to SEARCH, so a repair may still write it whole.
+    const style = unwrap(parseWorkReply("@@file style.css\nbody { margin: 0; }\n@@end"));
+    expect(applyWorkReply({ ...BASE, style: "" }, style, { mode: "repair" }).ok).toBe(true);
+  });
+
+  it("reports changed files against the stored parent, not a salvaged base", () => {
+    const patch = unwrap(
+      parseWorkReply(
+        '@@edit assets.json\n<<<<<<< SEARCH\n"player"\n=======\n"hero"\n>>>>>>> REPLACE\n@@end',
+      ),
+    );
+    const applied = unwrap(applyWorkReply(BASE, patch, { mode: "repair", parent: null }));
+    expect(applied.changed).toEqual(["main.js", "style.css", "assets.json"]);
+  });
+});
+
+describe("repair and retry turns", () => {
+  it("lists each distinct problem once and forbids whole files", () => {
+    const [system, user] = repairWorkMessages(BASE, [
+      "main.js:3:1 TypeError: x is not iterable",
+      "main.js:3:1 TypeError: x is not iterable",
+    ]);
+    expect(system?.content).toContain("@@file is rejected in a repair");
+    expect(user?.content.match(/x is not iterable/g)?.length).toBe(1);
+  });
+
+  it("echoes a short failed reply but never re-sends a whole world", () => {
+    const turn = repairWorkMessages(BASE, ["main.js:1 boom"]);
+    const short = retryWorkMessages(turn, "@@edit main.js\n...", "SEARCH text not found", "repair");
+    expect(short.length).toBe(turn.length + 2);
+    expect(short.at(-2)?.role).toBe("assistant");
+
+    const world = `@@file main.js\n${"x".repeat(WORK_ECHO_CHARS + 1)}`;
+    const long = retryWorkMessages(turn, world, "A repair must not resend main.js", "repair");
+    expect(long.length).toBe(turn.length + 1);
+    expect(long.some((message) => message.content.includes("x".repeat(100)))).toBe(false);
+    expect(long.at(-1)?.content).toContain("@@edit SEARCH/REPLACE blocks only");
   });
 });

@@ -156,6 +156,22 @@ describe("UnwrittenLedger", () => {
     ).toBe("NoteTooLong");
   });
 
+  it("refuses an oversized uri, so one entry cannot grow without bound", async () => {
+    const long = await call(
+      encodeFunctionData({
+        abi: artifact.abi,
+        functionName: "publish",
+        args: [`0x${"ee".repeat(32)}`, ZERO, 0, "i".repeat(401)],
+      }),
+    );
+    expect(
+      decodeErrorResult({
+        abi: artifact.abi,
+        data: `0x${Buffer.from(long.execResult.returnValue).toString("hex")}` as `0x${string}`,
+      }).errorName,
+    ).toBe("UriTooLong");
+  });
+
   it("the committed artifact is what the current source compiles to", () => {
     execFileSync("node", ["scripts/build-contracts.mjs"], { stdio: "pipe" });
     const fresh = JSON.parse(readFileSync("contracts/UnwrittenLedger.json", "utf8")) as {

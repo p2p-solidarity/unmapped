@@ -1,108 +1,127 @@
-# 交接：《未記之地》P1.5 → P5
+# 交接（2026-09-23）：AI 世界 · 故事劇集 · 選配鏈上出處
 
-> 這是一份給新 session 的完整工作指令。照順序做，每完成一個階段就更新 `plan.md` §10「目前狀態」。
+> 給下一個 session 的工作指令。上一版交接（P1.5 → P5，2026-09-21）的工作**全部做完了**，
+> 內容已移到 `plan.md` §10；本檔只講 2026-09-22 → 09-23 這一輪做了什麼、還缺什麼。
 
-## 0. 開工前（必做）
+## 0. 開工前
 
-1. **確認你站在對的程式碼上。** 執行 `ls src/shared/chunks.ts src/renderer/engine/ChunkField.tsx plan.md`。
-   任一不存在，代表你的 worktree 是從舊 commit 切出來的，缺少尚未提交的工作（P1 + 前一位 agent 的大量 WIP）。
-   這時**不要開工**：改到主 checkout `/Users/kidney/Workspace/Hackathon/26ethtokyo` 工作，或請使用者先 commit。
-2. 依序讀：`CLAUDE.md`（規則，全部有效）→ `plan.md`（**唯一規格**，2026-09-17 改向）→ 本檔。
-   `docs/ref/plan-cartridge-console.md` 是上一版計畫，只在做 P5 時參考。
-3. 跑 `bun run check`，必須全綠（基準：88 檔 678 測試）。不綠就先回報，不要疊新東西上去。
+1. `git log --oneline -1` 應該是 `4fc229b`（已在 `origin/main`）。工作樹應該乾淨。
+2. 依序讀：`CLAUDE.md`（規則，**Rule 12／13 是這一輪新增的**）→ `plan.md`（規格）→ 本檔
+   → `docs/plans/interactive-web-player.md`（AI 世界的設計）→
+   `docs/experiments/interactive-works-acceptance-2026-09-23.md`（**實測數據，別重測**）。
+3. `bun run check` 必須全綠。基準：**115 檔 806 測試**（2026-09-23 10:42 實跑）。不綠先回報，不要疊新東西。
+4. 模型：`.env` 有 `OPENAI_API_KEY` 就走 OpenAI（`gpt-5.4-mini`）。圖片走 `OPENAI_IMAGE_MODEL`（預設 `gpt-image-1-mini`）。
+   鏈是選配：`UNWRITTEN_*` 全空時每個畫面照常運作，只是說「沒有設定帳本」。
 
-## 1. 已經定案、不要重新討論的事
+## 1. 已定案，不要重新討論
 
-- 只做**一個遊戲**、無限地圖。不新增類型、kit、capability context、Create 步驟。
-- 地形確定性（`landSeed = seedFromText(cartridgeId)` + 區塊座標），**不落盤、不呼叫模型**。
-- 模型只在「顯影」時對一個區塊寫**一次**（居民、地標、習俗、靜態對話），存進 instance 的 save。
-- **互動當下不呼叫 LLM。** 沒有許願祭壇。戰鬥不在主路徑。相機玩家可切換。
-- 舊 Create 流程**從路由拿掉、保留為進階入口「重制」**，不刪。
-- 精神 = Large Lore Models（事實帳本 + 可爭論的 para-ledger）；控制核心 = Zero（固定錨點 + lore 圖啟動）。
-- 主軸「被看見，才存在」、昭和鄉間質感、不要奇幻。細節全在 `plan.md` §2–§8。
+- 一個遊戲、無限地圖；顯影（witness）只在玩家踏進未記區塊時對該區塊寫一次；**互動當下不呼叫 LLM**。
+- **Rule 12**：模型唯一能寫 JavaScript 的地方是 `interactive-web@1` 世界，且只跑在
+  `<iframe sandbox="allow-scripts">` + `ulwork://<token>/` + nonce CSP。永遠不要加 `allow-same-origin`、
+  不要從 app origin 提供世界、不要把 `window.seed`／路徑／secret 丟進 frame。
+- **Rule 13**：故事計畫是卡帶內容（`bible/story.json`，進 content hash）；玩到哪、產出的世界、帶著的東西在存檔
+  （`land.episodes`、`land.storyCarry`）。**閘門位置與 carry 合併由主程式決定，不是模型**。鏈上只放 hash／作者／血緣／短註記。
+- 世界（works）存在卡帶**旁邊**，不在卡帶裡：`works/`（不可變、有 hash）、`work-plays/`（釘住的進度）、
+  `work-drafts/`（候選；head 只能 compare-and-set 移動）。舊卡帶的位元組因此完全沒動。
+- 沒有假資料：模型不通、沒有世界、沒有帳本 → 顯示 `error` + `hint`，不要塞範例內容。
 
-## 2. 現況（P1 已完成並實機驗證）
+## 2. 這一輪交付了什麼
 
-- `src/shared/chunks.ts`：`CHUNK_SIZE=32`、`chunkOf`、`chunksAround`、`groundAt`、`chunkTerrain`（value noise：水／岸／岩、林地、稀有巨樹；原點區塊為 authored scene 留洞）。測試 `tests/shared/chunks.test.ts`。
-- `src/renderer/engine/ChunkField.tsx`：玩家周圍 5×5 繪製、3×3 有碰撞。`Ground`／`Props` 多了 `hole`、`solid`。
-- `kits/registry.ts` 的 `GameplayKitBehavior.open`（只有 `tps_exploration@1` 為 true）；`Player.tsx` 在 open 時不 `clampToFloor`；
-  `Atmosphere.tsx` 的太陽跟隨玩家、霧下限 `OPEN_FOG_FLOOR`；`engineStore.chunk` → HUD `LAND cx · cz`。
-- 實測：《P0 Finale Test》跑到 `LAND 0 · -3`、《湯屋來信》到 `LAND -1 · -1`，60 FPS，無邊界。
+| commit | 交付 | 程式在哪 |
+| --- | --- | --- |
+| `83a4225` | 2D 開放地（CC0 Ninja Adventure 貼圖、區塊串流、道具碰撞） | `src/renderer/engine2d/` |
+| `64fb5b4` | **Prompt 1+2+3**：沙箱 AI 世界播放器 + 創作迴圈（產生 → 玩 → 改 → 存版本 → 旅程） | `src/shared/{works,workEdits,workPrompt}.ts`、`src/main/works/`、`src/renderer/works/` |
+| `763ea31` | 用圖片模型畫世界素材（主程式持 key，`nativeImage` 縮到 256px，照樣要過檢查才生效） | `src/main/works/images.ts` |
+| `baf6ce0` | **故事 → RPG 地圖 → 劇集**：一段故事變成世界聖經 + 3–8 段劇集，閘門散在開放地上，走到才寫世界，carry 一路帶著 | `src/shared/story.ts`、`src/renderer/works/EpisodePanel.tsx`、`src/renderer/engine2d/storyLayer.ts` |
+| `ef75aea`＋`4fc229b` | 選配鏈上出處（`publish` 出處帳本 / `witness` 註記）＋ 先寫下一段劇集的按鈕；review 修正（取消要在每個 await 之間生效、uri 長度上限、花 gas 前二次確認） | `contracts/src/UnwrittenLedger.sol`、`src/main/chain/`、`src/shared/chain.ts` |
 
-### 怎麼實機驗證（不搶使用者畫面）
+重點契約（改之前先讀）：
+
+- 模型看到的世界 API 就只有 `host.{root, carry, load, save, complete, status, asset}`（`src/shared/workPrompt.ts`）。
+- 模型回覆是 `@@summary` / `@@file` / `@@edit`（SEARCH/REPLACE）/ `@@end` 行協定（`src/shared/workEdits.ts`），修不好最多 repair 2 次。
+- 「可玩」是自動關卡：全新開一次（補放按鍵與點擊）→ 若有存檔再用該存檔重開一次；兩次都過才會動 head。
+- 每次嘗試會在 console 印 `[works:attempt] {...}`（時間、token、repair 次數）——驗收數據就是從這裡來的。
+
+## 3. 實測數據在哪
+
+`docs/experiments/interactive-works-acceptance-2026-09-23.md`：邊界逃逸測試（`window.seed`/`eval`/`fetch`/跳轉/無窮迴圈各自的結果）、
+4 個世界的產生時間與 token、5 次修改、旅程與重開、故事 5 段劇集、圖片、鏈。**別重做這些測量**，要引用就引這份。
+
+## 4. 還沒做的（建議照這個順序）
+
+### A. 無限遊戲：自動預寫下一章 + 官方劇集打完後續寫（最接近可交付）
+
+現況：只有手動的「Prepare the next episode now」按鈕（`EpisodePanel.tsx`），而且劇集打完就結束。
+目標：走在地上時背景把**下一段**的世界寫好，走到閘門是秒開；作者寫的劇集打完後，土地自己續寫下一章。
+
+作法（已想過，照做即可）：
+
+1. `src/shared/story.ts`
+   - 加 `storyEpisodes(plan, extra)` = 卡帶的劇集 ++ 存檔續寫的劇集。
+   - `episodeUnlocked` / `nextEpisode` 改成吃 `StoryEpisode[]`（不要再吃 `StoryPlan`，因為 schema 最多 8 段）。
+   - 加 `parseNextEpisode(reply, index)`（單一 `@@episode` 區塊）與 `continueStoryMessages()`（給 logline、已清的劇集摘要、carry、語言）。
+   - **注意閘門距離**：現在 `episodePlace(index)` 的半徑每段 +1，相鄰閘門距離約 `1.87 × 半徑`，續寫到第 20 段會遠到走不到。
+     改成 phyllotaxis（`r ≈ c·√n`）讓相鄰距離大致固定；卡帶裡已存的 `cx/cz` 不受影響（story.json 存的是座標）。
+     上限：schema 的 `cx/cz` 是 ±64，id 是 `e1`–`e99`，所以續寫要設一個上限並誠實顯示。
+2. 存檔：`LandProgress.storyMore?: StoryEpisode[]`（`src/shared/land.ts`）＋ `src/main/instances/schemas.ts` 的 zod
+   ＋ `landStore.addEpisode()`。存檔會自動 checkpoint（`usePersistWorld` 已訂閱 landStore）。
+3. 把 `EpisodePanel.prepare()` 抽成 `src/renderer/works/prepareEpisode.ts`（面板與背景預寫共用；面板現在 257 行，Rule 1）。
+4. 新 `src/renderer/works/EpisodePrefetch.tsx`，掛在 `PlayScreen`：
+   - 一次只跑一段；`sessionStore.episodeOpen !== null` 時不跑（避免和面板重複產生）；失敗不自動重試（會燒 token），給 Retry。
+   - **檢查用的 frame 必須真的在畫面上**（隱藏的 frame 收不到 animation frame——這個坑踩過）：角落一張小卡片顯示
+     「正在寫下一章…」+ `useChecker` 的元素 + Pause／Cancel。Pause 偏好放 `localStorage`（Rule 2 允許的裝置偏好）。
+   - 全部劇集都清完 → 先呼叫 `continueStoryMessages` 續寫一章 → `addEpisode` → 下一輪自然會去寫它的世界。
+5. 其他讀者一起改：`engine2d/storyLayer.ts`（標記／目標／指南針）、`app/hud/PlayerCard.tsx`（`Story 3/5` → 續寫後顯示章數）、
+   `engine2d/LandView2D.tsx` 的 memo、`EpisodePanel`。
+6. 驗收（實機）：進故事世界走一段 → 閘門世界已經寫好、秒開；清掉最後一段作者劇集 → 地圖上冒出新章、走到時已就緒；
+   Pause 有效；拔掉模型時卡片顯示原因且不發明內容。
+
+### B. HD-2D 主畫面（使用者要的「歧路旅人」質感，完全沒開始）
+
+誠實的選項，先跟使用者確認要哪一條：
+
+- **真 HD-2D**：把開放地改走既有 Three.js 路徑（`src/renderer/engine/`），角色用 billboard sprite、固定俯角相機、
+  景深（tilt-shift）+ bloom。需要新相依 `@react-three/postprocessing`（+`postprocessing`），而且要保留現在的 canvas 路徑在旗標後面，
+  因為故事／閘門流程現在是靠 2D canvas 跑的。工作量最大，畫面最像。
+- **加深的 16-bit**：留在 canvas，補時間光色、遠景視差層、柔和陰影。半天可做，但**不要叫它 HD-2D**。
+
+### C. 把帳本部署到測試網（需要使用者本人）
+
+`bun run contracts:deploy` 會花 gas、需要 `UNWRITTEN_PRIVATE_KEY`。**agent 不要自己跑**。
+部署後把 `UNWRITTEN_RPC_URL` / `UNWRITTEN_CHAIN_ID` / `UNWRITTEN_LEDGER_ADDRESS` 填進 `.env`，
+在 AI Worlds 的世界卡上按 publish（會二次確認才送出）驗一次真交易。合約規則已在 in-process EVM 測過，也比對過已提交的 bytecode。
+
+### D. 省 token 的三件事（實測指出來的，不是猜的）
+
+最貴的不是第一次產生，是 **repair 整檔重寫** 和 **模型重複犯的錯**。依序做：
+1. repair 一律要求 SEARCH/REPLACE（現在允許整檔覆蓋）。
+2. 把「存檔／讀檔要回得來」「carry 要合併不是覆蓋」「dt 用秒」做進 host API，模型就不用每次重寫。
+3. `host.status` 已經在 shim 做節流；其他每幀呼叫的 API 也一併看一次。
+
+### E. 已知缺口（不在上面任何一項裡）
+
+- **v1 存檔 reader 未做**：真實 userData 開卡帶會出現 `instance-invalid: expected 2`；測試一律用 `AETHER_TEST_USER_DATA` 繞開。
+- 顯影偶發「這個地名已經有人用了」，2 輪 repair 後該區塊維持未記（舊管線，和這一輪無關）。
+- app 被直接關掉時，最後 5 秒的移動不會寫入。
+- `RTCPeerConnection` 在沙箱 frame 裡仍然存在（CSP 擋不掉），已記錄為可接受的殘留。
+- 「Replace…」換圖走原生檔案對話框，沒有自動化測試。
+- `plan.md` §10 的狀態這一輪已補上 09-22／09-23 條目；之後每做完一段請繼續更新。
+
+## 5. 怎麼實機驗證（不要搶使用者的畫面）
 
 ```bash
 mkdir -p /tmp/aether-ud && cp -R ~/Library/Application\ Support/Unwritten\ Land/cartridges /tmp/aether-ud/
-AETHER_TEST_USER_DATA=/tmp/aether-ud bunx electron-vite dev --remoteDebuggingPort 9333   # 背景執行
-bun scripts/cdp-drive.ts '[{"text":true}]'                                              # 讀畫面文字
-bun scripts/cdp-drive.ts '[{"click":[160,722]},{"wait":1500},{"text":true}]'            # 標題 → Cartridges
-bun scripts/cdp-drive.ts '[{"hold":["KeyW","ShiftLeft"],"ms":10000},{"shot":"/tmp/a.jpg"}]'
+AETHER_TEST_USER_DATA=/tmp/aether-ud bun run dev --remoteDebuggingPort 9222   # 背景執行
+bun scripts/cdp-drive.ts '[{"text":true}]'                                    # 讀畫面文字
+bun scripts/cdp-drive.ts '[{"hold":["KeyW"],"ms":4000},{"shot":"/tmp/a.jpg"}]'
 ```
 
-座標是 CSS px（視窗約 1440×868）。用 `{"eval": "..."}` 以文字找元素的 `getBoundingClientRect()` 再點，別猜座標。
-**不要碰** `~/Library/Application Support/Unwritten Land/` 底下的真實資料；一律用 `AETHER_TEST_USER_DATA`。
-結束時 `pkill -f "electron-vite dev"` 並確認 Electron 行程已退出（殘留會佔住 9333）。
+- 座標是 CSS px；用 `{"eval":"..."}` 找元素的 `getBoundingClientRect()` 再點，別猜。
+- **不要碰** `~/Library/Application Support/Unwritten Land/` 的真實資料。
+- 收工：`pkill -f "electron-vite dev"`，並確認 9222 沒有殘留行程（殘留會讓下一次連不上）。
+- 沙箱世界的 frame 要另外連：它是獨立的 OOPIF target，`ulwork://` origin。
 
-### 已知擋路的 bug（不在本交接範圍，另有任務）
+## 6. 回報格式
 
-真實 userData 下 Cartridges 面板顯示 `instance-invalid: expected 2`：v2 存檔格式沒有 v1 reader。用暫存 userData 即可繞過。
-
-## 3. 要做的工作
-
-每個階段：先寫最小可跑的實作 → `bun run check` 綠 → 用上面的方式**實機走一遍** → 更新 `plan.md` 狀態 → 才進下一階段。
-Rule 0：不要過度工程，測試只要證明「這部分能跑」。每檔 ≤ 600 行。不確定的產品決定才問使用者，其餘自己選並在回報裡說明。
-
-### P1.5 收尾
-
-1. **天光下限**：open 且場景沒有 `sun` 時，加一盞跟隨玩家的弱方向光（夜景走出去現在近乎全黑）。在 `Atmosphere.tsx`。
-2. **相機切換**：open 世界允許玩家用一個按鍵在 orbit / fps 間切換（目前 HUD 顯示 `scene locked`，見 `CameraRig.tsx`、`app/hud/ActionDock.tsx`）。只對 `open` kit 放寬，其他 kit 維持鎖定。
-3. **世界座標存檔**：`SaveState.player`（`src/shared/cartridge.ts`）加世界座標；離開 Play／定期（低頻）寫入，載入時從該座標出生而不是 `spawnPoint`。
-   經 `src/main/instances/`（zod 驗證，Rule 6）與 preload `window.seed.instances`。驗收：重開 app 回到原地、同座標地形相同。
-4. HUD 在 open 世界不顯示 `FLOOR`。
-
-### P2 顯影（本計畫的核心，花最多心力）
-
-規格在 `plan.md` §4–§6。建議順序：
-
-1. **`src/shared/lore.ts`（純函式 + 測試）**：`LoreNode { id, kind, label, text, coord, links[], tone }`；
-   `activate(nodes, { coord, karma }) → LoreNode[]`：空間核 + 近期 karma 加權 + 沿 links 擴散一步（×0.5）+ top-K≈12。
-2. **世界聖經**：cartridge 多 `bible/core.md`、`bible/style.md`，納入 content hash（看 `src/main/cartridges/` 的檔案表與 `validate-revision.ts`）。
-   沒有聖經的舊卡帶：顯影功能顯示 `error` 狀態與 hint，**不要**塞預設聖經（Rule 2）。
-3. **DSL**：在 `src/dsl` 加 `Lore(id, kind, label, text, links[], tone)` 元件與 `parseChunk`（Scene 程式 + Lore 宣告），數值走 `limits.ts` clamp。
-   區塊 Scene 用區塊內本地座標 0..31。prompt 放 `src/dsl/prompts/`，repair 沿用 `src/dsl/repair.ts`（≤ 2 輪）。
-4. **顯影管線**（renderer `narrative/`，比照 `generateScene` 的 prompt → chat → parse → repair）：
-   輸入 = 聖經（原封不動）+ `activate()` 的熱區 + 鄰區摘要 + 本區地形摘要（由 `chunkTerrain` 算：水／林比例、有無巨樹）。
-   輸出 = 區塊 Scene + 每個 NPC 的**靜態** Dialogue 程式 + 新 Lore 節點。prompt 明示「居民可以記錯、各說各話」、語言 = `genesis.language`。
-   衛生檢查：助理腔、空泛神祕語、與既有節點重名 → 當成 repair 錯誤。兩輪失敗 → 區塊維持「未記」、可重試，**絕不寫 fallback**。
-5. **存檔**：`saves/<saveId>/chunks/<cx>_<cz>/{scene.oui,dialogue/<npcId>.oui}`、`lore.jsonl`；`karma.jsonl` 加 `{cx, cz}` 與 action `witness`。
-   全部經 main（zod）寫入；寫一次後唯讀。
-6. **觸發與渲染**：玩家進入一個未記區塊（且模型可用）→ 背景顯影，走路不中斷；完成後該區塊的居民／道具疊在地形上
-   （`ChunkField` 的 `Chunk` 多渲染 overlay 的 walls／props／NPC，座標加區塊偏移）。`Proximity`／`useInteractions` 要能認到非原點區塊的 NPC。
-   HUD 誠實顯示該區塊狀態：未記／顯影中／已記／失敗。
-7. **對話零 LLM**：互動時讀存好的 Dialogue 程式；`useInteractions.ts` 在 open 世界不再呼叫 `generateDialogue`。
-8. **換掉扁平視窗**：`src/harness/builtins/worldContext.ts` 的 `KARMA_WINDOW = 12` 改由 `activate()` 的熱區提供。
-9. **鄉間詞彙**：`src/shared/world.ts` 補 prop／biome（電線桿、自動販賣機、公車亭、鐵軌、煙囪、鐵塔、風車、防波堤、民家…），
-   幾何在 `src/renderer/engine/palette/`（hex 只能放那裡，Rule 3）。舊詞彙保留以相容舊卡帶。
-10. **遠景層**：霧下限讓 64 m 外看不到東西，和「遠方有高的東西」衝突——加一層只畫高地標剪影、不受近霧影響的遠景。
-
-驗收：走進未記區塊 → 居民出現、重開後不變；相鄰區塊的習俗看得出關聯；拔掉模型仍可無限行走；對話期間零 LLM 請求（看 main 的 inference log）。
-
-### P3 家與門
-
-`plan.md` §7。委託用確定性模板（送／找／帶路），文字在顯影時寫好；完成 → 紀念物（沿用 Item DSL，於顯影時生成定義）→ 擺在家。
-門 = 四格轉盤（世界座標或朋友門牌），存在 save。驗收：完成委託 → 紀念物擺在家 → 用門回到該地。
-
-### P4 連線
-
-`plan.md` §8、既有 `src/renderer/net`。Y.Doc：`overlays`（key = 座標，先寫者為準）、`lore`、`notes`、`home`；位置走 awareness。
-加入前沿用 SessionHello 的 `contentHash` gate。手記 `notes.jsonl`：`{ id, author, at, coord, anchors, text, contests? }`，玩家自己打的字，不經模型。
-驗收：兩個 app 行程（兩個 `AETHER_TEST_USER_DATA`）在同一區塊看到同一批居民與彼此的手記。
-
-### P5 重制入口
-
-極簡 Create（世界名 + 一句意圖 + 語言 → 模型寫聖經與**邊緣開放**的原點場景 → 發布 `tps_exploration@1` cartridge → 直接進遊戲）成為主路徑；
-舊 `narrative/ui/CreateScreen.tsx` 那一套移到進階入口「重制」。無模型 → `error` + hint。驗收：新玩家三次輸入內進到遊戲。
-
-## 4. 回報格式
-
-每階段結束回報：改了哪些檔、`bun run check` 結果（失敗就貼原文）、實機走了什麼流程與截圖、沒做或沒驗到的部分照實寫。
+改了哪些檔 → `bun run check` 結果（失敗貼原文）→ 實機走了什麼流程（數據從 `[works:attempt]` 抄）→
+沒做或沒驗到的部分照實寫。不要宣稱沒跑過的功能會動。

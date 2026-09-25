@@ -8,6 +8,7 @@ import { dirname, join } from "node:path";
 import type { CartridgeFileIntegrity, ContentHash } from "@shared/cartridge";
 import { compareCartridgeVersions } from "@shared/cartridge";
 import { err, ok, type Result } from "@shared/result";
+import { mergeCarry } from "@shared/story";
 import {
   assetMapSchema,
   type Json,
@@ -403,14 +404,17 @@ async function applyPlayChange(
     }
     states[change.world] = change.state;
   } else if (change.kind === "complete") {
-    const bytes = jsonBytes(change.carry);
+    // Rule 13: the host merges what a world hands back over what it was given, so a world that
+    // passes only what it earned (or forgets the rest) cannot erase what earlier worlds gave.
+    const merged = mergeCarry(play.carry, change.carry);
+    const bytes = jsonBytes(merged);
     if (bytes === null || bytes > WORK_LIMITS.carryBytes) {
       return err(
         "carry-too-large",
         `Carry is ${bytes ?? "?"} bytes (limit ${WORK_LIMITS.carryBytes}).`,
       );
     }
-    carry = change.carry;
+    carry = merged;
     completions = [
       ...completions,
       {

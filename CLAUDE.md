@@ -275,11 +275,14 @@ export function WorksScreen(): JSX.Element;   // title → "AI Worlds": new worl
 // WorkFrame: one sandboxed session; validates messages, heartbeat watchdog (kills a hung frame's pid), "check" mode
 // runAttempt(draft, "generate" | "edit", request, deps): model reply → @@ line protocol (src/shared/workEdits.ts)
 //   → pending candidate → player check (fresh + resume-from-save) → ≤ 2 repairs → settle (compare-and-set)
+//   a repair answers with @@edit SEARCH/REPLACE only (a whole-file @@file is refused and counts as the repair)
 // window.seed.works.*: list/plays/drafts, createDraft, readCandidate, writeCandidate, settleCandidate,
 //   revertDraft, publishDraft, replaceAsset, createPlay/readPlay/changePlay, openSession/closeSession
 ```
 The model-facing contract is `WORK_CONTRACT` in `src/shared/workPrompt.ts`; the host API a world sees
-is exactly `host.{root, carry, load, save, complete, status, asset}`.
+is exactly `host.{root, carry, load, save, loop, complete, status, asset}` (shim: `FRAME_RUNTIME` in
+`src/main/works/frame.ts`). `load(fresh)` fills keys the save lacks, `loop(fn)` gives dt in seconds,
+and main merges a completion's carry over the incoming one (`mergeCarry`), so worlds need not.
 
 ### `src/main/chain` + `src/shared/chain.ts` (optional ledger, Rule 13)
 ```ts

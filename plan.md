@@ -320,6 +320,35 @@ provider 沒做／沒驗到：
 - **Apple 模型生成完全沒驗到**（需要使用者自己 `sudo fm license`）。串流、`stop`、`max_tokens` 是否被 fm serve 支援未知；
   顯影 prompt 約 3.8k tokens + 最多 3.2k 輸出，可能超過 Apple 模型的 context，屆時會以錯誤顯示、區塊維持未記。
 
+**2D 開放地 · AI 世界 · 故事劇集 · 選配鏈**（2026-09-22 → 09-23）：`bun run check` 全綠（115 檔 806 測試）。
+
+- **2D 開放地**（`83a4225`）：開放地改用 2D canvas 繪製（CC0 Ninja Adventure 貼圖），區塊串流、道具碰撞、
+  站進碰撞體時的脫困處理。程式在 `src/renderer/engine2d/`。
+- **AI 世界 `interactive-web@1`**（`64fb5b4`，Rule 12）：模型寫 `main.js`／`style.css`／`assets.json`，
+  只跑在 `<iframe sandbox="allow-scripts">` + 每個 session 一個 `ulwork://<token>/` + nonce CSP；
+  世界看得到的只有 `host.{root, carry, load, save, loop, complete, status, asset}`。
+  產生 → 玩 → 改 → 存版本 → 旅程全線可用（入口：標題 → AI Worlds）。
+  儲存在卡帶**旁邊**：`works/`（不可變、有 hash）、`work-plays/`、`work-drafts/`（head 只能 compare-and-set）。
+  「可玩」是自動關卡：全新開一次 + 用它自己的存檔再開一次，兩次都過才動 head；修不好最多 repair 2 次。
+- **圖片**（`763ea31`）：`gpt-image-1-mini` 畫素材，key 只在主程式，縮到 256px，照樣要過檢查才生效。
+- **故事 → RPG 地圖**（`baf6ce0`，Rule 13）：一段故事 → 世界聖經 + 3–8 段劇集，閘門由**主程式**散在開放地上；
+  走到閘門才寫那一段的世界，清掉後 carry 由主程式合併帶往下一段，並記一筆 `witness` karma。
+  計畫是卡帶內容（`bible/story.json`，進 content hash）；進度在存檔（`land.episodes`、`land.storyCarry`）。
+- **選配鏈上出處**（`ef75aea`、`4fc229b`）：`contracts/src/UnwrittenLedger.sol` 只記 app 本來就算好的 sha256、
+  作者、血緣與短註記；沒設定 `UNWRITTEN_*` 時每個畫面照常運作並說明沒有帳本。合約規則用 in-process EVM 測過。
+- 實測數據（邊界逃逸、4 個世界的產生時間／token、5 次修改、旅程重開、5 段劇集、圖片、鏈）全在
+  `docs/experiments/interactive-works-acceptance-2026-09-23.md`。
+
+這一輪沒做／已知問題：
+- 劇集只能手動「先寫下一段」，沒有背景自動預寫；作者寫的劇集打完就結束，土地不會續寫（無限遊戲的部分未做）。
+- HD-2D（歧路旅人那種質感）完全沒開始；現在是 2D canvas 的 16-bit。
+- 合約**從未部署到任何公開網路**、沒送過真實交易（要花 gas、要使用者的 key：`bun run contracts:deploy`）。
+- （已處理，handoff §4D）repair 只收 `@@edit`（整檔 `@@file` 被拒並算一次 repair）；`host.load(fresh)` 補齊存檔缺的鍵、
+  `host.save` 保留 Set/Map、`host.loop(fn)` 給秒為單位的 dt、完成時 carry 由主程式合併。省下多少 token **尚未實機量測**。
+- 沙箱 frame 裡 `RTCPeerConnection` 仍存在（CSP 擋不掉），記錄為可接受殘留；換圖的原生對話框沒有自動化測試。
+
+下一步與作法寫在 `docs/handoff-next-session.md`。
+
 ## 11. 已知未決
 
 - 地形是平的。高低差（丘陵、階地）最有「無人深空感」，但牽涉碰撞與相機，P1 不做。

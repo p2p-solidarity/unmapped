@@ -50,6 +50,17 @@ describe("palette coverage", () => {
     expect(Object.keys(PROP_SHAPE)).toHaveLength(PROP_KINDS.length);
   });
 
+  // Props.tsx keys one instanced mesh per part by shape + offset + size; the gear's crossed
+  // spokes share the first two, so a recipe with two fully identical parts would collide.
+  it("tells the parts of a recipe apart by shape, offset and size", () => {
+    for (const kind of PROP_KINDS) {
+      const keys = PROP_SHAPE[kind].parts.map(
+        (part) => `${part.geo}-${part.offset.join("_")}-${part.size.join("_")}`,
+      );
+      expect(new Set(keys).size, kind).toBe(keys.length);
+    }
+  });
+
   it("has a look for every monster kind", () => {
     for (const kind of MONSTER_KINDS) {
       const look = MONSTER_LOOK[kind];

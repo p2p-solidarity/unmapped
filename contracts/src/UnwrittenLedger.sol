@@ -26,6 +26,7 @@ contract UnwrittenLedger {
     }
 
     uint256 public constant MAX_NOTE = 280;
+    uint256 public constant MAX_URI = 400;
 
     mapping(bytes32 => Revision) private revisions;
 
@@ -43,6 +44,7 @@ contract UnwrittenLedger {
     error UnknownParent(bytes32 parent);
     error UnknownRevision(bytes32 contentHash);
     error NoteTooLong(uint256 length);
+    error UriTooLong(uint256 length);
 
     /// Records a revision. `parent` is bytes32(0) for a first version, otherwise a published hash.
     function publish(bytes32 contentHash, bytes32 parent, Kind kind, string calldata uri) external {
@@ -51,6 +53,7 @@ contract UnwrittenLedger {
         if (parent != bytes32(0) && revisions[parent].author == address(0)) {
             revert UnknownParent(parent);
         }
+        if (bytes(uri).length > MAX_URI) revert UriTooLong(bytes(uri).length);
         revisions[contentHash] = Revision({
             author: msg.sender,
             parent: parent,

@@ -50,7 +50,7 @@ export function useChecker(height = 220): Checker {
         ...resumed,
         problems: resumed.problems.map((problem) => ({
           ...problem,
-          message: `After reloading the state it saved with host.save: ${problem.message}. host.load() must restore everything main.js needs.`,
+          message: `After reloading the state it saved with host.save: ${problem.message}. Resume with host.load(newGame()) so whatever the save lacks comes from a fresh game.`,
         })),
       };
     },

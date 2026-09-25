@@ -157,11 +157,17 @@ export function wallBoxes(walls: readonly WallSpec[]): BoxSpec[] {
   return walls.map(wallBox);
 }
 
+/** Colliders for the props that have one; two props on the same tile only need one of them. */
 export function propColliders(props: readonly PropSpec[]): CylinderSpec[] {
   const out: CylinderSpec[] = [];
+  const seen = new Set<string>();
   for (const prop of props) {
     const collider = propCollider(prop);
-    if (collider !== null) out.push(collider);
+    if (collider === null) continue;
+    const key = `${collider.center.join("_")}:${collider.radius}:${collider.halfHeight}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(collider);
   }
   return out;
 }

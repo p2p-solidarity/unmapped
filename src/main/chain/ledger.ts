@@ -75,7 +75,7 @@ export interface LedgerClients {
   address: Address;
 }
 
-/** Built per call so a changed .env takes effect without a restart. Injectable for tests. */
+/** Built per call from the env this process booted with (`.env` is read once). Injectable for tests. */
 export function ledgerClients(env: LedgerEnv = readEnv()): Result<LedgerClients> {
   const config = ledgerConfig(env);
   if (!config.readable || !isAddress(env.address)) {
