@@ -1,10 +1,12 @@
 // Combat on the open land itself — no screen change, no second combat model. When the cartridge's
-// rules declare combat, the fight is whoever is near: the authored origin's monsters plus the wild
-// monsters of the 3 × 3 chunks around the player (`wildMonsters`), rebuilt as the player crosses a
-// chunk. The trigger, cooldown, turns, progression and hostiles closing in are `combatLoop.ts`,
-// exactly as in 3D; this only says where the walker stands and what ground a hostile may cross (the
-// walker's own `canStandAt`). The shot flies the way the player faces. The fallen stay down in the
-// save until they respawn (`landFelled.ts`).
+// rules declare combat, the fight is whoever is near: the wild monsters of the 3 × 3 chunks around
+// the player (`wildMonsters`) and a story chapter's foes (the authored origin's own monsters stand at
+// home, so they never join), rebuilt as the player crosses a chunk. The trigger, cooldown, turns,
+// progression and hostiles closing in are `combatLoop.ts`, exactly as in 3D; this only says where
+// the walker stands and what ground a hostile may cross (the walker's own `canStandAt`). The shot
+// flies the way the player faces. The fallen stay down in the save until they respawn
+// (`landFelled.ts`). Home is safe (`isSafeGround`): no foe stands in the home chunk, none follows
+// the player into it and no blow lands there.
 
 import { translate } from "@renderer/i18n";
 import {
@@ -18,6 +20,7 @@ import { chunkOf, wildMonsters } from "@shared/chunks";
 import type { TerritoryMap } from "@shared/continent";
 import { FOE_TUNING } from "@shared/foes";
 import type { GameplayRules } from "@shared/gameplay";
+import { isSafeGround } from "@shared/safeGround";
 import type { MonsterKind, MonsterSpec, SceneGraph } from "@shared/world";
 import { type RefObject, useCallback, useEffect, useMemo, useRef } from "react";
 import { spawnPoint } from "../engine/colliders";
@@ -32,6 +35,7 @@ import {
 import { buildEncounter, carryWounds, PLAYER_ID, shotBlockers } from "../engine/combat/encounter";
 import { shownAt } from "../engine/combat/hostiles";
 import { createShove } from "../engine/combat/livePositions";
+import { carriedPlayerHp, carryPlayerHp } from "../engine/combat/playerWounds";
 import { felledBook } from "./landFelled";
 import { findPath } from "./walkTo";
 
@@ -105,7 +109,8 @@ export function useLandCombat(input: {
   // Whoever is near makes up the fight. Crossing a chunk rebuilds it; everyone's wounds carry.
   const cx = chunk?.cx ?? chunkOf(player.current.x, player.current.z).cx;
   const cz = chunk?.cz ?? chunkOf(player.current.x, player.current.z).cz;
-  const hp = useRef<number | null>(null);
+  // A place's fight may have left the player hurt: the land carries that on (playerWounds.ts).
+  const hp = useRef<number | null>(carriedPlayerHp());
   // Who this land last put in the fight: only their wounds carry into the next roster, never those
   // of a place's fight that has not been torn down yet.
   const own = useRef(new Set<string>());
@@ -123,8 +128,9 @@ export function useLandCombat(input: {
         wild.push(...wildMonsters(seed, near, graph));
       }
     }
+    // Nobody is put in the fight at home, whoever wrote them there (an authored origin's monsters).
     const monsters = [...graph.monsters, ...(extra ?? []), ...wild].filter(
-      (one) => !book.isDown(one.id),
+      (one) => !book.isDown(one.id) && !isSafeGround(one.x, one.z),
     );
     const built = buildEncounter({ ...graph, monsters }, rules, { armedAlone: true });
     if (built === null) {
@@ -144,7 +150,10 @@ export function useLandCombat(input: {
     let live = true;
     const stop = useEncounterStore.subscribe((state, previous) => {
       const you = state.combatants.find((one) => one.id === PLAYER_ID);
-      if (you !== undefined && state.turn !== null) hp.current = you.hp;
+      if (you !== undefined && state.turn !== null) {
+        hp.current = you.hp;
+        carryPlayerHp(you.hp);
+      }
       if (previous.turn !== null && state.turn === null && rules?.combat) {
         queueMicrotask(() => {
           if (live) rebuild();
@@ -168,6 +177,7 @@ export function useLandCombat(input: {
         player.current.x = x;
         player.current.z = z;
         hp.current = null;
+        carryPlayerHp(null);
         clock.current.hostiles.clear();
         clock.current.guard = FOE_TUNING.reviveGuardSeconds;
         shove.drop();
@@ -199,7 +209,10 @@ export function useLandCombat(input: {
       endless: true,
       ground: {
         stand: (x, z) => stand.current(x, z),
-        route: (from, to) => findPath(from, to, stand.current),
+        // Routes go round home as well as round what blocks the walker.
+        route: (from, to) =>
+          findPath(from, to, (x, z) => !isSafeGround(x, z) && stand.current(x, z)),
+        safe: isSafeGround,
       },
       shove: (dx, dz) => shove.push(dx, dz),
     }),

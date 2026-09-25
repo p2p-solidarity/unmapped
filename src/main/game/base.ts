@@ -15,9 +15,10 @@ import { handle } from "../handle";
 import v100 from "./aether-land-1.0.0.json";
 import v110 from "./aether-land-1.1.0.json";
 import v120 from "./aether-land-1.2.0.json";
+import v130 from "./aether-land-1.3.0.json";
 
 /** Oldest first; the last one is what New Game starts on. Never drop an entry. */
-const SHIPPED: readonly unknown[] = [v100, v110, v120];
+const SHIPPED: readonly unknown[] = [v100, v110, v120, v130];
 
 /** One install at a time: the title screen can ask twice before the first answer arrives. */
 let installing: Promise<Result<CartridgeManifest>> | null = null;

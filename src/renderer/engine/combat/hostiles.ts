@@ -1,6 +1,7 @@
 // Real-time hostiles (`shooter_combat@1` when the timing system is continuous): each notices the
 // player, closes in over ground the player could stand on too, stops at arm's length, draws back,
-// strikes, recovers, and walks home once the player has led it past its leash.
+// strikes, recovers, and walks home once the player has led it past its leash — or once the player
+// is on safe ground (the land's home), which no hostile steps onto and no blow reaches.
 //
 // Pure — no store, no renderer, no clock of its own. `combatLoop.ts` owns the one mutable map of
 // these states (in the caller's ref, Rule 4), resolves the blows this returns, and the land and 3D
@@ -37,6 +38,11 @@ export interface HostileState {
 export interface HostileGround {
   stand(x: number, z: number): boolean;
   route?(from: Point, to: Point): Point[] | null;
+  /**
+   * Safe ground (the land's home, `isSafeGround`): a hostile never steps onto it, never notices or
+   * follows a player standing on it, and a blow wound up at them there does not land. Absent = none.
+   */
+  safe?(x: number, z: number): boolean;
 }
 
 /** A living hostile as the roster knows it (position = its home). */
@@ -71,6 +77,11 @@ const HEADWAY = 0.3;
 
 type Move = "moved" | "ground" | "crowd";
 
+/** Ground a hostile may step onto: what the walker stands on, less safe ground. */
+function roams(ground: HostileGround, x: number, z: number): boolean {
+  return ground.stand(x, z) && ground.safe?.(x, z) !== true;
+}
+
 function tryMove(
   self: HostileState,
   x: number,
@@ -79,7 +90,7 @@ function tryMove(
   others: readonly Point[],
 ): Move {
   // Something standing inside a collider (a prop that appeared under it) may always walk out.
-  if (ground.stand(self.x, self.z) && !ground.stand(x, z)) return "ground";
+  if (roams(ground, self.x, self.z) && !roams(ground, x, z)) return "ground";
   for (const other of others) {
     const after = Math.hypot(other.x - x, other.z - z);
     if (after < FOE_TUNING.spacing && after < Math.hypot(other.x - self.x, other.z - self.z)) {
@@ -188,7 +199,9 @@ export function stepHostile(
   const { player, delta, ground, others } = input;
   const reach = FOE_TUNING.reach + input.radius;
   const gap = distance(self, player);
-  const led = distance(self.home, player) > FOE_TUNING.leashRadius;
+  // A player at home is out of every hostile's reach: it neither notices, follows nor hits them.
+  const sheltered = ground?.safe?.(player.x, player.z) === true;
+  const led = sheltered || distance(self.home, player) > FOE_TUNING.leashRadius;
   const strayed = distance(self, self.home) > FOE_TUNING.leashRadius + 2;
   const speed = foeSpeed(input.level);
   switch (self.mode) {
@@ -217,7 +230,7 @@ export function stepHostile(
       if (self.timer > 0) return false;
       self.mode = "recover";
       self.timer = FOE_TUNING.recoverSeconds;
-      return gap <= reach + FOE_TUNING.reachSlack;
+      return !sheltered && gap <= reach + FOE_TUNING.reachSlack;
     case "recover":
       self.timer -= delta;
       if (self.timer <= 0) self.mode = "chase";

@@ -57,7 +57,10 @@ export interface CombatAim {
    * only the player falling ends the fight.
    */
   endless?: boolean;
-  /** Where real-time hostiles may walk: the same test the player moves by. Absent = they hold. */
+  /**
+   * Where real-time hostiles may walk: the same test the player moves by. Absent = they hold. On the
+   * land it also names safe ground (home), where no hostile goes and no hostile's blow lands.
+   */
   ground?: HostileGround;
   /** Pushes the player back by (dx, dz) tiles, through the controller's own collision. */
   shove?(dx: number, dz: number): void;
@@ -223,9 +226,12 @@ export function stepCombat(
 
   // The player is the only combatant that moves, so its live position wins over the roster's.
   const here = aim.player();
+  // No hostile strikes anyone standing on safe ground (the land's home); its turn passes them over.
+  const safe = self.side === "hostile" ? aim.ground?.safe : undefined;
   const foes = store.combatants
     .filter((one) => one.side !== self.side)
-    .map((one) => (one.id === PLAYER_ID ? { ...one, x: here.x, z: here.z } : one));
+    .map((one) => (one.id === PLAYER_ID ? { ...one, x: here.x, z: here.z } : one))
+    .filter((one) => safe === undefined || !safe(one.x, one.z));
   // Walls block their shots exactly as they block yours; nobody in sight passes the turn.
   const victimId = chooseVictim(self, foes, weapon, blockers);
   if (victimId !== null) {
