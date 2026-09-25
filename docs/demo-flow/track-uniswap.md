@@ -39,22 +39,26 @@
 
 市場畫面的按鈕與等待時間以 ENSv2 那邊的 `docs/demo/lineage-market.md` 為準（例如改編世界的拍賣大約 10 分鐘，現場發行後要接一個事先拍賣完的世界來示範交易）。app 入口：「世界」→「市場」。
 
-### 鏈上現況（ENSv2 session 2026-09-26 回報；E2E 紀錄將放在 `docs/e2e/milestone-lineage-demo/`）
+### 鏈上現況（Sepolia 真實交易，[milestone-lineage-demo](../e2e/milestone-lineage-demo/result.md)）
 
 | 項目 | 狀態 |
 | --- | --- |
-| 根世界的 CCA 拍賣（LBPStrategy v3.1.0＋CCA factory v2.1.0），拍賣合約 `0x828fC65d333712474fb249220aBD1EBc04B3b1fC` | **Sepolia 上真的在跑**：底價 0.01，4 筆 passkey 出價（3 個種子出價者＋1 筆從 app 出）後清算價約 0.018 USDC——價格真的被出價推高了，這是模擬裡沒有的 |
-| 畢業開成 v4 池、經池子買賣、領權利金 | 拍賣結束後由 ENSv2 session 在 app 內結算與交易，交易雜湊之後補上 |
+| 根世界 `aether-land.unmapped.eth` 的 CCA 拍賣（LBPStrategy v3.1.0＋CCA factory v2.1.0） | **已結束**：5 筆 passkey 出價，清算價 0.018395 USDC（底價 0.009999，**+84%**），募得 9,070 USDC，50 萬顆全數領走 |
+| 結算並畢業成 v4 池（app 的「結算拍賣」，不需簽名，中繼器付 gas） | 5 × `exitBid`＋5 × `claimTokens`＋`graduate`（`0x218ae77b…f6bb`） |
+| 用 passkey 經池子買入 10 USDC（系統瀏覽器簽名） | 買到 535.39 AETHERLAND，hook 抽 5.408——**剛好 1%**（`0x0aca30e5…d55f`） |
+| 發放分潤給 ENS 名字的持有人 | 5.408 AETHERLAND 付給 `0x8eEC…51C3`（`0x3161c788…d819`）。根世界是第一代，所以 1% 全歸它；50／30／20 的三代分帳看 `bun run lineage:market --dry-run` |
 | 3 跳買入的權利金 7.30／10.95／18.25（50／30／20 精確） | 只在模擬中 |
 | 玩家不需要錢包：passkey 擁有一個 PasskeyAccount，main 組好批次、passkey 簽摘要、中繼器只付 gas；鏈上用 OpenZeppelin WebAuthn＋EIP-7951 P-256 precompile 驗章 | precompile 驗章在 Sepolia 上真實通過；重放、竄改、別的 passkey 在模擬中都被拒 |
 
-**台上的圖**：`web/lineage-auction`（唯讀的「Lineage Auction House」）即時畫清算價曲線、出價（標 PASSKEY）、池子與家族樹，比 Etherscan 好講。本機：`python3 -m http.server 4173 --directory web/lineage-auction` → http://localhost:4173。
+**台上的圖**：公開的唯讀拍賣頁 https://unmapped-auction.gimmychang.workers.dev（現在顯示 GRADUATED · POOL OPEN）畫出清算價逐塊上升、出價（標 PASSKEY）、池子與家族樹，比 Etherscan 好講。操作手冊：`docs/demo/lineage-market.md`。
 
-**簽名的限制**：Electron 開發版叫不出 Touch ID；改走瀏覽器簽名的步驟完成前，現場出價請用 USB 安全金鑰，或改成展示已經完成的出價與交易。
+**現場要出價**：根世界的池子已經開了，要現場示範拍賣就先發行一個新的改編世界：`bun run lineage:demo launch <label> --parent 0x5e8e39c25cEa96F3ED4d6B03c1fc17213453ae7f --blocks 50`（約 10 分鐘）。中繼器 `0x8eEC…51C3` 的 Sepolia ETH 要維持在 0.02 以上。
+
+**簽名**：Electron 開發版叫不出 Touch ID，所以 app 會在 Chrome／Safari 開一個本機頁面完成那一次簽名。E2E 用的是虛擬驗證器，**真的用手指按 Touch ID 還沒測過——上台前在 demo 用的 Mac 上排練一次**。
 
 ## 要講清楚、不能講過頭的
 
 - 可以說：合約已在 Sepolia 真實部署；發行、拍賣、畢業、多跳交易、權利金、名字轉手、四種拒絕情境已在真實合約上模擬通過。
-- 模擬裡每場拍賣只有一個出價者，清算價從沒高過底價；Sepolia 上根世界的真實拍賣有 4 筆出價、價格從 0.01 推到約 0.018。畢業失敗（`MigrationFailed`）和 exact-output 交易沒有跑過。被問到價格發現時照實說。
+- 模擬裡每場拍賣只有一個出價者，清算價從沒高過底價；Sepolia 上根世界的真實拍賣有 5 筆出價，清算價從底價 0.009999 推到 0.018395（+84%）。畢業失敗（`MigrationFailed`）和 exact-output 交易沒有跑過。被問到價格發現時照實說。
 - 已知限制（評審可能問）：registry 持有的全範圍流動性目前不能提出，LP 手續費也沒人收；沒用到的 LP 儲備歸世界擁有者。
-- 在 ENSv2 那邊的 E2E 綠燈之前，不要說「app 裡已經能交易」。
+- 可以說「app 裡用 passkey 出價、結算、買入、發放分潤都在 Sepolia 真實交易過」；三代分帳與名字轉手仍只在模擬中。
