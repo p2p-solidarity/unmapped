@@ -1,6 +1,8 @@
 // Prose hygiene for witnessed chunks (after Zero's hygiene pass): the land must sound like people
 // living somewhere, not like an assistant or a fortune cookie, and it must not re-declare what the
-// world already remembers. Every hit is a repair-round complaint, never a silent rewrite.
+// world already remembers. Every hit is a repair-round complaint, never a silent rewrite. (A Lore
+// that merely re-declares a known name is folded into the known node by the parser before this
+// runs; only a place named like an existing one still reaches the check below.)
 
 import type { OpenUIError } from "@openuidev/lang-core";
 import type { LoreNode } from "@shared/lore";

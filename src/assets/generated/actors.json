@@ -1,0 +1,176 @@
+{
+  "cell": 64,
+  "columns": 9,
+  "cells": {
+    "npc.merchant": {
+      "id": "npc.merchant",
+      "prompt": "Pixel-art game sprite in the style of HD-2D JRPGs such as Octopath Traveler: 16-bit pixel art, clean dark outlines, a limited warm palette, soft light from the top-left. Exactly one travelling merchant villager with a big pack and an apron, full body, standing, seen from the front at a slight top-down three-quarter angle, facing the viewer, centred, feet at the bottom of the figure. Transparent background. No ground, no shadow, no text, no border, no scenery, no second figure.",
+      "model": "gpt-image-1-mini",
+      "quality": "medium",
+      "elapsedMs": 16885,
+      "inputTokens": 117,
+      "outputTokens": 1056,
+      "at": "2026-09-23T07:00:39.431Z"
+    },
+    "monster.slime": {
+      "id": "monster.slime",
+      "prompt": "Pixel-art game sprite in the style of HD-2D JRPGs such as Octopath Traveler: 16-bit pixel art, clean dark outlines, a limited warm palette, soft light from the top-left. Exactly one round green slime monster with simple eyes, full body, standing, seen from the front at a slight top-down three-quarter angle, facing the viewer, centred, feet at the bottom of the figure. Transparent background. No ground, no shadow, no text, no border, no scenery, no second figure.",
+      "model": "gpt-image-1-mini",
+      "quality": "medium",
+      "elapsedMs": 14457,
+      "inputTokens": 113,
+      "outputTokens": 1056,
+      "at": "2026-09-23T07:00:53.891Z"
+    },
+    "npc.monk": {
+      "id": "npc.monk",
+      "prompt": "Pixel-art game sprite in the style of HD-2D JRPGs such as Octopath Traveler: 16-bit pixel art, clean dark outlines, a limited warm palette, soft light from the top-left. Exactly one shaven-headed monk in simple ochre robes holding prayer beads, full body, standing, seen from the front at a slight top-down three-quarter angle, facing the viewer, centred, feet at the bottom of the figure. Transparent background. No ground, no shadow, no text, no border, no scenery, no second figure.",
+      "model": "gpt-image-1-mini",
+      "quality": "medium",
+      "elapsedMs": 15908,
+      "inputTokens": 118,
+      "outputTokens": 1056,
+      "at": "2026-09-23T07:01:29.940Z"
+    },
+    "npc.smith": {
+      "id": "npc.smith",
+      "prompt": "Pixel-art game sprite in the style of HD-2D JRPGs such as Octopath Traveler: 16-bit pixel art, clean dark outlines, a limited warm palette, soft light from the top-left. Exactly one burly blacksmith with a leather apron and a hammer, full body, standing, seen from the front at a slight top-down three-quarter angle, facing the viewer, centred, feet at the bottom of the figure. Transparent background. No ground, no shadow, no text, no border, no scenery, no second figure.",
+      "model": "gpt-image-1-mini",
+      "quality": "medium",
+      "elapsedMs": 13702,
+      "inputTokens": 117,
+      "outputTokens": 1056,
+      "at": "2026-09-23T07:01:43.642Z"
+    },
+    "npc.farmer": {
+      "id": "npc.farmer",
+      "prompt": "Pixel-art game sprite in the style of HD-2D JRPGs such as Octopath Traveler: 16-bit pixel art, clean dark outlines, a limited warm palette, soft light from the top-left. Exactly one farmer in a straw hat carrying a hoe, full body, standing, seen from the front at a slight top-down three-quarter angle, facing the viewer, centred, feet at the bottom of the figure. Transparent background. No ground, no shadow, no text, no border, no scenery, no second figure.",
+      "model": "gpt-image-1-mini",
+      "quality": "medium",
+      "elapsedMs": 16658,
+      "inputTokens": 114,
+      "outputTokens": 1056,
+      "at": "2026-09-23T07:02:00.300Z"
+    },
+    "npc.guard": {
+      "id": "npc.guard",
+      "prompt": "Pixel-art game sprite in the style of HD-2D JRPGs such as Octopath Traveler: 16-bit pixel art, clean dark outlines, a limited warm palette, soft light from the top-left. Exactly one town guard in light armour holding a spear, full body, standing, seen from the front at a slight top-down three-quarter angle, facing the viewer, centred, feet at the bottom of the figure. Transparent background. No ground, no shadow, no text, no border, no scenery, no second figure.",
+      "model": "gpt-image-1-mini",
+      "quality": "medium",
+      "elapsedMs": 15455,
+      "inputTokens": 114,
+      "outputTokens": 1056,
+      "at": "2026-09-23T07:02:15.756Z"
+    },
+    "npc.child": {
+      "id": "npc.child",
+      "prompt": "Pixel-art game sprite in the style of HD-2D JRPGs such as Octopath Traveler: 16-bit pixel art, clean dark outlines, a limited warm palette, soft light from the top-left. Exactly one small village child in simple clothes, full body, standing, seen from the front at a slight top-down three-quarter angle, facing the viewer, centred, feet at the bottom of the figure. Transparent background. No ground, no shadow, no text, no border, no scenery, no second figure.",
+      "model": "gpt-image-1-mini",
+      "quality": "medium",
+      "elapsedMs": 14092,
+      "inputTokens": 112,
+      "outputTokens": 1056,
+      "at": "2026-09-23T07:02:29.849Z"
+    },
+    "npc.elder": {
+      "id": "npc.elder",
+      "prompt": "Pixel-art game sprite in the style of HD-2D JRPGs such as Octopath Traveler: 16-bit pixel art, clean dark outlines, a limited warm palette, soft light from the top-left. Exactly one white-haired village elder leaning on a walking staff, full body, standing, seen from the front at a slight top-down three-quarter angle, facing the viewer, centred, feet at the bottom of the figure. Transparent background. No ground, no shadow, no text, no border, no scenery, no second figure.",
+      "model": "gpt-image-1-mini",
+      "quality": "medium",
+      "elapsedMs": 14977,
+      "inputTokens": 115,
+      "outputTokens": 1056,
+      "at": "2026-09-23T07:02:44.827Z"
+    },
+    "npc.bard": {
+      "id": "npc.bard",
+      "prompt": "Pixel-art game sprite in the style of HD-2D JRPGs such as Octopath Traveler: 16-bit pixel art, clean dark outlines, a limited warm palette, soft light from the top-left. Exactly one bard in a feathered cap holding a lute, full body, standing, seen from the front at a slight top-down three-quarter angle, facing the viewer, centred, feet at the bottom of the figure. Transparent background. No ground, no shadow, no text, no border, no scenery, no second figure.",
+      "model": "gpt-image-1-mini",
+      "quality": "medium",
+      "elapsedMs": 14318,
+      "inputTokens": 115,
+      "outputTokens": 1056,
+      "at": "2026-09-23T07:02:59.146Z"
+    },
+    "npc.stranger": {
+      "id": "npc.stranger",
+      "prompt": "Pixel-art game sprite in the style of HD-2D JRPGs such as Octopath Traveler: 16-bit pixel art, clean dark outlines, a limited warm palette, soft light from the top-left. Exactly one hooded mysterious traveller in a long dark cloak, full body, standing, seen from the front at a slight top-down three-quarter angle, facing the viewer, centred, feet at the bottom of the figure. Transparent background. No ground, no shadow, no text, no border, no scenery, no second figure.",
+      "model": "gpt-image-1-mini",
+      "quality": "medium",
+      "elapsedMs": 12959,
+      "inputTokens": 115,
+      "outputTokens": 1056,
+      "at": "2026-09-23T07:03:12.106Z"
+    },
+    "monster.skeleton": {
+      "id": "monster.skeleton",
+      "prompt": "Pixel-art game sprite in the style of HD-2D JRPGs such as Octopath Traveler: 16-bit pixel art, clean dark outlines, a limited warm palette, soft light from the top-left. Exactly one skeleton warrior monster with a rusty sword, full body, standing, seen from the front at a slight top-down three-quarter angle, facing the viewer, centred, feet at the bottom of the figure. Transparent background. No ground, no shadow, no text, no border, no scenery, no second figure.",
+      "model": "gpt-image-1-mini",
+      "quality": "medium",
+      "elapsedMs": 13892,
+      "inputTokens": 113,
+      "outputTokens": 1056,
+      "at": "2026-09-23T07:03:25.999Z"
+    },
+    "monster.drone": {
+      "id": "monster.drone",
+      "prompt": "Pixel-art game sprite in the style of HD-2D JRPGs such as Octopath Traveler: 16-bit pixel art, clean dark outlines, a limited warm palette, soft light from the top-left. Exactly one round flying scout drone robot in one piece, with small side rotors and one glowing eye, full body, standing, seen from the front at a slight top-down three-quarter angle, facing the viewer, centred, feet at the bottom of the figure. Transparent background. No ground, no shadow, no text, no border, no scenery, no second figure.",
+      "model": "gpt-image-1-mini",
+      "quality": "medium",
+      "elapsedMs": 16180,
+      "inputTokens": 124,
+      "outputTokens": 1056,
+      "at": "2026-09-23T07:05:33.301Z"
+    },
+    "monster.golem": {
+      "id": "monster.golem",
+      "prompt": "Pixel-art game sprite in the style of HD-2D JRPGs such as Octopath Traveler: 16-bit pixel art, clean dark outlines, a limited warm palette, soft light from the top-left. Exactly one hulking stone golem monster with moss on its shoulders, full body, standing, seen from the front at a slight top-down three-quarter angle, facing the viewer, centred, feet at the bottom of the figure. Transparent background. No ground, no shadow, no text, no border, no scenery, no second figure.",
+      "model": "gpt-image-1-mini",
+      "quality": "medium",
+      "elapsedMs": 14785,
+      "inputTokens": 117,
+      "outputTokens": 1056,
+      "at": "2026-09-23T07:03:54.846Z"
+    },
+    "monster.wisp": {
+      "id": "monster.wisp",
+      "prompt": "Pixel-art game sprite in the style of HD-2D JRPGs such as Octopath Traveler: 16-bit pixel art, clean dark outlines, a limited warm palette, soft light from the top-left. Exactly one floating will-o'-the-wisp: a pale blue flame spirit, full body, standing, seen from the front at a slight top-down three-quarter angle, facing the viewer, centred, feet at the bottom of the figure. Transparent background. No ground, no shadow, no text, no border, no scenery, no second figure.",
+      "model": "gpt-image-1-mini",
+      "quality": "medium",
+      "elapsedMs": 16074,
+      "inputTokens": 119,
+      "outputTokens": 1056,
+      "at": "2026-09-23T07:04:10.920Z"
+    },
+    "monster.serpent": {
+      "id": "monster.serpent",
+      "prompt": "Pixel-art game sprite in the style of HD-2D JRPGs such as Octopath Traveler: 16-bit pixel art, clean dark outlines, a limited warm palette, soft light from the top-left. Exactly one giant serpent monster coiled and rearing up, green scales, full body, standing, seen from the front at a slight top-down three-quarter angle, facing the viewer, centred, feet at the bottom of the figure. Transparent background. No ground, no shadow, no text, no border, no scenery, no second figure.",
+      "model": "gpt-image-1-mini",
+      "quality": "medium",
+      "elapsedMs": 14604,
+      "inputTokens": 118,
+      "outputTokens": 1056,
+      "at": "2026-09-23T07:04:25.525Z"
+    },
+    "monster.fox_spirit": {
+      "id": "monster.fox_spirit",
+      "prompt": "Pixel-art game sprite in the style of HD-2D JRPGs such as Octopath Traveler: 16-bit pixel art, clean dark outlines, a limited warm palette, soft light from the top-left. Exactly one kitsune fox spirit with three flame-tipped tails, full body, standing, seen from the front at a slight top-down three-quarter angle, facing the viewer, centred, feet at the bottom of the figure. Transparent background. No ground, no shadow, no text, no border, no scenery, no second figure.",
+      "model": "gpt-image-1-mini",
+      "quality": "medium",
+      "elapsedMs": 14728,
+      "inputTokens": 116,
+      "outputTokens": 1056,
+      "at": "2026-09-23T07:04:40.253Z"
+    },
+    "monster.shade": {
+      "id": "monster.shade",
+      "prompt": "Pixel-art game sprite in the style of HD-2D JRPGs such as Octopath Traveler: 16-bit pixel art, clean dark outlines, a limited warm palette, soft light from the top-left. Exactly one shadowy wraith monster of dark smoke with glowing eyes, full body, standing, seen from the front at a slight top-down three-quarter angle, facing the viewer, centred, feet at the bottom of the figure. Transparent background. No ground, no shadow, no text, no border, no scenery, no second figure.",
+      "model": "gpt-image-1-mini",
+      "quality": "medium",
+      "elapsedMs": 13836,
+      "inputTokens": 117,
+      "outputTokens": 1056,
+      "at": "2026-09-23T07:04:54.089Z"
+    }
+  }
+}

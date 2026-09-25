@@ -7,9 +7,19 @@ import { CHUNK_SIZE, type ChunkCoord, chunkKey, groundAt } from "@shared/chunks"
 import type { LandNote, LandProgress } from "@shared/land";
 import type { LandPlace } from "@shared/places";
 import { episodeGate, nextEpisode } from "@shared/story";
-import type { FloorSpec, PropSpec, SceneGraph, Tile } from "@shared/world";
+import {
+  type FloorSpec,
+  MONSTER_KINDS,
+  type MonsterKind,
+  NPC_ROLES,
+  type NpcRole,
+  type PropSpec,
+  type SceneGraph,
+  type Tile,
+} from "@shared/world";
 import { doorPosition } from "../engine/home";
-import { LAND_2D_PALETTE, MONSTER_LOOK } from "../engine/palette";
+import { LAND_2D_PALETTE } from "../engine/palette";
+import { MONSTER_SPRITES, MONSTER_WIDTH, ROLE_SPRITES, ROLE_WIDTH } from "../engine2d/actorSprites";
 import { cachedTerrain, landTileAt } from "../engine2d/landModel";
 import { placeMarkers } from "../engine2d/placeLayer";
 import { type StoryView, storyMarkers } from "../engine2d/storyLayer";
@@ -51,18 +61,16 @@ export function standHeight(tileAt: (x: number, z: number) => Tile, x: number, z
 
 type Height = (x: number, z: number) => number;
 
-const RESIDENTS: readonly Billboard[] = [
-  { id: "actor.samuraiBlue", atlas: "samuraiBlue", sx: 0, sy: 0, sw: 16, sh: 16, widthTiles: 1.2 },
-  {
-    id: "actor.samuraiGreen",
-    atlas: "samuraiGreen",
-    sx: 0,
-    sy: 0,
-    sw: 16,
-    sh: 16,
-    widthTiles: 1.2,
-  },
-];
+/** The image-model figures (actorSprites.ts) as upright boards, one per role and per kind. */
+const ROLE_BOARDS = Object.fromEntries(
+  NPC_ROLES.map((role) => [role, { ...ROLE_SPRITES[role], widthTiles: ROLE_WIDTH[role] }]),
+) as Record<NpcRole, Billboard>;
+const MONSTER_BOARDS = Object.fromEntries(
+  MONSTER_KINDS.map((kind) => [
+    kind,
+    { ...MONSTER_SPRITES[kind], widthTiles: MONSTER_WIDTH[kind] },
+  ]),
+) as Record<MonsterKind, Billboard>;
 
 export interface StandingContent {
   boards: BoardInstance[];
@@ -91,16 +99,8 @@ export function collectContent(source: LandSource, coords: readonly ChunkCoord[]
     pushScene(content, height, source.origin, 0, 0, !fighting);
   }
   for (const foe of source.foes ?? []) {
-    content.markers.push({
-      key: `foe:${foe.id}`,
-      x: foe.x,
-      y: height(foe.x, foe.z),
-      z: foe.z,
-      color: MONSTER_LOOK[foe.kind]?.color ?? LAND_2D_PALETTE.monster,
-      glyph: "◆",
-      label: "",
-      beam: false,
-    });
+    const board = MONSTER_BOARDS[foe.kind];
+    content.boards.push({ board, x: foe.x, y: height(foe.x, foe.z), z: foe.z, scale: 1 });
   }
   content.markers.push(...collectMarkers(source, height));
   return content;
@@ -123,13 +123,11 @@ function pushScene(
     }
   }
   for (const prop of scene.props) pushProp(content, height, prop, ox, oz);
-  scene.npcs.forEach((npc, index) => {
-    const board = RESIDENTS[index % RESIDENTS.length];
-    if (board === undefined) return;
+  for (const npc of scene.npcs) {
     const x = ox + npc.x + 0.5;
     const z = oz + npc.z + 0.5;
-    content.boards.push({ board, x, y: height(x, z), z, scale: 1 });
-  });
+    content.boards.push({ board: ROLE_BOARDS[npc.role], x, y: height(x, z), z, scale: 1 });
+  }
   const marker = (key: string, x: number, z: number, color: string, glyph: string) =>
     content.markers.push({
       key,
@@ -154,7 +152,9 @@ function pushScene(
     marker(`exit:${ox},${oz}:${exit.x},${exit.z}`, exit.x, exit.z, LAND_2D_PALETTE.exit, "↥");
   }
   for (const monster of withMonsters ? scene.monsters : []) {
-    marker(`monster:${ox},${oz}:${monster.id}`, monster.x, monster.z, LAND_2D_PALETTE.monster, "◆");
+    const x = ox + monster.x + 0.5;
+    const z = oz + monster.z + 0.5;
+    content.boards.push({ board: MONSTER_BOARDS[monster.kind], x, y: height(x, z), z, scale: 1 });
   }
 }
 

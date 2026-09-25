@@ -320,13 +320,34 @@ function resolveLore(
       tone: draft.tone,
     });
   }
+  // A Lore that re-declares a name the world already remembers *is* that node: it is folded into
+  // the known one (links repointed, the place tied to it) instead of failing the whole chunk —
+  // models keep re-declaring well-known customs, and a place left unwritten over it is worse.
+  const known = new Map(ctx.lore.map((node) => [node.label.trim().toLowerCase(), node] as const));
+  const folded = new Map<string, LoreNode>();
+  for (const node of nodes) {
+    const same = known.get(node.label.trim().toLowerCase());
+    if (same !== undefined && node.kind !== "place") folded.set(node.id, same);
+  }
+  if (folded.size > 0) {
+    const kept = nodes.filter((node) => !folded.has(node.id));
+    for (const node of kept) {
+      node.links = [...new Set(node.links.map((link) => folded.get(link)?.id ?? link))];
+    }
+    const place = kept.find((node) => node.kind === "place");
+    for (const same of folded.values()) {
+      if (place !== undefined && !place.links.includes(same.id)) place.links.push(same.id);
+    }
+    nodes.splice(0, nodes.length, ...kept);
+  }
   if (!nodes.some((node) => node.kind === "place")) {
     issues.push(
       issue("Lore", "No Lore describes this place.", `Add Lore(<id>, "place", "${name}", ...).`),
     );
   }
   const customs = nodes.filter((node) => node.kind === "custom");
-  if (customs.length === 0) {
+  const keepsKnownCustom = [...folded.values()].some((node) => node.kind === "custom");
+  if (customs.length === 0 && !keepsKnownCustom) {
     issues.push(
       issue(
         "Lore",

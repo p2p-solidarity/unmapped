@@ -4,8 +4,8 @@ export const ATLAS_DIMENSIONS = {
   floor: { width: 352, height: 417 },
   village: { width: 320, height: 192 },
   ninja: { width: 64, height: 112 },
-  samuraiBlue: { width: 64, height: 112 },
-  samuraiGreen: { width: 64, height: 112 },
+  /** Image-model residents and monsters (actorSprites.ts): 9 × 2 cells of 64 px. */
+  actors: { width: 576, height: 128 },
 } as const;
 
 export type AtlasId = keyof typeof ATLAS_DIMENSIONS;
@@ -52,8 +52,4 @@ export const PROP_ASSETS: Partial<Record<PropKind, SpriteAsset>> = {
 
 export const ACTOR_ASSETS = {
   player: sprite("actor.player", "ninja", 0, 0),
-  resident: [
-    sprite("actor.resident.blue", "samuraiBlue", 0, 0),
-    sprite("actor.resident.green", "samuraiGreen", 0, 0),
-  ],
 } as const;

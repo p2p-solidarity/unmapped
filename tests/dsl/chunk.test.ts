@@ -93,6 +93,22 @@ describe("chunk dialect", () => {
     );
     expect(codes(known).join(" ")).toContain("already the name");
 
+    // Re-declaring a known custom is not a failure: it is folded into the node the world has.
+    const custom = {
+      id: loreId("coin_rule", { cx: 9, cz: 9 }),
+      kind: "custom" as const,
+      label: "A coin for the next one",
+      text: "",
+      coord: { cx: 9, cz: 9 },
+      links: [],
+      tone: 0,
+    };
+    const folded = parseChunk(CHUNK_EXAMPLE, ctx({ lore: [custom] }));
+    if (!folded.ok) throw new Error(JSON.stringify(folded.error));
+    expect(folded.value.lore.some((node) => node.kind === "custom")).toBe(false);
+    const place = folded.value.lore.find((node) => node.kind === "place");
+    expect(place?.links).toContain(custom.id);
+
     expect(codes(parseChunk(CHUNK_EXAMPLE, ctx({ language: "ja-JP" }))).join(" ")).toContain(
       "player's language",
     );

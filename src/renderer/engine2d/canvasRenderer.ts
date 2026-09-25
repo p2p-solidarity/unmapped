@@ -5,6 +5,7 @@ import type { LandPlace } from "@shared/places";
 import type { PropSpec, SceneGraph } from "@shared/world";
 import { doorPosition } from "../engine/home";
 import { LAND_2D_PALETTE, MONSTER_LOOK } from "../engine/palette";
+import { MONSTER_SPRITES, MONSTER_WIDTH, ROLE_SPRITES, ROLE_WIDTH } from "./actorSprites";
 import {
   ACTOR_ASSETS,
   type AtlasId,
@@ -137,16 +138,17 @@ function collectScenery(frame: LandFrame, transform: ScreenTransform): DrawItem[
       for (const prop of written.scene.props) {
         pushProp(items, frame, transform, prop, cx * CHUNK_SIZE, cz * CHUNK_SIZE);
       }
-      written.scene.npcs.forEach((npc, index) => {
+      for (const npc of written.scene.npcs) {
         pushActor(
           items,
           frame,
           transform,
           cx * CHUNK_SIZE + npc.x + 0.5,
           cz * CHUNK_SIZE + npc.z + 0.5,
-          ACTOR_ASSETS.resident[index % ACTOR_ASSETS.resident.length] ?? ACTOR_ASSETS.resident[0],
+          ROLE_SPRITES[npc.role],
+          ROLE_WIDTH[npc.role],
         );
-      });
+      }
     }
   }
 
@@ -156,16 +158,17 @@ function collectScenery(frame: LandFrame, transform: ScreenTransform): DrawItem[
     }
   }
   for (const prop of frame.scene.props) pushProp(items, frame, transform, prop, 0, 0);
-  frame.scene.npcs.forEach((npc, index) => {
+  for (const npc of frame.scene.npcs) {
     pushActor(
       items,
       frame,
       transform,
       npc.x + 0.5,
       npc.z + 0.5,
-      ACTOR_ASSETS.resident[index % ACTOR_ASSETS.resident.length] ?? ACTOR_ASSETS.resident[0],
+      ROLE_SPRITES[npc.role],
+      ROLE_WIDTH[npc.role],
     );
-  });
+  }
   for (const treasure of frame.scene.treasures) {
     pushMarker(
       items,
@@ -182,27 +185,30 @@ function collectScenery(frame: LandFrame, transform: ScreenTransform): DrawItem[
   }
   if (frame.foes === null || frame.foes === undefined) {
     for (const monster of frame.scene.monsters) {
-      pushMarker(
+      pushActor(
         items,
         frame,
         transform,
         monster.x + 0.5,
         monster.z + 0.5,
-        LAND_2D_PALETTE.monster,
-        "◆",
+        MONSTER_SPRITES[monster.kind],
+        MONSTER_WIDTH[monster.kind],
       );
     }
   }
   for (const foe of frame.foes ?? []) {
-    pushMarker(
+    pushActor(
       items,
       frame,
       transform,
       foe.x,
       foe.z,
-      MONSTER_LOOK[foe.kind]?.color ?? LAND_2D_PALETTE.monster,
-      "◆",
-      `Lv ${foe.level} · ${foe.hp}/${foe.maxHp}`,
+      MONSTER_SPRITES[foe.kind],
+      MONSTER_WIDTH[foe.kind],
+      {
+        text: `Lv ${foe.level} · ${foe.hp}/${foe.maxHp}`,
+        color: MONSTER_LOOK[foe.kind]?.color ?? LAND_2D_PALETTE.monster,
+      },
     );
   }
   for (const note of frame.notes) {
@@ -294,28 +300,32 @@ function pushWall(
   });
 }
 
+/** A figure standing on its tile: `widthTiles` wide, feet just below the tile's centre. */
 function pushActor(
   items: DrawItem[],
   frame: LandFrame,
   transform: ScreenTransform,
   x: number,
   z: number,
-  asset: SpriteAsset | undefined,
+  asset: SpriteAsset,
+  widthTiles: number,
+  label: { text: string; color: string } | null = null,
 ): void {
-  if (asset === undefined || !visible(transform, x, z, 2)) return;
+  if (!visible(transform, x, z, 2)) return;
   items.push({
     z,
     draw: () => {
       const [cx, cy] = toScreen(transform, x, z);
-      drawSprite(
-        frame.ctx,
-        frame.atlases,
-        asset,
-        cx - transform.tileSize / 2,
-        cy - transform.tileSize / 2,
-        transform.tileSize,
-        transform.tileSize,
-      );
+      const size = transform.tileSize * widthTiles;
+      const top = cy + transform.tileSize * 0.4 - size;
+      drawSprite(frame.ctx, frame.atlases, asset, cx - size / 2, top, size, size);
+      if (label !== null) {
+        frame.ctx.fillStyle = label.color;
+        frame.ctx.font = `${Math.round(transform.tileSize * 0.3)}px sans-serif`;
+        frame.ctx.textAlign = "center";
+        frame.ctx.textBaseline = "middle";
+        frame.ctx.fillText(label.text, cx, top + size * 0.1);
+      }
     },
   });
 }

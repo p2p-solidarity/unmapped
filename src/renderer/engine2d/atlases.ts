@@ -1,10 +1,10 @@
-// The CC0 sprite sheets both land views draw from, loaded once as images.
+// The sprite sheets both land views draw from, loaded once as images: the CC0 ground, village and
+// player sheets, and the image-model sheet of residents and monsters (scripts/gen-sprites.ts).
 
 import ninjaUrl from "../../assets/cc0/ninja_blue.png";
-import samuraiBlueUrl from "../../assets/cc0/samurai_blue.png";
-import samuraiGreenUrl from "../../assets/cc0/samurai_green.png";
 import floorUrl from "../../assets/cc0/tileset_floor.png";
 import villageUrl from "../../assets/cc0/tileset_village_abandoned.png";
+import actorsUrl from "../../assets/generated/actors.png";
 import type { AtlasId } from "./assetCatalog";
 import type { SpriteAtlases } from "./canvasRenderer";
 
@@ -16,8 +16,7 @@ export function loadAtlases(): Promise<SpriteAtlases> {
     floor: floorUrl,
     village: villageUrl,
     ninja: ninjaUrl,
-    samuraiBlue: samuraiBlueUrl,
-    samuraiGreen: samuraiGreenUrl,
+    actors: actorsUrl,
   };
   pending = Promise.all(
     Object.entries(sources).map(async ([id, url]) => [id, await loadImage(url)] as const),

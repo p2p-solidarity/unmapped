@@ -737,23 +737,25 @@
       <div class="drawer-head"><p class="drawer-title" id="drawer-title">新版規格</p><button class="ghost-button" type="button" id="menu-close">關閉</button></div>
       <nav class="drawer-nav" aria-label="規格文件分頁">
         <button class="doc-tab" type="button" aria-current="page" data-doc-page="core" data-page-target="entry"><span class="doc-tab-index">01</span><span class="doc-tab-copy">產品方向<small>AI 更好產 · 2D 優先 · 成本指標</small></span></button>
-        <button class="doc-tab" type="button" data-doc-page="progress" data-page-target="progress"><span class="doc-tab-index">02</span><span class="doc-tab-copy">開發計劃與 Prompt<small>驗證方式 → 播放器 → 創作閉環</small></span></button>
-        <button class="doc-tab" type="button" data-doc-page="technical" data-page-target="verdict"><span class="doc-tab-index">03</span><span class="doc-tab-copy">作品契約與現況<small>責任分工 · 執行邊界 · 故事章節</small></span></button>
-        <button class="doc-tab" type="button" data-doc-page="chain" data-page-target="chain-why"><span class="doc-tab-index">04</span><span class="doc-tab-copy">智能合約與流通<small>出處帳本 · 見證帳本 · 設定與現況</small></span></button>
+        <button class="doc-tab" type="button" data-doc-page="game" data-page-target="game-entry"><span class="doc-tab-index">02</span><span class="doc-tab-copy">遊戲現況<small>HD-2D 大地 · 章節 · 戰鬥 · 地點（實機截圖）</small></span></button>
+        <button class="doc-tab" type="button" data-doc-page="progress" data-page-target="progress"><span class="doc-tab-index">03</span><span class="doc-tab-copy">開發計劃與 Prompt<small>已交付階段 · 實測數字 · 驗收</small></span></button>
+        <button class="doc-tab" type="button" data-doc-page="technical" data-page-target="verdict"><span class="doc-tab-index">04</span><span class="doc-tab-copy">作品契約與現況<small>責任分工 · 執行邊界 · 無限章節</small></span></button>
+        <button class="doc-tab" type="button" data-doc-page="chain" data-page-target="chain-why"><span class="doc-tab-index">05</span><span class="doc-tab-copy">智能合約與流通<small>出處帳本 · 見證帳本 · 設定與現況</small></span></button>
       </nav>
-      <p class="drawer-note">這是現況規格：第 01–03 頁描述已交付並實機驗收的設計，第 04 頁是選配的鏈上出處。四頁可獨立閱讀；列印時展開全文。</p>
+      <p class="drawer-note">這是現況規格：第 01 頁是方向，第 02 頁是遊戲現在的樣子（全是實機截圖），第 03–04 頁是已交付並實機驗收的設計，第 05 頁是選配的鏈上出處。五頁可獨立閱讀；列印時展開全文。</p>
     </aside>
     <div class="hero" id="top" data-page-hero="core">
-      <p class="eyebrow">Product direction · Revision 3 · 2026-09-23</p>
+      <p class="eyebrow">Product direction · Revision 4 · 2026-09-23</p>
       <h1>讓 AI 更容易產出，<br>讓每次修改更便宜。</h1>
-      <p class="hero-lede">Unwritten Land 是讓 AI 生成、執行與修改互動作品的框架。降低製作與試錯成本是核心價值；遊戲是主要用途，2D 是預設，Three.js 是可選能力。</p>
-      <div class="hero-meta"><span class="pill">HTML / CSS / JavaScript</span><span class="pill">玩法由作品定義</span><span class="pill">局部修改與修補</span><span class="pill">目標規格 · 待實作驗證</span></div>
+      <p class="hero-lede">Unwritten Land 是讓 AI 生成、執行與修改互動作品的框架。降低製作與試錯成本是核心價值；遊戲是主要用途，2D 是預設，Three.js 是可選能力。現在的主作品是一張無限的 HD-2D 大地：故事寫成走不完的章節，戰鬥、橫向捲軸與地城都在同一張地圖上。</p>
+      <div class="hero-meta"><span class="pill">HTML / CSS / JavaScript</span><span class="pill">玩法由作品定義</span><span class="pill">局部修改與修補</span><span class="pill">HD-2D 大地 · 已實機驗收</span></div>
     </div>
     <div class="layout"><main id="main">
       <div class="page-intro" data-page-intro="core"><div><p class="section-kicker">Page 01 · Product direction</p><h2 data-page-title>先降低產出的成本</h2><p>框架的工作是讓想法更快成為可操作的作品，再讓創作者低成本迭代。</p></div><span class="status inference">方向已確認</span></div>
-      <div class="page-intro" data-page-intro="progress" hidden><div><p class="section-kicker">Page 02 · Delivery plan</p><h2 data-page-title>三階段已交付，接著把故事接上地圖</h2><p>生成方式、隔離播放器與創作閉環都已實作並實機驗收；本頁只寫實際量到的數字與下一階段。</p></div><span class="status verified">階段 1–4 已交付</span></div>
-      <div class="page-intro" data-page-intro="technical" hidden><div><p class="section-kicker">Page 03 · Contract &amp; world</p><h2 data-page-title>固定服務介面，開放作品玩法</h2><p>作品契約、執行邊界、儲存責任與故事章節都已落地；本頁是現況，不是提案。</p></div><span class="status verified">契約已實作</span></div>
-      <div class="page-intro" data-page-intro="chain" hidden><div><p class="section-kicker">Page 04 · On-chain</p><h2 data-page-title>上鏈只記出處與見證</h2><p>內容永遠不上鏈；鏈上只有雜湊、作者、血緣與玩家留下的話。沒有設定鏈，整個遊戲照常運作。</p></div><span class="status unverified">合約已寫與測試 · 尚未部署</span></div>
+      <div class="page-intro" data-page-intro="game" hidden><div><p class="section-kicker">Page 02 · The game today</p><h2 data-page-title>現在的遊戲：一張無限的 HD-2D 大地</h2><p>標題、開新世界、章節、戰鬥、調整機制與地點。以下全是開發版的實機截圖，文字寫的是它們現在怎麼運作。</p></div><span class="status verified">實機截圖 · 2026-09-23</span></div>
+      <div class="page-intro" data-page-intro="progress" hidden><div><p class="section-kicker">Page 03 · Delivery plan</p><h2 data-page-title>故事、戰鬥與地點都接上同一張地圖</h2><p>生成方式、隔離播放器、創作閉環、無限章節、HD-2D、大地戰鬥與地點都已實作並實機驗收；本頁只寫實際量到的數字。</p></div><span class="status verified">階段 1–9 已交付</span></div>
+      <div class="page-intro" data-page-intro="technical" hidden><div><p class="section-kicker">Page 04 · Contract &amp; world</p><h2 data-page-title>固定服務介面，開放作品玩法</h2><p>作品契約、執行邊界、儲存責任與故事章節都已落地；本頁是現況，不是提案。</p></div><span class="status verified">契約已實作</span></div>
+      <div class="page-intro" data-page-intro="chain" hidden><div><p class="section-kicker">Page 05 · On-chain</p><h2 data-page-title>上鏈只記出處與見證</h2><p>內容永遠不上鏈；鏈上只有雜湊、作者、血緣與玩家留下的話。沒有設定鏈，整個遊戲照常運作。</p></div><span class="status unverified">合約已寫與測試 · 尚未部署</span></div>
         <section id="entry" data-section data-page="core" data-open-default>
           <div class="section-head"><p class="section-kicker">01 · Core value</p><h2>框架以「AI 更好產」為第一優先</h2><p class="section-intro">同一個需求，選擇能讓模型用更少上下文、更少錯誤與更少修補，產出可玩結果的表示方式。</p></div>
 
@@ -776,7 +778,7 @@
 </tbody></table></div>
         </section>
         <section id="experience" data-section data-page="core" data-open-default>
-          <div class="section-head"><p class="section-kicker">03 · Creation loop</p><h2>先玩到，再用一句話改掉</h2><p class="section-intro">下列是目標流程示意，不是新版 app 截圖。玩法摘要由模型提出，不再要求使用者先填工程表單。</p></div>
+          <div class="section-head"><p class="section-kicker">03 · Creation loop</p><h2>先玩到，再用一句話改掉</h2><p class="section-intro">下列是流程示意；實機畫面見第 02 頁「遊戲現況」。玩法摘要由模型提出，不再要求使用者先填工程表單。</p></div>
 
           <div class="flowline" aria-label="目標創作流程">
             <div class="flow-step"><b>01 · DESCRIBE</b><span>一句話描述想做的體驗</span></div>
@@ -802,14 +804,65 @@
 <tr><td>模型理解成本</td><td>注入的契約說明長度、必要宿主 API 數量與契約誤用；不為追求數字壓縮到難以理解</td></tr>
 </tbody></table></div><div class="callout warn"><strong>比較原則：</strong>可使用現有 DSL 路徑支援的重疊題目做基準，不強迫它執行不支援的玩法。沒有模型就標示未量測，不以手寫原型推論模型生成成功率。</div>
         </section>
+        <section id="game-entry" data-section data-page="game" data-open-default>
+          <div class="section-head"><p class="section-kicker">01 · Title &amp; new world</p><h2>標題畫面就是大地本身</h2><p class="section-intro">選單後面不是一張背景圖，是同一個 HD-2D 畫面層即時畫出來的地形。開新世界只要名字、一段故事和語言。</p></div>
+          <div class="screen-grid">
+            <figure class="screen-card screen-card--wide"><img src="assets/unwritten-land-title.jpg" alt="未記之地 · Unwritten Land" loading="lazy"><figcaption><span class="capture-label">HD-2D · 標題</span><strong>未記之地 · Unwritten Land</strong>選單疊在即時算出的大地上：bloom、tilt-shift 與調色都是 three.js 內建後製，沒有預渲染圖，也沒有假的示範世界。</figcaption></figure>
+            <figure class="screen-card"><img src="assets/unwritten-land-new-world.jpg" alt="一段故事就開始" loading="lazy"><figcaption><span class="capture-label">New world</span><strong>一段故事就開始</strong>名字、故事、語言三格。模型把故事寫成世界聖經與章節計畫，放進卡帶和其他內容一起雜湊；之後說的話都用這個語言。</figcaption></figure>
+            <figure class="screen-card"><img src="assets/unwritten-land-cartridges.jpg" alt="每個版本都還在" loading="lazy"><figcaption><span class="capture-label">Cartridges</span><strong>每個版本都還在</strong>卡帶的每個已發布版本與釘住它的存檔。繼續、備份、匯入都在這裡；舊版本不會被新版本覆蓋。</figcaption></figure>
+          </div>
+        </section>
+        <section id="game-land" data-section data-page="game" data-open-default>
+          <div class="section-head"><p class="section-kicker">02 · Open land &amp; story</p><h2>走到哪，世界寫到哪；故事是地上的門</h2><p class="section-intro">大地沒有邊：地形從種子算出來，只有第一次走進的區塊才請模型「見證」。故事章節是地上的門，玩目前這章時，下一章已經在背景寫好。</p></div>
+          <div class="grid-3">
+            <article class="card card-accent"><h3>無限大地</h3><p>32×32 格一個區塊，只畫身邊 5×5。河上每個區塊中心都有淺灘，所以任何門、任何地點都走得到；起點區塊永遠是乾的。</p></article>
+            <article class="card card-cyan"><h3>見證</h3><p>第一次走進一個區塊，模型寫下它的名字、居民、對話與習俗，存進這個存檔。重複宣告世界已經記得的傳說，會併進原本的節點，不再讓整塊失敗。</p></article>
+            <article class="card"><h3>無限章節</h3><p>門的位置由宿主決定。背景先寫好下一章的世界（生成 → 檢查 → 發布），走到門口就能進。卡帶的章節過完後，大地自己續寫，最多 99 章。</p></article>
+          </div>
+          <div class="screen-grid" style="margin-top:20px">
+            <figure class="screen-card"><img src="assets/unwritten-land-land-story.jpg" alt="第 6 章：五章已過" loading="lazy"><figcaption><span class="capture-label">HD-2D · 大地</span><strong>第 6 章：五章已過</strong>左上是這個存檔的真實狀態：已過 5 章，下一章「潮口燈點」在 75 格外，指南針指過去。打勾的門是過關過的章節。</figcaption></figure>
+            <figure class="screen-card"><img src="assets/unwritten-land-next-chapter.jpg" alt="背景預寫下一章" loading="lazy"><figcaption><span class="capture-label">Background writing</span><strong>背景預寫下一章</strong>右下卡片是正在寫的下一章：生成後在隔離的檢查框裡真的跑一次（全新開始、回放按鍵與點擊），通過才發布。可暫停、可取消，失敗不自動重試。</figcaption></figure>
+            <figure class="screen-card"><img src="assets/unwritten-land-episode.jpg" alt="章節世界：找回燈芯" loading="lazy"><figcaption><span class="capture-label">AI world · sandbox</span><strong>章節世界：找回燈芯</strong>進門後是模型寫的 HTML 小遊戲，跑在 sandbox iframe 裡。過關時交回的東西由宿主併進攜帶物，帶回大地，後面的章節蓋不掉。</figcaption></figure>
+            <figure class="screen-card"><img src="assets/unwritten-land-land-16bit.jpg" alt="同一張地圖，像素外觀" loading="lazy"><figcaption><span class="capture-label">V · 16-bit</span><strong>同一張地圖，像素外觀</strong>按 V 關掉 HD-2D 後製、切成 16-bit 平面畫法；地圖、戰鬥、門與地點完全一樣，只是換一種畫。</figcaption></figure>
+          </div>
+        </section>
+        <section id="game-fight" data-section data-page="game" data-open-default>
+          <div class="section-head"><p class="section-kicker">03 · Combat &amp; tweaks</p><h2>一套戰鬥，一句話加機制</h2><p class="section-intro">大地、橫向捲軸與地城共用同一個戰鬥迴圈。「調整機制」用一句話加武器、怪物或隊伍：卡帶缺什麼就補什麼，不會拒絕。</p></div>
+          <div class="grid-2">
+            <article class="card card-accent"><h3>一套戰鬥模型</h3><p>開火、命中、回合都走同一個迴圈。大地上的野怪來自卡帶的怪物名單，打倒的在這次遊玩裡不會再冒出來（還沒寫進存檔）；HP 進出地點都保留。</p></article>
+            <article class="card card-cyan"><h3>調整機制不拒絕</h3><p>需求 → 模型提出變更 → 先試玩 → 發布成新版本。卡帶沒有戰鬥時，「加一把槍」會連戰鬥模組一起補上（玩家 100 HP、怪物 30 HP + 每級 10），而不是回一個錯誤。</p></article>
+          </div>
+          <div class="screen-grid" style="margin-top:20px">
+            <figure class="screen-card"><img src="assets/unwritten-land-land-combat.jpg" alt="在大地上直接打" loading="lazy"><figcaption><span class="capture-label">HD-2D · 戰鬥</span><strong>在大地上直接打</strong>右上是戰鬥 HUD：回合、HP、彈匣、擊殺。Lv 2、Lv 4 標記是附近的野怪；Space、F 或點擊開火。</figcaption></figure>
+            <figure class="screen-card"><img src="assets/unwritten-land-mod-revision.jpg" alt="「加一把槍，再在起點附近放三隻史萊姆」" loading="lazy"><figcaption><span class="capture-label">調整機制</span><strong>「加一把槍，再在起點附近放三隻史萊姆」</strong>提案列出新武器（6 傷害、18 射程、650 ms 冷卻）與三隻 Lv 1 史萊姆，並自動補上戰鬥模組；下方可以先試玩再發布。</figcaption></figure>
+          </div>
+        </section>
+        <section id="game-places" data-section data-page="game" data-open-default>
+          <div class="section-head"><p class="section-kicker">04 · Places</p><h2>橫向捲軸與地城，從大地走進去</h2><p class="section-intro">地點屬於這個存檔，不產生新版本。模型只寫裡面住了誰、有什麼、要做什麼；地形由宿主從種子蓋出來，所以一定走得通，每次讀檔都一樣。</p></div>
+<div class="table-wrap" role="region" aria-label="地點" tabindex="0"><table><thead><tr><th scope="col">種類</th><th scope="col">宿主蓋的</th><th scope="col">模型寫的</th></tr></thead><tbody>
+<tr><td>橫向捲軸</td><td>一條 61 格長的路，平台高差都跳得上去，偶爾一道矮牆，終點在最右邊</td><td>名字、光、居民、寶箱、怪物、一個任務</td></tr>
+<tr><td>地城</td><td>19×19 第一人稱迷宮，有保證路線；轉身就是回大地的出口，終點在某個角落</td><td>同上，再加走廊擺設</td></tr>
+<tr><td>進出</td><td>入口在淺灘交叉口；↩ 回到入口旁，✓ 走出終點算通過，寫一筆見證並在地圖上打勾</td><td>不寫座標：模型給的位置一律由宿主重新擺到空地上</td></tr>
+</tbody></table></div>
+          <div class="screen-grid" style="margin-top:20px">
+            <figure class="screen-card screen-card--wide"><img src="assets/unwritten-land-place-gate.jpg" alt="大地上的入口" loading="lazy"><figcaption><span class="capture-label">HD-2D · 入口</span><strong>大地上的入口</strong>在調整機制說一句「北邊加一個……」，入口就出現在往那個方向幾個區塊外的淺灘上。這裡是「舊燈芯倉庫」，按 E 進去。</figcaption></figure>
+            <figure class="screen-card"><img src="assets/unwritten-land-place-side.jpg" alt="橫向捲軸" loading="lazy"><figcaption><span class="capture-label">Side-scroller</span><strong>橫向捲軸</strong>鏡頭鎖在側面。平台、矮牆與出口由種子決定；史萊姆站在平台之間的地面上，同一把槍照樣能打。</figcaption></figure>
+            <figure class="screen-card"><img src="assets/unwritten-land-place-dungeon.jpg" alt="地城" loading="lazy"><figcaption><span class="capture-label">Dungeon · first person</span><strong>地城</strong>第一人稱格子迷宮；進門轉身就是回大地的出口（E · Back to the land），骷髏守在走廊裡。</figcaption></figure>
+          </div>
+          <div class="callout"><strong>關於這些圖：</strong>全部是 2026-09-23 在開發版實機截的（模型 gpt-5.4-mini，視窗 1440×868），沒有設計稿、沒有後製修圖。舊版文件的示範截圖已經移除。</div>
+        </section>
         <section id="progress" data-section data-page="progress" data-open-default>
-          <div class="section-head"><p class="section-kicker">01 · Delivery scope</p><h2>最小閉環已經跑起來了</h2><p class="section-intro">以下狀態來自實機驗收，不是計劃。數字全部取自實際執行紀錄（模型：gpt-5.4-mini）。</p></div>
+          <div class="section-head"><p class="section-kicker">01 · Delivery scope</p><h2>最小閉環之後，接上了整張地圖</h2><p class="section-intro">以下狀態來自實機驗收，不是計劃。數字全部取自實際執行紀錄（模型：gpt-5.4-mini）。</p></div>
 <div class="table-wrap" role="region" aria-label="階段狀態" tabindex="0"><table><thead><tr><th scope="col">階段</th><th scope="col">產出</th><th scope="col">進入下一階段的條件</th><th scope="col">狀態</th></tr></thead><tbody>
 <tr><td>1 · 生成方式原型</td><td>同一播放器承載三種互動作品，含原始成本紀錄</td><td>不需玩法專用模組</td><td><span class="status verified">已完成</span></td></tr>
 <tr><td>2 · 最小播放器</td><td><code>interactive-web@1</code>：sandbox iframe + 自訂 scheme + nonce CSP + 驗證過的訊息；不可變版本、釘住的遊玩進度、草稿候選</td><td>惡意作品拿不到宿主能力；無窮迴圈只殺自己的行程</td><td><span class="status verified">已完成並實機對抗測試</span></td></tr>
 <tr><td>3 · 生成與修改閉環</td><td>一句需求 → 可玩 → 一句話改 → 保存／回復；修補上限 2 次</td><td>4 個玩法 3 類修改真跑通</td><td><span class="status verified">已完成</span></td></tr>
 <tr><td>4 · 故事 → RPG 地圖</td><td>故事 → 章節計畫（寫進卡帶雜湊）→ 地圖上的門 → 進門即生成該章節世界 → 帶著道具回到 RPG</td><td>章節可生成、可過關、進度與攜帶物跨重開保留</td><td><span class="status verified">已完成，兩章實玩通過</span></td></tr>
 <tr><td>5 · 素材生成</td><td>缺圖的素材槽可由影像模型補上，走同一條候選→檢查→保存</td><td>產出可用、可回退、成本有紀錄</td><td><span class="status verified">已接上（測試 3 張）</span></td></tr>
+<tr><td>6 · 無限章節</td><td>玩目前章節時背景預寫下一章的世界；卡帶章節過完由大地續寫（最多 99 章），續寫的章節屬於存檔</td><td>走到門口不用等；失敗不自動重試，不白燒 token</td><td><span class="status verified">已完成，續寫到第 6 章實玩</span></td></tr>
+<tr><td>7 · HD-2D</td><td>標題與大地的第二個畫面層：bloom、tilt-shift、調色，全用 three.js 內建後製；V 切回 16-bit</td><td>不改地圖資料；兩種外觀玩起來一樣</td><td><span class="status verified">已完成（截圖時 HUD 顯示 60 FPS）</span></td></tr>
+<tr><td>8 · 大地戰鬥與調整機制</td><td>一套戰鬥模型，大地上直接打；調整機制缺什麼補什麼（武器、怪物、隊伍），不再拒絕</td><td>沒有戰鬥的卡帶也能「加一把槍」並發布</td><td><span class="status verified">已完成</span></td></tr>
+<tr><td>9 · 地點</td><td>橫向捲軸與地城，從大地走進去、走出來；存檔自己的，不產生新版本</td><td>地形一定走得通；離開後回到入口旁、大地狀態不變</td><td><span class="status verified">已完成，兩種都實玩通過</span></td></tr>
 </tbody></table></div>
 <div class="table-wrap" role="region" aria-label="實測數字" tabindex="0"><table><thead><tr><th scope="col">量到的</th><th scope="col">結果</th></tr></thead><tbody>
 <tr><td>首次可玩（自動檢查通過）</td><td>四個玩法（RPG／ARPG／迷宮／瑪利歐式平台）3/4 第一次就過，全部在 1 次修補內可玩；故事章節 2/2 第一次就過</td></tr>
@@ -819,7 +872,7 @@
 <tr><td>素材生成</td><td>3 張 256px 透明 PNG，各約 16 秒、約 1,056 output tokens</td></tr>
 <tr><td>隔離</td><td>惡意作品拿不到 preload／Node／父頁面／儲存／eval／網路／彈窗／導頁；無窮迴圈只吃掉自己的行程（97% CPU），宿主往返仍 95–98 毫秒</td></tr>
 </tbody></table></div>
-<div class="callout"><strong>完成定義：</strong>有程式碼只代表已有實作。以上每一項都跑過專案檢查（801 測試）與實機操作；失敗、取消與重新開啟也各驗過一次。詳細紀錄與未量測項目見 <a href="../experiments/interactive-works-acceptance-2026-09-23.md">驗收文件</a>。</div>
+<div class="callout"><strong>完成定義：</strong>有程式碼只代表已有實作。以上每一項都跑過專案檢查（836 測試）與實機操作；失敗、取消與重新開啟也各驗過一次。詳細紀錄與未量測項目見 <a href="../experiments/interactive-works-acceptance-2026-09-23.md">驗收文件</a>。</div>
         </section>
         <section id="stages" data-section data-page="progress" data-open-default>
           <div class="section-head"><p class="section-kicker">02 · Acceptance</p><h2>每階段只解決一個問題</h2><p class="section-intro">先證明生成方式，再固定執行契約；避免一開始把新的框架做成另一個龐大引擎。</p></div>
@@ -831,7 +884,7 @@
           </div>
         </section>
         <section id="prompts" data-section data-page="progress" data-open-default>
-          <div class="section-head"><p class="section-kicker">03 · Development prompts</p><h2>已執行完的三段 Prompt（保留作紀錄）</h2><p class="section-intro">Prompt 1–3 都已交付並驗收，內容保留在這裡當作可追溯的來源。下一階段的工作寫在本頁第 05 節。</p></div>
+          <div class="section-head"><p class="section-kicker">03 · Development prompts</p><h2>已執行完的三段 Prompt（保留作紀錄）</h2><p class="section-intro">Prompt 1–3 都已交付並驗收，內容保留在這裡當作可追溯的來源。還沒回答的問題寫在第 04 頁第 07 節。</p></div>
 <details><summary>Prompt 1 · 驗證生成方式</summary><div class="details-body"><div class="code-wrap"><button class="copy" type="button" aria-label="複製開發 Prompt 1">複製 Prompt 1</button><pre class="prompt-code"><code>請在 /Users/kidney/Workspace/Hackathon/26ethtokyo 為 Unwritten Land 驗證新的 AI 遊戲生成方向。
 
 產品決策：框架核心是降低 AI 生成、修改與修補互動作品的成本。不強制 Three.js、SceneGraph 或 gameplay kit；預設探索 HTML／CSS／JavaScript 的 2D 作品，圖片與 Canvas 按需使用。框架提供通用服務，玩法由 AI 產生。暫不遷移或刪除舊路徑。
@@ -880,7 +933,7 @@
 完成必要測試、專案檢查與實機驗收。交付可現場展示的生成→試玩→修改流程及下一個成本瓶頸，先不擴充發布平台與大型編輯器。</code></pre></div></div></details>
         </section>
         <section id="demo" data-section data-page="progress" data-open-default>
-          <div class="section-head"><p class="section-kicker">04 · Demo &amp; definition of done</p><h2>展示一個想法如何便宜地變成作品</h2><p class="section-intro">這是新方向的 demo 驗收設計，沒有聲稱目前 app 已提供這些操作。</p></div>
+          <div class="section-head"><p class="section-kicker">04 · Demo &amp; definition of done</p><h2>展示一個想法如何便宜地變成作品</h2><p class="section-intro">以下每一步都已在 app 裡實機操作過；對應畫面見第 02 頁。</p></div>
 <div class="table-wrap" role="region" aria-label="新版展示流程" tabindex="0"><table><thead><tr><th scope="col">步驟</th><th scope="col">展示</th><th scope="col">證明</th></tr></thead><tbody>
 <tr><td>生成</td><td>輸入一個小型作品需求，直接看到可操作結果</td><td>AI 能在少量框架說明下產出作品</td></tr>
 <tr><td>修改</td><td>一句話改規則，再換素材或調整布局</td><td>修改可以局部生效，不必整個重做</td></tr>
@@ -933,22 +986,23 @@
           <div class="section-head"><p class="section-kicker">04 · Existing implementation</p><h2>沿用資料責任，舊路徑保持可玩</h2><p class="section-intro">新舊並存的現況：卡帶／實例／草稿的責任分離被沿用，AI 作品是它旁邊的新類型，不是取代。</p></div>
 <div class="table-wrap" role="region" aria-label="現有能力與新版差距" tabindex="0"><table><thead><tr><th scope="col">現有部分</th><th scope="col">新版處置</th><th scope="col">仍待完成</th></tr></thead><tbody>
 <tr><td>Cartridge／Instance／Workspace</td><td>保留發布內容、個人進度、草稿分開的責任</td><td>新增作品類型與相容驗證；不直接沿用固定 Scene 欄位</td></tr>
-<tr><td>Three.js／R3F／Rapier／Scene DSL</td><td>保留舊卡帶路徑；新作品不必經過</td><td>最小 2D 播放器與清楚的類型路由</td></tr>
+<tr><td>Three.js／R3F／Rapier／Scene DSL</td><td>開放大地、戰鬥與地點都跑在這條路徑上；HD-2D 是它上面的第二個畫面層。AI 章節世界不必經過</td><td>AI 作品與卡帶的類型路由已分開；兩條路徑共用存檔與攜帶物</td></tr>
 <tr><td>Genre Matrix／Capability Compiler／六步 Create</td><td>退出新版必要創作流程</td><td>一句需求、預覽與自然語言修改入口</td></tr>
 <tr><td>Inference／AFM scene artifact</td><td>優先重用可用模型連線與取消機制；AFM 場景能力留給適用作品</td><td>新檔案產物契約與修補上下文；不假設原有場景管線可直接通用</td></tr>
 <tr><td>備份與版本</td><td>保留精確 revision 與 hash 的身份原則</td><td>目前 instance 備份未包含顯影 chunks、lore、notes；不宣稱現有世界備份完整</td></tr>
 <tr><td>多人／身份／ENS／鏈上發布</td><td>既有能力保留；不當新播放器的前置條件</td><td>待生成成本與核心閉環被驗證後，另定分享範圍</td></tr>
-</tbody></table></div><div class="callout warn"><strong>規格銜接：</strong>本頁取代舊版 HTML 的產品主軸。<code>plan.md</code> 的「見證人／無限地圖」與 <code>CLAUDE.md</code> 的 data-only 規則仍描述舊路徑；實作新作品類型時要同步界定適用範圍。此次只更新文件，不默默放寬現有程式權限，也不刪除舊遊戲。</div>
+</tbody></table></div><div class="callout warn"><strong>規格銜接：</strong><code>plan.md</code> 的「見證人／無限地圖」現在就是主遊戲：大地、見證、章節、戰鬥與地點都在它上面。<code>CLAUDE.md</code> 的 data-only 規則仍管卡帶、Scene DSL 與 mod；只有 AI 章節世界能寫程式，而且只在 sandbox 裡（Rule 12）。舊遊戲沒有刪除。</div>
         </section>
         <section id="story" data-section data-page="technical" data-open-default>
-          <div class="section-head"><p class="section-kicker">05 · Story → map</p><h2>玩家寫故事，地圖長出章節</h2><p class="section-intro">RPG 是外框，小遊戲是劇情。故事一次變成一串章節，散在同一張無限地圖上，道具跟著人走。</p></div>
+          <div class="section-head"><p class="section-kicker">05 · Story → map</p><h2>玩家寫故事，地圖長出章節</h2><p class="section-intro">RPG 是外框，小遊戲是劇情。故事先變成一串章節，散在同一張無限地圖上；章節用完了，大地接著寫，道具跟著人走。</p></div>
 <div class="table-wrap" role="region" aria-label="故事章節" tabindex="0"><table><thead><tr><th scope="col">誰負責</th><th scope="col">內容</th><th scope="col">存在哪裡</th></tr></thead><tbody>
 <tr><td>模型</td><td>世界聖經（core／style）＋ 3–6 個章節：標題、地點、玩法種類、一段簡述</td><td>章節計畫寫進卡帶 <code>bible/story.json</code>，和內容雜湊綁在一起</td></tr>
-<tr><td>宿主</td><td>把每章放到地圖上的一個區塊（黃金角螺旋，越後面越遠）、畫門、指南針、鎖與解鎖順序</td><td>純函式，位置不由模型決定</td></tr>
+<tr><td>宿主</td><td>把每章放到地圖上的一個區塊（卡帶章節在向日葵螺旋上；續寫的章節從上一章再走約 2.5 個區塊、每章轉一個黃金角）、畫門、指南針、鎖與解鎖順序</td><td>純函式，位置不由模型決定</td></tr>
+<tr><td>續寫</td><td>卡帶章節都過完後，大地一次寫一章（一個 <code>@@episode</code>），延續世界聖經與前面的劇情，最多 99 章</td><td>存檔的 <code>land.storyMore</code>，屬於這個存檔，不是卡帶</td></tr>
 <tr><td>章節世界</td><td>進門當下才生成，走同一條 生成 → 檢查 → 修補 → 發布版本</td><td>不可變作品版本；進度是釘住那一版的單章旅程</td></tr>
 <tr><td>攜帶物</td><td>每章結束回傳的東西由宿主合併（不讓世界把前面的東西蓋掉），再帶進下一章</td><td>存檔的 <code>land.storyCarry</code>；過關同時寫一筆見證 karma</td></tr>
 </tbody></table></div>
-          <div class="callout"><strong>為什麼章節不預先全部生成：</strong>玩家可能永遠走不到第五章，先生成就是先付錢。等走到門口再寫，成本只花在真的被看見的地方——這也是之後做「無限」時要延續的原則：在玩目前這章時，背景先寫好下一章。</div>
+          <div class="callout"><strong>為什麼章節不預先全部生成：</strong>玩家可能永遠走不到第五章，先生成就是先付錢。現在的做法是只預寫「下一章」：玩目前這章時背景寫好、檢查好，走到門口就能進；一次只做一件，失敗就停下來等玩家按重試，不會自己一直燒 token。</div>
         </section>
         <section id="assets" data-section data-page="technical" data-open-default>
           <div class="section-head"><p class="section-kicker">06 · Assets</p><h2>缺圖就說缺圖，需要時再讓模型畫</h2><p class="section-intro">素材引用與程式分離：換一張圖只動 <code>assets.json</code> 與一個檔案，不必重寫玩法。</p></div>
@@ -964,11 +1018,14 @@
 <div class="table-wrap" role="region" aria-label="尚待決定事項" tabindex="0"><table><thead><tr><th scope="col">問題</th><th scope="col">何時決定</th><th scope="col">需要的證據</th></tr></thead><tbody>
 <tr><td>單檔或多檔作品？是否需要建置？</td><td><span class="status verified">已回答</span></td><td>三個檔案（main.js／style.css／assets.json）＋素材，不需要建置；規則、畫面、素材各改各的</td></tr>
 <tr><td>用什麼機制隔離執行？</td><td><span class="status verified">已回答</span></td><td>每個 session 一個隨機 <code>ulwork://</code> 主機、sandbox iframe（不給 same-origin）、nonce CSP、驗證過的 postMessage；實測連無窮迴圈都只死自己</td></tr>
-<tr><td>宿主 API 最少需要幾個？</td><td><span class="status verified">已回答</span></td><td>七個：<code>root, carry, load, save, complete, status, asset</code></td></tr>
+<tr><td>宿主 API 最少需要幾個？</td><td><span class="status verified">已回答</span></td><td>八個：<code>root, carry, load, save, loop, complete, status, asset</code>（<code>loop</code> 給以秒計的 dt，取代 requestAnimationFrame）</td></tr>
 <tr><td>局部修改採什麼格式？</td><td><span class="status verified">已回答</span></td><td>@@ 行協議：整檔替換或 SEARCH/REPLACE；改一條規則只動 3 行</td></tr>
-<tr><td>模型重複犯的錯要不要由框架吸收？</td><td><span class="status inference">正在回答</span></td><td>已吸收：狀態列洗頻、素材路徑、攜帶物被蓋掉、存檔無法還原（新增復原檢查）。下一個候選：時間單位與存檔輔助</td></tr>
-<tr><td>無限化怎麼做才不先付錢？</td><td><span class="status unknown">下一階段</span></td><td>玩目前章節時背景生成下一章的成功率與等待時間；世界聖經能否讓長線故事不漂移</td></tr>
-<tr><td>HD-2D 值不值得？</td><td><span class="status unknown">下一階段</span></td><td>先在既有 Three.js 路徑做一個區塊的原型，比較視覺收益與 FPS／複雜度成本</td></tr>
+<tr><td>模型重複犯的錯要不要由框架吸收？</td><td><span class="status verified">已回答</span></td><td>要。已吸收：狀態列洗頻、素材路徑、攜帶物被蓋掉、存檔無法還原（復原檢查）、時間單位（<code>host.loop</code>）、存檔補欄位（<code>host.load</code>）、重複宣告的傳說（併進既有節點）；修補只送失敗的語句，不重生全檔</td></tr>
+<tr><td>無限化怎麼做才不先付錢？</td><td><span class="status verified">已回答</span></td><td>只預寫下一章，一次一件，失敗不自動重試；卡帶章節用完由大地續寫，實玩到第 6 章。長線故事會不會漂移仍要更長的實玩</td></tr>
+<tr><td>HD-2D 值不值得？</td><td><span class="status verified">已回答</span></td><td>做成既有 Three.js 路徑上的第二個畫面層，只用內建後製，不動地圖資料；V 可切回 16-bit</td></tr>
+<tr><td>每種玩法要各有一套戰鬥嗎？</td><td><span class="status verified">已回答</span></td><td>不要。一個戰鬥迴圈，大地、橫向捲軸、地城共用；地點是存檔自己的，不是新版本</td></tr>
+<tr><td>大地的備份要不要含見證過的區塊？</td><td><span class="status unknown">下一階段</span></td><td><code>.spire-backup</code> 目前只有 instance 與存檔，不含區塊、傳說與手記；要決定格式與大小上限</td></tr>
+<tr><td>角色與怪物要不要改用影像模型畫？</td><td><span class="status unknown">下一階段</span></td><td>每張的成本與風格一致性；會花錢，先問過再做</td></tr>
 </tbody></table></div>
         </section>
         <section id="chain-why" data-section data-page="chain" data-open-default>
@@ -1010,7 +1067,7 @@
 </tbody></table></div>
         </section>
       <footer class="footer">
-        <p><strong>文件狀態：</strong>2026-09-23。階段 1–3（生成方式、隔離播放器、創作閉環）與故事章節、素材生成已實作並實機驗收，數字見第 02 頁與 <a href="../experiments/interactive-works-acceptance-2026-09-23.md">驗收紀錄</a>；智能合約已寫、已測、尚未部署。本頁保留原檔名以維持入口，AFM／DSL 不再代表整體產品的必經架構。</p>
+        <p><strong>文件狀態：</strong>2026-09-23（Revision 4）。階段 1–9（生成方式、隔離播放器、創作閉環、故事章節、素材生成、無限章節、HD-2D、大地戰鬥與調整機制、地點）已實作並實機驗收；畫面見第 02 頁，數字見第 03 頁與 <a href="../experiments/interactive-works-acceptance-2026-09-23.md">驗收紀錄</a>；智能合約已寫、已測、尚未部署。本頁保留原檔名以維持入口，AFM／DSL 不再代表整體產品的必經架構。</p>
         <p><strong>實作參考：</strong><a href="../../CLAUDE.md">現有工程規範</a> · <a href="../../plan.md">既有遊戲計劃</a> · <a href="../../src/main/instances/backup.ts">目前備份邊界</a> · <a href="../research/afm3-architecture-source-audit.md">AFM 歷史研究</a>。這些是既有能力與研究參考，不代表新版執行作品已交付。</p>
       </footer>
     </main></div>
@@ -1027,7 +1084,7 @@
     const menuOpen = document.querySelector('#menu-open');
     const menuClose = document.querySelector('#menu-close');
     const pageName = document.querySelector('#page-name');
-    const pageNames = { core: '產品方向', progress: '開發計劃', technical: '作品契約', chain: '智能合約' };
+    const pageNames = { core: '產品方向', game: '遊戲現況', progress: '開發計劃', technical: '作品契約', chain: '智能合約' };
 
     const setSectionOpen = (section, open) => {
       section.classList.toggle('is-collapsed', !open);

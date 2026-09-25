@@ -266,6 +266,10 @@ export function TitleDiorama({ seedText }): JSX.Element;   // App's MenuBackdrop
   shadow-casting sprites, bloom + tilt-shift, all from `three/examples` — no postprocessing dep) and
   `pixel` (the 16-bit canvas). Only the drawing differs; never put game rules in a renderer.
   Colours: `engine/palette/hd2d.ts`. Sheet rects: `hd2d/assets.ts` (a test keeps them inside the sheets).
+- Residents and monsters are image-model sprites: one 64 px cell per NPC role (row 0) and monster
+  kind (row 1) of `src/assets/generated/actors.png` (`engine2d/actorSprites.ts`). They are drawn
+  once by `bun scripts/gen-sprites.ts`, a dev step that spends the OpenAI key (ask first); raw
+  pictures stay in `.cache/sprites/`, provenance in `actors.json`. Never generate sprites at runtime.
 - Reachability is the host's: every chunk's centre row/column is a ford (`isFord` in
   `@shared/chunks` — water there is sand, nothing grows) and the origin chunk is dry; written chunks
   pass through `clearFords` when they enter the land store. Story gates stand at chunk centres, so
@@ -281,6 +285,16 @@ export function TitleDiorama({ seedText }): JSX.Element;   // App's MenuBackdrop
   (and its requirements) locked, its rules turned on with fresh tuning, and a reason line — never an
   error. The only refusal is a module the engine does not have. A mod revision carries the bible,
   story, dialogues and assets of its base unchanged.
+
+### Places on the land (`@shared/places`, `app/land/places.ts`)
+- A place (side-scroller `platformer_2_5d@1` or grid dungeon `dungeon_grid@1`) is **save-owned**
+  (`land.places`), not a cartridge scene: adding one never makes a new version or a new run.
+- The model writes only the life in it (`dsl/prompts/place.ts`); `buildPlace` builds the ground from
+  the stored seed on every entry (course / `generateMaze`) and moves every entity onto open ground.
+  Never trust model coordinates in a place, never store its walls in the program.
+- Entrances stand at chunk centres chosen by `placeSpot` (reachable thanks to the fords). A place is
+  played through `GameCanvas({ graph, rules })` while `sessionStore.place` is set; its exits call
+  `leavePlace` (far end = crossed) and the land resumes at the entrance via `landReturn`.
 
 ### `src/renderer/identity`
 ```ts
