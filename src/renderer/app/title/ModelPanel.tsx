@@ -34,14 +34,13 @@ function cloudKey(kind: ProviderKind): TypedKeyProvider | null {
 
 function option(kind: ProviderKind, detection: LocalDetection | null): InferenceConfig {
   if (kind === "llamacpp") {
+    const binaryPath = detection?.llamacpp.binaryPath ?? "";
     return {
       ...PROVIDER_PRESETS[kind],
-      sidecar: {
-        binaryPath: detection?.llamacpp.binaryPath ?? "",
-        modelPath: "",
-        port: 8080,
-        ctxSize: 16_384,
-      },
+      // Without llama-server on this machine the app only talks to one the player runs on :8080:
+      // a sidecar needs a trusted binary path, and an empty one was refused as untrusted-config.
+      sidecar:
+        binaryPath === "" ? null : { binaryPath, modelPath: "", port: 8080, ctxSize: 16_384 },
     };
   }
   if (kind === "ollama") {
