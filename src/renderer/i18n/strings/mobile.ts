@@ -46,6 +46,16 @@ export const MOBILE = {
     "zh-TW": "搖桿：走動 · Y：這個世界和它的留言",
     ja: "スティック：歩く · Y：このワールドとメモ",
   },
+  landLoading: {
+    en: "Unpacking this world's land…",
+    "zh-TW": "正在展開這個世界的大地…",
+    ja: "このワールドの大地を広げています…",
+  },
+  positionUnkept: {
+    en: "Where you stand was not kept on this device: {reason}",
+    "zh-TW": "沒能在這台裝置上記下你站的位置：{reason}",
+    ja: "立っている場所をこの端末に残せませんでした：{reason}",
+  },
 
   // ── The world ──────────────────────────────────────────────────────────────────────────────
   madeBy: { en: "Made by {name}", "zh-TW": "由 {name} 建立", ja: "{name} がつくった世界" },

@@ -1,13 +1,21 @@
-// E2E setup for the browser proof (rev 6 phase 4, D7, p4-mobile) without the desktop app: a small
+// E2E setup for the browser proof (rev 6 phase 4, D7, p4-browser) without the desktop app: a small
 // world made with a throwaway owner key and attached to a world service exactly as the desktop's
 // `world.attach` does (local entries with null receipts, then the owner's `sequencer` in the last
-// `attach` frame), plus owner invites and owner notes. Like the provenance dry run's worlds, its
-// cartridge ref names no installable revision (`e2e-browser-proof`): the browser proof never
-// installs a cartridge, and the desktop cannot join such a world. The witnessed chunk is the DSL's
-// own worked example (`CHUNK_EXAMPLE`), the one the prompts teach with.
+// `attach` frame), plus owner invites and owner notes.
+//
+// The world plays on the shipped built-in revision (`aether-land-1.3.0.json`, the one New Game
+// starts on): the script validates it as the app installs it (`prepare`), packs it reproducibly as
+// main does (`packCartridgeReproducibly`), checks that `unpackCartridge` reads the pack back as that
+// exact revision, uploads it by hash (`PUT /v1/worlds/<id>/blobs/<hex>`, signed by the owner) and
+// only then announces it with a `pack` event, so a browser can draw the land. The desktop can join
+// the same world (it ships 1.3.0). Its seed is a fresh seed code unless `--seed` names one.
+//
+// The one witnessed chunk is the DSL's own worked example (`CHUNK_EXAMPLE`, the program the prompts
+// teach with), kept from the first pass so the "places witnessed" list has an entry; the script
+// writes no other place and no scene of its own.
 //
 //   bun --tsconfig-override tsconfig.node.json scripts/seed-shared-world.ts make \
-//     --service ws://127.0.0.1:8797 --out <dir> [--name "Glass Harbor"]
+//     --service ws://127.0.0.1:8799 --out <dir> [--name "Glass Harbor"] [--seed ABCD2345]
 //   … invite --out <dir> [--uses 1] [--days 7]      → prints another invite link
 //   … note --out <dir> --text "…"                   → the owner leaves a note (a live-sync check)
 //
@@ -23,11 +31,14 @@ import {
   serializeScene,
   witnessIndexOf,
 } from "@dsl/index";
+import type { CartridgeRevision, ContentHash } from "@shared/cartridge";
+import { unpackCartridge } from "@shared/cartridgePack";
 import { inviteLink } from "@shared/history/access";
 import { base32, base64Url, fromBase64Url } from "@shared/history/ids";
 import { type LogCursor, logStart, sequenceEvent } from "@shared/history/log";
 import {
   authorKeyFor,
+  blobAuthHeader,
   newSecretKey,
   signEvent,
   signInvite,
@@ -44,12 +55,18 @@ import type {
 } from "@shared/history/types";
 import { sha256 } from "@shared/integrity";
 import { PHYSICS_SUPPORTED, PHYSICS_VERSION } from "@shared/physics";
+import { randomSeedCode } from "@shared/seedCode";
 import {
   type FromService,
   readFromService,
   type ToService,
   WORLD_PROTOCOL,
 } from "@shared/worldProtocol";
+import { publishCartridgeInputSchema } from "../src/main/cartridges/schemas";
+import { prepare } from "../src/main/cartridges/validate-revision";
+import aetherLand from "../src/main/game/aether-land-1.3.0.json";
+import { blobPathOf, httpBase } from "../src/main/histories/blobClient";
+import { packCartridgeReproducibly } from "../src/main/histories/packs";
 
 const argv = process.argv.slice(2);
 const command = argv[0] ?? "";
@@ -137,9 +154,43 @@ function witnessBody(cx: number, cz: number): WitnessBody {
   return { ...programs, lore, index: index.value };
 }
 
+/** The shipped 1.3.0 revision as the app installs it, and its reproducible pack, read back. */
+function builtInPack(): { revision: CartridgeRevision; bytes: Uint8Array; hash: ContentHash } {
+  const input = publishCartridgeInputSchema.safeParse(aetherLand);
+  if (!input.success) throw new Error(`aether-land-1.3.0.json: ${input.error.issues[0]?.message}`);
+  const revision = prepare(input.data);
+  if (!revision.ok) throw new Error(`aether-land-1.3.0.json: ${revision.error.message}`);
+  const bytes = packCartridgeReproducibly(revision.value);
+  if (!bytes.ok) throw new Error(`pack: ${bytes.error.message}`);
+  const back = unpackCartridge(bytes.value);
+  const manifest = revision.value.manifest;
+  if (!back.ok || back.value.manifest.contentHash !== manifest.contentHash) {
+    throw new Error(`the pack does not read back as ${manifest.cartridgeId}@${manifest.version}`);
+  }
+  return { revision: revision.value, bytes: bytes.value, hash: sha256(bytes.value) };
+}
+
+/** Stores the pack on the service by its hash, as the owner (`PUT …/blobs/<hex>`, signed). */
+async function uploadPack(url: string, world: string, secret: Uint8Array, bytes: Uint8Array) {
+  const hash = sha256(bytes);
+  const path = blobPathOf(world, hash);
+  const ts = Math.floor(Date.now() / 1000);
+  const response = await fetch(`${httpBase(url)}${path}`, {
+    method: "PUT",
+    headers: {
+      "X-Unmapped-Auth": blobAuthHeader(secret, { method: "PUT", path, ts, body: bytes }),
+      "Content-Type": "application/octet-stream",
+    },
+    body: new Uint8Array(bytes),
+  });
+  if (!response.ok) throw new Error(`blob upload: ${response.status} ${await response.text()}`);
+}
+
 async function make(): Promise<void> {
   const url = flag("service");
   const name = flag("name", "Glass Harbor");
+  const pack = builtInPack();
+  const { cartridgeId, version, contentHash } = pack.revision.manifest;
   const owner = newSecretKey();
   const author = authorKeyFor(owner);
   const start = Date.now() - 60_000;
@@ -153,17 +204,14 @@ async function make(): Promise<void> {
       seen: 0,
       body: {
         name,
-        cartridge: {
-          cartridgeId: "e2e-browser-proof",
-          version: "1.0.0",
-          contentHash: sha256("e2e-browser-proof"),
-        },
-        seed: "e2e-browser-proof",
+        cartridge: { cartridgeId, version, contentHash },
+        seed: flag("seed", randomSeedCode()),
         language: "en",
         physicsVersion: PHYSICS_VERSION,
         createdAt: iso(start),
         access: "friends",
-        gates: [],
+        // As the desktop's genesis names them (dsl/history/migrate.ts): the story's gates.
+        gates: (pack.revision.story?.episodes ?? []).map(({ id, cx, cz }) => ({ id, cx, cz })),
         from: { instanceId: `e2e-browser-proof-${start}` },
       },
     },
@@ -224,12 +272,33 @@ async function make(): Promise<void> {
     (frame): frame is Extract<FromService, { t: "opened" }> =>
       frame.t === "opened" && frame.world === genesis.id,
   );
+  // The pack is on the service before any event names it, so no friend is sent to a missing blob.
+  await uploadPack(url, genesis.id, owner, pack.bytes);
+  const announce = signEvent(
+    {
+      v: 1,
+      world: genesis.id,
+      kind: "pack",
+      author,
+      at: iso(Date.now()),
+      seen: opened.head.n,
+      body: { cartridge: contentHash, pack: pack.hash, bytes: pack.bytes.length },
+    },
+    owner,
+  );
+  socket.send({ t: "submit", world: genesis.id, events: [announce] });
+  const packed = await socket.until(
+    (frame): frame is Extract<FromService, { t: "entries" }> =>
+      frame.t === "entries" && frame.entries.some((entry) => entry.event.id === announce.id),
+  );
   socket.ws.close();
   const dir = flag("out");
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
   const record: Owner = { secret: base64Url(owner), world: genesis.id, url };
   writeFileSync(ownerFile(), `${JSON.stringify(record, null, 2)}\n`, { mode: 0o600 });
   console.log(`world ${genesis.id} "${name}" attached at ${url}, head ${opened.head.n}`);
+  console.log(`cartridge ${cartridgeId}@${version} ${contentHash}, seed ${genesis.body.seed}`);
+  console.log(`pack ${pack.hash} (${pack.bytes.length} bytes) announced, head ${packed.head.n}`);
   console.log(`witnessed "${witness.index.name}" at 1,0`);
   printInvite(owner, genesis.id, url);
 }

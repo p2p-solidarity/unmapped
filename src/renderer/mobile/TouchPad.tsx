@@ -85,6 +85,9 @@ function PadButton({ button }: { button: TouchButton }): JSX.Element {
     setTouchButton(button, on);
     setDown(on);
   };
+  // A button taken off screen while pressed (Y opens the world, which swaps it for A) never sees
+  // its finger lift, so it lets go here; a held button would stay latched in the poller for good.
+  useEffect(() => () => setTouchButton(button, false), [button]);
   return (
     <div
       data-touch={button}
@@ -151,3 +154,14 @@ export function TouchPad({ buttons }: { buttons: readonly TouchButton[] }): JSX.
 
 /** Height the docked pad covers, so a scrolling screen can leave room under its last row. */
 export const TOUCH_PAD_HEIGHT = STICK * 2 + space.lg * 2;
+
+/**
+ * Where a screen's one thumb button sits: right-aligned just above the docked pad, in reach of
+ * the right thumb. The button itself is a `Button` (a real, focusable control).
+ */
+export const THUMB_SPOT = {
+  position: "fixed",
+  right: space.lg,
+  bottom: TOUCH_PAD_HEIGHT,
+  zIndex: zIndex.hud,
+} as const;

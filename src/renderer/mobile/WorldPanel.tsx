@@ -1,14 +1,15 @@
 // One joined world on a phone (rev 6 phase 4, D7): its genesis name and maker, the link and the
 // outbox, anything the world refused (listed until dismissed, Rule 2), the note composer, and the
 // lists of what its history holds. Everything is read through `window.seed.world` and folded by
-// `useSharedWorld`.
+// `useSharedWorld`, which the world's screen holds once for the land and this panel alike.
 
 import { errorLine, useT } from "@renderer/i18n";
 import { Button, ErrorBlock, StatePanel, Surface, space, Text } from "@renderer/ui";
+import type { Loadable } from "@shared/result";
 import type { JSX } from "react";
 import { NoteComposer } from "./NoteComposer";
 import { StoragePanel } from "./StoragePanel";
-import { type SharedWorldView, useSharedWorld } from "./useSharedWorld";
+import type { SharedWorldView } from "./useSharedWorld";
 import { WorldLists } from "./WorldLists";
 
 function Header({ view }: { view: SharedWorldView }): JSX.Element {
@@ -86,8 +87,13 @@ function Refused({
   );
 }
 
-export function WorldPanel({ worldId }: { worldId: string }): JSX.Element {
-  const state = useSharedWorld(worldId);
+export function WorldPanel({
+  worldId,
+  state,
+}: {
+  worldId: string;
+  state: Loadable<SharedWorldView>;
+}): JSX.Element {
   return (
     <StatePanel state={state}>
       {(view) => (

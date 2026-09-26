@@ -11,6 +11,8 @@
 // whole save). So the instance set here carries only what LandView2D reads — `save.seed`,
 // `save.cartridge`, `save.position`, and the revision — and is cast to that type. Nothing else in
 // the browser page's module graph reads the session's instance; the desktop never calls this.
+// (The cast would go if LandView2D took the seed, story and start as props; it sits at the line
+// limit, so that waits for LandView2D's own split.)
 
 import { serializeScene } from "@dsl";
 import { useLandStore, useSessionStore, useWorldStore } from "@renderer/state";

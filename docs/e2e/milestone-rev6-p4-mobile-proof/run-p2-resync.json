@@ -1,0 +1,56 @@
+{
+ "env": {
+  "service": "UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8799 --data $SCR/service-data --browser-origin http://localhost:5190 (a fresh empty dir)",
+  "page": "bunx vite --config docs/e2e/milestone-rev6-p4-mobile-proof/vite.e2e.config.mts (the repo's browser config with no watcher and no HMR; http://localhost:5190, the dev CSP that allows loopback)",
+  "world": "bun --tsconfig-override tsconfig.node.json scripts/seed-shared-world.ts make --service ws://127.0.0.1:8799 --out $SCR/seed (aether-land 1.3.0 packed, uploaded and announced) → __INVITE__; … invite --out $SCR/seed → __INVITE_B__",
+  "browser": "Playwright's chrome-headless-shell 1243, --remote-debugging-port=9342 --user-data-dir=$SCR/chrome-profile (fresh) --window-size=375,812 http://localhost:5190/",
+  "desktop": "app B: AETHER_TEST_USER_DATA=$SCR/ud-b bunx electron-vite dev --remoteDebuggingPort 9347, a fresh userData whose inference.json names an unreachable loopback llama.cpp (http://127.0.0.1:8098/v1, no sidecar) so nothing can call a model",
+  "driver": "CDP_PORT=9342 (phone) or 9347 (desktop B) bun scripts/cdp-drive.ts \"$(sed 's|__INVITE_B__|<B link>|; s|__INVITE__|<phone link>|; s|__SHOTS__|<dir>|g; s|/__REPO__|<absolute repo path>|g' <run file>)\" — '/@fs/<absolute path>' is the exact URL the page imports these modules by, so the probes read the page's own module instances (a '//' path would load fresh copies)",
+  "viewport": "phone: 375 × 812, deviceScaleFactor 2, mobile with touch emulation (each phone run starts with {viewport})",
+  "input": "phone: touch only (tap, tapText, drags held on the docked stick) and text typed into the focused field; evals only read (samplePlayer, the land/session stores, remoteRoster, IndexedDB, window.seed.world.read/badges). Desktop B: clicks, typed text, the N key, one select() of its name field."
+ },
+ "model": null,
+ "part": "P2-F — service and page server back: the socket reconnects by itself and the offline note is sequenced",
+ "actions": [
+  {
+   "viewport": {
+    "width": 375,
+    "height": 812,
+    "scale": 2,
+    "mobile": true
+   }
+  },
+  {
+   "offline": false
+  },
+  {
+   "eval": "window.__t0 = performance.now(); 'mark'"
+  },
+  {
+   "repeat": {
+    "times": 60,
+    "until": "/^Online · Entry \\d+ · 0 waiting to send/m.test(document.body.innerText)",
+    "actions": [
+     {
+      "wait": 1000
+     }
+    ]
+   }
+  },
+  {
+   "eval": "Math.round(performance.now() - window.__t0)"
+  },
+  {
+   "eval": "document.body.innerText.split('\\n').slice(0, 3).join(' | ')"
+  },
+  {
+   "eval": "(async () => { const b = await window.seed.world.badges(); const id = b.value[0].worldId; const r = await window.seed.world.read(id); const now = r.value.snapshot.now; return JSON.stringify({head: now.head.n, pack: now.pack, me: r.value.status.me, link: r.value.status.link, pending: r.value.pending.map((p) => p.event.body.text ?? p.event.kind), notes: now.notes.map((n) => ({n: n.n, by: now.names[n.author] ?? n.author.slice(0, 9), author: n.author, text: n.body.text, coord: n.body.coord}))}); })()"
+  },
+  {
+   "eval": "new Promise((resolve) => { const open = indexedDB.open('unmapped-browser'); open.onsuccess = () => { const db = open.result; const tx = db.transaction(['blobs', 'places', 'entries', 'outbox'], 'readonly'); const out = {}; const b = tx.objectStore('blobs').getAll(); b.onsuccess = () => { out.blobs = b.result.map((r) => [r.hash, r.bytes.byteLength ?? r.bytes.length]); }; const p = tx.objectStore('places').getAll(); p.onsuccess = () => { out.places = p.result.map((r) => ({sceneId: r.position.sceneId, x: +r.position.x.toFixed(3), z: +r.position.z.toFixed(3)})); }; const e = tx.objectStore('entries').count(); e.onsuccess = () => { out.entries = e.result; }; const o = tx.objectStore('outbox').getAll(); o.onsuccess = () => { out.outbox = o.result.map((r) => r.events.length); }; tx.oncomplete = () => resolve(JSON.stringify(out)); }; open.onerror = () => resolve('no db'); })"
+  },
+  {
+   "shot": "__SHOTS__/p2-f-00-resynced.jpg"
+  }
+ ]
+}

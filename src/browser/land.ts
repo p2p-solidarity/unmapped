@@ -77,18 +77,24 @@ export function landOfRevision(revision: CartridgeRevision): Result<Omit<PhoneLa
   return ok({ revision, graph, rules: rules.value });
 }
 
+/**
+ * The pack from this device, else fetched by hash. Blobs travel over HTTP, not the world's socket,
+ * so a socket still connecting (just after a join or a reload) does not stop the fetch; a fetch
+ * that fails while the socket is not up says the land has not arrived yet, and the shell asks again
+ * once the service answers.
+ */
 async function packBytes(host: Host, world: LiveWorld, hash: string): Promise<Result<Uint8Array>> {
   const kept = await host.store.blob(hash);
   if (!kept.ok) return kept;
   if (kept.value !== null) return ok(kept.value);
-  if (world.link !== "online") {
-    return err(
-      "browser-pack-missing",
-      "This world's land has not reached this browser yet.",
-      "Go online once so the land can be fetched; after that it draws offline too.",
-    );
-  }
-  return fetchPack(host, world, hash);
+  const missing = err(
+    "browser-pack-missing",
+    "This world's land has not reached this browser yet.",
+    "Go online once so the land can be fetched; after that it draws offline too.",
+  );
+  if (world.link === "diverged" || world.link === "refused") return missing;
+  const fetched = await fetchPack(host, world, hash);
+  return fetched.ok || world.link === "online" ? fetched : missing;
 }
 
 /** The page's `PhoneDevice`: `live` loads (and starts syncing) a joined world, as `read` does. */
