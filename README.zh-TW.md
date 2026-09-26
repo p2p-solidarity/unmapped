@@ -87,7 +87,7 @@
   CSP 的 `sandbox="allow-scripts"` iframe 裡執行。
 - **誠實的數字。** 每次模型呼叫都記進本機的用量帳本：token、快取 token 和毫秒數，絕不記錄提示詞或金鑰。
   HUD 會顯示每個世界的累計。畫面上沒有任何假資料；缺了什麼，畫面就直接說，並告訴你怎麼補上。
-- **可選的鏈上出處。** 已發布的卡帶可以在 Sepolia 上擁有 ENSv2 名稱。共享世界的服務也能把每個節拍的指紋
+- **可選的鏈上出處。** 世界、改編、存檔和玩家可以在 Sepolia 上擁有 ENSv2 名稱，而且名稱就在遊戲裡：玩家卡片、過章、用名稱加入大陸。共享世界的服務也能把每個節拍的指紋
   記錄到鏈上（目前只模擬過，尚未部署）。內容永遠不上鏈，沒有設定任何鏈，每個畫面也都照常運作。
 
 ## 畫面
@@ -337,7 +337,8 @@ usage.jsonl                       每次模型呼叫一行：用途、模型、t
 
 大陸是比較早的一起玩的方式，現在留給只放在一台裝置上的世界。已共享到世界服務的世界不能加入大陸
 （`continent-world-attached`）。這種世界都有一個固定的**門牌**，它同時也是這個世界開啟的大陸代碼。在遊戲裡
-向夥伴敞開你的門，或在 **世界 → 大陸** 選一個世界、輸入朋友的門牌。每個世界都保有自己的原點、種子和存檔。
+向夥伴敞開你的門，或在 **世界 → 大陸** 選一個世界、輸入朋友的門牌或朋友存檔的 ENS 名稱（存檔的名稱記著它的
+門牌）。每個世界都保有自己的原點、種子和存檔。
 加入大陸時世界會分到一個錨點，每塊領土屬於離它最近的錨點。
 
 - **會傳過去的：** 每個世界的描述、見證過的區塊、手記，以及即時位置（只放在 awareness，永不存檔）。訪客留在
@@ -403,12 +404,14 @@ skills: [skills]
 
 玩遊戲完全不需要這些。什麼都沒設定時，每個畫面都會直接說明尚未設定帳本。
 
-- **卡帶與存檔的 ENSv2 名稱（Sepolia）。** 全部掛在 `unmapped.eth` 底下的同一棵樹：卡帶版本是
-  `<cartridge>.unmapped.eth`，改編作品掛在母卡帶的名稱底下，存檔是 `<save>.<cartridge>.unmapped.eth`，由玩家
-  自己的 passkey 帳戶持有。在 **世界 → 卡帶** 可以替版本登記名稱（或把自己的名稱指到新版本），**用 ENS
-  名稱開啟** 能從名稱找回確切的版本，或存檔的進度；在 **世界 → 存檔 → 這個存檔的 ENS 名稱** 可以記錄這趟
-  旅程，玩下去再更新。紀錄只有 id、版本和內容雜湊（存檔則是它的 sha256、釘住的版本和一行進度）；備份在
-  另一台機器還原後，會用雜湊自己找到名稱。
+- **世界、存檔與玩家的 ENSv2 名稱（Sepolia）。** 全部掛在 `unmapped.eth` 底下的同一棵樹：世界是
+  `<label>.unmapped.eth`，改編作品掛在母世界的名稱底下，存檔是 `<save>.<cartridge>.unmapped.eth`，玩家是
+  `<you>.players.unmapped.eth`；存檔和玩家名稱由玩家自己的 passkey 帳戶持有。名稱就在遊戲裡，不只在選單裡：
+  按下 **建立並開始玩** 後可以馬上替世界登記名稱（標籤由你挑，所以「霧之港」可以叫 `misty-harbor.unmapped.eth`）
+  並上架到市場；玩家卡片上顯示這趟旅程的名稱；過一章就會提示用一次 passkey 簽名記錄這趟旅程，或把名稱移到新
+  進度；朋友輸入你存檔的名稱就能走進你的大陸。在 **世界 → 卡帶** 可以替版本登記名稱、改指向或上架，
+  **用 ENS 名稱開啟** 能從名稱找回確切的版本，或存檔的進度。紀錄只有 id、版本和內容雜湊（存檔則是它的
+  sha256、釘住的版本、一行進度和門牌）；備份在另一台機器還原後，會用雜湊自己找到名稱。
 - **出處帳本。** [`contracts/src/UnwrittenLedger.sol`](contracts/src/UnwrittenLedger.sol) 記錄誰發布了哪個
   雜湊、它是從哪裡改編來的，以及玩家的短評。內容永遠不上鏈。
 - **共享世界的輕量鏈（尚未部署）。** 主人可以在門的**記錄在公開的區塊鏈上**區塊選**記錄節拍**。之後世界服務
@@ -420,8 +423,9 @@ skills: [skills]
   以母世界的代幣計價發售，之後由 v4 hook 把 1% 權利金沿著家族往上分配（世界、上一代、再上一代各
   50／30／20），付給當下持有 ENS 名稱的人。第一個世界 `aether-land.unmapped.eth` 已經拍賣、結算並開始交易。
   在 **世界 → 市場** 裡，玩家用 passkey 出價、結算、買入、發放分潤：不用錢包、不用 ETH，app 裡也沒有私鑰——
-  passkey 擁有一個小型帳戶合約，由代付站（Cloudflare Worker，`src/relay`）只替市場自己的動作付 gas。發行新
-  世界目前仍是操作者指令（`bun run lineage:demo launch`）。唯讀的拍賣頁面在 https://unmapped-auction.gimmychang.workers.dev。詳見
+  passkey 擁有一個小型帳戶合約，由代付站（Cloudflare Worker，`src/relay`）只替市場自己的動作付 gas。世界名稱
+  的持有人可以在 app 裡把它上架（**世界 → 卡帶**，或建完世界當下）；改編要等母世界先上架，並以母世界的代幣
+  計價。唯讀的拍賣頁面在 https://unmapped-auction.gimmychang.workers.dev。詳見
   [`docs/demo/lineage-market.md`](docs/demo/lineage-market.md)、
   [`docs/plans/lineage-market.md`](docs/plans/lineage-market.md) 與 [`contracts/README.md`](contracts/README.md)。
 
@@ -446,9 +450,11 @@ skills: [skills]
 | 雲端模型（OpenAI `gpt-5.4-mini`）與用量帳本 | ✅ 已驗證 | [model-switch](docs/e2e/milestone-model-switch/result.md) · [rev6-create](docs/e2e/milestone-rev6-create/result.md) |
 | 本機模型生成（llama.cpp、Ollama、Apple） | ⏳ Apple 已能在應用程式內完整走完「創造世界」；它的 4K 上下文還放不下見證與章節；llama.cpp 與 Ollama 生成尚未 | [model-switch](docs/e2e/milestone-model-switch/result.md) · [apple-in-app](docs/e2e/milestone-apple-in-app/result.md) · [apple-create](docs/e2e/milestone-apple-create/result.md) |
 | AI 世界（沙箱互動世界） | ✅ 已驗證 | [acceptance](docs/experiments/interactive-works-acceptance.md) |
-| Sepolia 上的 ENSv2 卡帶名稱（舊的 `ens:setup` 上層名稱） | ✅ 已驗證 | [ensv2-cartridge-names](docs/e2e/milestone-ensv2-cartridge-names/result.md) |
+| Sepolia 上的 ENSv2 卡帶名稱（舊的 `ens:setup` 上層名稱，已移除） | ✅ 已驗證 | [ensv2-cartridge-names](docs/e2e/milestone-ensv2-cartridge-names/result.md) |
 | 名稱樹裡的 ENS 名稱：改編卡帶、玩家存檔、更新、還原後用雜湊找到名稱 | ✅ 已在 Sepolia 驗證 | [lineage-names](docs/e2e/milestone-lineage-names/result.md) |
 | 代付站：app 裡沒有私鑰 | ✅ 已驗證（app 流程對本機執行的代付站；部署的 Worker 已實際送出一筆領 USDC 交易） | [lineage-relay](docs/e2e/milestone-lineage-relay/result.md) |
+| 遊戲裡的 ENS：建完世界當下登記名稱（中文名自選標籤）、在 app 裡上架、玩家卡片上的名稱、過章後記錄與更新這趟旅程的名稱（帶門牌）、從「改編」按鈕做出的改編掛在母名稱下並以母代幣上架、朋友用存檔名稱加入大陸 | ✅ 已在 Sepolia 驗證（Touch ID 由虛擬驗證器代替；代付站用這一版在本機執行）；過章卡片的「更新」按鈕沒按到（同一個更新從存檔頁送出） | [ens-in-game](docs/e2e/milestone-ens-in-game/result.md) |
+| 玩家名稱（`<you>.players.unmapped.eth`） | ⏳ 已完成；`players.unmapped.eth` 目錄尚未登記，所以還沒跑過 | [ens-in-game](docs/e2e/milestone-ens-in-game/result.md) |
 | 血統市場：在 app 裡用 passkey 出價、結算、買入、發放分潤 | ✅ 已在 Sepolia 驗證（Touch ID 由虛擬驗證器代替）；三代只跑過 dry run | [lineage-demo](docs/e2e/milestone-lineage-demo/result.md) · [lineage-market](docs/e2e/milestone-lineage-market/result.md) |
 | 共享世界：朋友用邀請加入，走過你見證的地方 0 次模型呼叫；重開後你不必呼叫就看到對方的地方 | ✅ 已驗證（本機世界服務） | [p3-offline-visit](docs/e2e/milestone-rev6-p3-offline-visit/result.md) |
 | 舊存檔遷移成世界的歷史：各類數量相符、原本的檔案不變、重跑新增 0 筆、0 次模型呼叫；第二段的舊版本仍能打開同一個資料夾，這個版本再補上它寫的東西 | ✅ 已驗證；遷移花費的時間未量 | [p3-migrate](docs/e2e/milestone-rev6-p3-migrate/result.md) · [p3-older-build](docs/e2e/milestone-rev6-p3-older-build/result.md) |
@@ -510,7 +516,7 @@ skills: [skills]
 | `bun run demo:cartridges` | 建置 `cartridges-examples/` 裡的示範卡帶 |
 | `bun run contracts:build` | 重新編譯 Solidity 產物（已提交進 repo） |
 | `bun run lineage:market --dry-run` | 在 Sepolia 上模擬部署 → 三代發行 → 拍賣 → 交易 → 權利金 |
-| `bun run lineage:demo status\|launch\|seed-bids\|settle` | 市場的現場操作工具（launch 與 seed-bids 會花 Sepolia gas） |
+| `bun run lineage:demo status\|launch\|seed-bids\|settle\|players` | 市場的現場操作工具（launch、seed-bids 與只需一次的 `players` 目錄會花 Sepolia gas） |
 | `bun run web:deploy` | 把唯讀的拍賣頁面部署到 Cloudflare |
 | `bun run relay:key` / `relay:dev` / `relay:deploy` | 代付站：產生它的私鑰、在本機執行、部署到 Cloudflare |
 | `bun run service -- --port 8787 --data <dir>` | 世界服務；`import <file.world>` 以鏡像提供一個世界、`export <worldId>` 寫出一個檔、`--browser-origin <origin>` 讓網頁取得它的包；`UNMAPPED_SERVICE_TEST=1` 讓測試能調動它的時鐘 |
@@ -555,7 +561,7 @@ src/
     ├── history/    這台裝置上的世界歷史：fold、由它畫出的大地、把寫入交給主程序
     ├── mobile/     瀏覽器證明掛上的手機殼：大地畫面、觸控搖桿、留言
     ├── net/        大陸：y-webrtc 房間、閘門、信令；世界服務；同在
-    ├── identity/   passkey PRF、鑰匙圈備援、AES-GCM、ENS 解析
+    ├── identity/   passkey PRF、鑰匙圈備援、AES-GCM、ENS 名稱查詢
     ├── works/      AI 世界的沙箱播放器
     ├── i18n/       en · zh-TW · ja 字串表
     └── ui/         UI 基本元件與設計 token

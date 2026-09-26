@@ -102,7 +102,7 @@
 - **正直な数字。** モデルの呼び出しはすべてローカルの使用量台帳に記録されます。記録するのはトークン数、
   キャッシュされたトークン数、ミリ秒で、プロンプトやキーは記録しません。HUD にはワールドごとの累計が出ます。
   ダミーのデータは一切表示しません。足りないものがあれば、画面がそのことと直し方を伝えます。
-- **オンチェーンの来歴はオプション。** 公開したカートリッジは Sepolia 上で ENSv2 の名前を持てます。共有
+- **オンチェーンの来歴はオプション。** ワールド、リミックス、セーブ、プレイヤーは Sepolia 上で ENSv2 の名前を持てます。名前はゲームの中にもあります（プレイヤーカード、章のクリア、名前での大陸参加）。共有
   ワールドのサービスは、拍ごとの指紋をチェーンに記録することもできます（まだシミュレーションのみで、未デプロイ）。
   コンテンツ自体がチェーンに載ることはなく、チェーンを設定しなくてもすべての画面が動きます。
 
@@ -372,7 +372,8 @@ usage.jsonl                       モデル呼び出し 1 回につき 1 行：�
 大陸は以前からの遊び方で、1 台の端末だけにあるワールドのために残しています。ワールドサービスで共有した
 ワールドは大陸に参加できません（`continent-world-attached`）。そうしたワールドにはそれぞれ変わらない
 **扉番号**があり、それがそのワールドの開く大陸のコードにもなります。ゲーム内で仲間に扉を開くか、
-**ワールド → 大陸** でワールドを選んで友だちの扉番号を入力してください。ワールドはそれぞれ自分の原点、シード、
+**ワールド → 大陸** でワールドを選んで友だちの扉番号か、友だちのセーブの ENS 名を入力してください（セーブの名前には
+扉番号が記録されています）。ワールドはそれぞれ自分の原点、シード、
 セーブを持ったままです。参加するとアンカーが割り当てられ、各地はいちばん近いアンカーの領地になります。
 
 - **やりとりされるもの：** 各ワールドの概要、観測済みのチャンク、メモ、リアルタイムの位置（awareness のみで、
@@ -451,14 +452,17 @@ skills: [skills]
 
 遊ぶだけなら、どれも必要ありません。何も設定しなければ、台帳が未設定であることを各画面がはっきり伝えます。
 
-- **カートリッジとセーブの ENSv2 名（Sepolia）。** すべて `unmapped.eth` の下の一本のツリーに付きます。
-  カートリッジのリビジョンは `<cartridge>.unmapped.eth`、リミックスは親の名前の下、セーブは
-  `<save>.<cartridge>.unmapped.eth` で、プレイヤー自身のパスキーのアカウントが保有します。**ワールド →
-  カートリッジ** でリビジョンに名前を付け（自分の名前を新しいリビジョンに向け）、**ENS 名で開く** で名前から
-  正確なリビジョン、あるいはセーブのチェックポイントにたどり着けます。**ワールド → セーブ → このセーブの ENS
-  名** では遊んだ記録を残し、進めたら更新します。レコードは id、バージョン、コンテンツハッシュだけ（セーブは
-  その sha256、固定したバージョン、進行状況の一行）で、別の端末で復元したバックアップはハッシュから自分の
-  名前を見つけます。
+- **ワールド・セーブ・プレイヤーの ENSv2 名（Sepolia）。** すべて `unmapped.eth` の下の一本のツリーに付きます。
+  ワールドは `<label>.unmapped.eth`、リミックスは親の名前の下、セーブは `<save>.<cartridge>.unmapped.eth`、
+  プレイヤーは `<you>.players.unmapped.eth` で、セーブとプレイヤーの名前はプレイヤー自身のパスキーのアカウントが
+  保有します。名前はメニューの中だけでなくゲームの中にあります。**作って遊ぶ** の直後にワールドへ名前を付けられ
+  （ラベルは自分で選ぶので「霧之港」は `misty-harbor.unmapped.eth` にできます）、そのままマーケットに出せます。
+  プレイヤーカードにはこの旅の名前が出て、章をクリアするとパスキーの署名一回で旅を記録するか、名前を新しい
+  進行状況へ進めるよう提案されます。友だちはあなたのセーブの名前を入力するだけであなたの大陸に来られます。
+  **ワールド → カートリッジ** ではリビジョンへの命名、向け直し、マーケットへの出品ができ、**ENS 名で開く** で
+  名前から正確なリビジョン、あるいはセーブのチェックポイントにたどり着けます。レコードは id、バージョン、
+  コンテンツハッシュだけ（セーブはその sha256、固定したバージョン、進行状況の一行、扉番号）で、別の端末で復元
+  したバックアップはハッシュから自分の名前を見つけます。
 - **来歴台帳。** [`contracts/src/UnwrittenLedger.sol`](contracts/src/UnwrittenLedger.sol) は、誰がどのハッシュを
   公開し、それが何のリミックスなのかと、プレイヤーの短いメモを記録します。コンテンツはチェーンに載りません。
 - **共有ワールドの軽いチェーン（未デプロイ）。** 持ち主は、扉の**公開チェーンへの記録**の欄で**拍を記録する**を
@@ -473,8 +477,8 @@ skills: [skills]
   最初のワールド `aether-land.unmapped.eth` はオークション、精算、取引まで済んでいます。**ワールド →
   マーケット** では、パスキーで入札・精算・購入・ロイヤリティの支払いができます。ウォレットも ETH も要らず、
   アプリに鍵もありません。パスキーが小さなアカウントコントラクトを持ち、ガスステーション（Cloudflare Worker、
-  `src/relay`）がマーケット自身の操作に限ってガス代を払います。新しいワールドの発行はまだ運営者のコマンド
-  （`bun run lineage:demo launch`）です。
+  `src/relay`）がマーケット自身の操作に限ってガス代を払います。ワールドの名前の持ち主はアプリから出品できます
+  （**ワールド → カートリッジ**、または作った直後）。リミックスは親が出品してからで、親のトークン建てです。
   読み取り専用のオークションページ: https://unmapped-auction.gimmychang.workers.dev。詳しくは
   [`docs/demo/lineage-market.md`](docs/demo/lineage-market.md)、
   [`docs/plans/lineage-market.md`](docs/plans/lineage-market.md) と
@@ -502,9 +506,11 @@ UNMAPPED はバージョン `0.1.0`、動作はする初期段階の研究版で
 | クラウドモデル（OpenAI `gpt-5.4-mini`）と使用量台帳 | ✅ 検証済み | [model-switch](docs/e2e/milestone-model-switch/result.md) · [rev6-create](docs/e2e/milestone-rev6-create/result.md) |
 | ローカルモデルでの生成（llama.cpp、Ollama、Apple） | ⏳ Apple はアプリ内で「世界をつくる」を最後まで実行できる、4K のコンテキストにはまだ観測と章が収まらない、llama.cpp と Ollama の生成は未検証 | [model-switch](docs/e2e/milestone-model-switch/result.md) · [apple-in-app](docs/e2e/milestone-apple-in-app/result.md) · [apple-create](docs/e2e/milestone-apple-create/result.md) |
 | AI ワールド（サンドボックスのインタラクティブワールド） | ✅ 検証済み | [acceptance](docs/experiments/interactive-works-acceptance.md) |
-| Sepolia 上の ENSv2 カートリッジ名（以前の `ens:setup` の親） | ✅ 検証済み | [ensv2-cartridge-names](docs/e2e/milestone-ensv2-cartridge-names/result.md) |
+| Sepolia 上の ENSv2 カートリッジ名（以前の `ens:setup` の親、削除済み） | ✅ 検証済み | [ensv2-cartridge-names](docs/e2e/milestone-ensv2-cartridge-names/result.md) |
 | 名前ツリーの ENS 名：リミックスのカートリッジ、プレイヤーのセーブ、更新、復元したバックアップのハッシュ照合 | ✅ Sepolia で検証済み | [lineage-names](docs/e2e/milestone-lineage-names/result.md) |
 | ガスステーション：アプリに鍵なし | ✅ 検証済み（アプリの流れはローカル実行で、デプロイした Worker も実際にテスト USDC の送信を 1 件実行） | [lineage-relay](docs/e2e/milestone-lineage-relay/result.md) |
+| ゲームの中の ENS: 作った直後の命名（中国語名は自分でラベルを選ぶ）、アプリからの出品、プレイヤーカードの名前、章のクリア後に旅の名前を記録・更新（扉番号つき）、リミックスボタンから作ったリミックスを親の名前の下で命名し親のトークン建てで出品、友だちがセーブの名前で大陸に参加 | ✅ Sepolia で検証済み（Touch ID は仮想認証器で代用、ガスステーションはこのビルドをローカルで実行）。章のカードの更新ボタンは押せていない（同じ更新はセーブ画面から） | [ens-in-game](docs/e2e/milestone-ens-in-game/result.md) |
+| プレイヤー名（`<you>.players.unmapped.eth`） | ⏳ 実装済み。`players.unmapped.eth` のディレクトリが未登録のため未実行 | [ens-in-game](docs/e2e/milestone-ens-in-game/result.md) |
 | 系譜マーケット: アプリからパスキーで入札・精算・購入・ロイヤリティ | ✅ Sepolia で検証済み（Touch ID は仮想認証器で代用）。3 世代はドライランのみ | [lineage-demo](docs/e2e/milestone-lineage-demo/result.md) · [lineage-market](docs/e2e/milestone-lineage-market/result.md) |
 | 共有ワールド：友だちが招待で参加し、あなたが観測した場所をモデル呼び出し 0 回で歩く。再起動後、相手の場所を呼び出しなしで見る | ✅ 検証済み（ローカルのワールドサービス） | [p3-offline-visit](docs/e2e/milestone-rev6-p3-offline-visit/result.md) |
 | 古いセーブのワールド歴史への移行：種類ごとの数が一致、元のファイルは不変、再実行で 0 件追加、モデル呼び出しなし。フェーズ 2 のビルドも同じフォルダーを開け、このビルドがその書いた分を取り込む | ✅ 検証済み。移行にかかる時間は未計測 | [p3-migrate](docs/e2e/milestone-rev6-p3-migrate/result.md) · [p3-older-build](docs/e2e/milestone-rev6-p3-older-build/result.md) |
@@ -574,7 +580,7 @@ UNMAPPED はバージョン `0.1.0`、動作はする初期段階の研究版で
 | `bun run demo:cartridges` | `cartridges-examples/` のデモカートリッジをビルド |
 | `bun run contracts:build` | Solidity の成果物を再コンパイル（リポジトリにコミット済み） |
 | `bun run lineage:market --dry-run` | Sepolia 上でデプロイ → 3 世代 → オークション → スワップ → ロイヤリティをシミュレート |
-| `bun run lineage:demo status\|launch\|seed-bids\|settle` | マーケットの運営ツール（launch と seed-bids は Sepolia のガスを使います） |
+| `bun run lineage:demo status\|launch\|seed-bids\|settle\|players` | マーケットの運営ツール（launch、seed-bids と一度きりの `players` ディレクトリは Sepolia のガスを使います） |
 | `bun run web:deploy` | 読み取り専用のオークションページを Cloudflare にデプロイ |
 | `bun run relay:key` / `relay:dev` / `relay:deploy` | ガスステーション：鍵を作る、ローカルで動かす、Cloudflare にデプロイ |
 | `bun run service -- --port 8787 --data <dir>` | ワールドサービス。`import <file.world>` でミラーとして公開、`export <worldId>` でファイルを書き出し、`--browser-origin <origin>` でページにパックを渡す。`UNMAPPED_SERVICE_TEST=1` でテストから時計を進められる |
@@ -620,7 +626,7 @@ src/
     ├── history/    この端末でのワールドの歴史：fold、そこから描く大地、メインプロセスへの書き込み
     ├── mobile/     ブラウザー実証が載せるスマートフォンの殻：大地の表示、タッチパッド、メモ
     ├── net/        大陸：y-webrtc のルーム、ゲート、シグナリング。ワールドサービス。プレゼンス
-    ├── identity/   パスキー PRF、キーチェーンのフォールバック、AES-GCM、ENS の解決
+    ├── identity/   パスキー PRF、キーチェーンのフォールバック、AES-GCM、ENS 名の照会
     ├── works/      AI ワールドのサンドボックスプレイヤー
     ├── i18n/       en · zh-TW · ja の文字列テーブル
     └── ui/         UI の基本部品とデザイントークン

@@ -106,9 +106,11 @@ path has been verified end to end so far; the [status table](#status) lists what
 - **Honest numbers.** Every model call goes to a local usage ledger: tokens, cached tokens and
   milliseconds, never prompts or keys. The HUD shows the totals for each world. The app never shows
   placeholder data. When something is missing, the screen says so and tells you how to fix it.
-- **Optional on-chain provenance.** Published cartridges can hold ENSv2 names on Sepolia. A shared
-  world's service can also record a fingerprint of each beat on a chain (simulated so far, not
-  deployed). Content never goes on chain, and every screen works without a chain configured.
+- **Optional on-chain provenance.** Worlds, remixes, saves and players can hold ENSv2 names on
+  Sepolia, and the names are in the game: the player card, chapter clears, joining a continent by
+  name. A shared world's service can also record a fingerprint of each beat on a chain (simulated
+  so far, not deployed). Content never goes on chain, and every screen works without a chain
+  configured.
 
 ## Screenshots
 
@@ -381,7 +383,8 @@ and holds no model key. You can run one with `bun run service` (see [Development
 Continents are the older way to play together, kept for worlds that live only on one device. A
 world shared on a world service cannot join one (`continent-world-attached`). Every such world has a
 stable **door number** (門牌), which is also the code of the continent it opens. Open your door to
-friends in game, or pick a world and enter a friend's door number in **Worlds → Continent**. Each
+friends in game, or pick a world and enter a friend's door number, or the ENS name of their save, in
+**Worlds → Continent** (a save's name carries its door number). Each
 world keeps its own origin, seed and save. Joining gives it an anchor, and territory belongs to the
 nearest anchor.
 
@@ -466,14 +469,18 @@ Full example: [`mods-examples/onsen-festival`](mods-examples/onsen-festival). De
 None of this is needed to play. With nothing configured, every screen says plainly that no ledger
 is set up.
 
-- **ENSv2 names for cartridges and saves (Sepolia).** Everything hangs in one tree under
-  `unmapped.eth`: a cartridge revision is `<cartridge>.unmapped.eth`, a remix sits under its parent's
-  name, and a save is `<save>.<cartridge>.unmapped.eth`, held by the player's own passkey account.
-  In **Worlds → Cartridges** a player names a revision (or points their name at a newer one), and
-  **Open by ENS name** follows a name back to the exact revision, or to a save's checkpoint. In
-  **Worlds → Saves → ENS name for this save** they record their run and move it forward as they play.
-  The records hold only the id, version and content hash (for a save: its sha256, the pinned version
-  and one line of progress); a backup restored on another machine finds its name by hash.
+- **ENSv2 names for worlds, saves and players (Sepolia).** Everything hangs in one tree under
+  `unmapped.eth`: a world is `<label>.unmapped.eth`, a remix sits under its parent's name, a save is
+  `<save>.<cartridge>.unmapped.eth`, and a player is `<you>.players.unmapped.eth`; saves and players
+  are held by the player's own passkey account. The names are in the game, not only in menus:
+  right after **Build and play** a world can be named (you pick the label, so a world called 霧之港
+  can be `misty-harbor.unmapped.eth`) and put on the market; the player card shows the run's name;
+  clearing a chapter offers to record the run, or move its name to the new checkpoint, with one
+  passkey signature; and a friend can walk onto your continent by typing your save's name. In
+  **Worlds → Cartridges** a player names, repoints or launches a revision, and **Open by ENS name**
+  follows a name back to the exact revision, or to a save's checkpoint. The records hold only the
+  id, version and content hash (for a save: its sha256, the pinned version, one line of progress and
+  its door number); a backup restored on another machine finds its name by hash.
 - **Provenance ledger.** [`contracts/src/UnwrittenLedger.sol`](contracts/src/UnwrittenLedger.sol)
   records who published which hash and what it was remixed from, plus short player notes. Content
   never goes on chain.
@@ -491,7 +498,8 @@ is set up.
   settled and traded. In **Worlds → Market** a player bids, settles, buys and pays out royalties with
   a passkey. There is no wallet and no ETH, and no key in the app: the passkey owns a small account
   contract, and a gas station (a Cloudflare Worker, `src/relay`) pays for exactly the market's own
-  actions. Launching a world is still an operator command (`bun run lineage:demo launch`). A read-only auction page runs at
+  actions. A world's name holder launches it from the app (**Worlds → Cartridges**, or right after
+  building it); a remix only after its parent, priced in the parent's token. A read-only auction page runs at
   https://unmapped-auction.gimmychang.workers.dev. See [`docs/demo/lineage-market.md`](docs/demo/lineage-market.md),
   [`docs/plans/lineage-market.md`](docs/plans/lineage-market.md) and
   [`contracts/README.md`](contracts/README.md).
@@ -519,9 +527,11 @@ screenshots.
 | Cloud model (OpenAI `gpt-5.4-mini`), usage ledger | ✅ verified | [model-switch](docs/e2e/milestone-model-switch/result.md) · [rev6-create](docs/e2e/milestone-rev6-create/result.md) |
 | Local model generation (llama.cpp, Ollama, Apple) | ⏳ Apple runs Create end to end inside the app; its 4K context does not yet fit witnessing or chapters; llama.cpp and Ollama generation not yet | [model-switch](docs/e2e/milestone-model-switch/result.md) · [apple-in-app](docs/e2e/milestone-apple-in-app/result.md) · [apple-create](docs/e2e/milestone-apple-create/result.md) |
 | AI Worlds (sandboxed interactive worlds) | ✅ verified | [acceptance](docs/experiments/interactive-works-acceptance.md) |
-| ENSv2 cartridge names on Sepolia (the older `ens:setup` parent) | ✅ verified | [ensv2-cartridge-names](docs/e2e/milestone-ensv2-cartridge-names/result.md) |
+| ENSv2 cartridge names on Sepolia (the older `ens:setup` parent, since removed) | ✅ verified | [ensv2-cartridge-names](docs/e2e/milestone-ensv2-cartridge-names/result.md) |
 | ENS names in the lineage tree: a remix cartridge, a player's save, its update, a restored backup found by hash | ✅ verified on Sepolia | [lineage-names](docs/e2e/milestone-lineage-names/result.md) |
 | Gas station: no key in the app | ✅ verified (the app flows against the station run locally; the deployed Worker sent a live faucet transaction) | [lineage-relay](docs/e2e/milestone-lineage-relay/result.md) |
+| ENS in the game: naming right after Create (a chosen label for a Chinese name), launching from the app, the name on the player card, recording and moving a run's name after chapters (with its door), a remix from the Remix button named under its parent and launched in its token, a friend joining a continent by a save's name | ✅ verified on Sepolia (a virtual authenticator stood in for Touch ID; the station ran locally from this build); the chapter card's update button was not clicked (the same update went through Saves) | [ens-in-game](docs/e2e/milestone-ens-in-game/result.md) |
+| Player names (`<you>.players.unmapped.eth`) | ⏳ built; the `players.unmapped.eth` directory is not registered yet, so not run | [ens-in-game](docs/e2e/milestone-ens-in-game/result.md) |
 | Lineage market: bid, settle, buy and royalties from the app with a passkey | ✅ verified on Sepolia (a virtual authenticator stood in for Touch ID); three generations in the dry run only | [lineage-demo](docs/e2e/milestone-lineage-demo/result.md) · [lineage-market](docs/e2e/milestone-lineage-market/result.md) |
 | Shared world: a friend joins by invite and walks what you witnessed with 0 model calls; you see their place after a restart, with no call | ✅ verified with a local world service | [p3-offline-visit](docs/e2e/milestone-rev6-p3-offline-visit/result.md) |
 | Old saves migrate into a world history: counts match, source files unchanged, a rerun adds 0, no model call; the phase-2 build still opens the folder and this build catches up what it wrote | ✅ verified; migration time not measured | [p3-migrate](docs/e2e/milestone-rev6-p3-migrate/result.md) · [p3-older-build](docs/e2e/milestone-rev6-p3-older-build/result.md) |
@@ -594,7 +604,7 @@ Still ahead:
 | `bun run demo:cartridges` | build the demo cartridges in `cartridges-examples/` |
 | `bun run contracts:build` | recompile the Solidity artifacts (committed) |
 | `bun run lineage:market --dry-run` | simulate deploy → three generations → auctions → swaps → royalties on Sepolia |
-| `bun run lineage:demo status\|launch\|seed-bids\|settle` | live market operator tools (launch and seed bids spend Sepolia gas) |
+| `bun run lineage:demo status\|launch\|seed-bids\|settle\|players` | live market operator tools (launch, seed bids and the one-time `players` directory spend Sepolia gas) |
 | `bun run web:deploy` | deploy the read-only auction page to Cloudflare |
 | `bun run relay:key` / `relay:dev` / `relay:deploy` | the gas station: make its key, run it locally, ship it to Cloudflare |
 | `bun run service -- --port 8787 --data <dir>` | a world service; `import <file.world>` serves a mirror, `export <worldId>` writes one, `--browser-origin <origin>` lets a page fetch its packs; `UNMAPPED_SERVICE_TEST=1` lets tests move its clock |
@@ -641,7 +651,7 @@ src/
     ├── history/    a world's history on this device: the fold, the land drawn from it, writes to main
     ├── mobile/     the phone shell the browser proof mounts: land view, touch pad, notes
     ├── net/        continents: y-webrtc rooms, gate, signaling; world services; presence
-    ├── identity/   passkey PRF, keychain fallback, AES-GCM, ENS resolve
+    ├── identity/   passkey PRF, keychain fallback, AES-GCM, ENS name lookup
     ├── works/      AI Worlds sandboxed player
     ├── i18n/       en · zh-TW · ja string tables
     └── ui/         primitives + design tokens
