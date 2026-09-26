@@ -1,7 +1,7 @@
-// The friend's-door field of the door at home and of Worlds → Continent: a door number (門牌) or a
-// save's ENS name. A number is used as typed; a name is followed back to the door it carries first
-// (net/doorByName.ts), with the button showing that it is looking and the field's error line
-// saying why a name led nowhere. Dials still keep numbers only: a pinned name is pinned as its door.
+// The "join a world" field (../friends/JoinWorldField in the door and F12, and the Worlds screen):
+// a friend's ENS name or their join code (加入碼; in code a door number). A code is used as typed; a
+// name is followed back to the join code it carries first (net/doorByName.ts), with the button
+// showing that it is looking and the field's error line saying why a name led nowhere.
 
 import { type DoorInput, doorOf, readDoorInput, typedDoor } from "@renderer/net/doorByName";
 import type { AppError } from "@shared/result";
@@ -14,12 +14,12 @@ export interface FriendDoor {
   value: string;
   maxLength: number;
   onChange(event: ChangeEvent<HTMLInputElement>): void;
-  /** A full door number or a name; null while the field is neither. */
+  /** A full join code or a name; null while the field is neither. */
   input: DoorInput | null;
   /** Which action is following a name right now, if any. */
   resolving: string | null;
   error: AppError | null;
-  /** The door number to use, or null when a name led nowhere (then `error` says why). */
+  /** The join code to use, or null when a name led nowhere (then `error` says why). */
   resolve(purpose: string): Promise<string | null>;
   clear(): void;
 }

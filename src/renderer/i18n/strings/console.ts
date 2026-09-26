@@ -1,14 +1,14 @@
-// The F12 console (world, karma, inference) and the mods panel.
+// The F12 console (friends, world, karma, inference) and the mods panel.
 
 import type { Phrase } from "./phrase";
 
 export const CONSOLE = {
   // ── Frame and tabs ─────────────────────────────────────────────────────────────────────────
   title: { en: "CONSOLE", "zh-TW": "主控台", ja: "コンソール" },
+  tabFriends: { en: "Friends", "zh-TW": "朋友", ja: "友だち" },
   tabWorld: { en: "World", "zh-TW": "世界", ja: "ワールド" },
   tabKarma: { en: "Karma", "zh-TW": "因果", ja: "カルマ" },
   tabInference: { en: "Inference", "zh-TW": "推論", ja: "推論" },
-  tabMultiplayer: { en: "Multiplayer", "zh-TW": "多人連線", ja: "マルチプレイ" },
 
   // ── World tab (world.oui editor) ───────────────────────────────────────────────────────────
   issueCount: {
@@ -24,9 +24,9 @@ export const CONSOLE = {
   unresolved: { en: "unresolved: {list}", "zh-TW": "未解析：{list}", ja: "未解決：{list}" },
   orphaned: { en: "orphaned: {list}", "zh-TW": "未被引用：{list}", ja: "孤立：{list}" },
   sceneImmutable: {
-    en: "This scene is a published cartridge revision. Remix it to edit.",
-    "zh-TW": "這個場景屬於已發布的卡帶版本。請先 Remix 再編輯。",
-    ja: "このシーンは公開済みカートリッジの版です。編集するにはリミックスしてください。",
+    en: "This scene belongs to a published version of the world. Remix it to edit.",
+    "zh-TW": "這個場景屬於已發布的世界版本。請先 Remix 再編輯。",
+    ja: "このシーンはワールドの公開済みの版です。編集するにはリミックスしてください。",
   },
   noWorldLoaded: {
     en: "No world is loaded, so world.oui was not written.",
@@ -44,9 +44,9 @@ export const CONSOLE = {
     ja: "{path} に書き出しました",
   },
   unlockBeforeExport: {
-    en: "Unlock saves before exporting an encrypted seed.",
-    "zh-TW": "請先解鎖存檔，才能匯出加密種子。",
-    ja: "暗号化シードを書き出す前に、セーブのロックを解除してください。",
+    en: "Unlock your data before exporting an encrypted seed.",
+    "zh-TW": "請先解鎖你的資料，才能匯出加密種子。",
+    ja: "暗号化シードを書き出す前に、データのロックを解除してください。",
   },
   encryptedExportedTo: {
     en: "Encrypted seed exported to {path}",
@@ -54,23 +54,23 @@ export const CONSOLE = {
     ja: "暗号化シードを {path} に書き出しました",
   },
   unlockBeforeImport: {
-    en: "Unlock saves before importing an encrypted seed.",
-    "zh-TW": "請先解鎖存檔，才能匯入加密種子。",
-    ja: "暗号化シードを読み込む前に、セーブのロックを解除してください。",
+    en: "Unlock your data before importing an encrypted seed.",
+    "zh-TW": "請先解鎖你的資料，才能匯入加密種子。",
+    ja: "暗号化シードを読み込む前に、データのロックを解除してください。",
   },
   publishedScene: {
-    en: "scene (published cartridge)",
-    "zh-TW": "場景（已發布卡帶）",
-    ja: "シーン（公開済みカートリッジ）",
+    en: "scene (published version)",
+    "zh-TW": "場景（已發布版本）",
+    ja: "シーン（公開済みの版）",
   },
   readOnly: { en: "read-only", "zh-TW": "唯讀", ja: "読み取り専用" },
   unsavedEdits: { en: "unsaved edits", "zh-TW": "有未儲存的修改", ja: "未保存の変更あり" },
   inSync: { en: "in sync with disk", "zh-TW": "與磁碟同步", ja: "ディスクと同期済み" },
   immutableNote: {
-    en: "A cartridge revision never changes during play. Use REMIX in the library to edit its scenes; the checkpoint (flags, inventory, karma) is saved to the instance.",
+    en: "A published version never changes during play. Use REMIX in Worlds to edit its scenes; your progress (flags, inventory, karma) is saved with this world.",
     "zh-TW":
-      "卡帶版本在遊玩中不會改變。要編輯場景，請在收藏庫使用 REMIX；檢查點（旗標、背包、因果）會存進遊玩進度。",
-    ja: "カートリッジの版はプレイ中に変わりません。シーンを編集するにはライブラリの REMIX を使ってください。チェックポイント（フラグ・持ち物・カルマ）はプレイに保存されます。",
+      "已發布的版本在遊玩中不會改變。要編輯場景，請在「世界」使用 REMIX；你的進度（旗標、背包、因果）會和這個世界一起儲存。",
+    ja: "公開済みの版はプレイ中に変わりません。シーンを編集するには「ワールド」で REMIX を使ってください。進行（フラグ・持ち物・カルマ）はこのワールドと一緒に保存されます。",
   },
   format: { en: "Format", "zh-TW": "格式化", ja: "整形" },
   reloadFromDisk: {
@@ -81,16 +81,6 @@ export const CONSOLE = {
   exportSeed: { en: "Export .seed", "zh-TW": "匯出 .seed", ja: ".seed を書き出す" },
   exportSeedEnc: { en: "Export .seed.enc", "zh-TW": "匯出 .seed.enc", ja: ".seed.enc を書き出す" },
   importSeedEnc: { en: "Import .seed.enc", "zh-TW": "匯入 .seed.enc", ja: ".seed.enc を読み込む" },
-  seedKeychainNote: {
-    en: "Encrypted seeds use this machine's OS keychain key; they do not unlock on another device.",
-    "zh-TW": "加密種子使用這台電腦的系統鑰匙圈金鑰，無法在其他裝置上解鎖。",
-    ja: "暗号化シードはこのマシンの OS キーチェーンの鍵を使うため、他の端末ではロック解除できません。",
-  },
-  seedPasskeyNote: {
-    en: "Encrypted seeds use passkey PRF only when this runtime reports WebAuthn PRF support.",
-    "zh-TW": "只有在此執行環境回報支援 WebAuthn PRF 時，加密種子才會使用通行密鑰 PRF。",
-    ja: "暗号化シードがパスキー PRF を使うのは、この実行環境が WebAuthn PRF 対応を報告した場合だけです。",
-  },
 
   // ── Karma tab ──────────────────────────────────────────────────────────────────────────────
   karmaCount: { en: "{n} {n|entry|entries}", "zh-TW": "{n} 筆", ja: "{n} 件" },
@@ -175,15 +165,6 @@ export const CONSOLE = {
   sidecarError: { en: "error", "zh-TW": "錯誤", ja: "エラー" },
   start: { en: "Start", "zh-TW": "啟動", ja: "起動" },
 
-  // ── Multiplayer tab ────────────────────────────────────────────────────────────────────────
-  room: { en: "ROOM", "zh-TW": "房間", ja: "ルーム" },
-  roomNote: {
-    en: "A room compares the locally verified cartridge and runtime hashes before gameplay starts. The host owns progress and scene transitions; published scene files never travel through the room.",
-    "zh-TW":
-      "房間會在開始遊玩前比對本機驗證過的卡帶與執行環境雜湊值。進度與場景切換由房主掌控；已發布的場景檔案不會經由房間傳送。",
-    ja: "ルームはプレイ開始前に、ローカルで検証したカートリッジとランタイムのハッシュを照合します。進行とシーンの切り替えはホストが管理し、公開済みのシーンファイルはルームを通りません。",
-  },
-
   // ── Mods panel ─────────────────────────────────────────────────────────────────────────────
   modsTitle: { en: "Mods", "zh-TW": "模組", ja: "MOD" },
   modsIntro: {
@@ -192,9 +173,9 @@ export const CONSOLE = {
     ja: "MOD はプロンプト文・スキル・宣言的ツールで、コードは含みません。有効な MOD は開いているワールドに組み込まれます。",
   },
   modsPinned: {
-    en: "This run uses its cartridge’s locked rules. Use Create a mod revision to review and publish gameplay changes.",
-    "zh-TW": "這個遊玩進度使用卡帶鎖定的規則。請用「建立模組版本」檢視並發布玩法變更。",
-    ja: "このプレイはカートリッジの固定ルールを使います。ゲームプレイの変更は「MOD 版を作成」で確認して公開してください。",
+    en: "This world uses its version’s locked rules. Use Create a mod revision to review and publish gameplay changes.",
+    "zh-TW": "這個世界使用其版本鎖定的規則。請用「建立模組版本」檢視並發布玩法變更。",
+    ja: "このワールドは版の固定ルールを使います。ゲームプレイの変更は「MOD 版を作成」で確認して公開してください。",
   },
   modsLoading: {
     en: "Reading the mods folder…",

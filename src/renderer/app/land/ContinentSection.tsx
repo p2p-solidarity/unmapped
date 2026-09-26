@@ -1,37 +1,27 @@
-// The door's continent section (plan.md §8). Not merged: this world's door number and a button that
-// opens the door to friends. Merged: the continent's code (the number to share), how the connection
-// stands, this world's offset, every other world on it with a way to its door, and a way back off.
-//
-// Rev 6 phase 3 (D12): a world attached to a world service shows why it cannot open a continent
-// (`continent-world-attached`) instead of the button, and notes visitors left on this land wait
-// here, "left by <name>, not kept yet", until the owner keeps them into the world's history.
+// The door's list of friends' worlds on this shared land (plan.md §8; in code a continent), shown
+// only while this world plays with friends: each friend's world with whether they are here now and a
+// way to their door, and the notes visiting friends left on this land, waiting until the owner keeps
+// them into the world's history (rev 6 phase 3, D12). Inviting, the join code, how many friends are
+// here and leaving are ../friends/InviteFriends, above it in the door.
 
 import { errorLine, formatDateTime, translate, useT } from "@renderer/i18n";
 import {
   keepVisitorNote,
-  leaveContinent,
-  myPlate,
-  openMyDoor,
-  refreshWorldBadges,
   setAsideVisitorNote,
   useVisitorNotes,
   type VisitorNote,
-  WORLD_ATTACHED,
-  worldAttached,
 } from "@renderer/net/continentActions";
 import {
   type ForeignWorld,
   useContinentStore,
   useEngineStore,
-  useLandStore,
   useSessionStore,
 } from "@renderer/state";
-import { Button, ErrorBlock, Surface, space, Text } from "@renderer/ui";
+import { Button, Surface, space, Text } from "@renderer/ui";
 import { chunkOf } from "@shared/chunks";
 import type { Result } from "@shared/result";
-import { type JSX, useEffect, useState } from "react";
+import { type JSX, useState } from "react";
 import { currentDoorArrival } from "./doorArrival";
-import { useOpenWorld } from "./together";
 
 /** Toasts a continent action that failed; true when it went through. */
 export function continentOk(result: Result<string>): boolean {
@@ -63,8 +53,6 @@ function WorldRow({ world }: { world: ForeignWorld }): JSX.Element {
           {t("continent.worldLine", {
             owner: world.owner,
             title: world.title.trim().length > 0 ? world.title : t("continent.untitled"),
-            cx: world.anchor.cx,
-            cz: world.anchor.cz,
           })}
         </Text>
         <Text variant="caption" tone={world.online ? "success" : "dim"}>
@@ -137,91 +125,13 @@ function VisitorNotes(): JSX.Element | null {
   );
 }
 
-/** Whether this save's world is attached (its history says so first, else main's badge). */
-function useAttached(): boolean {
-  const instanceId = useLandStore((state) => state.instanceId);
-  // Read so the answer is re-derived whenever the land's history reports the world.
-  useOpenWorld();
-  const [, reread] = useState(0);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: another save opening re-reads the badges
-  useEffect(() => {
-    let live = true;
-    void refreshWorldBadges().then(() => {
-      if (live) reread((n) => n + 1);
-    });
-    return () => {
-      live = false;
-    };
-  }, [instanceId]);
-  return instanceId !== null && worldAttached(instanceId);
-}
-
-export function ContinentSection(): JSX.Element {
+export function ContinentSection(): JSX.Element | null {
   const t = useT();
-  const status = useContinentStore((state) => state.status);
-  const anchor = useContinentStore((state) => state.anchor);
+  const on = useContinentStore((state) => state.status.kind !== "off");
   const worlds = useContinentStore((state) => state.worlds);
-  const attached = useAttached();
-
-  if (status.kind === "off" && attached) {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: space.xs }}>
-        <Text variant="label" tone="muted">
-          {t("continent.section")}
-        </Text>
-        <ErrorBlock error={WORLD_ATTACHED} />
-      </div>
-    );
-  }
-
-  if (status.kind === "off") {
-    const plate = myPlate();
-    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: space.xs }}>
-        <Text variant="label" tone="muted">
-          {t("continent.section")}
-        </Text>
-        {plate === null ? (
-          <Text variant="caption" tone="dim">
-            {t("continent.noPlate")}
-          </Text>
-        ) : (
-          <>
-            <Text variant="body">{t("continent.yourPlate", { code: plate })}</Text>
-            <Text variant="caption" tone="dim">
-              {t("continent.openHint")}
-            </Text>
-            <Button variant="primary" onClick={() => continentOk(openMyDoor())}>
-              {t("continent.openDoor")}
-            </Button>
-          </>
-        )}
-      </div>
-    );
-  }
-
+  if (!on) return null;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: space.xs }}>
-      <Text variant="label" tone="muted">
-        {t("continent.section")}
-      </Text>
-      <Text variant="body">{t("continent.code", { code: status.code })}</Text>
-      {status.kind === "connecting" ? (
-        <Text variant="caption" tone="muted">
-          {t("continent.connecting")}
-        </Text>
-      ) : status.kind === "live" ? (
-        <Text variant="caption" tone="success">
-          {t("continent.live", { n: status.peers })}
-        </Text>
-      ) : (
-        <ErrorBlock error={status.error} />
-      )}
-      <Text variant="caption" tone="muted">
-        {anchor === null
-          ? t("continent.offsetPending")
-          : t("continent.yourOffset", { cx: anchor.cx, cz: anchor.cz })}
-      </Text>
       <Text variant="label" tone="muted">
         {t("continent.others")}
       </Text>
@@ -233,9 +143,6 @@ export function ContinentSection(): JSX.Element {
         worlds.map((world) => <WorldRow key={world.worldId} world={world} />)
       )}
       <VisitorNotes />
-      <Button variant="ghost" onClick={() => leaveContinent()}>
-        {t("continent.leave")}
-      </Button>
     </div>
   );
 }

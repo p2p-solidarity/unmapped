@@ -15,6 +15,7 @@ import type { ReactNode } from "react";
 import { useFloorAdvance } from "./advanceFloor";
 import { ChangeProposalPanel } from "./ChangeProposalPanel";
 import { Console } from "./Console";
+import { ChatBox } from "./friends/ChatBox";
 import { Hud } from "./Hud";
 import { ChapterNameOffer } from "./land/ChapterNameOffer";
 import { ChapterPanel } from "./land/ChapterPanel";
@@ -154,6 +155,8 @@ export function PlayScreen() {
       <NotePanel />
       <TweakPanel />
       <OtherworldLayer />
+      {/* Friends' words on a shared land (P2P); memory only, shown only while friends are here. */}
+      <ChatBox />
       {consoleOpen ? <Console /> : null}
 
       {scene.status === "ready" ? null : (

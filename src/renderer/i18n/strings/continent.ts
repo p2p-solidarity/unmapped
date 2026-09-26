@@ -1,135 +1,125 @@
-// A continent: several players' worlds merged onto one land. The door's continent section, a
-// foreign world's door card, and the HUD lines that say whose land the player stands on.
+// Playing with friends on one shared land (in code: a continent; players never see that word — they
+// invite friends and join a world). The door's friends' worlds list, a friend's door card, and the
+// HUD lines that say whose land the player stands on.
 
 import type { Phrase } from "./phrase";
 
 export const CONTINENT = {
   // ── The door at home ──────────────────────────────────────────────────────────────────────
-  section: { en: "Continent", "zh-TW": "大陸", ja: "大陸" },
+  section: { en: "Friends' worlds", "zh-TW": "朋友的世界", ja: "友だちのワールド" },
   yourPlate: {
-    en: "This world's door number: {code}",
-    "zh-TW": "這個世界的門牌：{code}",
-    ja: "この世界の扉番号：{code}",
+    en: "This world's join code: {code}",
+    "zh-TW": "這個世界的加入碼：{code}",
+    ja: "このワールドの参加コード：{code}",
   },
   noPlate: {
-    en: "This world has no door number — open a saved world with open land first.",
-    "zh-TW": "這個世界沒有門牌 — 請先開啟一個有開放大地的存檔。",
-    ja: "この世界には扉番号がありません — まず開かれた大地のあるセーブを開いてください。",
+    en: "This world has no join code yet — open one of your worlds and step out onto its land first.",
+    "zh-TW": "這個世界還沒有加入碼 — 請先開啟你的一個世界，走到它的大地上。",
+    ja: "このワールドにはまだ参加コードがありません — まずワールドを開いて、その大地に出てください。",
   },
   openHint: {
-    en: "Open your door and every friend who walks through brings their world onto one continent with yours.",
-    "zh-TW": "敞開你的門，每位穿過它的夥伴都會把自己的世界帶來，與你的世界連成一片大陸。",
-    ja: "扉を開くと、くぐってきた仲間がそれぞれの世界を持ち寄り、あなたの世界とひとつの大陸になります。",
+    en: "Press it, then tell your friend the name or code that appears.",
+    "zh-TW": "按下後，把畫面上出現的名稱或加入碼告訴朋友。",
+    ja: "押したら、表示される名前か参加コードを友だちに伝えてください。",
   },
-  openDoor: { en: "Open my door to friends", "zh-TW": "向夥伴敞開我的門", ja: "仲間に扉を開く" },
-  walkThrough: { en: "Walk through", "zh-TW": "穿過這扇門", ja: "くぐる" },
+  openDoor: { en: "Invite friends", "zh-TW": "邀請朋友", ja: "友だちを招待" },
+  walkThrough: { en: "Join", "zh-TW": "加入", ja: "参加" },
   resolvingName: {
     en: "Looking up the name…",
     "zh-TW": "正在查詢名稱…",
     ja: "名前を調べています…",
   },
   nameReading: {
-    en: "Reading this save's ENS name…",
-    "zh-TW": "正在讀取這個存檔的 ENS 名稱…",
-    ja: "このセーブの ENS 名を読み込んでいます…",
+    en: "Reading this world's ENS name…",
+    "zh-TW": "正在讀取這個世界的 ENS 名稱…",
+    ja: "このワールドの ENS 名を読み込んでいます…",
   },
   nameCarriesDoor: {
-    en: "Friends can also walk in by name: {name}",
-    "zh-TW": "夥伴也可以用名稱走進來：{name}",
-    ja: "仲間は名前でも入れます：{name}",
+    en: "Friends can also join by its ENS name: {name}",
+    "zh-TW": "朋友也可以用 ENS 名稱加入：{name}",
+    ja: "友だちは ENS 名でも参加できます：{name}",
   },
   nameNeedsDoor: {
-    en: "{name} does not carry this door number yet. Record the save again in Worlds → Saves to put it on the name.",
-    "zh-TW": "{name} 還沒有記上這個門牌。到「世界 → 存檔」再記錄一次存檔，就會把門牌寫上名稱。",
-    ja: "{name} にはまだこの扉番号が載っていません。「ワールド → セーブ」でセーブを記録し直すと、名前に扉番号が載ります。",
+    en: "{name} does not carry this world's join code yet. Record it again in Worlds → My worlds to add it.",
+    "zh-TW": "{name} 還沒有記上這個世界的加入碼。到「世界 → 我的世界」再記錄一次，就會加上。",
+    ja: "{name} にはまだこのワールドの参加コードが載っていません。「ワールド → マイワールド」で記録し直すと加わります。",
   },
   code: {
-    en: "Continent {code} — share this door number with friends.",
-    "zh-TW": "大陸 {code} — 把這個門牌分享給夥伴。",
-    ja: "大陸 {code} — この扉番号を仲間に伝えてください。",
+    en: "Join code {code} — tell your friends.",
+    "zh-TW": "加入碼 {code} — 告訴你的朋友。",
+    ja: "参加コード {code} — 友だちに伝えてください。",
   },
   connecting: { en: "Connecting…", "zh-TW": "連線中…", ja: "接続中…" },
   live: {
-    en: "Live · {n} {n|peer|peers} here",
-    "zh-TW": "已連線 · 有 {n} 位夥伴在",
-    ja: "つながっています · {n} 人がいます",
+    en: "Open · {n} {n|friend|friends} here",
+    "zh-TW": "已開放 · {n} 位朋友在這裡",
+    ja: "開いています · 友だち {n} 人",
   },
-  yourOffset: {
-    en: "This world's offset: {cx} · {cz}",
-    "zh-TW": "這個世界的偏移：{cx} · {cz}",
-    ja: "この世界のオフセット：{cx} · {cz}",
-  },
-  offsetPending: {
-    en: "This world's offset is not settled yet.",
-    "zh-TW": "這個世界的偏移還沒確定。",
-    ja: "この世界のオフセットはまだ決まっていません。",
-  },
-  others: { en: "Other worlds", "zh-TW": "其他世界", ja: "ほかの世界" },
+  others: { en: "Friends' worlds", "zh-TW": "朋友的世界", ja: "友だちのワールド" },
   noOthers: {
-    en: "No other world has walked through yet.",
-    "zh-TW": "還沒有其他世界穿過這扇門。",
-    ja: "まだほかの世界はくぐってきていません。",
+    en: "No friend has joined yet.",
+    "zh-TW": "還沒有朋友加入。",
+    ja: "まだ友だちは参加していません。",
   },
   worldLine: {
-    en: "{owner} · {title} · {cx} · {cz}",
-    "zh-TW": "{owner} · {title} · {cx} · {cz}",
-    ja: "{owner} · {title} · {cx} · {cz}",
+    en: "{owner} · {title}",
+    "zh-TW": "{owner} · {title}",
+    ja: "{owner} · {title}",
   },
   untitled: { en: "an untitled world", "zh-TW": "無名的世界", ja: "名もない世界" },
-  online: { en: "online", "zh-TW": "在線", ja: "オンライン" },
+  online: { en: "here now", "zh-TW": "在線", ja: "オンライン" },
   offline: {
-    en: "offline — as they left it",
+    en: "away — as they left it",
     "zh-TW": "離線 — 維持離開時的樣子",
     ja: "オフライン — 去ったときのまま",
   },
   goToDoor: { en: "Go to their door", "zh-TW": "前往他們的門", ja: "その扉へ行く" },
-  leave: { en: "Leave the continent", "zh-TW": "離開大陸", ja: "大陸を離れる" },
+  leave: { en: "Leave", "zh-TW": "離開", ja: "離れる" },
 
-  // ── Another world's door ──────────────────────────────────────────────────────────────────
+  // ── A friend's door ───────────────────────────────────────────────────────────────────────
   doorOf: { en: "{owner}'s door", "zh-TW": "{owner} 的門", ja: "{owner} の扉" },
-  offset: { en: "Offset {cx} · {cz}", "zh-TW": "偏移 {cx} · {cz}", ja: "オフセット {cx} · {cz}" },
   shelf: { en: "On their shelf", "zh-TW": "他們架上的紀念品", ja: "棚に飾られた記念品" },
   shelfEmpty: {
     en: "Nothing on the shelf yet.",
     "zh-TW": "架子上還沒有東西。",
     ja: "棚にはまだ何もありません。",
   },
-  dials: { en: "Their dials", "zh-TW": "他們的轉盤", ja: "その扉のダイヤル" },
+  dials: { en: "Their quick travel", "zh-TW": "他們的快速移動", ja: "その扉のクイック移動" },
   gone: {
-    en: "That world has left the continent.",
-    "zh-TW": "那個世界已經離開大陸了。",
-    ja: "その世界はもう大陸を離れました。",
+    en: "That friend has left.",
+    "zh-TW": "那位朋友已經離開了。",
+    ja: "その友だちはもういません。",
   },
 
   // ── Where you stand ───────────────────────────────────────────────────────────────────────
   foreignLand: {
     en: "{owner}'s land · {title}",
-    "zh-TW": "{owner} 的大地 · {title}",
-    ja: "{owner} の大地 · {title}",
+    "zh-TW": "{owner} 的土地 · {title}",
+    ja: "{owner} の土地 · {title}",
   },
   foreignUnwritten: {
-    en: "Not yet witnessed — only {owner} can write it.",
-    "zh-TW": "尚未見證 — 只有 {owner} 能書寫這裡。",
+    en: "Not yet seen — only {owner} can write it.",
+    "zh-TW": "還沒有人見證 — 只有 {owner} 能書寫這裡。",
     ja: "まだ見届けられていません — ここを書けるのは {owner} だけです。",
   },
   hudConnecting: {
-    en: "CONTINENT {code} · CONNECTING…",
-    "zh-TW": "大陸 {code} · 連線中…",
-    ja: "大陸 {code} · 接続中…",
+    en: "WITH FRIENDS · CODE {code} · CONNECTING…",
+    "zh-TW": "和朋友一起 · 加入碼 {code} · 連線中…",
+    ja: "友だちと · 参加コード {code} · 接続中…",
   },
   hudLive: {
-    en: "CONTINENT {code} · LIVE · {n} {n|PEER|PEERS}",
-    "zh-TW": "大陸 {code} · 已連線 · {n} 位夥伴",
-    ja: "大陸 {code} · 接続済み · {n} 人",
+    en: "WITH FRIENDS · CODE {code} · {n} {n|FRIEND|FRIENDS}",
+    "zh-TW": "和朋友一起 · 加入碼 {code} · {n} 位朋友",
+    ja: "友だちと · 参加コード {code} · {n} 人",
   },
   hudError: {
-    en: "CONTINENT {code} · {reason}",
-    "zh-TW": "大陸 {code} · {reason}",
-    ja: "大陸 {code} · {reason}",
+    en: "WITH FRIENDS · CODE {code} · {reason}",
+    "zh-TW": "和朋友一起 · 加入碼 {code} · {reason}",
+    ja: "友だちと · 参加コード {code} · {reason}",
   },
   peerRejected: {
-    en: "A world could not join this continent: {reason}",
-    "zh-TW": "有個世界無法加入這片大陸：{reason}",
-    ja: "ある世界がこの大陸に加われませんでした：{reason}",
+    en: "A friend could not join: {reason}",
+    "zh-TW": "有位朋友無法加入：{reason}",
+    ja: "友だちが参加できませんでした：{reason}",
   },
 } as const satisfies Record<string, Phrase>;

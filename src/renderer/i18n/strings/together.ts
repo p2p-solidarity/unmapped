@@ -1,5 +1,6 @@
-// Playing a shared world together (rev 6 phase 3, D12, D16, D17): watching a place being written,
-// emotes, and the notes continent visitors leave, waiting for the owner to keep them.
+// Playing together (rev 6 phase 3, D12, D16, D17; simplify-together): watching a place being
+// written, emotes, the notes visiting friends leave, inviting friends and joining a friend's world
+// (the door and F12 → Friends), the friends online, and the chat box.
 
 import type { Phrase } from "./phrase";
 
@@ -97,4 +98,122 @@ export const TOGETHER = {
     "zh-TW": "他們另有 {n} 則要等到明天。",
     ja: "残り {n} 件は明日まで待ちます。",
   },
+
+  // ── Invite friends (the door and F12) ─────────────────────────────────────────────────────
+  invite: { en: "Invite friends", "zh-TW": "邀請朋友", ja: "友だちを招待" },
+  inviteHint: {
+    en: "Press it, then tell your friend the name or code that appears.",
+    "zh-TW": "按下後，把畫面上出現的名稱或加入碼告訴朋友。",
+    ja: "押したら、表示される名前か参加コードを友だちに伝えてください。",
+  },
+  inviteNoLand: {
+    en: "Step out onto this world's land first, then you can invite friends.",
+    "zh-TW": "先走到這個世界的大地上，才能邀請朋友。",
+    ja: "まずこのワールドの大地に出ると、友だちを招待できます。",
+  },
+  inviteShared: {
+    en: "This world is already shared with friends. To invite more: walk to your door at home, press E, open “Advanced” and make an invite link.",
+    "zh-TW": "這個世界已經和朋友共享。想再邀請朋友：走到家門按 E，打開「進階」，建立邀請連結。",
+    ja: "このワールドはもう友だちと共有しています。さらに招待するには、家の扉で E を押し、「詳細」を開いて招待リンクを作ってください。",
+  },
+  inviteSharedHere: {
+    en: "This world is already shared with friends. To invite more: open “Advanced” below and make an invite link.",
+    "zh-TW": "這個世界已經和朋友共享。想再邀請朋友：打開下面的「進階」，建立邀請連結。",
+    ja: "このワールドはもう友だちと共有しています。さらに招待するには、下の「詳細」を開いて招待リンクを作ってください。",
+  },
+  tellFriend: {
+    en: "Tell your friend this:",
+    "zh-TW": "把這個告訴朋友：",
+    ja: "これを友だちに伝えてください：",
+  },
+  tellMoreFriends: {
+    en: "You are in a friend's world. Other friends can join with this code:",
+    "zh-TW": "你正在朋友的世界裡。其他朋友也可以用這個加入碼加入：",
+    ja: "友だちのワールドにいます。ほかの友だちもこの参加コードで参加できます：",
+  },
+  ensName: { en: "ENS name", "zh-TW": "ENS 名稱", ja: "ENS 名" },
+  joinCode: { en: "Join code", "zh-TW": "加入碼", ja: "参加コード" },
+  copy: { en: "Copy", "zh-TW": "複製", ja: "コピー" },
+  copied: { en: "Copied.", "zh-TW": "已複製。", ja: "コピーしました。" },
+  copyFailed: {
+    en: "Could not copy it. Write it down instead.",
+    "zh-TW": "無法複製，請直接抄下來。",
+    ja: "コピーできませんでした。書き写してください。",
+  },
+  inviteConnecting: { en: "Opening…", "zh-TW": "正在開放…", ja: "開いています…" },
+  inviteWaiting: {
+    en: "Open · waiting for friends",
+    "zh-TW": "已開放 · 等朋友加入",
+    ja: "開いています · 友だちを待っています",
+  },
+  inviteLive: {
+    en: "Open · {n} {n|friend|friends} here",
+    "zh-TW": "已開放 · {n} 位朋友在這裡",
+    ja: "開いています · 友だち {n} 人",
+  },
+  friendsHere: {
+    en: "{n} {n|friend|friends} here",
+    "zh-TW": "{n} 位朋友在這裡",
+    ja: "友だち {n} 人",
+  },
+  friendWaiting: {
+    en: "Waiting for your friend…",
+    "zh-TW": "等朋友上線中…",
+    ja: "友だちを待っています…",
+  },
+  inviteClose: { en: "Close", "zh-TW": "關閉", ja: "閉じる" },
+  leaveFriend: { en: "Leave", "zh-TW": "離開", ja: "離れる" },
+
+  // ── Join a world (the door and F12) ───────────────────────────────────────────────────────
+  joinTitle: { en: "Join a world", "zh-TW": "加入世界", ja: "ワールドに参加" },
+  joinField: {
+    en: "Friend's ENS name or join code",
+    "zh-TW": "朋友的 ENS 名稱或加入碼",
+    ja: "友だちの ENS 名または参加コード",
+  },
+  join: { en: "Join", "zh-TW": "加入", ja: "参加" },
+  joinLooking: { en: "Looking it up…", "zh-TW": "正在查詢…", ja: "調べています…" },
+  joined: {
+    en: "You joined your friend's world.",
+    "zh-TW": "已加入朋友的世界。",
+    ja: "友だちのワールドに参加しました。",
+  },
+
+  // ── F12 → Friends ─────────────────────────────────────────────────────────────────────────
+  bringFriends: { en: "Bring friends in", "zh-TW": "拉朋友進來", ja: "友だちを呼ぶ" },
+  friendsOnline: { en: "Friends online", "zh-TW": "在線的朋友", ja: "オンラインの友だち" },
+  friendsNone: {
+    en: "No friends online yet.",
+    "zh-TW": "還沒有朋友在線",
+    ja: "まだオンラインの友だちはいません。",
+  },
+  friendPlace: {
+    en: "Position {x}, {z} · {n} {n|step|steps} from you",
+    "zh-TW": "位置 {x}, {z} · 距離你 {n} 步",
+    ja: "位置 {x}, {z} · あなたから {n} 歩",
+  },
+  friendPosition: { en: "Position {x}, {z}", "zh-TW": "位置 {x}, {z}", ja: "位置 {x}, {z}" },
+  friendOnLand: {
+    en: "On {owner}'s land",
+    "zh-TW": "在 {owner} 的土地上",
+    ja: "{owner} の土地にいます",
+  },
+  friendOnYours: { en: "On your land", "zh-TW": "在你的土地上", ja: "あなたの土地にいます" },
+  friendInWorld: { en: "In this world", "zh-TW": "在這個世界裡", ja: "このワールドにいます" },
+
+  // ── Chat ──────────────────────────────────────────────────────────────────────────────────
+  chat: { en: "Chat", "zh-TW": "聊天", ja: "チャット" },
+  chatHint: { en: "Press Enter to talk", "zh-TW": "按 Enter 說話", ja: "Enter で話す" },
+  chatPlaceholder: {
+    en: "Say something to your friends…",
+    "zh-TW": "對朋友說點什麼…",
+    ja: "友だちに話しかける…",
+  },
+  chatKeys: {
+    en: "Enter to send · Esc to close",
+    "zh-TW": "Enter 送出 · Esc 關閉",
+    ja: "Enter で送信 · Esc で閉じる",
+  },
+  chatYou: { en: "You", "zh-TW": "你", ja: "あなた" },
+  chatFriend: { en: "Friend", "zh-TW": "朋友", ja: "友だち" },
 } as const satisfies Record<string, Phrase>;

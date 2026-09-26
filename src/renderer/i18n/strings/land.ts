@@ -148,43 +148,31 @@ export const LAND = {
 
   // ── The door at home ──────────────────────────────────────────────────────────────────────
   door: { en: "Door", "zh-TW": "門", ja: "扉" },
-  dial: { en: "Dial {n}", "zh-TW": "轉盤 {n}", ja: "ダイヤル {n}" },
+  quickTravel: { en: "Quick travel", "zh-TW": "快速移動", ja: "クイック移動" },
+  dial: { en: "Slot {n}", "zh-TW": "第 {n} 格", ja: "{n} 番" },
   dialEmpty: { en: "— empty —", "zh-TW": "— 空 —", ja: "— 空き —" },
   go: { en: "Go", "zh-TW": "前往", ja: "行く" },
   clear: { en: "Clear", "zh-TW": "清除", ja: "外す" },
   pinPlace: {
-    en: "Pin a witnessed place to dial {n}",
-    "zh-TW": "把見證過的地點設定到轉盤 {n}",
-    ja: "見届けた場所をダイヤル {n} に登録",
+    en: "Put a place you have been in slot {n}",
+    "zh-TW": "把去過的地方放進第 {n} 格",
+    ja: "行ったことのある場所を {n} 番に登録",
   },
   noPlacesWitnessed: {
-    en: "No other place has been witnessed yet. Walk out and see somewhere first.",
-    "zh-TW": "還沒見證過其他地點。先出門走走，去看看別的地方吧。",
-    ja: "まだ他の場所を見届けていません。まずは外を歩いて、どこかを見てきましょう。",
-  },
-  doorCodes: { en: "Door codes", "zh-TW": "門牌代碼", ja: "扉コード" },
-  doorCodesHint: {
-    en: "Host this game from the room panel and its code becomes your door number.",
-    "zh-TW": "從房間面板開設這場遊戲，它的代碼就會成為你的門牌號碼。",
-    ja: "ルームパネルからこのゲームをホストすると、そのコードがあなたの扉番号になります。",
-  },
-  yourDoorNumber: {
-    en: "Your door number: {code} — friends pin it to a dial to visit.",
-    "zh-TW": "你的門牌號碼：{code} — 夥伴把它設定到轉盤上就能來拜訪。",
-    ja: "あなたの扉番号：{code} — 仲間がダイヤルに登録すると訪ねて来られます。",
-  },
-  visitingDoor: {
-    en: "Visiting through door {code}.",
-    "zh-TW": "正透過門 {code} 拜訪中。",
-    ja: "扉 {code} から訪問中です。",
+    en: "You have not been anywhere else yet. Walk out and look around first.",
+    "zh-TW": "還沒去過別的地方。先出門走走吧。",
+    ja: "まだほかの場所に行っていません。まず外を歩いてみましょう。",
   },
   friendDoorOrName: {
-    en: "Friend's door number or ENS name",
-    "zh-TW": "夥伴的門牌或 ENS 名稱",
-    ja: "仲間の扉番号または ENS 名",
+    en: "Friend's ENS name or join code",
+    "zh-TW": "朋友的 ENS 名稱或加入碼",
+    ja: "友だちの ENS 名または参加コード",
   },
-  pinToDial: { en: "Pin to dial {n}", "zh-TW": "設定到轉盤 {n}", ja: "ダイヤル {n} に登録" },
-  doorOf: { en: "Door {code}", "zh-TW": "門 {code}", ja: "扉 {code}" },
+  doorOf: {
+    en: "A friend's world ({code})",
+    "zh-TW": "朋友的世界（{code}）",
+    ja: "友だちのワールド（{code}）",
+  },
   keepsakes: { en: "Keepsakes you carry", "zh-TW": "你攜帶的紀念品", ja: "持っている記念品" },
   noKeepsakes: {
     en: "Nothing to set on the shelf. Residents hand keepsakes over when an errand is done.",
@@ -195,16 +183,6 @@ export const LAND = {
     en: "Set {name} on the shelf",
     "zh-TW": "把 {name} 擺上架子",
     ja: "{name} を棚に飾る",
-  },
-  visitNeedsSave: {
-    en: "Open a saved game of this cartridge before visiting a friend.",
-    "zh-TW": "拜訪夥伴前，請先開啟這個卡帶的存檔。",
-    ja: "仲間を訪ねる前に、このカートリッジのセーブを開いてください。",
-  },
-  visitNoProfile: {
-    en: "No player profile could be made for the visit.",
-    "zh-TW": "無法為這次拜訪建立玩家檔案。",
-    ja: "訪問用のプレイヤープロフィールを作成できませんでした。",
   },
 
   // ── Notes ─────────────────────────────────────────────────────────────────────────────────

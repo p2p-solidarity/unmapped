@@ -1,6 +1,7 @@
-// Another world's door on the continent (plan.md §8): whose it is, where it stands, what is on its
-// shelf, and its dials. Turned from here, a place dial walks to that place on the shared land (its
-// coordinates shifted into this world's) and a door number brings this world onto that continent.
+// A friend's door on the shared land (plan.md §8; in code a continent): whose it is, whether they
+// are here now, what is on their shelf, and their quick-travel slots. Turned from here, a place slot
+// walks to that place on the shared land (its coordinates shifted into this world's) and a join code
+// brings this world into that friend's world.
 
 import { type Translate, translate, useT } from "@renderer/i18n";
 import { joinContinentByCode } from "@renderer/net/continentActions";
@@ -113,9 +114,6 @@ export function ForeignDoorCard(): JSX.Element | null {
             </Text>
             <Text variant="body">
               {world.title.trim().length > 0 ? world.title : t("continent.untitled")}
-            </Text>
-            <Text variant="caption" tone="muted">
-              {t("continent.offset", { cx: world.anchor.cx, cz: world.anchor.cz })}
             </Text>
             <Text variant="caption" tone={world.online ? "success" : "dim"}>
               {world.online ? t("continent.online") : t("continent.offline")}

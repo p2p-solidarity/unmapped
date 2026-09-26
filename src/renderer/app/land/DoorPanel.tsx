@@ -1,21 +1,22 @@
-// The door at home (plan.md §7): four dials, each pinned to a place the player has witnessed or to a
-// friend's door number. Turning to a place walks through to it; turning to a number brings this world
-// onto the continent behind that friend's door (plan.md §8). A friend's save's ENS name works too: it
-// is followed back to its door number (./useFriendDoor), which is what a dial keeps. Keepsakes
-// carried home are set on the shelf here. The world's own door (sharing, who may come in, invites,
-// people) is ./WorldDoorSection.
+// The door at home (plan.md §7), top to bottom as a player needs it (simplify-together): invite
+// friends (../friends/InviteFriends: one big button, then the one name or code to tell them), join a
+// friend's world (../friends/JoinWorldField: their ENS name or join code), the friends' worlds on
+// this shared land (./ContinentSection), then quick travel — four slots, each pinned to a place the
+// player has been or to a friend's join code — the keepsakes carried home, and last the world's own
+// door (./WorldDoorSection: its folded Advanced part — who may come in, invite links, people, the
+// chain, records).
 
-import { errorLine, translate, useT } from "@renderer/i18n";
+import { InviteFriends } from "@renderer/app/friends/InviteFriends";
+import { JoinWorldField } from "@renderer/app/friends/JoinWorldField";
+import { translate, useT } from "@renderer/i18n";
 import { joinContinentByCode } from "@renderer/net/continentActions";
 import { useEngineStore, useLandStore, useSessionStore, useWorldStore } from "@renderer/state";
-import { Button, Surface, space, Text, TextField, zIndex } from "@renderer/ui";
+import { Button, Surface, space, Text, zIndex } from "@renderer/ui";
 import type { DoorSlot } from "@shared/land";
 import { type JSX, useState } from "react";
 import { ContinentSection, continentOk } from "./ContinentSection";
 import { currentDoorArrival } from "./doorArrival";
-import { useFriendDoor } from "./useFriendDoor";
 import { WorldDoorSection } from "./WorldDoorSection";
-import { WorldRecordsSection } from "./WorldRecordsSection";
 
 function travel(slot: DoorSlot): void {
   if (slot.kind === "room") {
@@ -38,7 +39,6 @@ export function DoorPanel(): JSX.Element | null {
   const chunks = useLandStore((state) => state.chunks);
   const items = useWorldStore((state) => state.inventory.items);
   const [dial, setDial] = useState(0);
-  const friend = useFriendDoor();
   if (!open || progress === null) return null;
 
   const places = Object.entries(chunks).flatMap(([key, chunk]) => {
@@ -80,10 +80,21 @@ export function DoorPanel(): JSX.Element | null {
         <Text variant="title" as="h2">
           {t("land.door")}
         </Text>
+
+        <InviteFriends inDoor />
+        <Text variant="label" tone="muted">
+          {t("together.joinTitle")}
+        </Text>
+        <JoinWorldField />
+        <ContinentSection />
+
+        <Text variant="label" tone="muted">
+          {t("land.quickTravel")}
+        </Text>
         <div style={{ display: "flex", flexDirection: "column", gap: space.xs }}>
           {progress.door.map((slot, index) => (
             <div
-              // biome-ignore lint/suspicious/noArrayIndexKey: the four dials are positions
+              // biome-ignore lint/suspicious/noArrayIndexKey: the four slots are positions
               key={index}
               style={{ display: "flex", alignItems: "center", gap: space.sm }}
             >
@@ -95,7 +106,7 @@ export function DoorPanel(): JSX.Element | null {
                   ? t("land.dialEmpty")
                   : slot.kind === "place"
                     ? `${slot.label} (${slot.cx} · ${slot.cz})`
-                    : `${t("land.doorOf", { code: slot.code })} (${slot.code})`}
+                    : t("land.doorOf", { code: slot.code })}
               </Text>
               {slot !== null ? (
                 <>
@@ -113,8 +124,7 @@ export function DoorPanel(): JSX.Element | null {
             </div>
           ))}
         </div>
-
-        <Text variant="label" tone="muted">
+        <Text variant="caption" tone="muted">
           {t("land.pinPlace", { n: dial + 1 })}
         </Text>
         {places.length === 0 ? (
@@ -133,55 +143,6 @@ export function DoorPanel(): JSX.Element | null {
               </Button>
             ))}
           </div>
-        )}
-
-        <WorldDoorSection />
-        <WorldRecordsSection />
-
-        <ContinentSection />
-        <div style={{ display: "flex", flexWrap: "wrap", gap: space.sm, alignItems: "flex-end" }}>
-          <TextField
-            label={t("land.friendDoorOrName")}
-            value={friend.value}
-            maxLength={friend.maxLength}
-            mono
-            spellCheck={false}
-            autoCapitalize="none"
-            autoCorrect="off"
-            onChange={friend.onChange}
-          />
-          <Button
-            variant="secondary"
-            disabled={friend.input === null || friend.resolving !== null}
-            onClick={async () => {
-              const code = await friend.resolve("pin");
-              if (code === null) return;
-              useLandStore
-                .getState()
-                .setDoorSlot(dial, { kind: "room", code, label: `Door ${code}` });
-            }}
-          >
-            {friend.resolving === "pin"
-              ? t("continent.resolvingName")
-              : t("land.pinToDial", { n: dial + 1 })}
-          </Button>
-          <Button
-            variant="primary"
-            disabled={friend.input === null || friend.resolving !== null}
-            onClick={async () => {
-              const code = await friend.resolve("walk");
-              if (code !== null && continentOk(joinContinentByCode(code))) friend.clear();
-            }}
-          >
-            {friend.resolving === "walk"
-              ? t("continent.resolvingName")
-              : t("continent.walkThrough")}
-          </Button>
-        </div>
-        {friend.error === null ? null : (
-          <Text variant="caption" tone="danger">
-            {errorLine(friend.error)}
-          </Text>
         )}
 
         <Text variant="label" tone="muted">
@@ -210,6 +171,8 @@ export function DoorPanel(): JSX.Element | null {
             </Button>
           ))
         )}
+
+        <WorldDoorSection />
         <Button variant="ghost" onClick={() => useSessionStore.getState().closeDoor()}>
           {t("common.close")}
         </Button>

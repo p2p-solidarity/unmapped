@@ -1,40 +1,41 @@
-// The developer console (F12 / `). An overlay strip on the right third of the window: the world
-// source, the karma ledger, the provider settings and the multiplayer room all in one place.
+// The console (F12 / `). An overlay strip on the right third of the window: friends first (invite,
+// join, who is online and where), then the world source, the karma ledger, and the model settings
+// with what this world's model calls cost.
 
 import { type StringKey, useT } from "@renderer/i18n";
 import { useSessionStore } from "@renderer/state";
 import { Button, colors, Surface, space, Text, zIndex } from "@renderer/ui";
 import { useState } from "react";
+import { FriendsTab } from "./console/FriendsTab";
 import { InferenceTab } from "./console/InferenceTab";
 import { KarmaTab } from "./console/KarmaTab";
-import { MultiplayerTab } from "./console/MultiplayerTab";
 import { WorldTab } from "./console/WorldTab";
 
-const TABS = ["World", "Karma", "Inference", "Multiplayer"] as const;
+const TABS = ["Friends", "World", "Karma", "Inference"] as const;
 type ConsoleTab = (typeof TABS)[number];
 
 const TAB_LABEL: Record<ConsoleTab, StringKey> = {
+  Friends: "console.tabFriends",
   World: "console.tabWorld",
   Karma: "console.tabKarma",
   Inference: "console.tabInference",
-  Multiplayer: "console.tabMultiplayer",
 };
 
 function TabBody({ tab }: { tab: ConsoleTab }) {
   switch (tab) {
+    case "Friends":
+      return <FriendsTab />;
     case "World":
       return <WorldTab />;
     case "Karma":
       return <KarmaTab />;
     case "Inference":
       return <InferenceTab />;
-    case "Multiplayer":
-      return <MultiplayerTab />;
   }
 }
 
 export function Console() {
-  const [tab, setTab] = useState<ConsoleTab>("World");
+  const [tab, setTab] = useState<ConsoleTab>("Friends");
   const toggleConsole = useSessionStore((state) => state.toggleConsole);
   const t = useT();
 

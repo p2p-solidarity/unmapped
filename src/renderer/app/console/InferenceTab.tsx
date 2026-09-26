@@ -23,6 +23,7 @@ import {
 } from "@shared/llm";
 import { idle, type Loadable, loading, ready } from "@shared/result";
 import { useCallback, useEffect, useState } from "react";
+import { WorldUsage } from "../hud/UsagePanel";
 import { useRefreshProbe } from "../inferenceSync";
 import {
   apiKeyEnvFromInput,
@@ -295,6 +296,9 @@ function SidecarSection() {
 export function InferenceTab() {
   const config = useInferenceStore((state) => state.config);
   const state: Loadable<InferenceConfig> = config === null ? loading() : ready(config);
+  const instanceId = useSessionStore(
+    (session) => session.activeInstance?.instance.meta.instanceId ?? null,
+  );
   const t = useT();
 
   return (
@@ -307,6 +311,11 @@ export function InferenceTab() {
       </StatePanel>
       <ProbeSection />
       <SidecarSection />
+      {/* What this world's model calls cost: moved here from the HUD (simplify-together). */}
+      <Text variant="label" tone="muted">
+        {t("usage.title")}
+      </Text>
+      <WorldUsage scope={instanceId === null ? null : { kind: "instance", id: instanceId }} />
     </>
   );
 }

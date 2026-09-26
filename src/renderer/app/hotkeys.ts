@@ -34,7 +34,8 @@ export function hotkeyAction(code: string, ctx: HotkeyContext): HotkeyAction {
     if (ctx.altarOpen) return "close-altar";
     if (ctx.dialogueOpen) return "close-dialogue";
     if (ctx.proposalOpen) return null;
-    if (ctx.screen === "play") return "exit-play";
+    // A text field over the land (the chat line) keeps its own Escape: it never leaves Play.
+    if (ctx.screen === "play") return ctx.typing ? null : "exit-play";
     return null;
   }
   if ((CONSOLE_KEYS as readonly string[]).includes(code)) {
