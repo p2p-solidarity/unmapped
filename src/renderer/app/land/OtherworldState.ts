@@ -5,7 +5,9 @@
 // It never sets `sessionStore.place` — an otherworld has no Scene to draw. While a layer is open the
 // land holds still: the encounter clock is paused, which also locks the land's input through the one
 // input-lock rule (`useInputLock`). What the land writes on completion (cleared, the karma line, the
-// toast) comes from the place as the save stores it, never from anything the frame sent.
+// toast, the `place.crossed` deed) comes from the place as the world's history stores it (rev 6
+// phase 3: places are read from the fold), never from anything the frame sent. The journey's id and
+// whether it was crossed are the player's own progress (progress.json).
 
 import { errorLine, translate } from "@renderer/i18n";
 import { setUsageScope, usageScope } from "@renderer/llm/usage";
@@ -17,6 +19,7 @@ import type { WorkLookSource, WorkRef } from "@shared/works";
 import { create } from "zustand";
 import { makeKarmaEntry } from "../karmaFile";
 import { checkpointCurrentInstance } from "../usePersistWorld";
+import { recordDeed } from "./deeds";
 
 export type OtherworldLayer =
   | {
@@ -139,19 +142,13 @@ async function pinnedPlay(place: OtherworldPlace): Promise<Result<string>> {
   return created;
 }
 
-/** Stores the journey's id with its place (a save-owned field; the land store checkpoints it). */
+/** Stores the journey's id with its place (the player's own progress; the land store checkpoints it). */
 function rememberPlay(instanceId: string | null, placeId: string, playId: string): void {
   const land = useLandStore.getState();
   if (land.instanceId !== instanceId || land.progress === null) return;
-  const places = land.progress.places ?? [];
-  const next = places.map((one) =>
-    one.id === placeId && one.kind === "otherworld" && one.playId !== playId
-      ? { ...one, playId }
-      : one,
-  );
-  if (next.some((one, index) => one !== places[index])) {
-    land.setProgress({ ...land.progress, places: next });
-  }
+  const stored = land.progress.places?.find((one) => one.id === placeId);
+  if (stored?.kind !== "otherworld" || stored.playId === playId) return;
+  land.setPlacePlay(placeId, playId);
 }
 
 /** Walks into an otherworld: the land is saved first, then its world opens over the land. */
@@ -186,6 +183,7 @@ export function completeOtherworld(): void {
   const stored = land.progress?.places?.find((one) => one.id === layer.placeId);
   if (stored === undefined || stored.kind !== "otherworld") return;
   land.setPlaceCleared(stored.id);
+  recordDeed("place.crossed", land.world?.placeEvents[stored.id] ?? null);
   const world = useWorldStore.getState();
   world.appendKarma(
     makeKarmaEntry({

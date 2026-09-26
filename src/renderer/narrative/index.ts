@@ -17,4 +17,4 @@ export {
 } from "./turn";
 export { AltarPanel } from "./ui/AltarPanel";
 export { DialogueCard } from "./ui/DialogueCard";
-export { generateChunk, type WitnessInput } from "./witness";
+export { generateChunk, type WitnessInput, type WitnessLegend } from "./witness";

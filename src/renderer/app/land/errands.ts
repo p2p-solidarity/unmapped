@@ -1,6 +1,8 @@
 // Errands, settled by rules the model never touches again (plan.md §3.3): accept at the giver,
 // reach the goal (search the tile, or walk into the named place), report back, receive the
-// keepsake. Every step is a ledger entry on the chunk it happened on.
+// keepsake. Every step is a ledger entry on the chunk it happened on. In a world's history (rev 6
+// phase 3) the stages are the player's own progress, keyed by the witness that wrote the errand
+// (the land store maps them), and a finished errand is also an `errand.done` deed.
 
 import { type StringKey, translate } from "@renderer/i18n";
 import {
@@ -21,6 +23,7 @@ import {
 import type { ItemSpec } from "@shared/world";
 import { useEffect } from "react";
 import { makeKarmaEntry } from "../karmaFile";
+import { recordDeed } from "./deeds";
 
 export interface ErrandView {
   key: string;
@@ -112,6 +115,8 @@ export function acceptErrand(view: ErrandView): void {
 export function reportErrand(view: ErrandView): void {
   if (view.stage !== "reached") return;
   useLandStore.getState().setErrand(view.key, "done");
+  const witness = useLandStore.getState().world?.witnessOf[chunkKey(view.coord)];
+  recordDeed("errand.done", witness === undefined ? null : `${witness}:${view.errand.id}`);
   if (view.keepsake !== null) useWorldStore.getState().addItem(view.keepsake);
   record(
     view.coord,

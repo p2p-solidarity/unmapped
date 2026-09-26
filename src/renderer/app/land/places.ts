@@ -1,15 +1,21 @@
-// Places on the land (地點): asking for one, walking into it, and coming back out. A place is the
-// save's own (`land.places`), so adding one never makes a new cartridge version or a new run; its
-// entrance is chosen by the host, the model writes only what lives inside (`generatePlace`), and the
-// ground is rebuilt from its seed every time it is entered (`buildPlace`). An otherworld (異界) is
-// an entrance into one published AI world: placing it asks no model, and walking in opens the
-// sandboxed player over the land (`OtherworldState.ts`).
+// Places on the land (地點): asking for one, walking into it, and coming back out. A place belongs
+// to the world, not the cartridge: a `place` event of its history (rev 6 phase 3, D3), so adding one
+// never makes a new cartridge version or a new run, and everyone in the world walks into it. Its
+// entrance is chosen by the writer (`placeSpot` over the world's gates and places; a spot taken
+// meanwhile is chosen again with no model call), the model writes only what lives inside
+// (`generatePlace`), and the ground is rebuilt from its seed every time it is entered
+// (`buildPlace`). An otherworld (異界) is an entrance into one published AI world: placing it asks no
+// model (its pack goes into the blob store, so friends can fetch it), and walking in opens the
+// sandboxed player over the land (`OtherworldState.ts`). Crossing a place is the player's own
+// progress (progress.json) and a `deed` the world can retell.
 
 import { parseDialogue, parseScene, serializeDialogue, serializeScene } from "@dsl";
+import { appendToWorld, onHistory, seenHead, syncWorld, writeBlocker } from "@renderer/history";
 import { contentLanguage, errorLine, translate } from "@renderer/i18n";
 import { generatePlace } from "@renderer/narrative/place";
 import {
   type ActivePlace,
+  openWorld,
   useEngineStore,
   useLandStore,
   useSessionStore,
@@ -19,6 +25,8 @@ import { bibleLanguage } from "@shared/cartridge";
 import { type ChunkCoord, chunkOf } from "@shared/chunks";
 import { kitTuning } from "@shared/forge";
 import type { GameplayRules } from "@shared/gameplay";
+import { placeIdOf } from "@shared/history/ids";
+import type { PlaceBody } from "@shared/history/types";
 import {
   buildPlace,
   isOtherworld,
@@ -39,6 +47,7 @@ import type { DialogueGraph } from "@shared/world";
 import { makeKarmaEntry } from "../karmaFile";
 import { checkpointCurrentInstance } from "../usePersistWorld";
 import { clearChapterById } from "./chapters";
+import { recordDeed } from "./deeds";
 import { enterOtherworld } from "./OtherworldState";
 
 /**
@@ -184,19 +193,68 @@ function newEntrance(
 }
 
 /**
+ * Writes a place into the world's history at a free spot near the player; a spot someone took
+ * meanwhile (`place-spot-taken`) is chosen again from the fresh history, with no model call.
+ */
+async function appendPlace(
+  body: Omit<PlaceBody, "at">,
+  wish: string,
+  seen: number,
+): Promise<Result<{ id: string } & ChunkCoord>> {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const entrance = newEntrance(useLandStore.getState().progress?.places ?? [], wish);
+    if (!entrance.ok) return entrance;
+    const at = { cx: entrance.value.cx, cz: entrance.value.cz };
+    const stored = await appendToWorld({ kind: "place", body: { ...body, at }, seen });
+    if (stored.ok) return ok({ id: placeIdOf(stored.value.id), ...at });
+    if (stored.error.code !== "place-spot-taken") return stored;
+    await syncWorld();
+  }
+  return err("place-no-room", "There is no free ground near here for a place.");
+}
+
+function randomSeed(): number {
+  return crypto.getRandomValues(new Uint32Array(1))[0] ?? 1;
+}
+
+/**
  * Puts the entrance of an otherworld — one published AI world of this device — a short walk from
  * the player. Asks no model: the world is already written, and stays in `works/` (Rule 12).
  */
-export function placeOtherworld(work: WorkManifest, wish: string): Result<OtherworldPlace> {
+export async function placeOtherworld(
+  work: WorkManifest,
+  wish: string,
+): Promise<Result<OtherworldPlace>> {
   const land = placeableLand();
   if (!land.ok) return land;
+  const title = work.title.trim().slice(0, PLACE_LIMITS.titleChars) || work.workId;
+  const ref = { workId: work.workId, version: work.version, contentHash: work.contentHash };
+  // No key yet, or a world this device only reads: nothing new is written (D7).
+  const blocked = writeBlocker();
+  if (blocked !== null) return { ok: false, error: blocked };
+  if (onHistory()) {
+    const worldId = openWorld()?.worldId ?? null;
+    if (worldId === null) return err("world-not-open", "This save's world is not open.");
+    const seen = seenHead();
+    const pack = await window.seed.world.packWork(worldId, ref);
+    if (!pack.ok) return pack;
+    const body = {
+      kind: "otherworld" as const,
+      title,
+      seed: randomSeed(),
+      work: { ...ref, pack: pack.value },
+    };
+    const placed = await appendPlace(body, wish, seen);
+    if (!placed.ok) return placed;
+    return ok({ ...placed.value, kind: "otherworld", title, work: ref, cleared: false });
+  }
   const entrance = newEntrance(land.value.places, wish);
   if (!entrance.ok) return entrance;
   const place: OtherworldPlace = {
     ...entrance.value,
     kind: "otherworld",
-    title: work.title.trim().slice(0, PLACE_LIMITS.titleChars) || work.workId,
-    work: { workId: work.workId, version: work.version, contentHash: work.contentHash },
+    title,
+    work: ref,
     cleared: false,
   };
   useLandStore.getState().addPlace(place);
@@ -205,7 +263,8 @@ export function placeOtherworld(work: WorkManifest, wish: string): Result<Otherw
 
 /**
  * Asks the model for a place of `kind`, with what each resident says, and puts its entrance a
- * short walk from the player. Costs one model call; nothing is added when it fails.
+ * short walk from the player. Costs one model call (plus at most two repairs, whether the parser or
+ * the world's history refused it); nothing is added when it fails.
  */
 export async function createPlace(
   kind: WrittenPlaceKind,
@@ -217,47 +276,57 @@ export async function createPlace(
   if (!placeable.ok) return placeable;
   if (active === null) return err("place-no-land", "Places are added to open land.");
   const instanceId = placeable.value.instanceId;
+  const history = onHistory();
+  const blocked = writeBlocker();
+  if (blocked !== null) return { ok: false, error: blocked };
+  // `seen`: the history's head when this place began to be written (D2).
+  const seen = seenHead();
   const bible = active.cartridge.bible;
   const rules = useWorldStore.getState().gameplayRules;
   const language =
     useWorldStore.getState().genesis?.language ?? bibleLanguage(bible) ?? contentLanguage();
+  const kept: { place: WrittenPlace | null } = { place: null };
   const written = await generatePlace({
     kind,
     wish,
     combat: rules?.combat !== null && rules?.combat !== undefined,
     language,
     bible,
+    // Kept from inside the model's repair loop (D5): a size or a program the world's history
+    // refuses goes back to the model; a spot taken meanwhile is chosen again with no model call.
+    accept: async ({ graph: { graph, dialogues } }) => {
+      if (
+        useLandStore.getState().instanceId !== instanceId ||
+        useSessionStore.getState().activeInstance?.instance.meta.instanceId !== instanceId
+      ) {
+        return err("place-save-changed", "The save changed while this place was being written.");
+      }
+      const words = residentWords(dialogues);
+      if (!words.ok) return words;
+      const seed = randomSeed();
+      const source = `${serializeScene(graph).replace(/\n*$/, "")}\n`;
+      if (source.length > PLACE_LIMITS.sourceChars) {
+        return err("place-too-large", "The model wrote more than a place can hold.", "Ask again.");
+      }
+      const title = graph.name.slice(0, PLACE_LIMITS.titleChars) || kind;
+      const body = { kind, title, seed, source, dialogues: words.value };
+      if (history) {
+        const placed = await appendPlace(body, wish, seen);
+        if (!placed.ok) return placed;
+        kept.place = { ...placed.value, ...body, cleared: false };
+        return ok(undefined);
+      }
+      // Read again: the land may have gained a place while the model wrote this one.
+      const entrance = newEntrance(useLandStore.getState().progress?.places ?? [], wish);
+      if (!entrance.ok) return entrance;
+      const place: WrittenPlace = { ...entrance.value, ...body, cleared: false };
+      land.addPlace(place);
+      kept.place = place;
+      return ok(undefined);
+    },
   });
   if (!written.ok) return written;
-  if (
-    useLandStore.getState().instanceId !== instanceId ||
-    useSessionStore.getState().activeInstance?.instance.meta.instanceId !== instanceId
-  ) {
-    return err("place-save-changed", "The save changed while this place was being written.");
-  }
-  const { graph, dialogues } = written.value.graph;
-  const words = residentWords(dialogues);
-  if (!words.ok) return words;
-
-  // Read again: the land may have gained a place while the model wrote this one.
-  const entrance = newEntrance(useLandStore.getState().progress?.places ?? [], wish);
-  if (!entrance.ok) return entrance;
-  const seed = crypto.getRandomValues(new Uint32Array(1))[0] ?? 1;
-  const source = `${serializeScene(graph).replace(/\n*$/, "")}\n`;
-  if (source.length > PLACE_LIMITS.sourceChars) {
-    return err("place-too-large", "The model wrote more than a place can hold.", "Ask again.");
-  }
-  const place: WrittenPlace = {
-    ...entrance.value,
-    kind,
-    title: graph.name.slice(0, PLACE_LIMITS.titleChars) || kind,
-    seed,
-    source,
-    dialogues: words.value,
-    cleared: false,
-  };
-  land.addPlace(place);
-  return ok(place);
+  return kept.place === null ? err("place-not-kept", "Nothing was kept.") : ok(kept.place);
 }
 
 /** Walks into a place: the land is saved first, then the place is played on top of it. */
@@ -296,6 +365,7 @@ export function leavePlace(finished: boolean): void {
   }
   if (finished) {
     useLandStore.getState().setPlaceCleared(place.id);
+    recordDeed("place.crossed", useLandStore.getState().world?.placeEvents[place.id] ?? null);
     const world = useWorldStore.getState();
     const stored = useLandStore.getState().progress?.places?.find((one) => one.id === place.id);
     world.appendKarma(

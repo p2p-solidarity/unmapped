@@ -4,6 +4,7 @@
 import { GameCanvas } from "@renderer/engine";
 import { isOpenLand2D, LandView2D, PlaceView2D } from "@renderer/engine2d";
 import { useWorldHarness } from "@renderer/harness";
+import { useWorldLink, useWorldVisits } from "@renderer/history";
 import { useT } from "@renderer/i18n";
 import { useUsageScope } from "@renderer/llm";
 import { AltarPanel, DialogueCard } from "@renderer/narrative";
@@ -94,6 +95,9 @@ export function PlayScreen() {
   useUsageScope(instanceId === null ? null : { kind: "instance", id: instanceId });
   useInteractions({ onAdvanceFloor: advance, onDescend: descend });
   usePositionAutosave();
+  // The save's world: synced while Play is up; the chunks walked are the day's visit (rev 6 p3).
+  useWorldVisits();
+  useWorldLink();
   useWitness();
   useErrandArrivals();
 
@@ -102,8 +106,13 @@ export function PlayScreen() {
     // Falling inside a place sends the player back out to its entrance on the land.
     useSessionStore.getState().leavePlace();
     const active = useSessionStore.getState().activeInstance;
-    if (active !== null) hydrateInstance(active);
     resetRun();
+    if (active === null) return;
+    // Re-read the save rather than re-hydrating the copy opened with it: that copy's ledger and
+    // land are what they were at opening, and a checkpoint of them would take back later lines.
+    void window.seed.instances.resolve(active.instance.meta.instanceId).then((fresh) => {
+      hydrateInstance(fresh.ok ? fresh.value : active);
+    });
   };
 
   return (

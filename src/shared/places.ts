@@ -86,7 +86,11 @@ export function isWrittenPlace(place: LandPlace): place is WrittenPlace {
   return place.kind !== "otherworld";
 }
 
-const PLACE_ID = /^p[0-9]{1,3}$/;
+/**
+ * A place's id: `p1`…`p999` in a save from before worlds had histories (kept by migration as
+ * `legacyId`), else `p` + 8 characters of its `place` event id (rev 6 phase 3, D3).
+ */
+export const PLACE_ID = /^p(?:[0-9]{1,3}|[a-z2-7]{8})$/;
 const entrance = {
   id: z.string().regex(PLACE_ID),
   title: z.string().min(1).max(PLACE_LIMITS.titleChars),
@@ -190,7 +194,7 @@ export function placeTarget(id: string): string {
 }
 
 export function parsePlaceTarget(target: string): string | null {
-  const match = /^place:(p[0-9]{1,3})$/.exec(target);
+  const match = /^place:(p(?:[0-9]{1,3}|[a-z2-7]{8}))$/.exec(target);
   return match?.[1] ?? null;
 }
 

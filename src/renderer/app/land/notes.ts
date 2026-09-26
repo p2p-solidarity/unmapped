@@ -1,10 +1,18 @@
 // Writing a note (手記, plan.md §6). The text is exactly what the player typed — no model, no
 // translation — anchored to the tile underfoot and the place remembered there. A note left on this
-// world's own land is appended to the save's notes.jsonl. On a continent, a note left on another
-// world's land belongs to that world: it travels through the room in its owner's coordinates
+// world's own land is a `note` event of its history (rev 6 phase 3), anchored to the live witness
+// of the chunk; everyone in the world reads it. On a continent, a note left on another world's land
+// belongs to that world: it travels through the room in its owner's coordinates
 // (net/continentSync.ts) and its owner keeps it.
 
 import { samplePlayer } from "@renderer/engine/playerProbe";
+import {
+  appendToWorld,
+  onHistory,
+  seenHead,
+  worldDisplayName,
+  writeBlocker,
+} from "@renderer/history";
 import { playerName } from "@renderer/net/room";
 import {
   foreignAt,
@@ -79,11 +87,27 @@ export async function writeNote(text: string, contests: string | null): Promise<
     publisher(foreign.worldId, note);
     return ok(note);
   }
+  if (session.networkRole === "peer") {
+    return err(
+      "note-no-room",
+      "A visitor's notes are not kept in a shared room.",
+      "Open land is shared as a continent: use the door at home.",
+    );
+  }
+  const coord = {
+    cx: chunk.cx,
+    cz: chunk.cz,
+    x: local(where.x, chunk.cx),
+    z: local(where.z, chunk.cz),
+  };
+  if (onHistory()) return writeWorldNote(coord, words, contests);
+  const blocked = writeBlocker();
+  if (blocked !== null) return { ok: false, error: blocked };
   const note: LandNote = {
     id: crypto.randomUUID(),
     author: session.playerProfile?.displayName ?? playerName(),
     at: new Date().toISOString(),
-    coord: { cx: chunk.cx, cz: chunk.cz, x: local(where.x, chunk.cx), z: local(where.z, chunk.cz) },
+    coord,
     anchors: land.lore
       .filter(
         (node) => node.kind === "place" && node.coord.cx === chunk.cx && node.coord.cz === chunk.cz,
@@ -92,16 +116,37 @@ export async function writeNote(text: string, contests: string | null): Promise<
     text: words,
     contests,
   };
-  if (session.networkRole === "peer") {
-    return err(
-      "note-no-room",
-      "A visitor's notes are not kept in a shared room.",
-      "Open land is shared as a continent: use the door at home.",
-    );
-  }
   const stored = await window.seed.instances.appendNote({ instanceId: land.instanceId, note });
   if (!stored.ok) return stored;
   useLandStore.getState().addNote(note);
+  recordNote(note);
+  return ok(note);
+}
+
+/**
+ * A note in the world's history: anchored to the witness standing where it was written (its lore
+ * lives in that event), answering another note by its event id. The fold brings it back.
+ */
+async function writeWorldNote(
+  coord: LandNote["coord"],
+  text: string,
+  contests: string | null,
+): Promise<Result<LandNote>> {
+  const land = useLandStore.getState();
+  const witness = land.world?.witnessOf[`${coord.cx},${coord.cz}`];
+  const name = worldDisplayName();
+  const body = { coord, anchors: witness === undefined ? [] : [witness], text, contests, name };
+  const stored = await appendToWorld({ kind: "note", body, seen: seenHead() });
+  if (!stored.ok) return stored;
+  const note: LandNote = {
+    id: stored.value.id,
+    author: name,
+    at: new Date().toISOString(),
+    coord,
+    anchors: body.anchors,
+    text,
+    contests,
+  };
   recordNote(note);
   return ok(note);
 }

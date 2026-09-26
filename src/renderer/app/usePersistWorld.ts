@@ -1,10 +1,17 @@
 // The world store is the live copy; the dotfiles are the save. Every karma/inventory/floor change
 // is written back through IPC, debounced so a burst of choices costs one write.
+//
+// A save that plays in a world (rev 6 phase 3, D1, D6) checkpoints differently: its legacy land
+// fields are frozen in save.json (sent back exactly as stored — main refuses any change,
+// `legacy-land-changed`), only home, door, felled foes and the story's carry are written there, and
+// the player's own progress in the world goes to progress.json in the same checkpoint.
 
 import { samplePlayer } from "@renderer/engine/playerProbe";
+import { liveOf } from "@renderer/history";
 import { errorLine, translate } from "@renderer/i18n";
 import { useLandStore, useSessionStore, useWorldStore, type WorldState } from "@renderer/state";
 import type { SavedPosition } from "@shared/cartridge";
+import type { LandProgress } from "@shared/land";
 import { type AppError, ok, type Result } from "@shared/result";
 import type { Inventory, KarmaEntry, WorldMeta } from "@shared/world";
 import { WORLD_FILES } from "@shared/world";
@@ -80,6 +87,16 @@ export function currentPosition(): SavedPosition | null {
   return sample.sceneId === active.instance.save.currentSceneId ? sample : null;
 }
 
+/**
+ * The land a checkpoint sends: all of it for a save without a world; for a save in a world, the
+ * stored legacy fields unchanged with the live ones on top.
+ */
+function landToSave(progress: LandProgress, inWorld: boolean): LandProgress {
+  if (!inWorld) return progress;
+  const stored = useSessionStore.getState().activeInstance?.instance.save.land;
+  return { errands: {}, ...stored, ...liveOf(progress) };
+}
+
 async function performInstanceCheckpoint(): Promise<Result<void>> {
   if (useSessionStore.getState().networkRole === "peer") return ok(undefined);
   const world = useWorldStore.getState();
@@ -90,6 +107,8 @@ async function performInstanceCheckpoint(): Promise<Result<void>> {
   const position = currentPosition();
   const land = useLandStore.getState();
   const progress = land.instanceId === origin.instanceId ? land.progress : null;
+  const personal =
+    land.instanceId === origin.instanceId && land.mode === "history" ? land.personal : null;
   const result = await window.seed.instances.checkpoint({
     instanceId: origin.instanceId,
     expectedUpdatedAt,
@@ -98,7 +117,8 @@ async function performInstanceCheckpoint(): Promise<Result<void>> {
     mutation: meta.mutation,
     karma: world.karma,
     ...(position === null ? {} : { position }),
-    ...(progress === null ? {} : { land: progress }),
+    ...(progress === null ? {} : { land: landToSave(progress, personal !== null) }),
+    ...(personal === null ? {} : { progress: personal }),
   });
   if (!result.ok) return result;
   const latest = useWorldStore.getState();

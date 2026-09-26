@@ -1,13 +1,15 @@
 // The place maker's otherworld (異界) choice: put the entrance of one of this device's published AI
 // worlds on the land — no model call — or write a new one in the workshop opened over the land.
-// Everything listed comes from main (`works.list`); a device with none says so.
+// Everything listed comes from main (`works.list`); a device with none says so. Worlds that arrived
+// with someone else's shared world are theirs and are not listed (rev 6 phase 3, D10); the place
+// itself goes into the world's history, which is where the land reads it from.
 
 import { errorLine, useT } from "@renderer/i18n";
 import { useSessionStore } from "@renderer/state";
 import { Button, StatePanel, Surface, space, Text } from "@renderer/ui";
 import { titleOf } from "@renderer/works/WorksScreen";
 import type { OtherworldPlace } from "@shared/places";
-import { errored, fromResult, idle, type Loadable, loading } from "@shared/result";
+import { errored, fromResult, idle, type Loadable, loading, ready } from "@shared/result";
 import type { WorkManifest } from "@shared/works";
 import { type JSX, useEffect, useState } from "react";
 import { checkpointCurrentInstance } from "../usePersistWorld";
@@ -22,16 +24,26 @@ export function OtherworldPicker({ wish }: { wish: string }): JSX.Element {
 
   useEffect(() => {
     let live = true;
-    void window.seed.works.list().then((result) => {
-      if (live) setWorks(fromResult(result));
-    });
+    void Promise.all([window.seed.works.list(), window.seed.world.receivedWorks()]).then(
+      ([listed, received]) => {
+        if (!live) return;
+        if (!listed.ok) return setWorks(errored(listed.error));
+        if (!received.ok) return setWorks(errored(received.error));
+        const theirs = new Set(received.value.map((ref) => `${ref.workId}@${ref.contentHash}`));
+        setWorks(
+          ready(listed.value.filter((work) => !theirs.has(`${work.workId}@${work.contentHash}`))),
+        );
+      },
+    );
     return () => {
       live = false;
     };
   }, []);
 
   const place = (work: WorkManifest): void => {
-    setPlaced(fromResult(placeOtherworld(work, wish)));
+    if (placed.status === "loading") return;
+    setPlaced(loading());
+    void placeOtherworld(work, wish).then((result) => setPlaced(fromResult(result)));
   };
 
   const write = async (): Promise<void> => {

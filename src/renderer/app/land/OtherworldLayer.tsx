@@ -70,7 +70,7 @@ function WorkshopLayer({
     (manifest: WorkManifest) => {
       const now = useOtherworldStore.getState().layer;
       if (now?.kind !== "workshop" || now.draftId !== layer.draftId) return;
-      toastPlaced(placeOtherworld(manifest, now.wish));
+      void placeOtherworld(manifest, now.wish).then(toastPlaced);
       closeOtherworld();
     },
     [layer.draftId],

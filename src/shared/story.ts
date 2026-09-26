@@ -159,10 +159,14 @@ const TRAIL_STEP = 2.5;
  * clear of every gate already placed, of the origin, and of the map's edge. A global spiral would
  * put chapter n+1 ever further from chapter n; this keeps every next chapter the same walk away.
  */
-export function trailPlace(before: readonly Pick<StoryEpisode, "cx" | "cz">[]): ChunkCoord {
+export function trailPlace(
+  before: readonly Pick<StoryEpisode, "cx" | "cz">[],
+  taken: readonly ChunkCoord[] = [],
+): ChunkCoord {
   const last = before[before.length - 1];
-  if (last === undefined) return episodePlace(0);
-  const used = new Set<string>(["0,0", ...before.map(coordKey)]);
+  if (last === undefined) return episodePlace(0, taken);
+  // `taken`: what else stands on the land (a world's places), so a gate never lands on one (D3).
+  const used = new Set<string>(["0,0", ...before.map(coordKey), ...taken.map(coordKey)]);
   const heading = before.length * GOLDEN_ANGLE;
   for (let ring = 0; ring < 8; ring += 1) {
     for (let turn = 0; turn < 16; turn += 1) {
@@ -175,7 +179,7 @@ export function trailPlace(before: readonly Pick<StoryEpisode, "cx" | "cz">[]): 
       if (!used.has(coordKey(coord))) return coord;
     }
   }
-  return episodePlace(before.length, before);
+  return episodePlace(before.length, [...before, ...taken]);
 }
 
 /** World position (tile centre) of an episode's gate: the middle of its chunk. */

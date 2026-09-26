@@ -1,9 +1,36 @@
 // When the player first sets foot on an unwritten chunk, it is witnessed: the model writes it once
-// (narrative/witness.ts), main stores it, and from then on it is read, never generated. Walking
+// (narrative/witness.ts) and the world's history keeps it (rev 6 phase 3: a `witness` event); from
+// then on it is read, never generated — by this player and by everyone who joins the world. Walking
 // never waits for this — it runs in the background and the HUD says what state the chunk is in.
+//
+// Before generating, an attached world is asked whether someone has written here (./claims, D15):
+// a written chunk is synced and drawn with no call, someone else's stream is followed, and a
+// granted claim relays the model's text to every viewer. `seen` is the head when generation began,
+// so a chunk someone else wrote meanwhile keeps theirs live and ours as a variant (異聞). A chunk
+// that faded into fog is witnessed anew, told its old tale (`witness:legend`), and the old witness
+// becomes its legend (傳說). Nothing is witnessed while the world cannot be written here.
+//
+// The witness is appended from inside the model's repair loop: when main refuses it for what the
+// program says (a lore link, a size, words that do not round-trip) the model is told why and
+// rewrites it, as one of Rule 7's two repairs (D5); any other refusal shows at once, with Retry.
 
-import { serializeDialogue, serializeErrands, serializeScene } from "@dsl";
-import { generateChunk } from "@renderer/narrative";
+import {
+  serializeDialogue,
+  serializeErrands,
+  serializeScene,
+  type WitnessedDraft,
+  witnessIndexOf,
+} from "@dsl";
+import {
+  appendToWorld,
+  onHistory,
+  seenHead,
+  waitForFold,
+  waitForHead,
+  worldNow,
+  writeBlocker,
+} from "@renderer/history";
+import { generateChunk, type WitnessLegend } from "@renderer/narrative";
 import {
   foreignAt,
   useEngineStore,
@@ -13,10 +40,14 @@ import {
   useWorldStore,
 } from "@renderer/state";
 import { type ChunkCoord, chunkKey, chunksAround, chunkTerrain } from "@shared/chunks";
+import { chunkStands } from "@shared/history/decay";
+import type { WitnessBody } from "@shared/history/types";
 import { landSeedOf } from "@shared/land";
-import { type AppError, toError } from "@shared/result";
+import { type AppError, err, fail, ok, type Result, toError } from "@shared/result";
+import { claimTarget } from "@shared/worldProtocol";
 import { useEffect } from "react";
 import { makeKarmaEntry } from "../karmaFile";
+import { abandonClaim, claimToWrite } from "./claims";
 
 /** Why nothing can be witnessed right now, or null when it can. Shown by the HUD verbatim. */
 export function witnessBlocker(): AppError | null {
@@ -45,8 +76,15 @@ export function witnessBlocker(): AppError | null {
   const land = useLandStore.getState().load;
   if (land.status === "error") return land.error;
   if (land.status !== "ready") {
-    return { code: "witness-loading", message: "Reading the land…", hint: "One moment." };
+    // Opening a save migrates or catches up its world first (world.ensure): say that is what waits.
+    const world = writeBlocker();
+    return world?.code === "world-loading"
+      ? world
+      : { code: "witness-loading", message: "Reading the land…", hint: "One moment." };
   }
+  // The world's history is where a witness goes: no key, read-only or diverged means nothing new.
+  const world = writeBlocker();
+  if (world !== null) return world;
   const { config, probe } = useInferenceStore.getState();
   if (config === null) {
     return {
@@ -80,6 +118,26 @@ function neighbours(coord: ChunkCoord) {
   });
 }
 
+/**
+ * A chunk that faded into fog: the witness it grows out of and its old tale. A hidden witness is
+ * named nowhere (D8), so a chunk the owner hid is written with no legend.
+ */
+function legendOf(coord: ChunkCoord): { supersedes: string; legend: WitnessLegend } | null {
+  const now = worldNow();
+  const chunk = now?.chunks[chunkKey(coord)];
+  if (now === null || chunk === undefined || chunkStands(now, chunk)) return null;
+  if (now.hidden[chunk.live.id] === true) return null;
+  const { body } = chunk.live;
+  return {
+    supersedes: chunk.live.id,
+    legend: {
+      name: body.index.name,
+      residents: body.index.npcs.map((npc) => npc.name),
+      tales: body.lore.map((node) => `${node.label}: ${node.text}`),
+    },
+  };
+}
+
 interface Inflight {
   key: string;
   instanceId: string;
@@ -92,6 +150,7 @@ interface Inflight {
 let inflight: Inflight | null = null;
 
 export const WITNESS_CANCELLED = "cancelled";
+const WITNESS_SAVE_CHANGED = "witness-save-changed";
 
 function stop(reason: "cancel" | "leave"): void {
   if (inflight === null || inflight.reason !== null) return;
@@ -104,6 +163,46 @@ export function cancelWitness(): void {
   stop("cancel");
 }
 
+function failed(key: string, error: AppError): void {
+  useLandStore.getState().setChunk(key, { status: "failed", error });
+}
+
+/** Leaves a chunk that turned out to be someone else's: drawn if the history has it, else unwritten. */
+function settleElsewhere(key: string): void {
+  if (useLandStore.getState().chunks[key]?.status === "writing")
+    useLandStore.getState().forget(key);
+}
+
+/** The `witness` event a parsed chunk becomes: its programs, lore and index (D3). */
+function witnessBody(
+  coord: ChunkCoord,
+  draft: WitnessedDraft,
+  supersedes: string | null,
+): Result<WitnessBody> {
+  const dialogues = Object.fromEntries(
+    draft.dialogues.map((dialogue) => [dialogue.npcId, serializeDialogue(dialogue)]),
+  );
+  const errands =
+    draft.errands.length === 0
+      ? undefined
+      : serializeErrands({ errands: draft.errands, keepsakes: draft.keepsakes });
+  const programs = {
+    cx: coord.cx,
+    cz: coord.cz,
+    scene: serializeScene(draft.scene),
+    dialogues,
+    ...(errands === undefined ? {} : { errands }),
+  };
+  const index = witnessIndexOf(programs);
+  if (!index.ok) return index;
+  return ok({
+    ...programs,
+    lore: draft.lore,
+    index: index.value,
+    ...(supersedes === null ? {} : { supersedes }),
+  });
+}
+
 async function witness(coord: ChunkCoord): Promise<void> {
   const key = chunkKey(coord);
   const land = useLandStore.getState();
@@ -111,6 +210,7 @@ async function witness(coord: ChunkCoord): Promise<void> {
   // On a continent, another world's territory is witnessed by its own owner, never from here.
   if (foreignAt(coord) !== null) return;
   if (Object.values(land.chunks).some((chunk) => chunk.status === "writing")) return;
+  if (!onHistory()) return;
   const world = useWorldStore.getState();
   const active = useSessionStore.getState().activeInstance;
   const instanceId = land.instanceId;
@@ -126,71 +226,91 @@ async function witness(coord: ChunkCoord): Promise<void> {
     origin: { floor: origin.floor },
   });
   land.setChunk(key, { status: "writing" });
+  const target = claimTarget({ kind: "chunk", cx: coord.cx, cz: coord.cz });
+  const claimed = await claimToWrite(target);
+  const same = (): boolean => useLandStore.getState().instanceId === instanceId;
+  if (!same()) {
+    abandonClaim(target, claimed);
+    return;
+  }
+  if (claimed.kind === "refused") {
+    failed(key, claimed.error);
+    return;
+  }
+  if (claimed.kind === "written") {
+    // Someone wrote it (or is done writing it): the fold brings it; no model call here.
+    if (claimed.n !== null) await waitForHead(claimed.n);
+    else await waitForFold((now) => now.chunks[key] !== undefined);
+    if (same()) settleElsewhere(key);
+    return;
+  }
+
   const controller = new AbortController();
   const mine: Inflight = { key, instanceId, controller, reason: null };
   inflight = mine;
-
-  const program = await generateChunk(
-    {
-      bible,
-      coord,
-      biome: origin.biome,
-      ground: origin.floor.tile,
-      hole: terrain.hole,
-      lore: land.lore,
-      language: world.genesis.language,
-      terrain,
-      neighbours: neighbours(coord),
-      ...(isOrigin ? { authored: origin.npcs } : {}),
-    },
-    { signal: controller.signal },
-  );
+  const grows = legendOf(coord);
+  // `seen`: the head when this generation began (D2).
+  const seen = seenHead();
+  const relay = claimed.relay;
+  let program: Awaited<ReturnType<typeof generateChunk>>;
+  try {
+    program = await generateChunk(
+      {
+        bible,
+        coord,
+        biome: origin.biome,
+        ground: origin.floor.tile,
+        hole: terrain.hole,
+        lore: useLandStore.getState().lore,
+        language: world.genesis.language,
+        terrain,
+        neighbours: neighbours(coord),
+        ...(isOrigin ? { authored: origin.npcs } : {}),
+        legend: grows?.legend ?? null,
+      },
+      {
+        signal: controller.signal,
+        ...(relay === null ? {} : { onDelta: (text: string) => relay.delta(text) }),
+        // The witness is appended inside the repair loop: a refusal about what the program says
+        // (lore links, sizes, words) is one of its two repairs (D5); any other ends it here.
+        accept: async ({ graph }) => {
+          if (!same()) return err(WITNESS_SAVE_CHANGED, "The save changed while this was written.");
+          const body = witnessBody(coord, graph, grows?.supersedes ?? null);
+          return body.ok ? appendToWorld({ kind: "witness", body: body.value, seen }) : body;
+        },
+      },
+    );
+  } catch (thrown) {
+    // Whatever broke is shown, and the relay still ends below like any other failure.
+    program = fail(toError(thrown, "witness-failed"));
+  }
   if (inflight === mine) inflight = null;
-  if (useLandStore.getState().instanceId !== instanceId) return;
-  // A cancelled witnessing writes nothing: not the chunk, not its lore, not a karma line.
-  if (controller.signal.aborted) {
-    if (mine.reason === "leave") {
-      useLandStore.getState().forget(key);
-      return;
-    }
-    useLandStore.getState().setChunk(key, {
-      status: "failed",
-      error: {
+  if (!program.ok) {
+    // Every way out but an appended witness ends the relay "abort" and releases the lease.
+    abandonClaim(target, claimed);
+    if (!same()) return;
+    // A cancelled witnessing writes nothing: not the chunk, not its lore, not a karma line.
+    if (controller.signal.aborted) {
+      if (mine.reason === "leave") {
+        useLandStore.getState().forget(key);
+        return;
+      }
+      failed(key, {
         code: WITNESS_CANCELLED,
         message: "Witnessing was cancelled; nothing was written.",
         hint: "Retry when you want this place witnessed.",
-      },
-    });
+      });
+      return;
+    }
+    failed(key, program.error);
     return;
   }
-  if (!program.ok) {
-    useLandStore.getState().setChunk(key, { status: "failed", error: program.error });
-    return;
-  }
+  // Appended (a stop that came after the append changes nothing: the world has it now).
+  claimed.relay?.end("done");
+  if (!same()) return;
   const draft = program.value.graph;
-  const dialogues = Object.fromEntries(
-    draft.dialogues.map((dialogue) => [dialogue.npcId, serializeDialogue(dialogue)]),
-  );
-  const errands =
-    draft.errands.length === 0 ? null : { errands: draft.errands, keepsakes: draft.keepsakes };
-  const stored = await window.seed.instances.witness({
-    instanceId,
-    cx: coord.cx,
-    cz: coord.cz,
-    scene: serializeScene(draft.scene),
-    dialogues,
-    ...(errands === null ? {} : { errands: serializeErrands(errands) }),
-    lore: draft.lore,
-  });
-  if (useLandStore.getState().instanceId !== instanceId) return;
-  if (!stored.ok) {
-    useLandStore.getState().setChunk(key, { status: "failed", error: stored.error });
-    return;
-  }
-  useLandStore
-    .getState()
-    .setChunk(key, { status: "written", scene: draft.scene, dialogues, errands });
-  useLandStore.getState().addLore(draft.lore);
+  // The fold drew it; if it lost a race it is a variant and the other witness stands here.
+  settleElsewhere(key);
   const customs = draft.lore.filter((node) => node.kind === "custom").map((node) => node.label);
   useWorldStore.getState().appendKarma(
     makeKarmaEntry({
@@ -211,9 +331,7 @@ export function witnessHere(): void {
     .catch((thrown: unknown) => {
       // Never leave a chunk "witnessing" forever: whatever broke is shown, with Retry.
       if (useLandStore.getState().chunks[chunkKey(chunk)]?.status !== "writing") return;
-      useLandStore
-        .getState()
-        .setChunk(chunkKey(chunk), { status: "failed", error: toError(thrown, "witness-failed") });
+      failed(chunkKey(chunk), toError(thrown, "witness-failed"));
     })
     .then(() => {
       const now = useEngineStore.getState().chunk;

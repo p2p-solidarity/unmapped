@@ -13,6 +13,7 @@ import { FILE_ERRORS } from "./errors-files";
 import { IDENTITY_ERRORS } from "./errors-identity";
 import { IMAGES_ERRORS } from "./errors-images";
 import { LAND_ERRORS } from "./errors-land";
+import { LAND_HISTORY_ERRORS } from "./errors-landHistory";
 import { MODEL_ERRORS } from "./errors-model";
 import { NET_ERRORS } from "./errors-net";
 import { SAVE_ERRORS } from "./errors-save";
@@ -33,6 +34,7 @@ export const ERRORS: Record<string, ErrorText> = {
   ...IDENTITY_ERRORS,
   ...NET_ERRORS,
   ...WORKS_ERRORS,
+  ...LAND_HISTORY_ERRORS,
   ...ACCOUNT_ERRORS,
   ...IMAGES_ERRORS,
 };

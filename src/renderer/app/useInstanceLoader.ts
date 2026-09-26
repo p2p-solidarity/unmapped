@@ -83,13 +83,15 @@ export function hydrateInstance(resolved: ResolvedInstance): Result<InstanceMeta
     inventory: instance.save.inventory,
     gameplayRules: selectedRules.value,
   });
-  useEngineStore.getState().setCameraMode(behaviorForKit(kit.value.id).camera);
+  const behavior = behaviorForKit(kit.value.id);
+  useEngineStore.getState().setCameraMode(behavior.camera);
   useEngineStore.getState().resetFloor();
   useSessionStore.getState().setActiveInstance(resolved);
   // A visitor walks the host's land, which arrives through the room — never from this disk.
   if (useSessionStore.getState().networkRole !== "peer") {
     if (useLandStore.getState().instanceId !== instance.meta.instanceId) {
-      void loadLand(instance.meta.instanceId);
+      // Open land plays on its world's history (rev 6 phase 3); a bounded scene has none.
+      void loadLand(instance.meta.instanceId, behavior.open);
     }
     useLandStore.getState().setProgress(instance.save.land ?? emptyProgress());
   }

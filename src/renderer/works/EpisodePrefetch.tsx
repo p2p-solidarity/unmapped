@@ -16,6 +16,7 @@ import {
   useChapterJobs,
 } from "@renderer/app/land/chapterJobs";
 import { CHAPTER_CANCELLED } from "@renderer/app/land/chapters";
+import { writeNextEpisode } from "@renderer/app/land/storyMore";
 import { contentLanguage, translate, useT } from "@renderer/i18n";
 import { useLandStore, useSessionStore, useWorldStore } from "@renderer/state";
 import { useInferenceStore } from "@renderer/state/inferenceStore";
@@ -25,7 +26,6 @@ import type { InferenceConfig, ProbeResult } from "@shared/llm";
 import type { AppError, Loadable } from "@shared/result";
 import { storyEpisodes, storyStep } from "@shared/story";
 import { type CSSProperties, type JSX, useCallback, useEffect, useRef, useState } from "react";
-import { writeNextChapter } from "./continueStory";
 
 const PAUSE_KEY = "unwritten.story.prefetchPaused";
 
@@ -162,7 +162,8 @@ export function EpisodePrefetch(): JSX.Element | null {
     stopReason.current = null;
     const instanceId = land.instanceId;
     setNext({ stopping: false });
-    const written = await writeNextChapter({
+    // The world's history keeps the episode (a `story.more` event, or the save before it has one).
+    const written = await writeNextEpisode({
       logline: story.logline,
       episodes: all,
       progress: land.progress.episodes ?? {},
@@ -175,7 +176,6 @@ export function EpisodePrefetch(): JSX.Element | null {
     // A reply that made it back before a stop is kept: it is paid for, and resuming would ask again.
     const sameLand = useLandStore.getState().instanceId === instanceId;
     if (written.ok && sameLand) {
-      useLandStore.getState().addEpisode(written.value);
       const { title, place } = written.value;
       const line = translate("works.newChapterOnMap", { title, place });
       useSessionStore.getState().toast("success", line);

@@ -12,6 +12,7 @@ import { IDENTITY } from "./identity";
 import { IMAGES } from "./images";
 import { INPUT } from "./input";
 import { LAND } from "./land";
+import { LAND_HISTORY } from "./landHistory";
 import { LIBRARY } from "./library";
 import { MARKET } from "./market";
 import { MODEL } from "./model";
@@ -33,6 +34,7 @@ export const STRINGS = {
   images: IMAGES,
   input: INPUT,
   land: LAND,
+  landHistory: LAND_HISTORY,
   library: LIBRARY,
   market: MARKET,
   model: MODEL,
