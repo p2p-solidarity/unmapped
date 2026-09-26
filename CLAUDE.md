@@ -10,8 +10,11 @@ decide the userData folder and the macOS keychain entry that wraps saved keys), 
 Desktop-first (Electron) implementation of `plan.md`: the model writes a tiny **OpenUI Lang
 dialect** (our game DSL), a parser is the source of truth, Three.js renders it, published content
 lives in immutable cartridges, and progress lives in cartridge-pinned instances. A random Data Key
-encrypts portable player data and is wrapped by passkey PRF or the OS keychain. Friends join a
-shared document room over WebRTC signaling. Read this file before editing anything.
+encrypts portable player data and is wrapped by passkey PRF or the OS keychain. What a world's
+land holds is a signed, append-only **history** (rev 6 phase 3) that a world service may sequence
+so friends share it; continents still meet over WebRTC signaling. Model calls stay on devices: a
+player's own key, a local model, or the metered generation gateway (phase 4). Read this file
+before editing anything.
 
 ## Quick start
 
@@ -33,6 +36,13 @@ Any OpenAI-compatible endpoint works (llama.cpp, Ollama `qwen3.5:4b`, vLLM servi
 `thesysdev/OUI-1`, OpenUI Gateway `https://api.thesys.dev/v1/embed`, OpenAI). Provider presets:
 `src/shared/llm.ts`. Keys entered in Settings → Model are encrypted with the OS keychain and only
 read by the main process; `.env` keys are also read in main as a fallback.
+
+Two optional Bun servers; neither is needed to play (see their sections):
+
+```bash
+UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8787 --data "$TMPDIR/svc"   # a world service: Settings → Shared worlds → ws://127.0.0.1:8787
+bun run gateway -- --port 8788 --data "$TMPDIR/gw"                           # the generation gateway: UNMAPPED_GATEWAY_URL=http://127.0.0.1:8788
+```
 
 ## Rules (each one exists because the previous version of it caused a bug)
 ### Rule 0. Do not over-engineer, and test end to end
@@ -78,7 +88,7 @@ Hex colour literals are allowed **only** in `src/renderer/ui/tokens.ts` (UI) and
 
 ### Rule 4. State ownership
 - Per-frame data (positions, velocity, camera) → refs / R3F `useFrame`. **Never** in zustand.
-- World + session + inference + low-frequency engine state → the four stores in
+- World + session + inference + land + history + low-frequency engine state → the stores in
   `src/renderer/state/`. Only add fields there when two modules need them.
 - Local UI state (expanded, hovered, draft text) → `useState` in the smallest component.
 
@@ -90,7 +100,10 @@ IPC and never swallow. `code` is machine-readable, `hint` tells the user how to 
 `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`. The renderer talks to main
 only through `window.seed` (preload `contextBridge`) using channels from `src/shared/ipc.ts`.
 Secrets (`OPENAI_API_KEY`, `THESYS_API_KEY`) never reach the renderer. Validate every IPC payload
-in main (zod) — the renderer is untrusted once mods/P2P exist.
+in main (zod) — the renderer is untrusted once mods/P2P exist. The same holds for provider keys,
+the device key and the gateway account token: main only; the renderer sees a `KeyStatus`, a route
+view or an account status, never a value. Every `UNMAPPED_*` / `QWEN_IMAGE_*` var is read in main
+(or in the service / gateway process that owns it), never in a renderer or a browser page.
 
 ### Rule 7. DSL is the truth, the model is a guest
 - The model only ever writes OpenUI Lang programs against our libraries (`src/dsl`). No JSON
@@ -102,8 +115,16 @@ in main (zod) — the renderer is untrusted once mods/P2P exist.
   cannot break the engine.
 
 ### Rule 8. Import direction
-`shared ← dsl ← { main, renderer }`. `renderer` never imports `main`; `main` never imports
-`renderer`. `dsl` has no React/Electron imports (it must run in vitest and in main).
+`shared ← dsl ← { main, renderer, service }`; `shared ← gateway`; `shared ← dsl ← renderer ← browser`.
+`renderer` never imports `main`; `main` never imports `renderer`. `dsl` has no React/Electron
+imports (it must run in vitest, in main and in the service). The world service (`src/service`)
+imports only `@shared` and `@dsl` (verdicts, `.world` files; plus viem and the committed
+`contracts/WorldProvenance.json` for its chain recorder); the gateway (`src/gateway`) only
+`@shared`; the browser proof (`src/browser`) `@shared`, `@dsl` and `@renderer`, never `main`. Nothing in `src/`
+imports `service`, `gateway` or `browser` — only their tests and `scripts/`. `tsconfig.node.json`
+compiles main, service, gateway and scripts with an `@main/*` alias, so the compiler does not
+enforce this for service or gateway: check imports by hand. `@main` / `@renderer` also resolve in
+`tsconfig.test.json` and `vitest.config.ts`, for tests only; `tsconfig.browser.json` has no `@main`.
 
 ### Rule 9. Cartridge content, instance progress, and workspaces have separate owners
 
@@ -112,16 +133,39 @@ in main (zod) — the renderer is untrusted once mods/P2P exist.
   identity. Play and model tools never write here.
 - `<userData>/instances/<instanceId>/` owns `instance.json` plus the active
   `saves/<saveId>/{save.json,karma.jsonl}`. The save pins an exact cartridge id, version, and hash;
-  flags, inventory, mutation, current scene, and completion live here.
+  flags, inventory, mutation, current scene, and completion live here. A save that plays in a
+  world (rev 6 phase 3) also has `world.json` (the pin: `worldId` + the migration digest; the
+  commit point) and `progress.json` (`WorldProgress`: errands, episodes, places), both owned by
+  `main/histories/`. `save.json` keeps its exact legacy shape (its schemas are `.strict()`, so a new
+  field breaks older builds); its legacy land fields are frozen once `world.json` exists.
+- `<userData>/histories/<worldId>/` (`main/histories/paths.ts`) owns a world's shared history:
+  `log.jsonl` (line n = entry n, append-only), `outbox.jsonl` (own events awaiting a receipt),
+  `refused.jsonl` (never deleted), `link.json` (service URL + pinned key), `snapshot.json` (fold
+  cache), `received-works.json`, `uploaded-packs.json`, `issued-invites.jsonl` (never the `k=`
+  secret); `histories/index.json` maps `instanceId → worldId` and is rebuilt from every log's line 1.
+- `<userData>/blobs/<sha256 hex>` (`main/blobs/`): cartridge and work packs, verified on read.
+  `<userData>/identity/device.key` (`main/identity/`): this device's Ed25519 key, safeStorage-
+  encrypted, never regenerated over an unreadable file. `<userData>/images.json`: the image
+  provider choice (an id only). `<userData>/provider-keys/<provider>.key`: saved keys, including the
+  gateway account token as `hosted.key`.
+- Picture licences: `assets/licences.json` in a cartridge revision (hashed, written by main at
+  publish); `works/<workId>/<version>/licences.json` beside an AI world (outside `contentFiles`, so
+  not in its content hash; carried in its work pack); per-picture records in
+  `workspaces/create.<draftId>/looks/<id>.json` and `work-drafts/<draftId>/pictures/<hex>.json`.
 - `<userData>/workspaces/<workspaceId>/` is the mutable authoring copy. Structural scene/rule edits
   go here, then full validation publishes a new immutable revision with explicit lineage.
 - `<userData>/worlds/<id>/` is the legacy five-dotfile format. Keep it readable and recoverable;
   migration creates a cartridge plus pinned instance and never deletes the source automatically.
 
-A `.cartridge` contains content only. A `.spire-backup` contains one instance and active save only,
-and restore requires its exact cartridge revision. Encrypted portable data uses a random AES-GCM
-Data Key; PRF/keychain-derived keys only wrap that Data Key, with one validated wrapping record per
-credential. Installed mods remain outside saves in `<userData>/mods/<name>/` (docs/harness.md).
+A `.cartridge` contains content only. A `.spire-backup` contains one instance and active save only
+(plus, for a save in a world, `world.json`, `progress.json` and `history/{log,outbox}.jsonl`), and
+restore requires its exact cartridge revision; a restored history is written only when absent or a
+chain prefix, otherwise both are kept (`backup-history-diverged`). A `.world` file holds one shared
+world with no personal state (see "`.world` bundles"). Outside userData: a world service's
+`--data` dir and a gateway's `--data` dir (their sections list the files). Encrypted portable data
+uses a random AES-GCM Data Key; PRF/keychain-derived keys only wrap that Data Key, with one validated
+wrapping record per credential. Installed mods remain outside saves in `<userData>/mods/<name>/`
+(docs/harness.md).
 
 ### Rule 10. Language is the player's (Babel)
 - UI chrome is translated (en / zh-TW / ja) and every player-visible word goes through
@@ -143,20 +187,30 @@ credential. Installed mods remain outside saves in `<userData>/mods/<name>/` (do
 
 ```
 src/
-├── shared/        contracts — result.ts, world.ts (vocabulary + SceneGraph), llm.ts, ipc.ts, events.ts
-├── dsl/           OpenUI Lang game dialect: schemas, libraries, prompts, parse, repair, grammar, limits
+├── shared/        contracts — result.ts, world.ts (vocabulary + SceneGraph), llm.ts, ipc.ts, events.ts;
+│                  history/ (events, log, fold, admit, beats, rumors), worldProtocol.ts, worldBundle.ts
+├── dsl/           OpenUI Lang game dialect: schemas, libraries, prompts, parse, repair, grammar, limits;
+│                  history/ (verdicts, body validation, migration planning, .world read/write)
 ├── main/          Electron main: cartridges/, instances/, workspaces/, legacy worlds/, vault/, inference/
+│                  (+ route.ts), histories/ (world host + sync), identity/ (device key), blobs/, images/,
+│                  account/ + billing/ (gateway client), bundles/ (.world files), chain/ (+ provenance.ts)
 ├── preload/       contextBridge → window.seed (SeedApi)
+├── service/       the world service (Bun): sequences histories, verdicts, beats, claims, blobs, mirrors
+├── gateway/       the generation gateway (Bun): device-key accounts, quota ledger, upstreams, billing/
+├── browser/       the browser proof (Vite page): its own window.seed, WebCrypto key, IndexedDB, sw.js
+├── relay/         the lineage market's gas station (Cloudflare Worker)
 └── renderer/
     ├── app/       screens: title (WorldsScreen), library/ (Worlds), create/, Play (HUD), Console (F12)
     ├── engine2d/  the land and places in 2D (the one engine players see); hd2d/ is the land's HD-2D look
     ├── engine/    R3F scene (frozen: legacy bounded scenes only), shared targets, combat, keys, palettes
-    ├── input/     gamepad poller + focus navigation (one action map with the keyboard, @shared/input)
+    ├── input/     gamepad poller + touch pad + focus navigation (one action map, @shared/input)
     ├── narrative/ generateScene / generateDialogue / generateItem (prompt → chat → parse → repair)
     ├── llm/       renderer-side streaming client over IPC
-    ├── identity/  passkey PRF unlock + keychain fallback, AES-GCM, ENS resolve
-    ├── net/       yjs + y-webrtc rooms: shared dotfiles + presence
-    ├── state/     zustand stores (world, engine, session, inference)
+    ├── history/   the open world's fold, the land drawn from it, writing drafts to main
+    ├── mobile/    the phone shell the browser proof mounts (LandView2D, touch pad, notes)
+    ├── identity/  passkey PRF unlock + keychain fallback, AES-GCM, ENS name lookup (lineage tree)
+    ├── net/       yjs + y-webrtc rooms + continents; world services list; world presence
+    ├── state/     zustand stores (world, engine, session, inference, land, history, continent, …)
     └── ui/        primitives + tokens
 tests/             vitest — only failures E2E cannot reach (Rule 0); fixtures in tests/fixtures/
 docs/e2e/          one folder per E2E run: run.json + result.md + screenshots (Rule 0)
@@ -183,8 +237,9 @@ Worlds are stored beside cartridges, not inside them: `works/` (immutable, hashe
 
 ### Rule 13. A story is content; the chain is optional
 A world made from a story keeps its episode plan in the cartridge (`bible/story.json`, hashed with
-everything else); what each chapter wrote, how far the player got and the carried items live in the
-save (`land.episodes[id].stage`, `land.storyCarry`). A chapter is played **in the game itself**,
+everything else). What each chapter wrote is a `chapter` event in the world's history (rev 6 phase
+3; a save without a world yet keeps `land.episodes[id].stage`); how far the player got is in
+`progress.json`, and the carried items stay in `save.json` (`land.storyCarry`). A chapter is played **in the game itself**,
 never on a separate page (`@shared/chapter`): on the land around its gate (the Chapter dialect —
 people with their words, finds, foes; no coordinates, the host sets them on walkable ground), or as
 a place when its kind is a climb or a maze. Only the next chapter is written ahead (or at its gate),
@@ -196,7 +251,9 @@ never written.
 On-chain provenance (`contracts/src/UnwrittenLedger.sol`) is optional and additive: content never
 goes on chain, only the sha256 hash the app already computes, its author, its lineage and short
 player notes. `UNWRITTEN_*` env vars live in main only (Rule 6). With nothing configured every
-screen must still work and say plainly that no ledger is set up.
+screen must still work and say plainly that no ledger is set up. The same holds for the light
+chain of shared worlds (`WorldProvenance`, see "Provenance"): off unless configured, read-only in
+the app.
 
 ## Module contracts (what each module MUST export)
 
@@ -263,17 +320,24 @@ Components take **positional** args in zod key order (required first). Enums com
 - `worlds/` is the legacy five-dotfile store + watcher and migration source; migration never deletes it.
 - `vault/` keeps the keychain fallback secret and validated Data Key wrapping records in userData.
 - `inference/` owns `InferenceConfig` persistence (`inference.json` in userData), the OpenAI-SDK
-  client (`baseURL` from config, key from `process.env[apiKeyEnv]`), streaming → `inference:event`,
-  abort, `/v1/models` probe, and the `llama-server` sidecar (spawn, health poll, kill on quit).
+  client (the effective config from `routeFor`, see "Routing, account and billing"), streaming →
+  `inference:event`, abort, `/v1/models` probe, and the `llama-server` sidecar (spawn, health poll,
+  kill on quit). Apple's on-device model (`apple-fm`) is answered inside the app by the afm-bridge
+  `chat` method (`appleChat.ts`: streamed partials, host tool calls, cancel) — never `fm serve`, no
+  port, no `sudo fm license`; a saved `fm serve` config is read as Apple-in-app.
+- `histories/`, `identity/`, `blobs/`: a world's shared history on this device (see "`src/main/histories`").
+  `account/`, `billing/`: the gateway client. `images/`: picture providers and licences.
+  `bundles/`: `.world` files and moving worlds. Each has its section below.
 - `usage/` owns the usage ledger `<userData>/usage.jsonl` (@shared/usage): one append-only line per
   model call — purpose, world scope, provider, model, input / output / cached tokens, ms, outcome —
   written where each chat, Apple scene or image request settles (never by the renderer); numbers
   only, never a prompt, answer or key. A world's total folds in the Create draft linked to it.
-- `works/images.ts`: every picture goes through an `ImageProvider` (swap the model = swap the
-  object); its look comes from the world (its maker's words, its library art), never a house style.
-  `generate(prompt, signal, { reference?, quality?, kind? })`: with a `reference` PNG the OpenAI
-  provider calls `images.edit`. Keys only through `resolveApiKey` (saved → `.env`), never
-  `process.env` directly. A world's look picture is the cartridge asset `assets/look.png`
+- Pictures: every picture goes through an `ImageProvider` from `main/images/` (swap the model = swap
+  the object; `works/images.ts` now only keeps `assetPrompt` and re-exports); its look comes from the
+  world (its maker's words, its library art), never a house style.
+  `generate(prompt, signal, { reference?, quality?, kind? })`: with a `reference` PNG the OpenAI and
+  hosted providers call `images.edit`. Keys only through `resolveApiKey` / `resolveProviderKey`
+  (`inference/keyStore.ts`: saved → `.env`), never `process.env` directly. A world's look picture is the cartridge asset `assets/look.png`
   (`LOOK_PICTURE_ASSET`); main reads it with `readLookPicture(cartridgeId, version)`
   (`cartridges/look.ts`) and passes it as the reference for every picture that world asks for.
 - `game/base.ts` installs every shipped `aether-land-<version>.json`, oldest first; never drop one
@@ -366,12 +430,18 @@ export function TitleDiorama({ seedText }): JSX.Element;   // App's MenuBackdrop
 
 ### Places on the land (`@shared/places`, `app/land/places.ts`)
 - A place (side-scroller `platformer_2_5d@1`, grid dungeon `dungeon_grid@1`, or an otherworld 異界)
-  is **save-owned** (`land.places`, validated by `landPlaceSchema` — a union of `WrittenPlace` and
-  `OtherworldPlace`), not a cartridge scene: adding one never makes a new version or a new run.
+  belongs to the world, not the cartridge: a `place` event of its history (`PlaceBody`, rev 6
+  phase 3), so adding one never makes a new version or a new run and every member walks into it.
+  Its id is `legacyId ?? "p" + 8 base32 chars of the event id`. Crossing it is the player's own
+  `progress.json` plus a `place.crossed` deed. A save without a world yet still reads `land.places`
+  (`landPlaceSchema`); migrated saves never write it again.
 - The model writes only the life in it (`dsl/prompts/place.ts`); `buildPlace` builds the ground from
   the stored seed on every entry (course / `generateMaze`) and moves every entity onto open ground.
   Never trust model coordinates in a place, never store its walls in the program.
-- Entrances stand at chunk centres chosen by `placeSpot` (reachable thanks to the fords). A written
+- Entrances stand at chunk centres chosen by the writer with `placeSpot` (reachable thanks to the
+  fords); `admit` only checks the spot is free (`place-spot-taken`: home, a gate or a live place;
+  `place-spot-far` beyond 64 chunks), and the renderer recomputes and resubmits with no model call.
+  The fold never runs `placeSpot` (`Math.hypot` stays out of it). A written
   place (and a chapter's climb or maze) is played on engine2d by `PlaceView2D({ graph, rules, title })`
   (`engine2d/place/`: pure `placeMotion.ts`, a side view and a top-down dungeon view in the 16-bit
   look) while `sessionStore.place` is set; its exits call `leavePlace` (far end = crossed) and the
@@ -409,18 +479,23 @@ export function TitleDiorama({ seedText }): JSX.Element;   // App's MenuBackdrop
 
 ### Title, Worlds and input (`app/WorldsScreen.tsx`, `app/library/`, `@shared/input`, `renderer/input/`)
 - The title has exactly four entries: Continue · Worlds · Create World · Settings (today's System
-  panel, a `role="dialog"` layer). Worlds is the `library` screen: sections New game (the built-in
-  world), Saves, Cartridges, Continent, and Archive when legacy worlds exist (`library/sections.ts`
-  — a new section is one entry there). Do not add title entries.
-- One action map for keys and pads (`@shared/input`: standard-mapping layout, dead zones, menu
+  panel, a `role="dialog"` layer: Language, Model, Account, Plan, Images, Signaling servers, Shared
+  worlds, build info, unlock). Worlds is the `library` screen: sections New game (the built-in
+  world), Saves, Join a world, World files, Cartridges, Continent, Market, and Archive when legacy
+  worlds exist (`library/sections.ts` — a new section is one entry there). Do not add title entries.
+- One action map for keys, pads and touch (`@shared/input`: standard-mapping layout, dead zones, menu
   actions). `useGamepad()` (mounted once in App) polls `navigator.getGamepads()`: in Play with no
   layer open it makes the key each pad action is bound to count as held/pressed in the same
-  `engine/useKeys.ts` held set (A interact, B jump, X fire, Y notes, RB sprint, Start = Esc), so
+  `engine/useKeys.ts` held set (A interact, B jump, X fire, Y notes, LB emote = T, RB sprint, Start = Esc), so
   engine code never reads pads; anywhere else it moves DOM focus spatially inside the top-most layer
   (`[data-layer]`, `role="dialog"`), A clicks, B / Start send Escape. Mark new panels over Play with
   `data-layer`, give screens one initial focus (`.g-autofocus` / `data-autofocus`), and never make
-  something needed to play reachable only by mouse. Hint rows show pad glyphs after a pad input.
-  `scripts/cdp-drive.ts` `{"pad": {buttons, axes, ms}}` installs a virtual pad for E2E. Offer no option the land cannot play
+  something needed to play reachable only by mouse. Touch is a third `InputDevice`
+  (`"keys" | "pad" | "touch"`, `input/device.ts`): the on-screen `mobile/TouchPad` writes a
+  standard-mapping `PadSnapshot` (`input/touch.ts`) that `readPad()` merges with real pads, so
+  engine2d never learns touch exists. Hint rows show pad glyphs after a pad or touch input.
+  `scripts/cdp-drive.ts` `{"pad": {buttons, axes, ms}}` installs a virtual pad for E2E; `viewport`,
+  `touch` (`Input.dispatchTouchEvent`) and `offline` drive a phone-sized page. Offer no option the land cannot play
   (companions exist in the rules but are not drawn or followed on the land yet).
 
 ### `src/renderer/identity`
@@ -538,9 +613,15 @@ export function plateOf(worldId): string;      // a world's stable door number (
 export function useContinentSync(continent): void;   // publish own world, read the others into useContinentStore
 // shared: resolveAnchors(claims) (earlier claim keeps a slot), ownerOf (nearest anchor), territoryMap → at(coord): Territory | null
 ```
+- Continents are frozen and only for worlds kept on this device (rev 6 phase 3, D12): a world
+  attached to a world service refuses one (`continent-world-attached`, `net/continentActions.ts`),
+  and one that turns out attached while on a continent leaves it. A continent's `worldId` is still
+  the instance id; its land comes from the fold via `useLandStore`.
 - Every world keeps its own origin, seed and save. Joining gives it an **anchor** (offset in chunks,
   spiral slots `CONTINENT_SPACING` apart); territory = nearest anchor. Only a territory's owner
-  witnesses there; a note left on someone's land goes to *their* notes.jsonl. Other worlds are
+  witnesses there. A note a visitor leaves on a world in a history is not kept by itself: it waits
+  (at most `VISITOR_NOTES_PER_DAY` per visitor) until the owner keeps it as an owner-signed `note`
+  with the visitor's name and `via: "continent"`. Other worlds are
   shifted into this world's coordinates, so chunk keys, targets and tiles stay local everywhere.
   A save stores a position only on its own land: `samplePlayer()` tags a sample on another
   territory `visiting:<worldId>`, so no checkpoint writes it, and leaving or switching a continent
@@ -565,6 +646,224 @@ export function useContinentSync(continent): void;   // publish own world, read 
   refuses open land (`room-open-land`). `patches/y-webrtc@10.3.0.patch`: the lower peer id alone
   initiates (upstream glare left one-way data channels).
 
+## Shared worlds and what surrounds them (rev 6 phases 3–4: docs/plans/rev6-phase3.md, rev6-phase4.md)
+
+### `@shared/history` + `@shared/worldProtocol` (the history, pure)
+```ts
+// A world = its genesis (worldId = the genesis event's id) + one sequenced, append-only log. No DAG.
+HistoryEvent { v: 1; world; kind; author: "k"+base32(Ed25519 pub); at; seen; body; id: "h"+base32(sha256(canonical event − id − sig)); sig }
+LogEntry { n; rt; chain; event; rsig }   // chain(n) = sha256(chain(n−1)\nn\nrt\nid); rsig null only in a local-only world
+export function admit(now: WorldNow, event: HistoryEvent, rt: string): Result<Admission>;
+export function applyEntry(now: WorldNow, entry: LogEntry, verdict: EntryVerdict): WorldNow;   foldEntries(now, entries);   withPending(now, outbox, rt)
+export function computeBeat(now: WorldNow, at: string): Result<BeatComputation>;   FOLD_VERSION;   WORLD_PROTOCOL = 2;   protocolRefusal(now, protocol)
+```
+- One validation everywhere: `readEvent` → `verifyEvent` → `validateEventBody` (`dsl/history`) →
+  `admit`. Main and the service compute each entry's verdict with `entryVerdict`
+  (`dsl/history/verdict.ts`); the renderer receives it and folds. `verifyLog` checks the chain, an
+  ownership pass, then the receipt key schedule (from admitted `sequencer` entries; a rehost
+  switches keys from its own entry on).
+- Fold, admit, beat and rumor code are deterministic: integers, strict-ISO `Date.parse`, code-unit
+  comparison; never `Math.hypot/cos/sin/pow`, `localeCompare`, `Intl`, `toLocale*`, `toLowerCase`.
+  Geometry stays with the writer (`placeSpot`, `trailPlace`); admit only checks the result is free.
+- History only accumulates. Fog (low care, 28 quiet days, beyond the town ring; home, chapters,
+  places and traces never fog), legends 傳說, variants 異聞 (a child of a variant is one too) and
+  `hide` are views. An unknown kind or `v` is kept, skipped and counted "from a newer build".
+- An event is ≤ 128 KiB of canonical JSON (the binding cap); other caps are `HISTORY_LIMITS`.
+- Bump `FOLD_VERSION` with any change to fold, admit, beat or rumor rules. A validator change that
+  refuses what an earlier build admitted also bumps `PHYSICS_VERSION` (beat constants are
+  `BEAT_RECORDED` in `tests/shared/physics.test.ts`).
+- A rumor cites one event its beat chose (never a note or gift); `validateRumor` checks names, not
+  tone: no known label but the cited and allowed ones.
+- Protocol 2 adds co-owners (`owner.add` / `owner.remove`; the last owner stays) and
+  `chain { record }`; a protocol-1 client opening such a world gets `protocol-newer`.
+- Invite link: `unmapped://join?i=<invite>&k=<one-time secret>[&o=<≤ 4 owner.add events>]`. The log
+  holds only the signed invite and a `proof` bound to the joiner's key, never the secret. Doors:
+  `private` | `friends` (default) | `public` (visitors write only `VISITOR_KINDS`).
+
+### `src/service` (the world service, Bun)
+```bash
+UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8787 --data <dir> [--browser-origin <origin>] [--beat-every 1m]
+bun run service -- import <file.world> --data <dir>   |   export <worldId> --data <dir> [--out <file>]
+```
+- Stores and relays signed history, computes verdicts, runs `admit` and beats (6 h), holds claim
+  leases (90 s, renewed by deltas, ≤ 10 min), relays presence and streams. It never calls a model,
+  holds no model key, and never changes or deletes an entry.
+- One WebSocket (`/v1/ws`), frames ≤ 256 KiB read by `readToService` / `readFromService` on both
+  sides; blobs over HTTP (`/v1/worlds/<id>/blobs/<sha256 hex>`, signed `X-Unmapped-Auth` ±300 s).
+  Limits are host flags answered with `quota-*`; only protocol violations close a socket. Visitors
+  share one per-world budget (`quota-visitors`) that never touches members.
+- `--data`: `service-key.json` (0600; its worlds verify only with it), `worlds/<id>/{log.jsonl,
+  blobs.txt, snapshot.json, imported.json}`, `blobs/<sha256 hex>`. Claims and presence are memory only.
+- `UNMAPPED_SERVICE_TEST=1` enables `--beat-every` and `POST /v1/test/advance {days}` (moves the
+  receipt clock, beats at once). `bun run world:probe` attacks the socket with throwaway keys.
+- A mirror (an imported `.world` not sequenced here) serves reads; submits get `world-mirror-only`
+  and claims are refused until a rehost `sequencer` names this service's key.
+
+### `src/main/histories` + `window.seed.world` (this device's side)
+```ts
+window.seed.world.ensure(instanceId, name)   // migrate once, catch up, adopt: lazy, idempotent
+  .read · .append(worldId, draft /* carries seen */) · .claim · .sendStream · .sendPresence · .attach(worldId, url)
+  .invite(worldId, { uses, days }) · .join(link, name, instanceId?) · .setAccess · .hide · .addOwner · .setChainRecording · …
+// events: world:entries (with verdicts) · world:status · world:presence · world:stream
+```
+- `WorldHost` owns the loaded worlds and one socket per service URL; `ipc.ts` only validates.
+- Main runs every check before it signs a renderer draft (`seen` ≤ head, `readEvent`,
+  `validateEventBody`, `admit`). The renderer drafts only `DRAFT_KINDS`.
+- A local-only world appends straight to its log (its owner's device beats it on open); an attached
+  one queues in the outbox and submits. Refused events stay listed until dismissed (Rule 2).
+- Sync is "after my n" with a chain check; a mismatch is `history-diverged`, kept in `link.json`,
+  never merged. Only `wss://`, or `ws://` on loopback; a changed service key is fatal.
+- Migration (`ensure.ts`, `planMigration`) is lazy, idempotent, never destructive, never lossy:
+  deterministic signatures, `world.json` written last. Catch-up after an older build appends only
+  missing ids; a chunk that fails validation stays drawn (`legacyOnly`) and is listed.
+- The device key is never regenerated over an unreadable file; without one a history still reads,
+  and writing waits. A never-attached world restored on another device is adopted (new genesis, all
+  re-signed, owner changes and `chain` left out); an attached one is `world-device-not-member` there
+  until an invite.
+- `join` verifies the invite and the whole log, installs the exact revision from the `pack` blob,
+  and writes the history before the save; a refused join writes nothing. A received work never
+  replaces a local `workId@version` and never shows in the otherworld picker.
+
+### `src/renderer/history` (the land on its world's history)
+```ts
+export function openWorldLand(instanceId: string): Promise<void>;   appendToWorld(draft: WorldDraft): Promise<Result<WorldAppended>>
+export function landFromHistory(now: WorldNow, legacy?): LandFromHistory;   seenHead(): number;   writeBlocker(): AppError | null
+```
+- `useHistoryStore` holds the open world; `useLandStore` in `history` mode is a view of the fold
+  (`applyWorld`) plus `personal` (progress.json) and `live` (save.json fields). Content goes to the
+  history, never the store. `legacy` mode is a save with no device key yet.
+- `seen` is `seenHead()` read before the model call, never after, so a slow write becomes a variant.
+- Before witnessing, a live witness in the fold is drawn with no call; an attached, online world
+  claims `chunk:cx,cz` for ≤ 1.5 s (`app/land/claims.ts`): `written` → sync, `writing` → watch that
+  stream (no call), `granted` → generate and relay, `refused` → error, timeout → write locally.
+  Chapters claim `chapter:eN`, rumor batches `rumors:<beat>`. Walking never waits for this.
+- Every view (marks, traces, "They say…" rumor rows, mist, season tint) skips hidden events.
+  Presence (`net/worldPresence.ts`) is attached + online + in Play only, emotes on T / LB, never saved.
+- The rumor switch (Settings → Shared worlds) is on for the owner, off for members, and off
+  whenever the route would be hosted: an allowance is never spent in the background by default.
+
+### `src/gateway` (the generation gateway, Bun)
+```bash
+bun run gateway -- --port 8788 --data <dir> [--free-credits <n>] [limit flags]
+bun run gateway -- grant <accountId> <credits> | token <accountId> | revoke <tokenId> | set-key <name> --data <dir>   # set-key reads stdin
+```
+- A metered, OpenAI-compatible model endpoint (`/v1/chat/completions`, `/v1/images/*`, `/v1/models`
+  with licences, `/v1/status`, `/v1/quota`, `/v1/plans`, billing). It never learns a world (ledger
+  lines carry `scope: null`) and is separate from the world service.
+- Accounts are records of device keys: a signed challenge gives a `ugk_` token (stored hashed, one per
+  device, 90 idle days). A second device pairs by an 8-character code a member device approves;
+  accounts never merge; the last key stays. A `.env` token comes only from `token`, printed once.
+- Quota: reserve, then settle on reported usage (else the whole hold), release on abort. Execution
+  is deduplicated per (account, `X-Request-Id`) for 24 h. One credit = $1e-6 of upstream cost from
+  the operator's dated `costs.json`; an unpriced model is not served. The app shows credits as a
+  share of the allowance, never money. Allowance comes only from `grant` or billing.
+- `BillingProvider { id; mode; plans(); checkout(account, planId, returnUrl); portal(customer,
+  returnUrl); parseWebhook(raw, headers, nowMs) }`, Stripe first; plans and credits come only from
+  the catalogue (`unmapped_credits`). A live key refuses to start unless `GATEWAY_BILLING_LIVE=1`,
+  `NODE_ENV=production`, `GATEWAY_COMMERCIAL=1` and no test mode.
+- `--data`: `gateway.lock` (one writer; the CLI hands commands to a running gateway over loopback),
+  `gateway-key.json`, `admin-secret`, `keys.json` (0600), `upstreams.json` + `costs.json` (the
+  operator's), `accounts.jsonl`, `ledger.jsonl` (append-only, fsynced; a damaged line stops the start).
+
+### Routing, account and billing (main: `inference/route.ts`, `account/`, `billing/`)
+```ts
+export async function routeFor(config: InferenceConfig, deps: RouteDeps): Promise<Result<Routed>>;   // { route: "local" | "direct" | "hosted"; config /* what runs */; key; via }
+```
+- One order, decided in main and shown in Settings → Model: local kinds → this computer; `custom` →
+  its saved key (never `.env`); `openai` / `openui-gateway` → saved key, else `.env` → direct; only
+  with no own key or `hosted` selected, and a gateway configured → the account token (saved, else
+  `UNMAPPED_GATEWAY_KEY`) → metered; nothing → `no-api-key`.
+- No step runs after a failure (`auth` is never retried at the gateway; `quota-exhausted` shows its
+  ways out). A silent reroute would change who pays and which model writes the world.
+- `endpointFor` (`keys.ts`) is the only source of a key's endpoint. The gateway URL is
+  `UNMAPPED_GATEWAY_URL`, else the baked `GATEWAY_URL` (null: dev builds have no gateway).
+- Settings → Account signs in with the device key (token in `provider-keys/hosted.key`). A 401 on a
+  saved token deletes exactly that record, so a `.env` token is used next; `.env` is never deleted.
+  Settings → Plan is `ready` or `error`, never `idle`; checkout opens the system browser
+  (`UNMAPPED_BILLING_BROWSER=none` only logs the URL).
+
+### Images and licences (`src/main/images`, `@shared/{images,licence}`)
+```ts
+export interface ImageProvider { readonly id: ImageProviderId | "hosted"; readonly model: string; readonly licence: string; readonly locality; readonly endpoint;
+  generate(prompt: string, signal: AbortSignal, options?: ImageOptions): Promise<Result<GeneratedImage>> }
+export async function selectImageProvider(policy?: ImagePolicy): Promise<Result<ImageProvider>>;   // asked before every picture
+```
+- Providers: `openai`, `qwen-image-2512`, `qwen-image-2.1` (`QWEN_IMAGE_BASE_URL`, https or loopback;
+  the exact model must be served), plus `hosted` (OpenAI with no own key, through the gateway).
+- Every picture carries a licence written by main: a record id (`LICENCES`, sources in
+  `docs/licenses/models.md`), `player-supplied`, or `unknown` (all pictures drawn before phase 4).
+- Commercial mode is on with `UNMAPPED_COMMERCIAL=1` or a gateway saying `commercial: true`: a
+  non-commercial provider cannot be chosen or draw (`image-licence-noncommercial`), and a revision may
+  not add or change a non-commercial or `unknown` picture (`image-licence-redraw`); pictures
+  inherited unchanged are listed, never refused.
+
+### `.world` bundles (`@shared/worldBundle`, `dsl/history/worldBundle*.ts`, `main/bundles`)
+```ts
+export function verifyWorldFile(bytes: Uint8Array): { report: WorldBundleReport; opened: OpenedWorldBundle | null };   // pure; main, service, script
+window.seed.bundle.{ list(), export(worldId), inspect(), import(token, name), move(link) }
+```
+- A zip of `world.json` (manifest, `files` in `hashOrder`), `history/log.jsonl`, `blobs/<sha256>`
+  (the genesis pack, made reproducibly for a built-in revision, and every work pack) and
+  `signature.json` (who exported). No personal state: save, pin, progress, outbox, snapshot stay out.
+- Limits are checked from the central directory before inflating. Verification returns a report
+  (hashes, log, verdicts, fold, beats, packs, physics, protocol), never a boolean; any problem
+  refuses an import. Offline: `bun run verify-world -- <file.world> [--json]`.
+- Import (Worlds → World files) is `join` from a file: the log by the backup rule, a save pinned to
+  the genesis revision, seed, language and physics (`import-physics-pin`), then `ensure`.
+- Bringing a world back: `service -- import` serves a mirror; an owner or co-owner rehosts with
+  `world.attach` (old receipts still verify); members follow `unmapped://world?w=<id>&svc=<url>`,
+  which switches only if the served log extends theirs (else `history-diverged` / `move-not-rehosted`).
+
+### Provenance (`contracts/src/provenance/WorldProvenance.sol`, `@shared/provenance`)
+- `openStream(worldId, cartridgeHash, ownerKey, genesisSig, sequencerKey, sequencerSig)` once per
+  (recorder, world); `recordBeats(worldIds[], upTos[], chains[], fingerprints[])`, `upTo` strictly
+  rising. Only hashes go on chain; Ed25519 is checked offline.
+- The world service signs and pays (`src/service/chain`, `SERVICE_CHAIN_*` +
+  `SERVICE_PROVENANCE_ADDRESS`). Off twice: no env, or no `chain { record: true }` event. A beat never
+  waits for the chain.
+- The app only reads (`main/chain/provenance.ts`, `UNMAPPED_PROVENANCE_*`); a stream counts only if
+  its sequencer signature verifies with a key the log installs. Without env the door says no chain
+  is set up.
+- Not deployed: `bun run provenance --dry-run [--from <service data dir>]` simulates on Sepolia;
+  `--deploy` spends gas and is run by a person.
+
+### Browser proof (`src/browser`, `src/renderer/mobile`; `bun run browser:dev`)
+- The smallest phone client, not a mobile app (plan D7): join by invite, walk by touch, read the
+  world, leave a note, reload offline. No AI, keys, Create, places, owning, export or chain in the page.
+- Its own `window.seed`: only `world`, run in the page over its WebSocket and IndexedDB with main's
+  checks; everything else answers `not-on-this-client`, never a stand-in. The device key is a
+  non-extractable WebCrypto Ed25519 key; the invite secret is used once and never stored.
+- Blobs are verified by hash and kept in an IndexedDB LRU that never drops an outbox; `sw.js` caches
+  only the page's own GETs. The service needs `--browser-origin <page origin>` to serve it blobs.
+- `MobileShell` + `TouchPad` get a `PhoneDevice` from the page. The phone's land view
+  (`LandView2D` over the stores `history/showWorldLand.ts` fills; the proof's second pass) is being
+  wired and has no E2E run; `NoteComposer` needs the player's tile, so it sends only once the land
+  is drawn.
+
+### Environment variables added in phases 3–4
+| Var | Read by | Meaning |
+| --- | --- | --- |
+| `UNMAPPED_GATEWAY_URL`, `UNMAPPED_GATEWAY_KEY` | main (`inference/config.ts`, `keys.ts`) | the gateway; a `.env` account token (fallback) |
+| `UNMAPPED_COMMERCIAL` | main (`images/commercial.ts`) | `1` = commercial mode |
+| `QWEN_IMAGE_BASE_URL`, `QWEN_IMAGE_API_KEY` | main (`inference/keys.ts`) | the Qwen-Image server and its key (fallback) |
+| `UNMAPPED_PROVENANCE_RPC_URL` / `_ADDRESS` / `_CHAIN_ID` | main (`chain/provenance.ts`) | read-only light chain |
+| `UNMAPPED_BILLING_BROWSER` | main (`billing/billing.ts`) | `none` logs the billing URL (E2E) |
+| `UNMAPPED_TEST_CLOCK_DAYS` | main (`histories/clock.ts`) | shifts main's world clock; only with `AETHER_TEST_USER_DATA` |
+| `AETHER_TEST_WORLD_PATH` | main (`bundles/dialog.ts`) | answers the `.world` dialogs; unpackaged + `AETHER_TEST_USER_DATA` only |
+| `UNMAPPED_SERVICE_TEST`, `SERVICE_CHAIN_*`, `SERVICE_PROVENANCE_ADDRESS` | service | test mode; the chain recorder |
+| `UNMAPPED_GATEWAY_TEST`, `GATEWAY_*`, `STRIPE_*`, upstream `keyEnv`s | gateway | test clock; commercial, live billing, CORS; keys |
+
+`.env.example` holds the main-process ones; the service's and gateway's are documented in
+`src/service/config.ts`, `src/service/chain/config.ts` and `src/gateway/config.ts`.
+
+### Status (what has an E2E run)
+Only two runs exist for these phases: `docs/e2e/milestone-rev6-p4-chain` (the provenance dry run
+against a real service's beats; one step not run) and `docs/e2e/milestone-rev6-p4-mobile-proof`
+(the browser proof's first pass; the phone's land view not run). No `milestone-rev6-p3-*` run is
+committed, and the other planned p3/p4 flows (migrate, offline-visit, together, fog, door, rehost,
+account, quota, billing, licence, …) are unverified until their folder lands. Never call one of
+them working before then (Rule 2).
+
 ## Verify before claiming done
 1. `bun run check` must pass (typecheck, lint, line limit, and the few isolated tests in `tests/`).
 2. E2E: run the flow you changed in the real app, never on the user's own data or window:
@@ -573,6 +872,9 @@ export function useContinentSync(continent): void;   // publish own world, read 
    AETHER_TEST_USER_DATA="$TMPDIR/ud" bun run dev --remoteDebuggingPort 9333   # in the background
    bun scripts/cdp-drive.ts "$(cat docs/e2e/<run>/run.json)"
    ```
+   A shared-world flow also runs the service on a throwaway `--data` dir in test mode, and a second
+   app on its own userData and `--remoteDebuggingPort 9334`; a gateway flow uses a local
+   llama-server upstream so no money is spent.
    Then write the artifact from Rule 0 (`run.json`, `result.md`, screenshots) under `docs/e2e/`.
 3. Update the progress page (Rule 0) with what that run verified.
 4. Update the READMEs in the same change: `README.md`, `README.zh-TW.md` and `README.ja.md` say the
