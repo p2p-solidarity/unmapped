@@ -6,10 +6,12 @@ import type { PlayerProfile } from "@shared/player";
 import type {
   CartridgeManifest,
   CartridgeRevision,
+  ContentHash,
   InstanceMeta,
   LegacyMigrationReceipt,
   PublishCartridgeInput,
   ResolvedInstance,
+  RestoredInstance,
   UpgradeInstanceInput,
   WorkspaceMeta,
   WorkspacePreview,
@@ -23,6 +25,7 @@ import type {
 } from "@shared/chain";
 import type { CreateDraft, CreateDraftEntry, DraftIdea, LookPicture } from "@shared/createDraft";
 import type { ClaimNameResult, EnsNamesConfig } from "@shared/ensNames";
+import type { AccessPolicy } from "@shared/history/types";
 import type { DataKeyWrappingRecord } from "@shared/identity";
 import type {
   AppInfo,
@@ -74,6 +77,7 @@ import type {
   SubmitActionInput,
 } from "@shared/market";
 import type { ModBundle, ModSummary } from "@shared/mods";
+import type { ProvenanceReport } from "@shared/provenance";
 import type { Result } from "@shared/result";
 import type {
   GenerationEvent,
@@ -87,11 +91,31 @@ import type {
   WorkLookSource,
   WorkManifest,
   WorkPlay,
+  WorkRef,
   WorkSession,
   WorkSessionSource,
   WorkText,
 } from "@shared/works";
 import type { WorldFile, WorldMeta } from "@shared/world";
+import type {
+  ClaimAnswer,
+  InvitePreview,
+  ServiceProbe,
+  StreamFrame,
+  WorldAppended,
+  WorldBadge,
+  WorldDoor,
+  WorldDraft,
+  WorldEnsured,
+  WorldEntriesEvent,
+  WorldInvite,
+  WorldJoined,
+  WorldPresenceEvent,
+  WorldRead,
+  WorldStatus,
+  WorldStreamEvent,
+} from "@shared/worldApi";
+import type { ClaimTarget, Presence } from "@shared/worldProtocol";
 import { contextBridge, type IpcRendererEvent, ipcRenderer } from "electron";
 
 function invoke<T>(channel: string, ...args: unknown[]): Promise<T> {
@@ -157,7 +181,7 @@ const api: SeedApi = {
       invoke<Result<ResolvedInstance>>(IPC.instances.upgrade, input),
     exportBackup: (instanceId: string) =>
       invoke<Result<SeedExport>>(IPC.instances.exportBackup, instanceId),
-    importBackup: () => invoke<Result<ResolvedInstance>>(IPC.instances.importBackup),
+    importBackup: () => invoke<Result<RestoredInstance>>(IPC.instances.importBackup),
     readLand: (instanceId: string) =>
       invoke<Result<LandRecord>>(IPC.instances.readLand, instanceId),
     witness: (input: WitnessChunkInput) =>
@@ -332,6 +356,64 @@ const api: SeedApi = {
     cancelLook: (requestId: string) => invoke<Result<void>>(IPC.createDrafts.cancelLook, requestId),
     discardLooks: (draftId: string, keep: string[]) =>
       invoke<Result<void>>(IPC.createDrafts.discardLooks, draftId, keep),
+  },
+  world: {
+    ensure: (instanceId: string, name: string) =>
+      invoke<Result<WorldEnsured>>(IPC.world.ensure, instanceId, name),
+    read: (worldId: string) => invoke<Result<WorldRead>>(IPC.world.read, worldId),
+    close: (worldId: string) => invoke<Result<void>>(IPC.world.close, worldId),
+    append: (worldId: string, draft: WorldDraft) =>
+      invoke<Result<WorldAppended>>(IPC.world.append, worldId, draft),
+    claim: (worldId: string, target: ClaimTarget) =>
+      invoke<Result<ClaimAnswer>>(IPC.world.claim, worldId, target),
+    release: (worldId: string, target: ClaimTarget) =>
+      invoke<Result<void>>(IPC.world.release, worldId, target),
+    sendStream: (worldId: string, frame: StreamFrame) =>
+      invoke<Result<void>>(IPC.world.sendStream, worldId, frame),
+    sendPresence: (worldId: string, presence: Presence | null) =>
+      invoke<Result<void>>(IPC.world.sendPresence, worldId, presence),
+    attach: (worldId: string, url: string) =>
+      invoke<Result<WorldStatus>>(IPC.world.attach, worldId, url),
+    invite: (worldId: string, options: { uses: number; days: number }) =>
+      invoke<Result<WorldInvite>>(IPC.world.invite, worldId, options),
+    setAccess: (worldId: string, policy: AccessPolicy) =>
+      invoke<Result<WorldAppended>>(IPC.world.setAccess, worldId, policy),
+    hide: (worldId: string, id: string, hidden: boolean) =>
+      invoke<Result<WorldAppended>>(IPC.world.hide, worldId, id, hidden),
+    dismissRefused: (worldId: string, id: string) =>
+      invoke<Result<void>>(IPC.world.dismissRefused, worldId, id),
+    // The handler's schema checks arity: a trailing `undefined` would be a third argument.
+    join: (link: string, name: string, instanceId?: string) =>
+      instanceId === undefined
+        ? invoke<Result<WorldJoined>>(IPC.world.join, link, name)
+        : invoke<Result<WorldJoined>>(IPC.world.join, link, name, instanceId),
+    revoke: (worldId: string, nonce: string) =>
+      invoke<Result<WorldAppended>>(IPC.world.revoke, worldId, nonce),
+    removeMember: (worldId: string, key: string) =>
+      invoke<Result<WorldAppended>>(IPC.world.removeMember, worldId, key),
+    preview: (link: string) => invoke<Result<InvitePreview>>(IPC.world.preview, link),
+    badges: () => invoke<Result<WorldBadge[]>>(IPC.world.badges),
+    probe: (url: string) => invoke<Result<ServiceProbe>>(IPC.world.probe, url),
+    door: (worldId: string) => invoke<Result<WorldDoor>>(IPC.world.door, worldId),
+    packWork: (worldId: string, work: WorkRef) =>
+      invoke<Result<ContentHash>>(IPC.world.packWork, worldId, work),
+    receivedWorks: () => invoke<Result<WorkRef[]>>(IPC.world.receivedWorks),
+    addOwner: (worldId: string, key: string) =>
+      invoke<Result<WorldAppended>>(IPC.world.addOwner, worldId, key),
+    removeOwner: (worldId: string, key: string) =>
+      invoke<Result<WorldAppended>>(IPC.world.removeOwner, worldId, key),
+    setChainRecording: (worldId: string, record: boolean) =>
+      invoke<Result<WorldAppended>>(IPC.world.setChainRecording, worldId, record),
+    provenance: (worldId: string) =>
+      invoke<Result<ProvenanceReport>>(IPC.world.provenance, worldId),
+    onEntries: (listener: (event: WorldEntriesEvent) => void) =>
+      subscribe<WorldEntriesEvent>(IPC.world.entries, listener),
+    onStatus: (listener: (status: WorldStatus) => void) =>
+      subscribe<WorldStatus>(IPC.world.status, listener),
+    onPresence: (listener: (event: WorldPresenceEvent) => void) =>
+      subscribe<WorldPresenceEvent>(IPC.world.presence, listener),
+    onStream: (listener: (event: WorldStreamEvent) => void) =>
+      subscribe<WorldStreamEvent>(IPC.world.stream, listener),
   },
 };
 

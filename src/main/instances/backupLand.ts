@@ -7,19 +7,13 @@
 
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { validateWitness } from "@dsl/index";
 import type { LandNote, LandRecord, WitnessedChunk } from "@shared/land";
 import type { LoreNode } from "@shared/lore";
 import { err, ok, type Result } from "@shared/result";
 import type { z } from "zod";
 import type { SaveFiles } from "./backupShape";
-import {
-  LORE_FILE,
-  landNoteSchema,
-  loreNodeSchema,
-  NOTES_FILE,
-  validateWitness,
-  witnessChunkSchema,
-} from "./land";
+import { LORE_FILE, landNoteSchema, loreNodeSchema, NOTES_FILE, witnessChunkSchema } from "./land";
 
 const LAND_HINT =
   "The witnessed land in this save is damaged or was edited by hand; export the backup again from the save it came from.";

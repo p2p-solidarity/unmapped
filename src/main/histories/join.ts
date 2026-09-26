@@ -3,8 +3,10 @@
 //   1. read the link (the owner-signed invite and its one-time secret); prove the secret is held,
 //      bound to this device's key (`signJoinProof`);
 //   2. open the world with `join` and collect its whole history; the genesis must hash to the
-//      invite's world and be written by the invite's signer (`genesis.author === invite.by`), its
-//      physics reproducible here, and the log must verify (chain and receipts);
+//      invite's world and be written by the invite's signer (`genesis.author === invite.by`) — or,
+//      for a co-owner's invite (phase 4 D5), by the root of its `&o=` path, with the signer an
+//      owner in the verified history —, its physics reproducible here, and the log must verify
+//      (chain, the ownership pass and receipts);
 //   3. submit `member.join` and wait until the service sequences it (or refuses it);
 //   4. install the exact cartridge revision the genesis names (a verified pack blob, or this build's
 //      own copy of a shipped revision), then the AI works its places and chapters announce;
@@ -16,12 +18,13 @@
 // history is written before the save, so a save never exists without the world it joined.
 
 import { mkdir } from "node:fs/promises";
-import { readInviteLink } from "@shared/history/access";
+import { inviteRoot, readInviteLink } from "@shared/history/access";
 import { verifyInvite } from "@shared/history/admit";
 import { readEvent } from "@shared/history/event";
 import { emptyNow, foldEntries, openGenesis } from "@shared/history/fold";
 import { verifyLog } from "@shared/history/log";
-import { signJoinProof } from "@shared/history/sign";
+import { isOwner } from "@shared/history/owners";
+import { inviteSigned, signJoinProof } from "@shared/history/sign";
 import type { GenesisEvent, Invite, LogEntry, WorldNow } from "@shared/history/types";
 import { LANGUAGE_TAG_PATTERN } from "@shared/language";
 import { checkPhysics, PHYSICS_VERSION } from "@shared/physics";
@@ -51,8 +54,11 @@ function refusedJoin(
   return err("join-invalid", message, hint);
 }
 
-/** The world as the service holds it, verified from the genesis to its head. */
-async function fetchHistory(
+/**
+ * The world as the service holds it, verified from the genesis to its head. `by` (the invite's
+ * signer) must be its genesis author, or a co-owner the verified history names (phase 4, D5).
+ */
+export async function fetchHistory(
   core: HostCore,
   input: { url: string; world: string; by: string; join?: { invite: Invite; proof: string } },
 ): Promise<Result<{ genesis: GenesisEvent; entries: LogEntry[]; now: WorldNow }>> {
@@ -61,7 +67,7 @@ async function fetchHistory(
   if (!collected.ok) return collected;
   const genesis = openGenesis(collected.value.opened.genesis);
   if (!genesis.ok) return refusedJoin("The service sent a world that does not read.");
-  if (genesis.value.id !== input.world || genesis.value.author !== input.by) {
+  if (genesis.value.id !== input.world) {
     return refusedJoin("The service's world is not the one this invite is for.");
   }
   const physics = checkPhysics(genesis.value.body.physicsVersion);
@@ -73,6 +79,9 @@ async function fetchHistory(
     emptyNow(genesis.value),
     collected.value.entries.map((entry) => ({ entry, verdict: core.verdictOf(entry.event) })),
   );
+  if (genesis.value.author !== input.by && !isOwner(now, input.by)) {
+    return refusedJoin("The service's world is not the one this invite is for.");
+  }
   return ok({ genesis: genesis.value, entries: collected.value.entries, now });
 }
 
@@ -182,6 +191,14 @@ export async function joinWorld(
   const parsed = readInviteLink(link);
   if (!parsed.ok) return parsed;
   const { invite, secret } = parsed.value;
+  // Never connect for a link the owner did not sign (as previewInvite does).
+  if (!inviteSigned(invite)) {
+    return err(
+      "invite-sig-invalid",
+      "This invite's signature does not verify.",
+      "Ask the owner for a new link.",
+    );
+  }
   const key = await core.deps.key();
   if (!key.ok) return key;
   const proof = signJoinProof(secret, invite, key.value.author);
@@ -202,6 +219,10 @@ export async function joinWorld(
     const join = { invite, proof };
     const first = await fetchHistory(core, { url, world: invite.world, by: invite.by, join });
     if (!first.ok) return first;
+    // An invite by a co-owner carries `&o=`, checked offline; it must start at this world's maker.
+    if (first.value.genesis.author !== inviteRoot(parsed.value)) {
+      return refusedJoin("The invite's signer does not lead back to this world's maker.");
+    }
     const member = first.value.now.members[key.value.author] !== undefined;
     if (!member) {
       const valid = verifyInvite(first.value.now, invite, proof, key.value.author, core.nowIso());

@@ -1,5 +1,7 @@
 // A `.spire-backup` is instance.json plus the active save: save.json, karma.jsonl and the land the
-// player witnessed (chunks, lore.jsonl, notes.jsonl — backupLand.ts). It carries the pinned
+// player witnessed (chunks, lore.jsonl, notes.jsonl — backupLand.ts), and for a save that plays in
+// a world its world.json, progress.json and that world's history (rev 6 phase 3, D6 "Backups":
+// histories/backupHistory.ts makes, checks and restores them). It carries the pinned
 // CartridgeRef but never cartridge content, so restoring on a machine without that exact revision
 // reports what is missing instead of silently substituting a newer one (plan §一, §七). Backups
 // from an older build (instance format 1) are upgraded against that exact revision on import.
@@ -14,16 +16,23 @@ import type {
   SaveState,
 } from "@shared/cartridge";
 import type { LandRecord } from "@shared/land";
-import { err, fail, ok, type Result, toError } from "@shared/result";
+import { type AppError, err, fail, ok, type Result, toError } from "@shared/result";
 import { strToU8, zipSync } from "fflate";
 import { verifyRuntimePin } from "../cartridges/integrity";
 import { cartridgeCompatibility, readCartridgeRevision } from "../cartridges/store";
+import {
+  type HistoryBackup,
+  historyBackupTexts,
+  readHistoryBackup,
+  restoreHistory,
+  restoreSaveWorld,
+} from "../histories/backupHistory";
 import { parseKarmaText } from "../worlds/schemas";
 import { landEntries, landFromFiles, validateLand, writeLand } from "./backupLand";
 import { BACKUP_LIMITS, readBackupFiles, SHAPE_HINT } from "./backupShape";
 import { readLand } from "./land";
 import { legacyInstanceMetaSchema, upgradeLegacyFromLibrary } from "./legacy";
-import { instanceDir, isInstanceId, isSaveId } from "./paths";
+import { instanceDir, isInstanceId, isSaveId, saveDir as saveDirOf } from "./paths";
 import { instanceMetaSchema, saveStateSchema } from "./schemas";
 import { readInstance, resolveInstance } from "./store";
 
@@ -31,10 +40,14 @@ const INSTANCE_FILE = "instance.json";
 const ZIP_LEVEL = 6;
 const MAX_INSTANCE_ID_BYTES = 96;
 
-/** One instance, its active save and that save's witnessed land. */
+/** One instance, its active save, that save's witnessed land and, if it has one, its world. */
 export interface InstanceBackup extends InstanceRecord {
   land: LandRecord;
+  history: HistoryBackup | null;
 }
+
+/** A restored save; `historyNotice` is set when this device's copy of its world was kept too. */
+export type RestoredInstance = ResolvedInstance & { historyNotice: AppError | null };
 
 function serializeKarma(entries: InstanceRecord["karma"]): string {
   return entries.length === 0
@@ -53,6 +66,7 @@ export async function packInstanceBackup(
   instancesDir: string,
   instanceId: string,
   cartridgesDir?: string,
+  histories?: string,
 ): Promise<Result<Uint8Array>> {
   const instance = await readInstance(instancesDir, instanceId, cartridgesDir);
   if (!instance.ok) return instance;
@@ -69,6 +83,13 @@ export async function packInstanceBackup(
   };
   for (const [path, text] of Object.entries(landEntries(land.value))) {
     texts[`${base}/${path}`] = text;
+  }
+  if (histories !== undefined) {
+    const slotDir = saveDirOf(instancesDir, instanceId, meta.activeSaveId);
+    const history = await historyBackupTexts(histories, slotDir);
+    if (!history.ok) return history;
+    for (const [path, text] of Object.entries(history.value.slot)) texts[`${base}/${path}`] = text;
+    for (const [path, text] of Object.entries(history.value.root)) texts[path] = text;
   }
   const files = Object.fromEntries(
     Object.entries(texts).map(([path, text]) => [path, strToU8(text)]),
@@ -188,7 +209,14 @@ export async function unpackInstanceBackup(
   if (!karma.ok) return karma;
   const land = landFromFiles(meta.instanceId, slot);
   if (!land.ok) return land;
-  return ok({ meta, save, karma: karma.value, land: land.value });
+  const history = readHistoryBackup({
+    ...(slot.pin === undefined ? {} : { pin: slot.pin }),
+    ...(slot.progress === undefined ? {} : { progress: slot.progress }),
+    ...(files.value.history.log === undefined ? {} : { log: files.value.history.log }),
+    ...(files.value.history.outbox === undefined ? {} : { outbox: files.value.history.outbox }),
+  });
+  if (!history.ok) return history;
+  return ok({ meta, save, karma: karma.value, land: land.value, history: history.value });
 }
 
 async function exists(path: string): Promise<boolean> {
@@ -209,7 +237,8 @@ export async function restoreInstanceBackup(
   instancesDir: string,
   backup: InstanceBackup,
   now: Date = new Date(),
-): Promise<Result<ResolvedInstance>> {
+  histories?: string,
+): Promise<Result<RestoredInstance>> {
   const ref = backup.meta.cartridge;
   const revision = await readCartridgeRevision(cartridgesDir, ref.cartridgeId, ref.version);
   const shortHash = ref.contentHash.slice(0, 23);
@@ -250,6 +279,14 @@ export async function restoreInstanceBackup(
   const save = { ...backup.save, instanceId, updatedAt: at };
   const destination = instanceDir(instancesDir, instanceId);
   const staging = join(instancesDir, `.staging-${instanceId}-${process.pid}-${Date.now()}`);
+  // The world's history goes in first (beside, never over, a copy this device holds), so the save
+  // that pins it never appears before it.
+  let historyNotice: AppError | null = null;
+  if (backup.history !== null && histories !== undefined) {
+    const restored = await restoreHistory(histories, backup.history, now);
+    if (!restored.ok) return restored;
+    historyNotice = restored.value.notice;
+  }
   try {
     await mkdir(instancesDir, { recursive: true });
     const saveDir = join(staging, "saves", meta.activeSaveId);
@@ -258,10 +295,15 @@ export async function restoreInstanceBackup(
     await writeFile(join(saveDir, "save.json"), `${JSON.stringify(save, null, 2)}\n`, "utf8");
     await writeFile(join(saveDir, "karma.jsonl"), serializeKarma(backup.karma), "utf8");
     await writeLand(saveDir, backup.land);
+    if (backup.history !== null && histories !== undefined) {
+      const pinned = await restoreSaveWorld(saveDir, backup.history);
+      if (!pinned.ok) throw new Error(pinned.error.message);
+    }
     await rename(staging, destination);
   } catch (error) {
     await rm(staging, { recursive: true, force: true }).catch(() => undefined);
     return fail(toError(error, "backup-restore-failed"));
   }
-  return resolveInstance(cartridgesDir, instancesDir, instanceId);
+  const resolved = await resolveInstance(cartridgesDir, instancesDir, instanceId);
+  return resolved.ok ? ok({ ...resolved.value, historyNotice }) : resolved;
 }

@@ -197,9 +197,9 @@ export async function restoreHistory(
       : theirs.length === mine.length
         ? "same"
         : "kept";
+  const kept = `restored-${at.replace(/[:.]/g, "-")}.jsonl`;
   if (outcome === "diverged") {
-    const stamp = at.replace(/[:.]/g, "-");
-    await writeTextAtomic(join(dir, `restored-${stamp}.jsonl`), jsonl(theirs));
+    await writeTextAtomic(join(dir, kept), jsonl(theirs));
   } else if (outcome === "extended") {
     await writeLog(dir, theirs);
   }
@@ -226,7 +226,7 @@ export async function restoreHistory(
       ? {
           code: "backup-history-diverged",
           message: "This device already holds another history of this world; both are kept.",
-          hint: "The backup's copy is kept beside it as restored-<time>.jsonl; nothing was merged.",
+          hint: `The backup's copy is kept aside, unmerged, as ${kept} in histories/${world}/.`,
         }
       : null;
   return ok({ outcome, notice });

@@ -5,8 +5,10 @@ import type { GameplayKitId } from "./gameplay";
 import type { LandProgress } from "./land";
 import type { ModLock } from "./mods";
 import type { PartyState, PlayerState } from "./player";
+import type { AppError } from "./result";
 import type { StoryPlan } from "./story";
 import type { Genesis, Inventory, KarmaEntry, WorldMutation } from "./world";
+import type { WorldProgress } from "./worldProgress";
 
 export * from "./gameplay";
 
@@ -321,12 +323,24 @@ export interface InstanceProgressInput {
   position?: SavedPosition;
   /** Omitted when nothing on open land changed; the saved progress is kept. */
   land?: LandProgress;
+  /**
+   * The player's progress in the save's world (rev 6 phase 3, D1): written to `progress.json`,
+   * merged with what is stored. Only for a save that has a world (`world.json`).
+   */
+  progress?: WorldProgress;
 }
 
 export interface ResolvedInstance {
   instance: InstanceRecord;
   cartridge: CartridgeRevision;
 }
+
+/**
+ * A save restored from a `.spire-backup`: `historyNotice` is set when this device already held
+ * another history of its world and both were kept (`backup-history-diverged`: the backup's copy
+ * sits aside as `restored-<time>.jsonl`, nothing merged).
+ */
+export type RestoredInstance = ResolvedInstance & { historyNotice: AppError | null };
 
 export interface WorkspaceMeta {
   formatVersion: typeof WORKSPACE_FORMAT_VERSION;

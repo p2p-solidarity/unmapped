@@ -8,30 +8,28 @@
 //   4. verifies that whole log against the receipt schedule, then replaces log.jsonl with it
 //      atomically — the one rewrite a log ever gets, and it changes no entry but its receipt — and
 //      writes link.json with the pinned key;
-//   5. uploads the packs the history announces (cartridge, AI works) for friends to fetch.
+//   5. uploads the packs the history announces (cartridge, AI works) for friends to fetch, noting
+//      each one the service confirmed (./workPacks), so the reconnect that follows sends none again.
 //
 // Anything unexpected leaves the local log exactly as it was.
 
 import { canonicalJson } from "@shared/canonical";
-import type { ContentHash } from "@shared/cartridge";
 import { admit } from "@shared/history/admit";
 import { isServiceUrl } from "@shared/history/bodies";
 import { readEvent } from "@shared/history/event";
 import { verifyLog } from "@shared/history/log";
+import { isOwner } from "@shared/history/owners";
 import type { Invite, LogEntry } from "@shared/history/types";
 import { PHYSICS_SUPPORTED } from "@shared/physics";
 import { err, ok, type Result } from "@shared/result";
 import type { WorldStatus } from "@shared/worldApi";
 import { FRAME_LIMITS, type FromService, WORLD_PROTOCOL } from "@shared/worldProtocol";
-import { readBlob } from "../blobs/store";
-import type { DeviceKey } from "../identity/deviceKey";
-import { uploadBlob } from "./blobClient";
 import type { HostCore } from "./core";
-import { isLocalOnly, type LoadedWorld } from "./loaded";
+import { isLocalOnly } from "./loaded";
 import { readLog, writeLink, writeLog } from "./logStore";
-import { announcedWorks } from "./receive";
 import { framesOf } from "./sync";
 import { startSync } from "./syncWorld";
+import { uploadOwnPacks } from "./workPacks";
 
 const CONNECT_MS = 10_000;
 const COLLECT_MS = 30_000;
@@ -99,19 +97,6 @@ export function openFromZero(
     });
 }
 
-async function uploadPacks(core: HostCore, world: LoadedWorld, url: string, key: DeviceKey) {
-  const hashes = new Set<ContentHash>();
-  if (world.now.pack !== null) hashes.add(world.now.pack.pack);
-  for (const work of announcedWorks(world.now)) hashes.add(work.pack);
-  for (const hash of hashes) {
-    const bytes = await readBlob(core.blobsDir, hash);
-    if (!bytes.ok) return bytes;
-    const sent = await uploadBlob(url, world.id, hash, bytes.value, key, core.deps.fetchImpl);
-    if (!sent.ok) return sent;
-  }
-  return ok(undefined);
-}
-
 /** The chain binds ids only: the whole event must come back byte for byte, only `rsig` new. */
 function sameExceptReceipt(local: LogEntry, remote: LogEntry): boolean {
   return (
@@ -134,11 +119,11 @@ export async function attachWorld(
   if (!key.ok) return key;
   const token = `attach:${worldId}`;
   const result = await core.withWorld(worldId, async (world) => {
-    if (world.owner !== key.value.author) {
+    if (!isOwner(world.now, key.value.author)) {
       return err(
         "access-owner-only",
-        "Only the world's owner attaches it.",
-        "Do it from the device that made the world.",
+        "Only the world's owners attach it.",
+        "Do it from the device that made the world, or a co-owner's.",
       );
     }
     if (!isLocalOnly(world)) return err("attach-already", "This world is already attached.");
@@ -218,9 +203,11 @@ export async function attachWorld(
   return core.withWorld(worldId, async (world) => {
     core.emitEntries(world, world.tail, true);
     startSync(core, world);
-    const packs = await uploadPacks(core, world, url, key.value);
+    // Noted as confirmed per pack, so the reconnect that follows sends none of them again.
+    const packs = await uploadOwnPacks(core, world, url);
     const status = await core.status(world, key);
-    if (!packs.ok) status.error = packs.error;
+    const failed = packs.failed[0];
+    if (failed !== undefined) status.error = failed.error;
     await core.emitStatus(world);
     return ok(status);
   });

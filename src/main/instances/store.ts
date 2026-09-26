@@ -17,7 +17,9 @@ import { completeScene, transitionScene } from "@shared/sceneTransition";
 import { EMPTY_INVENTORY, type SceneGraph } from "@shared/world";
 import { newRuntimePin, verifyRuntimePin } from "../cartridges/integrity";
 import { cartridgeCompatibility, readCartridgeRevision } from "../cartridges/store";
+import { locked } from "../histories/fsx";
 import { parseKarmaText } from "../worlds/schemas";
+import { checkpointWorld } from "./checkpointWorld";
 import { legacyInstanceMetaSchema, upgradeLegacyInstance } from "./legacy";
 import { instanceDir, isInstanceId, isSaveId, saveDir } from "./paths";
 import { instanceMetaSchema, saveStateSchema } from "./schemas";
@@ -418,12 +420,27 @@ export async function completeInstance(
   return writeInstanceSave(instancesDir, resolved.value, completed.value);
 }
 
-/** `cartridgesDir` lets a save from an older build be checkpointed — in the current format. */
-export async function checkpointInstance(
+/**
+ * `cartridgesDir` lets a save from an older build be checkpointed — in the current format. Holds
+ * the instance's lock, the one `ensureWorld`'s catch-up takes, so progress.json is read, merged and
+ * written by one of them at a time and a catch-up is never overwritten by a stale merge.
+ */
+export function checkpointInstance(
   instancesDir: string,
   input: InstanceProgressInput,
   now: Date = new Date(),
   cartridgesDir?: string,
+): Promise<Result<InstanceMeta>> {
+  return locked(`instance:${input.instanceId}`, () =>
+    checkpointUnlocked(instancesDir, input, now, cartridgesDir),
+  );
+}
+
+async function checkpointUnlocked(
+  instancesDir: string,
+  input: InstanceProgressInput,
+  now: Date,
+  cartridgesDir: string | undefined,
 ): Promise<Result<InstanceMeta>> {
   const current = await readInstance(instancesDir, input.instanceId, cartridgesDir);
   if (!current.ok) return current;
@@ -434,6 +451,10 @@ export async function checkpointInstance(
       "Reload the instance before saving again.",
     );
   }
+  const currentSaveDir = saveDir(instancesDir, input.instanceId, current.value.meta.activeSaveId);
+  // A save that plays in a world keeps its legacy land frozen and writes progress.json instead.
+  const progress = await checkpointWorld(currentSaveDir, current.value, input);
+  if (!progress.ok) return progress;
   const updatedAt = now.toISOString();
   const save: SaveState = {
     ...current.value.save,
@@ -445,11 +466,18 @@ export async function checkpointInstance(
     updatedAt,
   };
   const meta: InstanceMeta = { ...current.value.meta, updatedAt };
-  const currentSaveDir = saveDir(instancesDir, input.instanceId, meta.activeSaveId);
   const instancePath = join(instanceDir(instancesDir, input.instanceId), "instance.json");
   const outputs = [
     { path: join(currentSaveDir, "save.json"), content: `${JSON.stringify(save, null, 2)}\n` },
     { path: join(currentSaveDir, "karma.jsonl"), content: serializeKarma(input.karma) },
+    ...(progress.value === null
+      ? []
+      : [
+          {
+            path: join(currentSaveDir, "progress.json"),
+            content: `${JSON.stringify(progress.value, null, 2)}\n`,
+          },
+        ]),
     { path: instancePath, content: `${JSON.stringify(meta, null, 2)}\n` },
   ];
   const suffix = `${process.pid}-${Date.now()}`;

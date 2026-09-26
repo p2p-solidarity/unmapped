@@ -11,6 +11,7 @@ import type {
   LegacyMigrationReceipt,
   PublishCartridgeInput,
   ResolvedInstance,
+  RestoredInstance,
   UpgradeInstanceInput,
   WorkspaceMeta,
   WorkspacePreview,
@@ -79,6 +80,7 @@ import type {
   WorkText,
 } from "./works";
 import type { Genesis, WorldFile, WorldMeta } from "./world";
+import { WORLD_IPC, type WorldApi } from "./worldApi";
 
 export const IPC = {
   worlds: {
@@ -234,6 +236,8 @@ export const IPC = {
     cancelLook: "create-drafts:cancel-look",
     discardLooks: "create-drafts:discard-looks",
   },
+  /** A world's shared history (rev 6 phase 3, D11): `main/histories/ipc.ts`. */
+  world: WORLD_IPC,
 } as const;
 
 export interface CreateWorldInput {
@@ -395,7 +399,7 @@ export interface SeedApi {
     /** Writes a `.spire-backup` (instance + active save, never cartridge content). */
     exportBackup(instanceId: string): Promise<Result<SeedExport>>;
     /** Restores a `.spire-backup`; fails with `cartridge-missing` unless the exact revision is installed. */
-    importBackup(): Promise<Result<ResolvedInstance>>;
+    importBackup(): Promise<Result<RestoredInstance>>;
     /** Every witnessed chunk and the lore graph of the active save. */
     readLand(instanceId: string): Promise<Result<LandRecord>>;
     /** Writes one chunk once; `chunk-already-witnessed` if somebody got there first. */
@@ -581,4 +585,6 @@ export interface SeedApi {
     /** Deletes every picture of the draft but `keep`. */
     discardLooks(draftId: string, keep: string[]): Promise<Result<void>>;
   };
+  /** A world's shared history: migrate, read, append, claim, share (rev 6 phase 3, D11). */
+  world: WorldApi;
 }

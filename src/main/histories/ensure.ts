@@ -287,6 +287,8 @@ export function ensureWorld(
       const status = await core.status(world, key);
       if (key.ok && roleOf(world.now, key.value.author) === "visitor") status.error ??= NOT_MEMBER;
       const finalPin = await readWorldPin(saveDir);
+      const progress = await readProgress(saveDir, worldId);
+      if (!progress.ok) return progress;
       return ok({
         worldId,
         migrated: outcome.migrated,
@@ -296,6 +298,7 @@ export function ensureWorld(
         adjusted: outcome.adjusted,
         lost: outcome.lost,
         status,
+        progress: progress.value,
       });
     });
   });

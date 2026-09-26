@@ -28,6 +28,8 @@ import {
 } from "./migrateRun";
 
 const CLEARED = "cleared chapter ";
+/** What builds before land chapters wrote for an episode played as an AI work (Rule 13). */
+const CLEARED_EPISODE = "cleared episode ";
 const CROSSED = "crossed ";
 const FINISHED = "finished ";
 
@@ -109,8 +111,9 @@ function deedOfLine(
   line: KarmaEntry,
 ): { what: DeedBody["what"]; ref: string | null } | null {
   const here = (coord: ChunkCoord): boolean => line.cx === undefined || onChunk(line, coord);
-  if (line.action === "witness" && line.choice.startsWith(CLEARED)) {
-    const title = line.choice.slice(CLEARED.length);
+  const cleared = [CLEARED, CLEARED_EPISODE].find((prefix) => line.choice.startsWith(prefix));
+  if (line.action === "witness" && cleared !== undefined) {
+    const title = line.choice.slice(cleared.length);
     const episode = storyOf(run).episodes.find((one) => one.title === title && here(one));
     const ref = episode === undefined ? null : (run.chapters.get(episode.id) ?? null);
     return { what: "chapter.cleared", ref };

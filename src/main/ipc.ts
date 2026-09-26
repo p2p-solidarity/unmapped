@@ -13,6 +13,7 @@ import { registerChainIpc } from "./chain/ipc";
 import { registerMarketIpc } from "./chain/marketIpc";
 import type { MainContext } from "./context";
 import { registerGameIpc } from "./game/base";
+import { registerWorldIpc } from "./histories/ipc";
 import { registerInferenceIpc } from "./inference/ipc";
 import { registerInstancesIpc } from "./instances/ipc";
 import { registerModsIpc } from "./mods/ipc";
@@ -42,4 +43,5 @@ export function registerIpc(ctx: MainContext): void {
   registerMarketIpc(ctx);
   registerCreateDraftsIpc(ctx);
   registerUsageIpc(ctx);
+  registerWorldIpc(ctx);
 }

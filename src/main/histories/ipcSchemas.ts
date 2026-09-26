@@ -3,9 +3,11 @@
 // schemas the history reads events with). Each is a tuple of the handler's arguments, so arity is
 // checked too (`handle`, main/handle.ts).
 
+import type { ContentHash } from "@shared/cartridge";
 import { BODY_SCHEMAS, isOneLine, isServiceUrl } from "@shared/history/bodies";
-import { EVENT_ID } from "@shared/history/ids";
+import { AUTHOR_KEY, CONTENT_HASH, EVENT_ID, NONCE } from "@shared/history/ids";
 import { ACCESS_POLICIES } from "@shared/history/types";
+import { WORK_ID, type WorkRef } from "@shared/works";
 import { DRAFT_KINDS, type StreamFrame, type WorldDraft } from "@shared/worldApi";
 import {
   type ClaimTarget,
@@ -50,6 +52,15 @@ export const streamFrameSchema: z.ZodType<StreamFrame> = z.strictObject({
 
 const serviceUrl = z.string().max(200).refine(isServiceUrl, "must be wss://, or ws:// on loopback");
 
+const workRef: z.ZodType<WorkRef> = z.strictObject({
+  workId: z.string().regex(WORK_ID),
+  version: z.string().regex(/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/),
+  contentHash: z.custom<ContentHash>(
+    (value) => typeof value === "string" && CONTENT_HASH.test(value),
+    "must be an algorithm-tagged SHA-256 hash",
+  ),
+});
+
 export const worldIpcSchemas = {
   ensure: z.tuple([instanceId, displayName]),
   read: z.tuple([worldId]),
@@ -74,4 +85,18 @@ export const worldIpcSchemas = {
     z.tuple([z.string().min(1).max(8000), displayName]),
     z.tuple([z.string().min(1).max(8000), displayName, instanceId]),
   ]),
+  revoke: z.tuple([worldId, z.string().regex(NONCE)]),
+  removeMember: z.tuple([worldId, z.string().regex(AUTHOR_KEY)]),
+  preview: z.tuple([z.string().min(1).max(8000)]),
+  badges: z.tuple([]),
+  probe: z.tuple([serviceUrl]),
+  door: z.tuple([worldId]),
+  packWork: z.tuple([worldId, workRef]),
+  receivedWorks: z.tuple([]),
+  // Co-owners and the chain opt-in (phase 4, D5, D6): a device's author key, a yes or no, and
+  // only the world id for the chain's answer (main reads its own chain config, Rule 6).
+  addOwner: z.tuple([worldId, z.string().regex(AUTHOR_KEY)]),
+  removeOwner: z.tuple([worldId, z.string().regex(AUTHOR_KEY)]),
+  setChainRecording: z.tuple([worldId, z.boolean()]),
+  provenance: z.tuple([worldId]),
 } as const;

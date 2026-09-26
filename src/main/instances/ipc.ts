@@ -3,10 +3,12 @@ import { IPC, type SeedExport } from "@shared/ipc";
 import { LANGUAGE_TAG_PATTERN } from "@shared/language";
 import { err, fail, ok, type Result, toError } from "@shared/result";
 import { SEED_PATTERN } from "@shared/seedCode";
+import { worldProgressSchema } from "@shared/worldProgress";
 import { z } from "zod";
 import { readCartridgeRevision } from "../cartridges/store";
 import type { MainContext } from "../context";
 import { handle } from "../handle";
+import { historiesDir } from "../histories/paths";
 import { inventorySchema, karmaEntrySchema, worldFlagsSchema } from "../worlds/schemas";
 import { packInstanceBackup, restoreInstanceBackup, unpackInstanceBackup } from "./backup";
 import { chooseBackupSource, chooseBackupTarget } from "./backupDialog";
@@ -46,6 +48,7 @@ const checkpointSchema = z
     karma: z.array(karmaEntrySchema).max(10_000),
     position: savedPositionSchema.optional(),
     land: landProgressSchema.optional(),
+    progress: worldProgressSchema.optional(),
   })
   .strict();
 const upgradeSchema = z
@@ -54,7 +57,12 @@ const upgradeSchema = z
 const CANCEL_HINT = "Choose a file to continue, or pick the action again when you are ready.";
 
 async function exportBackup(ctx: MainContext, instanceId: string): Promise<Result<SeedExport>> {
-  const packed = await packInstanceBackup(ctx.instancesDir, instanceId, ctx.cartridgesDir);
+  const packed = await packInstanceBackup(
+    ctx.instancesDir,
+    instanceId,
+    ctx.cartridgesDir,
+    historiesDir(ctx.userData),
+  );
   if (!packed.ok) return packed;
   const target = await chooseBackupTarget(`${instanceId}.spire-backup`);
   if (target === null) return err("cancelled", "Export cancelled", CANCEL_HINT);
@@ -84,7 +92,13 @@ async function importBackup(ctx: MainContext) {
   }
   const unpacked = await unpackInstanceBackup(new Uint8Array(bytes), ctx.cartridgesDir);
   if (!unpacked.ok) return unpacked;
-  return restoreInstanceBackup(ctx.cartridgesDir, ctx.instancesDir, unpacked.value);
+  return restoreInstanceBackup(
+    ctx.cartridgesDir,
+    ctx.instancesDir,
+    unpacked.value,
+    new Date(),
+    historiesDir(ctx.userData),
+  );
 }
 
 export function registerInstancesIpc(ctx: MainContext): void {

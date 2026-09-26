@@ -5,8 +5,10 @@
 //
 //   instance.json
 //   saves/<saveId>/{save.json, karma.jsonl, lore.jsonl, notes.jsonl}
+//   saves/<saveId>/{world.json, progress.json}             (a save that plays in a world, D6)
 //   saves/<saveId>/chunks/<cx>_<cz>/{scene.oui, errands.oui}
 //   saves/<saveId>/chunks/<cx>_<cz>/dialogue/<npcId>.oui
+//   history/{log.jsonl, outbox.jsonl}                     (that world's history, D6 "Backups")
 //
 // plus the directory entries for those paths, which some zip tools add.
 
@@ -34,6 +36,10 @@ export const BACKUP_LIMITS = {
     scene: 256 * KIB,
     errands: 64 * KIB,
     dialogue: 64 * KIB,
+    pin: 4 * MIB,
+    progress: 4 * MIB,
+    log: 128 * MIB,
+    outbox: 16 * MIB,
   },
 } as const;
 
@@ -47,8 +53,17 @@ export const SHAPE_HINT =
 const SAVE = "([a-z0-9][a-z0-9-]{0,63})";
 const COORD = "(-?[0-9]{1,5})";
 const SAVE_FILE = new RegExp(
-  `^saves/${SAVE}/(save\\.json|karma\\.jsonl|lore\\.jsonl|notes\\.jsonl)$`,
+  `^saves/${SAVE}/(save\\.json|karma\\.jsonl|lore\\.jsonl|notes\\.jsonl|world\\.json|progress\\.json)$`,
 );
+const HISTORY_FILE = /^history\/(log|outbox)\.jsonl$/;
+const SAVE_FILE_KIND = {
+  save: "save",
+  karma: "karma",
+  lore: "lore",
+  notes: "notes",
+  world: "pin",
+  progress: "progress",
+} as const;
 const CHUNK_FILE = new RegExp(`^saves/${SAVE}/chunks/${COORD}_${COORD}/(scene|errands)\\.oui$`);
 const DIALOGUE_FILE = new RegExp(
   `^saves/${SAVE}/chunks/${COORD}_${COORD}/dialogue/([a-z][a-z0-9_]{0,31})\\.oui$`,
@@ -72,12 +87,17 @@ export interface SaveFiles {
   karma?: string;
   lore?: string;
   notes?: string;
+  /** `world.json` and `progress.json` (rev 6 phase 3). */
+  pin?: string;
+  progress?: string;
   /** Keyed `${cx}_${cz}`, canonical integers only. */
   chunks: Map<string, ChunkFiles>;
 }
 
 export interface BackupFiles {
   instance: string | null;
+  /** The save's world history (`history/log.jsonl`, `history/outbox.jsonl`), when it has one. */
+  history: { log?: string; outbox?: string };
   /** Every save id an entry or a directory names; only the active one may appear. */
   saves: Map<string, SaveFiles>;
 }
@@ -90,13 +110,19 @@ function coord(text: string): number | null {
 
 type Entry =
   | { kind: "instance" }
+  | { kind: "history"; file: "log" | "outbox" }
   | { kind: "directory"; saveId: string | null; chunk: [string, string] | null }
-  | { kind: "save-file"; saveId: string; file: "save" | "karma" | "lore" | "notes" }
+  | { kind: "save-file"; saveId: string; file: SaveFileKind }
   | { kind: "chunk-file"; saveId: string; cx: string; cz: string; file: "scene" | "errands" }
   | { kind: "dialogue"; saveId: string; cx: string; cz: string; npcId: string };
 
+type SaveFileKind = (typeof SAVE_FILE_KIND)[keyof typeof SAVE_FILE_KIND];
+
 function classify(name: string): Entry | null {
   if (name === "instance.json") return { kind: "instance" };
+  if (name === "history/") return { kind: "directory", saveId: null, chunk: null };
+  const history = HISTORY_FILE.exec(name);
+  if (history?.[1] !== undefined) return { kind: "history", file: history[1] as "log" | "outbox" };
   const directory = DIRECTORY.exec(name);
   if (directory !== null) {
     const [, saveId, cx, cz] = directory;
@@ -108,8 +134,8 @@ function classify(name: string): Entry | null {
   }
   const saveFile = SAVE_FILE.exec(name);
   if (saveFile?.[1] !== undefined && saveFile[2] !== undefined) {
-    const file = saveFile[2].split(".")[0] as "save" | "karma" | "lore" | "notes";
-    return { kind: "save-file", saveId: saveFile[1], file };
+    const stem = saveFile[2].split(".")[0] as keyof typeof SAVE_FILE_KIND;
+    return { kind: "save-file", saveId: saveFile[1], file: SAVE_FILE_KIND[stem] };
   }
   const chunkFile = CHUNK_FILE.exec(name);
   if (chunkFile !== null) {
@@ -128,6 +154,8 @@ function kindOf(entry: Entry): FileKind | null {
   switch (entry.kind) {
     case "instance":
       return "instance";
+    case "history":
+      return entry.file;
     case "directory":
       return null;
     case "save-file":
@@ -257,7 +285,7 @@ function collect(
   entries: Map<string, Entry>,
   unzipped: Record<string, Uint8Array>,
 ): Result<BackupFiles> {
-  const out: BackupFiles = { instance: null, saves: new Map() };
+  const out: BackupFiles = { instance: null, history: {}, saves: new Map() };
   for (const [name, entry] of entries) {
     if (entry.kind === "directory") {
       if (entry.saveId === null) continue;
@@ -274,6 +302,10 @@ function collect(
     const text = strFromU8(raw);
     if (entry.kind === "instance") {
       out.instance = text;
+      continue;
+    }
+    if (entry.kind === "history") {
+      out.history[entry.file] = text;
       continue;
     }
     const slot = slotOf(out.saves, entry.saveId);

@@ -6,6 +6,7 @@
 import { randomBytes } from "node:crypto";
 import { inviteLink } from "@shared/history/access";
 import { base32, DAY_MS } from "@shared/history/ids";
+import { isOwner, OWNER_PATH_MAX, ownerPath } from "@shared/history/owners";
 import { authorKeyFor, newSecretKey } from "@shared/history/sign";
 import type { AccessPolicy } from "@shared/history/types";
 import { err, ok, type Result } from "@shared/result";
@@ -173,12 +174,20 @@ export class WorldHost {
     if (!key.ok) return key;
     const world = await this.world(worldId);
     if (!world.ok) return world;
-    if (world.value.owner !== key.value.author) {
-      return err(
-        "access-owner-only",
-        "Only the world's owner invites.",
-        "Do it from the device that made the world.",
-      );
+    // Any owner invites (phase 4, D5); a co-owner's link carries the path back to the maker (`&o=`).
+    const path = ownerPath(world.value.now, key.value.author);
+    if (path === null) {
+      return isOwner(world.value.now, key.value.author)
+        ? err(
+            "invite-owner-path-long",
+            `This device became a co-owner more than ${OWNER_PATH_MAX} steps from the world's maker.`,
+            "Ask an owner closer to the maker to send the invite.",
+          )
+        : err(
+            "access-owner-only",
+            "Only the world's owners invite.",
+            "Do it from the device that made the world, or a co-owner's.",
+          );
     }
     const svc = world.value.link?.url;
     if (svc === undefined) {
@@ -200,7 +209,7 @@ export class WorldHost {
       exp,
       uses: options.uses,
     });
-    return ok({ link: inviteLink(invite, secret), exp, uses: options.uses });
+    return ok({ link: inviteLink(invite, secret, path), exp, uses: options.uses });
   }
 
   dismissRefused(worldId: string, id: string): Promise<Result<void>> {

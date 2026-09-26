@@ -6,6 +6,27 @@
 
 export { DEFAULT_RULES_SOURCE } from "./defaultRules";
 export { sceneGrammar } from "./grammar";
+export { type MigrationPlan, planMigration } from "./history/migrate";
+export {
+  type Adjusted as MigrationAdjusted,
+  type LegacySources,
+  legacyOnlyChunks,
+  type MigrationFiles,
+  type Skipped as MigrationSkipped,
+  type SourceDigest,
+  sameSource,
+  sourceDigest,
+} from "./history/migrateSource";
+// Rev 6 phase 3 (WP2): stored programs checked as history events, verdicts, migration planning
+// and the Rumors dialect.
+export {
+  type EventBodyOf,
+  validateEventBody,
+  validateWitness,
+  type WitnessPrograms,
+  witnessIndexOf,
+} from "./history/validate";
+export { entryVerdict, pendingEvents, verdictEntries } from "./history/verdict";
 export { hygieneIssues } from "./hygiene";
 export {
   chapterLibrary,
@@ -54,6 +75,13 @@ export { type ErrandLand, parseErrands, readErrands } from "./parse/errand";
 export { parseItem, toItem } from "./parse/item";
 export { type PlaceContext, type PlaceDraft, parsePlace } from "./parse/place";
 export { parseRules } from "./parse/rules";
+export {
+  normalRumorText,
+  parseRumors,
+  type RumorContext,
+  type RumorDraft,
+  serializeRumors,
+} from "./parse/rumor";
 export { parseScene, toSceneGraph } from "./parse/scene";
 export { ARCHETYPE_GUIDE } from "./prompts/archetypes";
 export { CHAPTER_EXAMPLE, type ChapterPromptContext, chapterPrompt } from "./prompts/chapter";
@@ -79,15 +107,25 @@ export {
   originPrompt,
 } from "./prompts/newWorld";
 export { PLACE_EXAMPLE } from "./prompts/place";
+export {
+  RUMOR_EXAMPLE,
+  type RumorFact,
+  type RumorPromptContext,
+  rumorFacts,
+  rumorPrompt,
+  SEASON_NAMES,
+} from "./prompts/rumor";
 export { SCENE_EXAMPLES, scenePrompt } from "./prompts/scene";
 export { repairPrompt } from "./repair";
 export { DIALOGUE_PROPS } from "./schemas/dialogue";
 export { ITEM_PROPS } from "./schemas/item";
 export { accentFor, ROLE_LOOK, type RoleLook } from "./schemas/looks";
+export { RUMOR_PROPS, rumorLibrary } from "./schemas/rumor";
 export { SCENE_PROPS, type SceneComponentName } from "./schemas/scene";
 export { serializeScene } from "./serialize";
 export { serializeDialogue } from "./serializeDialogue";
 export { serializeErrands } from "./serializeErrands";
+export { serializeItem } from "./serializeItem";
 export { serializeRules } from "./serializeRules";
 export type {
   ComponentSpec,

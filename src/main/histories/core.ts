@@ -135,6 +135,7 @@ export class HostCore {
       ignored: world.now.ignored.length,
       newer: newerCount(world.now),
       error: sync.error ?? keyError ?? (refused.ok ? null : refused.error),
+      me: device.ok ? device.value.author : null,
     };
   }
 

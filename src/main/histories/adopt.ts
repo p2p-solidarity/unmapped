@@ -5,7 +5,9 @@
 // anchors and contests, `supersedes`, deed refs, a chapter's `more`, a take's gift, a hide's target)
 // follow the old → new map, and `seen` follows the renumbering. Beats and rumors are not carried
 // (a beat's fingerprint binds the old chain; the next beat recomputes), nor is anything that needs
-// a service (sequencer, joins, removals, revocations). The old history directory is never touched.
+// a service (sequencer, joins, removals, revocations). Nor are co-owners and the chain opt-in
+// (phase 4 D1, D5): the adopter starts as the only owner with provenance off, and the notice lists
+// what stayed behind. The old history directory is never touched.
 //
 // The same rebase serves a catch-up whose plan names another genesis than the save's world (an
 // adopted world, or a world whose genesis inputs changed): planned events are rebased onto the
@@ -27,6 +29,9 @@ import type { Skipped } from "@shared/worldApi";
 import type { DeviceKey } from "../identity/deviceKey";
 import { skippedOf, type VerdictOf } from "./loaded";
 
+/** Who owns the old world and whether it was recorded on chain: never the adopted world's. */
+const OWNERS_KINDS: ReadonlySet<string> = new Set(["owner.add", "owner.remove", "chain"]);
+
 /** Kinds an adoption or a rebase never carries. */
 const NOT_CARRIED: ReadonlySet<string> = new Set([
   "genesis",
@@ -36,6 +41,7 @@ const NOT_CARRIED: ReadonlySet<string> = new Set([
   "member.join",
   "member.remove",
   "invite.revoke",
+  ...OWNERS_KINDS,
 ]);
 
 type IdMap = Map<string, string>;
@@ -187,8 +193,14 @@ export function adoptLog(
       } else {
         dropped.push(skippedOf(read.value, refused.code, `Not carried over: ${refused.code}.`));
       }
+    } else if (read.ok && read.value.kind === "beat") {
+      // The old world's own reckoning: the new world keeps its own beats, so nothing is lost here
+      // and nothing is listed (the skipped list shows content only).
     } else if (read.ok) {
-      dropped.push(skippedOf(read.value, "adopt-not-carried", "Written for the old world only."));
+      const why = OWNERS_KINDS.has(read.value.kind)
+        ? "Co-owners and the chain opt-in stay with the old world; this device is the only owner."
+        : "Written for the old world only.";
+      dropped.push(skippedOf(read.value, "adopt-not-carried", why));
     } else {
       dropped.push(skippedOf(entry.event, read.error.code, read.error.message));
     }

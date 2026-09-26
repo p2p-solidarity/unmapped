@@ -7,19 +7,27 @@
 //
 // The outbox is (re)submitted whenever the world opens and whenever an event is queued; a duplicate
 // submit is harmless (ids are content addresses). A `rejected` own event moves from the outbox to
-// refused.jsonl, where it stays listed until the player dismisses it.
+// refused.jsonl, where it stays listed until the player dismisses it. Every time the world comes
+// online, the packs this device announced and the service has not confirmed go up (./workPacks).
 
 import { verifyLog } from "@shared/history/log";
+import { ownershipOf } from "@shared/history/owners";
 import type { StoredEvent } from "@shared/history/types";
 import { PHYSICS_SUPPORTED } from "@shared/physics";
 import { type AppError, err, ok, type Result } from "@shared/result";
-import { WORLD_IPC, type WorldPresenceEvent, type WorldStreamEvent } from "@shared/worldApi";
+import {
+  type LinkState,
+  WORLD_IPC,
+  type WorldPresenceEvent,
+  type WorldStreamEvent,
+} from "@shared/worldApi";
 import { type FromService, WORLD_PROTOCOL } from "@shared/worldProtocol";
 import type { HostCore } from "./core";
 import { appendVerified, type LoadedWorld } from "./loaded";
 import { appendRefused, writeLink, writeOutbox } from "./logStore";
 import { receiveWorks } from "./receive";
 import { framesOf, SUBMIT_BATCH } from "./sync";
+import { uploadOwnPacks } from "./workPacks";
 
 const DIVERGED_HINT =
   "Sync with this service stopped so nothing merges silently. Keep playing here; ask the world's owner which history is right.";
@@ -28,12 +36,19 @@ function urlOf(world: LoadedWorld): string | null {
   return world.link?.url ?? world.now.sequencer?.url ?? null;
 }
 
-/** Starts syncing `world` (it must be attached): wants its socket and opens it once ready. */
+/**
+ * Starts syncing `world` (it must be attached): wants its socket and opens it once ready. A world
+ * already open or opening on that socket is left alone — every `read` calls this, and opening again
+ * would flip an online link back to "connecting" (a claim then answers `claim-offline`) and spend
+ * the connection's frame budget.
+ */
 export function startSync(core: HostCore, world: LoadedWorld): void {
   const url = urlOf(world);
   if (url === null || world.link?.diverged != null) return;
-  if (!core.sync.has(world.id)) core.setSync(world.id, { url, link: "connecting", error: null });
+  const info = core.sync.get(world.id);
   core.hub.want(url, world.id);
+  if (info?.url === url && (info.link === "online" || info.link === "connecting")) return;
+  if (info === undefined) core.setSync(world.id, { url, link: "connecting", error: null });
   if (core.hub.state(url) === "ready") sendOpen(core, world);
 }
 
@@ -113,9 +128,13 @@ async function onOpened(
     );
     return;
   }
-  core.setSync(world.id, { url: urlOf(world) ?? "", link: "online", error: null });
+  const url = urlOf(world) ?? "";
+  core.setSync(world.id, { url, link: "online", error: null });
   await core.emitStatus(world);
   submit(core, world);
+  // Packs this device announced while offline (an otherworld placed, a cartridge pack that failed
+  // at attach) go up now; in the background, so the world's lock is not held for the upload.
+  if (url !== "") void uploadOwnPacks(core, world, url);
 }
 
 async function onEntries(
@@ -134,9 +153,10 @@ async function onEntries(
     sendOpen(core, world);
     return;
   }
+  // Co-owners (phase 4, D5): the batch's sequencers count by who owns the world at the cursor.
   const check = verifyLog(world.id, fresh, {
     from: world.cursor,
-    owner: world.owner,
+    ownership: ownershipOf(world.now),
     schedule: world.schedule,
   });
   if (!check.ok) {
@@ -170,6 +190,29 @@ async function onRejected(
   await core.emitStatus(world);
 }
 
+/**
+ * Refusals that end this device's link to a world whatever state it is in: divergence, physics,
+ * a removal, a world or protocol the service does not have.
+ */
+const LINK_ENDING: ReadonlySet<string> = new Set([
+  "history-diverged",
+  "physics-newer",
+  "access-removed",
+  "world-unknown",
+  "protocol-unsupported",
+  "protocol-newer",
+]);
+
+/**
+ * Whether a `refused` frame ends the link. Before a world is open, a refusal is the door answering
+ * `open` (access, invites, quotas on open) and does. Once it is online, any other refusal is about
+ * one frame — a claim the door refused, a stream without its lease (`stream-no-lease`,
+ * `lease-expired`), a presence or stream quota — and the link stays up.
+ */
+export function refusalEndsLink(code: string, link: LinkState | undefined): boolean {
+  return LINK_ENDING.has(code) || link !== "online";
+}
+
 /** Every frame for a world this device syncs; frames for other worlds are ignored. */
 export async function onFrame(core: HostCore, url: string, frame: FromService): Promise<void> {
   if (frame.t === "challenge" || frame.t === "claimed") return;
@@ -178,7 +221,12 @@ export async function onFrame(core: HostCore, url: string, frame: FromService): 
       ([id, info]) => info.url === url && (frame.world === "" || id === frame.world),
     );
     for (const [id, info] of worlds) {
-      core.setSync(id, { ...info, link: "refused", error: frame.error });
+      const ends = refusalEndsLink(frame.error.code, info.link);
+      if (!ends) {
+        console.warn(`[world] ${id.slice(0, 12)}… refused one frame: ${frame.error.code}`);
+      }
+      // An advisory refusal is surfaced in the status's error; the link stays as it is.
+      core.setSync(id, { ...info, link: ends ? "refused" : info.link, error: frame.error });
       const world = core.worlds.get(id);
       if (world !== undefined) await core.emitStatus(world);
     }

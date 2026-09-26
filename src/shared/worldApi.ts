@@ -3,6 +3,7 @@
 // wiring adds `world: WORLD_IPC` to `IPC` and `world: WorldApi` to `SeedApi` (src/shared/ipc.ts).
 // Every payload is zod-checked in main (`main/histories/ipcSchemas.ts`).
 
+import type { ContentHash } from "./cartridge";
 import type {
   AccessPolicy,
   EventDraft,
@@ -12,7 +13,10 @@ import type {
   StoredEvent,
   VerdictEntry,
 } from "./history/types";
+import type { ProvenanceReport } from "./provenance";
 import type { AppError, Result } from "./result";
+import type { WorkRef } from "./works";
+import type { WorldProgress } from "./worldProgress";
 import type { ClaimStatus, ClaimTarget, Presence, StreamEnd } from "./worldProtocol";
 
 export const WORLD_IPC = {
@@ -30,6 +34,21 @@ export const WORLD_IPC = {
   hide: "world:hide",
   dismissRefused: "world:dismiss-refused",
   join: "world:join",
+  /** The door and the library (WP8): owner actions, a look before joining, badges, a probe. */
+  revoke: "world:revoke",
+  removeMember: "world:remove-member",
+  preview: "world:preview",
+  badges: "world:badges",
+  probe: "world:probe",
+  door: "world:door",
+  /** The land (WP5): the pack of an AI work an otherworld place announces (D10). */
+  packWork: "world:pack-work",
+  receivedWorks: "world:received-works",
+  /** Co-owners and the chain opt-in (phase 4, D5, D6): owner actions, and the chain's answer. */
+  addOwner: "world:add-owner",
+  removeOwner: "world:remove-owner",
+  setChainRecording: "world:set-chain-recording",
+  provenance: "world:provenance",
   /** Events main sends: new sequenced entries (with verdicts) and the current outbox. */
   entries: "world:entries",
   status: "world:status",
@@ -100,6 +119,8 @@ export interface WorldStatus {
   /** Entries from a newer build, kept and skipped (D18). */
   newer: number;
   error: AppError | null;
+  /** This device's author key (what "mine" means in the fold); null without a device key. */
+  me: string | null;
 }
 
 export interface RefusedEvent {
@@ -122,6 +143,8 @@ export interface WorldEnsured {
   /** Progress keys an adoption could not carry over (their events did not survive re-signing). */
   lost: string[];
   status: WorldStatus;
+  /** The save's `progress.json` as it stands after this call (merged, never regressed). */
+  progress: WorldProgress;
 }
 
 export interface WorldRead {
@@ -188,6 +211,127 @@ export interface WorldJoined {
   status: WorldStatus;
 }
 
+/**
+ * What an invite link leads to, read from its service before joining (D8): the world's history is
+ * fetched with the invite and verified, the invite checked against it, and nothing is written.
+ */
+export interface InvitePreview {
+  world: string;
+  /** The genesis name. */
+  name: string;
+  /** The genesis author's key, and the name the world knows them by (null: none yet). */
+  owner: string;
+  ownerName: string | null;
+  /** The service the invite names. */
+  service: string;
+  exp: string;
+  uses: number;
+  /** Uses left as the world's history counts them. */
+  left: number;
+  access: AccessPolicy;
+  members: number;
+  head: number;
+  /** This device's key already belongs to the world: joining only makes the save. */
+  member: boolean;
+  /**
+   * A save on this device already pinned to this world (restored from its owner's backup, D7):
+   * joining redeems the invite for that save instead of making a new one.
+   */
+  restored: { instanceId: string; name: string } | null;
+}
+
+/**
+ * Where a save's world lives, for the library: `local` (only this device sequences it), `shared`
+ * (a world this device owns or co-owns, on a service), `joined` (a world this device joined).
+ */
+export type WorldBadgeKind = "local" | "shared" | "joined";
+
+export interface WorldBadge {
+  instanceId: string;
+  worldId: string;
+  kind: WorldBadgeKind;
+  url: string | null;
+  owner: string;
+  ownerName: string | null;
+}
+
+/** A world service that answered on both halves of its address (Settings → Shared worlds). */
+export interface ServiceProbe {
+  url: string;
+  /** The key the service proved; equal on `/v1/health` and in its WebSocket challenge. */
+  key: string;
+  version: string;
+  protocol: number;
+  /** Physics versions it reproduces. */
+  physics: number[];
+  worlds: number;
+  test: boolean;
+  healthMs: number;
+  challengeMs: number;
+}
+
+/**
+ * One row of the door's people list. Rows are told apart by `kind`, so a later kind is one more
+ * member of the union and one more row renderer, not a new list. `owner` is the world's maker
+ * while it owns the world; `co-owner` is any other key that owns it now (phase 4, D5); a former
+ * owner that is not a member is listed as `removed`.
+ */
+export type DoorRowKind = "owner" | "co-owner" | "member" | "removed";
+
+export interface DoorPerson {
+  kind: DoorRowKind;
+  key: string;
+  /** The name the world knows the key by (joins and profiles, latest wins); null: none yet. */
+  name: string | null;
+  /**
+   * n of the `member.join` (member), the `owner.add` that made it an owner (co-owner), or the
+   * `member.remove` / `owner.remove` that ended it (removed); null for the maker.
+   */
+  n: number | null;
+  /** Still in this device's outbox (a join, an addition or a removal not yet sequenced). */
+  pending: boolean;
+  /** This device's own key. */
+  me: boolean;
+}
+
+export type IssuedInviteState = "open" | "used-up" | "expired" | "revoked";
+
+/**
+ * An invite this device made for a world, as the owner's device remembers it (never its secret:
+ * the link is shown once, when made) and as the world's history counts it.
+ */
+export interface IssuedInvite {
+  nonce: string;
+  exp: string;
+  uses: number;
+  /** Joins the history counts for it. */
+  used: number;
+  state: IssuedInviteState;
+  /** When this device made it. */
+  at: string;
+}
+
+/** What the world's door shows (D8): who is in, the policy, and the owner's invites. */
+export interface WorldDoor {
+  world: string;
+  /** The genesis name. */
+  name: string;
+  status: WorldStatus;
+  /** The door with this device's own unsent changes on top (`accessPending` while one waits). */
+  access: AccessPolicy;
+  accessPending: boolean;
+  owner: string;
+  people: DoorPerson[];
+  /** Made on this device, newest first; empty on a device that owns nothing here. */
+  invites: IssuedInvite[];
+  /**
+   * D6's opt-in with this device's unsent change on top: whether the owners asked the world's
+   * service to record its beats on chain (`recordingPending` while that change waits).
+   */
+  recording: boolean;
+  recordingPending: boolean;
+}
+
 export interface WorldApi {
   /** Migrates (once) or catches up the save's world, adopts a restored one; lazy and idempotent. */
   ensure(instanceId: string, name: string): Promise<Result<WorldEnsured>>;
@@ -210,6 +354,39 @@ export interface WorldApi {
    * body); `instanceId` reuses a save restored from the world's owner (else a new save is made).
    */
   join(link: string, name: string, instanceId?: string): Promise<Result<WorldJoined>>;
+  /** Owner: withdraws an invite by its nonce (an `invite.revoke`); later joins with it fail. */
+  revoke(worldId: string, nonce: string): Promise<Result<WorldAppended>>;
+  /** Owner: a `member.remove`; from its n the key neither reads nor writes, its past stays. */
+  removeMember(worldId: string, key: string): Promise<Result<WorldAppended>>;
+  /** Reads the world an invite link leads to without joining it. */
+  preview(link: string): Promise<Result<InvitePreview>>;
+  /** Every save on this device that has a world, and where that world lives. Never migrates. */
+  badges(): Promise<Result<WorldBadge[]>>;
+  /** `GET /v1/health` and the WebSocket challenge of a service, from main (no page talks to it). */
+  probe(url: string): Promise<Result<ServiceProbe>>;
+  /** The door of a world: its people, its policy and the invites this device made for it. */
+  door(worldId: string): Promise<Result<WorldDoor>>;
+  /**
+   * Packs one of this device's published AI works as the blob an otherworld place announces (its
+   * hash goes in the place body's `work.pack`); an attached world also gets the blob uploaded.
+   */
+  packWork(worldId: string, work: WorkRef): Promise<Result<ContentHash>>;
+  /** AI works that arrived with any shared world on this device (never this device's to place). */
+  receivedWorks(): Promise<Result<WorkRef[]>>;
+  /**
+   * Owner (phase 4, D5): makes `key` (another device's author key, "k…") a co-owner with an
+   * `owner.add`. Refused before anything is signed when this device owns nothing here.
+   */
+  addOwner(worldId: string, key: string): Promise<Result<WorldAppended>>;
+  /** Owner: ends `key`'s ownership (`owner.remove`); the last owner stays (`owner-last`). */
+  removeOwner(worldId: string, key: string): Promise<Result<WorldAppended>>;
+  /** Owner (D6): whether the world's service records its beats on a public chain (a `chain`). */
+  setChainRecording(worldId: string, record: boolean): Promise<Result<WorldAppended>>;
+  /**
+   * This device's copy of the world against what its services recorded on chain (read-only).
+   * `provenance-not-configured` when no chain is set up on this device: nothing is read then.
+   */
+  provenance(worldId: string): Promise<Result<ProvenanceReport>>;
   onEntries(listener: (event: WorldEntriesEvent) => void): () => void;
   onStatus(listener: (status: WorldStatus) => void): () => void;
   onPresence(listener: (event: WorldPresenceEvent) => void): () => void;

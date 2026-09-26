@@ -6,6 +6,9 @@
 //   <userData>/histories/<worldId>/link.json          sync state: service URL and pinned key
 //   <userData>/histories/<worldId>/snapshot.json      a fold cache (D4)
 //   <userData>/histories/<worldId>/received-works.json  AI worlds that arrived with this history
+//   <userData>/histories/<worldId>/uploaded-packs.json  packs this device's service confirmed holding
+//   <userData>/histories/<worldId>/issued-invites.jsonl  invites this owner device made (./issued;
+//                                                         only grows, never holds the `k=` secret)
 //   <userData>/histories/index.json                   genesis `from.instanceId` of every world
 //   <instances>/<instanceId>/saves/<saveId>/world.json + progress.json
 
@@ -20,6 +23,7 @@ export const REFUSED_FILE = "refused.jsonl";
 export const LINK_FILE = "link.json";
 export const SNAPSHOT_FILE = "snapshot.json";
 export const RECEIVED_WORKS_FILE = "received-works.json";
+export const UPLOADED_PACKS_FILE = "uploaded-packs.json";
 export const INDEX_FILE = "index.json";
 export const WORLD_PIN_FILE = "world.json";
 export const PROGRESS_FILE = "progress.json";

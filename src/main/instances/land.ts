@@ -18,7 +18,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { join } from "node:path";
-import { parseDialogue, parseErrands, parseScene } from "@dsl/index";
+import { validateWitness } from "@dsl/index";
 import {
   type AppendNoteInput,
   type LandNote,
@@ -184,80 +184,6 @@ export async function readLand(
   } catch (error) {
     return fail(toError(error, "land-read-failed"));
   }
-}
-
-/** Every rule a stored chunk obeys, checked against the graph it is joining. */
-export function validateWitness(
-  input: WitnessChunkInput,
-  graph: readonly LoreNode[],
-): Result<void> {
-  const scene = parseScene(input.scene);
-  if (!scene.ok)
-    return err("witness-scene-invalid", scene.error.message, "Witness the chunk again.");
-  // The origin chunk may also carry the words of the authored village's residents, who live in
-  // the cartridge scene rather than in this chunk's own Scene program.
-  const origin = input.cx === 0 && input.cz === 0;
-  const npcIds = scene.value.npcs.map((npc) => npc.id);
-  const keys = Object.keys(input.dialogues);
-  const missing = npcIds.some((id) => !keys.includes(id));
-  const extra = keys.some((key) => !npcIds.includes(key));
-  if (missing || (extra && !origin)) {
-    return err(
-      "witness-dialogue-mismatch",
-      "Every resident needs exactly its own dialogue.",
-      "Witness the chunk again.",
-    );
-  }
-  for (const [npcId, source] of Object.entries(input.dialogues)) {
-    const dialogue = parseDialogue(source);
-    if (!dialogue.ok || dialogue.value.npcId !== npcId) {
-      return err(
-        "witness-dialogue-invalid",
-        `The dialogue for ${npcId} does not parse as its own.`,
-        "Witness the chunk again.",
-      );
-    }
-  }
-  const known = new Set(graph.map((node) => node.id));
-  for (const node of input.lore) {
-    if (node.coord.cx !== input.cx || node.coord.cz !== input.cz || known.has(node.id)) {
-      return err(
-        "witness-lore-invalid",
-        `Lore ${node.id} is misplaced or already exists.`,
-        "Witness the chunk again.",
-      );
-    }
-    known.add(node.id);
-  }
-  if (input.errands !== undefined) {
-    const errands = parseErrands(input.errands);
-    if (!errands.ok) {
-      return err("witness-errands-invalid", errands.error.message, "Witness the chunk again.");
-    }
-    for (const errand of errands.value.errands) {
-      const asker = npcIds.includes(errand.giver) || (origin && keys.includes(errand.giver));
-      const placed = errand.place === null || known.has(errand.place);
-      const rewarded = errands.value.keepsakes.some((item) => item.id === errand.reward);
-      if (!asker || !placed || !rewarded) {
-        return err(
-          "witness-errands-invalid",
-          `Errand ${errand.id} names someone, somewhere or a keepsake that does not exist.`,
-          "Witness the chunk again.",
-        );
-      }
-    }
-  }
-  for (const node of input.lore) {
-    const dangling = node.links.find((link) => !known.has(link));
-    if (dangling !== undefined) {
-      return err(
-        "witness-lore-invalid",
-        `Lore ${node.id} links to unknown ${dangling}.`,
-        "Witness the chunk again.",
-      );
-    }
-  }
-  return ok(undefined);
 }
 
 export async function witnessChunk(
