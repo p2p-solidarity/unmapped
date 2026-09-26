@@ -1,0 +1,127 @@
+LINEAGE AUCTION HOUSE
+UNMAPPED · worlds under unmapped.eth
+WORLD
+aether-land.unmapped.eth
+misty-harbor.unmapped.eth
+lantern-quay.aether-land.unmapped.eth
+Sepolia · block 11786020
+aether-land.unmapped.eth
+GRADUATED · POOL OPEN
+
+$AETHERLAND 0xA801…dBb6 · holder 0x8eEC…51C3 · priced in $USDC
+
+CLEARING PRICE
+0.01864
+USDC per AETHERLAND
+
+Bids have pushed the price 86% above the 0.009999 floor. Every filled bid pays this one price.
+
+TIME LEFT
+ended
+ended at block 11781522
+RAISED
+9,025 USDC
+enough to graduate
+SOLD SO FAR
+100.0%
+500,000 of 500,000 AETHERLAND
+BIDS
+4
+4 settled
+Price discovery, block by block
+
+clearing price
+floor
+bid (height = amount)
+now
+
+0
+0.00582
+0.0116
+0.0175
+0.0233
+bids
+block 11781472
+block 11781497
+block 11781522
+Bids
+
+Every bid is signed by a passkey and carried on chain by a relayer that only pays gas.
+
+#	BIDDER	AMOUNT	MAX PRICE	BLOCK	STATE
+3	0x0E50…5c07 PASSKEY	25 USDC	0.05	11781489	CLAIMED 1,341
+2	0x8930…7e3A PASSKEY	2,000 USDC	0.05	11781479	CLAIMED 107,412
+1	0x32D4…3869 PASSKEY	3,000 USDC	0.05	11781476	CLAIMED 164,450
+0	0xd8E8…c344 PASSKEY	4,000 USDC	0.05	11781474	CLAIMED 226,797
+How the auction clears
+Supply is released every block. The world's auction sells an equal slice of its tokens in each of its blocks — no one can buy it all in the first second.
+Bids say “up to this price”. A bid is an amount of currency and a ceiling. Each block, the clearing price is the lowest price at which demand meets that block's supply.
+Everyone pays the same price. Bids above the clearing price are filled at the clearing price, never at their ceiling; the difference is refunded when the bid exits.
+Graduation opens a Uniswap v4 pool. When the auction ends having raised enough, Uniswap's LBPStrategy opens a pool at the discovered price, paired with the parent world's token, under the lineage hook that pays royalties up the family line.
+Bid without a wallet
+
+In the UNMAPPED app: Worlds → Market, pick the world, enter an amount and approve Touch ID. The app turns the signature into a relayed transaction; the player never holds ETH or connects a wallet.
+
+After the auction
+POOL PRICE
+0.01872 USDC/AETHERLAND
+UNISWAP V4
+fee 0.30% · hook 0x59FA…a044 (1% royalty, 50/30/20 up the line)
+ROYALTIES OWED
+0 AETHERLAND + 0 USDC → paid to 0x8eEC…51C3, the ENS holder
+POOL ID
+0x8031a4ce4ed2c5b7…
+Family tree
+
+ENSv2 names under unmapped.eth — cartridges, the remixes that hang under them and players' saves (held by their passkey accounts). A world on the market trades against its parent's token.
+
+└ 
+aether-land.unmapped.eth
+MARKET
+  └ 
+moss-hollow.aether-land.unmapped.eth
+CARTRIDGE
+  └ 
+kidney-run.aether-land.unmapped.eth
+SAVE
+0 chapters cleared · 1 deed · v1.3.0
+  └ 
+first-light.aether-land.unmapped.eth
+SAVE
+0 chapters cleared · 1 deed · v1.3.0
+  └ 
+lantern-quay.aether-land.unmapped.eth
+MARKET
+  └ 
+kidney-mui0pchb.aether-land.unmapped.eth
+SAVE
+2 chapters cleared · 17 deeds · v1.3.0
+└ 
+misty-harbor.unmapped.eth
+MARKET
+  └ 
+my-save.misty-harbor.unmapped.eth
+SAVE
+2 chapters cleared · 17 deeds · v1.0.0
+└ 
+players.unmapped.eth
+PLAYER NAMES
+  └ 
+kidney.players.unmapped.eth
+PLAYER
+On chain
+
+Everything on this page is read from Sepolia in your browser. Nothing here can sign or send.
+
+WORLD TOKEN
+0xA801C5067a0649c640AF21fa2334Cf822bb8dBb6
+CONTINUOUS CLEARING AUCTION
+0xAB2Df6CA3f3972b22D4980897aD12cd401a56203
+LINEAGEREGISTRY (ENSV2 REGISTRAR + LAUNCHER)
+0xda8051e3e2855C125AAd6050f97Ea64cf203dAf6
+LINEAGEHOOK (UNISWAP V4)
+0x59FA49D974B4564Eade17EDDC4a3CCf8D819a044
+LINEAGEROUTER
+0x2201fBDB7f17BD687d8965B9Dc2Ae000689039BE
+PASSKEYACCOUNTFACTORY
+0x7B8b8E17590cC85c315d459feD8fC9384C2c9bE5

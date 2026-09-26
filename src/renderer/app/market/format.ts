@@ -23,6 +23,8 @@ export function phaseLabel(t: Translate, phase: MarketPhase): string {
         ? "market.phasePool"
         : phase === "ended"
           ? "market.phaseEnded"
-          : "market.phaseSoon",
+          : phase === "failed"
+            ? "market.phaseFailed"
+            : "market.phaseSoon",
   );
 }

@@ -259,3 +259,113 @@ Addresses in every doc (`contracts/README.md`, `lineage-market.md`, `track-*`, `
 - App runs: `run.json`, `run-menus.json`, `run-door-a-settings.json`, `run-door-b-share.json`,
   `run-saves.json`. Screenshots `00`–`14` (app, 2880 × 1674 at scale 2) and `web-01`, `web-02`
   (1440 wide). Scratch paths are shown as `$SCR` / `<snap>`.
+
+## Fixes after the audit
+
+Same day, a later session. It fixes Found 1–3 and 6 and the last row of section 7. It was checked
+read-only, like the audit: nothing was signed and no transaction was sent. The app ran with no
+passkey linked, `UNWRITTEN_SIGN_BROWSER=none` and the OpenAI, gateway and operator keys blanked.
+The station was not called. The web view was served locally and **not deployed**: the page at
+`unmapped-auction…workers.dev` still has the old copy until someone runs `bun run web:deploy`.
+
+### What decides "failed", and where it is read
+
+- **Required raise.** CCA v2.1.0 (`7d7602d2`) keeps it in `REQUIRED_CURRENCY_RAISED_Q96X7`, an
+  internal immutable with no getter (`AuctionStorage.sol`). The factory
+  (`0x0000…63F8`, `ContinuousClearingAuctionFactory.create`) emits
+  `AuctionCreated(auction, token, amount, configData)`, where `configData` is `abi.encode` of the
+  AuctionParameters the auction was built from.
+  - The app, the demo script and the web view decode that log. It takes one `eth_getLogs` for
+    every world, filtered by the auction topic, and the value is kept per auction.
+  - It covers operator launches (`lineage:demo launch --required …`) as well as in-app ones.
+    `LAUNCH_TERMS` is not used.
+  - Decoded today: aether-land 10 USDC, misty-harbor 10 USDC, lantern-quay 10 AETHERLAND. These
+    equal the values `launches.out.txt` decoded from the launch transactions.
+- **Graduated.**
+  - `isGraduated()` is `$currencyRaisedQ96X7 >= REQUIRED…` (`ContinuousClearingAuction.sol`), and
+    it moves only at a checkpoint. Raised only grows, so a `true` stands.
+  - A `false` is final once `lastCheckpointedBlock() == endBlock()`, or when `nextBidId() == 0`.
+  - Otherwise the end checkpoint is simulated: `checkpoint()`, then `isGraduated()` and
+    `currencyRaised()`, in one `eth_simulateV1` call on the latest state
+    (`src/main/chain/auctionOutcome.ts`).
+- **What a failed auction allows.**
+  - `exitBid` after the end on a non-graduated auction is `_processExit(bid, 0, 0)`: the whole bid
+    comes back, and anyone may call it. That is the station's existing `exit` kind, which
+    simulates first and caps the gas at 400,000.
+  - `claimTokens` reverts with `NotGraduated`.
+  - `LineageRegistry.graduate` → `LBPStrategy.migrate` does **not** revert on a failed auction.
+    Its `tryMigrate` fails, the catch sends the 500,000 LP-reserve tokens to the owner, and it emits
+    `MigrationFailed`. The call works only once and no pool ever opens
+    (liquidity-launcher `873cbb23`, `LBPStrategy.sol`).
+  - So the app never sends `graduate` for a failed auction.
+
+### Changes
+
+| Finding | Fix | Files |
+| --- | --- | --- |
+| 1 · Market offers 結算拍賣 on a failed auction | New phase `failed` (「競標未達門檻」 / "Auction fell short" / 「オークション不成立」). The detail shows 「已募 0／門檻 10 AETHERLAND，共 0 筆出價」 and 「拍賣已結束，募得金額沒有達到門檻，所以不會轉入交易池：這個世界的 Uniswap 池不會開啟。」, with **no settle button**. If the viewing account has an open bid there, it shows the refund line and 「退還出價」. That runs the existing `market.settle` IPC, and `settleWorld` then exits every open bid through the station's `exit` and sends nothing else (`market-nothing-to-refund` if none is left). An exited bid on a failed world reads 「已退款」. Every phase except the pool shows "raised X of the required Y" | `src/main/chain/auctionOutcome.ts` (new), `market.ts`, `marketRelay.ts`, `lineageCalls.ts` (+`lastCheckpointedBlock`), `src/shared/market.ts`, `src/renderer/app/market/{WorldDetail.tsx,format.ts}`, `src/renderer/i18n/strings/{market,errors-market}.ts` |
+| 2 · Web view: opens on a failed auction, and its copy says the pool opens | It opens on the newest world whose pool is open, else the newest launch (`#name` still wins). A failed auction has the pill `FAILED · NO POOL`, the raised line "ended below the required raise of 10 …: it will not graduate", the price note "It ended at the … floor: demand never exceeded the supply each block released." and the After-the-auction line "The auction ended below its required raise, so it will not graduate and no pool will open. Every bid exits with a full refund." | `web/lineage-auction/public/{app.js,style.css}` |
+| 3 · `lineage:demo status` says "opens when the auction is settled" | It prints the required raise, "ended below the required raise: it will not graduate" and "pool: will never open (the auction failed; nobody bid)". It reads the end the same way as the app (`endedOutcome`) | `scripts/lineage-demo.ts` |
+| 6 · unused `land.friendDoorCode` | Removed. A grep of `src`, `tests` and `scripts` found no reader, dynamic or literal | `src/renderer/i18n/strings/land.ts` |
+| §7 last row · the explainer says nothing about WorldProvenance | One fact in the chain section (zh-TW, like the page). It says the contract records only the world id, the entry number and each beat's fingerprint, never content. The world service pays, and only when an owner turns on 「記錄節拍」. The app only reads it, at the door. It gives the address `0xF625ec3c228e3BCE34977C0b7e97BD591291Ef02` and a link to `milestone-rev6-p4-chain-live/result.md` | `docs/demo-flow/explainer.html` |
+
+`bun run lineage:demo settle` was left as it was. Run on a failed auction, it would still send
+`graduate`, which hands the LP reserve to the owner (see above).
+
+### Checks
+
+| Check | Observed | Verdict |
+| --- | --- | --- |
+| `bun run check` (working tree = origin/main `d494588` + this change) | typecheck (4 projects) clean; biome "Checked 1115 files … No fixes applied"; "ok: all source files are <= 600 lines"; vitest 165 files, 849 tests passed | pass |
+| `UNWRITTEN_PRIVATE_KEY= bun run lineage:demo status --dry-run` (`--dry-run` = `dryExec`, simulation only; `status` only reads) | aether-land "raised 9024.999999 of the required 10 USDC; enough to graduate", pool 0.018719; misty-harbor and lantern-quay "raised 0 of the required 10 …; ended below the required raise: it will not graduate" and "pool: will never open (the auction failed; nobody bid)" (`fix-lineage-demo-status.out.txt`) | pass |
+| `requiredRaises` + `endedOutcome` over all 10 auctions the CCA factory made since block 11,780,564, ours and other users' (`fix-outcome-probe.*`, latest 11,786,006) | Ours: aether-land graduated with its end checkpointed; misty-harbor and lantern-quay not graduated, 0 bids, final with no simulation, required 10,000,000 (6 dp) and 10e18. Another user's `0xF0ab…fF9a` ended not graduated with 2 bids and its end checkpointed: failed, read without simulation. **No ended auction is stale today**, so the simulated end did not meet a real ended auction | pass (simulated path: see next row) |
+| The simulated end call, on the one live factory auction (`0xFBEE…f2C2`, another user's; `fix-rpc-simulate.*`) | publicnode: ok in 244 ms (`checkpoint` success, `isGraduated` true, `currencyRaised` 36061). tenderly: "Request exceeds defined limit." drpc: "RPC Request failed." viem's fallback goes on to the next node, so only publicnode can answer it today (it is first in main's list unless `UNWRITTEN_ENS_RPC_URL` is set) | pass for publicnode |
+
+### App (snapshot of origin/main `d494588` + this change, CDP 9346, fresh userData, zh-TW then English)
+
+Replay: `run-fixes-market.json`, then `run-fixes-market-en.json`, against the same running app. Screenshots are 2880 × 1736.
+
+| Shot | Observed |
+| --- | --- |
+| `fix-00-market` | list: `aether-land.unmapped.eth 交易中 · 0.019 USDC/AETHERLAND`, `misty-harbor.unmapped.eth 競標未達門檻 · 0.01 USDC/MISTYHARBOR`, `lantern-quay.aether-land.unmapped.eth 競標未達門檻 · 0.1 AETHERLAND/LANTERNQUAY` |
+| `fix-01-market-aether-land` | unchanged: `交易中 · $AETHERLAND · 名字持有人 0x8eEC…51C3`, `Uniswap 池價 0.019 USDC／AETHERLAND`, `花費（USDC）`, `用 passkey 買入`, `沿著每一代祖先買入（USDC → aether-land）…` |
+| `fix-02-market-lantern-quay` | `競標未達門檻 · $LANTERNQUAY · 名字持有人 kidney.players.unmapped.eth (0xfBaB…8537)`, `成交價 0.1 AETHERLAND／LANTERNQUAY（底價 0.1）`, `已募 0／門檻 10 AETHERLAND，共 0 筆出價`, `拍賣已結束，募得金額沒有達到門檻，所以不會轉入交易池：這個世界的 Uniswap 池不會開啟。`; buttons in the world detail: none |
+| `fix-03-market-misty-harbor` | `競標未達門檻 · $MISTYHARBOR`, `成交價 0.01 USDC／MISTYHARBOR（底價 0.01）`, `已募 0／門檻 10 USDC，共 0 筆出價`, the same failed line; buttons in the world detail: none |
+| `fix-04-market-lantern-quay-en` | `Auction fell short · $LANTERNQUAY · Name held by kidney.players.unmapped.eth (0xfBaB…8537)`, `Raised 0 of the 10 AETHERLAND it needs, from 0 bids`, `The auction is over and did not raise what it needed, so it will not graduate: its Uniswap pool will not open.`; aether-land in English is still `Trading · … Uniswap pool price 0.019 USDC per AETHERLAND … Buy with passkey` (text only) |
+
+### Web view (web/lineage-auction/public served locally, chrome-headless-shell 153, CDP 9347)
+
+`python3 -m http.server 8811 --bind 127.0.0.1` in `web/lineage-auction/public`. The capture script is
+`chain-audit-web.ts.txt` unchanged, run with `CHROME_PORT=9347 WEB_URL=http://127.0.0.1:8811/<hash>`.
+Screenshots are 1440 wide.
+
+| Shot | Observed |
+| --- | --- |
+| `fix-web-01-default` (no hash, block 11,786,020) | opens on **aether-land.unmapped.eth · GRADUATED · POOL OPEN**, raised 9,025 USDC "enough to graduate", pool 0.01872 USDC/AETHERLAND. It picked this world after reading both failed worlds' pools (`getSlot0` on StateView ×5 in `fix-web-01-default-network.json`), plus one `eth_getLogs` on the CCA factory |
+| `fix-web-02-lantern-quay` (`/#lantern-quay`, block 11,786,022) | `FAILED · NO POOL`; raised "0 AETHERLAND / ended below the required raise of 10 AETHERLAND: it will not graduate"; "It ended at the 0.1 floor: demand never exceeded the supply each block released."; After the auction: "The auction ended below its required raise, so it will not graduate and no pool will open. Every bid exits with a full refund." |
+| `fix-web-03-misty-harbor` (`/#misty-harbor`, block 11,786,024) | the same, with "required raise of 10 USDC" |
+
+### Not verified
+
+- **The refund button and its flow.** No passkey account holds a bid on a failed auction, and
+  nothing could be signed or sent. It was not shown and not run. Its parts were read from the
+  source: CCA `exitBid`, the station's `exit` kind, and `settleWorld`'s refund path.
+- The simulated end checkpoint on a real ended auction (none is stale today; see Checks).
+- The ja strings were not shown on screen.
+- The explainer was not rendered. The change is one `<li>`.
+- The deployed web view (not deployed, see above).
+
+### Ports and shutdown
+
+The web view went first: http.server on 8811 and headless Chrome on 9347, both stopped before the
+app started. The app then used 8811 for its Vite renderer (`strictPort`) and 9346 for CDP. Electron
+was closed through CDP `Browser.close`, and `fix-main.log.txt` ends with "[quit] exit 0 148 ms after
+the request". Afterwards `lsof -iTCP:<port> -sTCP:LISTEN` found nothing on 9346, 9347 or 8811. The
+log's only other lines are the known `afm-bridge ENOENT` (Found 8) and Vite/React dev notices.
+
+### Files added
+
+`run-fixes-market.json`, `run-fixes-market-en.json`, `fix-00`…`fix-04` (app), `fix-web-01`…`03`
+(`.jpg`, `-text.txt`, `-network.json`), `fix-lineage-demo-status.out.txt`,
+`fix-outcome-probe.ts.txt` + `.out.txt`, `fix-rpc-simulate.ts.txt` + `.out.txt`,
+`fix-main.log.txt`.

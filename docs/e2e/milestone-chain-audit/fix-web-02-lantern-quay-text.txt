@@ -1,0 +1,119 @@
+LINEAGE AUCTION HOUSE
+UNMAPPED · worlds under unmapped.eth
+WORLD
+aether-land.unmapped.eth
+misty-harbor.unmapped.eth
+lantern-quay.aether-land.unmapped.eth
+Sepolia · block 11786022
+lantern-quay.aether-land.unmapped.eth
+FAILED · NO POOL
+
+$LANTERNQUAY 0x42eb…031d · holder 0xfBaB…8537 · priced in $AETHERLAND
+
+CLEARING PRICE
+0.1
+AETHERLAND per LANTERNQUAY
+
+It ended at the 0.1 floor: demand never exceeded the supply each block released.
+
+TIME LEFT
+ended
+ended at block 11783902
+RAISED
+0 AETHERLAND
+ended below the required raise of 10 AETHERLAND: it will not graduate
+SOLD SO FAR
+0.0%
+0 of 500,000 LANTERNQUAY
+BIDS
+0
+0 settled
+Price discovery, block by block
+
+clearing price
+floor
+bid (height = amount)
+now
+
+0
+0.04
+0.08
+0.12
+0.16
+bids
+block 11783802
+block 11783852
+block 11783902
+Bids
+
+Every bid is signed by a passkey and carried on chain by a relayer that only pays gas.
+
+#	BIDDER	AMOUNT	MAX PRICE	BLOCK	STATE
+No bids yet.
+How the auction clears
+Supply is released every block. The world's auction sells an equal slice of its tokens in each of its blocks — no one can buy it all in the first second.
+Bids say “up to this price”. A bid is an amount of currency and a ceiling. Each block, the clearing price is the lowest price at which demand meets that block's supply.
+Everyone pays the same price. Bids above the clearing price are filled at the clearing price, never at their ceiling; the difference is refunded when the bid exits.
+Graduation opens a Uniswap v4 pool. When the auction ends having raised enough, Uniswap's LBPStrategy opens a pool at the discovered price, paired with the parent world's token, under the lineage hook that pays royalties up the family line.
+Bid without a wallet
+
+In the UNMAPPED app: Worlds → Market, pick the world, enter an amount and approve Touch ID. The app turns the signature into a relayed transaction; the player never holds ETH or connects a wallet.
+
+After the auction
+
+The auction ended below its required raise, so it will not graduate and no pool will open. Every bid exits with a full refund.
+
+Family tree
+
+ENSv2 names under unmapped.eth — cartridges, the remixes that hang under them and players' saves (held by their passkey accounts). A world on the market trades against its parent's token.
+
+└ 
+aether-land.unmapped.eth
+MARKET
+  └ 
+moss-hollow.aether-land.unmapped.eth
+CARTRIDGE
+  └ 
+kidney-run.aether-land.unmapped.eth
+SAVE
+0 chapters cleared · 1 deed · v1.3.0
+  └ 
+first-light.aether-land.unmapped.eth
+SAVE
+0 chapters cleared · 1 deed · v1.3.0
+  └ 
+lantern-quay.aether-land.unmapped.eth
+MARKET
+  └ 
+kidney-mui0pchb.aether-land.unmapped.eth
+SAVE
+2 chapters cleared · 17 deeds · v1.3.0
+└ 
+misty-harbor.unmapped.eth
+MARKET
+  └ 
+my-save.misty-harbor.unmapped.eth
+SAVE
+2 chapters cleared · 17 deeds · v1.0.0
+└ 
+players.unmapped.eth
+PLAYER NAMES
+  └ 
+kidney.players.unmapped.eth
+PLAYER
+On chain
+
+Everything on this page is read from Sepolia in your browser. Nothing here can sign or send.
+
+WORLD TOKEN
+0x42ebe333Ab23158bDb2d8757e542dA3D73CC031d
+CONTINUOUS CLEARING AUCTION
+0x5532370EE47a34CE263E0C4382FfF4C412B8a01f
+LINEAGEREGISTRY (ENSV2 REGISTRAR + LAUNCHER)
+0xda8051e3e2855C125AAd6050f97Ea64cf203dAf6
+LINEAGEHOOK (UNISWAP V4)
+0x59FA49D974B4564Eade17EDDC4a3CCf8D819a044
+LINEAGEROUTER
+0x2201fBDB7f17BD687d8965B9Dc2Ae000689039BE
+PASSKEYACCOUNTFACTORY
+0x7B8b8E17590cC85c315d459feD8fC9384C2c9bE5

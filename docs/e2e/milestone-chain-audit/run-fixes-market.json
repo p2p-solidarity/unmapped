@@ -1,0 +1,28 @@
+{
+  "part": "fixes after the audit — Worlds → Market on live Sepolia (fresh userData, system language zh-TW, no passkey linked; nothing signed or sent): the list, then aether-land (pool), lantern-quay and misty-harbor (failed below the required raise)",
+  "env": "snapshot of origin/main d494588 + this change (git archive; node_modules and .env symlinked; renderer cacheDir .vite-cache, server port 8811 strictPort). cd $SCR/snap && env -u SERVICE_CHAIN_KEY -u SERVICE_CHAIN_ID -u SERVICE_CHAIN_RPC_URL -u SERVICE_PROVENANCE_ADDRESS OPENAI_API_KEY= THESYS_API_KEY= UNMAPPED_GATEWAY_URL= UNMAPPED_GATEWAY_KEY= UNWRITTEN_PRIVATE_KEY= UNWRITTEN_SIGN_BROWSER=none AETHER_TEST_USER_DATA=$SCR/ud bunx electron-vite dev --remoteDebuggingPort 9346; then CDP_PORT=9346 bun scripts/cdp-drive.ts \"$(cat docs/e2e/milestone-chain-audit/run-fixes-market.json)\"",
+  "model": "none: OPENAI_API_KEY blanked; no model call is made on these screens",
+  "actions": [
+    { "wait": 3000 },
+    { "clickText": "世界" },
+    { "wait": 2500 },
+    { "clickText": "市場" },
+    { "wait": 15000 },
+    { "eval": "document.querySelector('.carts')?.innerText ?? 'no list'" },
+    { "shot": "docs/e2e/milestone-chain-audit/fix-00-market.jpg" },
+    { "clickText": "aether-land.unmapped.eth" },
+    { "wait": 5000 },
+    { "eval": "[...document.querySelectorAll('.detail')].at(-1).innerText" },
+    { "shot": "docs/e2e/milestone-chain-audit/fix-01-market-aether-land.jpg" },
+    { "clickText": "lantern-quay.aether-land.unmapped.eth" },
+    { "wait": 5000 },
+    { "eval": "[...document.querySelectorAll('.detail')].at(-1).innerText" },
+    { "eval": "[...[...document.querySelectorAll('.detail')].at(-1).querySelectorAll('button')].map(b => b.textContent).join(' | ') || 'no button in the world detail'" },
+    { "shot": "docs/e2e/milestone-chain-audit/fix-02-market-lantern-quay.jpg" },
+    { "clickText": "misty-harbor.unmapped.eth" },
+    { "wait": 5000 },
+    { "eval": "[...document.querySelectorAll('.detail')].at(-1).innerText" },
+    { "eval": "[...[...document.querySelectorAll('.detail')].at(-1).querySelectorAll('button')].map(b => b.textContent).join(' | ') || 'no button in the world detail'" },
+    { "shot": "docs/e2e/milestone-chain-audit/fix-03-market-misty-harbor.jpg" }
+  ]
+}

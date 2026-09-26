@@ -85,6 +85,7 @@ export const MARKET = {
   phaseLive: { en: "Auction live", "zh-TW": "競標中", ja: "オークション中" },
   phaseSoon: { en: "Starts soon", "zh-TW": "即將開始", ja: "まもなく開始" },
   phaseEnded: { en: "Auction ended", "zh-TW": "競標已結束", ja: "オークション終了" },
+  phaseFailed: { en: "Auction fell short", "zh-TW": "競標未達門檻", ja: "オークション不成立" },
   phasePool: { en: "Trading", "zh-TW": "交易中", ja: "取引中" },
   blocksLeft: {
     en: "{n} {n|block|blocks} left (about {min} min)",
@@ -100,6 +101,11 @@ export const MARKET = {
     en: "Raised {amount} {currency} from {n} {n|bid|bids}",
     "zh-TW": "已募 {amount} {currency}，共 {n} 筆出價",
     ja: "{n} 件の入札で {amount} {currency} を調達",
+  },
+  raisedOf: {
+    en: "Raised {amount} of the {required} {currency} it needs, from {n} {n|bid|bids}",
+    "zh-TW": "已募 {amount}／門檻 {required} {currency}，共 {n} 筆出價",
+    ja: "{n} 件の入札で {amount} {currency} を調達（必要額 {required} {currency}）",
   },
   poolPrice: {
     en: "Uniswap pool price {price} {currency} per {symbol}",
@@ -135,6 +141,24 @@ export const MARKET = {
     "zh-TW": "已結算，共 {n} 筆交易。",
     ja: "{n} 件のトランザクションで精算しました。",
   },
+  failedHelp: {
+    en: "The auction is over and did not raise what it needed, so it will not graduate: its Uniswap pool will not open.",
+    "zh-TW":
+      "拍賣已結束，募得金額沒有達到門檻，所以不會轉入交易池：這個世界的 Uniswap 池不會開啟。",
+    ja: "オークションは終わりましたが必要額に届かなかったため、プールには移りません。Uniswap プールは開きません。",
+  },
+  refundHelp: {
+    en: "Every bid here comes back in full. Refunding returns each open bid to its bidder; the gas station pays.",
+    "zh-TW":
+      "這裡的每筆出價都會全額退還。按下退款，每筆還沒退的出價都會回到出價者手上，gas 由代付站支付。",
+    ja: "ここでの入札はすべて全額戻ります。返金すると未返金の入札がそれぞれ入札者に戻り、ガス代はガスステーションが払います。",
+  },
+  refund: { en: "Refund the bids", "zh-TW": "退還出價", ja: "入札を返金" },
+  refundDone: {
+    en: "Refunded in {n} {n|transaction|transactions}.",
+    "zh-TW": "已退款，共 {n} 筆交易。",
+    ja: "{n} 件のトランザクションで返金しました。",
+  },
   buyLabel: { en: "Spend (USDC)", "zh-TW": "花費（USDC）", ja: "支払う額（USDC）" },
   buyButton: { en: "Buy with passkey", "zh-TW": "用 passkey 買入", ja: "パスキーで購入" },
   buyHelp: {
@@ -166,6 +190,7 @@ export const MARKET = {
   },
   bidOpen: { en: "open", "zh-TW": "進行中", ja: "受付中" },
   bidExited: { en: "exited", "zh-TW": "已退出", ja: "退出済み" },
+  bidRefunded: { en: "refunded", "zh-TW": "已退款", ja: "返金済み" },
   bidClaimed: { en: "tokens claimed", "zh-TW": "已領代幣", ja: "受取済み" },
   signing: {
     en: "Waiting for your passkey…",

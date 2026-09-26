@@ -127,6 +127,7 @@ main { max-width: 1120px; margin: 0 auto; display: grid; gap: 18px; padding-top:
 }
 .pill[data-phase="live"] { color: var(--clear); border-color: var(--clear); background: var(--clear-soft); }
 .pill[data-phase="ended"] { color: var(--warn); border-color: var(--warn); }
+.pill[data-phase="failed"] { color: var(--bad); border-color: var(--bad); }
 .pill[data-phase="pool"] { color: var(--good); border-color: var(--good); }
 .price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
 .price-label { flex-basis: 100%; }

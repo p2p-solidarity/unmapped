@@ -10,6 +10,7 @@ import type {
   MarketAccount,
   MarketConfig,
   MarketKey,
+  MarketPhase,
   MarketView,
   MarketWorld,
   PlayerView,
@@ -28,6 +29,7 @@ import {
   parseAbiItem,
 } from "viem";
 import { sepolia } from "viem/chains";
+import { endedOutcome, requiredRaises } from "./auctionOutcome";
 import { ENSV2_SEPOLIA } from "./ensCalls";
 import {
   ccaAbi,
@@ -178,36 +180,55 @@ export async function launchedWorlds(c: MarketClients, latest: bigint): Promise<
 export const currencyOf = (world: LaunchedWorld): Address =>
   world.parent === ZERO ? USDC : world.parent;
 
-async function readWorld(c: MarketClients, w: LaunchedWorld, latest: bigint): Promise<MarketWorld> {
+async function readWorld(
+  c: MarketClients,
+  w: LaunchedWorld,
+  latest: bigint,
+  required: bigint | undefined,
+): Promise<MarketWorld> {
   const currency = currencyOf(w);
   const decimals = decimalsOf(currency);
   const auction = (functionName: string) =>
     c.public.readContract({ address: w.auction, abi: ccaAbi, functionName } as never) as Promise<
       bigint | boolean
     >;
-  const [start, end, clearing, floor, bids, raised, symbol, currencySymbol, owner, key] =
-    await Promise.all([
-      auction("startBlock"),
-      auction("endBlock"),
-      auction("clearingPrice"),
-      auction("floorPrice"),
-      auction("nextBidId"),
-      auction("currencyRaised"),
-      c.public.readContract({ address: w.token, abi: erc20Abi, functionName: "symbol" }),
-      c.public.readContract({ address: currency, abi: erc20Abi, functionName: "symbol" }),
-      c.public.readContract({
-        address: c.deployment.registry,
-        abi: lineageRegistry.abi,
-        functionName: "ownerOf",
-        args: [w.token],
-      }) as Promise<Address>,
-      c.public.readContract({
-        address: c.deployment.registry,
-        abi: lineageRegistry.abi,
-        functionName: "poolKeyOf",
-        args: [w.token],
-      }) as Promise<PoolKey>,
-    ]);
+  const [
+    start,
+    end,
+    clearing,
+    floor,
+    bids,
+    raised,
+    graduated,
+    lastCheckpointed,
+    symbol,
+    currencySymbol,
+    owner,
+    key,
+  ] = await Promise.all([
+    auction("startBlock"),
+    auction("endBlock"),
+    auction("clearingPrice"),
+    auction("floorPrice"),
+    auction("nextBidId"),
+    auction("currencyRaised"),
+    auction("isGraduated"),
+    auction("lastCheckpointedBlock"),
+    c.public.readContract({ address: w.token, abi: erc20Abi, functionName: "symbol" }),
+    c.public.readContract({ address: currency, abi: erc20Abi, functionName: "symbol" }),
+    c.public.readContract({
+      address: c.deployment.registry,
+      abi: lineageRegistry.abi,
+      functionName: "ownerOf",
+      args: [w.token],
+    }) as Promise<Address>,
+    c.public.readContract({
+      address: c.deployment.registry,
+      abi: lineageRegistry.abi,
+      functionName: "poolKeyOf",
+      args: [w.token],
+    }) as Promise<PoolKey>,
+  ]);
   const [sqrtPriceX96] = (await c.public.readContract({
     address: UNISWAP_SEPOLIA.stateView,
     abi: stateViewAbi,
@@ -224,6 +245,27 @@ async function readWorld(c: MarketClients, w: LaunchedWorld, latest: bigint): Pr
   const [owedToken, owedCurrency] = await Promise.all([owed(w.token), owed(currency)]);
   const startBlock = start as bigint;
   const endBlock = end as bigint;
+  let phase: MarketPhase =
+    sqrtPriceX96 > 0n
+      ? "pool"
+      : latest < startBlock
+        ? "soon"
+        : latest <= endBlock
+          ? "live"
+          : "ended";
+  let raisedNow = raised as bigint;
+  if (phase === "ended") {
+    // Over with no pool: settled into one only if it graduated (auctionOutcome.ts reads the end).
+    const outcome = await endedOutcome(c.public, w.auction, {
+      graduated: graduated as boolean,
+      raised: raisedNow,
+      lastCheckpointed: lastCheckpointed as bigint,
+      end: endBlock,
+      bids: bids as bigint,
+    });
+    if (!outcome.graduated) phase = "failed";
+    raisedNow = outcome.raised;
+  }
   let poolPrice: string | null = null;
   if (sqrtPriceX96 > 0n) {
     // v4 prices currency1 in currency0; flip it so it reads currency per world token.
@@ -237,18 +279,12 @@ async function readWorld(c: MarketClients, w: LaunchedWorld, latest: bigint): Pr
     parent: w.parent === ZERO ? null : w.parent,
     symbol,
     currencySymbol,
-    phase:
-      sqrtPriceX96 > 0n
-        ? "pool"
-        : latest < startBlock
-          ? "soon"
-          : latest <= endBlock
-            ? "live"
-            : "ended",
+    phase,
     blocksLeft: latest <= endBlock ? Number(endBlock - latest + 1n) : 0,
     clearing: humanPrice(clearing as bigint, decimals),
     floor: humanPrice(floor as bigint, decimals),
-    raised: formatUnits(raised as bigint, decimals),
+    raised: formatUnits(raisedNow, decimals),
+    required: required === undefined ? null : formatUnits(required, decimals),
     bids: Number(bids),
     poolPrice,
     owner,
@@ -354,8 +390,16 @@ export async function marketView(
   try {
     const latest = await c.public.getBlockNumber();
     const launched = await launchedWorlds(c, latest);
+    const required = await requiredRaises(
+      c.public,
+      launched.map((w) => w.auction),
+      c.deployment.fromBlock,
+      latest,
+    );
     const [worlds, account] = await Promise.all([
-      Promise.all(launched.map((w) => readWorld(c, w, latest))),
+      Promise.all(
+        launched.map((w) => readWorld(c, w, latest, required.get(w.auction.toLowerCase()))),
+      ),
       key === null ? Promise.resolve(null) : readAccount(c, key, launched, latest),
     ]);
     return ok({ block: String(latest), worlds, account });

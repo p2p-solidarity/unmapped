@@ -1,0 +1,3 @@
+https://ethereum-sepolia-rpc.publicnode.com: ok in 244 ms — success=null, success=true, success=36061
+https://sepolia.gateway.tenderly.co: refused in 1803 ms — Request exceeds defined limit.
+https://sepolia.drpc.org: refused in 98 ms — RPC Request failed.

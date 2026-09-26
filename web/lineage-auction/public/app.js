@@ -7,7 +7,9 @@
 
 import {
   createPublicClient,
+  decodeAbiParameters,
   encodeAbiParameters,
+  encodeFunctionData,
   formatUnits,
   http,
   keccak256,
@@ -25,6 +27,7 @@ const CONFIG = {
   accounts: "0x7B8b8E17590cC85c315d459feD8fC9384C2c9bE5",
   stateView: "0xE1Dd9c3fA50EDB962E442f60DfBc432e24537E4C",
   usdc: "0x16f95d91dba7da3aca778ec053df0ff6c6a8aa8e",
+  ccaFactory: "0x000000001f26a0044baa66024e7b6599c61963f8", // continuous-clearing-auction v2.1.0
   fromBlock: 11781460n, // the registry's deployment
   explorer: "https://sepolia.etherscan.io",
 };
@@ -42,11 +45,26 @@ const auctionAbi = parseAbi([
   "function floorPrice() view returns (uint256)",
   "function nextBidId() view returns (uint256)",
   "function isGraduated() view returns (bool)",
+  "function lastCheckpointedBlock() view returns (uint64)",
   "function currencyRaised() view returns (uint256)",
   "function totalCleared() view returns (uint256)",
   "function totalSupply() view returns (uint128)",
 ]);
 const erc20Abi = parseAbi(["function symbol() view returns (string)"]);
+/** The auction's own parameters, as its factory logged them: the only place the CCA (v2.1.0) keeps
+ * its required raise readable (it has no getter). Field for field, contracts/src/lineage/LaunchTypes.sol. */
+const AUCTION_PARAMETERS = [{
+  type: "tuple",
+  components: [
+    { name: "currency", type: "address" }, { name: "tokensRecipient", type: "address" },
+    { name: "fundsRecipient", type: "address" }, { name: "startBlock", type: "uint64" },
+    { name: "endBlock", type: "uint64" }, { name: "claimBlock", type: "uint64" },
+    { name: "tickSpacing", type: "uint256" }, { name: "validationHook", type: "address" },
+    { name: "floorPrice", type: "uint256" }, { name: "requiredCurrencyRaised", type: "uint128" },
+    { name: "auctionStepsData", type: "bytes" },
+  ],
+}];
+const checkpointCall = encodeFunctionData({ abi: parseAbi(["function checkpoint()"]), functionName: "checkpoint" });
 const stateViewAbi = parseAbi([
   "function getSlot0(bytes32 poolId) view returns (uint160 sqrtPriceX96, int24 tick, uint24 protocolFee, uint24 lpFee)",
 ]);
@@ -59,6 +77,7 @@ const EVENTS = {
   price: parseAbiItem("event ClearingPriceUpdated(uint256 blockNumber, uint256 clearingPriceQ96)"),
   exited: parseAbiItem("event BidExited(uint256 indexed bidId, address indexed owner, uint256 tokensFilled, uint256 currencyRefunded)"),
   claimed: parseAbiItem("event TokensClaimed(uint256 indexed bidId, address indexed owner, uint256 tokensFilled)"),
+  created: parseAbiItem("event AuctionCreated(address indexed auction, address indexed token, uint256 amount, bytes configData)"),
   named: parseAbiItem(
     "event NameRegistered(bytes32 indexed node, bytes32 indexed parent, address indexed owner, uint8 kind, bytes dnsName)",
   ),
@@ -87,7 +106,55 @@ function dnsName(packet) {
   return labels.join(".");
 }
 
-const state = { worlds: [], names: [], saves: new Map(), selected: null, symbols: new Map(), code: new Map() };
+const state = { worlds: [], names: [], saves: new Map(), selected: null, symbols: new Map(), code: new Map(), required: new Map() };
+
+/** An auction's required raise (raw currency units) from its factory log; immutable, so kept. */
+async function requiredRaise(world, latest) {
+  const key = lower(world.auction);
+  if (!state.required.has(key)) {
+    const [log] = await client.getLogs({
+      address: CONFIG.ccaFactory, event: EVENTS.created, args: { auction: world.auction }, fromBlock: world.block, toBlock: latest,
+    });
+    if (!log) return null;
+    state.required.set(key, decodeAbiParameters(AUCTION_PARAMETERS, log.args.configData)[0].requiredCurrencyRaised);
+  }
+  return state.required.get(key);
+}
+
+/** An ended auction's final outcome. isGraduated() / currencyRaised() read the last checkpoint:
+ * a graduation stands (raised only grows), and so does a miss once the end block is checkpointed or
+ * nobody bid; otherwise the end checkpoint is simulated (checkpoint(), then the reads). */
+async function endedOutcome(world, reads) {
+  if (reads.graduated || reads.lastCheckpointed === reads.end || reads.bidCount === 0n) {
+    return { graduated: reads.graduated, raised: reads.raised };
+  }
+  const { results } = await client.simulateCalls({
+    calls: [
+      { to: world.auction, data: checkpointCall },
+      { to: world.auction, abi: auctionAbi, functionName: "isGraduated" },
+      { to: world.auction, abi: auctionAbi, functionName: "currencyRaised" },
+    ],
+  });
+  if (results.some((r) => r.status !== "success")) throw new Error("could not simulate the auction's end");
+  return { graduated: results[1].result, raised: results[2].result };
+}
+
+async function poolOpen(world) {
+  const key = await client.readContract({ address: CONFIG.registry, abi: registryAbi, functionName: "poolKeyOf", args: [world.token] });
+  const [sqrtPriceX96] = await client.readContract({ address: CONFIG.stateView, abi: stateViewAbi, functionName: "getSlot0", args: [poolIdOf(key)] });
+  return sqrtPriceX96 > 0n;
+}
+
+const poolIdOf = (key) => keccak256(encodeAbiParameters(
+  [{ type: "address" }, { type: "address" }, { type: "uint24" }, { type: "int24" }, { type: "address" }],
+  [key.currency0, key.currency1, key.fee, key.tickSpacing, key.hooks],
+));
+
+/** With no world asked for: the newest world whose pool is open, else the newest launch. */
+async function defaultWorld() {
+  for (const world of [...state.worlds].reverse()) if (await poolOpen(world)) return world;
+  return state.worlds.at(-1);
+}
 
 async function symbol(token) {
   if (!state.symbols.has(lower(token))) {
@@ -132,7 +199,7 @@ async function loadWorlds(latest) {
   select.innerHTML = state.worlds.map((w) => `<option value="${w.token}">${escape(w.name)}</option>`).join("");
   const fromHash = location.hash.slice(1);
   const pick = state.worlds.find((w) => w.name === fromHash || w.name.split(".")[0] === fromHash);
-  select.value = current || pick?.token || state.worlds.at(-1)?.token || "";
+  select.value = current || pick?.token || (await defaultWorld())?.token || "";
   renderTree();
 }
 
@@ -170,13 +237,16 @@ function renderTree() {
 async function loadWorld(world, latest) {
   const currency = world.parent === "0x0000000000000000000000000000000000000000" ? CONFIG.usdc : world.parent;
   const read = (functionName) => client.readContract({ address: world.auction, abi: auctionAbi, functionName });
-  const [start, end, clearing, floor, bidCount, graduated, raised, cleared, supply, owner, tokenSymbol, currencySymbol] =
+  const [start, end, clearing, floor, bidCount, graduatedNow, lastCheckpointed, raisedNow, cleared, supply, owner, tokenSymbol, currencySymbol, required] =
     await Promise.all([
       read("startBlock"), read("endBlock"), read("clearingPrice"), read("floorPrice"), read("nextBidId"),
-      read("isGraduated"), read("currencyRaised"), read("totalCleared"), read("totalSupply"),
+      read("isGraduated"), read("lastCheckpointedBlock"), read("currencyRaised"), read("totalCleared"), read("totalSupply"),
       client.readContract({ address: CONFIG.registry, abi: registryAbi, functionName: "ownerOf", args: [world.token] }),
-      symbol(world.token), symbol(currency),
+      symbol(world.token), symbol(currency), requiredRaise(world, latest),
     ]);
+  const { graduated, raised } = latest > end
+    ? await endedOutcome(world, { graduated: graduatedNow, raised: raisedNow, lastCheckpointed, end, bidCount })
+    : { graduated: graduatedNow, raised: raisedNow };
   const range = { address: world.auction, fromBlock: world.block, toBlock: latest };
   const [bids, prices, exits, claims] = await Promise.all([
     client.getLogs({ ...range, event: EVENTS.bid }),
@@ -185,13 +255,10 @@ async function loadWorld(world, latest) {
     client.getLogs({ ...range, event: EVENTS.claimed }),
   ]);
   const key = await client.readContract({ address: CONFIG.registry, abi: registryAbi, functionName: "poolKeyOf", args: [world.token] });
-  const poolId = keccak256(encodeAbiParameters(
-    [{ type: "address" }, { type: "address" }, { type: "uint24" }, { type: "int24" }, { type: "address" }],
-    [key.currency0, key.currency1, key.fee, key.tickSpacing, key.hooks],
-  ));
+  const poolId = poolIdOf(key);
   const [sqrtPriceX96] = await client.readContract({ address: CONFIG.stateView, abi: stateViewAbi, functionName: "getSlot0", args: [poolId] });
   return {
-    world, currency, start, end, clearing, floor, bidCount, graduated, raised, cleared, supply, owner,
+    world, currency, start, end, clearing, floor, bidCount, graduated, raised, required, cleared, supply, owner,
     tokenSymbol, currencySymbol, bids, prices, exits, claims, key, poolId, sqrtPriceX96, latest,
     decimals: decimalsOf(currency),
   };
@@ -200,10 +267,13 @@ async function loadWorld(world, latest) {
 function renderBoard(d) {
   const { world, decimals, latest, start, end } = d;
   $("world-name").textContent = world.name;
-  const phase = d.sqrtPriceX96 > 0n ? "pool" : latest < start ? "soon" : latest <= end ? "live" : "ended";
+  const phase = phaseOf(d);
   const pill = $("phase");
   pill.dataset.phase = phase;
-  pill.textContent = { pool: "graduated · pool open", soon: "starts soon", live: "live auction", ended: "auction ended" }[phase];
+  pill.textContent = {
+    pool: "graduated · pool open", soon: "starts soon", live: "live auction", ended: "auction ended",
+    failed: "failed · no pool",
+  }[phase];
   $("world-meta").textContent = `$${d.tokenSymbol} ${short(world.token)} · holder ${short(d.owner)} · priced in $${d.currencySymbol}`;
   $("clearing").textContent = fmt(human(d.clearing, decimals));
   $("clearing-unit").textContent = `${d.currencySymbol} per ${d.tokenSymbol}`;
@@ -212,12 +282,19 @@ function renderBoard(d) {
   $("price-note").textContent =
     rise > 0.5
       ? `Bids have pushed the price ${rise.toFixed(0)}% above the ${fmt(floor)} floor. Every filled bid pays this one price.`
-      : `At the ${fmt(floor)} floor: demand has not yet exceeded the supply each block releases.`;
+      : latest > end
+        ? `It ended at the ${fmt(floor)} floor: demand never exceeded the supply each block released.`
+        : `At the ${fmt(floor)} floor: demand has not yet exceeded the supply each block releases.`;
   const left = end >= latest ? end - latest + 1n : 0n;
   $("time-left").textContent = left > 0n ? `${left} blocks` : "ended";
   $("time-sub").textContent = left > 0n ? `≈ ${Math.ceil(Number(left) * 12 / 60)} min · ends at ${end}` : `ended at block ${end}`;
   $("raised").textContent = `${fmt(Number(formatUnits(d.raised, decimals)))} ${d.currencySymbol}`;
-  $("raised-sub").textContent = d.graduated ? "enough to graduate" : "below the graduation threshold";
+  const need = d.required === null ? "" : ` of ${fmt(Number(formatUnits(d.required, decimals)))} ${d.currencySymbol}`;
+  $("raised-sub").textContent = d.graduated
+    ? "enough to graduate"
+    : phase === "failed"
+      ? `ended below the required raise${need}: it will not graduate`
+      : `below the required raise${need}`;
   const soldPct = d.supply > 0n ? Number((d.cleared * 10000n) / d.supply) / 100 : 0;
   $("sold").textContent = `${soldPct.toFixed(1)}%`;
   $("sold-sub").textContent = `${fmt(Number(formatUnits(d.cleared, 18)))} of ${fmt(Number(formatUnits(d.supply, 18)))} ${d.tokenSymbol}`;
@@ -288,9 +365,18 @@ async function renderBids(d) {
   $("bids").innerHTML = rows.join("") || `<tr><td colspan="6" class="empty">No bids yet.</td></tr>`;
 }
 
+/** pool · soon · live · ended (graduated, not yet settled) · failed (ended below its required raise). */
+const phaseOf = (d) =>
+  d.sqrtPriceX96 > 0n ? "pool" : d.latest < d.start ? "soon" : d.latest <= d.end ? "live" : d.graduated ? "ended" : "failed";
+
 async function renderPool(d) {
   if (d.sqrtPriceX96 === 0n) {
-    $("pool").innerHTML = `<p class="empty">${d.latest <= d.end ? "The pool opens once the auction ends and is settled." : "The auction has ended; the pool opens when it is settled (anyone may call graduate)."}</p>`;
+    $("pool").innerHTML = `<p class="empty">${{
+      soon: "The pool opens if the auction ends having raised enough, once it is settled.",
+      live: "The pool opens if the auction ends having raised enough, once it is settled.",
+      ended: "The auction has ended; the pool opens when it is settled (anyone may call graduate).",
+      failed: "The auction ended below its required raise, so it will not graduate and no pool will open. Every bid exits with a full refund.",
+    }[phaseOf(d)]}</p>`;
     return;
   }
   const raw = (d.sqrtPriceX96 * d.sqrtPriceX96 * 10n ** 18n) >> 192n;

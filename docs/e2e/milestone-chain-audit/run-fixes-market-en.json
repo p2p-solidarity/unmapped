@@ -1,0 +1,28 @@
+{
+  "part": "fixes after the audit — the same Market in English (continues run-fixes-market.json in the same app): back to the title, Settings → English, Worlds → Market → lantern-quay and aether-land",
+  "env": "as run-fixes-market.json",
+  "model": "none",
+  "actions": [
+    { "clickText": "← 標題畫面" },
+    { "wait": 2000 },
+    { "clickText": "設定" },
+    { "wait": 1500 },
+    { "clickText": "English" },
+    { "wait": 1500 },
+    { "hold": "Escape", "ms": 80 },
+    { "wait": 1500 },
+    { "clickText": "Worlds" },
+    { "wait": 2500 },
+    { "clickText": "Market" },
+    { "wait": 15000 },
+    { "eval": "document.querySelector('.carts')?.innerText ?? 'no list'" },
+    { "clickText": "lantern-quay.aether-land.unmapped.eth" },
+    { "wait": 5000 },
+    { "eval": "[...document.querySelectorAll('.detail')].at(-1).innerText" },
+    { "eval": "[...[...document.querySelectorAll('.detail')].at(-1).querySelectorAll('button')].map(b => b.textContent).join(' | ') || 'no button in the world detail'" },
+    { "shot": "docs/e2e/milestone-chain-audit/fix-04-market-lantern-quay-en.jpg" },
+    { "clickText": "aether-land.unmapped.eth" },
+    { "wait": 5000 },
+    { "eval": "[...document.querySelectorAll('.detail')].at(-1).innerText" }
+  ]
+}

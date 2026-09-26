@@ -1,4 +1,5 @@
 // One world on the market: its auction (bid with the passkey), its end (settle — open to anyone),
+// an end below its required raise (no pool ever; a bidder with open bids can have them refunded),
 // or its Uniswap pool (buy through its ancestors with the passkey; pay out the royalties its ENS
 // name holder is owed). The last transaction links to Sepolia Etherscan.
 
@@ -41,6 +42,7 @@ export function WorldDetail({
   const busy = market.busy !== null;
   const canAct = market.config?.relayer === true;
   const bids = view.account?.bids.filter((b) => b.world === world.token) ?? [];
+  const openBids = bids.some((b) => b.state === "open");
   const owed = Number(world.owedToken) > 0 || Number(world.owedCurrency) > 0;
   const who = usePlayerNames([world.owner]);
 
@@ -65,9 +67,12 @@ export function WorldDetail({
     toast("success", t("market.buyDone", { name: world.name, amount: spend }));
     setSpend("");
   };
+  // On a failed auction main's settle exits every open bid (a full refund) and sends nothing else.
   const settle = async (): Promise<void> => {
     const receipt = await market.relayed(() => window.seed.market.settle(world.token));
-    if (receipt !== null) toast("success", t("market.settleDone", { n: receipt.txHashes.length }));
+    if (receipt === null) return;
+    const done = world.phase === "failed" ? "market.refundDone" : "market.settleDone";
+    toast("success", t(done, { n: receipt.txHashes.length }));
   };
   const payOut = async (): Promise<void> => {
     const receipt = await market.relayed(() => window.seed.market.royalties(world.token));
@@ -99,11 +104,18 @@ export function WorldDetail({
             })}
           </Text>
           <span className="g-meta">
-            {t("market.raised", {
-              amount: amount(world.raised),
-              currency: world.currencySymbol,
-              n: world.bids,
-            })}
+            {world.required === null
+              ? t("market.raised", {
+                  amount: amount(world.raised),
+                  currency: world.currencySymbol,
+                  n: world.bids,
+                })
+              : t("market.raisedOf", {
+                  amount: amount(world.raised),
+                  required: amount(world.required),
+                  currency: world.currencySymbol,
+                  n: world.bids,
+                })}
             {world.phase === "live"
               ? ` · ${t("market.blocksLeft", { n: world.blocksLeft, min: Math.ceil((world.blocksLeft * 12) / 60) })}`
               : ""}
@@ -157,6 +169,26 @@ export function WorldDetail({
               {market.busy === "sending" ? t("market.sending") : t("market.settle")}
             </Button>
           </div>
+        </>
+      ) : null}
+
+      {world.phase === "failed" ? (
+        <>
+          <Text variant="caption" tone="dim">
+            {t("market.failedHelp")}
+          </Text>
+          {openBids ? (
+            <>
+              <Text variant="caption" tone="dim">
+                {t("market.refundHelp")}
+              </Text>
+              <div className="row-actions">
+                <Button variant="primary" disabled={busy || !canAct} onClick={() => void settle()}>
+                  {market.busy === "sending" ? t("market.sending") : t("market.refund")}
+                </Button>
+              </div>
+            </>
+          ) : null}
         </>
       ) : null}
 
@@ -220,7 +252,9 @@ export function WorldDetail({
                   b.state === "claimed"
                     ? "market.bidClaimed"
                     : b.state === "exited"
-                      ? "market.bidExited"
+                      ? world.phase === "failed"
+                        ? "market.bidRefunded"
+                        : "market.bidExited"
                       : "market.bidOpen",
                 ),
               })}

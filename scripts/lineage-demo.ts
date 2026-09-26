@@ -32,6 +32,7 @@ import {
   zeroAddress,
 } from "viem";
 import { sepolia } from "viem/chains";
+import { endedOutcome, requiredRaises } from "../src/main/chain/auctionOutcome";
 import { ENSV2_SEPOLIA, usdcAbi } from "../src/main/chain/ensCalls";
 import {
   type AccountCall,
@@ -135,9 +136,13 @@ const decimalsOf = (currency: Address) => (currency.toLowerCase() === usdc ? 6 :
 const symbolOf = async (token: Address) =>
   (await read(exec, token, erc20Abi, "symbol", [])) as string;
 
+/** Where log queries start: the registry's deployment, else the last ~week of blocks. */
+const fromBlock = (latest: bigint): bigint =>
+  BigInt(process.env.UNWRITTEN_LINEAGE_FROM_BLOCK ?? latest - 50_000n);
+
 async function allWorlds(): Promise<Address[]> {
   const latest = await client.getBlockNumber();
-  const from = BigInt(process.env.UNWRITTEN_LINEAGE_FROM_BLOCK ?? latest - 50_000n);
+  const from = fromBlock(latest);
   const logs = await client.getLogs({
     address: registry,
     event: parseAbiItem(
@@ -152,7 +157,8 @@ async function allWorlds(): Promise<Address[]> {
 async function status(token: Address): Promise<void> {
   const w = await world(token);
   const decimals = decimalsOf(w.currency);
-  const [symbol, currencySymbol, start, end, clearing, bids, graduated, owner, now, raised] =
+  const latest = await client.getBlockNumber();
+  const [symbol, currencySymbol, start, end, clearing, bids, graduatedNow, owner, now, raisedNow] =
     await Promise.all([
       symbolOf(w.token),
       symbolOf(w.currency),
@@ -165,6 +171,27 @@ async function status(token: Address): Promise<void> {
       exec.nextBlock(),
       read(exec, w.auction, ccaAbi, "currencyRaised", []) as Promise<bigint>,
     ]);
+  const lastCheckpointed = (await read(
+    exec,
+    w.auction,
+    ccaAbi,
+    "lastCheckpointedBlock",
+    [],
+  )) as bigint;
+  const required = (await requiredRaises(client, [w.auction], fromBlock(latest), latest)).get(
+    w.auction.toLowerCase(),
+  );
+  // isGraduated()/currencyRaised() read the last checkpoint; once over, read the end's (auctionOutcome.ts).
+  const ended = now > end;
+  const { graduated, raised } = ended
+    ? await endedOutcome(client, w.auction, {
+        graduated: graduatedNow,
+        raised: raisedNow,
+        lastCheckpointed,
+        end,
+        bids,
+      })
+    : { graduated: graduatedNow, raised: raisedNow };
   say(`${w.name}  ($${symbol}, token ${w.token})`);
   say(`  owner (ENS holder) ${owner}; priced in $${currencySymbol}`);
   const phase =
@@ -174,8 +201,14 @@ async function status(token: Address): Promise<void> {
         ? `LIVE — ${end - now + 1n} blocks left (~${((end - now + 1n) * 12n) / 60n} min), ends at block ${end}`
         : `ended at block ${end}`;
   say(`  auction ${w.auction}: ${phase}`);
+  const need = required === undefined ? "" : ` of the required ${formatUnits(required, decimals)}`;
+  const verdict = graduated
+    ? "enough to graduate"
+    : ended
+      ? "ended below the required raise: it will not graduate"
+      : "not enough to graduate yet";
   say(
-    `  clearing ${humanPrice(clearing, decimals)} ${currencySymbol}/${symbol}; ${bids} bid(s); raised ${formatUnits(raised, decimals)} ${currencySymbol}; ${graduated ? "enough to graduate" : "not enough to graduate yet"}`,
+    `  clearing ${humanPrice(clearing, decimals)} ${currencySymbol}/${symbol}; ${bids} bid(s); raised ${formatUnits(raised, decimals)}${need} ${currencySymbol}; ${verdict}`,
   );
   const poolKey = (await read(exec, registry, lineageRegistry.abi, "poolKeyOf", [
     w.token,
@@ -184,7 +217,13 @@ async function status(token: Address): Promise<void> {
     poolId(poolKey),
   ])) as [bigint];
   if (sqrtPriceX96 === 0n) {
-    say("  pool: not open yet (opens when the auction is settled)");
+    say(
+      !ended
+        ? "  pool: not open yet (opens if the auction ends at or above its required raise and is settled)"
+        : graduated
+          ? `  pool: not open yet (settle it: bun run lineage:demo settle ${w.token})`
+          : `  pool: will never open (the auction failed; ${bids === 0n ? "nobody bid" : "each bid exits with a full refund"})`,
+    );
     return;
   }
   // v4 prices currency1 in currency0; flip it so it reads currency per world token.
@@ -336,10 +375,30 @@ async function settle(token: Address): Promise<void> {
     poolId(poolKey),
   ])) as [bigint];
   if (sqrtPriceX96 === 0n) {
-    await exec.send(
-      call(registry, lineageRegistry.abi, "graduate", [w.token]),
-      `graduate ${w.name}`,
-    );
+    // A failed auction (below its required raise) never graduates, yet `graduate` would still go
+    // through and hand the owner the pool's reserve: decide by the end's outcome first.
+    const [graduatedNow, raisedNow, lastCheckpointed] = await Promise.all([
+      read(exec, w.auction, ccaAbi, "isGraduated", []) as Promise<boolean>,
+      read(exec, w.auction, ccaAbi, "currencyRaised", []) as Promise<bigint>,
+      read(exec, w.auction, ccaAbi, "lastCheckpointedBlock", []) as Promise<bigint>,
+    ]);
+    const { graduated } = await endedOutcome(client, w.auction, {
+      graduated: graduatedNow,
+      raised: raisedNow,
+      lastCheckpointed,
+      end,
+      bids,
+    });
+    if (graduated) {
+      await exec.send(
+        call(registry, lineageRegistry.abi, "graduate", [w.token]),
+        `graduate ${w.name}`,
+      );
+    } else {
+      say(
+        `  ${w.name}'s auction ended below its required raise: no graduate (its pool never opens).`,
+      );
+    }
   }
   await status(token);
 }

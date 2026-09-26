@@ -102,6 +102,7 @@ export const ccaAbi = parseAbi([
   "function currencyRaised() view returns (uint256)",
   "function claimBlock() view returns (uint64)",
   "function isGraduated() view returns (bool)",
+  "function lastCheckpointedBlock() view returns (uint64)",
   "function clearingPrice() view returns (uint256)",
   "event BidSubmitted(uint256 indexed id, address indexed owner, uint256 priceQ96, uint128 amount)",
 ]);

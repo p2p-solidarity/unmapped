@@ -17,6 +17,7 @@ import type { RelayRequest } from "@shared/relay";
 import { err, ok, type Result, toError } from "@shared/result";
 import { type Address, encodeFunctionData, type Hex, parseUnits } from "viem";
 import { sepolia } from "viem/chains";
+import { endedOutcome } from "./auctionOutcome";
 import { launchCalls } from "./launch";
 import {
   type AccountCall,
@@ -332,7 +333,11 @@ export async function faucet(
   return sent.ok ? ok({ txHashes: [sent.value] }) : sent;
 }
 
-/** After the auction: every bid exits and claims (open to anyone), then the pool opens. */
+/**
+ * After the auction (open to anyone). Graduated: every bid exits and claims, then the pool opens.
+ * Ended below its required raise (auctionOutcome.ts): every bid still open exits, which refunds it
+ * in full, and nothing else is sent — `graduate` would only hand the pool's reserve to the owner.
+ */
 export async function settleWorld(
   token: string,
   env: NodeJS.ProcessEnv = process.env,
@@ -343,17 +348,16 @@ export async function settleWorld(
   const found = await findWorld(c, token);
   if (!found.ok) return found;
   const w = found.value;
-  const [end, bids, latest] = await Promise.all([
-    c.public.readContract({
-      address: w.auction,
-      abi: ccaAbi,
-      functionName: "endBlock",
-    }) as Promise<bigint>,
-    c.public.readContract({
-      address: w.auction,
-      abi: ccaAbi,
-      functionName: "nextBidId",
-    }) as Promise<bigint>,
+  const read = (functionName: string) =>
+    c.public.readContract({ address: w.auction, abi: ccaAbi, functionName } as never) as Promise<
+      bigint | boolean
+    >;
+  const [end, bids, graduated, raised, lastCheckpointed, latest] = await Promise.all([
+    read("endBlock") as Promise<bigint>,
+    read("nextBidId") as Promise<bigint>,
+    read("isGraduated") as Promise<boolean>,
+    read("currencyRaised") as Promise<bigint>,
+    read("lastCheckpointedBlock") as Promise<bigint>,
     c.public.getBlockNumber(),
   ]);
   if (latest <= end) {
@@ -363,6 +367,14 @@ export async function settleWorld(
       "Settle it after its last block.",
     );
   }
+  const outcome = await endedOutcome(c.public, w.auction, {
+    graduated,
+    raised,
+    lastCheckpointed,
+    end,
+    bids,
+  });
+  if (!outcome.graduated) return refundBids(c, w, bids);
   const txHashes: string[] = [];
   for (let id = 0n; id < bids; id++) {
     for (const step of ["exitBid", "claimTokens"] as const) {
@@ -396,6 +408,33 @@ export async function settleWorld(
     txHashes.push(sent.value);
   }
   return ok({ txHashes });
+}
+
+/** A failed auction: each bid that can still exit does, and gets its whole amount back. */
+async function refundBids(
+  c: Relaying,
+  w: LaunchedWorld,
+  bids: bigint,
+): Promise<Result<MarketReceipt>> {
+  const txHashes: string[] = [];
+  for (let id = 0n; id < bids; id++) {
+    const data = encodeFunctionData({ abi: ccaAbi, functionName: "exitBid", args: [id] });
+    try {
+      await c.public.call({ to: w.auction, data });
+    } catch {
+      continue; // already exited
+    }
+    const sent = await relay(c, { kind: "exit", world: w.token, bid: id.toString() });
+    if (!sent.ok) return sent;
+    txHashes.push(sent.value);
+  }
+  return txHashes.length === 0
+    ? err(
+        "market-nothing-to-refund",
+        "Every bid in this auction has already been refunded.",
+        "Refresh the market.",
+      )
+    : ok({ txHashes });
 }
 
 /** Pays a world's accrued royalties to whoever holds its ENS name now (open to anyone). */

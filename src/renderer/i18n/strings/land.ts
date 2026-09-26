@@ -178,7 +178,6 @@ export const LAND = {
     "zh-TW": "正透過門 {code} 拜訪中。",
     ja: "扉 {code} から訪問中です。",
   },
-  friendDoorCode: { en: "a friend's door code", "zh-TW": "夥伴的門牌代碼", ja: "仲間の扉コード" },
   friendDoorOrName: {
     en: "Friend's door number or ENS name",
     "zh-TW": "夥伴的門牌或 ENS 名稱",

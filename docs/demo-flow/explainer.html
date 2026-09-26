@@ -355,6 +355,7 @@ a_shi  = NPC("a_shi", "阿時", 6, 7, "stranger", "calm", "#8a6a45", "slim", "he
       <li><b>鏈可以整個關掉。</b>沒有設定鏈時，創造、見證、大陸全部照常，畫面會直接說明還沒有設定帳本。</li>
       <li><b>玩家不需要錢包，app 裡也沒有私鑰。</b>簽名用 passkey（開發版在瀏覽器裡簽），手續費由 Cloudflare 上的 gas station 付，它改不了你簽的內容。</li>
       <li><b>真的在鏈上跑過。</b>第一個世界在 app 裡拍賣：4 筆 passkey 出價，清算價比底價高 86%，開成 Uniswap v4 池；10 USDC 買入時 hook 剛好抽 1%，分潤付給名字的持有人。三代分帳與名字轉手在 Sepolia 真實合約上模擬通過。</li>
+      <li><b>共享世界的歷史也能在鏈上留戳記。</b>另一份合約 WorldProvenance 只記雜湊：世界服務每過一個節拍，寫下世界的 id、紀錄編號和那一拍的指紋，從不寫任何人寫的內容。gas 由世界服務自己付，而且要世界的主人在門口打開「記錄節拍」才會寫；app 只讀鏈，在門口顯示有沒有紀錄。部署在 Sepolia：<code>0xF625ec3c228e3BCE34977C0b7e97BD591291Ef02</code>。<a href="https://github.com/p2p-solidarity/unmapped/blob/main/docs/e2e/milestone-rev6-p4-chain-live/result.md">實機紀錄</a>：一個共享世界記了三個節拍，app 的門口從鏈上讀了回來。</li>
     </ul>
   </section>
 

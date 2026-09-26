@@ -1,11 +1,24 @@
 // Errors from the lineage market's names and launches (src/main/chain/names.ts, players.ts,
-// launch.ts): naming a cartridge or a save, claiming a player name, putting a world on the market.
+// launch.ts): naming a cartridge or a save, claiming a player name, putting a world on the market;
+// and refunding a failed auction's bids (marketRelay.ts).
 // Each message holds wherever its code is raised; the source's English (with the exact name) stays
 // the detail.
 
 import type { ErrorText } from "./errors";
 
 export const MARKET_ERRORS: Record<string, ErrorText> = {
+  "market-nothing-to-refund": {
+    message: {
+      en: "Every bid in this auction has already been refunded.",
+      "zh-TW": "這場拍賣的每筆出價都已經退款了。",
+      ja: "このオークションの入札はすべて返金済みです。",
+    },
+    hint: {
+      en: "Refresh the market.",
+      "zh-TW": "請重新整理市場。",
+      ja: "マーケットを再読み込みしてください。",
+    },
+  },
   "market-launch-unnamed": {
     message: {
       en: "This world has no ENS name yet.",

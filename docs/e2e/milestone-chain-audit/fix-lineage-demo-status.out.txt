@@ -1,0 +1,19 @@
+$ UNWRITTEN_PRIVATE_KEY= bun scripts/lineage-demo.ts status --dry-run   (= bun run lineage:demo status --dry-run)
+aether-land.unmapped.eth  ($AETHERLAND, token 0xA801C5067a0649c640AF21fa2334Cf822bb8dBb6)
+  owner (ENS holder) 0x8eECf2cD24664EB2275BFd74E324D9E0541b51C3; priced in $USDC
+  auction 0xAB2Df6CA3f3972b22D4980897aD12cd401a56203: ended at block 11781522
+  clearing 0.018636 USDC/AETHERLAND; 4 bid(s); raised 9024.999999 of the required 10 USDC; enough to graduate
+  pool: 0.018719 USDC/AETHERLAND (v4, hook 0x59FA49D974B4564Eade17EDDC4a3CCf8D819a044)
+misty-harbor.unmapped.eth  ($MISTYHARBOR, token 0x9552B4B6E2E492Bbc8646aeB0598ecd1f6e98FD0)
+  owner (ENS holder) 0xfBaBBa0e1681F837ea6D03B9d4D3962CFD6E8537; priced in $USDC
+  auction 0x373c2a8a1fC5Fe61c4b63753BBe68dCf518b1C1e: ended at block 11783799
+  clearing 0.009999 USDC/MISTYHARBOR; 0 bid(s); raised 0 of the required 10 USDC; ended below the required raise: it will not graduate
+  pool: will never open (the auction failed; nobody bid)
+lantern-quay.aether-land.unmapped.eth  ($LANTERNQUAY, token 0x42ebe333Ab23158bDb2d8757e542dA3D73CC031d)
+  owner (ENS holder) 0xfBaBBa0e1681F837ea6D03B9d4D3962CFD6E8537; priced in $AETHERLAND
+  auction 0x5532370EE47a34CE263E0C4382FfF4C412B8a01f: ended at block 11783902
+  clearing 0.099999999999999999 AETHERLAND/LANTERNQUAY; 0 bid(s); raised 0 of the required 10 AETHERLAND; ended below the required raise: it will not graduate
+  pool: will never open (the auction failed; nobody bid)
+
+(dry run — nothing was sent)
+exit 0

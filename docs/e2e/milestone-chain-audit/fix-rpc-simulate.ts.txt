@@ -1,0 +1,22 @@
+// Read-only: which public Sepolia RPC answers eth_simulateV1 (viem simulateCalls) with the exact
+// calls auctionOutcome.ts sends — checkpoint(), then isGraduated() and currencyRaised() — on the one
+// auction the CCA factory has that is still live (another factory user's, 0xFBEE…f2C2). Sends nothing.
+import { createPublicClient, encodeFunctionData, http, parseAbi } from "viem";
+import { sepolia } from "viem/chains";
+const auction = "0xFBEEb83F0BbF8c2D62F4AF92C8F6B675d810f2C2" as const;
+const abi = parseAbi(["function isGraduated() view returns (bool)", "function currencyRaised() view returns (uint256)"]);
+const checkpoint = encodeFunctionData({ abi: parseAbi(["function checkpoint()"]), functionName: "checkpoint" });
+for (const url of ["https://ethereum-sepolia-rpc.publicnode.com", "https://sepolia.gateway.tenderly.co", "https://sepolia.drpc.org"]) {
+  const client = createPublicClient({ chain: sepolia, transport: http(url) });
+  const t0 = Date.now();
+  try {
+    const { results } = await client.simulateCalls({ calls: [
+      { to: auction, data: checkpoint },
+      { to: auction, abi, functionName: "isGraduated" },
+      { to: auction, abi, functionName: "currencyRaised" },
+    ] });
+    console.log(`${url}: ok in ${Date.now() - t0} ms — ${results.map((r) => `${r.status}${r.status === "success" && r.result !== undefined ? `=${r.result}` : ""}`).join(", ")}`);
+  } catch (e) {
+    console.log(`${url}: refused in ${Date.now() - t0} ms — ${String((e as Error).message).split("\n")[0]}`);
+  }
+}

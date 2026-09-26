@@ -1,0 +1,21 @@
+{
+ "hosts": {
+  "127.0.0.1:8811": 3,
+  "fonts.googleapis.com": 1,
+  "fonts.gstatic.com": 5,
+  "cdn.jsdelivr.net": 25,
+  "ethereum-sepolia-rpc.publicnode.com": 60
+ },
+ "rpcCalls": 60,
+ "byTarget": {
+  "eth_blockNumber -": 3,
+  "eth_getLogs 0xda8051e3e2855c125aad6050f97ea64cf203daf6": 3,
+  "eth_call 0x373c2a8a1fc5fe61c4b63753bbe68dcf518b1c1e": 30,
+  "eth_call 0xda8051e3e2855c125aad6050f97ea64cf203daf6": 6,
+  "eth_call 0x9552b4b6e2e492bbc8646aeb0598ecd1f6e98fd0": 1,
+  "eth_call 0x16f95d91dba7da3aca778ec053df0ff6c6a8aa8e": 1,
+  "eth_getLogs 0x000000001f26a0044baa66024e7b6599c61963f8": 1,
+  "eth_getLogs 0x373c2a8a1fc5fe61c4b63753bbe68dcf518b1c1e": 12,
+  "eth_call 0xe1dd9c3fa50edb962e442f60dfbc432e24537e4c": 3
+ }
+}

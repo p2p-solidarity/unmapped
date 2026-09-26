@@ -18,7 +18,9 @@ export interface MarketKey {
   qy: `0x${string}`;
 }
 
-export type MarketPhase = "soon" | "live" | "ended" | "pool";
+/** `ended`: over and graduated, waiting to be settled into its pool. `failed`: over below its
+ * required raise — it never graduates, its pool never opens, and each bid exits with a full refund. */
+export type MarketPhase = "soon" | "live" | "ended" | "failed" | "pool";
 
 /** Amounts are decimal strings in whole units (never floats), so nothing rounds on the way. */
 export interface MarketWorld {
@@ -33,6 +35,8 @@ export interface MarketWorld {
   clearing: string;
   floor: string;
   raised: string;
+  /** What it must raise to graduate (the CCA factory's log of its parameters); null if unread. */
+  required: string | null;
   bids: number;
   /** Currency per token in the v4 pool; null until the auction graduates. */
   poolPrice: string | null;

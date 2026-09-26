@@ -1,0 +1,31 @@
+// Read-only probe (run from the repo as scripts/_outcome-probe.ts, then deleted): the app's own
+// requiredRaises + endedOutcome (src/main/chain/auctionOutcome.ts) over every auction the CCA
+// factory made since the registry's deployment — ours and other factory users' — so the
+// simulated-end path would meet a real auction if one were stale. Sends nothing.
+import { createPublicClient, fallback, http, type PublicClient } from "viem";
+import { sepolia } from "viem/chains";
+import { auctionCreatedEvent, endedOutcome, requiredRaises } from "../src/main/chain/auctionOutcome";
+import { ccaAbi, UNISWAP_SEPOLIA } from "../src/main/chain/lineageCalls";
+
+const client = createPublicClient({
+  chain: sepolia,
+  transport: fallback(["https://ethereum-sepolia-rpc.publicnode.com", "https://sepolia.gateway.tenderly.co", "https://sepolia.drpc.org"].map((u) => http(u))),
+  batch: { multicall: true },
+}) as PublicClient;
+const latest = await client.getBlockNumber();
+const logs = await client.getLogs({ address: UNISWAP_SEPOLIA.ccaFactory, event: auctionCreatedEvent, fromBlock: 11780564n, toBlock: latest });
+const auctions = logs.map((l) => l.args.auction!);
+const required = await requiredRaises(client, auctions, 11780564n, latest);
+console.log(`latest ${latest}; ${auctions.length} auctions from the factory`);
+for (const a of auctions) {
+  const r = (fn: string) => client.readContract({ address: a, abi: ccaAbi, functionName: fn } as never) as Promise<bigint | boolean>;
+  const [end, bids, graduated, raised, lastCheckpointed] = await Promise.all([r("endBlock"), r("nextBidId"), r("isGraduated"), r("currencyRaised"), r("lastCheckpointedBlock")]);
+  const reads = { graduated: graduated as boolean, raised: raised as bigint, lastCheckpointed: lastCheckpointed as bigint, end: end as bigint, bids: bids as bigint };
+  const ended = latest > reads.end;
+  const stale = ended && !reads.graduated && reads.lastCheckpointed !== reads.end && reads.bids > 0n;
+  const t0 = Date.now();
+  const outcome = ended ? await endedOutcome(client, a, reads) : null;
+  console.log(JSON.stringify({ auction: a, required: String(required.get(a.toLowerCase())), end: String(reads.end), bids: String(reads.bids),
+    read: { graduated: reads.graduated, raised: String(reads.raised), lastCheckpointed: String(reads.lastCheckpointed) },
+    ended, simulated: stale, outcome: outcome && { graduated: outcome.graduated, raised: String(outcome.raised) }, ms: Date.now() - t0 }));
+}

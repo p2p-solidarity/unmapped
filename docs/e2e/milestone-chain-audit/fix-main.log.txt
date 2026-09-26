@@ -1,0 +1,47 @@
+vite v8.3.0 building ssr environment for development...
+transforming...
+✓ 367 modules transformed.
+rendering chunks...
+out/main/chunks/heart-BgeRAx0t.png                          3.12 kB
+out/main/chunks/samurai_green-XToNlHMv.png                  4.78 kB
+out/main/chunks/samurai_blue-YZHMdpFI.png                   5.53 kB
+out/main/chunks/ninja_blue-COU3McFS.png                     6.13 kB
+out/main/chunks/tileset_floor-B7205uFr.png                 29.61 kB
+out/main/chunks/tileset_village_abandoned-BqZ8VUQR.png     31.77 kB
+out/main/index.js                                       1,315.12 kB
+
+✓ built in 151ms
+
+electron main process built successfully
+
+-----
+
+vite v8.3.0 building ssr environment for development...
+transforming...
+✓ 122 modules transformed.
+rendering chunks...
+out/preload/index.js  223.99 kB
+
+✓ built in 27ms
+
+electron preload scripts built successfully
+
+-----
+
+dev server running for the electron renderer process at:
+
+  ➜  Local:   http://localhost:8811/
+  ➜  Network: use --host to expose
+
+starting electron app...
+
+
+DevTools listening on ws://127.0.0.1:9346/devtools/browser/0fc3080b-b529-4da5-923a-7638aab1a7ec
+[apple-local] native-helper-start: spawn $SCR/snap/native/afm-bridge/.build/debug/afm-bridge ENOENT
+[renderer:LOG] [vite] connecting... (http://localhost:8811/@vite/client:883)
+[renderer:LOG] [vite] connected. (http://localhost:8811/@vite/client:996)
+[renderer:LOG] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold (http://localhost:8811/.vite-cache/deps/client-FfsKyqGM.js?v=9fe15baa:15861)
+[quit] requested; closing windows
+[quit] windows closed 104 ms after the request; page calls finished
+[quit] 7 cleanups done 107 ms after the request: registerInferenceIpc 1 ms · registerAccountIpc 1 ms · appleLocalHelper 3 ms · startWorldsWatcher 3 ms · registerWorldIpc 1 ms · startModsWatcher 0 ms · createSidecar 1 ms
+[quit] exit 0 148 ms after the request
