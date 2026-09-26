@@ -890,7 +890,7 @@ Every planned flow of phases 3 and 4 has a run in `docs/e2e/`, and each result.m
 did not reach: `milestone-rev6-p3-{migrate,older-build,backup,local-beat,physics,offline-visit,
 migrated-share,together,variant,presence,fog,rumors,door,gift-race,continent}` and
 `milestone-rev6-p4-{account,quota,billing-off,images-hosted,licence,rehost,import-physics,chain,
-mobile-proof,no-servers}`; progress rows 30–39 summarise them. `milestone-rev6-integrated-journey`
+chain-live,mobile-proof,no-servers}`; progress rows 30–39 summarise them. `milestone-rev6-integrated-journey`
 walks one world through all of it (Create → play → share → together → co-owner → phone → `.world`
 → Apple on-device → quit and continue). Not run, because each needs a person: Stripe checkout (test
 and live), Qwen-Image on a GPU endpoint, a real phone, and witnessing
