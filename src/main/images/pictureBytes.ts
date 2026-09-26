@@ -3,6 +3,8 @@
 // (`resizeToPng`), so a published one must decode as a PNG: the signature, every chunk whole with
 // a matching CRC, a sane IHDR first, IDAT data that inflates to exactly the rows the header
 // promises, and IEND last. Pure (node:zlib only), so it runs in vitest as it does in main.
+// The bytes are untrusted (a publish IPC payload): inflating never goes past what the header
+// promises, and a header promising more than any picture of ours is refused before inflating.
 
 import { crc32, inflateSync } from "node:zlib";
 import { err, ok, type Result } from "@shared/result";
@@ -10,6 +12,8 @@ import { err, ok, type Result } from "@shared/result";
 const SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 /** Far above any picture main stores (512 × 512); a larger header is not one of ours. */
 const MAX_SIDE = 8_192;
+/** The most filtered image data a header may promise (4096 × 4096 RGBA8): main inflates no more. */
+const MAX_IMAGE_BYTES = 64 * 1024 * 1024;
 /** Samples per pixel by colour type (0 grey, 2 RGB, 3 palette, 4 grey + alpha, 6 RGBA). */
 const CHANNELS: Record<number, number> = { 0: 1, 2: 3, 3: 1, 4: 2, 6: 4 };
 const DEPTHS: Record<number, readonly number[]> = {
@@ -87,14 +91,19 @@ export function pngProblem(bytes: Uint8Array): string | null {
   if (header === null) return "it has no IHDR chunk";
   if (!ended) return "it has no end chunk (cut off)";
   if (data.length === 0) return "it has no image data";
+  const { width, height, bits, interlaced } = header;
+  const expected = expectedBytes(width, height, bits, interlaced);
+  if (expected > MAX_IMAGE_BYTES) return `its size ${width} × ${height} is too large a picture`;
   let pixels: Uint8Array;
   try {
-    pixels = inflateSync(Buffer.concat(data));
-  } catch {
-    return "its image data does not inflate";
+    // One byte past the promise is enough to tell a stream that inflates further (a zip bomb).
+    pixels = inflateSync(Buffer.concat(data), { maxOutputLength: expected + 1 });
+  } catch (error) {
+    return (error as { code?: string }).code === "ERR_BUFFER_TOO_LARGE"
+      ? "its image data inflates past the size its header gives"
+      : "its image data does not inflate";
   }
-  const { width, height, bits, interlaced } = header;
-  if (pixels.length !== expectedBytes(width, height, bits, interlaced)) {
+  if (pixels.length !== expected) {
     return "its image data does not fill the size its header gives";
   }
   return null;
