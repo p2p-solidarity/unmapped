@@ -19,6 +19,7 @@ import { openInstance } from "../useInstanceLoader";
 import { AUTOFOCUS, useArrowFocus } from "./focus";
 import { useRestoreNotice } from "./RestoreNotice";
 import type { SectionProps } from "./sections";
+import { DetailBadge, RowBadge, useWorldBadges } from "./WorldBadges";
 
 /** The newest compatible revision of the save's cartridge that is newer than its pin. */
 function upgradeFor(save: InstanceMeta, cartridges: CartridgeManifest[]): CartridgeManifest | null {
@@ -50,6 +51,7 @@ export function SavesPanel({ data, refresh, onClose }: SectionProps): JSX.Elemen
 
   useKeys({ Escape: onClose });
   useArrowFocus(listRef);
+  const badges = useWorldBadges(data);
 
   const resume = (save: InstanceMeta): void => {
     if (!busy) void openInstance(save.instanceId);
@@ -124,6 +126,7 @@ export function SavesPanel({ data, refresh, onClose }: SectionProps): JSX.Elemen
                 >
                   <strong>{save.name}</strong>
                   <span className="g-meta">{formatDateTime(save.updatedAt)}</span>
+                  <RowBadge badges={badges} instanceId={save.instanceId} />
                 </Button>
               ))}
             </div>
@@ -149,6 +152,7 @@ export function SavesPanel({ data, refresh, onClose }: SectionProps): JSX.Elemen
               </Button>
             )}
           </div>
+          <DetailBadge badges={badges} instanceId={selected.instanceId} />
           <SaveEnsBlock instanceId={selected.instanceId} />
         </div>
       )}

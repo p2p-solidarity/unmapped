@@ -13,6 +13,7 @@ import { AccountPanel } from "./AccountPanel";
 import { ImagePanel } from "./ImagePanel";
 import { ModelPanel } from "./ModelPanel";
 import { PlanPanel } from "./PlanPanel";
+import { SharedWorldsPanel } from "./SharedWorldsPanel";
 import { SignalingPanel } from "./SignalingPanel";
 
 function useAppInfo(): Loadable<AppInfo> {
@@ -77,6 +78,8 @@ export function SystemPanel({ onClose }: { onClose(): void }) {
       <ImagePanel />
 
       <SignalingPanel />
+
+      <SharedWorldsPanel />
 
       <StatePanel state={info} loadingText={t("title.readingBuild")}>
         {(value) => (

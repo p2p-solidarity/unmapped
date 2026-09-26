@@ -1,7 +1,7 @@
 // The door at home (plan.md §7): four dials, each pinned to a place the player has witnessed or to a
 // friend's door number. Turning to a place walks through to it; turning to a number brings this world
 // onto the continent behind that friend's door (plan.md §8). Keepsakes carried home are set on the
-// shelf here.
+// shelf here. The world's own door (sharing, who may come in, invites, people) is ./WorldDoorSection.
 
 import { translate, useT } from "@renderer/i18n";
 import { normalizeRoomCode, ROOM_CODE_LENGTH } from "@renderer/net/codes";
@@ -12,6 +12,7 @@ import type { DoorSlot } from "@shared/land";
 import { type JSX, useState } from "react";
 import { ContinentSection, continentOk } from "./ContinentSection";
 import { currentDoorArrival } from "./doorArrival";
+import { WorldDoorSection } from "./WorldDoorSection";
 
 function travel(slot: DoorSlot): void {
   if (slot.kind === "room") {
@@ -131,6 +132,7 @@ export function DoorPanel(): JSX.Element | null {
           </div>
         )}
 
+        <WorldDoorSection />
         <ContinentSection />
         <div style={{ display: "flex", flexWrap: "wrap", gap: space.sm, alignItems: "flex-end" }}>
           <TextField

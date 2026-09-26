@@ -21,6 +21,7 @@ import { PLACE_VIEW } from "./placeView";
 import { TITLE } from "./title";
 import { USAGE } from "./usage";
 import { WORKS } from "./works";
+import { WORLD } from "./world";
 
 export const STRINGS = {
   account: ACCOUNT,
@@ -42,6 +43,7 @@ export const STRINGS = {
   title: TITLE,
   usage: USAGE,
   works: WORKS,
+  world: WORLD,
 } as const;
 
 type Table = typeof STRINGS;

@@ -12,6 +12,7 @@ import { ArchivePanel } from "../title/ArchivePanel";
 import { CartridgesPanel } from "../title/CartridgesPanel";
 import { ContinentPanel } from "../title/ContinentPanel";
 import type { LibraryData } from "../title/useLibrary";
+import { JoinWorld } from "./JoinWorld";
 import { NewGamePanel } from "./NewGamePanel";
 import { SavesPanel } from "./SavesPanel";
 
@@ -41,6 +42,7 @@ export const SECTIONS: readonly Section[] = [
     Panel: SavesPanel,
     count: (library) => library.instances.length,
   },
+  { id: "join", label: "world.sectionJoin", Panel: JoinWorld },
   {
     id: "cartridges",
     label: "library.sectionCartridges",

@@ -18,6 +18,7 @@ import { MODEL_ERRORS } from "./errors-model";
 import { NET_ERRORS } from "./errors-net";
 import { SAVE_ERRORS } from "./errors-save";
 import { WORKS_ERRORS } from "./errors-works";
+import { WORLD_ERRORS } from "./errors-world";
 import type { Phrase } from "./phrase";
 
 export interface ErrorText {
@@ -34,6 +35,7 @@ export const ERRORS: Record<string, ErrorText> = {
   ...IDENTITY_ERRORS,
   ...NET_ERRORS,
   ...WORKS_ERRORS,
+  ...WORLD_ERRORS,
   ...LAND_HISTORY_ERRORS,
   ...ACCOUNT_ERRORS,
   ...IMAGES_ERRORS,
