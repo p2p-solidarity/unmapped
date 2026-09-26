@@ -1,0 +1,9 @@
+# service $SCR/service/worlds/*/log.jsonl after the stop
+## service/worlds/h7eh5pro2aw6rzmhgyum74pbw6vnvwyqpxlskybyum4zyosz7w2zq/log.jsonl
+1 genesis 
+2 profile 
+3 sequencer {"url": "ws://127.0.0.1:8796", "key": "kezrdmppibhvhgq56zqmavlsf5vwmmyukcfjfhiurailcu6oonina"}
+4 chain {"record": true}
+blobs
+service-key.json
+worlds

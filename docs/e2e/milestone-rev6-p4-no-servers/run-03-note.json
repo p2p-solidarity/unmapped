@@ -1,0 +1,18 @@
+{
+  "step": 3,
+  "app": "launch 1 (CDP 9344), in Play at home: N, leave one note on this local world (so the .world carries a note), read the world's head before and after",
+  "actions": [
+    {"eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return n === null ? 'no world' : { world: n.world, head: n.head.n, notes: (n.notes ?? []).length, sequencer: n.sequencer ?? null } })()"},
+    {"hold": "KeyN", "ms": 100},
+    {"wait": 1000},
+    {"eval": "(() => { const f = [...document.querySelectorAll('[data-layer=notes] input')].find(x => (x.closest('label')?.innerText ?? '').includes('your note')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"},
+    {"type": "No servers here: this note stays on this device."},
+    {"clickText": "Leave the note"},
+    {"wait": 1500},
+    {"eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 800) : 'no notes layer' })()"},
+    {"eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return n === null ? 'no world' : { world: n.world, head: n.head.n, notes: (n.notes ?? []).length } })()"},
+    {"shot": "docs/e2e/milestone-rev6-p4-no-servers/03-00-note-left.jpg"},
+    {"hold": "Escape", "ms": 80},
+    {"wait": 500}
+  ]
+}

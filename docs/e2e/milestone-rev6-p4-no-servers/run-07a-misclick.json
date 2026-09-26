@@ -1,0 +1,67 @@
+{
+ "step": "7a",
+ "app": "(kept for the record) meant as step 7. Create's 'Back to the title' on a draft's idea step goes back to Create's draft list, not the title, so the 'Continue' here resumed the Create draft, and the walk ran on the Create screen (pad toward: timeout; chunk null). Afterwards one more action was sent by hand: [{\"clickText\":\"Back to the title\"}] which left the draft for Create's draft list. Step 7 (run-07-witness-apple.json) redoes it.",
+ "actions": [
+  {
+   "clickText": "Back to the title"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 120; i++) { if (S.useSessionStore.getState().screen === 'play' && S.useLandStore.getState().progress !== null) return { ms: Date.now() - t0 }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return { head: n?.head.n, chunks: Object.keys(n?.chunks ?? {}) } })()"
+  },
+  {
+   "pad": {
+    "toward": "[16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[40.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "repeat": {
+    "times": 60,
+    "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['1,0']; return c !== undefined && c.status !== 'writing' })()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const P = await import('/engine/playerProbe.ts'); const H = await import('/history/index.ts'); const p = P.samplePlayer(); const c = S.useLandStore.getState().chunks['1,0']; const n = H.worldNow(); return { pos: p && [Number(p.x.toFixed(2)), Number(p.z.toFixed(2))], chunk: S.useEngineStore.getState().chunk, chunk10: c === undefined ? 'absent' : { status: c.status, error: c.status === 'failed' ? c.error : null }, head: n?.head.n, chunks: Object.keys(n?.chunks ?? {}) } })()"
+  },
+  {
+   "eval": "(() => { const lines = document.body.innerText.split('\\n').filter(Boolean); const i = lines.indexOf('LAND'); return { land: i < 0 ? null : lines[i + 1], hud: lines.slice(0, 20) } })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/07a-00-still-in-create.jpg (renamed after the run)"
+  }
+ ]
+}

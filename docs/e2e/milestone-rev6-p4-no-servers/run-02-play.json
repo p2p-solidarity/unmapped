@@ -1,0 +1,29 @@
+{
+  "step": 2,
+  "app": "launch 1 (CDP 9344): close Settings; Worlds -> New game -> Start on the built-in world; read the HUD; walk W for 1.5 s; look for a resident to talk to; open the notes (N)",
+  "actions": [
+    {"hold": "Escape", "ms": 80},
+    {"wait": 600},
+    {"clickText": "Worlds"},
+    {"wait": 1200},
+    {"eval": "(() => { const m = document.querySelector('main') ?? document.body; return m.innerText.slice(0, 1200) })()"},
+    {"clickText": "Start"},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance && S.useLandStore.getState().progress !== null) return { ms: Date.now() - t0, screen: s.screen, instance: s.activeInstance.instanceId ?? s.activeInstance }; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + S.useSessionStore.getState().screen })()"},
+    {"wait": 2500},
+    {"eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const S = await import('/state/index.ts'); const p = P.samplePlayer(); const lines = document.body.innerText.split('\\n').filter(Boolean); return { pos: p && [Number(p.x.toFixed(2)), Number(p.z.toFixed(2))], chunk: S.useEngineStore.getState().chunk, cartridge: S.useWorldStore.getState().origin, hud: lines.slice(0, 40) } })()"},
+    {"shot": "docs/e2e/milestone-rev6-p4-no-servers/02-00-play.jpg"},
+    {"hold": "KeyW", "ms": 1500},
+    {"wait": 300},
+    {"eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const S = await import('/state/index.ts'); const p = P.samplePlayer(); const lines = document.body.innerText.split('\\n').filter(Boolean); const i = lines.indexOf('LAND'); return { pos: p && [Number(p.x.toFixed(2)), Number(p.z.toFixed(2))], chunk: S.useEngineStore.getState().chunk, land: i < 0 ? null : lines[i + 1], fps: lines.find(l => /FPS$/.test(l)) ?? null } })()"},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); const scene = S.useWorldStore.getState().scene; const chunks = S.useLandStore.getState().chunks; const progress = S.useLandStore.getState().progress; return { originNpcs: scene.status === 'ready' ? scene.value.npcs.map(n => n.name) : scene.status, chunks: Object.fromEntries(Object.entries(chunks).map(([k, c]) => [k, { status: c.status, npcs: c.status === 'written' ? c.scene.npcs.map(n => n.name) : null, error: c.error?.code ?? null }])), episodes: progress?.episodes ?? null, nearby: S.useEngineStore.getState().nearby ?? null } })()"},
+    {"eval": "(() => { const lines = document.body.innerText.split('\\n').filter(Boolean); return lines.filter(l => /chapter|Chapter|write|model|Error|error|resident|talk|Talk/i.test(l)).slice(0, 20) })()"},
+    {"shot": "docs/e2e/milestone-rev6-p4-no-servers/02-01-walked.jpg"},
+    {"hold": "KeyN", "ms": 100},
+    {"wait": 1000},
+    {"eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 1200) : 'no notes layer' })()"},
+    {"shot": "docs/e2e/milestone-rev6-p4-no-servers/02-02-notes.jpg"},
+    {"hold": "Escape", "ms": 80},
+    {"wait": 500},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); return { screen: S.useSessionStore.getState().screen, notes: document.querySelector('[data-layer=notes]') !== null } })()"}
+  ]
+}

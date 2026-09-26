@@ -1,0 +1,11 @@
+{
+  "part": "G2-D (service stopped, no chain env): read the HUD and position, hold W for 1.5 s, read them again",
+  "actions": [
+    {"eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const S = await import('/state/index.ts'); const p = P.samplePlayer(); const lines = document.body.innerText.split('\\n').filter(Boolean); const i = lines.indexOf('LAND'); return { screen: S.useSessionStore.getState().screen, pos: p && [Number(p.x.toFixed(2)), Number(p.z.toFixed(2))], chunk: S.useEngineStore.getState().chunk, land: i < 0 ? null : lines[i + 1], fps: lines.find(l => /FPS$/.test(l)) ?? null, hud: lines.slice(0, 18) } })()"},
+    {"shot": "docs/e2e/milestone-rev6-p4-chain/g2-04-before-walk.jpg"},
+    {"hold": "KeyW", "ms": 1500},
+    {"wait": 300},
+    {"eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const S = await import('/state/index.ts'); const p = P.samplePlayer(); const lines = document.body.innerText.split('\\n').filter(Boolean); const i = lines.indexOf('LAND'); return { screen: S.useSessionStore.getState().screen, pos: p && [Number(p.x.toFixed(2)), Number(p.z.toFixed(2))], chunk: S.useEngineStore.getState().chunk, land: i < 0 ? null : lines[i + 1], fps: lines.find(l => /FPS$/.test(l)) ?? null, hud: lines.slice(0, 18) } })()"},
+    {"shot": "docs/e2e/milestone-rev6-p4-chain/g2-05-after-walk.jpg"}
+  ]
+}

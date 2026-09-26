@@ -1,0 +1,47 @@
+# launch 1 ($SCR/ud1) histories
+## ud1/histories/hqgq6fcycjwmfare3uukgs2na4rfsz33ja5bdrje6ojnydzks6dja/log.jsonl
+1 genesis author kaoccgu7rnngnm65nit4rwvscfrltw2e4mj5kxs7vyxrqxy4aqrlq chain sha256:6179615817b286b80a83c1600435c2ad3e885859ab67a0c66d8818d41f2e465f
+2 profile author kaoccgu7rnngnm65nit4rwvscfrltw2e4mj5kxs7vyxrqxy4aqrlq chain sha256:984b528d969e6c1a453f95a57a97bebec864789ecf0a5d34483be4ad5a2448b7
+3 note author kaoccgu7rnngnm65nit4rwvscfrltw2e4mj5kxs7vyxrqxy4aqrlq chain sha256:42699ffee22890e7c87fee7133c9836db5c37696add4fb867597631da4a3f462
+4 visit author kaoccgu7rnngnm65nit4rwvscfrltw2e4mj5kxs7vyxrqxy4aqrlq chain sha256:be1c8c3827d529625b22a8cd3291bb85deb3dcbd0a93ce500e44702e9d3c7bf3
+
+# launch 2 ($SCR/ud2) histories after import
+## ud2/histories/hiph756v4mvrfkwwa73gbl64mhvry2yzelvi7mvzchoq4lktmdrvq/log.jsonl
+1 genesis author kxoz4smgmgzq7xhgnl4gylpfbybrowo535k4egppvnumggkikmutq chain sha256:74b908b3d366a5740c3f273eb9d44e5175e3e61b894d6165d4c95c20e5b6267a from {"instanceId": "um7t-ewls-muhx0c2d", "world": "hqgq6fcycjwmfare3uukgs2na4rfsz33ja5bdrje6ojnydzks6dja", "head": {"n": 4, "chain": "sha256:be1c8c3827d529625b22a8cd3291bb85deb3dcbd0a93ce500e44702e9d3c7bf3"}}
+2 profile author kxoz4smgmgzq7xhgnl4gylpfbybrowo535k4egppvnumggkikmutq chain sha256:424d0cc917bb476632d46bdee3d5ddc3697d93c5a31a5c1eec670dafb4889cf8 
+3 note author kxoz4smgmgzq7xhgnl4gylpfbybrowo535k4egppvnumggkikmutq chain sha256:3aa50c1a36cc88becdf67b022fca6e1960e4eb22f2fe51c40398b4fae75de4d8 
+4 visit author kxoz4smgmgzq7xhgnl4gylpfbybrowo535k4egppvnumggkikmutq chain sha256:99d06c8d03f7ece304303c80bf0a7e65d360999f43deafad60ce51fd8bae189d 
+5 profile author kxoz4smgmgzq7xhgnl4gylpfbybrowo535k4egppvnumggkikmutq chain sha256:a1d28cad8bd2cda197f16621e143b3dd859ce18106c8130a9348fe540f3e6dfe 
+## ud2/histories/hqgq6fcycjwmfare3uukgs2na4rfsz33ja5bdrje6ojnydzks6dja/log.jsonl
+1 genesis author kaoccgu7rnngnm65nit4rwvscfrltw2e4mj5kxs7vyxrqxy4aqrlq chain sha256:6179615817b286b80a83c1600435c2ad3e885859ab67a0c66d8818d41f2e465f from {"instanceId": "um7t-ewls-muhx0c2d"}
+2 profile author kaoccgu7rnngnm65nit4rwvscfrltw2e4mj5kxs7vyxrqxy4aqrlq chain sha256:984b528d969e6c1a453f95a57a97bebec864789ecf0a5d34483be4ad5a2448b7 
+3 note author kaoccgu7rnngnm65nit4rwvscfrltw2e4mj5kxs7vyxrqxy4aqrlq chain sha256:42699ffee22890e7c87fee7133c9836db5c37696add4fb867597631da4a3f462 
+4 visit author kaoccgu7rnngnm65nit4rwvscfrltw2e4mj5kxs7vyxrqxy4aqrlq chain sha256:be1c8c3827d529625b22a8cd3291bb85deb3dcbd0a93ce500e44702e9d3c7bf3 
+
+## $SCR/ud2/histories/index.json
+{
+  "v": 1,
+  "worlds": {
+    "hqgq6fcycjwmfare3uukgs2na4rfsz33ja5bdrje6ojnydzks6dja": {
+      "instanceId": "um7t-ewls-muhx0c2d",
+      "owner": "kaoccgu7rnngnm65nit4rwvscfrltw2e4mj5kxs7vyxrqxy4aqrlq"
+    },
+    "hiph756v4mvrfkwwa73gbl64mhvry2yzelvi7mvzchoq4lktmdrvq": {
+      "instanceId": "um7t-ewls-muhx0c2d",
+      "owner": "kxoz4smgmgzq7xhgnl4gylpfbybrowo535k4egppvnumggkikmutq"
+    }
+  }
+}
+
+## $SCR/ud2/instances/um7t-ewls-muhxclhk/saves/default/world.json
+{
+  "v": 1,
+  "worldId": "hiph756v4mvrfkwwa73gbl64mhvry2yzelvi7mvzchoq4lktmdrvq",
+  "migrated": null
+}
+
+## $SCR/ud1/usage.jsonl
+{"v":1,"at":"2026-09-26T04:56:30.269Z","purpose":"bible","scope":{"kind":"create","id":"4f41918a02eb1925"},"provider":"apple-fm","model":"system","input":null,"output":null,"cached":null,"ms":1168,"outcome":"failed"}
+{"v":1,"at":"2026-09-26T05:01:27.516Z","purpose":"bible","scope":{"kind":"create","id":"4f41918a02eb1925"},"provider":"apple-fm","model":"system","input":null,"output":null,"cached":null,"ms":1318,"outcome":"failed"}
+## $SCR/ud2/usage.jsonl
+(absent)

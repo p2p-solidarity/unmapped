@@ -159,3 +159,78 @@ The service data dir was hashed before and after the dry run and was unchanged:
   `g0-04`, `g0-03-title-after-reload`, `g1-00-title-after-reload`.
 
 Scratch paths in the copied logs are shown as `$SCR`.
+
+## Part G (finished)
+
+This is a second session on 2026-09-26. It finishes G, the pass with no chain env anywhere and
+the service stopped. It does not replace the G-a / G-c rows above.
+
+It used a fresh userData and a fresh service dir on a private snapshot tree: origin/main
+`0a03e29`, no `.env`, and its own Vite cache and port. That is why no other session's edit
+reloaded it; `g2-main.log.txt` has no `page reload` line. The world is a new New game (seed
+4QCL-JV9D), not the A–F world. It was shared on 8796, "Record beats" was turned on, and then the
+service was stopped.
+
+No chain env was set anywhere:
+- The service was started with `env -u` for every `SERVICE_CHAIN_*` / `SERVICE_PROVENANCE_*`.
+- The app was started with `env -u` for every `UNMAPPED_PROVENANCE_*`, and the `UNWRITTEN_*`
+  values were blanked.
+- `ps eww` on Electron main showed no `UNMAPPED_PROVENANCE_*` or `SERVICE_*`.
+
+Model: none answering (`apple-fm · system`, UNREACHABLE). No model call was made.
+
+### Replay
+
+```bash
+SCR=$(mktemp -d); R=<repo root>; D=docs/e2e/milestone-rev6-p4-chain
+mkdir -p $SCR/snap $SCR/service $SCR/udG
+git -C $R archive origin/main | tar -x -C $SCR/snap; ln -s $R/node_modules $SCR/snap/node_modules
+# $SCR/snap/electron.vite.config.ts, renderer section, add:
+#   cacheDir: resolve(__dirname, ".vite-cache"), server: { port: 5197, strictPort: true },
+(cd $SCR/snap && env -u SERVICE_CHAIN_KEY -u SERVICE_CHAIN_ID -u SERVICE_CHAIN_RPC_URL -u SERVICE_PROVENANCE_ADDRESS \
+  UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8796 --data $SCR/service) &
+(cd $SCR/snap && env -u UNMAPPED_PROVENANCE_RPC_URL -u UNMAPPED_PROVENANCE_ADDRESS -u UNMAPPED_PROVENANCE_CHAIN_ID \
+  OPENAI_API_KEY= THESYS_API_KEY= UNMAPPED_GATEWAY_URL= UNMAPPED_GATEWAY_KEY= UNWRITTEN_LINEAGE_ACCOUNTS= \
+  UNWRITTEN_LINEAGE_FROM_BLOCK= UNWRITTEN_LINEAGE_HOOK= UNWRITTEN_LINEAGE_PARENT= UNWRITTEN_LINEAGE_REGISTRY= \
+  UNWRITTEN_LINEAGE_RELAY= UNWRITTEN_LINEAGE_ROUTER= UNWRITTEN_PRIVATE_KEY= \
+  AETHER_TEST_USER_DATA=$SCR/udG bunx electron-vite dev --remoteDebuggingPort 9344) &
+cd $R; part() { CDP_PORT=9344 bun scripts/cdp-drive.ts "$(cat $D/$1)"; }
+part run-g2-a-settings.json; part run-g2-b-newgame-share-record.json
+kill $(lsof -tiTCP:8796 -sTCP:LISTEN)                     # stop the service
+part run-g2-c-door-chain-stopped.json; part run-g2-d-walk.json
+part run-g2-e-screens.json; part run-g2-f-settings-test-stopped.json
+```
+
+`run-g2.json` holds the env, the model, the sequence, and the actions before the stop
+(`actionsBeforeStop`) and after it (`actions`).
+
+### What was checked
+
+| # | Expected | Observed | Verdict |
+| --- | --- | --- | --- |
+| G2-A | The service is set up in Settings | Shared worlds took `ws://127.0.0.1:8796`, and Test said "Reachable: unmapped-service/1, physics 1, 0 worlds kept. Health **22 ms**, greeting **23 ms**." Service key `kezrdmpp…oonina`, "runs in test mode" (`g2-00`) | pass |
+| G2-B | New game, share, Record beats | Play on `aether-land` 1.3.0, instance `4qcl-jv9d-muhxfj0q`. "Share on 127.0.0.1:8796" read "Shared on 127.0.0.1:8796 · Online" after **505 ms**. Service log: `attached world h7eh5pro…w2zq (3 entries)`. "Record beats" went disabled (active), and the door read "Recording is now: Record beats." The service's `log.jsonl` n=4 is `chain {"record": true}`. The provenance line read "No chain is set up on this device, so nothing is compared. Everything else works as usual." (`g2-01`, `g2-service-disk.txt`) | pass |
+| — | Service stopped | `kill` (SIGTERM) on the pid on 8796 at 05:06:16Z. The service logged "world service: stopped (SIGTERM), snapshots written". `lsof` then found nothing on 8796, and `curl /v1/health` exited 7 | — |
+| G1 | The door's chain section with the service stopped says no chain is set up, with no error block | Sharing: "Shared on 127.0.0.1:8796 · Offline: your changes wait here and go out when the service answers. · You own this world." Chain section: "Recorded on a public chain", the chips "Don't record" / "Record beats" (Record beats active), the public-metadata note, and "No chain is set up on this device, so nothing is compared. Everything else works as usual." The chain section has **no** error block. `window.seed.world.provenance()` → `provenance-not-configured` ("No provenance chain is configured."). The only error block in the whole door is the Continent section's known `continent-world-attached` (item 5 above) (`g2-02`, `g2-03`) | pass |
+| G2 | Play still works: W for 1.5 s, with HUD reads before and after | Before: (10.4, **8.5**), LAND 0 · 0, 41 FPS. After: (10.4, **2.55**), 5.95 tiles, LAND 0 · 0, 40 FPS. The HUD lines were the same both times: seed, "UNWRITTEN · The model is not reachable…", KARMA 0 entries, CARRIED 0 items · 0 mats, "Story 0/3 · next: The Twice-a-Day Bus (Last Stop)", "UNREACHABLE apple-fm · system", "No model calls counted for this world yet." (`g2-04`, `g2-05`). After Settings and Continue, Play opened again at (10.4, 2.55), 49 FPS, head 4 (`g2-12`) | pass |
+| G3a | Worlds → Saves | "無界之地 · 4QCL-JV9D · Shared on 127.0.0.1:8796 · aether-land@1.3.0 · Resume · Backup save", then "No ENS tree is set up on this machine (UNWRITTEN_LINEAGE_* in .env)." (`g2-06`) | pass |
+| G3b | Worlds → Cartridges says plainly what is not set up | All 4 revisions listed (1.3.0, 1.2.0, 1.1.0, 1.0.0). The selected 1.3.0 shows "1 run: 無界之地 · 4QCL-JV9D", "No ENS tree is set up on this machine (UNWRITTEN_LINEAGE_* in .env).", Play / Remix / Export .cartridge / Import .cartridge / Open by ENS name. **0** error blocks (`g2-07`) | pass |
+| G3c | Worlds → Market says plainly what is not set up | "Bid on and trade worlds on Sepolia. Your passkey signs every move and UNMAPPED's gas station pays the gas — no wallet, no ETH." Then "Error · market-not-configured · No lineage market is configured on this machine. · Run `bun run lineage:market <label>` and put the UNWRITTEN_LINEAGE_* lines it prints in .env." The screen works; the not-configured line is drawn as an error block, not a calm line (`g2-08`) | pass |
+| G3d | Settings | It opened with LANGUAGE, Model, Account, Plan, Images, Signaling servers and Shared worlds. The only error blocks are Account and Plan `gateway-not-configured`, because this run blanked `UNMAPPED_GATEWAY_URL`. Shared worlds lists `ws://127.0.0.1:8796` "Not tested yet." (`g2-09`, `g2-10`). Its Test with the service stopped: "Error · service-unreachable · Cannot reach http://127.0.0.1:8796/v1/health: fetch failed · Check the address and that the service runs." (`g2-11`) | pass |
+| G4 | No crash anywhere | `g2-main.log.txt` has no renderer error, no uncaught exception and no Vite reload. Every step ended on the screen it meant to reach | pass |
+
+**Part G verdict: pass.** With the chain switched off everywhere and the service gone, the door's
+chain section is one calm line, play goes on, and Saves, Cartridges, Market and Settings each say
+what is not set up. Market draws that as an error block, Cartridges and Saves as a plain line.
+
+### Part G files
+
+- `run-g2.json`: env, model, sequence, all actions.
+- Part files: `run-g2-a-settings.json`, `run-g2-b-newgame-share-record.json`,
+  `run-g2-c-door-chain-stopped.json`, `run-g2-d-walk.json`, `run-g2-e-screens.json`,
+  `run-g2-f-settings-test-stopped.json`.
+- Logs: `g2-service.log.txt` (the service's log), `g2-service-disk.txt` (its stored log after the
+  stop), `g2-main.log.txt` (the app's log).
+- Screenshots: `g2-00` to `g2-12`.
+- The app was closed with CDP `Browser.close`; the first attempt got no reply and the second
+  closed it. At the end nothing listened on 9344, 8796 or 5197.

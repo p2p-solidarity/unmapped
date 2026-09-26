@@ -1,0 +1,20 @@
+{
+  "step": 9,
+  "app": "launch 1 (CDP 9344), on Create: Back to the title ×2 → Worlds → World files → Export .world (the dialog answers AETHER_TEST_WORLD_PATH = $SCR/files/ns-export.world)",
+  "actions": [
+    {"clickText": "Back to the title"},
+    {"wait": 1200},
+    {"clickText": "Back to the title"},
+    {"wait": 1200},
+    {"clickText": "Worlds"},
+    {"wait": 1000},
+    {"clickText": "World files"},
+    {"wait": 1500},
+    {"eval": "(() => { const m = document.querySelector('main') ?? document.body; return m.innerText.slice(0, 1600) })()"},
+    {"eval": "window.__t0 = performance.now(); 'mark'"},
+    {"clickText": "Export .world"},
+    {"eval": "(async () => { for (let i = 0; i < 80; i++) { const t = document.body.innerText; if (/Wrote .*KiB/.test(t) || /Error/.test(t)) return { ms: Math.round(performance.now() - window.__t0) }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"},
+    {"eval": "(() => { const t = document.body.innerText; const at = t.indexOf('Worlds on this device'); return t.slice(at, at + 900) })()"},
+    {"shot": "docs/e2e/milestone-rev6-p4-no-servers/09-00-exported.jpg"}
+  ]
+}

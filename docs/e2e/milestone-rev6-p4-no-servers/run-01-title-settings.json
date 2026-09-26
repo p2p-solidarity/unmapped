@@ -1,0 +1,29 @@
+{
+  "step": 1,
+  "app": "launch 1 (CDP 9344, userData $SCR/ud1, fresh): title in the system language (zh-TW); Settings; switch to English; read every section heading, Account, Plan and Model; look for any sign-in prompt",
+  "actions": [
+    {"eval": "(() => ({ title: document.body.innerText.split('\\n').filter(Boolean), buttons: [...document.querySelectorAll('button')].map(b => b.innerText.trim()).filter(Boolean) }))()"},
+    {"shot": "docs/e2e/milestone-rev6-p4-no-servers/01-00-title.jpg"},
+    {"clickText": "設定"},
+    {"wait": 1000},
+    {"clickText": "English"},
+    {"wait": 2000},
+    {"eval": "(() => { const d = document.querySelector('[role=dialog]'); return d ? { dialog: d.getAttribute('aria-label'), sections: [...d.querySelectorAll('section')].map(s => s.innerText.split('\\n')[0].trim()) } : 'no dialog' })()"},
+    {"eval": "(() => { const a = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Account')); if (!a) return 'no Account section'; a.scrollIntoView({ block: 'start' }); return { account: a.innerText, dataAccount: document.querySelector('[data-account]') !== null, inputs: [...a.querySelectorAll('input')].map(i => i.type + ':' + (i.closest('label')?.innerText ?? '')), buttons: [...a.querySelectorAll('button')].map(b => b.innerText.trim()) } })()"},
+    {"eval": "(() => { const p = document.querySelector('[data-plans]') ?? [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Plan')); return p ? { plan: p.innerText, plans: document.querySelectorAll('[data-plan]').length, prices: /\\$|€|£|per month|per year|\\/mo/.test(p.innerText) } : 'no Plan section' })()"},
+    {"wait": 300},
+    {"shot": "docs/e2e/milestone-rev6-p4-no-servers/01-01-account-plan.jpg"},
+    {"eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); if (!s) return 'no Model section'; s.scrollIntoView({ block: 'start' }); return { model: s.innerText, allowanceChip: [...document.querySelectorAll('button')].some(b => b.innerText.trim() === 'Free allowance'), freeAllowanceText: /Free allowance/.test(document.body.innerText) } })()"},
+    {"clickText": "Cloud API"},
+    {"wait": 1000},
+    {"eval": "({ cloudChips: [...document.querySelectorAll('button')].filter(b => ['OpenAI', 'OpenUI Gateway', 'Custom API', 'Free allowance'].includes(b.innerText.trim())).map(b => b.innerText.trim()), freeAllowanceText: /Free allowance/.test(document.body.innerText) })"},
+    {"wait": 300},
+    {"shot": "docs/e2e/milestone-rev6-p4-no-servers/01-02-model-cloud-no-allowance.jpg"},
+    {"clickText": "On this computer"},
+    {"wait": 1500},
+    {"eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); return s ? s.innerText : 'no Model section' })()"},
+    {"eval": "(() => { const t = document.body.innerText; return { signIn: /sign in|log in|create an account|sign up/i.test(t), lines: t.split('\\n').filter(l => /sign in|log in|account|sign up/i.test(l)) } })()"},
+    {"eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Shared worlds')); return s ? s.innerText.slice(0, 800) : 'no Shared worlds section' })()"},
+    {"eval": "localStorage.getItem('unwritten.worldServices')"}
+  ]
+}

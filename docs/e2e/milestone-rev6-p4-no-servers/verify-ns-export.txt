@@ -1,0 +1,17 @@
+$ bun --tsconfig-override tsconfig.node.json scripts/verify-world.ts "$SCR/files/ns-export.world"
+world      hqgq6fcycjwmfare3uukgs2na4rfsz33ja5bdrje6ojnydzks6dja "無界之地 · UM7T-EWLS"
+cartridge  aether-land@1.3.0 sha256:57f17e0d3e1504466da111ee6eae2e55720b812a2b07afdad932e7f72467e81b
+head       #4 sha256:be1c8c3827d529625b22a8cd3291bb85deb3dcbd0a93ce500e44702e9d3c7bf3
+physics    1   protocol 2
+exported   2026-09-26T05:01:58.779Z by kaoccgu7rnngnm65nit4rwvscfrltw2e4mj5kxs7vyxrqxy4aqrlq (signature valid)
+entries    4 by 1 keys; owners 1
+services   none (never attached)
+beats      0 (0 do not recompute)
+ignored    0 (0 from a newer build)
+packs      1 (0 AI worlds), 8504 bytes in all
+checked in 55 ms
+OK — every check passed.
+Internal error: directory mismatch for directory "$SCR/snap/tsconfig.node.json", fd 3. You don't need to do anything, but this indicates a bug.
+real 0.22
+user 0.26
+sys 0.08

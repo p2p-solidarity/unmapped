@@ -1,0 +1,47 @@
+vite v8.3.0 building ssr environment for development...
+transforming...
+✓ 355 modules transformed.
+rendering chunks...
+out/main/chunks/heart-BgeRAx0t.png                          3.12 kB
+out/main/chunks/samurai_green-XToNlHMv.png                  4.78 kB
+out/main/chunks/samurai_blue-YZHMdpFI.png                   5.53 kB
+out/main/chunks/ninja_blue-COU3McFS.png                     6.13 kB
+out/main/chunks/tileset_floor-B7205uFr.png                 29.61 kB
+out/main/chunks/tileset_village_abandoned-BqZ8VUQR.png     31.77 kB
+out/main/index.js                                       1,278.55 kB
+
+✓ built in 233ms
+
+electron main process built successfully
+
+-----
+
+vite v8.3.0 building ssr environment for development...
+transforming...
+✓ 122 modules transformed.
+rendering chunks...
+out/preload/index.js  223.84 kB
+
+✓ built in 41ms
+
+electron preload scripts built successfully
+
+-----
+
+dev server running for the electron renderer process at:
+
+  ➜  Local:   http://localhost:5197/
+  ➜  Network: use --host to expose
+
+starting electron app...
+
+
+DevTools listening on ws://127.0.0.1:9344/devtools/browser/1078356f-a1be-41ec-bd64-b16ac245b3b8
+[apple-local] native-helper-start: spawn $SCR/snap/native/afm-bridge/.build/debug/afm-bridge ENOENT
+[renderer:LOG] [vite] connecting... (http://localhost:5197/@vite/client:883)
+[renderer:LOG] [vite] connected. (http://localhost:5197/@vite/client:996)
+[renderer:LOG] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold (http://localhost:5197/@fs$SCR/snap/.vite-cache/deps/client-CBEMz44o.js?v=3ee6cacf:15861)
+[inference] chat fe111a3a-7f22-4fd9-8344-ed7e3a876d15 · 2 messages · 0 tools
+[inference] fail fe111a3a-7f22-4fd9-8344-ed7e3a876d15 · bible · apple-fm system · 1168 ms · connection-refused
+[inference] chat 15561dc5-39ee-47c4-999b-40fe2ab7bfac · 2 messages · 0 tools
+[inference] fail 15561dc5-39ee-47c4-999b-40fe2ab7bfac · bible · apple-fm system · 1317 ms · connection-refused

@@ -1,0 +1,23 @@
+{
+  "part": "G2-C (after `kill` of the service on 8796; no chain env anywhere): wait for the link to leave Online; walk to the door, E; read Sharing and the chain section; ask main for provenance; screenshot the chain section; close the door",
+  "actions": [
+    {"eval": "(async () => { const t0 = Date.now(); const H = await import('/history/index.ts'); for (let i = 0; i < 60; i++) { const l = document.body.innerText; if (!/Online/.test(l) && i > 4) break; await new Promise(r => setTimeout(r, 250)); } return { ms: Date.now() - t0, head: H.worldNow()?.head.n } })()"},
+    {"pad": {"toward": "(async () => { const S = await import('/state/index.ts'); const H = await import('/engine/home.ts'); const p = S.useLandStore.getState().progress; const g = S.useWorldStore.getState().scene; return p === null || g.status !== 'ready' ? null : H.doorPosition(g.value, p.home) })()", "within": 0.5, "timeoutMs": 15000}},
+    {"wait": 300},
+    {"eval": "document.body.innerText.split('\\n').filter(l => /Open the door/.test(l))"},
+    {"hold": "KeyE", "ms": 120},
+    {"wait": 2500},
+    {"eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; const at = t.indexOf('Recorded on a public chain'); return { sharing: t.slice(t.indexOf('Sharing'), t.indexOf('Who may come in')), chain: at < 0 ? 'no chain section' : t.slice(at, t.indexOf('Continent', at)) } })()"},
+    {"eval": "(() => { const l = document.querySelector('[data-layer=door]'); const at = [...l.querySelectorAll('*')].find(e => e.innerText?.trim() === 'Recorded on a public chain'); let box = at?.parentElement; const blocks = [...document.querySelectorAll('[data-layer=door] *')].filter(e => /^Error · /.test((e.innerText ?? '').trim()) && e.children.length === 0).map(e => e.parentElement?.innerText ?? e.innerText); return { errorBlocksInDoor: blocks, chainSectionHasError: box ? /Error · /.test(box.innerText) : null } })()"},
+    {"eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); const r = await window.seed.world.provenance(n.world); return r.ok ? { ok: true, verdict: r.value.verdict } : { ok: false, code: r.error.code, message: r.error.message, hint: r.error.hint } })()"},
+    {"eval": "(() => { const h = [...document.querySelectorAll('[data-layer=door] *')].find(e => e.innerText?.trim() === 'Recorded on a public chain'); h?.scrollIntoView({ block: 'start' }); return !!h })()"},
+    {"wait": 300},
+    {"shot": "docs/e2e/milestone-rev6-p4-chain/g2-02-door-chain-service-stopped.jpg"},
+    {"eval": "(() => { const h = [...document.querySelectorAll('[data-layer=door] *')].find(e => e.innerText?.trim() === 'Sharing'); h?.scrollIntoView({ block: 'start' }); return !!h })()"},
+    {"wait": 300},
+    {"shot": "docs/e2e/milestone-rev6-p4-chain/g2-03-door-sharing-service-stopped.jpg"},
+    {"hold": "Escape", "ms": 80},
+    {"wait": 500},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); return { screen: S.useSessionStore.getState().screen, door: S.useSessionStore.getState().doorOpen } })()"}
+  ]
+}

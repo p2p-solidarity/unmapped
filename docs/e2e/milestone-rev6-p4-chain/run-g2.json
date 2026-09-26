@@ -1,0 +1,370 @@
+{
+ "env": {
+  "scratch": "SCR = a fresh empty dir (this run: the session scratchpad .../scratchpad/p4ns); mkdir -p $SCR/service $SCR/udG",
+  "tree": "git archive origin/main (0a03e29) | tar -x -C $SCR/snap; ln -s <repo>/node_modules $SCR/snap/node_modules; no .env in $SCR/snap; electron.vite.config.ts renderer section gets cacheDir: resolve(__dirname, '.vite-cache') and server: { port: 5197, strictPort: true } (a private Vite cache: no other session's edit can reload this app)",
+  "service": "cd $SCR/snap && env -u SERVICE_CHAIN_KEY -u SERVICE_CHAIN_ID -u SERVICE_CHAIN_RPC_URL -u SERVICE_PROVENANCE_ADDRESS UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8796 --data $SCR/service   (no .env in the snapshot, so Bun loads none)",
+  "app": "cd $SCR/snap && env -u UNMAPPED_PROVENANCE_RPC_URL -u UNMAPPED_PROVENANCE_ADDRESS -u UNMAPPED_PROVENANCE_CHAIN_ID OPENAI_API_KEY= THESYS_API_KEY= UNMAPPED_GATEWAY_URL= UNMAPPED_GATEWAY_KEY= UNWRITTEN_LINEAGE_ACCOUNTS= UNWRITTEN_LINEAGE_FROM_BLOCK= UNWRITTEN_LINEAGE_HOOK= UNWRITTEN_LINEAGE_PARENT= UNWRITTEN_LINEAGE_REGISTRY= UNWRITTEN_LINEAGE_RELAY= UNWRITTEN_LINEAGE_ROUTER= UNWRITTEN_PRIVATE_KEY= AETHER_TEST_USER_DATA=$SCR/udG bunx electron-vite dev --remoteDebuggingPort 9344   (ps eww on Electron main: no UNMAPPED_PROVENANCE_* and no SERVICE_*; the listed keys present and empty)",
+  "driver": "from the repo root: CDP_PORT=9344 bun scripts/cdp-drive.ts \"$(cat docs/e2e/milestone-rev6-p4-chain/<part>.json)\"",
+  "stop": "kill $(lsof -tiTCP:8796 -sTCP:LISTEN)   (SIGTERM; the service logs 'stopped (SIGTERM), snapshots written'; curl /v1/health then exits 7)",
+  "close": "bun close-app.ts with CDP_PORT=9344 (docs/e2e/milestone-rev6-p4-no-servers/close-app.ts.txt): CDP Browser.close on the browser target",
+  "system": "macOS 27.0 (26A428), Bun 1.3.6, Electron 44.3.0 (Chrome 152); UI zh-TW until G2-A switches it to English"
+ },
+ "model": "none answering (apple-fm · system, UNREACHABLE: fm serve's terms not accepted); no model call was made in Part G (0 [inference] lines in g2-main.log.txt)",
+ "sequence": [
+  "start the service, then the app",
+  "run-g2-a-settings.json",
+  "run-g2-b-newgame-share-record.json",
+  "shell: stop the service (above); lsof: nothing on 8796",
+  "run-g2-c-door-chain-stopped.json",
+  "run-g2-d-walk.json",
+  "run-g2-e-screens.json",
+  "run-g2-f-settings-test-stopped.json",
+  "shell: close the app; lsof: nothing on 9344, 8796, 5197"
+ ],
+ "actionsBeforeStop": [
+  {
+   "note": "run-g2-a-settings.json: G2-A (Part G finished, fresh userData $SCR/udG): Settings in the system language (zh-TW) → English; add ws://127.0.0.1:8796 under Shared worlds; Save; the Shared worlds Test button (found under that field, clicked through the DOM as in run-a2-test.json)"
+  },
+  {
+   "clickText": "設定"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "English"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const ta = [...document.querySelectorAll('textarea')].find(t => (t.closest('label')?.innerText ?? '').includes('World services') || (t.labels?.[0]?.innerText ?? '').includes('World services')); if (!ta) return 'no field'; ta.scrollIntoView({block: 'center'}); ta.focus(); return ta === document.activeElement })()"
+  },
+  {
+   "type": "ws://127.0.0.1:8796"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "clickText": "Save"
+  },
+  {
+   "wait": 400
+  },
+  {
+   "eval": "(() => { const field = [...document.querySelectorAll('textarea')].find(t => t.value.includes('ws://127.0.0.1:8796')); let box = field; while (box && ![...box.querySelectorAll('button')].some(b => b.innerText.trim() === 'Test')) box = box.parentElement; const btn = [...box.querySelectorAll('button')].find(b => b.innerText.trim() === 'Test'); btn.scrollIntoView({block: 'center'}); btn.click(); return 'clicked the Shared worlds Test' })()"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('ws://127.0.0.1:8796\\n'); return at < 0 ? 'no probe line' : t.slice(at, at + 400) })()"
+  },
+  {
+   "eval": "localStorage.getItem('unwritten.worldServices')"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-chain/g2-00-settings-service.jpg"
+  },
+  {
+   "note": "run-g2-b-newgame-share-record.json: G2-B (service on 8796 running): close Settings; Worlds → New game → Start; E at home opens the door; Share on 127.0.0.1:8796; turn on Record beats; read Sharing and the chain section; close the door"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "clickText": "Worlds"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Start"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance && S.useLandStore.getState().progress !== null) return { ms: Date.now() - t0, screen: s.screen, instance: s.activeInstance.instance?.meta?.instanceId ?? null }; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + S.useSessionStore.getState().screen })()"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; return t.slice(t.indexOf('Sharing'), t.indexOf('Continent')) })()"
+  },
+  {
+   "clickText": "Share on 127.0.0.1:8796"
+  },
+  {
+   "eval": "(async () => { const t0 = Date.now(); for (let i = 0; i < 120; i++) { const l = document.querySelector('[data-layer=door]'); const t = l ? l.innerText : ''; if (/Recorded on a public chain/.test(t) && /Online/.test(t)) return { ms: Date.now() - t0 }; await new Promise(r => setTimeout(r, 250)); } const l = document.querySelector('[data-layer=door]'); return 'timeout: ' + (l ? l.innerText.slice(0, 1500) : 'no door') })()"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "Record beats"
+  },
+  {
+   "eval": "(async () => { const t0 = Date.now(); for (let i = 0; i < 80; i++) { const l = document.querySelector('[data-layer=door]'); const t = l ? l.innerText : ''; if (/Recording is now/.test(t) || [...(l?.querySelectorAll('button') ?? [])].some(b => b.innerText.trim() === 'Record beats' && b.disabled)) return { ms: Date.now() - t0 }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); const t = l.innerText; const at = t.indexOf('Recorded on a public chain'); return { sharing: t.slice(t.indexOf('Sharing'), t.indexOf('Who may come in')), chain: t.slice(at, t.indexOf('Continent', at)), buttons: [...l.querySelectorAll('button')].filter(b => ['Record beats', \"Don't record\", 'Check again'].includes(b.innerText.trim())).map(b => ({ text: b.innerText.trim(), disabled: b.disabled })) } })()"
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return { world: n?.world, head: n?.head.n } })()"
+  },
+  {
+   "eval": "(() => { const h = [...document.querySelectorAll('[data-layer=door] *')].find(e => e.innerText?.trim() === 'Recorded on a public chain'); h?.scrollIntoView({ block: 'start' }); return !!h })()"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-chain/g2-01-door-recording-service-online.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 500
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); return { screen: S.useSessionStore.getState().screen, door: S.useSessionStore.getState().doorOpen } })()"
+  }
+ ],
+ "actions": [
+  {
+   "note": "run-g2-c-door-chain-stopped.json: G2-C (after `kill` of the service on 8796; no chain env anywhere): wait for the link to leave Online; walk to the door, E; read Sharing and the chain section; ask main for provenance; screenshot the chain section; close the door"
+  },
+  {
+   "eval": "(async () => { const t0 = Date.now(); const H = await import('/history/index.ts'); for (let i = 0; i < 60; i++) { const l = document.body.innerText; if (!/Online/.test(l) && i > 4) break; await new Promise(r => setTimeout(r, 250)); } return { ms: Date.now() - t0, head: H.worldNow()?.head.n } })()"
+  },
+  {
+   "pad": {
+    "toward": "(async () => { const S = await import('/state/index.ts'); const H = await import('/engine/home.ts'); const p = S.useLandStore.getState().progress; const g = S.useWorldStore.getState().scene; return p === null || g.status !== 'ready' ? null : H.doorPosition(g.value, p.home) })()",
+    "within": 0.5,
+    "timeoutMs": 15000
+   }
+  },
+  {
+   "wait": 300
+  },
+  {
+   "eval": "document.body.innerText.split('\\n').filter(l => /Open the door/.test(l))"
+  },
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; const at = t.indexOf('Recorded on a public chain'); return { sharing: t.slice(t.indexOf('Sharing'), t.indexOf('Who may come in')), chain: at < 0 ? 'no chain section' : t.slice(at, t.indexOf('Continent', at)) } })()"
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); const at = [...l.querySelectorAll('*')].find(e => e.innerText?.trim() === 'Recorded on a public chain'); let box = at?.parentElement; const blocks = [...document.querySelectorAll('[data-layer=door] *')].filter(e => /^Error · /.test((e.innerText ?? '').trim()) && e.children.length === 0).map(e => e.parentElement?.innerText ?? e.innerText); return { errorBlocksInDoor: blocks, chainSectionHasError: box ? /Error · /.test(box.innerText) : null } })()"
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); const r = await window.seed.world.provenance(n.world); return r.ok ? { ok: true, verdict: r.value.verdict } : { ok: false, code: r.error.code, message: r.error.message, hint: r.error.hint } })()"
+  },
+  {
+   "eval": "(() => { const h = [...document.querySelectorAll('[data-layer=door] *')].find(e => e.innerText?.trim() === 'Recorded on a public chain'); h?.scrollIntoView({ block: 'start' }); return !!h })()"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-chain/g2-02-door-chain-service-stopped.jpg"
+  },
+  {
+   "eval": "(() => { const h = [...document.querySelectorAll('[data-layer=door] *')].find(e => e.innerText?.trim() === 'Sharing'); h?.scrollIntoView({ block: 'start' }); return !!h })()"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-chain/g2-03-door-sharing-service-stopped.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 500
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); return { screen: S.useSessionStore.getState().screen, door: S.useSessionStore.getState().doorOpen } })()"
+  },
+  {
+   "note": "run-g2-d-walk.json: G2-D (service stopped, no chain env): read the HUD and position, hold W for 1.5 s, read them again"
+  },
+  {
+   "eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const S = await import('/state/index.ts'); const p = P.samplePlayer(); const lines = document.body.innerText.split('\\n').filter(Boolean); const i = lines.indexOf('LAND'); return { screen: S.useSessionStore.getState().screen, pos: p && [Number(p.x.toFixed(2)), Number(p.z.toFixed(2))], chunk: S.useEngineStore.getState().chunk, land: i < 0 ? null : lines[i + 1], fps: lines.find(l => /FPS$/.test(l)) ?? null, hud: lines.slice(0, 18) } })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-chain/g2-04-before-walk.jpg"
+  },
+  {
+   "hold": "KeyW",
+   "ms": 1500
+  },
+  {
+   "wait": 300
+  },
+  {
+   "eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const S = await import('/state/index.ts'); const p = P.samplePlayer(); const lines = document.body.innerText.split('\\n').filter(Boolean); const i = lines.indexOf('LAND'); return { screen: S.useSessionStore.getState().screen, pos: p && [Number(p.x.toFixed(2)), Number(p.z.toFixed(2))], chunk: S.useEngineStore.getState().chunk, land: i < 0 ? null : lines[i + 1], fps: lines.find(l => /FPS$/.test(l)) ?? null, hud: lines.slice(0, 18) } })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-chain/g2-05-after-walk.jpg"
+  },
+  {
+   "note": "run-g2-e-screens.json: G2-E (service stopped, no chain env): ← Home → Worlds → Saves, Cartridges, Market; ← Title → Settings; read each for its plain 'not set up' lines and for error blocks; screenshot Cartridges, Market and Settings"
+  },
+  {
+   "clickText": "← Home"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Worlds"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Saves"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const m = document.querySelector('main') ?? document.body; return m.innerText.slice(0, 1400) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-chain/g2-06-worlds-saves.jpg"
+  },
+  {
+   "clickText": "Cartridges"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(() => { const m = document.querySelector('main') ?? document.body; const t = m.innerText; return { text: t.slice(0, 2400), notSetUp: t.split('\\n').filter(l => /not set up|not configured|No ENS|UNWRITTEN_|No ledger|ledger/i.test(l)), errors: t.split('\\n').filter(l => /^Error · /.test(l)) } })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-chain/g2-07-worlds-cartridges.jpg"
+  },
+  {
+   "clickText": "Market"
+  },
+  {
+   "wait": 3000
+  },
+  {
+   "eval": "(() => { const m = document.querySelector('main') ?? document.body; const t = m.innerText; return { text: t.slice(0, 2400), notSetUp: t.split('\\n').filter(l => /not set up|not configured|No ENS|UNWRITTEN_|read-only|station/i.test(l)), errors: t.split('\\n').filter(l => /^Error · /.test(l)) } })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-chain/g2-08-worlds-market.jpg"
+  },
+  {
+   "clickText": "← Title"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Settings"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const d = document.querySelector('[role=dialog]'); if (!d) return 'no dialog'; const t = d.innerText; return { sections: [...d.querySelectorAll('section')].map(s => s.innerText.split('\\n')[0].trim()), errors: t.split('\\n').filter(l => /^Error · /.test(l)), sharedWorlds: (() => { const s = [...d.querySelectorAll('section')].find(x => x.innerText.startsWith('Shared worlds')); return s ? s.innerText.slice(0, 500) : null })() } })()"
+  },
+  {
+   "eval": "(() => { const errs = [...document.querySelectorAll('[role=dialog] *')].filter(e => /^Error · /.test((e.innerText ?? '').trim()) && e.children.length === 0).map(e => e.parentElement?.innerText ?? e.innerText); return errs })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-chain/g2-09-settings.jpg"
+  },
+  {
+   "eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Shared worlds')); s?.scrollIntoView({ block: 'start' }); return !!s })()"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-chain/g2-10-settings-shared-worlds.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); return { screen: S.useSessionStore.getState().screen, dialog: document.querySelector('[role=dialog]') !== null } })()"
+  },
+  {
+   "note": "run-g2-f-settings-test-stopped.json: G2-F (service stopped): Settings → Shared worlds → Test on ws://127.0.0.1:8796; read what it says; close Settings; Continue back into Play and read the door's Sharing line once more from the page"
+  },
+  {
+   "clickText": "Settings"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "(() => { const field = [...document.querySelectorAll('textarea')].find(t => t.value.includes('ws://127.0.0.1:8796')); let box = field; while (box && ![...box.querySelectorAll('button')].some(b => b.innerText.trim() === 'Test')) box = box.parentElement; const btn = [...box.querySelectorAll('button')].find(b => b.innerText.trim() === 'Test'); btn.scrollIntoView({block: 'center'}); btn.click(); return 'clicked the Shared worlds Test' })()"
+  },
+  {
+   "wait": 3000
+  },
+  {
+   "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('ws://127.0.0.1:8796\\n'); return at < 0 ? 'no probe line' : t.slice(at, at + 400) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-chain/g2-11-settings-test-service-stopped.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 120; i++) { if (S.useSessionStore.getState().screen === 'play' && S.useLandStore.getState().progress !== null) return { ms: Date.now() - t0 }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const p = P.samplePlayer(); const lines = document.body.innerText.split('\\n').filter(Boolean); const i = lines.indexOf('LAND'); return { screen: S.useSessionStore.getState().screen, pos: p && [Number(p.x.toFixed(2)), Number(p.z.toFixed(2))], land: i < 0 ? null : lines[i + 1], fps: lines.find(l => /FPS$/.test(l)) ?? null, head: H.worldNow()?.head.n } })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-chain/g2-12-play-again-service-stopped.jpg"
+  }
+ ]
+}

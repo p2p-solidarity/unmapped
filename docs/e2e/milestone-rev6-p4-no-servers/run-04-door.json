@@ -1,0 +1,19 @@
+{
+  "step": 4,
+  "app": "launch 1 (CDP 9344), in Play: walk to the door at home, E, read the door's sharing section and the rest of the door (this device lists no world service)",
+  "actions": [
+    {"pad": {"toward": "(async () => { const S = await import('/state/index.ts'); const H = await import('/engine/home.ts'); const p = S.useLandStore.getState().progress; const g = S.useWorldStore.getState().scene; return p === null || g.status !== 'ready' ? null : H.doorPosition(g.value, p.home) })()", "within": 0.5, "timeoutMs": 15000}},
+    {"wait": 300},
+    {"eval": "document.body.innerText.split('\\n').filter(l => /Open the door/.test(l))"},
+    {"hold": "KeyE", "ms": 120},
+    {"wait": 1500},
+    {"eval": "(() => { const l = document.querySelector('[data-layer=door]'); return l ? l.innerText : 'no door layer' })()"},
+    {"eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; return { online: /Online|Connecting|Shared on/.test(t), shareButtons: [...l.querySelectorAll('button')].map(b => b.innerText.trim()).filter(x => /^Share on/.test(x)), errors: [...l.querySelectorAll('*')].filter(e => /^Error · /.test((e.innerText ?? '').trim()) && e.children.length === 0).map(e => e.parentElement?.innerText ?? e.innerText) } })()"},
+    {"eval": "(() => { const h = [...document.querySelectorAll('[data-layer=door] *')].find(e => /^Share this world/.test(e.innerText?.trim() ?? '') || e.innerText?.trim() === 'Sharing'); h?.scrollIntoView({ block: 'start' }); return h ? h.innerText.trim().slice(0, 60) : null })()"},
+    {"wait": 300},
+    {"shot": "docs/e2e/milestone-rev6-p4-no-servers/04-00-door-no-service.jpg"},
+    {"hold": "Escape", "ms": 80},
+    {"wait": 500},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); return { screen: S.useSessionStore.getState().screen, door: S.useSessionStore.getState().doorOpen } })()"}
+  ]
+}

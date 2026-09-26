@@ -1,0 +1,6 @@
+$ bun --tsconfig-override tsconfig.node.json src/service/main.ts --port "8796" --data "$SCR/service"
+world service kezrdmppibhvhgq56zqmavlsf5vwmmyukcfjfhiurailcu6oonina
+  ws://127.0.0.1:8796/v1/ws  data $SCR/service  worlds 0 (0 not served)  new key TEST MODE (beat every 21600000 ms)
+2026-09-26T05:06:01.420Z attached world h7eh5pro2aw6rzmhgyum74pbw6vnvwyqpxlskybyum4zyosz7w2zq (3 entries)
+world service: stopped (SIGTERM), snapshots written
+Internal error: directory mismatch for directory "$SCR/snap/tsconfig.node.json", fd 3. You don't need to do anything, but this indicates a bug.

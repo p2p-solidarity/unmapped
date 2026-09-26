@@ -1,0 +1,29 @@
+{
+  "part": "G2-B (service on 8796 running): close Settings; Worlds → New game → Start; E at home opens the door; Share on 127.0.0.1:8796; turn on Record beats; read Sharing and the chain section; close the door",
+  "actions": [
+    {"hold": "Escape", "ms": 80},
+    {"wait": 600},
+    {"clickText": "Worlds"},
+    {"wait": 1200},
+    {"clickText": "Start"},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance && S.useLandStore.getState().progress !== null) return { ms: Date.now() - t0, screen: s.screen, instance: s.activeInstance.instance?.meta?.instanceId ?? null }; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + S.useSessionStore.getState().screen })()"},
+    {"wait": 2500},
+    {"hold": "KeyE", "ms": 120},
+    {"wait": 1200},
+    {"eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; return t.slice(t.indexOf('Sharing'), t.indexOf('Continent')) })()"},
+    {"clickText": "Share on 127.0.0.1:8796"},
+    {"eval": "(async () => { const t0 = Date.now(); for (let i = 0; i < 120; i++) { const l = document.querySelector('[data-layer=door]'); const t = l ? l.innerText : ''; if (/Recorded on a public chain/.test(t) && /Online/.test(t)) return { ms: Date.now() - t0 }; await new Promise(r => setTimeout(r, 250)); } const l = document.querySelector('[data-layer=door]'); return 'timeout: ' + (l ? l.innerText.slice(0, 1500) : 'no door') })()"},
+    {"wait": 800},
+    {"clickText": "Record beats"},
+    {"eval": "(async () => { const t0 = Date.now(); for (let i = 0; i < 80; i++) { const l = document.querySelector('[data-layer=door]'); const t = l ? l.innerText : ''; if (/Recording is now/.test(t) || [...(l?.querySelectorAll('button') ?? [])].some(b => b.innerText.trim() === 'Record beats' && b.disabled)) return { ms: Date.now() - t0 }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"},
+    {"wait": 800},
+    {"eval": "(() => { const l = document.querySelector('[data-layer=door]'); const t = l.innerText; const at = t.indexOf('Recorded on a public chain'); return { sharing: t.slice(t.indexOf('Sharing'), t.indexOf('Who may come in')), chain: t.slice(at, t.indexOf('Continent', at)), buttons: [...l.querySelectorAll('button')].filter(b => ['Record beats', \"Don't record\", 'Check again'].includes(b.innerText.trim())).map(b => ({ text: b.innerText.trim(), disabled: b.disabled })) } })()"},
+    {"eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return { world: n?.world, head: n?.head.n } })()"},
+    {"eval": "(() => { const h = [...document.querySelectorAll('[data-layer=door] *')].find(e => e.innerText?.trim() === 'Recorded on a public chain'); h?.scrollIntoView({ block: 'start' }); return !!h })()"},
+    {"wait": 300},
+    {"shot": "docs/e2e/milestone-rev6-p4-chain/g2-01-door-recording-service-online.jpg"},
+    {"hold": "Escape", "ms": 80},
+    {"wait": 500},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); return { screen: S.useSessionStore.getState().screen, door: S.useSessionStore.getState().doorOpen } })()"}
+  ]
+}

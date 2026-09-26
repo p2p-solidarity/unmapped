@@ -1,0 +1,58 @@
+{
+ "step": 6,
+ "app": "launch 1 (CDP 9344), Settings open, model = Apple on-device (fm serve exits: terms not accepted): Escape; Create World → Start a new game; type the idea; Write the world; wait for the outcome (up to 60 s); read every error block",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "Create World"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Start a new game"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "clickText": "In one sentence, what is this land?"
+  },
+  {
+   "type": "A river delta where the ferries run on a tide table nobody wrote down."
+  },
+  {
+   "wait": 400
+  },
+  {
+   "eval": "(() => { window.__t0 = performance.now(); window.__errs = (document.body.innerText.match(/Error · /g) ?? []).length; return { errorBlocksBefore: window.__errs, lines: document.body.innerText.split('\\n').filter(l => /Error · |model|Model/.test(l)).slice(0, 10) } })()"
+  },
+  {
+   "clickText": "Write the world"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 240; i++) { const n = (document.body.innerText.match(/Error · /g) ?? []).length; if (n > window.__errs) return { ms: Math.round(performance.now() - window.__t0), errorBlocks: n }; await new Promise(r => setTimeout(r, 250)); } return 'no new error after 60 s' })()"
+  },
+  {
+   "eval": "(() => { const all=[...document.querySelectorAll('*')].filter(e => /^Error · /.test((e.innerText ?? '').trim())); const blocks = all.filter(e => !all.some(o => o !== e && e.contains(o))); return blocks.map(b => (b.parentElement?.innerText ?? b.innerText)); })()"
+  },
+  {
+   "eval": "(() => { const hits = [...document.querySelectorAll('*')].filter(e => /^Error · /.test((e.innerText ?? '').trim())); const el = hits.sort((a, b) => a.innerText.length - b.innerText.length)[0]; el?.scrollIntoView({block: 'center'}); return el ? el.innerText : 'no error on screen'; })()"
+  },
+  {
+   "wait": 400
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/06-00-create-apple-error.jpg"
+  },
+  {
+   "eval": "(() => { const t = document.body.innerText; return t.split('\\n').filter(Boolean).slice(0, 60) })()"
+  }
+ ]
+}
