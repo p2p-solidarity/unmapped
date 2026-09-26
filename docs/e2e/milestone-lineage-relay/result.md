@@ -8,9 +8,11 @@ against the passkey's signature on chain. Replay: `run.json`.
 
 The app ran with `UNWRITTEN_PRIVATE_KEY=` (empty wins over `.env`, since dotenv never overrides a
 set variable). The station ran locally under `wrangler dev`. The deployed Worker
-(https://unmapped-relay.gimmychang.workers.dev) is the same code; at the time of this run it was
-still waiting for its `RELAYER_KEY` secret, so `/status` answered `relayer: null` and every write was
-refused with `relay-no-key` (checked).
+(https://unmapped-relay.gimmychang.workers.dev) is the same code. Before its `RELAYER_KEY` secret was
+added, `/status` answered `relayer: null` and every write was refused with `relay-no-key` (checked).
+Once the key was added (10:34 JST), `/status` showed `0xB62C…Fd3D` with 0.0482 ETH, and a faucet
+request for a throwaway key went through the deployed Worker: tx `0xc29d69ef…c190`, 51,369 gas, sent
+by the station's key; a request with a browser `Origin` was still refused.
 
 ## What was checked, and what we saw
 
@@ -31,7 +33,5 @@ royalties, record a save, update a save), all successful, for 0.00178 Sepolia ET
 
 ## Not verified here
 
-- The deployed Worker sending a transaction: it has no `RELAYER_KEY` yet. The operator adds it with
-  `bunx wrangler@4 secret put RELAYER_KEY -c web/lineage-relay/wrangler.jsonc < .cache/relay/relayer.key`.
 - Its rate limit (30 requests a minute per client address) was deployed but not driven to its limit.
 - Real Touch ID: the CDP virtual authenticator stood in for it, as in milestone-lineage-demo.
