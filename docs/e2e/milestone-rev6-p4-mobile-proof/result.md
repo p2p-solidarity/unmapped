@@ -274,3 +274,148 @@ phone, and no fake witness was added.
 `bun run typecheck` (all four projects), `bun run lint` (1,093 files), `bun run lines`,
 `bunx vitest run tests/browser` (3 files, 9 tests), `bunx vitest run tests/i18n` (3 tests) and
 `bun run browser:build` (1.74 MB script, 0.44 s) all pass on the tree as it stood after the run.
+
+## Removed member on the phone
+
+The desktop fix in `milestone-rev6-p3-door` ("Fixes after the run") made main stop writing for a key
+the owner removed, and list what that key had waiting as refused. This run checks the phone page for
+the same defect. The phone takes a member's role from its fold alone. A removed key's copy ends
+before its own `member.remove`, so the fold still says member. On the service's `access-removed`
+refusal the page kept writing and left its outbox waiting. The same steps were run twice from fresh
+directories, once before the fix and once after it.
+
+### Replay
+
+```bash
+SCR=$(mktemp -d); REPO=$(pwd); D=docs/e2e/milestone-rev6-p4-mobile-proof
+# The page runs from a snapshot, so other sessions' edits never reload it.
+mkdir -p "$SCR/snap" && git archive origin/main | tar -x -C "$SCR/snap"
+cp scripts/seed-shared-world.ts "$SCR/snap/scripts/"          # "before": only the script's `remove`
+# "after" also copies src/browser/{store,live,sync,worlds}.ts, src/renderer/mobile/{LandScreen,WorldPanel}.tsx
+ln -s "$REPO/node_modules" "$SCR/snap/node_modules"
+cat > "$SCR/vite.e2e.config.mts" <<EOC
+import { fileURLToPath } from "node:url";
+import base from "./snap/vite.browser.config.ts";
+const at = (path) => fileURLToPath(new URL(path, import.meta.url));
+export default { ...base, cacheDir: at("./snap/.vite-e2e-cache"), server: { ...base.server,
+  port: 5192, hmr: false, watch: null, fs: { allow: [at("./snap"), "$REPO/node_modules"] } } };
+EOC
+mkdir -p "$SCR/service-data" "$SCR/seed" "$SCR/chrome-profile" "$SCR/shots"
+svc() { (cd "$SCR/snap" && UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8799 \
+  --data "$SCR/service-data" --browser-origin http://localhost:5192 &); }
+seed() { (cd "$SCR/snap" && bun --tsconfig-override tsconfig.node.json scripts/seed-shared-world.ts "$@"); }
+svc; (cd "$SCR/snap" && bunx vite --config "$SCR/vite.e2e.config.mts" &); sleep 3
+seed make --service ws://127.0.0.1:8799 --out "$SCR/seed" | tee "$SCR/seed/make.txt"
+~/Library/Caches/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-mac-arm64/chrome-headless-shell \
+  --remote-debugging-port=9344 --user-data-dir="$SCR/chrome-profile" --no-first-run \
+  --window-size=375,812 http://localhost:5192/ &
+sleep 3
+L=$(grep '^unmapped://' "$SCR/seed/make.txt"); E=${L//&/\\&}
+run() { CDP_PORT=9344 bun scripts/cdp-drive.ts "$(sed "s|__INVITE__|$E|; s|__SHOTS__|$SCR/shots|g" "$D/$1")"; }
+run run-rm-1-join-note.json                                        # join as Rin, one note
+kill $(lsof -tiTCP:8799 -sTCP:LISTEN); run run-rm-2-offline-note.json   # a note waits; page parked
+svc; sleep 2
+KEY=$(bun -e 'for (const l of require("fs").readFileSync(process.argv[1], "utf8").trim().split("\n")) {
+  const e = JSON.parse(l); if (e.event.kind === "member.join") console.log(e.event.author); }' \
+  "$SCR"/service-data/worlds/*/log.jsonl)
+seed remove --out "$SCR/seed" --key "$KEY"                          # the owner removes the phone
+run run-rm-3-reconnect.json                                        # the phone opens and reconnects
+kill $(lsof -tiTCP:8799 -sTCP:LISTEN); run run-rm-4-reload-offline.json # reload, no service
+```
+
+Environment:
+
+- **Code:** a snapshot of `origin/main` `e0710c6`. Before: plus the seed script's new `remove`.
+  After: plus the fix below.
+- **Tools:** Vite 8.3.0 with the dev CSP (no watcher, no HMR, a private cache), and Playwright's
+  `chrome-headless-shell` 1243 on CDP 9344. The service ran on 8799 in test mode, with
+  `--browser-origin http://localhost:5192`.
+- **Phone:** 375 × 812 at device scale 2, touch emulation, UI language `en`.
+- **Model:** none. The page and the service never call one.
+- **Input:** touch and typed text only, with these exceptions. Evals read the page text,
+  `window.seed.world.read/badges` and IndexedDB. Two evals navigate: the page is parked on `/sw.js`
+  and then opened again. One eval calls `window.seed.world.append` directly, with
+  `crypto.subtle.sign` wrapped to count signatures. That draft bypasses the composer, which the fix
+  hides.
+- **Records:** the driver's full output is in `removed-before/driver.txt` and
+  `removed-after/driver.txt`, with the invite link left out. The screenshots are in the same two
+  folders.
+
+### What was checked
+
+World "Glass Harbor", made by Mira. Entries 1–7 are the owner's, and the phone joins as Rin.
+
+| Step | Before (origin/main) | After (with the fix) |
+| --- | --- | --- |
+| RM-1: join and leave a note | `Online · Entry 8` after 848 ms. The note reached `Entry 9 · 0 waiting` after 220 ms. IndexedDB: 9 entries, empty outbox | 819 ms and 220 ms. Same state (`rm-a-00`) |
+| RM-2: service stopped, a second note | `Offline — what you write waits here`. The note waits: pending 1, and the IndexedDB outbox holds it (221 ms). Then the page is parked on `/sw.js` | Same, 203 ms (`rm-b-00`) |
+| The owner removes the phone's key | `member.remove` sequenced as entry 10 | Entry 10 |
+| RM-3: the phone opens and reconnects. Land bar | "The service refused this device · Entry 9 · 1 waiting to send · 0 refused" | "**The owner removed this device** · Entry 9 · **0 waiting** to send · **1 refused**" (`rm-c-00`) |
+| Status | link `refused`, role **member**, writable **true**, pending 1, refused 0, error `access-removed` | link `refused`, role **removed**, writable **false**, pending **0**, refused **1**, error `access-removed` |
+| IndexedDB | The outbox holds the offline note. Refused list 0, and no removal kept | **The outbox row is gone.** The refused list holds 1 entry (the offline note, `access-removed`), and the record keeps `removed: access-removed` |
+| The World layer | "Made by Mira · You are a member". No refused list. The composer offers "Leave the note" | "Made by Mira · The owner removed this device". Under "The world refused these": "note · The owner removed this key from the world." with Dismiss. The composer is replaced by "You can read this world, but not write in it." (`rm-c-01`) |
+| A note sent straight to `world.append` | **1 signature**. `ok`, id `h3zo2hmr…`, n null, then pending 2 and 2 notes in the outbox | **0 signatures**. `access-removed` "The owner removed this key from the world." Pending 0, refused 1 and the outbox empty, all unchanged (`rm-c-02`) |
+| The service's `log.jsonl` | 10 entries. 2 are by the phone's key: n 8 `member.join` and n 9 the first note | Same: 10 entries, 2 by the phone's key |
+| RM-4: service stopped again, then a reload | "Offline — what you write waits here · Entry 9 · 2 waiting". Member, writable. A second direct append was **signed** (1 signature): pending 3, 3 notes in the outbox | "The owner removed this device · Entry 9 · 0 waiting · 1 refused". Link offline, role removed, writable false, error `access-removed`. The append made 0 signatures and got `access-removed`. Outbox empty, refused 1 (`rm-d-00`) |
+
+The refused state was on screen at the first check after the page opened. That check came 1,954 ms
+(before) and 1,955 ms (after) into the page load, behind a fixed 2 s wait, so both numbers are upper
+bounds.
+
+The page keeps refused events where it always has: the `refused` list of the world's record in the
+`worlds` store. That is the store a `rejected` event already moved to, so no new object store was
+added and the database version did not change.
+
+### Found on the way
+
+1. **A live page can beat the owner.** The page's socket retries on a backoff of 1–30 s whether or
+   not `navigator.onLine` is true. After the service restarts, a page that stayed open could
+   reconnect and submit its waiting note before the owner's removal. The note would then be
+   sequenced, which is correct behaviour but not this test. So the run parks the page on `/sw.js`
+   (same origin, no app code) while the service restarts and the owner acts, and the reconnect is
+   the page opening again. A refusal arriving on a socket that reconnected by itself goes through
+   the same `onFrame` branch, but it was not driven.
+2. **The first after-pass waited out its 20 s cap.** The wait conditions in RM-3 and RM-4 matched
+   only the wording from before the fix ("refused this device", "Offline"). The page's state was
+   already correct. Both conditions now accept either wording, and both runs above were replayed
+   from fresh directories with the final run files.
+
+### Code of this fix
+
+- `src/browser/store.ts`: `WorldRecord.removed` holds the service's `access-removed` until the
+  service opens the world again. The field is optional because records written earlier do not have
+  it. `putWorldAndOutbox` writes the record and the outbox in one IndexedDB transaction, so an event
+  moved to refused is never also waiting, and is never lost between two writes.
+- `src/browser/live.ts`: `removalOf`. `statusOf` reports role `removed`, `writable: false`, and the
+  removal as the error when there is no link error.
+- `src/browser/sync.ts`: an `access-removed` refusal runs in the world's serial queue. It records
+  the removal and moves the whole outbox to refused, through `refuseQueued`, which a `rejected` event
+  now uses too. `opened` clears the removal.
+- `src/browser/worlds.ts`: `append` refuses with `access-removed` before the signer is asked.
+- `src/renderer/mobile/LandScreen.tsx` and `WorldPanel.tsx`: for a removed key, the land bar shows
+  `mobile.role_removed` where the link line was, and the header drops the link line. That stops the
+  page saying "what you write waits here". No new strings: `mobile.role_removed`,
+  `mobile.refusedTitle`, `mobile.readOnly` and `access-removed` (errors-world.ts) already exist in
+  all three languages.
+- `scripts/seed-shared-world.ts`: `remove --out <dir> --key <k…>`, the owner's `member.remove`.
+  `note` now shares its open, submit and wait helper.
+
+### Not run, or not reachable
+
+- **Clearing the removal.** The service never opens a world again for a removed key: `readAccess`
+  answers `access-removed` before it checks any invite. The clearing path in `opened` is therefore
+  unreachable here.
+- **A removal pushed to an open session.** The service refuses a removed key's open session at once,
+  but a phone that is online has no waiting note to move. That path was not driven.
+- **Other languages and hardware.** The zh-TW and ja wording was not seen on screen, and no real
+  phone was used.
+- **No isolated test.** The page and its `window.seed` run in one JS context, so E2E reaches every
+  path, including the direct append above. The one failure E2E cannot reach is the page dying
+  between the record write and the outbox write, and the single transaction closes it. vitest here
+  has no IndexedDB.
+
+### Checks
+
+`bun run typecheck` (all four projects), `bun run lint` (1,098 files), `bun run lines`,
+`bunx vitest run tests/browser` (3 files, 9 tests) and `bun run browser:build` (1.75 MB script,
+0.38 s) all pass on the working tree with this fix.

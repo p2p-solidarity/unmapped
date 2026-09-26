@@ -1,0 +1,101 @@
+{
+ "env": {
+  "service": "UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8799 --data $SCR/service-data --browser-origin http://localhost:5192 (a fresh empty dir; restarted on the same dir between parts)",
+  "page": "bunx vite --config $SCR/vite.e2e.config.mts, run inside $SCR/snap: `git archive origin/main` (e0710c6) plus this run's files, node_modules symlinked, no watcher, no HMR, a private Vite cacheDir; http://localhost:5192 with the dev CSP that allows loopback",
+  "world": "bun --tsconfig-override tsconfig.node.json scripts/seed-shared-world.ts make --service ws://127.0.0.1:8799 --out $SCR/seed → __INVITE__; later … remove --out $SCR/seed --key <the phone's key>",
+  "browser": "Playwright's chrome-headless-shell 1243, --remote-debugging-port=9344 --user-data-dir=$SCR/chrome-profile (fresh) --window-size=375,812 http://localhost:5192/",
+  "driver": "CDP_PORT=9344 bun scripts/cdp-drive.ts \"$(sed 's|__INVITE__|<link, & escaped>|; s|__SHOTS__|<dir>|g' <run file>)\"",
+  "viewport": "375 × 812, deviceScaleFactor 2, mobile with touch emulation (each run starts with {viewport})",
+  "input": "touch only (tap, tapText) and text typed into the focused field. Evals read the page text, window.seed.world.read/badges and IndexedDB; some evals navigate (reload; park the page on /sw.js while the owner removes the key, then open it again), and one calls window.seed.world.append directly with crypto.subtle.sign counted, as a draft that bypasses the composer."
+ },
+ "model": null,
+ "part": "RM-2 — the service is stopped: a second note waits in the outbox; then the page is parked on /sw.js (the phone put away) so it cannot reconnect while the owner acts",
+ "actions": [
+  {
+   "viewport": {
+    "width": 375,
+    "height": 812,
+    "scale": 2,
+    "mobile": true
+   }
+  },
+  {
+   "repeat": {
+    "times": 80,
+    "until": "/^Offline/m.test(document.body.innerText)",
+    "actions": [
+     {
+      "wait": 250
+     }
+    ]
+   }
+  },
+  {
+   "eval": "document.body.innerText.split('\\n').slice(0, 2).join(' | ')"
+  },
+  {
+   "touch": {
+    "tapText": "World"
+   }
+  },
+  {
+   "wait": 600
+  },
+  {
+   "touch": {
+    "tapText": "Your note"
+   }
+  },
+  {
+   "type": "Written offline, before the owner removed this key."
+  },
+  {
+   "eval": "window.__t0 = performance.now(); 'mark'"
+  },
+  {
+   "touch": {
+    "tapText": "Leave the note"
+   }
+  },
+  {
+   "repeat": {
+    "times": 60,
+    "until": "/1 waiting to send/.test(document.body.innerText)",
+    "actions": [
+     {
+      "wait": 100
+     }
+    ]
+   }
+  },
+  {
+   "eval": "Math.round(performance.now() - window.__t0)"
+  },
+  {
+   "eval": "(async () => { const b = await window.seed.world.badges(); const id = b.value[0].worldId; const r = await window.seed.world.read(id); const s = r.value.status; return JSON.stringify({link: s.link, role: s.role, writable: s.writable, head: s.head.n, pending: s.pending, refused: s.refused, error: s.error && s.error.code, me: s.me, pendingTexts: r.value.pending.map((p) => p.event.body.text ?? p.event.kind), refusedList: r.value.refused.map((x) => [x.event.body.text ?? x.event.kind, x.error.code])}); })()"
+  },
+  {
+   "eval": "new Promise((resolve) => { const open = indexedDB.open('unmapped-browser'); open.onsuccess = () => { const db = open.result; const tx = db.transaction(['worlds', 'entries', 'outbox'], 'readonly'); const out = {}; const w = tx.objectStore('worlds').getAll(); w.onsuccess = () => { out.worlds = w.result.map((r) => ({refused: r.refused.map((x) => [x.event.kind, x.event.body.text ?? null, x.error.code]), removed: r.removed === undefined ? 'absent' : r.removed && r.removed.code})); }; const e = tx.objectStore('entries').count(); e.onsuccess = () => { out.entries = e.result; }; const o = tx.objectStore('outbox').getAll(); o.onsuccess = () => { out.outbox = o.result.map((r) => r.events.map((ev) => ev.body.text ?? ev.kind)); }; tx.oncomplete = () => resolve(JSON.stringify(out)); }; open.onerror = () => resolve('no db'); })"
+  },
+  {
+   "shot": "__SHOTS__/rm-b-00-offline-note-waits.jpg"
+  },
+  {
+   "touch": {
+    "tapText": "Back to the land"
+   }
+  },
+  {
+   "wait": 3500
+  },
+  {
+   "eval": "setTimeout(() => location.assign('/sw.js'), 50); 'parked'"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "location.pathname"
+  }
+ ]
+}

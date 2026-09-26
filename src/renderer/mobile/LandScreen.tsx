@@ -62,8 +62,16 @@ function useKeptPosition(
 function LandBar({ view, unkept }: { view: SharedWorldView; unkept: AppError | null }) {
   const t = useT();
   const { now, status } = view;
-  const tone =
-    status.link === "online" ? "success" : status.link === "connecting" ? "muted" : "danger";
+  // A removed key writes nothing, whatever the link: "what you write waits here" would be untrue.
+  const removed = status.role === "removed";
+  const link = removed ? t("mobile.role_removed") : t(`mobile.link_${status.link}`);
+  const tone = removed
+    ? "danger"
+    : status.link === "online"
+      ? "success"
+      : status.link === "connecting"
+        ? "muted"
+        : "danger";
   return (
     <Surface
       variant="overlay"
@@ -81,7 +89,7 @@ function LandBar({ view, unkept }: { view: SharedWorldView; unkept: AppError | n
         {now.genesis.body.name}
       </Text>
       <Text variant="caption" tone={tone}>
-        {`${t(`mobile.link_${status.link}`)} · ${t("mobile.syncLine", {
+        {`${link} · ${t("mobile.syncLine", {
           n: status.head.n,
           pending: status.pending,
           refused: status.refused,

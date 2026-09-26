@@ -26,14 +26,16 @@ function Header({ view }: { view: SharedWorldView }): JSX.Element {
         {" · "}
         {t(`mobile.role_${status.role}`)}
       </Text>
-      <Text
-        variant="label"
-        tone={
-          status.link === "online" ? "success" : status.link === "connecting" ? "muted" : "danger"
-        }
-      >
-        {t(`mobile.link_${status.link}`)}
-      </Text>
+      {status.role === "removed" ? null : (
+        <Text
+          variant="label"
+          tone={
+            status.link === "online" ? "success" : status.link === "connecting" ? "muted" : "danger"
+          }
+        >
+          {t(`mobile.link_${status.link}`)}
+        </Text>
+      )}
       <Text variant="caption" tone="dim" mono>
         {t("mobile.syncLine", {
           n: status.head.n,

@@ -7,7 +7,10 @@
 //
 // The outbox is (re)submitted whenever the world opens and whenever an event is queued; a
 // duplicate submit is harmless (ids are content addresses). A `rejected` own event leaves the
-// outbox for the record's refused list, where it stays until the player dismisses it.
+// outbox for the record's refused list, where it stays until the player dismisses it; so does the
+// whole outbox when the service says this key was removed (`access-removed`, D8, as main does).
+// The record keeps that removal, so the page signs nothing more until the service opens the world
+// again.
 
 import { foldEntries } from "@shared/history/fold";
 import { verifyLog } from "@shared/history/log";
@@ -16,8 +19,9 @@ import { PHYSICS_SUPPORTED } from "@shared/physics";
 import type { AppError } from "@shared/result";
 import type { LinkState } from "@shared/worldApi";
 import { FRAME_LIMITS, type FromService, WORLD_PROTOCOL } from "@shared/worldProtocol";
-import { emitEntries, emitStatus, type Host, type LiveWorld, verdictsOf } from "./live";
+import { emitEntries, emitStatus, type Host, type LiveWorld, removalOf, verdictsOf } from "./live";
 import { ensurePack, makeRoom } from "./packs";
+import type { WorldRecord } from "./store";
 
 const DIVERGED_HINT =
   "Sync with this service stopped so nothing merges silently. Ask the world's owner which history is right.";
@@ -101,7 +105,14 @@ async function onOpened(
     await diverge(host, world, "The service's history ends on another chain than this device's.");
     return;
   }
-  setLink(world, "online", null);
+  // The service serves this key again: whatever removal it said before no longer holds.
+  let kept: AppError | null = null;
+  if (removalOf(world) !== null) {
+    world.record = { ...world.record, removed: null };
+    const put = await host.store.putWorld(world.record);
+    if (!put.ok) kept = put.error;
+  }
+  setLink(world, "online", kept);
   await emitStatus(host, world);
   submitOutbox(host, world);
   void ensurePack(host, world);
@@ -165,26 +176,47 @@ export async function receiveEntries(
   return true;
 }
 
-async function onRejected(
+/**
+ * Moves the outbox events `which` picks to the record's refused list with `error`, where they stay
+ * listed until the player dismisses them (Rule 2), writing `record` (the world's record, or it with
+ * a change) and the outbox that is left in one transaction. Memory follows even if the write
+ * fails, and the storage error is shown: the service refuses them again on the next open.
+ */
+async function refuseQueued(
   host: Host,
   world: LiveWorld,
-  frame: Extract<FromService, { t: "rejected" }>,
-) {
-  const pending = world.outbox.find((one) => one.event.id === frame.id);
-  if (pending === undefined) return;
-  world.outbox = world.outbox.filter((one) => one !== pending);
-  const refused = [
-    ...world.record.refused,
-    { event: pending.event, error: frame.error, at: host.nowIso() },
-  ];
-  world.record = { ...world.record, refused };
-  await host.store.putWorld(world.record);
-  await host.store.writeOutbox(
-    world.record.id,
+  which: (id: string) => boolean,
+  error: AppError,
+  record: WorldRecord = world.record,
+): Promise<void> {
+  const moved = world.outbox.filter((one) => which(one.event.id));
+  if (moved.length === 0 && record === world.record) return;
+  const at = host.nowIso();
+  const refused = [...record.refused, ...moved.map((one) => ({ event: one.event, error, at }))];
+  world.record = { ...record, refused };
+  world.outbox = world.outbox.filter((one) => !which(one.event.id));
+  const put = await host.store.putWorldAndOutbox(
+    world.record,
     world.outbox.map((one) => one.event),
   );
+  if (!put.ok) setLink(world, world.link, put.error);
   emitEntries(host, world, []);
   await emitStatus(host, world);
+}
+
+function onRejected(host: Host, world: LiveWorld, frame: Extract<FromService, { t: "rejected" }>) {
+  return refuseQueued(host, world, (id) => id === frame.id, frame.error);
+}
+
+/**
+ * D8: the service removed this key. Nothing it queued can ever be sequenced, so all of it is
+ * refused now rather than left waiting for good, and the record keeps the removal, which stops
+ * `append` before it signs, until the service opens the world again.
+ */
+async function onRemoved(host: Host, id: string, error: AppError): Promise<void> {
+  const world = host.worlds.get(id);
+  if (world === undefined) return;
+  await refuseQueued(host, world, () => true, error, { ...world.record, removed: error });
 }
 
 /** Every frame from `url`; frames for worlds this page does not hold are ignored. */
@@ -197,7 +229,10 @@ export async function onFrame(host: Host, url: string, frame: FromService): Prom
       }
       const ends = LINK_ENDING.has(frame.error.code) || world.link !== "online";
       setLink(world, ends ? "refused" : world.link, frame.error);
-      await emitStatus(host, world);
+      if (frame.error.code === "access-removed") {
+        const id = world.record.id;
+        await host.serial(id, () => onRemoved(host, id, frame.error));
+      } else await emitStatus(host, world);
     }
     return;
   }

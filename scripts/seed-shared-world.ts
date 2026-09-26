@@ -18,6 +18,7 @@
 //     --service ws://127.0.0.1:8799 --out <dir> [--name "Glass Harbor"] [--seed ABCD2345]
 //   … invite --out <dir> [--uses 1] [--days 7]      → prints another invite link
 //   … note --out <dir> --text "…"                   → the owner leaves a note (a live-sync check)
+//   … remove --out <dir> --key <k…>                 → the owner removes that member's key
 //
 // <dir>/owner.json holds the owner's secret: keep <dir> in a scratch directory.
 
@@ -323,7 +324,8 @@ function printInvite(secret: Uint8Array, world: string, url: string): void {
   console.log(inviteLink(invite, inviteSecret));
 }
 
-async function note(): Promise<void> {
+/** The owner opens the world, submits one event and waits until the service sequences it. */
+async function ownerSubmits<K extends EventKind>(kind: K, body: EventBodies[K]) {
   const { secret, world, url } = readOwner();
   const socket = await connect(url, secret);
   socket.send({
@@ -337,31 +339,42 @@ async function note(): Promise<void> {
   const opened = await socket.until(
     (frame): frame is Extract<FromService, { t: "opened" }> => frame.t === "opened",
   );
-  const event = signEvent(
-    {
-      v: 1,
-      world,
-      kind: "note",
-      author: authorKeyFor(secret),
-      at: iso(Date.now()),
-      seen: opened.head.n,
-      body: {
-        coord: { cx: 0, cz: 0, x: 16, z: 16 },
-        anchors: [],
-        text: flag("text"),
-        contests: null,
-        name: flag("owner-name", "Mira"),
-      },
-    },
-    secret,
-  );
+  const unsigned = {
+    v: 1,
+    world,
+    kind,
+    author: authorKeyFor(secret),
+    at: iso(Date.now()),
+    seen: opened.head.n,
+    body,
+  };
+  const event = signEvent(unsigned as UnsignedEventOf<K>, secret);
   socket.send({ t: "submit", world, events: [event] });
   const entries = await socket.until(
     (frame): frame is Extract<FromService, { t: "entries" }> =>
       frame.t === "entries" && frame.entries.some((entry) => entry.event.id === event.id),
   );
   socket.ws.close();
-  console.log(`note ${event.id} sequenced, head ${entries.head.n}`);
+  const n = entries.entries.find((entry) => entry.event.id === event.id)?.n;
+  return { id: event.id, n, head: entries.head.n };
+}
+
+async function note(): Promise<void> {
+  const { id, head } = await ownerSubmits("note", {
+    coord: { cx: 0, cz: 0, x: 16, z: 16 },
+    anchors: [],
+    text: flag("text"),
+    contests: null,
+    name: flag("owner-name", "Mira"),
+  });
+  console.log(`note ${id} sequenced, head ${head}`);
+}
+
+/** The owner removes a member's key (`member.remove`): the service stops serving that key. */
+async function remove(): Promise<void> {
+  const key = flag("key");
+  const { id, n, head } = await ownerSubmits("member.remove", { key });
+  console.log(`member.remove ${id} of ${key} sequenced as entry ${n}, head ${head}`);
 }
 
 if (command === "make") await make();
@@ -369,7 +382,8 @@ else if (command === "invite") {
   const { secret, world, url } = readOwner();
   printInvite(secret, world, url);
 } else if (command === "note") await note();
+else if (command === "remove") await remove();
 else {
-  console.error("usage: seed-shared-world.ts make|invite|note --out <dir> [...]");
+  console.error("usage: seed-shared-world.ts make|invite|note|remove --out <dir> [...]");
   process.exit(1);
 }

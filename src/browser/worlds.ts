@@ -5,8 +5,9 @@
 // `not-on-this-client` (./unavailable). Beside it, the page hands the mobile shell its
 // `PhoneDevice` (./land): the world's land from its genesis pack, and where the player stood.
 //
-// Appending runs every check main runs before it signs (main/histories/drafts.ts): `seen` not
-// beyond the head, the envelope and body (`readEvent` with a placeholder signature), the DSL body
+// Appending runs every check main runs before it signs (main/histories/{commit,drafts}.ts): not a
+// key the service removed (`access-removed`, kept in the world's record), `seen` not beyond the
+// head, the envelope and body (`readEvent` with a placeholder signature), the DSL body
 // (`validateEventBody`), then `admit` over the fold with the outbox on top. Only then does the
 // WebCrypto key sign, and the event waits in the IndexedDB outbox until the service sequences it.
 
@@ -41,6 +42,7 @@ import {
   type LiveWorld,
   loadLive,
   pendingNow,
+  removalOf,
   statusOf,
 } from "./live";
 import { makeRoom } from "./packs";
@@ -192,6 +194,13 @@ export function browserClient(store: BrowserStore): { world: WorldApi; device: P
       if (!world.ok) return world;
       if (world.value.record.diverged !== null)
         return { ok: false, error: world.value.record.diverged };
+      // D8: a removed key writes nothing. Its copy ends before its own `member.remove`, so only
+      // the service's refusal (kept in the record) says so; without this the page would sign and
+      // queue notes nobody will ever sequence.
+      const removed = removalOf(world.value);
+      if (removed !== null) {
+        return err("access-removed", "The owner removed this key from the world.", removed.hint);
+      }
       const key = await host.signer();
       if (!key.ok) return key;
       const event = await prepare(world.value, draft, key.value);

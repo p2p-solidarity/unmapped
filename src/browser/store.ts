@@ -3,7 +3,8 @@
 //   meta     "device-keys" → the WebCrypto CryptoKeyPair (non-extractable private half);
 //            "current" → the world last opened
 //   worlds   one record per joined world: genesis, service URL and pinned key, the player's name
-//            there, a divergence (never cleared silently), refused own events (Rule 2)
+//            there, a divergence (never cleared silently), the service's word that it removed this
+//            key (until it opens the world again), refused own events (Rule 2)
 //   entries  the world's sequenced log, keyed [world, n]
 //   outbox   own events not yet sequenced, one record per world (rewritten whole, like main's
 //            outbox.jsonl, so order is kept)
@@ -40,6 +41,12 @@ export interface WorldRecord {
   name: string;
   joinedAt: string;
   diverged: AppError | null;
+  /**
+   * D8: the service's `access-removed` for this key, kept until it opens the world again. This
+   * device's copy ends before its own `member.remove`, so its fold still says member; only this
+   * says otherwise. Absent in records written before it was kept.
+   */
+  removed?: AppError | null;
   refused: RefusedEvent[];
 }
 
@@ -75,6 +82,25 @@ function isPosition(value: unknown): value is SavedPosition {
     typeof at.sceneId === "string" &&
     [at.x, at.y, at.z, at.yaw].every((n) => typeof n === "number" && Number.isFinite(n))
   );
+}
+
+/** Writes (or, when empty, removes) a world's outbox and its cache record within `tx`. */
+function putOutbox(tx: IDBTransaction, world: string, events: readonly StoredEvent[]): void {
+  const id = `outbox:${world}`;
+  if (events.length === 0) {
+    tx.objectStore("outbox").delete(world);
+    tx.objectStore("cache").delete(id);
+    return;
+  }
+  tx.objectStore("outbox").put({ world, events: [...events] } satisfies OutboxRow);
+  tx.objectStore("cache").put({
+    id,
+    kind: "outbox",
+    world,
+    hash: null,
+    bytes: bytesOf(events),
+    usedAt: Date.now(),
+  } satisfies CacheItem);
 }
 
 export class BrowserStore {
@@ -193,21 +219,21 @@ export class BrowserStore {
   writeOutbox(world: string, events: readonly StoredEvent[]): Promise<Result<void>> {
     return attempt(async () => {
       const tx = this.db.transaction(["outbox", "cache"], "readwrite");
-      const id = `outbox:${world}`;
-      if (events.length === 0) {
-        tx.objectStore("outbox").delete(world);
-        tx.objectStore("cache").delete(id);
-      } else {
-        tx.objectStore("outbox").put({ world, events: [...events] } satisfies OutboxRow);
-        tx.objectStore("cache").put({
-          id,
-          kind: "outbox",
-          world,
-          hash: null,
-          bytes: bytesOf(events),
-          usedAt: Date.now(),
-        } satisfies CacheItem);
-      }
+      putOutbox(tx, world, events);
+      await committed(tx);
+    });
+  }
+
+  /**
+   * The world's record and its outbox in one transaction: an event moved to the record's refused
+   * list leaves the outbox in the same commit, so it is never both waiting and refused, nor lost
+   * between the two.
+   */
+  putWorldAndOutbox(record: WorldRecord, events: readonly StoredEvent[]): Promise<Result<void>> {
+    return attempt(async () => {
+      const tx = this.db.transaction(["worlds", "outbox", "cache"], "readwrite");
+      tx.objectStore("worlds").put(record);
+      putOutbox(tx, record.id, events);
       await committed(tx);
     });
   }

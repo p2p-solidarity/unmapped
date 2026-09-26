@@ -107,8 +107,21 @@ export function pendingNow(world: LiveWorld, rt: string): WorldNow {
   return world.outbox.length === 0 ? world.now : withPending(world.now, world.outbox, rt);
 }
 
+/**
+ * D8: the service's word that it removed this key, until it opens the world again. The fold cannot
+ * say so: this device's copy ends before its own `member.remove`.
+ */
+export function removalOf(world: LiveWorld): AppError | null {
+  return world.record.removed ?? null;
+}
+
 export function statusOf(world: LiveWorld, me: Result<BrowserSigner>): WorldStatus {
-  const role: WorldRole = me.ok ? roleOf(world.now, me.value.author) : "visitor";
+  const removal = removalOf(world);
+  const role: WorldRole = !me.ok
+    ? "visitor"
+    : removal !== null
+      ? "removed"
+      : roleOf(world.now, me.value.author);
   const writable =
     me.ok &&
     world.link !== "diverged" &&
@@ -125,7 +138,7 @@ export function statusOf(world: LiveWorld, me: Result<BrowserSigner>): WorldStat
     refused: world.record.refused.length,
     ignored: world.now.ignored.length,
     newer: newerCount(world.now),
-    error: world.error ?? (me.ok ? null : me.error),
+    error: world.error ?? removal ?? (me.ok ? null : me.error),
     me: me.ok ? me.value.author : null,
   };
 }

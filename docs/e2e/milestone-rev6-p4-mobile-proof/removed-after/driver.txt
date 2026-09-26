@@ -1,0 +1,106 @@
+world hpwh4wr7r6qvobvpzpxzkkefddd3yd67v323hyp3j5b7j6mji4a5a "Glass Harbor" attached at ws://127.0.0.1:8799, head 6
+cartridge aether-land@1.3.0 sha256:57f17e0d3e1504466da111ee6eae2e55720b812a2b07afdad932e7f72467e81b, seed ALV445RD
+pack sha256:c0fcdf1af0a1d9dad2fbba2cbe9ad8ed62b6d2d2059d3d4ea6f7e89511c925c0 (4875 bytes) announced, head 7
+witnessed "Kasumi Crossing" at 1,0
+== run-rm-1-join-note.json
+viewport 375x812 (touch)
+{"result":{"type":"undefined"}}
+touch [187.5,136.3984375]
+touch [187.5,254.6953125]
+"mark"
+touch [187.5,345.09375]
+819
+"Glass Harbor | Online · Entry 8 · 0 waiting to send · 0 refused"
+touch [287.40625,634.8125]
+touch [187.5,224.5546875]
+"mark"
+touch [187.5,414.046875]
+220
+"{\"link\":\"online\",\"role\":\"member\",\"writable\":true,\"head\":9,\"pending\":0,\"refused\":0,\"error\":null,\"me\":\"kzvib4tlzwlanv7loqeup6za5eadwqkianeaugittey5pnn2awgpa\",\"pendingTexts\":[],\"refusedList\":[]}"
+"{\"worlds\":[{\"refused\":[],\"removed\":\"absent\"}],\"entries\":9,\"outbox\":[]}"
+shot $SCR/after/shots/rm-a-00-joined-note.jpg
+touch [244.90625,634.8125]
+== service stopped
+== run-rm-2-offline-note.json
+viewport 375x812 (touch)
+"Glass Harbor | Offline — what you write waits here · Entry 9 · 0 waiting to send · 0 refused"
+touch [287.40625,634.8125]
+touch [187.5,224.5546875]
+"mark"
+touch [187.5,414.046875]
+203
+"{\"link\":\"offline\",\"role\":\"member\",\"writable\":true,\"head\":9,\"pending\":1,\"refused\":0,\"error\":null,\"me\":\"kzvib4tlzwlanv7loqeup6za5eadwqkianeaugittey5pnn2awgpa\",\"pendingTexts\":[\"Written offline, before the owner removed this key.\"],\"refusedList\":[]}"
+"{\"worlds\":[{\"refused\":[],\"removed\":\"absent\"}],\"entries\":9,\"outbox\":[[\"Written offline, before the owner removed this key.\"]]}"
+shot $SCR/after/shots/rm-b-00-offline-note-waits.jpg
+touch [244.90625,634.8125]
+"parked"
+"/sw.js"
+== service back
+phone key kzvib4tlzwlanv7loqeup6za5eadwqkianeaugittey5pnn2awgpa
+member.remove h5a4vbl4s7k7n2pyjnzrazcqy2ss4p735u2xmrrhjhney3bley5na of kzvib4tlzwlanv7loqeup6za5eadwqkianeaugittey5pnn2awgpa sequenced as entry 10, head 10
+== run-rm-3-reconnect.json
+viewport 375x812 (touch)
+"opening"
+1955
+"Glass Harbor | The owner removed this device · Entry 9 · 0 waiting to send · 1 refused"
+"{\"link\":\"refused\",\"role\":\"removed\",\"writable\":false,\"head\":9,\"pending\":0,\"refused\":1,\"error\":\"access-removed\",\"me\":\"kzvib4tlzwlanv7loqeup6za5eadwqkianeaugittey5pnn2awgpa\",\"pendingTexts\":[],\"refusedList\":[[\"Written offline, before the owner removed this key.\",\"access-removed\"]]}"
+"{\"worlds\":[{\"refused\":[[\"note\",\"Written offline, before the owner removed this key.\",\"access-removed\"]],\"removed\":\"access-removed\"}],\"entries\":9,\"outbox\":[]}"
+shot $SCR/after/shots/rm-c-00-reconnected-land.jpg
+touch [289.40625,634.8125]
+"{\"lines\":[\"The owner removed this device · Entry 9 · 0 waiting to send · 1 refused\",\"Made by Mira · The owner removed this device\",\"Entry 9 · 0 waiting to send · 1 refused\",\"Error · access-removed\",\"The owner removed this key from the world.\",\"The world refused these\",\"note · The owner removed this key from the world.\",\"You can read this world, but not write in it.\",\"Left from a phone before the owner removed this key.\"],\"sendOffered\":false}"
+shot $SCR/after/shots/rm-c-01-world-layer.jpg
+"{\"signed\":0,\"result\":{\"ok\":false,\"code\":\"access-removed\",\"message\":\"The owner removed this key from the world.\"}}"
+"{\"link\":\"refused\",\"role\":\"removed\",\"writable\":false,\"head\":9,\"pending\":0,\"refused\":1,\"error\":\"access-removed\",\"me\":\"kzvib4tlzwlanv7loqeup6za5eadwqkianeaugittey5pnn2awgpa\",\"pendingTexts\":[],\"refusedList\":[[\"Written offline, before the owner removed this key.\",\"access-removed\"]]}"
+"{\"worlds\":[{\"refused\":[[\"note\",\"Written offline, before the owner removed this key.\",\"access-removed\"]],\"removed\":\"access-removed\"}],\"entries\":9,\"outbox\":[]}"
+"{\"lines\":[\"The owner removed this device · Entry 9 · 0 waiting to send · 1 refused\",\"Made by Mira · The owner removed this device\",\"Entry 9 · 0 waiting to send · 1 refused\",\"Error · access-removed\",\"The owner removed this key from the world.\",\"The world refused these\",\"note · The owner removed this key from the world.\",\"You can read this world, but not write in it.\",\"Left from a phone before the owner removed this key.\"],\"sendOffered\":false}"
+shot $SCR/after/shots/rm-c-02-after-append.jpg
+touch [244.90625,634.8125]
+== service log after RM-3
+1 genesis owner receipt 
+2 profile owner receipt 
+3 witness owner receipt 
+4 note owner receipt The ford is shallow at dawn.
+5 signpost owner receipt East to the crossing
+6 sequencer owner receipt 
+7 pack owner receipt 
+8 member.join PHONE receipt 
+9 note PHONE receipt Left from a phone before the owner removed this key.
+10 member.remove owner receipt 
+entries 10, by the phone key 2
+== service stopped
+== run-rm-4-reload-offline.json
+viewport 375x812 (touch)
+"reloading"
+2957
+"Glass Harbor | The owner removed this device · Entry 9 · 0 waiting to send · 1 refused"
+"{\"link\":\"offline\",\"role\":\"removed\",\"writable\":false,\"head\":9,\"pending\":0,\"refused\":1,\"error\":\"access-removed\",\"me\":\"kzvib4tlzwlanv7loqeup6za5eadwqkianeaugittey5pnn2awgpa\",\"pendingTexts\":[],\"refusedList\":[[\"Written offline, before the owner removed this key.\",\"access-removed\"]]}"
+"{\"signed\":0,\"result\":{\"ok\":false,\"code\":\"access-removed\",\"message\":\"The owner removed this key from the world.\"}}"
+"{\"link\":\"offline\",\"role\":\"removed\",\"writable\":false,\"head\":9,\"pending\":0,\"refused\":1,\"error\":\"access-removed\",\"me\":\"kzvib4tlzwlanv7loqeup6za5eadwqkianeaugittey5pnn2awgpa\",\"pendingTexts\":[],\"refusedList\":[[\"Written offline, before the owner removed this key.\",\"access-removed\"]]}"
+"{\"worlds\":[{\"refused\":[[\"note\",\"Written offline, before the owner removed this key.\",\"access-removed\"]],\"removed\":\"access-removed\"}],\"entries\":9,\"outbox\":[]}"
+shot $SCR/after/shots/rm-d-00-reloaded-offline.jpg
+== service log at the end
+1 genesis owner receipt 
+2 profile owner receipt 
+3 witness owner receipt 
+4 note owner receipt The ford is shallow at dawn.
+5 signpost owner receipt East to the crossing
+6 sequencer owner receipt 
+7 pack owner receipt 
+8 member.join PHONE receipt 
+9 note PHONE receipt Left from a phone before the owner removed this key.
+10 member.remove owner receipt 
+entries 10, by the phone key 2
+== service stdout
+$ bun --tsconfig-override tsconfig.node.json src/service/main.ts --port "8799" --data "$SCR/after/service-data" --browser-origin "http://localhost:5192"
+world service k5qmitirdjhcitnesywsmfaw2catglopwrukppes7odgjlt2ehh2q
+  ws://127.0.0.1:8799/v1/ws  data $SCR/after/service-data  worlds 0 (0 not served)  new key TEST MODE (beat every 21600000 ms)
+2026-09-26T06:01:58.960Z attached world hpwh4wr7r6qvobvpzpxzkkefddd3yd67v323hyp3j5b7j6mji4a5a (6 entries)
+world service: stopped (SIGTERM), snapshots written
+Internal error: directory mismatch for directory "$SCR/after/snap/tsconfig.node.json", fd 3. You don't need to do anything, but this indicates a bug.
+$ bun --tsconfig-override tsconfig.node.json src/service/main.ts --port "8799" --data "$SCR/after/service-data" --browser-origin "http://localhost:5192"
+world service k5qmitirdjhcitnesywsmfaw2catglopwrukppes7odgjlt2ehh2q
+  ws://127.0.0.1:8799/v1/ws  data $SCR/after/service-data  worlds 1 (0 not served) TEST MODE (beat every 21600000 ms)
+world service: stopped (SIGTERM), snapshots written
+Internal error: directory mismatch for directory "$SCR/after/snap/tsconfig.node.json", fd 3. You don't need to do anything, but this indicates a bug.
+== ports
+done
