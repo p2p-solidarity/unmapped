@@ -1,6 +1,7 @@
 // Every UI namespace. A key is `namespace.key` (`t("create.worldName")`), so each screen owns its
 // own table file and two screens can never collide on a name.
 
+import { ACCOUNT } from "./account";
 import { COMMON } from "./common";
 import { CONSOLE } from "./console";
 import { CONTINENT } from "./continent";
@@ -20,6 +21,7 @@ import { USAGE } from "./usage";
 import { WORKS } from "./works";
 
 export const STRINGS = {
+  account: ACCOUNT,
   common: COMMON,
   console: CONSOLE,
   continent: CONTINENT,

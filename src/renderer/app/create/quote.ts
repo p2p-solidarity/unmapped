@@ -3,7 +3,8 @@
 // harness with the built-in sections, exactly as `runNarrativeTurn` assembles it for Create, plus
 // its user turn. Tokens are an estimate (@shared/pricing `estimateTokens`: ~1 per CJK character,
 // ~4 characters per token otherwise); money only when the model has a dated price; a local model
-// is free. What the calls really cost lands in the usage ledger afterwards.
+// is free; a call main routes through the gateway is paid from the allowance (rev 6 phase 4, D2),
+// which the gateway counts. What the calls really cost lands in the usage ledger afterwards.
 
 import { originPrompt } from "@dsl";
 import { createHarness, mountBuiltins, ORDER } from "@harness";
@@ -18,6 +19,7 @@ import {
 import { MAX_REPAIRS } from "@renderer/narrative/program";
 import { DSL_SECTION } from "@renderer/narrative/turn";
 import { type BibleFields, flattenBible } from "@shared/bible";
+import type { RouteView } from "@shared/llm";
 import { type CallPrice, callPrice, costUsd, estimateTokens } from "@shared/pricing";
 import { err, ok, type Result } from "@shared/result";
 
@@ -60,12 +62,17 @@ export function buildQuote(
   idea: WorldIdea,
   fields: BibleFields,
   readiness: BuildReadiness,
+  /** Where main sends the next chat; a hosted route is quoted against the allowance. */
+  next: RouteView["next"] = null,
 ): Result<BuildQuote> {
-  const price = callPrice(readiness.kind, readiness.model);
+  const hosted = next?.route === "hosted" ? next : null;
+  const provider = hosted === null ? readiness.kind : hosted.kind;
+  const model = hosted === null ? readiness.model : hosted.model;
+  const price = callPrice(provider, model);
   const base = {
     route: readiness.route,
-    provider: readiness.kind,
-    model: readiness.model,
+    provider,
+    model,
     repairs: MAX_REPAIRS,
     // The bridge runs on this Mac: free, and its prompt is not the chat one measured here.
     price: readiness.route === "apple-bridge" ? ({ kind: "free" } as const) : price,

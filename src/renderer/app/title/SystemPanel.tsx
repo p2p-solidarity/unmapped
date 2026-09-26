@@ -1,6 +1,6 @@
 // Settings (title → Settings, a dialog over the title): real readings of this machine (build,
-// storage, model endpoint, signaling servers) and save protection. Only reached on purpose — the
-// title screen itself stays quiet.
+// storage, model endpoint, the gateway account and its plans, signaling servers, world services)
+// and save protection. Only reached on purpose — the title screen itself stays quiet.
 
 import { LANGUAGE_LABEL, UI_LANGUAGES, useLanguageStore, useT } from "@renderer/i18n";
 import { UnlockPanel } from "@renderer/identity";
@@ -9,7 +9,9 @@ import type { AppInfo } from "@shared/ipc";
 import { errored, idle, type Loadable, loading, ready, toError } from "@shared/result";
 import { useEffect, useState } from "react";
 import { useKeys } from "../shell/useKeys";
+import { AccountPanel } from "./AccountPanel";
 import { ModelPanel } from "./ModelPanel";
+import { PlanPanel } from "./PlanPanel";
 import { SignalingPanel } from "./SignalingPanel";
 
 function useAppInfo(): Loadable<AppInfo> {
@@ -66,6 +68,10 @@ export function SystemPanel({ onClose }: { onClose(): void }) {
       </section>
 
       <ModelPanel />
+
+      <AccountPanel />
+
+      <PlanPanel />
 
       <SignalingPanel />
 

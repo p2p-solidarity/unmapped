@@ -1,6 +1,7 @@
 // Create a game, the last step: what Build makes, and the quote before the button — the calls it
 // will make, the tokens measured from the real prompt (an estimate), the output cap, what this draft
-// has used so far, and money only when the model has a dated price (local models are free). Then the
+// has used so far, and money only when the model has a dated price (local models are free; a call
+// main routes through the gateway is paid from the allowance, shown as the share left). Then the
 // first chapter is written in the background once the player is in; that is counted separately.
 
 import { formatNumber, useT } from "@renderer/i18n";
@@ -8,14 +9,11 @@ import { playRules } from "@renderer/narrative/openLandCartridge";
 import type { BuildReadiness } from "@renderer/narrative/originScene";
 import { ErrorBlock, StatePanel, Surface, space, Text } from "@renderer/ui";
 import type { CreateDraft } from "@shared/createDraft";
-import { type KeyProvider, type KeyStatusMap, PROVIDER_PRESETS } from "@shared/llm";
-import type { AppError, Loadable } from "@shared/result";
-import { type JSX, useEffect, useMemo, useState } from "react";
+import type { Loadable } from "@shared/result";
+import { type JSX, useMemo } from "react";
 import { UsageLine } from "../hud/UsagePanel";
+import { percentLeft, useQuota, useRoute } from "../title/useGateway";
 import { buildQuote } from "./quote";
-
-/** Providers whose calls need a key (main's `needsKey`); the others run without one. */
-const KEYED: readonly KeyProvider[] = ["openai", "openui-gateway"];
 
 function usd(t: ReturnType<typeof useT>, value: number): string {
   // Rounded up to the cent: an estimate should not read cheaper than it can be.
@@ -32,42 +30,17 @@ function Quote({
   readiness: BuildReadiness;
 }): JSX.Element {
   const t = useT();
-  const [keys, setKeys] = useState<Loadable<KeyStatusMap>>({ status: "loading" });
-  useEffect(() => {
-    let alive = true;
-    void window.seed.inference.keyStatus().then((result) => {
-      if (alive) {
-        setKeys(
-          result.ok
-            ? { status: "ready", value: result.value }
-            : { status: "error", error: result.error },
-        );
-      }
-    });
-    return () => {
-      alive = false;
-    };
-  }, []);
+  // Where main sends the calls (own key, this computer, or the allowance), decided before any call.
+  const { route } = useRoute(`${readiness.kind}|${readiness.model}`);
+  const next = route.status === "ready" ? route.value.next : null;
   const fields = draft.world?.fields ?? null;
   const quote = useMemo(
-    () => (fields === null ? null : buildQuote(draft.idea, fields, readiness)),
-    [draft.idea, fields, readiness],
+    () => (fields === null ? null : buildQuote(draft.idea, fields, readiness, next)),
+    [draft.idea, fields, readiness, next],
   );
-  const keyed = (KEYED as readonly string[]).includes(readiness.kind);
-  const noKey: AppError | null =
-    keyed && keys.status === "ready" && !keys.value[readiness.kind as KeyProvider].set
-      ? readiness.kind === "openai"
-        ? {
-            code: "no-api-key",
-            message: "No OpenAI key is set.",
-            hint: "Enter one in Settings → Model (Cloud API → OpenAI), or add OPENAI_API_KEY to .env.",
-          }
-        : {
-            code: "no-api-key",
-            message: `The ${readiness.kind} provider needs an API key and none is set.`,
-            hint: `Enter a key in Settings → Model (Cloud API), or add ${PROVIDER_PRESETS[readiness.kind].apiKeyEnv ?? "the key"} to .env.`,
-          }
-      : null;
+  const allowance = useQuota(next?.route === "hosted");
+  // No key anywhere (and no allowance to fall back on): the route's own error, with its hint.
+  const noKey = route.status === "ready" && next === null ? route.value.error : null;
   if (quote === null) return <Text tone="danger">{t("create.worldIncomplete")}</Text>;
   if (!quote.ok) return <ErrorBlock error={quote.error} />;
   const q = quote.value;
@@ -102,16 +75,26 @@ function Quote({
         <Text variant="caption" tone={q.price.kind === "unknown" ? "dim" : "default"}>
           {q.price.kind === "free"
             ? t("create.quoteFree")
-            : q.price.kind === "unknown"
-              ? t("create.quotePriceUnknown", { model: q.price.model })
-              : t("create.quoteMoney", {
-                  first: usd(t, q.firstUsd ?? 0),
-                  worst: usd(t, q.worstUsd ?? 0),
-                  model: q.model,
-                  date: q.price.price.asOf,
-                  source: q.price.price.source,
-                })}
+            : q.price.kind === "allowance"
+              ? t("create.quoteAllowance", { model: q.model })
+              : q.price.kind === "unknown"
+                ? t("create.quotePriceUnknown", { model: q.price.model })
+                : t("create.quoteMoney", {
+                    first: usd(t, q.firstUsd ?? 0),
+                    worst: usd(t, q.worstUsd ?? 0),
+                    model: q.model,
+                    date: q.price.price.asOf,
+                    source: q.price.price.source,
+                  })}
         </Text>
+        {q.price.kind === "allowance" && allowance.status === "ready" ? (
+          <Text variant="caption" tone="dim">
+            {t("create.quoteAllowanceLeft", { percent: percentLeft(allowance.value) })}
+          </Text>
+        ) : null}
+        {q.price.kind === "allowance" && allowance.status === "error" ? (
+          <ErrorBlock error={allowance.error} />
+        ) : null}
         <Text variant="caption" tone="dim">
           {t("create.quoteChapter", {
             repairs: q.repairs,

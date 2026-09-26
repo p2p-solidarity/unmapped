@@ -1,7 +1,8 @@
-// API keys a player types in Settings → Model. Pure rules only — validation, the record format and
+// API keys a player types in Settings → Model, and the gateway's account token main's sign-in saves
+// (provider `hosted`, rev 6 phase 4 D1–D2). Pure rules only — validation, the record format and
 // which key a request may use; `keyStore.ts` encrypts records with safeStorage. A key is bound to
-// the one base URL it was entered for and is never sent anywhere else, and nothing in here ever
-// hands a key to the renderer: the renderer only sees a KeyStatus.
+// the one base URL `endpointFor` gives its provider and is never sent anywhere else, and nothing in
+// here ever hands a key to the renderer: the renderer only sees a KeyStatus.
 
 import {
   type InferenceConfig,
@@ -9,10 +10,11 @@ import {
   type KeyProvider,
   type KeyStatus,
   PROVIDER_PRESETS,
+  TYPED_KEY_PROVIDERS,
 } from "@shared/llm";
 import { fail, ok, type Result } from "@shared/result";
 import { z } from "zod";
-import { isLoopbackEndpoint, sameEndpoint } from "./config";
+import { gatewayNotConfigured, gatewaySetting, isLoopbackEndpoint, sameEndpoint } from "./config";
 
 /** Printable ASCII without spaces: every real provider key fits, a header injection does not. */
 const KEY_CHARS = /^[\x21-\x7e]+$/;
@@ -21,9 +23,10 @@ export const apiKeySchema = z.string().trim().min(8).max(512).regex(KEY_CHARS);
 
 const baseUrlSchema = z.string().max(2048);
 
+// The account token is never typed: only main's sign-in writes a `hosted` record.
 const setApiKeySchema = z
   .object({
-    provider: z.enum(KEY_PROVIDERS),
+    provider: z.enum(TYPED_KEY_PROVIDERS),
     key: apiKeySchema,
     baseUrl: baseUrlSchema.optional(),
   })
@@ -45,9 +48,24 @@ const ENV_NAME: Record<KeyProvider, string | null> = {
   openai: "OPENAI_API_KEY",
   "openui-gateway": "THESYS_API_KEY",
   custom: null,
+  "qwen-image": "QWEN_IMAGE_API_KEY",
+  // A token for .env comes only from `bun run gateway -- token <account>`, never from the app.
+  hosted: "UNMAPPED_GATEWAY_KEY",
 };
 
 export type EnvLike = Record<string, string | undefined>;
+
+/** Where vLLM-Omni serves Qwen-Image when nothing else is configured (rev 6 phase 4, D4). */
+export const QWEN_IMAGE_DEFAULT_URL = "http://127.0.0.1:8091/v1";
+
+/**
+ * The Qwen-Image server: main-only QWEN_IMAGE_BASE_URL, else this machine. The renderer never
+ * names it; whether a key (or any request) may go there is `keyEndpointAllowed`.
+ */
+export function qwenImageEndpoint(env: EnvLike = process.env): string {
+  const value = env.QWEN_IMAGE_BASE_URL?.trim() ?? "";
+  return value.length > 0 ? value : QWEN_IMAGE_DEFAULT_URL;
+}
 
 export function isKeyProvider(value: string): value is KeyProvider {
   return (KEY_PROVIDERS as readonly string[]).includes(value);
@@ -64,21 +82,44 @@ export function keyEndpointAllowed(baseUrl: string): boolean {
   }
 }
 
-/** Where a provider's key goes: the preset's own endpoint, or the custom URL it was typed for. */
-function boundEndpoint(provider: KeyProvider, baseUrl: string | undefined): Result<string> {
+/**
+ * The only source of a provider's endpoint, and so of where its key may go: the preset's own
+ * endpoint, the configured gateway (main's UNMAPPED_GATEWAY_URL; `gateway-not-configured` without
+ * one), Qwen-Image's configured server (https, or this machine), or the custom URL the key was typed
+ * for (`typedFor`).
+ */
+export function endpointFor(
+  provider: KeyProvider,
+  typedFor: string | undefined,
+  env: EnvLike = process.env,
+): Result<string> {
+  if (provider === "qwen-image") {
+    const endpoint = qwenImageEndpoint(env);
+    if (keyEndpointAllowed(endpoint)) return ok(endpoint);
+    return fail({
+      code: "key-endpoint-not-allowed",
+      message: `QWEN_IMAGE_BASE_URL (${endpoint}) is neither https:// nor on this computer.`,
+      hint: "Serve Qwen-Image over https://, or on http://127.0.0.1, and set QWEN_IMAGE_BASE_URL in .env.",
+    });
+  }
+  if (provider === "hosted") {
+    const gateway = gatewaySetting(env);
+    if (!gateway.ok) return gateway;
+    return gateway.value === null ? fail(gatewayNotConfigured()) : ok(gateway.value);
+  }
   if (provider !== "custom") return ok(PROVIDER_PRESETS[provider].baseUrl);
-  if (baseUrl === undefined || !keyEndpointAllowed(baseUrl)) {
+  if (typedFor === undefined || !keyEndpointAllowed(typedFor)) {
     return fail({
       code: "key-endpoint-not-allowed",
       message: "A key for a custom endpoint needs an https:// address, or one on this computer.",
       hint: "Use an https:// base URL (or http://127.0.0.1 for a server on this machine), then save the key again.",
     });
   }
-  return ok(baseUrl);
+  return ok(typedFor);
 }
 
 /** Validates an untrusted setApiKey payload into the record that will be encrypted. */
-export function parseSetApiKey(raw: unknown): Result<KeyRecord> {
+export function parseSetApiKey(raw: unknown, env: EnvLike = process.env): Result<KeyRecord> {
   const parsed = setApiKeySchema.safeParse(raw);
   if (!parsed.success) {
     return fail({
@@ -87,7 +128,7 @@ export function parseSetApiKey(raw: unknown): Result<KeyRecord> {
       hint: "Paste the whole key: 8 to 512 characters, no spaces or line breaks.",
     });
   }
-  const endpoint = boundEndpoint(parsed.data.provider, parsed.data.baseUrl);
+  const endpoint = endpointFor(parsed.data.provider, parsed.data.baseUrl, env);
   if (!endpoint.ok) return endpoint;
   return ok({
     v: 1,
@@ -102,7 +143,7 @@ export function serializeKeyRecord(record: KeyRecord): string {
 }
 
 /** A decrypted file that is not exactly a valid record reads as "no key saved". */
-export function parseKeyRecord(text: string): KeyRecord | null {
+export function parseKeyRecord(text: string, env: EnvLike = process.env): KeyRecord | null {
   let raw: unknown;
   try {
     raw = JSON.parse(text);
@@ -111,7 +152,7 @@ export function parseKeyRecord(text: string): KeyRecord | null {
   }
   const parsed = keyRecordSchema.safeParse(raw);
   if (!parsed.success) return null;
-  const expected = boundEndpoint(parsed.data.provider, parsed.data.baseUrl);
+  const expected = endpointFor(parsed.data.provider, parsed.data.baseUrl, env);
   if (!expected.ok || !sameEndpoint(expected.value, parsed.data.baseUrl)) return null;
   return parsed.data;
 }
@@ -124,8 +165,10 @@ function envKey(provider: KeyProvider, env: EnvLike): string | null {
 }
 
 /**
- * The key a request to `config` may carry: the player's saved key when it was saved for exactly
- * this provider and base URL, else the preset's .env variable. Custom endpoints never get an .env key.
+ * The key a request to `config` may carry: the player's saved key (or main's saved account token)
+ * when it was saved for exactly this provider and `endpointFor`'s base URL, else the provider's .env
+ * variable. A config pointed anywhere else gets nothing. Custom endpoints never get an .env key: a
+ * deliberate Rule 6 exception, so an env secret never goes to a URL the renderer picked.
  */
 export function pickApiKey(
   config: InferenceConfig,
@@ -134,16 +177,24 @@ export function pickApiKey(
 ): { key: string; source: "saved" | "env" } | null {
   if (!isKeyProvider(config.kind)) return null;
   const provider = config.kind;
+  if (provider === "custom") {
+    const bound =
+      saved !== null &&
+      saved.provider === "custom" &&
+      sameEndpoint(saved.baseUrl, config.baseUrl) &&
+      keyEndpointAllowed(config.baseUrl);
+    return bound ? { key: saved.key, source: "saved" } : null;
+  }
+  const endpoint = endpointFor(provider, undefined, env);
+  if (!endpoint.ok || !sameEndpoint(config.baseUrl, endpoint.value)) return null;
   if (
     saved !== null &&
     saved.provider === provider &&
-    sameEndpoint(saved.baseUrl, config.baseUrl) &&
-    (provider !== "custom" || keyEndpointAllowed(config.baseUrl))
+    sameEndpoint(saved.baseUrl, endpoint.value)
   ) {
     return { key: saved.key, source: "saved" };
   }
-  if (provider === "custom" || config.apiKeyEnv !== ENV_NAME[provider]) return null;
-  if (!sameEndpoint(config.baseUrl, PROVIDER_PRESETS[provider].baseUrl)) return null;
+  if (config.apiKeyEnv !== ENV_NAME[provider]) return null;
   const fromEnv = envKey(provider, env);
   return fromEnv === null ? null : { key: fromEnv, source: "env" };
 }
@@ -163,6 +214,29 @@ export function resolveKey(
   return fromEnv === null ? saved : ok(fromEnv);
 }
 
+/**
+ * The key a request to a provider's own endpoint may carry, for callers that have no chat config
+ * (the Qwen-Image server): the saved key when it was bound to that endpoint, else the provider's
+ * .env variable. Null when the endpoint may not carry a key at all (plain http off this machine).
+ */
+export function pickProviderKey(
+  provider: KeyProvider,
+  saved: KeyRecord | null,
+  env: EnvLike,
+): { key: string; source: "saved" | "env" } | null {
+  const endpoint = endpointFor(provider, undefined, env);
+  if (!endpoint.ok) return null;
+  if (
+    saved !== null &&
+    saved.provider === provider &&
+    sameEndpoint(saved.baseUrl, endpoint.value)
+  ) {
+    return { key: saved.key, source: "saved" };
+  }
+  const fromEnv = envKey(provider, env);
+  return fromEnv === null ? null : { key: fromEnv, source: "env" };
+}
+
 /** What the renderer may know about a provider's key. */
 export function describeKey(
   provider: KeyProvider,
@@ -171,7 +245,8 @@ export function describeKey(
 ): KeyStatus {
   if (saved !== null) return { set: true, source: "saved", boundTo: saved.baseUrl };
   if (envKey(provider, env) !== null) {
-    return { set: true, source: "env", boundTo: PROVIDER_PRESETS[provider].baseUrl };
+    const endpoint = endpointFor(provider, undefined, env);
+    return { set: true, source: "env", boundTo: endpoint.ok ? endpoint.value : null };
   }
   return { set: false, source: null, boundTo: null };
 }

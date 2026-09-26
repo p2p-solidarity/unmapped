@@ -1,5 +1,6 @@
 // Saved API keys on disk: `<userData>/provider-keys/<provider>.key`, one safeStorage-encrypted
-// record per provider (the OS keychain holds the encryption key). Only main reads these files, and
+// record per provider (the OS keychain holds the encryption key) — the keys a player typed, and the
+// gateway account token main's sign-in saves as `hosted.key`. Only main reads these files, and
 // every caller that needs a key — chat, probe, image generation — asks `resolveApiKey`, so the
 // saved-then-.env order and the endpoint binding live in one place. Values are never logged.
 
@@ -17,9 +18,11 @@ import { safeStorage } from "electron";
 import {
   describeKey,
   type EnvLike,
+  isKeyProvider,
   type KeyRecord,
   parseKeyRecord,
   pickApiKey,
+  pickProviderKey,
   resolveKey,
   serializeKeyRecord,
 } from "./keys";
@@ -130,8 +133,21 @@ export async function resolveApiKey(
   config: InferenceConfig,
   env: EnvLike = process.env,
 ): Promise<Result<{ key: string; source: "saved" | "env" } | null>> {
-  if (config.kind !== "openai" && config.kind !== "openui-gateway" && config.kind !== "custom") {
-    return ok(pickApiKey(config, null, env));
-  }
+  if (!isKeyProvider(config.kind)) return ok(pickApiKey(config, null, env));
   return resolveKey(config, await readKeyRecord(config.kind), env);
+}
+
+/**
+ * A provider's key without a chat config (the Qwen-Image server, rev 6 phase 4 D4): saved first,
+ * then that provider's .env variable. As with `resolveKey`, a saved key that no longer reads falls
+ * back to .env, and is an error only when there is no .env key either.
+ */
+export async function resolveProviderKey(
+  provider: KeyProvider,
+  env: EnvLike = process.env,
+): Promise<Result<{ key: string; source: "saved" | "env" } | null>> {
+  const saved = await readKeyRecord(provider);
+  if (saved.ok) return ok(pickProviderKey(provider, saved.value, env));
+  const fromEnv = pickProviderKey(provider, null, env);
+  return fromEnv === null ? saved : ok(fromEnv);
 }

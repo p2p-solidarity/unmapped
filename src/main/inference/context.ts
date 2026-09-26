@@ -74,6 +74,7 @@ export async function readContextWindow(
   switch (config.kind) {
     case "openai":
     case "openui-gateway":
+    case "hosted":
       return null;
     case "apple-fm":
       return { tokens: bridgeTokens ?? APPLE_FM_SIDECAR.ctxSize, source: "model" };

@@ -16,6 +16,7 @@
 import { randomBytes } from "node:crypto";
 import { chmod, link, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { type KeyChange, signKeyChange, signPairing, signSignIn } from "@shared/account";
 import { base64Url, fromBase64Url } from "@shared/history/ids";
 import {
   authorKeyFor,
@@ -56,6 +57,15 @@ export interface DeviceKey {
   signInvite(unsigned: UnsignedInvite): Invite;
   signWsAuth(nonce: string, serviceKey: string): string;
   blobAuth(request: { method: string; path: string; ts: number; body: Uint8Array }): string;
+  /**
+   * The gateway's own texts (phase 4, D1; @shared/account), each under its own "unmapped-…:v1"
+   * line, so none verifies as a world event and no event signature verifies at the gateway.
+   */
+  readonly account: {
+    signIn(nonce: string, gatewayKey: string): string;
+    pairing(nonce: string, gatewayKey: string): string;
+    keyChange(action: KeyChange, accountId: string, key: string): string;
+  };
 }
 
 const KEYCHAIN_HINT =
@@ -75,6 +85,11 @@ function wrap(secret: Uint8Array): DeviceKey {
     signInvite: (unsigned) => signInvite(unsigned, secret),
     signWsAuth: (nonce, serviceKey) => signWsAuth(secret, nonce, serviceKey),
     blobAuth: (request) => blobAuthHeader(secret, request),
+    account: {
+      signIn: (nonce, gatewayKey) => signSignIn(secret, nonce, gatewayKey),
+      pairing: (nonce, gatewayKey) => signPairing(secret, nonce, gatewayKey),
+      keyChange: (action, accountId, key) => signKeyChange(secret, action, accountId, key),
+    },
   };
 }
 

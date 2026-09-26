@@ -3,6 +3,7 @@ import type { PlayerProfile } from "@shared/player";
 // The only bridge between the renderer and main (Rule 6). `window.seed` is typed as `SeedApi`, so
 // a missing or mistyped method is a compile error here rather than a runtime surprise in the UI.
 
+import type { PlansResponse } from "@shared/billing";
 import type {
   CartridgeManifest,
   CartridgeRevision,
@@ -25,6 +26,7 @@ import type {
 } from "@shared/chain";
 import type { CreateDraft, CreateDraftEntry, DraftIdea, LookPicture } from "@shared/createDraft";
 import type { ClaimNameResult, EnsNamesConfig } from "@shared/ensNames";
+import type { AccountStatus, PairingLookup, QuotaView } from "@shared/gatewayApi";
 import type { AccessPolicy } from "@shared/history/types";
 import type { DataKeyWrappingRecord } from "@shared/identity";
 import type {
@@ -62,6 +64,7 @@ import type {
   KeyStatusMap,
   LocalDetection,
   ProbeResult,
+  RouteView,
   SetApiKeyInput,
   SidecarStatus,
 } from "@shared/llm";
@@ -414,6 +417,25 @@ const api: SeedApi = {
       subscribe<WorldPresenceEvent>(IPC.world.presence, listener),
     onStream: (listener: (event: WorldStreamEvent) => void) =>
       subscribe<WorldStreamEvent>(IPC.world.stream, listener),
+  },
+  gateway: {
+    route: () => invoke<Result<RouteView>>(IPC.gateway.route),
+    account: () => invoke<Result<AccountStatus>>(IPC.gateway.account),
+    signIn: () => invoke<Result<AccountStatus>>(IPC.gateway.signIn),
+    signOut: () => invoke<Result<AccountStatus>>(IPC.gateway.signOut),
+    requestPairing: () => invoke<Result<AccountStatus>>(IPC.gateway.requestPairing),
+    cancelPairing: () => invoke<Result<AccountStatus>>(IPC.gateway.cancelPairing),
+    lookupPairing: (code: string) => invoke<Result<PairingLookup>>(IPC.gateway.lookupPairing, code),
+    approvePairing: (code: string, key: string) =>
+      invoke<Result<AccountStatus>>(IPC.gateway.approvePairing, code, key),
+    removeDevice: (key: string) => invoke<Result<AccountStatus>>(IPC.gateway.removeDevice, key),
+    quota: () => invoke<Result<QuotaView>>(IPC.gateway.quota),
+    onChanged: (listener: () => void) => subscribe<null>(IPC.gateway.changed, () => listener()),
+    onQuota: (listener: (quota: QuotaView) => void) =>
+      subscribe<QuotaView>(IPC.gateway.quotaChanged, listener),
+    plans: () => invoke<Result<PlansResponse>>(IPC.gateway.plans),
+    checkout: (plan: string) => invoke<Result<void>>(IPC.gateway.checkout, plan),
+    portal: () => invoke<Result<void>>(IPC.gateway.portal),
   },
 };
 

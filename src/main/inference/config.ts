@@ -14,7 +14,7 @@ import {
   PROVIDER_PRESETS,
   type SidecarConfig,
 } from "@shared/llm";
-import { fail, ok, type Result, toError } from "@shared/result";
+import { type AppError, fail, ok, type Result, toError } from "@shared/result";
 import { z } from "zod";
 
 export const CONFIG_FILE = "inference.json";
@@ -43,7 +43,18 @@ export const sidecarConfigSchema = z.object({
 const TRUSTED_API_KEY_ENVS = {
   openai: "OPENAI_API_KEY",
   "openui-gateway": "THESYS_API_KEY",
+  hosted: "UNMAPPED_GATEWAY_KEY",
 } as const;
+
+/** The chat kinds that carry a key (the player's own, or the gateway's account token). */
+export type KeyedChatKind = keyof typeof TRUSTED_API_KEY_ENVS;
+
+/**
+ * The generation gateway a release build talks to when UNMAPPED_GATEWAY_URL is not set. A person
+ * bakes it in when the gateway goes live (rev 6 phase 4, "What a person must do"); development
+ * builds have none, so without the env variable nothing is hosted.
+ */
+export const GATEWAY_URL: string | null = null;
 
 /** Main-owned Homebrew locations; a same-named executable elsewhere is not trusted. */
 const TRUSTED_SIDECAR_PATHS = new Set<string>([...LLAMA_SERVER_PATHS, APPLE_FM_BINARY]);
@@ -108,17 +119,57 @@ export function isLoopbackEndpoint(value: string): boolean {
 }
 
 /**
+ * UNMAPPED_GATEWAY_URL (main env), else the baked-in GATEWAY_URL, as the gateway's `/v1` base:
+ * ok(null) when this build has no gateway. Its account token travels only over https, or to a
+ * gateway on this computer (the E2E one), so any other address is refused, never used.
+ */
+export function gatewaySetting(env: EnvLike = process.env): Result<string | null> {
+  const raw = env.UNMAPPED_GATEWAY_URL?.trim() || GATEWAY_URL;
+  if (raw === null || raw === "") return ok(null);
+  const url = endpoint(raw);
+  const allowed =
+    url !== null &&
+    url.username === "" &&
+    url.password === "" &&
+    url.search === "" &&
+    url.hash === "" &&
+    (url.protocol === "https:" || isLoopbackEndpoint(raw));
+  if (url === null || !allowed) {
+    return fail({
+      code: "gateway-url-not-allowed",
+      message: `UNMAPPED_GATEWAY_URL (${raw}) is not an https:// address or one on this computer.`,
+      hint: "Set UNMAPPED_GATEWAY_URL in .env to the gateway's https:// address (or http://127.0.0.1:<port> for one on this computer), then restart.",
+    });
+  }
+  const path = url.pathname.replace(/\/+$/, "");
+  return ok(`${url.origin}${path.endsWith("/v1") ? path : `${path}/v1`}`);
+}
+
+/** The gateway's `/v1` base, or null when none is configured (or its address is refused). */
+export function gatewayEndpoint(env: EnvLike = process.env): string | null {
+  const setting = gatewaySetting(env);
+  return setting.ok ? setting.value : null;
+}
+
+/** The only endpoint a keyed chat kind may use: its preset's, or the configured gateway's. */
+export function chatEndpointFor(kind: KeyedChatKind, env: EnvLike = process.env): string | null {
+  return kind === "hosted" ? gatewayEndpoint(env) : PROVIDER_PRESETS[kind].baseUrl;
+}
+
+/**
  * The renderer may choose a provider preset or a custom no-auth endpoint, but it must not choose
  * where a main-process environment secret is sent. Cloud keys are paired with their exact known
  * endpoint; local providers stay on loopback; custom endpoints are intentionally keyless.
  */
-export function isTrustedInferenceConfig(config: InferenceConfig): boolean {
-  if (config.kind === "openai") {
-    if (config.apiKeyEnv !== TRUSTED_API_KEY_ENVS.openai) return false;
-    if (!sameEndpoint(config.baseUrl, PROVIDER_PRESETS.openai.baseUrl)) return false;
-  } else if (config.kind === "openui-gateway") {
-    if (config.apiKeyEnv !== TRUSTED_API_KEY_ENVS["openui-gateway"]) return false;
-    if (!sameEndpoint(config.baseUrl, PROVIDER_PRESETS["openui-gateway"].baseUrl)) return false;
+export function isTrustedInferenceConfig(
+  config: InferenceConfig,
+  env: EnvLike = process.env,
+): boolean {
+  if (config.kind === "openai" || config.kind === "openui-gateway" || config.kind === "hosted") {
+    if (config.apiKeyEnv !== TRUSTED_API_KEY_ENVS[config.kind]) return false;
+    const expected = chatEndpointFor(config.kind, env);
+    if (expected === null || !sameEndpoint(config.baseUrl, expected)) return false;
+    if (config.kind === "hosted" && config.sidecar !== null) return false;
   } else if (
     config.kind === "llamacpp" ||
     config.kind === "ollama" ||
@@ -146,8 +197,10 @@ export function configPath(userData: string): string {
 }
 
 /**
- * Cloud when a key is already in the environment, otherwise the local llama.cpp sidecar.
- * An env var that exists but is empty counts as absent — an empty key cannot authenticate.
+ * OpenAI when its key is already in the environment; else the free allowance when a gateway is
+ * configured (direction item 9: it comes first); else the on-device Apple model; else the local
+ * llama.cpp sidecar. An env var that exists but is empty counts as absent — an empty key cannot
+ * authenticate. Development builds have no gateway, so their default is unchanged.
  */
 export function defaultConfig(
   env: EnvLike = process.env,
@@ -157,13 +210,19 @@ export function defaultConfig(
   if (typeof key === "string" && key.length > 0) {
     return { ...PROVIDER_PRESETS.openai, sidecar: null };
   }
+  const gateway = gatewayEndpoint(env);
+  if (gateway !== null) return { ...PROVIDER_PRESETS.hosted, baseUrl: gateway, sidecar: null };
   // No cloud key: the on-device Apple model when this Mac has it, else a local llama.cpp.
   if (hasAppleFm) return { ...PROVIDER_PRESETS["apple-fm"], sidecar: { ...APPLE_FM_SIDECAR } };
   return { ...PROVIDER_PRESETS.llamacpp, sidecar: { ...DEFAULT_SIDECAR } };
 }
 
-/** Validates an untrusted payload (disk contents or an IPC message from the renderer). */
-export function parseConfig(raw: unknown): Result<InferenceConfig> {
+/**
+ * Validates an untrusted payload (disk contents or an IPC message from the renderer). A `hosted`
+ * config's address and key variable are main's, never the payload's: they are rewritten from the
+ * configured gateway, and the config is refused when there is none.
+ */
+export function parseConfig(raw: unknown, env: EnvLike = process.env): Result<InferenceConfig> {
   const parsed = inferenceConfigSchema.safeParse(raw);
   if (!parsed.success) {
     const first = parsed.error.issues[0];
@@ -175,14 +234,37 @@ export function parseConfig(raw: unknown): Result<InferenceConfig> {
       hint: "baseUrl must be an absolute URL ending in /v1 and kind must be a known provider",
     });
   }
-  if (!isTrustedInferenceConfig(parsed.data)) {
+  const config = hostedRewrite(parsed.data, env);
+  if (!config.ok) return config;
+  if (!isTrustedInferenceConfig(config.value, env)) {
     return fail({
       code: "untrusted-config",
       message: "This inference endpoint or credential source is not trusted.",
       hint: "Use the OpenAI or OpenUI preset, a loopback local server, or a custom endpoint whose key is entered in Settings → Model; sidecars must be llama-server or Apple's fm.",
     });
   }
-  return ok(parsed.data);
+  return config;
+}
+
+function hostedRewrite(config: InferenceConfig, env: EnvLike): Result<InferenceConfig> {
+  if (config.kind !== "hosted") return ok(config);
+  const gateway = gatewaySetting(env);
+  if (!gateway.ok) return gateway;
+  if (gateway.value === null) return fail(gatewayNotConfigured());
+  return ok({
+    ...config,
+    baseUrl: gateway.value,
+    apiKeyEnv: TRUSTED_API_KEY_ENVS.hosted,
+    sidecar: null,
+  });
+}
+
+export function gatewayNotConfigured(): AppError {
+  return {
+    code: "gateway-not-configured",
+    message: "This build has no generation gateway configured.",
+    hint: "Set UNMAPPED_GATEWAY_URL in .env to the gateway's address and restart, or use your own key or a local model in Settings → Model.",
+  };
 }
 
 /** Never rejects: an unreadable or invalid file yields the default so the app can still boot. */
@@ -192,7 +274,7 @@ export async function loadConfig(
 ): Promise<InferenceConfig> {
   try {
     const text = await readFile(configPath(userData), "utf8");
-    const parsed = parseConfig(JSON.parse(text) as unknown);
+    const parsed = parseConfig(JSON.parse(text) as unknown, env);
     return parsed.ok ? parsed.value : defaultConfig(env);
   } catch {
     return defaultConfig(env);

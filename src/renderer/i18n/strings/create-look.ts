@@ -131,6 +131,16 @@ export const CREATE_LOOK = {
       "費用：第一次呼叫約 {first}，兩次修正都用上時最多約 {worst}（{model} 於 {date} 的公開價格，{source}）。",
     ja: "費用：1回目は約 {first}、修正を2回とも使うと最大 約 {worst}（{model} の {date} 時点の公開価格、{source}）。",
   },
+  quoteAllowance: {
+    en: "Cost: paid from the free allowance through the UNMAPPED gateway ({model}); the gateway counts it after each call.",
+    "zh-TW": "費用：經由 UNMAPPED 閘道從免費額度扣除（{model}）；閘道會在每次呼叫後計算。",
+    ja: "費用：UNMAPPED ゲートウェイ経由で無料枠から差し引かれます（{model}）。ゲートウェイが呼び出しごとに数えます。",
+  },
+  quoteAllowanceLeft: {
+    en: "{percent}% of this month's allowance is left.",
+    "zh-TW": "本月額度還剩 {percent}%。",
+    ja: "今月の枠は残り {percent}% です。",
+  },
   quoteUsd: { en: "US$ {amount}", "zh-TW": "{amount} 美元", ja: "{amount} 米ドル" },
   quoteUnderCent: {
     en: "under US$0.01",

@@ -1,7 +1,8 @@
 // What a model call would cost, for the quote Create a game shows before Build (rev 6 phase 2, D1).
 // Only prices read from a provider's own pricing page, each with its source and the day it was
 // read; a model not listed here has no price ("price unknown"), never a guess (Rule 2). A local
-// provider costs nothing to call. Token counts before a call are estimates (`estimateTokens`); what
+// provider costs nothing to call. A call through the generation gateway (`hosted`) is paid from the
+// account's allowance, which the gateway counts in its own credits (rev 6 phase 4, D2). Token counts before a call are estimates (`estimateTokens`); what
 // a call really used is the usage ledger's (@shared/usage), reported by the provider.
 
 import type { ProviderKind } from "./llm";
@@ -43,12 +44,14 @@ export const LOCAL_PROVIDERS: readonly ProviderKind[] = ["llamacpp", "ollama", "
 
 export type CallPrice =
   | { kind: "free" }
+  | { kind: "allowance" }
   | { kind: "priced"; price: ModelPrice }
   | { kind: "unknown"; model: string };
 
 /** The price of one call to `model` on `kind`: free, a listed price, or unknown. */
 export function callPrice(kind: ProviderKind, model: string): CallPrice {
   if (LOCAL_PROVIDERS.includes(kind)) return { kind: "free" };
+  if (kind === "hosted") return { kind: "allowance" };
   const listed = kind === "openai" ? OPENAI[model] : undefined;
   return listed === undefined ? { kind: "unknown", model } : { kind: "priced", price: listed };
 }

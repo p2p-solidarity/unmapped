@@ -87,4 +87,52 @@ export const MODEL = {
   offline: { en: "Model did not answer", "zh-TW": "模型沒有回應", ja: "モデルが応答しません" },
   start: { en: "Start local server", "zh-TW": "啟動本地伺服器", ja: "ローカルサーバーを起動" },
   stop: { en: "Stop local server", "zh-TW": "停止本地伺服器", ja: "ローカルサーバーを停止" },
+  // ── The free allowance and where the next call goes (rev 6 phase 4, D2) ────────────────────────
+  hosted: { en: "Free allowance", "zh-TW": "免費額度", ja: "無料枠" },
+  hostedNote: {
+    en: "Calls go through the UNMAPPED gateway and are counted against your account's allowance (Settings → Account). An empty model ID uses the gateway's default.",
+    "zh-TW":
+      "呼叫會經由 UNMAPPED 閘道，並從你帳號的額度扣除（「設定 → 帳號」）。模型 ID 留空則使用閘道的預設模型。",
+    ja: "呼び出しは UNMAPPED ゲートウェイを通り、アカウントの枠から差し引かれます（「設定 → アカウント」）。モデル ID が空ならゲートウェイの既定モデルを使います。",
+  },
+  routeChecking: {
+    en: "Checking where the next call goes…",
+    "zh-TW": "正在確認下一次呼叫會送往哪裡…",
+    ja: "次の呼び出しの行き先を確認中…",
+  },
+  routeLocal: {
+    en: "Next call: {kind} · this computer · {model}",
+    "zh-TW": "下一次呼叫：{kind} · 這台電腦 · {model}",
+    ja: "次の呼び出し：{kind} · このコンピュータ · {model}",
+  },
+  routeSaved: {
+    en: "Next call: {kind} · your saved key · {model}",
+    "zh-TW": "下一次呼叫：{kind} · 你儲存的金鑰 · {model}",
+    ja: "次の呼び出し：{kind} · 保存したキー · {model}",
+  },
+  routeEnv: {
+    en: "Next call: {kind} · key from .env · {model}",
+    "zh-TW": "下一次呼叫：{kind} · .env 的金鑰 · {model}",
+    ja: "次の呼び出し：{kind} · .env のキー · {model}",
+  },
+  routeKeyless: {
+    en: "Next call: {kind} · no key · {model}",
+    "zh-TW": "下一次呼叫：{kind} · 不帶金鑰 · {model}",
+    ja: "次の呼び出し：{kind} · キーなし · {model}",
+  },
+  routeNoKeyAllowance: {
+    en: "Next call: {kind} · no key → free allowance · {model}",
+    "zh-TW": "下一次呼叫：{kind} · 沒有金鑰 → 免費額度 · {model}",
+    ja: "次の呼び出し：{kind} · キーなし → 無料枠 · {model}",
+  },
+  routeAllowance: {
+    en: "Next call: free allowance · {model}",
+    "zh-TW": "下一次呼叫：免費額度 · {model}",
+    ja: "次の呼び出し：無料枠 · {model}",
+  },
+  routeNone: {
+    en: "The next call cannot go anywhere yet: {reason}",
+    "zh-TW": "下一次呼叫目前無處可送：{reason}",
+    ja: "次の呼び出しはまだどこにも送れません：{reason}",
+  },
 } as const satisfies Record<string, Phrase>;

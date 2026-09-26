@@ -1,5 +1,7 @@
 // One model setting for Create, play and the console. The renderer only writes API keys; main
-// encrypts them and returns status, never the secret. Detection and probe show real readings.
+// encrypts them and returns status, never the secret. Detection and probe show real readings, and
+// the route line says where the next call goes (own key, this computer, or the free allowance)
+// before any call is made (rev 6 phase 4, D2).
 
 import { errorLine, useT } from "@renderer/i18n";
 import { useInferenceStore } from "@renderer/state";
@@ -7,24 +9,27 @@ import { Button, ErrorBlock, space, Text, TextField } from "@renderer/ui";
 import {
   APPLE_FM_SIDECAR,
   type InferenceConfig,
-  type KeyProvider,
   type KeyStatusMap,
   type LocalDetection,
   PROVIDER_PRESETS,
   type ProviderKind,
+  type TypedKeyProvider,
 } from "@shared/llm";
 import { type AppError, errored, idle, type Loadable, loading, ready } from "@shared/result";
 import { type JSX, useCallback, useEffect, useState } from "react";
 import { useRefreshProbe } from "../inferenceSync";
+import { kindLabel, RouteLine } from "./RouteLine";
+import { useRoute } from "./useGateway";
 
-const CLOUD: ProviderKind[] = ["openai", "openui-gateway", "custom"];
+/** `hosted` is offered only when main reports a configured gateway. */
+const CLOUD: ProviderKind[] = ["openai", "openui-gateway", "custom", "hosted"];
 const LOCAL: ProviderKind[] = ["apple-fm", "ollama", "llamacpp"];
 
 function mode(kind: ProviderKind): "cloud" | "local" {
   return CLOUD.includes(kind) ? "cloud" : "local";
 }
 
-function cloudKey(kind: ProviderKind): KeyProvider | null {
+function cloudKey(kind: ProviderKind): TypedKeyProvider | null {
   return kind === "openai" || kind === "openui-gateway" || kind === "custom" ? kind : null;
 }
 
@@ -74,6 +79,11 @@ export function ModelPanel(): JSX.Element {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<AppError | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // Re-read the route when the saved setting or a key changes (a string, so equal means equal).
+  const { route } = useRoute(
+    JSON.stringify([current?.kind, current?.model, keys.status === "ready" ? keys.value : null]),
+  );
+  const gateway = route.status === "ready" && route.value.gateway !== null;
 
   useEffect(() => setDraft(current), [current]);
   const detect = useCallback(async () => {
@@ -170,27 +180,24 @@ export function ModelPanel(): JSX.Element {
         </Button>
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: space.xs }}>
-        {(selectedMode === "cloud" ? CLOUD : LOCAL).map((kind) => (
-          <Button
-            key={kind}
-            variant="chip"
-            active={selected.kind === kind}
-            onClick={() => choose(kind)}
-          >
-            {kind === "apple-fm"
-              ? t("model.apple")
-              : kind === "llamacpp"
-                ? t("model.llama")
-                : kind === "ollama"
-                  ? t("model.ollama")
-                  : kind === "custom"
-                    ? t("model.custom")
-                    : kind === "openai"
-                      ? "OpenAI"
-                      : "OpenUI Gateway"}
-          </Button>
-        ))}
+        {(selectedMode === "cloud" ? CLOUD : LOCAL)
+          .filter((kind) => kind !== "hosted" || gateway || selected.kind === "hosted")
+          .map((kind) => (
+            <Button
+              key={kind}
+              variant="chip"
+              active={selected.kind === kind}
+              onClick={() => choose(kind)}
+            >
+              {kindLabel(kind, t)}
+            </Button>
+          ))}
       </div>
+      {selected.kind === "hosted" ? (
+        <Text variant="caption" tone="dim">
+          {t("model.hostedNote")}
+        </Text>
+      ) : null}
       {selectedMode === "local" ? (
         <Text
           variant="caption"
@@ -324,6 +331,7 @@ export function ModelPanel(): JSX.Element {
           </Button>
         ) : null}
       </div>
+      <RouteLine route={route} />
       {active && probe.status === "ready" ? (
         <Text variant="caption" tone={probe.value.reachable ? "success" : "danger"}>
           {probe.value.reachable

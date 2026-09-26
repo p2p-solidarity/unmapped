@@ -1,22 +1,28 @@
 // OpenAI-SDK client for any OpenAI-compatible endpoint. Lives in main only: the caller resolves
-// the API key in main (`keyStore.resolveApiKey`) and it never crosses the bridge (Rule 6). Every
-// failure is mapped to an AppError with a hint the player can act on (Rule 5).
+// the route and its key in main (`routeFor`) and the key never crosses the bridge (Rule 6). Every
+// failure is mapped to an AppError with a hint the player can act on (Rule 5). The body itself is
+// built by @shared/chatWire, the one copy main and the gateway share.
 
-import type {
-  ChatMessage,
-  ChatRequest,
-  ChatUsage,
-  ContextWindow,
-  InferenceConfig,
-  ToolCall,
-} from "@shared/llm";
-import { fail, ok, type Result } from "@shared/result";
+import { buildChatBody, createThinkFilter, stripThinking } from "@shared/chatWire";
+import type { ChatRequest, ChatUsage, ContextWindow, InferenceConfig, ToolCall } from "@shared/llm";
+import { PURPOSE_HEADER, REQUEST_ID, REQUEST_ID_HEADER } from "@shared/quota";
+import { err, fail, ok, type Result } from "@shared/result";
 import OpenAI, { APIConnectionError, APIError, APIUserAbortError } from "openai";
 import type { ChatCompletionCreateParamsStreaming } from "openai/resources/chat/completions";
 import { fitOutput } from "./budget";
 import { parseConfig } from "./config";
-import { createThinkFilter, stripThinking } from "./think";
+import { hostedError, signedOutError } from "./hostedErrors";
 import { createToolCallAccumulator, type ToolCallDelta } from "./toolCalls";
+
+export {
+  buildChatBody,
+  type ChatBody,
+  toWireMessage,
+  usesReasoningParams,
+  type WireMessage,
+  type WireTool,
+  type WireToolCall,
+} from "@shared/chatWire";
 
 export interface ChatCompletionResult {
   text: string;
@@ -33,151 +39,9 @@ export interface StreamOptions {
   context: ContextWindow | null;
 }
 
-/** OpenAI's wire shape for a tool call the assistant emitted. */
-export interface WireToolCall {
-  id: string;
-  type: "function";
-  function: { name: string; arguments: string };
-}
-
-/**
- * Our `ChatMessage` union on the wire. The assistant carries `tool_calls`, and a tool result is
- * addressed by `tool_call_id` — the two halves the model needs to match a call to its answer.
- */
-export type WireMessage =
-  | { role: "system"; content: string }
-  | { role: "user"; content: string }
-  | { role: "assistant"; content: string; tool_calls?: WireToolCall[] }
-  | { role: "tool"; content: string; tool_call_id: string };
-
-/** A tool schema as the provider wants it: our flat `ToolSchema` wrapped in a function envelope. */
-export interface WireTool {
-  type: "function";
-  function: { name: string; description: string; parameters: Record<string, unknown> };
-}
-
-/**
- * The request body we actually send. The OpenAI SDK types only the official parameters, so the
- * provider-specific extras (`grammar`, `chat_template_kwargs`) are declared here and the whole
- * object is cast once, at the `create()` boundary — nothing downstream sees an untyped body.
- */
-export interface ChatBody {
-  model: string;
-  messages: WireMessage[];
-  stream: true;
-  stream_options: { include_usage: true };
-  stop?: string[];
-  /** Present only when the caller offered tools this step. */
-  tools?: WireTool[];
-  tool_choice?: "auto";
-  /** Classic Chat Completions budget (llama.cpp / ollama / vLLM / custom). */
-  max_tokens?: number;
-  /** GPT-5 family rejects `max_tokens` and requires this name instead. */
-  max_completion_tokens?: number;
-  /** Omitted for GPT-5 family: any value but the default returns 400 "Unsupported parameter". */
-  temperature?: number;
-  /** GPT-5 family only; "low" keeps DSL generation fast. */
-  reasoning_effort?: "none" | "low" | "medium" | "high";
-  /** llama.cpp only: GBNF grammar that constrains the sampler to our DSL. */
-  grammar?: string;
-  /** llama.cpp / ollama / vLLM: stops Qwen-style chat templates opening a <think> block. */
-  chat_template_kwargs?: { enable_thinking: boolean };
-}
-
-/** Reasoning models (GPT-5 family, o-series) take `max_completion_tokens` and reject `temperature`. */
-export function usesReasoningParams(config: InferenceConfig): boolean {
-  // Local runtimes never take these fields, whatever the model is called.
-  if (
-    config.kind === "llamacpp" ||
-    config.kind === "ollama" ||
-    config.kind === "vllm" ||
-    config.kind === "apple-fm"
-  )
-    return false;
-  // Gateways namespace the model ("openai/gpt-5"), so match the last path segment. The OpenAI
-  // preset is included on purpose: switching its model to gpt-4o must not send reasoning fields.
-  const model = (config.model.split("/").pop() ?? "").toLowerCase();
-  return /^gpt-5/.test(model) || /^o[1-9]/.test(model);
-}
-
-/**
- * Local runtimes whose chat templates take `chat_template_kwargs` (unknown fields are ignored by
- * all three). Apple's `fm serve` has no thinking mode and custom servers are unknown, so neither
- * gets the field; the think filter below covers any model that reasons out loud anyway.
- */
-function takesThinkingSwitch(config: InferenceConfig): boolean {
-  return config.kind === "llamacpp" || config.kind === "ollama" || config.kind === "vllm";
-}
-
-/** Maps one of our messages onto the provider's shape. Ollama and llama.cpp speak the same one. */
-export function toWireMessage(message: ChatMessage): WireMessage {
-  switch (message.role) {
-    case "system":
-    case "user":
-      return { role: message.role, content: message.content };
-    case "assistant": {
-      const calls = message.toolCalls ?? [];
-      if (calls.length === 0) return { role: "assistant", content: message.content };
-      return {
-        role: "assistant",
-        content: message.content,
-        tool_calls: calls.map((call) => ({
-          id: call.id,
-          type: "function",
-          function: { name: call.name, arguments: call.arguments },
-        })),
-      };
-    }
-    case "tool":
-      return { role: "tool", content: message.content, tool_call_id: message.toolCallId };
-  }
-}
-
-export function buildChatBody(config: InferenceConfig, request: ChatRequest): ChatBody {
-  const body: ChatBody = {
-    model: config.model,
-    messages: request.messages.map(toWireMessage),
-    stream: true,
-    stream_options: { include_usage: true },
-  };
-  if (request.stop.length > 0) body.stop = request.stop;
-
-  const withTools = request.tools.length > 0;
-  if (withTools) {
-    body.tools = request.tools.map((tool) => ({
-      type: "function",
-      function: {
-        name: tool.name,
-        description: tool.description,
-        parameters: tool.parameters,
-      },
-    }));
-    body.tool_choice = "auto";
-  }
-
-  if (usesReasoningParams(config)) {
-    body.max_completion_tokens = request.maxTokens;
-    // GPT-5 Chat Completions rejects function tools when reasoning is enabled. Keep reasoning for
-    // plain generation, but explicitly turn it off for tool turns instead of making the provider
-    // return a 400 (the Responses API is not part of this OpenAI-compatible client contract).
-    body.reasoning_effort = withTools ? "none" : "low";
-  } else {
-    body.max_tokens = request.maxTokens;
-    body.temperature = request.temperature;
-  }
-
-  // A GBNF grammar pins the sampler to the DSL, which would make emitting a tool call impossible.
-  // Tools win: the caller asked for a decision, not a program.
-  if (request.grammar !== null && config.kind === "llamacpp" && !withTools) {
-    body.grammar = request.grammar;
-  }
-  if (takesThinkingSwitch(config)) body.chat_template_kwargs = { enable_thinking: false };
-  return body;
-}
-
 /** The presets that cannot answer without a key; custom and local servers may be keyless. */
 function needsKey(config: InferenceConfig): boolean {
-  return config.kind === "openai" || config.kind === "openui-gateway";
+  return config.kind === "openai" || config.kind === "openui-gateway" || config.kind === "hosted";
 }
 
 export function createClient(
@@ -187,6 +51,7 @@ export function createClient(
   const trusted = parseConfig(config);
   if (!trusted.ok) return fail(trusted.error);
   const safeConfig = trusted.value;
+  if (safeConfig.kind === "hosted" && apiKey === null) return fail(signedOutError());
   if (needsKey(safeConfig) && apiKey === null) {
     return fail({
       code: "no-api-key",
@@ -194,7 +59,28 @@ export function createClient(
       hint: `Enter a key in Settings → Model (Cloud API), or add ${safeConfig.apiKeyEnv ?? "the key"} to .env.`,
     });
   }
-  return ok(new OpenAI({ baseURL: safeConfig.baseUrl, apiKey: apiKey ?? "local" }));
+  return ok(
+    new OpenAI({
+      baseURL: safeConfig.baseUrl,
+      apiKey: apiKey ?? "local",
+      // A metered call is never retried behind the player's back: the gateway de-duplicates by
+      // X-Request-Id, so a silent retry would only come back `request-in-flight` or `-settled`,
+      // hiding what really happened. A new attempt is a new call with a new id.
+      ...(safeConfig.kind === "hosted" ? { maxRetries: 0 } : {}),
+    }),
+  );
+}
+
+/** X-Request-Id (the chat id, 8–128 safe characters) and X-Unmapped-Purpose; never a world scope. */
+export function hostedHeaders(request: ChatRequest): Result<Record<string, string>> {
+  if (!REQUEST_ID.test(request.id)) {
+    return err(
+      "gateway-request-id",
+      "A hosted call needs a request id of 8–128 letters, digits and . _ : -",
+      "This is a bug in the calling code, not something the player can fix.",
+    );
+  }
+  return ok({ [REQUEST_ID_HEADER]: request.id, [PURPOSE_HEADER]: request.usage.purpose });
 }
 
 export async function streamChat(
@@ -206,6 +92,8 @@ export async function streamChat(
 ): Promise<Result<ChatCompletionResult>> {
   const client = createClient(config, options.apiKey);
   if (!client.ok) return client;
+  const headers = config.kind === "hosted" ? hostedHeaders(request) : ok(undefined);
+  if (!headers.ok) return headers;
   const budget = fitOutput(request, options.context, `${config.kind} · ${config.model}`);
   if (!budget.ok) return budget;
 
@@ -216,7 +104,10 @@ export async function streamChat(
   let raw = "";
   let usage: ChatUsage | null = null;
   try {
-    const stream = await client.value.chat.completions.create(body, { signal });
+    const stream = await client.value.chat.completions.create(body, {
+      signal,
+      headers: headers.value,
+    });
     for await (const chunk of stream) {
       const delta = chunk.choices[0]?.delta;
       const content = delta?.content;
@@ -267,9 +158,13 @@ export function mapProviderError(
           ? "start llama-server (llama-server -m <model>.gguf --port 8080 --jinja) or fix baseUrl"
           : config.kind === "apple-fm"
             ? "select Apple on-device in Settings → Model (it starts fm serve); run `sudo fm license` once first"
-            : `check the endpoint (${config.baseUrl}) in Settings → Model and that the server is running`,
+            : config.kind === "hosted"
+              ? "check UNMAPPED_GATEWAY_URL in .env and that the gateway is running, or use your own key or a local model in Settings → Model"
+              : `check the endpoint (${config.baseUrl}) in Settings → Model and that the server is running`,
     });
   }
+  // The gateway answers in its own codes, before the stream or as a `data: {"error":…}` event in it.
+  if (e instanceof APIError && config.kind === "hosted") return fail(hostedError(e));
   if (e instanceof APIError) {
     if (e.status === 401 || e.status === 403) {
       return fail({

@@ -7,6 +7,7 @@
 // templates), Apple helper protocol codes (the scene router reports them as
 // `provider-generation-failed`), and bug-only builder checks (`forge-*`, `base-game-invalid`).
 
+import { ACCOUNT_ERRORS } from "./errors-account";
 import { CARTRIDGE_ERRORS } from "./errors-cartridge";
 import { FILE_ERRORS } from "./errors-files";
 import { IDENTITY_ERRORS } from "./errors-identity";
@@ -31,4 +32,5 @@ export const ERRORS: Record<string, ErrorText> = {
   ...IDENTITY_ERRORS,
   ...NET_ERRORS,
   ...WORKS_ERRORS,
+  ...ACCOUNT_ERRORS,
 };

@@ -7,7 +7,9 @@ import { registerProfilesIpc } from "./profiles/ipc";
 // install directory, its watcher and the install dialog) are owned by their own folders; this file
 // only calls them so every channel is registered in the same pass.
 
+import { registerAccountIpc } from "./account/ipc";
 import { registerAppIpc } from "./app/ipc";
+import { registerBillingIpc } from "./billing/ipc";
 import { registerCartridgesIpc } from "./cartridges/ipc";
 import { registerChainIpc } from "./chain/ipc";
 import { registerMarketIpc } from "./chain/marketIpc";
@@ -44,4 +46,6 @@ export function registerIpc(ctx: MainContext): void {
   registerCreateDraftsIpc(ctx);
   registerUsageIpc(ctx);
   registerWorldIpc(ctx);
+  registerAccountIpc(ctx);
+  registerBillingIpc(ctx);
 }

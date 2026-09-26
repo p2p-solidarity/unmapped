@@ -4,7 +4,7 @@
 
 import type { MainContext } from "@main/context";
 import { IPC } from "@shared/ipc";
-import { KEY_PROVIDERS, type KeyStatusMap, type LocalDetection } from "@shared/llm";
+import { type KeyStatusMap, type LocalDetection, TYPED_KEY_PROVIDERS } from "@shared/llm";
 import { ok, type Result } from "@shared/result";
 import { dialog } from "electron";
 import { z } from "zod";
@@ -34,7 +34,8 @@ export function registerModelIpc(ctx: MainContext): void {
 
   handle(
     IPC.inference.clearApiKey,
-    z.tuple([z.enum(KEY_PROVIDERS)]),
+    // The account token is cleared by signing out (Settings → Account), never from here.
+    z.tuple([z.enum(TYPED_KEY_PROVIDERS)]),
     async ([provider]): Promise<Result<KeyStatusMap>> => {
       const cleared = await clearKeyRecord(provider);
       if (!cleared.ok) return cleared;

@@ -12,6 +12,9 @@ export const PROVIDER_KINDS = [
   "vllm",
   "openui-gateway",
   "custom",
+  // The UNMAPPED generation gateway (rev 6 phase 4, D2): metered against the account's allowance.
+  // Its address is main's alone (UNMAPPED_GATEWAY_URL); a renderer never supplies it.
+  "hosted",
 ] as const;
 export type ProviderKind = (typeof PROVIDER_KINDS)[number];
 
@@ -68,6 +71,14 @@ export const PROVIDER_PRESETS: Record<ProviderKind, Omit<InferenceConfig, "sidec
     apiKeyEnv: "THESYS_API_KEY",
   },
   custom: { kind: "custom", baseUrl: "http://127.0.0.1:8080/v1", model: "", apiKeyEnv: null },
+  // Main replaces baseUrl and apiKeyEnv with the configured gateway's (`parseConfig`), so this
+  // placeholder (a reserved .invalid name) is never contacted. An empty model = the gateway's default.
+  hosted: {
+    kind: "hosted",
+    baseUrl: "https://gateway.invalid/v1",
+    model: "",
+    apiKeyEnv: "UNMAPPED_GATEWAY_KEY",
+  },
 };
 
 /** macOS ships the Apple Foundation Models CLI here; `fm serve` is its Chat Completions server. */
@@ -111,9 +122,24 @@ export interface ContextWindow {
 // ── Keys typed on screen (Settings → Model) ────────────────────────────────────────────────────
 // The renderer may hand main a key but never reads one back: it only ever sees a KeyStatus.
 
-/** Providers a player can give a key to; everything else runs on this machine without one. */
-export const KEY_PROVIDERS = ["openai", "openui-gateway", "custom"] as const;
+/**
+ * Providers a player can give a key to; everything else runs on this machine without one.
+ * `qwen-image` is the self-hosted Qwen-Image server (rev 6 phase 4, D4): an image provider, never a
+ * chat `ProviderKind`; its endpoint is main's QWEN_IMAGE_BASE_URL (`qwenImageEndpoint`).
+ */
+export const KEY_PROVIDERS = [
+  "openai",
+  "openui-gateway",
+  "custom",
+  "qwen-image",
+  // The gateway's account token: written only by main's sign-in (main/account), never typed.
+  "hosted",
+] as const;
 export type KeyProvider = (typeof KEY_PROVIDERS)[number];
+
+/** The providers a player types a key for in Settings → Model (never the account token). */
+export const TYPED_KEY_PROVIDERS = ["openai", "openui-gateway", "custom", "qwen-image"] as const;
+export type TypedKeyProvider = (typeof TYPED_KEY_PROVIDERS)[number];
 
 export interface KeyStatus {
   set: boolean;
@@ -128,10 +154,36 @@ export interface KeyStatus {
 export type KeyStatusMap = Record<KeyProvider, KeyStatus>;
 
 export interface SetApiKeyInput {
-  provider: KeyProvider;
+  provider: TypedKeyProvider;
   key: string;
   /** Required for `custom` (https or loopback only); the presets always use their own endpoint. */
   baseUrl?: string;
+}
+
+// ── Where the next call goes (rev 6 phase 4, D2) ─────────────────────────────────────────────
+// Main decides with `routeFor` (src/main/inference/route.ts); the renderer only ever sees this.
+
+/** `local`: a server on this computer; `direct`: the provider with the player's own key (or a
+ * keyless custom endpoint); `hosted`: the gateway, metered against the account's allowance. */
+export type ChatRoute = "local" | "direct" | "hosted";
+
+export interface RouteView {
+  /** What the player selected in Settings → Model. */
+  selected: { kind: ProviderKind; model: string };
+  /** The configured gateway's base URL (not a secret), or null when this build has none. */
+  gateway: string | null;
+  /** Where the next chat goes, with what actually runs there; null when it cannot go anywhere. */
+  next: {
+    route: ChatRoute;
+    kind: ProviderKind;
+    model: string;
+    /** Hosted only: the player chose it, or there was no own key. */
+    via: "selected" | "no-own-key" | null;
+    /** Where the key or token comes from; null for keyless servers. */
+    keySource: "saved" | "env" | null;
+  } | null;
+  /** Why `next` is null (no key anywhere, signed out, the gateway unreachable). */
+  error: AppError | null;
 }
 
 // ── What runs on this computer ───────────────────────────────────────────────────────────────

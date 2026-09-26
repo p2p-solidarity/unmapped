@@ -4,6 +4,7 @@
 // the request dies before the first token — so the renderer can never hang waiting.
 
 import type { MainContext } from "@main/context";
+import { GATEWAY_IPC } from "@shared/gatewayApi";
 import { IPC } from "@shared/ipc";
 import type {
   ChatEvent,
@@ -12,6 +13,7 @@ import type {
   ContextWindow,
   InferenceConfig,
   ProbeResult,
+  RouteView,
   SidecarStatus,
 } from "@shared/llm";
 import { fail, ok, type Result, toError } from "@shared/result";
@@ -19,13 +21,18 @@ import type { GenerationEvent, SceneArtifact } from "@shared/scene-generation";
 import { usageTagSchema } from "@shared/usage";
 import { ipcMain } from "electron";
 import { z } from "zod";
+import { gatewayModels } from "../account/gatewayHttp";
+import { accountService } from "../account/service";
+import { handle } from "../handle";
 import { recordUsage } from "../usage/ipc";
 import { streamChat } from "./client";
 import { loadConfig, parseConfig, saveConfig } from "./config";
 import { readContextWindow } from "./context";
-import { initKeyStore, resolveApiKey } from "./keyStore";
+import { isDeadTokenCode } from "./hostedErrors";
+import { initKeyStore, readKeyRecord } from "./keyStore";
 import { registerModelIpc } from "./modelIpc";
 import { probe } from "./probe";
+import { type RouteDeps, routeFor, routeView } from "./route";
 import { SceneArtifactService } from "./sceneArtifactService";
 import { parseSceneGenerationRequest } from "./sceneGenerationIpc";
 import { createSidecar } from "./sidecar";
@@ -96,6 +103,8 @@ export function registerInferenceIpc(ctx: MainContext): void {
   let cached: InferenceConfig | null = null;
   let contextCache: { key: string; at: number; value: ContextWindow | null } | null = null;
   initKeyStore(ctx.userData);
+  const account = accountService(ctx);
+  const routeDeps: RouteDeps = { env: process.env, readSaved: readKeyRecord, gatewayModels };
 
   async function currentConfig(): Promise<InferenceConfig> {
     if (cached === null) cached = await loadConfig(ctx.userData);
@@ -135,24 +144,34 @@ export function registerInferenceIpc(ctx: MainContext): void {
       usage: null,
       code: "failed",
     };
+    let hosted = false;
     try {
-      const config = await currentConfig();
-      settled = { ...settled, provider: config.kind, model: config.model };
-      const [key, context] = await Promise.all([resolveApiKey(config), contextFor(config, false)]);
-      if (!key.ok) {
+      const selected = await currentConfig();
+      settled = { ...settled, provider: selected.kind, model: selected.model };
+      // D2: one route per call, decided here; a failure is never retried at another step.
+      const routed = await routeFor(selected, routeDeps);
+      if (!routed.ok) {
         process.stdout.write(
-          `[inference] fail ${request.id} · ${config.kind} · ${key.error.code}\n`,
+          `[inference] fail ${request.id} · ${selected.kind} · ${routed.error.code}\n`,
         );
-        emit({ id: request.id, type: "error", error: key.error });
+        emit({ id: request.id, type: "error", error: routed.error });
         return;
       }
+      const { config, key } = routed.value;
+      hosted = routed.value.route === "hosted";
+      settled = { ...settled, provider: config.kind, model: config.model };
+      const context = hosted ? null : await contextFor(config, false);
       const result = await streamChat(
         config,
         request,
         (text) => emit({ id: request.id, type: "delta", text }),
         controller.signal,
-        { apiKey: key.value?.key ?? null, context },
+        { apiKey: key?.key ?? null, context },
       );
+      // A refused account token: drop that saved token so UNMAPPED_GATEWAY_KEY is used next.
+      if (!result.ok && hosted && key !== null && isDeadTokenCode(result.error.code)) {
+        await account.forgetDeadToken(key);
+      }
       // Provider, time and budget only — never a prompt, an answer or a key.
       const head = `[inference] ${result.ok ? "done" : "fail"} ${request.id} · ${request.usage.purpose} · ${config.kind} ${config.model} · ${Date.now() - started} ms`;
       if (result.ok) {
@@ -190,6 +209,8 @@ export function registerInferenceIpc(ctx: MainContext): void {
         outcome:
           settled.code === "done" ? "done" : settled.code === "aborted" ? "aborted" : "failed",
       });
+      // The allowance changed (or was released): Settings → Account reads it again.
+      if (hosted) void account.refreshQuota();
     }
   }
 
@@ -233,12 +254,21 @@ export function registerInferenceIpc(ctx: MainContext): void {
     if (config.kind === "apple-fm" && config.sidecar !== null && idle) {
       await sidecar.start(config.sidecar);
     }
-    const key = await resolveApiKey(config);
-    if (!key.ok) return key;
-    const reached = await probe(config, key.value?.key ?? null);
+    // The probe asks where the next call would go, so an own-key-less OpenAI setting probes the
+    // gateway when that is where its calls go.
+    const routed = await routeFor(config, routeDeps);
+    if (!routed.ok) return routed;
+    const target = routed.value.config;
+    const reached = await probe(target, routed.value.key?.key ?? null);
     if (!reached.ok) return reached;
-    const context = reached.value.reachable ? await contextFor(config, true) : null;
+    const local = routed.value.route !== "hosted" && reached.value.reachable;
+    const context = local ? await contextFor(target, true) : null;
     return ok({ ...reached.value, context });
+  });
+
+  handle(GATEWAY_IPC.route, z.tuple([]), async (): Promise<Result<RouteView>> => {
+    const config = await currentConfig();
+    return ok(routeView(config, routeDeps.env, await routeFor(config, routeDeps)));
   });
 
   registerModelIpc(ctx);
