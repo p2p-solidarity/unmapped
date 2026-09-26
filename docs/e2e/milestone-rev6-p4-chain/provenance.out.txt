@@ -1,0 +1,24 @@
+$ bun --tsconfig-override tsconfig.node.json scripts/provenance.ts --dry-run --from "$SCR/service" --out "$SCR/prov"
+Dry run of WorldProvenance on Sepolia (https://ethereum-sepolia-rpc.publicnode.com); nothing is sent.
+Worlds: $SCR/service (service kd7z7css756dolp5afymgjlpxc5gqnvawzxnqc6suqmyjeaed656a).
+  hmx3uh22ofakymbirjzn3gof6vkvt5a3bslexza6gydrfbh5wmraa: 10 entries, 4 beats (4 recompute), record requested: true
+
+Contract 0xF625ec3c228e3BCE34977C0b7e97BD591291Ef02 (CREATE2, salt 0xa3557ee888ab4a72b65d7348d4170ce528dc0953da38bd851239920a1aa7622d); recorder 0xa1803ab20502712479f4369574ad04288f781b65
+  ✓ deploy WorldProvenance  (simulated, 609,729 gas)
+  ✓ refused: a beat before its stream is open (3) (StreamNotOpen)
+  ✓ open the stream of hmx3uh22ofak…  (simulated, 98,476 gas)
+  ✓ refused: a second open of one stream (2) (StreamAlreadyOpen)
+  ✓ record 2 beats (catch-up batch)  (simulated, 39,610 gas)
+  ✓ record 1 beats (one pass)  (simulated, 34,013 gas)
+  ✓ record 1 beats (one pass)  (simulated, 34,013 gas)
+  ✓ refused: a falling upTo (4) (UpToNotRising)
+  ✓ refused: the same upTo again (4) (UpToNotRising)
+  ✓ refused: one upTo twice in one batch (4) (UpToNotRising)
+
+Offline checks
+  ✓ hmx3uh22ofak…: genesis and stream signatures verify; replays read "sequencer-sig-invalid"
+  ✓ the chain takes the same signatures from another sender; offline they do not count (5)
+  ✓ hmx3uh22ofakymbirjzn3gof6vkvt5a3bslexza6gydrfbh5wmraa: matches at 9 (4 beats walked back); a changed copy: differs at 4; one cut before the first beat: not synced
+
+Wrote $SCR/prov/result.md
+Internal error: directory mismatch for directory "/Users/kidney/Workspace/Hackathon/unmapped/tsconfig.node.json", fd 3. You don't need to do anything, but this indicates a bug.

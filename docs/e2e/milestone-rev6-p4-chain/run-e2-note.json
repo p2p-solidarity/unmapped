@@ -1,0 +1,18 @@
+{
+  "part": "E2 (after advance #2): walk east, N, leave a second note",
+  "actions": [
+    {"hold": "KeyD", "ms": 1500},
+    {"wait": 300},
+    {"hold": "KeyN", "ms": 80},
+    {"wait": 600},
+    {"eval": "(() => { const f = [...document.querySelectorAll('input, textarea')].find(i => (i.labels?.[0]?.innerText ?? i.closest('label')?.innerText ?? '').toLowerCase().includes('your note')); if (!f) return 'no note field'; f.focus(); return document.activeElement === f })()"},
+    {"type": "Two weeks in, the wind turned."},
+    {"wait": 200},
+    {"clickText": "Leave the note"},
+    {"wait": 1500},
+    {"eval": "document.body.innerText.split('\\n').filter(l => /first week|wind turned|player-/i.test(l)).slice(0, 8)"},
+    {"shot": "docs/e2e/milestone-rev6-p4-chain/e-01-note-2.jpg"},
+    {"hold": "Escape", "ms": 80},
+    {"wait": 400}
+  ]
+}

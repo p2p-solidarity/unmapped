@@ -1,0 +1,70 @@
+{
+ "part": "G1 (stopped by the coordinator's pause after one pass): meant to walk, read the HUD and open the door with the service stopped. Another Vite reload (app.log 10:31:05 'page reload i18n/strings/mobile.ts') had put the app on the title before it began, so every step read the title; its one shot is g1-00-title-after-reload.jpg (renamed; the second shot was deleted).",
+ "actions": [
+  {
+   "eval": "(async () => { window.__p4 = Date.now(); const P = await import('/engine/playerProbe.ts'); const S = await import('/state/index.ts'); const p = P.samplePlayer(); return { screen: S.useSessionStore.getState().screen, pos: p && [Number(p.x.toFixed(2)), Number(p.z.toFixed(2))], chunk: S.useEngineStore.getState().chunk } })()"
+  },
+  {
+   "hold": "KeyW",
+   "ms": 1500
+  },
+  {
+   "wait": 300
+  },
+  {
+   "eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const p = P.samplePlayer(); return { pos: p && [Number(p.x.toFixed(2)), Number(p.z.toFixed(2))] } })()"
+  },
+  {
+   "hold": "KeyD",
+   "ms": 1500
+  },
+  {
+   "wait": 300
+  },
+  {
+   "eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const p = P.samplePlayer(); const lines = document.body.innerText.split('\\n'); const i = lines.indexOf('LAND'); return { pos: p && [Number(p.x.toFixed(2)), Number(p.z.toFixed(2))], land: i < 0 ? null : lines[i + 1], hud: lines.slice(0, 14), fps: lines.find(l => /FPS$/.test(l)) ?? null } })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-chain/g-00-walked-no-chain.jpg"
+  },
+  {
+   "pad": {
+    "toward": "(async () => { const S = await import('/state/index.ts'); const H = await import('/engine/home.ts'); const p = S.useLandStore.getState().progress; const g = S.useWorldStore.getState().scene; return p === null || g.status !== 'ready' ? null : H.doorPosition(g.value, p.home) })()",
+    "within": 0.5,
+    "timeoutMs": 15000
+   }
+  },
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; return { sharing: t.slice(t.indexOf('Sharing'), t.indexOf('Who may come in')), chain: t.slice(t.indexOf('Recorded on a public chain'), t.indexOf('Continent', t.indexOf('Recorded on a public chain'))) } })()"
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/write.ts'); const n = H.worldNow(); const r = await window.seed.world.provenance(n.world); return { head: n.head.n, beats: n.beats.length, provenance: r.ok ? r.value.verdict : r.error.code } })()"
+  },
+  {
+   "eval": "(() => { const h = [...document.querySelectorAll('[data-layer=door] *')].find(e => e.innerText?.trim() === 'Recorded on a public chain'); h?.scrollIntoView({ block: 'start' }); return !!h })()"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-chain/g-01-door-chain-off-service-stopped.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 400
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); return { screen: S.useSessionStore.getState().screen, door: S.useSessionStore.getState().doorOpen, reloaded: window.__p4 === undefined } })()"
+  }
+ ]
+}

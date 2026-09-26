@@ -1,0 +1,48 @@
+{
+ "part": "F0 (failed attempt, kept for the record): walk to the door and open it. The Escape that ended part E2 / the first F0 try (no layer open) left Play by design (hotkeys.ts: Escape in play = exit-play), so this pass steered the pad on the title screen for 15 s and found no door.",
+ "actions": [
+  {
+   "pad": {
+    "toward": "(async () => { const S = await import('/state/index.ts'); const H = await import('/engine/home.ts'); const p = S.useLandStore.getState().progress; const g = S.useWorldStore.getState().scene; return p === null || g.status !== 'ready' ? null : H.doorPosition(g.value, p.home) })()",
+    "within": 0.5,
+    "timeoutMs": 15000
+   }
+  },
+  {
+   "wait": 300
+  },
+  {
+   "eval": "document.body.innerText.split('\\n').filter(l => /Open the door/.test(l))"
+  },
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; return { sharing: t.slice(t.indexOf('Sharing'), t.indexOf('Who may come in')), chain: t.slice(t.indexOf('Recorded on a public chain'), t.indexOf('Continent', t.indexOf('Recorded on a public chain'))) } })()"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useLandStore.getState().world; return w === null || w === undefined ? 'no world in land store' : { keys: Object.keys(w).slice(0, 30), head: w.head ?? w.now?.head ?? null, beats: (w.beats ?? w.now?.beats ?? []).map(b => ({ upTo: b.body?.upTo ?? b.upTo, season: b.body?.season ?? b.season })) } })()"
+  },
+  {
+   "eval": "(() => { const h = [...document.querySelectorAll('[data-layer=door] *')].find(e => e.innerText?.trim() === 'Recorded on a public chain'); h?.scrollIntoView({ block: 'start' }); return !!h })()"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-chain/f-00-chain-section-after-beats.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 400
+  }
+ ],
+ "note": "First attempt passed useWorldStore.scene (a Loadable) instead of scene.value to doorPosition, so the toward target threw and read as null ('pad toward: no target'); this is the corrected file that was run."
+}

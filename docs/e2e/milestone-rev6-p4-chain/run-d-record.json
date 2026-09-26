@@ -1,0 +1,13 @@
+{
+  "part": "D: the door's chain section: turn on Record beats (an owner's `chain` event, record: true)",
+  "actions": [
+    {"clickText": "Record beats"},
+    {"eval": "(async () => { const t0 = Date.now(); for (let i = 0; i < 80; i++) { const l = document.querySelector('[data-layer=door]'); const t = l ? l.innerText : ''; if (/Recording is now|now: Record beats|Record beats\\./.test(t) || [...(l?.querySelectorAll('button') ?? [])].some(b => b.innerText.trim() === 'Record beats' && b.disabled)) return { ms: Date.now() - t0 }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"},
+    {"wait": 800},
+    {"eval": "(() => { const l = document.querySelector('[data-layer=door]'); const t = l.innerText; const at = t.indexOf('Recorded on a public chain'); return { chain: t.slice(at, t.indexOf('Continent', at)), buttons: [...l.querySelectorAll('button')].filter(b => ['Record beats', \"Don't record\", 'Check again'].includes(b.innerText.trim())).map(b => ({ text: b.innerText.trim(), disabled: b.disabled, pressed: b.getAttribute('aria-pressed') })) } })()"},
+    {"eval": "(() => { const l = document.querySelector('[data-layer=door]'); const t = l.innerText; return t.slice(t.indexOf('Sharing'), t.indexOf('Who may come in')) })()"},
+    {"eval": "(() => { const h = [...document.querySelectorAll('[data-layer=door] *')].find(e => e.innerText?.trim() === 'Recorded on a public chain'); h?.scrollIntoView({ block: 'start' }); return !!h })()"},
+    {"wait": 300},
+    {"shot": "docs/e2e/milestone-rev6-p4-chain/d-00-chain-section-recording.jpg"}
+  ]
+}

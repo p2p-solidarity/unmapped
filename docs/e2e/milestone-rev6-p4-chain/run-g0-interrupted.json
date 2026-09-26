@@ -1,0 +1,163 @@
+{
+ "part": "G0 (interrupted, kept for the record): other sessions' live i18n edits made Vite reload the renderer (app.log: 'page reload i18n/strings/account.ts' 10:29:36 and 10:29:52, 'errors-browser.ts' 10:30:45, 'mobile.ts' 10:30:57), which put the app back on the title before this pass and again during it. Saves was read before the reload; the rest is redone in G1/G2.",
+ "actions": [
+  {
+   "eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const S = await import('/state/index.ts'); const p = P.samplePlayer(); return { screen: S.useSessionStore.getState().screen, pos: p && [Number(p.x.toFixed(2)), Number(p.z.toFixed(2))], chunk: S.useEngineStore.getState().chunk } })()"
+  },
+  {
+   "hold": "KeyW",
+   "ms": 1500
+  },
+  {
+   "wait": 300
+  },
+  {
+   "eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const S = await import('/state/index.ts'); const p = P.samplePlayer(); return { pos: p && [Number(p.x.toFixed(2)), Number(p.z.toFixed(2))], chunk: S.useEngineStore.getState().chunk } })()"
+  },
+  {
+   "hold": "KeyD",
+   "ms": 1500
+  },
+  {
+   "wait": 300
+  },
+  {
+   "eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const p = P.samplePlayer(); const lines = document.body.innerText.split('\\n'); const i = lines.indexOf('LAND'); return { pos: p && [Number(p.x.toFixed(2)), Number(p.z.toFixed(2))], hud: lines.slice(0, 16), land: i < 0 ? null : lines[i + 1] } })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-chain/g-00-walked-no-chain.jpg"
+  },
+  {
+   "pad": {
+    "toward": "(async () => { const S = await import('/state/index.ts'); const H = await import('/engine/home.ts'); const p = S.useLandStore.getState().progress; const g = S.useWorldStore.getState().scene; return p === null || g.status !== 'ready' ? null : H.doorPosition(g.value, p.home) })()",
+    "within": 0.5,
+    "timeoutMs": 15000
+   }
+  },
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; return { sharing: t.slice(t.indexOf('Sharing'), t.indexOf('Who may come in')), chain: t.slice(t.indexOf('Recorded on a public chain'), t.indexOf('Continent', t.indexOf('Recorded on a public chain'))) } })()"
+  },
+  {
+   "eval": "(() => { const h = [...document.querySelectorAll('[data-layer=door] *')].find(e => e.innerText?.trim() === 'Recorded on a public chain'); h?.scrollIntoView({ block: 'start' }); return !!h })()"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-chain/g-01-door-chain-off-service-stopped.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 400
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); return { screen: S.useSessionStore.getState().screen, door: S.useSessionStore.getState().doorOpen } })()"
+  },
+  {
+   "clickText": "← Home"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Worlds"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Saves"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "(() => { const m = document.querySelector('main') ?? document.body; return m.innerText.slice(0, 1400) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-chain/g-02-worlds-saves.jpg"
+  },
+  {
+   "clickText": "Cartridges"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const m = document.querySelector('main') ?? document.body; return m.innerText.slice(0, 1600) })()"
+  },
+  {
+   "clickText": "Market"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(() => { const m = document.querySelector('main') ?? document.body; return m.innerText.slice(0, 1800) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-chain/g-03-worlds-market.jpg"
+  },
+  {
+   "clickText": "← Title"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Settings"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(() => { const d = document.querySelector('[role=dialog]'); return d ? { dialog: true, headings: [...d.querySelectorAll('h2, h3, [class*=label]')].map(h => h.innerText.trim()).filter(Boolean).slice(0, 20) } : 'no dialog' })()"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 120; i++) { if (S.useSessionStore.getState().screen === 'play' && S.useLandStore.getState().progress !== null) return { ms: Date.now() - t0 }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "hold": "KeyS",
+   "ms": 1500
+  },
+  {
+   "wait": 300
+  },
+  {
+   "eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const p = P.samplePlayer(); const lines = document.body.innerText.split('\\n'); const i = lines.indexOf('LAND'); return { pos: p && [Number(p.x.toFixed(2)), Number(p.z.toFixed(2))], land: i < 0 ? null : lines[i + 1], fps: lines.find(l => /FPS$/.test(l)) ?? null } })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-chain/g-04-play-again.jpg"
+  }
+ ],
+ "shotsRenamedAfterRun": {
+  "g-00-walked-no-chain.jpg": "g0-00-title-after-reload.jpg (overwritten by G1, see g1-00)",
+  "g-01-door-chain-off-service-stopped.jpg": "(deleted: showed the title)",
+  "g-02-worlds-saves.jpg": "g0-02-worlds-saves.jpg",
+  "g-03-worlds-market.jpg": "g0-03-title-after-reload.jpg",
+  "g-04-play-again.jpg": "g0-04-play-service-stopped.jpg"
+ }
+}

@@ -1,0 +1,22 @@
+{
+  "part": "F (after 4 beats, service online): Continue into the same save, walk to the door, E, read Sharing + the chain section and the app's own fold of the beats; ask main for provenance directly",
+  "actions": [
+    {"clickText": "Continue"},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 120; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && S.useLandStore.getState().progress !== null) return { ms: Date.now() - t0, screen: s.screen }; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + S.useSessionStore.getState().screen })()"},
+    {"wait": 2000},
+    {"eval": "(async () => { const H = await import('/history/write.ts'); for (let i = 0; i < 40; i++) { const n = H.worldNow(); if (n !== null && n.head.n >= 10) return { head: n.head.n, season: n.season, beats: n.beats.map(b => ({ upTo: b.body.upTo, season: b.body.season, at: b.body.at, fingerprint: b.body.fingerprint })) }; await new Promise(r => setTimeout(r, 250)); } const n = H.worldNow(); return n === null ? 'no world open' : { head: n.head.n, beats: n.beats.length } })()"},
+    {"pad": {"toward": "(async () => { const S = await import('/state/index.ts'); const H = await import('/engine/home.ts'); const p = S.useLandStore.getState().progress; const g = S.useWorldStore.getState().scene; return p === null || g.status !== 'ready' ? null : H.doorPosition(g.value, p.home) })()", "within": 0.5, "timeoutMs": 15000}},
+    {"wait": 300},
+    {"eval": "document.body.innerText.split('\\n').filter(l => /Open the door/.test(l))"},
+    {"hold": "KeyE", "ms": 120},
+    {"wait": 1500},
+    {"eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; return { sharing: t.slice(t.indexOf('Sharing'), t.indexOf('Who may come in')), chain: t.slice(t.indexOf('Recorded on a public chain'), t.indexOf('Continent', t.indexOf('Recorded on a public chain'))) } })()"},
+    {"eval": "(async () => { const id = window.location.hash; const S = await import('/state/index.ts'); const H = await import('/history/write.ts'); const n = H.worldNow(); const r = await window.seed.world.provenance(n.world); return r.ok ? { ok: true, verdict: r.value.verdict } : { ok: false, code: r.error.code, message: r.error.message, hint: r.error.hint } })()"},
+    {"eval": "(() => { const h = [...document.querySelectorAll('[data-layer=door] *')].find(e => e.innerText?.trim() === 'Recorded on a public chain'); h?.scrollIntoView({ block: 'start' }); return !!h })()"},
+    {"wait": 300},
+    {"shot": "docs/e2e/milestone-rev6-p4-chain/f-00-chain-section-after-beats.jpg"},
+    {"hold": "Escape", "ms": 80},
+    {"wait": 400},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); return { screen: S.useSessionStore.getState().screen, door: S.useSessionStore.getState().doorOpen } })()"}
+  ]
+}

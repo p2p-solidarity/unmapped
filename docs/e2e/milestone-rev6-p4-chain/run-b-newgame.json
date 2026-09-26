@@ -1,0 +1,15 @@
+{
+  "part": "B: Worlds -> New game -> Start on the built-in world; wait for Play",
+  "actions": [
+    {"hold": "Escape", "ms": 80},
+    {"wait": 600},
+    {"clickText": "Worlds"},
+    {"wait": 1200},
+    {"text": true},
+    {"clickText": "Start"},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance) return { ms: Date.now() - t0, screen: s.screen, instance: s.activeInstance.instanceId ?? s.activeInstance }; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + S.useSessionStore.getState().screen })()"},
+    {"wait": 2500},
+    {"text": true},
+    {"shot": "docs/e2e/milestone-rev6-p4-chain/b-00-play.jpg"}
+  ]
+}

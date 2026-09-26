@@ -1,0 +1,10 @@
+{
+  "part": "A2: the Shared worlds Test button (clickText 'Test' in part A hit another panel's Test first; this one is found under the Shared worlds heading and clicked through the DOM)",
+  "actions": [
+    {"eval": "(() => { const field = [...document.querySelectorAll('textarea')].find(t => t.value.includes('ws://127.0.0.1:8796')); let box = field; while (box && ![...box.querySelectorAll('button')].some(b => b.innerText.trim() === 'Test')) box = box.parentElement; const btn = [...box.querySelectorAll('button')].find(b => b.innerText.trim() === 'Test'); btn.scrollIntoView({block: 'center'}); btn.click(); return 'clicked the Shared worlds Test' })()"},
+    {"wait": 2500},
+    {"eval": "(() => { const t = document.body.innerText; const at = t.indexOf('ws://127.0.0.1:8796\\n'); return at < 0 ? 'no probe line' : t.slice(at, at + 400) })()"},
+    {"shot": "docs/e2e/milestone-rev6-p4-chain/a-01-service-reachable.jpg"},
+    {"eval": "(() => { const t = document.body.innerText; const at = t.indexOf('Not tested yet'); return at < 0 ? null : t.slice(Math.max(0, at - 300), at + 40) })()"}
+  ]
+}

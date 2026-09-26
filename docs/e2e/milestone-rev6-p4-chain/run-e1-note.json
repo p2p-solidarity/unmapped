@@ -1,0 +1,21 @@
+{
+  "part": "E1 (after advance #1): close the door, walk north, N, leave a note on the land (a `note` event between beats)",
+  "actions": [
+    {"hold": "Escape", "ms": 80},
+    {"wait": 500},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); return { door: S.useSessionStore.getState().doorOpen, landHistory: document.body.innerText.split('\\n').filter(l => /entries|Entry/.test(l)).slice(0, 4) } })()"},
+    {"hold": "KeyW", "ms": 1500},
+    {"wait": 300},
+    {"hold": "KeyN", "ms": 80},
+    {"wait": 600},
+    {"eval": "(() => { const f = [...document.querySelectorAll('input, textarea')].find(i => (i.labels?.[0]?.innerText ?? i.closest('label')?.innerText ?? '').toLowerCase().includes('your note')); if (!f) return 'no note field'; f.focus(); return document.activeElement === f })()"},
+    {"type": "The first week passed quietly on this road."},
+    {"wait": 200},
+    {"clickText": "Leave the note"},
+    {"wait": 1500},
+    {"eval": "(() => { const t = document.body.innerText; const at = t.indexOf('Notes'); return t.split('\\n').filter(l => /first week|player-|note/i.test(l)).slice(0, 8) })()"},
+    {"shot": "docs/e2e/milestone-rev6-p4-chain/e-00-note-1.jpg"},
+    {"hold": "Escape", "ms": 80},
+    {"wait": 400}
+  ]
+}
