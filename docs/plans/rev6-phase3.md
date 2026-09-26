@@ -652,8 +652,8 @@ Afterwards, update the progress page with measured numbers only.
 | `offline-visit` | Done 1 | A plays a New game, witnesses 2 chunks, attaches, invites, quits. B joins from the link (pack verified and installed, same head and chain) and walks A's chunks with 0 witness calls. B witnesses 1 chunk; A restarts and sees it with 0 calls |
 | `migrated-share` | D6, D10 | The fixture world is attached. B joins and sees its old chunks, notes and places, and enters the otherworld (work pack fetched, verified, sandboxed) with 0 calls |
 | `together` | Done 2 | A is `granted`, B is `writing`. The streamed-text hash is equal on both. Exactly 1 witness call across both logs. Both folds flip at the same `n` |
-| `fog` | Done 3 | `advance {days: 90}` plus a beat: mist and a legend on both clients, and the entry still in the log. A re-witness gets `witness:legend` and goes live. The season changes. Fingerprints are equal on the service and both apps |
-| `local-beat` | D13 | A local-only world with `UNMAPPED_TEST_CLOCK_DAYS=90`: the catch-up beat on open fogs a chunk and turns the season |
+| `fog` | Done 3 | `advance {days: 92}` plus a beat (92, not 90: the season is `floor(days / 7) mod 4`, so 90 days lands on the same season): mist and a legend on both clients, and the entry still in the log. A re-witness gets `witness:legend` and goes live. The season changes. Fingerprints are equal on the service and both apps |
+| `local-beat` | D13 | A local-only world relaunched with `UNMAPPED_TEST_CLOCK_DAYS=92`: the catch-up beat on a pinned open (not the first, migrating open) fogs a chunk and turns the season |
 | `rumors` | Done 4 | B's `deed` becomes a slot. A's batch (usage `rumor`) cites it, and the listener names B. `world-probe.ts` submits rumors with an uncited label, a bad slot and a visitor author: the service refuses each with its code. The same via IPC is refused by main |
 | `door` | D8 | `private` and `friends`-without-invite are refused. Used, expired and revoked invites are refused, and a replayed `member.join` from another key is refused (`invite-proof-invalid`). After `member.remove`, B can neither read nor write and B's past events stay. In a `public` world, C leaves a note and a signpost, and C's claim to witness is refused |
 | `gift-race` | D3 | B and C take one gift: one `gift.take` is live, and the loser's inventory is unchanged, with "someone took it first" |
@@ -669,6 +669,18 @@ schedule already allows a rehost); the generation gateway, quotas, billing and s
 calls (D7's key rule applies when they come); P2P acceleration and reworking continents; LRU blob
 eviction; mobile; chain writes; writing or walking a variant on purpose; moving home; fighting
 together; per-world sprites; moderation beyond `hide`, the visitor limits, caps and validators.
+
+## Accepted risks
+
+- **Freshness on a first join.** A joiner with no cursor yet can prove that the history it is given
+  is consistent (`verifyLog`: signatures, order, receipts under the D2 schedule), but not that it is
+  complete. A dishonest service could hand it a correctly signed but stale prefix, for example one
+  that stops before a recent `owner.remove` or `member.remove`. This comes with a single sequencer
+  and no consensus. Once a device holds a cursor it refuses anything shorter (a diverged or shorter
+  log is `history-diverged`), so the exposure is the first read only.
+  - Recorded after the phase-3 trust-path review (2026-09-26).
+  - A later mitigation: the inviter's head `{ n, chain }` inside the signed invite, so that a joiner
+    refuses a history that ends before it.
 
 ## How the six invariants hold
 
