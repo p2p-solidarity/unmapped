@@ -359,7 +359,7 @@ usage.jsonl                       每次模型呼叫一行：用途、模型、t
   測試再儲存。
 - **跨網路的中繼：** 路由器允許時，朋友會直接連上（STUN）。在 VPN、嚴格的 NAT 或防火牆後面沒有直接的
   路，就改由 TURN 中繼傳資料：中繼服務（`src/turn`，一個 Cloudflare Worker）產生短效的 Cloudflare
-  Realtime TURN 憑證，TURN 金鑰只留在它那裡；app 從 `UNMAPPED_TURN_URL` 向它要（本機 `bun run turn:dev`，
+  Realtime TURN 憑證，TURN 金鑰只留在它那裡；app 預設向專案已部署的那一個（`unmapped-turn.gimmychang.workers.dev`）要，`UNMAPPED_TURN_URL` 可以換成別的（本機 `bun run turn:dev`，
   正式 `bun run turn:deploy`；金鑰放在 `.cache/turn/dev.env` 或用 `wrangler secret put`）。只要一方有中繼
   就能連。兩方都沒有時，找到了卻連不上的朋友會在 20 秒後顯示「找到朋友了，但連不上」。
 
@@ -488,7 +488,7 @@ skills: [skills]
 
 ## 目前狀態
 
-《無界之地》目前是 `0.1.0` 版，一個早期但能用的研究版本。功能要在真正的 app 裡跑過，才會列為「已驗證」。
+《無界之地》目前是 `0.2.0` 版，一個早期但能用的研究版本。功能要在真正的 app 裡跑過，才會列為「已驗證」。
 每次實跑都在 [`docs/e2e/`](docs/e2e) 留下可重播的紀錄：確切的 `run.json` 操作、寫著實測數字的
 `result.md`，以及截圖。
 
@@ -540,7 +540,7 @@ skills: [skills]
 | 在和朋友連起來的世界裡聊天：按 Enter 說話，只送給驗證過的朋友，一句 200 個字，每位朋友每 5 秒最多 5 句，只存在記憶體 | ✅ 已驗證雙向（開著 VPN、經中繼）：一句話 0.65 秒內到，打字時不會走動 | [simplify-play-together](docs/e2e/milestone-simplify-play-together/result.md) |
 | 只有一把 passkey 的設定：語言、模型、你的 passkey（一個按鈕，玩家名稱在它底下）；帳號、方案、圖片、信令伺服器、共享世界與版本資訊收在進階設定裡；Data Key 解鎖移到 F12 → 世界 | ✅ 已驗證：畫面與收合；建立 passkey 這次沒跑 | [simplify-one-world](docs/e2e/milestone-simplify-one-world/result.md) |
 | 遊玩：玩家卡片上的世界名稱（ENS 優先）與一行白話的目標；供應商、模型、token、FPS 與種子移到 F12；第一次玩的怎麼玩說明卡與工具列的說明按鈕 | ✅ 已驗證：目標那一行、怎麼玩說明卡與說明按鈕，畫面上沒有機制數字 | [simplify-one-world](docs/e2e/milestone-simplify-one-world/result.md) |
-| 朋友的世界能跨網路連上：TURN 中繼（中繼服務 `src/turn` 產生短效的 Cloudflare Realtime TURN 憑證；`UNMAPPED_TURN_URL`），兩邊都沒有中繼時直接說「找到朋友了，但連不上」 | ✅ 在開著 NordVPN 的同一台機器上驗證：只有 STUN 一直連不上；經中繼 2.2 秒連上（`relay/udp turn.cloudflare.com`，來回 77–141 毫秒）；只要一方有中繼就能連；兩方都沒有時 22.4 秒後顯示提示。兩個真實網路與已部署的 Worker 還沒跑 | [simplify-play-together](docs/e2e/milestone-simplify-play-together/result.md) |
+| 朋友的世界能跨網路連上：TURN 中繼（中繼服務 `src/turn` 產生短效的 Cloudflare Realtime TURN 憑證；`UNMAPPED_TURN_URL`），兩邊都沒有中繼時直接說「找到朋友了，但連不上」 | ✅ 在開著 NordVPN 的同一台機器上驗證：只有 STUN 一直連不上；經中繼 2.2 秒連上（`relay/udp turn.cloudflare.com`，來回 77–141 毫秒）；只要一方有中繼就能連；兩方都沒有時 22.4 秒後顯示提示。已部署的 Worker（預設）同樣 2.4 秒連上。兩個真實網路還沒跑 | [simplify-play-together](docs/e2e/milestone-simplify-play-together/result.md) |
 | Stripe 結帳（測試模式與正式）、在你自己的 GPU 端點上跑 Qwen-Image | ⏳ 未跑；每一項都需要人來做 | — |
 | 同伴 | 🚧 規則裡有，但大地上還不會畫出來、也不會跟隨 | — |
 | Windows / Linux | ❔ 未測試；打包目前只支援 macOS | — |

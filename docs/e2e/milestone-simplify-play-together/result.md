@@ -39,12 +39,27 @@ did not add loopback candidates, so the fix is a relay, not a local switch.
 | 11 | One side with a relay is enough | A with the relay, B STUN only: verified in 2,408 ms | pass |
 | 12 | Neither side: the player is told | After **22.4 s** both apps show 「找到朋友了，但連不上。」 and 「可能被 VPN 或防火牆擋住了。試著關掉 VPN 或換個網路；它會一直重試，一通就自動連上。」 (code `continent-peer-unreachable`) (`b-05`) | pass (after fix 2) |
 
+## The deployed Worker (the release default)
+
+`bun run turn:deploy` → `https://unmapped-turn.gimmychang.workers.dev` (account `b9e60d05…`, rate
+limit 20 / 60 s per address); the TURN key went in with `wrangler secret put`, read from
+`.cache/turn/dev.env` and never printed. `/status` → configured; `POST /ice` → 2 server groups, 7
+URLs with relay credentials; a request with an `Origin` → 403. `TURN_URL` in `main/net/ice.ts` now
+names it, so the apps below ran **without** `UNMAPPED_TURN_URL`, NordVPN still on:
+
+| # | Checked | Observed | Result |
+| --- | --- | --- | --- |
+| 13 | Join by code on the default relay | run-01 / run-02 replayed: verified friend in **2,366 ms** (`c-01`–`c-03`) | pass |
+| 14 | Through the relay | A local `relay/udp turn:turn.cloudflare.com:3478?transport=udp`, B `prflx`; RTT 79–90 ms | pass |
+| 15 | Chat | A → B 「player-ZXNM: 你好！我是阿公，聽得到嗎？」 635 ms after sending (100 ms polling included) (`c-04`, `c-05`) | pass |
+
 ## Found and fixed during the run
 
 1. **No relay at all.** WebRTC had only simple-peer's default STUN. Added the relay service
    (`src/turn`, a Worker holding the TURN key; `@shared/ice`; `main/net/ice.ts` behind
    `window.seed.net.iceServers`; `net/iceServers.ts` feeding `peerOpts.config.iceServers`, also for
-   connections made after a late answer). `UNMAPPED_TURN_URL` in main; empty = STUN only.
+   connections made after a late answer). `UNMAPPED_TURN_URL` in main; empty = the baked
+   `TURN_URL`, the deployed Worker (checks 13–15).
 2. **The "found but cannot connect" wait reset on every attempt.** y-webrtc drops a failed attempt
    and starts another, so the pending count blinked to 0 and the 20 s wait never finished (seen with
    a temporary probe, since removed). The wait now runs from the first friend found until one
@@ -56,6 +71,5 @@ Calls: joining, positions and chat call no model. In the background: A 2 (a chap
 B 5 (a chapter and 4 witnesses), all gpt-5.4-mini, 19,611 in / 4,558 out on B.
 
 Not reached: two machines on two different real networks (here one machine behind a VPN stands in —
-the relay path is the same), the deployed Worker (this run used `turn:dev`, which calls the real
-Cloudflare TURN API), a shared world's presence chat (service worlds; chat is continent-only), and
+the relay path is the same), a shared world's presence chat (service worlds; chat is continent-only), and
 public signaling servers (a local one was used).

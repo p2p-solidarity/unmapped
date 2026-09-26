@@ -395,7 +395,7 @@ usage.jsonl                       モデル呼び出し 1 回につき 1 行：�
 - **ネットワークをまたぐリレー：** ルーターが許せば友だちとは直接つながります（STUN）。VPN や厳しい
   NAT、ファイアウォールの内側では直接の経路がないので、TURN リレーがデータを運びます。リレーサービス
   （`src/turn`、Cloudflare Worker）が短時間だけ有効な Cloudflare Realtime TURN の資格情報を発行し、TURN
-  キーは自分だけが持ちます。アプリは `UNMAPPED_TURN_URL` でそこに問い合わせます（ローカルは
+  キーは自分だけが持ちます。アプリは既定でプロジェクトがデプロイしたもの（`unmapped-turn.gimmychang.workers.dev`）に、`UNMAPPED_TURN_URL` があればそちらに問い合わせます（ローカルは
   `bun run turn:dev`、本番は `bun run turn:deploy`。キーは `.cache/turn/dev.env` か `wrangler secret put`）。
   片方にリレーがあれば接続できます。どちらにもないときは、見つかったのにつながらない友だちについて
   20 秒後に「友だちは見つかりましたが、つながりませんでした」と表示します。
@@ -556,7 +556,7 @@ skills: [skills]
 
 ## 現在の状態
 
-UNMAPPED はバージョン `0.1.0`、動作はする初期段階の研究版です。実際のアプリで動かして確かめた機能だけを
+UNMAPPED はバージョン `0.2.0`、動作はする初期段階の研究版です。実際のアプリで動かして確かめた機能だけを
 「検証済み」としています。実行のたびに、再生できる記録を [`docs/e2e/`](docs/e2e) に残しています。中身は
 `run.json`（実際の操作手順）、`result.md`（計測した数値）、スクリーンショットです。
 
@@ -608,7 +608,7 @@ UNMAPPED はバージョン `0.1.0`、動作はする初期段階の研究版で
 | 友だちとつながったワールドでのチャット：Enter で話す、検証済みの友だちだけ、1 行 200 文字、友だちひとりにつき 5 秒で最大 5 行、メモリの中だけ | ✅ 双方向で検証（VPN オン、リレー経由）：0.65 秒以内に届き、入力中は歩かない | [simplify-play-together](docs/e2e/milestone-simplify-play-together/result.md) |
 | パスキーひとつの設定：言語、モデル、あなたのパスキー（ボタンひとつ、その下にプレイヤー名）。アカウント、プラン、画像、シグナリングサーバー、共有ワールド、ビルド情報は詳細設定にたたむ。データキーのロック解除は F12 → ワールドへ移動 | ✅ 検証済み：画面と折りたたみ。パスキーの作成は今回未実行 | [simplify-one-world](docs/e2e/milestone-simplify-one-world/result.md) |
 | プレイ：プレイヤーカードのワールド名（ENS 名を優先）とひとことの目標。プロバイダー、モデル、トークン、FPS、シードは F12 へ。初回の遊び方カードとドックの遊び方ボタン | ✅ 検証済み：目標の一行、遊び方カードとボタン、画面に仕組みの数字なし | [simplify-one-world](docs/e2e/milestone-simplify-one-world/result.md) |
-| 友だちのワールドがネットワークをまたいでつながる：TURN リレー（リレーサービス `src/turn` が短時間だけ有効な Cloudflare Realtime TURN の資格情報を発行。`UNMAPPED_TURN_URL`）。どちらにもリレーがないときは「友だちは見つかりましたが、つながりませんでした」と表示 | ✅ NordVPN オンの 1 台で検証：STUN だけでは接続できず、リレー経由で 2.2 秒（`relay/udp turn.cloudflare.com`、往復 77–141 ms）。片方にリレーがあれば接続でき、どちらにもないと 22.4 秒後に案内。2 つの実ネットワークとデプロイ済みの Worker は未実行 | [simplify-play-together](docs/e2e/milestone-simplify-play-together/result.md) |
+| 友だちのワールドがネットワークをまたいでつながる：TURN リレー（リレーサービス `src/turn` が短時間だけ有効な Cloudflare Realtime TURN の資格情報を発行。`UNMAPPED_TURN_URL`）。どちらにもリレーがないときは「友だちは見つかりましたが、つながりませんでした」と表示 | ✅ NordVPN オンの 1 台で検証：STUN だけでは接続できず、リレー経由で 2.2 秒（`relay/udp turn.cloudflare.com`、往復 77–141 ms）。片方にリレーがあれば接続でき、どちらにもないと 22.4 秒後に案内。デプロイ済みの Worker（既定）でも同じく 2.4 秒で接続。2 つの実ネットワークは未実行 | [simplify-play-together](docs/e2e/milestone-simplify-play-together/result.md) |
 | Stripe の決済（テストモードと本番）、自分の GPU エンドポイントでの Qwen-Image | ⏳ 未実行。どれも人の作業が必要 | — |
 | 仲間キャラクター | 🚧 ルールにはあるが、大地ではまだ描画も追従もしない | — |
 | Windows / Linux | ❔ 未テスト。パッケージングは macOS のみ | — |

@@ -1,7 +1,7 @@
 {
   "name": "unwritten-land",
   "productName": "Unwritten Land",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Electron desktop engine for LLM-generated, player-owned autonomous worlds (OpenUI Lang DSL + Three.js + P2P + passkey saves)",
   "private": true,
   "type": "module",

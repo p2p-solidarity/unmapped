@@ -409,7 +409,8 @@ a code.
 - **Relay across networks:** friends meet directly when their routers allow it (STUN). Behind a VPN,
   a strict NAT or a firewall there is no direct path, so a TURN relay carries the data: the relay
   service (`src/turn`, a Cloudflare Worker) mints short-lived Cloudflare Realtime TURN credentials and
-  keeps the TURN key to itself; the app asks it at `UNMAPPED_TURN_URL` (`bun run turn:dev` locally,
+  keeps the TURN key to itself; the app asks the project's deployed one
+  (`unmapped-turn.gimmychang.workers.dev`) unless `UNMAPPED_TURN_URL` names another (`bun run turn:dev` locally,
   `bun run turn:deploy` for real; the key goes in `.cache/turn/dev.env` or `wrangler secret put`).
   One side with a relay is enough. With none, a friend who is found but cannot be reached is shown
   as "Your friend was found, but the connection could not open" after 20 s.
@@ -580,7 +581,7 @@ carry an action the player signed with their passkey.
 
 ## Status
 
-UNMAPPED is at version `0.1.0`: an early, working research build. A feature is listed as verified
+UNMAPPED is at version `0.2.0`: an early, working research build. A feature is listed as verified
 only after it has been run in the real app. Each run leaves a replayable record under
 [`docs/e2e/`](docs/e2e): the exact `run.json` actions, a `result.md` with measured numbers, and
 screenshots.
@@ -633,7 +634,7 @@ screenshots.
 | Chat on friends' joined worlds: Enter to talk, verified friends only, 200 characters a line, at most 5 lines per friend per 5 s, memory only | ✅ verified both ways across the relay (VPN on): a line arrives within 0.65 s, typing never walks | [simplify-play-together](docs/e2e/milestone-simplify-play-together/result.md) |
 | Settings with one passkey: Language, Model, Your passkey (one button, the player name under it); Account, Plan, Images, Signaling servers, Shared worlds and build info folded under Advanced settings; the Data Key unlock moved to F12 → World | ✅ verified: the screen and its folds; creating a passkey was not run | [simplify-one-world](docs/e2e/milestone-simplify-one-world/result.md) |
 | Play: the player card's world name (ENS first) and plain Goal line, provider, model, tokens, FPS and seed moved to F12, the first-run How to play card and the dock's How to play button | ✅ verified: Goal line, How to play card and Help button, no machinery on screen | [simplify-one-world](docs/e2e/milestone-simplify-one-world/result.md) |
-| Friends' worlds meet across networks: a TURN relay (the relay service `src/turn` mints short-lived Cloudflare Realtime TURN credentials; `UNMAPPED_TURN_URL`), and "your friend was found, but the connection could not open" when neither side has one | ✅ verified on one machine behind NordVPN: STUN alone never connected; through the relay 2.2 s (`relay/udp turn.cloudflare.com`, RTT 77–141 ms); one side's relay is enough; with none, the message after 22.4 s. Two real networks and the deployed Worker not run yet | [simplify-play-together](docs/e2e/milestone-simplify-play-together/result.md) |
+| Friends' worlds meet across networks: a TURN relay (the relay service `src/turn` mints short-lived Cloudflare Realtime TURN credentials; `UNMAPPED_TURN_URL`), and "your friend was found, but the connection could not open" when neither side has one | ✅ verified on one machine behind NordVPN: STUN alone never connected; through the relay 2.2 s (`relay/udp turn.cloudflare.com`, RTT 77–141 ms); one side's relay is enough; with none, the message after 22.4 s. The deployed Worker (the default) joined in 2.4 s the same way. Two real networks not run yet | [simplify-play-together](docs/e2e/milestone-simplify-play-together/result.md) |
 | Stripe checkout (test mode and live), Qwen-Image on your own GPU endpoint | ⏳ not run; each needs a person | — |
 | Companions | 🚧 in the rules, not yet drawn or followed on the land | — |
 | Windows / Linux | ❔ untested; packaging targets macOS only | — |
