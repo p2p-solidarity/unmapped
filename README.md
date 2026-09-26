@@ -582,7 +582,7 @@ carry an action the player signed with their passkey.
 
 ## Status
 
-UNMAPPED is at version `0.2.0`: an early, working research build. A feature is listed as verified
+UNMAPPED is at version `0.2.1`: an early, working research build. A feature is listed as verified
 only after it has been run in the real app. Each run leaves a replayable record under
 [`docs/e2e/`](docs/e2e): the exact `run.json` actions, a `result.md` with measured numbers, and
 screenshots.
