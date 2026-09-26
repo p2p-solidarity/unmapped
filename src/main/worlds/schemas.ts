@@ -2,6 +2,7 @@
 // refuse writing a file that a hand-editing player (or a mod) would corrupt.
 
 import { parseScene } from "@dsl/index";
+import { genesisSchema } from "@shared/cartridgeSchemas";
 import { err, ok, type Result } from "@shared/result";
 import {
   ARCHETYPES,
@@ -12,7 +13,6 @@ import {
   ITEM_KINDS,
   type KarmaEntry,
   LEDGER_ACTIONS,
-  PHYSICS_MODES,
   WORLD_FILE_NAMES,
   WORLD_FILES,
   type WorldFile,
@@ -34,14 +34,8 @@ export const itemSpecSchema = z.object({
   flavor: z.string(),
 });
 
-export const genesisSchema = z.object({
-  archetype: z.enum(ARCHETYPES),
-  physics: z.enum(PHYSICS_MODES),
-  language: z.string().min(1),
-  seed: z.number(),
-  intent: z.string(),
-  createdAt: z.string().min(1),
-});
+// Pure, so a cartridge manifest can be read outside main (rev 6 phase 4, @shared/cartridgeSchemas).
+export { genesisSchema };
 
 /** Quest switches and counters written by tools (`set_flag` in `@shared/effects`). */
 export const worldFlagsSchema = z.record(

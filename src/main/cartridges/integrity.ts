@@ -1,57 +1,27 @@
 import { createHash } from "node:crypto";
+import { canonicalJson } from "@shared/canonical";
 import { BUILTIN_MODULES } from "@shared/capability-modules";
-import type {
-  CartridgeFileIntegrity,
-  CartridgeManifest,
-  CartridgeManifestCore,
-  ContentHash,
-  RuntimePin,
-} from "@shared/cartridge";
-import { hashOrder } from "@shared/hashOrder";
+import type { CartridgeManifest, ContentHash, RuntimePin } from "@shared/cartridge";
 import { EMPTY_MOD_LOCK } from "@shared/mods";
 import { checkPhysics, PHYSICS_VERSION, physicsOf } from "@shared/physics";
 import { err, ok, type Result } from "@shared/result";
+
+// A revision's hash maths is pure and shared with the world service and bundle checks
+// (@shared/integrity, rev 6 phase 4); main keeps its native sha256 for large assets and blobs,
+// which gives the same bytes as the shared one.
+export {
+  bibleIntegrity,
+  cartridgeContentHash,
+  fileIntegrity,
+  manifestCore,
+} from "@shared/integrity";
 
 export function sha256(content: string | Uint8Array): ContentHash {
   return `sha256:${createHash("sha256").update(content).digest("hex")}`;
 }
 
-function canonicalValue(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(canonicalValue);
-  if (typeof value !== "object" || value === null) return value;
-  const out: Record<string, unknown> = {};
-  for (const key of Object.keys(value).sort()) {
-    out[key] = canonicalValue((value as Record<string, unknown>)[key]);
-  }
-  return out;
-}
-
-export function canonicalJson(value: unknown): string {
-  return JSON.stringify(canonicalValue(value));
-}
-
-export function fileIntegrity(path: string, content: string): CartridgeFileIntegrity {
-  return {
-    path,
-    bytes: Buffer.byteLength(content, "utf8"),
-    contentHash: sha256(content),
-  };
-}
-
-export function cartridgeContentHash(
-  manifest: CartridgeManifestCore,
-  files: CartridgeFileIntegrity[],
-): ContentHash {
-  return sha256(
-    canonicalJson({ manifest, files: [...files].sort((a, b) => hashOrder(a.path, b.path)) }),
-  );
-}
-
-/** The hashed part of a manifest: everything except the hash and the file table it seals. */
-export function manifestCore(manifest: CartridgeManifest): CartridgeManifestCore {
-  const { contentHash: _contentHash, files: _files, ...core } = manifest;
-  return core;
-}
+// The one canonical JSON every hash is computed over (rev 6 phase 3, D2) lives in @shared/canonical.
+export { canonicalJson } from "@shared/canonical";
 
 /** Recomputes every runtime identity from the immutable manifest; stored pins are never trusted. */
 export function deriveRuntimePin(manifest: CartridgeManifest): Result<RuntimePin> {

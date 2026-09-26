@@ -15,12 +15,7 @@ import type {
   PublishCartridgeInput,
   WorldBible,
 } from "@shared/cartridge";
-import {
-  BIBLE_FILES,
-  BIBLE_MAX_CHARS,
-  ENGINE_API_VERSION,
-  SAVE_SCHEMA_VERSION,
-} from "@shared/cartridge";
+import { BIBLE_MAX_CHARS, ENGINE_API_VERSION, SAVE_SCHEMA_VERSION } from "@shared/cartridge";
 import { kitFor } from "@shared/forge";
 import type { SceneContract } from "@shared/gameplay";
 import { hashOrder } from "@shared/hashOrder";
@@ -28,7 +23,13 @@ import { err, ok, type Result } from "@shared/result";
 import { parseStoryText, STORY_FILE, type StoryPlan, storyText } from "@shared/story";
 import type { SceneGraph } from "@shared/world";
 import { prepareDialogues } from "./dialogue-files";
-import { cartridgeContentHash, fileIntegrity, runtimePinForManifest, sha256 } from "./integrity";
+import {
+  bibleIntegrity,
+  cartridgeContentHash,
+  fileIntegrity,
+  runtimePinForManifest,
+  sha256,
+} from "./integrity";
 import { isCartridgeId, isCartridgeVersion, isSceneId } from "./paths";
 import { reachableScenes } from "./routes";
 import { cartridgeManifestCoreSchema } from "./schemas";
@@ -505,6 +506,9 @@ export function prepare(input: PublishCartridgeInput): Result<CartridgeRevision>
   return pin.ok ? ok(revision) : pin;
 }
 
+/** Integrity entries for a bible, in path order (pure: @shared/integrity, rev 6 phase 4). */
+export { bibleIntegrity };
+
 /** Normalised bible text, or an error when either anchor is empty or too long to inject. */
 export function prepareBible(bible: WorldBible | undefined): Result<WorldBible | null> {
   if (bible === undefined) return ok(null);
@@ -534,13 +538,6 @@ export function prepareStory(story: StoryPlan | undefined): Result<StoryPlan | n
 /** Integrity entry for a story plan, over the exact bytes `storyText` writes. */
 export function storyIntegrity(story: StoryPlan | null | undefined): CartridgeFileIntegrity[] {
   return story === null || story === undefined ? [] : [fileIntegrity(STORY_FILE, storyText(story))];
-}
-
-/** Integrity entries for a bible, in path order. */
-export function bibleIntegrity(bible: WorldBible | null): CartridgeFileIntegrity[] {
-  return bible === null
-    ? []
-    : [fileIntegrity(BIBLE_FILES.core, bible.core), fileIntegrity(BIBLE_FILES.style, bible.style)];
 }
 
 function canReachTerminal(

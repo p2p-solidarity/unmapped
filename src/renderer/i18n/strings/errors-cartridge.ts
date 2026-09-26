@@ -90,6 +90,18 @@ export const CARTRIDGE_ERRORS: Record<string, ErrorText> = {
     },
     hint: HINT.exportAgain,
   },
+  "cartridge-pack-too-large": {
+    message: {
+      en: "The .cartridge is larger than a cartridge may be, so it was not opened.",
+      "zh-TW": "這個 .cartridge 超過卡帶允許的大小，因此沒有開啟。",
+      ja: ".cartridge が許可されたサイズを超えているため、開きませんでした。",
+    },
+    hint: {
+      en: "A cartridge travels as one pack of at most 32 MiB; ask for a smaller export.",
+      "zh-TW": "卡帶以單一封包傳送，最多 32 MiB；請對方匯出較小的版本。",
+      ja: "カートリッジは最大 32 MiB の一つのパックで届きます。小さく書き出してもらってください。",
+    },
+  },
   "cartridge-manifest-invalid": {
     message: {
       en: "The cartridge's manifest is not valid.",
