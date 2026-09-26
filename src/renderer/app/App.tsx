@@ -7,6 +7,7 @@ import { useGamepad } from "@renderer/input";
 import { useInferenceSync } from "@renderer/narrative";
 import { setActiveContinent, useActiveContinent } from "@renderer/net/continent";
 import { useContinentSync } from "@renderer/net/continentSync";
+import { prefetchIceServers } from "@renderer/net/iceServers";
 import { useActiveRoom } from "@renderer/net/lifecycle";
 import { leaveActiveRoom, useRoomSync } from "@renderer/net/sync";
 import { useContinentStore, useSessionStore } from "@renderer/state";
@@ -131,6 +132,10 @@ export function App() {
   const activeRoom = useActiveRoom();
   const activeContinent = useActiveContinent();
   const syncRef = useRef(sync);
+  // The relay servers friends' worlds may need, asked once up front so a door opens with them.
+  useEffect(() => {
+    void prefetchIceServers();
+  }, []);
   useEffect(() => {
     syncRef.current = sync;
   }, [sync]);

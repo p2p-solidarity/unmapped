@@ -54,6 +54,7 @@ import {
   readContinent,
 } from "./continentDoc";
 import { buildContinentView } from "./continentView";
+import { hasRelay } from "./iceServers";
 import { playerName } from "./room";
 import { SIGNALING_WAIT_MS } from "./signaling";
 
@@ -221,11 +222,34 @@ export function useContinentSync(continent: Continent | null): void {
     // "Connecting" lasts only SIGNALING_WAIT_MS without any signaling server or peer; then the
     // continent says so with a way out, and turns live again the moment a server answers.
     let lostSince: number | null = null;
+    // A friend found through signaling whose connection never opens (a VPN, a strict NAT or
+    // firewall with no relay) is said out loud after the same wait, instead of "waiting" forever.
+    let stuckSince: number | null = null;
     const status = (): void => {
       const connected = continent.signalingStatus().some((entry) => entry.connected);
       const peers = continent.gate.verifiedWorlds().size;
       const store = useContinentStore.getState();
       const previous = store.status;
+      // y-webrtc drops a failed attempt and starts another, so "found" blinks: once a friend has
+      // been found, the wait runs until one connects (or signaling is lost), not per attempt.
+      if (peers > 0 || !connected) stuckSince = null;
+      else if (continent.pendingPeers() > 0) stuckSince ??= Date.now();
+      if (stuckSince !== null) {
+        if (Date.now() - stuckSince >= SIGNALING_WAIT_MS) {
+          if (previous.kind !== "error" || previous.error.code !== "continent-peer-unreachable") {
+            store.setStatus({
+              kind: "error",
+              code: continent.code,
+              error: {
+                code: "continent-peer-unreachable",
+                message: `A friend was found, but no connection opened within ${SIGNALING_WAIT_MS / 1000} s.`,
+                hint: `A VPN or firewall may be blocking it${hasRelay() ? "" : ", and no relay service is set up (UNMAPPED_TURN_URL)"}. Try turning the VPN off or another network; it keeps trying and connects by itself.`,
+              },
+            });
+          }
+          return;
+        }
+      }
       if (connected || peers > 0) {
         lostSince = null;
         if (previous.kind !== "live" || previous.peers !== peers) {

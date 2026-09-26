@@ -58,6 +58,18 @@ export const NET_ERRORS: Record<string, ErrorText> = {
     },
     hint: NETWORK,
   },
+  "continent-peer-unreachable": {
+    message: {
+      en: "Your friend was found, but the connection could not open.",
+      "zh-TW": "找到朋友了，但連不上。",
+      ja: "友だちは見つかりましたが、つながりませんでした。",
+    },
+    hint: {
+      en: "A VPN or firewall may be blocking it. Try turning the VPN off or another network; it keeps trying and connects by itself.",
+      "zh-TW": "可能被 VPN 或防火牆擋住了。試著關掉 VPN 或換個網路；它會一直重試，一通就自動連上。",
+      ja: "VPN やファイアウォールが妨げているかもしれません。VPN を切るか別のネットワークを試してください。自動で再試行し、つながりしだい接続します。",
+    },
+  },
   "continent-signaling-unreachable": {
     message: {
       en: "Friends cannot find this world: no connection server answered.",

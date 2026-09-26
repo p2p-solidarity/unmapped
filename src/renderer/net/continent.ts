@@ -25,6 +25,7 @@ import {
 } from "./codes";
 import { removeWorld } from "./continentDoc";
 import { type ContinentGate, gateContinent } from "./continentGate";
+import { currentIceServers, onIceServers, prefetchIceServers } from "./iceServers";
 import {
   onSignalingChange,
   type RoomOptions,
@@ -53,6 +54,8 @@ export interface Continent {
   signalingStatus(): SignalingStatus[];
   /** Direct peer connections that are actually open right now (not still being negotiated). */
   peerCount(): number;
+  /** Friends found through signaling whose direct or relayed connection has not opened yet. */
+  pendingPeers(): number;
   /** Signaling or peer connections changed. */
   onChange(listener: () => void): () => void;
   leave(): void;
@@ -65,6 +68,16 @@ export interface OpenContinentInput {
   name: string;
   /** The physics this world was made on (its runtime pin); only worlds on the same one merge. */
   physicsVersion: number;
+}
+
+/** Direct peer connections that are open (`open`), or found but still negotiating (`!open`). */
+function countConns(provider: WebrtcProvider, open: boolean): number {
+  const room = (
+    provider as unknown as { room: { webrtcConns: Map<string, { connected: boolean }> } | null }
+  ).room;
+  let count = 0;
+  for (const conn of room?.webrtcConns.values() ?? []) if (conn.connected === open) count += 1;
+  return count;
 }
 
 export function openContinent(
@@ -87,6 +100,8 @@ export function openContinent(
       "On the title screen open Settings → Advanced settings → Signaling servers and reset them.",
     );
   }
+  // Kept fresh while the app runs; an answer that lands after this is applied by `onIceServers`.
+  void prefetchIceServers();
   const doc = new Y.Doc();
   // The room's document is never written: land goes through the gate, to verified peers only.
   const roomDoc = new Y.Doc();
@@ -95,6 +110,8 @@ export function openContinent(
     provider = new WebrtcProvider(`${roomName(code)}:${CONTINENT_PREFIX}`, roomDoc, {
       signaling,
       password: options?.password,
+      // STUN finds a direct path; a TURN relay (when main has one) carries it when none exists.
+      peerOpts: { config: { iceServers: currentIceServers() } },
     });
   } catch (cause) {
     doc.destroy();
@@ -104,6 +121,10 @@ export function openContinent(
   }
   provider.awareness.setLocalState({ name: input.name, worldId: input.worldId });
   const stopRetrying = retryStuckSignaling(provider, SIGNALING_RETRY_MS);
+  // A relay that arrives after opening is used by every connection made from then on.
+  const stopIce = onIceServers((iceServers) => {
+    provider.peerOpts = { ...provider.peerOpts, config: { iceServers } };
+  });
   const channel = openChannel(provider, CONTINENT_NAMESPACE, isContinentMessage);
   const gate = gateContinent(
     doc,
@@ -120,14 +141,8 @@ export function openContinent(
     gate,
     signaling,
     signalingStatus: () => signalingStatusOf(provider),
-    peerCount: () => {
-      const room = (
-        provider as unknown as { room: { webrtcConns: Map<string, { connected: boolean }> } | null }
-      ).room;
-      let open = 0;
-      for (const conn of room?.webrtcConns.values() ?? []) if (conn.connected) open += 1;
-      return open;
-    },
+    peerCount: () => countConns(provider, true),
+    pendingPeers: () => countConns(provider, false),
     onChange(listener) {
       const offSignaling = onSignalingChange(provider, listener);
       const offGate = gate.onChange(listener);
@@ -144,6 +159,7 @@ export function openContinent(
       if (left) return;
       left = true;
       stopRetrying();
+      stopIce();
       // Take this world with us: the others stop drawing it at once instead of keeping a ghost.
       removeWorld(doc, input.worldId);
       provider.awareness.setLocalState(null);

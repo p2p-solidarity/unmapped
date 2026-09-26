@@ -8,7 +8,7 @@
 // in a friend's world it shows that world's code, which other friends can join with too.
 
 import { readSaveEns } from "@renderer/app/hud/saveEns";
-import { errorLine, translate, useT } from "@renderer/i18n";
+import { describeError, errorLine, translate, useT } from "@renderer/i18n";
 import { plateOf } from "@renderer/net/codes";
 import { leaveContinent, openMyDoor } from "@renderer/net/continentActions";
 import {
@@ -17,7 +17,7 @@ import {
   useLandStore,
   useSessionStore,
 } from "@renderer/state";
-import { Button, ErrorBlock, font, HIT_TARGET, Surface, space, Text } from "@renderer/ui";
+import { Button, font, HIT_TARGET, Surface, space, Text } from "@renderer/ui";
 import type { AppError } from "@shared/result";
 import { type CSSProperties, type JSX, useEffect, useState } from "react";
 import { useAttached } from "./useAttached";
@@ -71,7 +71,23 @@ async function copyText(text: string): Promise<void> {
 
 function StatusLine({ status, own }: { status: ContinentStatus; own: boolean }): JSX.Element {
   const t = useT();
-  if (status.kind === "error") return <ErrorBlock error={status.error} />;
+  if (status.kind === "error") {
+    // Plain words for the player: the translated message and what to do, no code or source text
+    // (ErrorBlock elsewhere and the logs keep those).
+    const { message, hint } = describeError(status.error);
+    return (
+      <>
+        <Text variant="body" tone="danger">
+          {message}
+        </Text>
+        {hint === null ? null : (
+          <Text variant="caption" tone="muted">
+            {hint}
+          </Text>
+        )}
+      </>
+    );
+  }
   if (status.kind !== "live") {
     return (
       <Text variant="body" tone="muted">
