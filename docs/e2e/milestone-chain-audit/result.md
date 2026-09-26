@@ -369,3 +369,15 @@ log's only other lines are the known `afm-bridge ENOENT` (Found 8) and Vite/Reac
 (`.jpg`, `-text.txt`, `-network.json`), `fix-lineage-demo-status.out.txt`,
 `fix-outcome-probe.ts.txt` + `.out.txt`, `fix-rpc-simulate.ts.txt` + `.out.txt`,
 `fix-main.log.txt`.
+
+## Web view deployed (after the fixes)
+
+`bun run web:deploy` on origin/main `73448dc`, 2026-09-26: 2 changed assets uploaded (`app.js`,
+`style.css`; `index.html` unchanged), version `2da2c04c-9645-4339-9e81-36907d0875fd` at
+https://unmapped-auction.gimmychang.workers.dev. Live check right after:
+
+| Checked | Observed |
+| --- | --- |
+| Deployed bytes vs `web/lineage-auction/public/` | `/` (index.html), `app.js`, `style.css`: sha256 equal to the committed files |
+| Default view (headless Chrome, block 11,786,071) | `aether-land.unmapped.eth · GRADUATED · POOL OPEN`, clearing 0.01864 (+86% over the 0.009999 floor), raised 9,025 USDC, "enough to graduate", 100.0% sold |
+| `/#lantern-quay` | `FAILED · NO POOL`, clearing 0.1 AETHERLAND, "It ended at the 0.1 floor: demand never exceeded the supply each block released." |
