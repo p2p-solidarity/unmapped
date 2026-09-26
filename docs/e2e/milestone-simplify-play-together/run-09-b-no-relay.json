@@ -1,0 +1,68 @@
+{
+ "port": 9336,
+ "note": "Both apps relaunched WITHOUT UNMAPPED_TURN_URL; A replays run-01 first.",
+ "actions": [
+  {
+   "cdp": {
+    "method": "Emulation.setFocusEmulationEnabled",
+    "params": {
+     "enabled": true
+    }
+   }
+  },
+  {
+   "clickText": "世界"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "加入世界"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(()=>{const f=[...document.querySelectorAll('input')].find(i=>i.offsetParent); f.focus(); return true})()"
+  },
+  {
+   "type": "K96S2G"
+  },
+  {
+   "wait": 700
+  },
+  {
+   "eval": "window.__t0=performance.now(); true"
+  },
+  {
+   "clickText": "加入"
+  },
+  {
+   "repeat": {
+    "times": 90,
+    "until": "(async()=>{const S=await import('/state/index.ts'); const st=S.useContinentStore.getState().status; return st.kind==='error' || st.peers>0})()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); const st=S.useContinentStore.getState().status; return {ms:Math.round(performance.now()-window.__t0), kind:st.kind, code:st.error?.code, peers:st.peers}})()"
+  },
+  {
+   "hold": "F12",
+   "ms": 80
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "document.querySelector('[data-layer=console]')?.innerText.split('拉朋友進來')[1]?.slice(0,260)"
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-play-together/b-05-no-relay-unreachable.jpg"
+  }
+ ]
+}

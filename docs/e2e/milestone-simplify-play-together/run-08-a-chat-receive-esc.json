@@ -1,0 +1,42 @@
+{
+ "port": 9335,
+ "actions": [
+  {
+   "repeat": {
+    "times": 40,
+    "until": "(async()=>{const S=await import('/state/index.ts'); return S.useChatStore.getState().lines.length>1})()",
+    "actions": [
+     {
+      "wait": 100
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); return S.useChatStore.getState().lines.map(l=>({name:l.name??null, text:l.text}))})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-play-together/a-04-chat-reply.jpg"
+  },
+  {
+   "hold": "Enter",
+   "ms": 60
+  },
+  {
+   "wait": 300
+  },
+  {
+   "type": "abc"
+  },
+  {
+   "hold": "Escape",
+   "ms": 60
+  },
+  {
+   "wait": 500
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); return {screen:S.useSessionStore.getState().screen, chatOpen: !!document.querySelector('[data-layer=chat]')}})()"
+  }
+ ]
+}

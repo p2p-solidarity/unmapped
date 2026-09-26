@@ -36,8 +36,8 @@ residents, a local custom, errands and foes. It writes them in a small declarati
 parser checks every line. The place is written once, saved, and never needs the model again. Worlds,
 saves and published revisions are plain files on your disk. What a world holds is a signed,
 append-only **history**: friends you invite share it through a small world service and walk what
-you witnessed without calling a model. Worlds kept on one device can still meet as a **continent**
-over peer-to-peer WebRTC.
+you witnessed without calling a model. Worlds kept on one device can still join friends' worlds
+peer to peer over WebRTC: tell a friend a join code or an ENS name.
 
 UNMAPPED talks to any OpenAI-compatible endpoint: a local llama.cpp or Ollama server, Apple's
 on-device model, vLLM, or a cloud API. You can play in English, 繁體中文 or 日本語. Only the cloud
@@ -48,6 +48,12 @@ path has been verified end to end so far; the [status table](#status) lists what
 
 ## Highlights
 
+- **Made to be simple.** The title has four entries: Continue · Worlds · Create World · Settings.
+  **Worlds → My worlds** is one list: **Start a new adventure**, **Resume** on every world you have
+  played, and **Start** on every world you have installed but not played yet; everything else sits
+  behind a row's **More**. In play, the player card shows the world's name (its ENS name first) and
+  one plain **Goal** line. A **How to play** card opens the first time, and the dock's **How to play**
+  button opens it again. Built on 2026-09-26 and not yet run in the app ([status](#status)).
 - **An endless land that never waits for the model.** The ground is 32 × 32-tile chunks computed
   from `seed + chunk coordinates`. The model never generates it and it is never stored, so walking
   always works, even with no model connected.
@@ -76,27 +82,29 @@ path has been verified end to end so far; the [status table](#status) lists what
   a world service and the friends you invite walk what you witnessed with no model call, even while
   you are offline. When two people reach an unwritten place together, one writes it and the other
   watches the same text arrive. Places nobody visits fade into fog and become legends, and residents
-  pass on rumours of things members really did. Members leave gifts and signposts, and see each
+  pass on rumours of things friends really did. Friends leave gifts and signposts, and see each
   other walk and emote. The service only orders, checks and relays signed entries; it never calls a
   model.
-- **Continents for worlds kept on one device.** Such a world has a door number (門牌). Share it and
-  your worlds merge into one continent over y-webrtc, with no game server holding anyone's world.
-  Visitors appear with their name, facing and walk. Every entry from a peer is validated before it
-  lands.
+- **Invite friends, or join a world.** One field takes a friend's ENS name or six-character join
+  code. A world kept on one device opens to friends peer to peer: your worlds join into one land over
+  y-webrtc, with no game server holding anyone's world. Friends appear with their name, facing and
+  walk; F12 → Friends lists where each one stands and how far away, and <kbd>Enter</kbd> opens a
+  chat. Every entry from a peer is validated before it lands.
 - **One route per model call.** A local model, your own key, or the free allowance of an account on
   the UNMAPPED generation gateway. Settings → Model shows where the next call goes, and a failed call
   never falls through to another route.
-- **Pictures keep their licence.** Settings → Images picks who draws. Every picture records its
-  licence, and commercial mode refuses providers and new pictures that may not be sold.
+- **Pictures keep their licence.** Settings → Advanced settings → Images picks who draws. Every
+  picture records its licence, and commercial mode refuses providers and new pictures that may not be
+  sold.
 - **Worlds outlive their servers.** A `.world` file holds a world's whole history and packs. Anyone
-  can verify it offline and bring it up on another world service; an owner moves the world there and
-  members follow.
+  can verify it offline and bring it up on another device or world service.
 - **A phone can join.** A phone-sized browser page joins a world by invite, draws its land, walks it
   by touch and leaves notes offline. It is a proof, not a mobile app.
 - **You own your data.** Published content is an immutable, sha256-hashed cartridge, and each save
   pins one exact revision. `.cartridge` files carry content, `.spire-backup` files carry progress
-  and `.world` files carry a shared world between machines. Portable data is encrypted with a random AES-GCM Data Key, which is
-  wrapped by a passkey PRF or the OS keychain.
+  and `.world` files carry a shared world between machines. An encrypted seed export (`.seed.enc`,
+  in F12 → World) is sealed with a random AES-GCM Data Key, which is wrapped by a passkey PRF or the
+  OS keychain.
 - **Mods are prompts and tools, never code.** A `mod.yml` adds prompt sections, declarative tools
   that map onto a fixed `GameEffect` vocabulary, and skills. It runs on a
   [Cordis](https://github.com/cordiverse/cordis) harness modelled on DeepSeek Harness.
@@ -104,11 +112,13 @@ path has been verified end to end so far; the [status table](#status) lists what
   interactive worlds that run in a `sandbox="allow-scripts"` iframe on a fresh origin with a nonce
   CSP.
 - **Honest numbers.** Every model call goes to a local usage ledger: tokens, cached tokens and
-  milliseconds, never prompts or keys. The HUD shows the totals for each world. The app never shows
-  placeholder data. When something is missing, the screen says so and tells you how to fix it.
+  milliseconds, never prompts or keys. F12 → Inference shows the totals for each world. The app
+  never shows placeholder data. When something is missing, the screen says so and tells you how to
+  fix it.
 - **Optional on-chain provenance.** Worlds, remixes, saves and players can hold ENSv2 names on
-  Sepolia, and the names are in the game: the player card, chapter clears, joining a continent by
-  name. A shared world's service can also record a fingerprint of each beat on a chain (deployed on
+  Sepolia, and the names are in the game: the player card, chapter clears, joining a friend's world
+  by name. One passkey (Settings → Your passkey) holds them and confirms market actions. A shared
+  world's service can also record a fingerprint of each beat on a chain (deployed on
   Sepolia). Content never goes on chain, and every screen works without a chain
   configured.
 
@@ -120,7 +130,7 @@ path has been verified end to end so far; the [status table](#status) lists what
     <td width="50%"><img src="docs/readme/land-combat.jpg" alt="Real-time combat on the land: two level-2 foes approach, HP 40/100, the chapter card tracks the story"></td>
   </tr>
   <tr>
-    <td><sub><b>Continent.</b> Another player's world joined over WebRTC; they're drawn with their name, facing and walk.</sub></td>
+    <td><sub><b>Friends' worlds.</b> A friend's world joined over WebRTC; they're drawn with their name, facing and walk.</sub></td>
     <td><sub><b>Combat.</b> Foes chase and hit in real time. The card on the left tracks the next chapter.</sub></td>
   </tr>
   <tr>
@@ -153,7 +163,7 @@ path has been verified end to end so far; the [status table](#status) lists what
   </tr>
   <tr>
     <td><sub><b>Together.</b> One player writes a new place; the other reads the same text as it arrives, and both get the same entry. The chapter card's <code>world-loading</code> error is a bug this phase found and fixed.</sub></td>
-    <td><sub><b>The door.</b> Share a world, choose who may come in, make one-time invites, and make a member a co-owner.</sub></td>
+    <td><sub><b>The door.</b> Who may come in, invite links and co-owners, now folded under the door's <b>Advanced</b> (the picture predates the simpler door).</sub></td>
   </tr>
 </table>
 
@@ -180,7 +190,8 @@ bun install        # also fetches the Electron binary
 bun run dev        # main + preload + renderer with HMR
 ```
 
-Next, open **Title → Settings → Model** and choose where the words come from.
+Next, open **Title → Settings → Model** and choose where the words come from. Then play from
+**Worlds → My worlds → Start a new adventure**, or make your own with **Create World**.
 
 ### Choose a model
 
@@ -192,7 +203,7 @@ Next, open **Title → Settings → Model** and choose where the words come from
 | Apple Foundation Models | inside the app (its Swift bridge; no server) | none | chat, tools, cancel, Create, witnessing and chapters ✅ inside its 4K context, guided ([apple-in-app](docs/e2e/milestone-apple-in-app/result.md) · [apple-create](docs/e2e/milestone-apple-create/result.md) · [witness-4k](docs/e2e/milestone-rev6-witness-names-4k/result.md) · [chapter-apple](docs/e2e/milestone-rev6-chapter-apple/result.md)) |
 | vLLM serving [`thesysdev/OUI-1`](https://huggingface.co/thesysdev) | `http://127.0.0.1:8000/v1` | none | not yet |
 | OpenUI Gateway | `https://api.thesys.dev/v1/embed` | `THESYS_API_KEY` | not yet |
-| Free allowance (the UNMAPPED generation gateway) | `UNMAPPED_GATEWAY_URL` (dev builds have none) | Settings → Account, or `UNMAPPED_GATEWAY_KEY` in `.env` | routing, metering, cancel and pictures ✅ against a test upstream only ([p4-quota](docs/e2e/milestone-rev6-p4-quota/result.md)) |
+| Free allowance (the UNMAPPED generation gateway) | `UNMAPPED_GATEWAY_URL` (dev builds have none) | Settings → Advanced settings → Account, or `UNMAPPED_GATEWAY_KEY` in `.env` | routing, metering, cancel and pictures ✅ against a test upstream only ([p4-quota](docs/e2e/milestone-rev6-p4-quota/result.md)) |
 | Any OpenAI-compatible server | your URL | optional | — |
 
 Each call takes exactly one route, decided in the main process and shown in Settings → Model as
@@ -223,14 +234,17 @@ llama-server -m ~/models/Qwen3.5-4B-Q4_K_M.gguf --port 8080 -c 16384 --jinja -ng
 
 | Where | Keys |
 | --- | --- |
-| Open land | <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or click to move · <kbd>Shift</kbd> sprint · <kbd>E</kbd> interact · <kbd>N</kbd> notes · <kbd>V</kbd> switch look · <kbd>F12</kbd> console |
+| Open land | <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or click to move · <kbd>Shift</kbd> sprint · <kbd>E</kbd> talk / open · <kbd>N</kbd> notes · <kbd>V</kbd> switch look · <kbd>F12</kbd> Friends & more (the console, which opens on Friends) |
 | Worlds with guns | <kbd>Space</kbd> / <kbd>F</kbd> fire · click a foe to shoot |
 | Side-scroller | <kbd>A</kbd><kbd>D</kbd> move · <kbd>Space</kbd> jump · <kbd>E</kbd> interact |
 | Dungeon (first person) | <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move · left click fire · <kbd>R</kbd> end turn · <kbd>F</kbd> flashlight · <kbd>E</kbd> interact |
+| With friends (joined worlds) | <kbd>Enter</kbd> talk · <kbd>Enter</kbd> send · <kbd>Esc</kbd> close |
 | Shared world, online | <kbd>T</kbd> Emote (pad <kbd>LB</kbd>) · <kbd>1</kbd>–<kbd>6</kbd> pick one |
 | Phone (browser proof) | Stick: walk · Y: this world and its notes |
 
-The HUD always shows the keys for the place you're in.
+The HUD shows only the keys you need where you are; the dock's buttons carry <kbd>N</kbd>,
+<kbd>V</kbd> and <kbd>F12</kbd>. The first time you play, a **How to play** card shows the basics,
+and the dock's **How to play** button opens it again.
 
 ## How it works
 
@@ -328,30 +342,99 @@ usage.jsonl                       one line per model call: purpose, model, token
 | `.spire-backup` | one run and its active save: land, lore, notes; for a save in a world also its pin, progress and history | a machine that has the exact cartridge revision; a history that has diverged is kept beside, never merged; on another device a never-shared world becomes that device's own |
 | `.world` | one shared world: its signed history and packs, none of your own progress | any device or world service, after an offline check (`bun run verify-world`) |
 
+In the app, a world's **More** in **Worlds → My worlds** exports `.world` and `.cartridge` files and
+makes backups; the list's own **More** restores a backup or imports a `.cartridge`; and
+**Worlds → Join a world → More: join from a .world file** brings in a `.world`.
+
 The two optional servers keep their own folders, outside userData: a world service's `--data`
 (`service-key.json`, and per world `log.jsonl`, blobs and a snapshot) and a gateway's `--data`
 (its key, accounts, the append-only `ledger.jsonl`, and the operator's `upstreams.json` and
 `costs.json`).
 
-## Play together: shared worlds
+## Play together
+
+Playing with friends comes down to two buttons, **Invite friends** and **Join a world**, and one
+thing you tell each other: a world's **ENS name** when it has one, else its six-character
+**join code**. These screens were rebuilt on 2026-09-26 and have not been run in the app yet (see
+[Status](#status)); the machinery under them has.
+
+- **Invite friends.** At home, walk to your door and press <kbd>E</kbd> (**Open the door**).
+  **Invite friends** is at the top: press it, then tell your friend the name or code that appears
+  (**Copy** copies it). While it is open it reads **Open · N friends here**, and **Close** closes it.
+  The same block comes first in <kbd>F12</kbd> → **Friends** (**Bring friends in**), and the
+  **More** of a world you have played in **Worlds → My worlds** has **Invite friends** too (it opens
+  the world first).
+- **Join a world.** Your friend types that name or code in **Join a world**: at their own door, in
+  F12 → Friends, or before playing in **Worlds → Join a world**, whose one field also takes an invite
+  link (`unmapped://join?…`) or a move link. An ENS name is looked up first: a save's name leads to
+  its join code, and a world's name offers **Play this world**. With a join code you bring one of your
+  worlds along (**Bringing: …** · **Change**; with none yet, a new adventure on the built-in world
+  starts first). Your world walks over to your friend's and keeps its own land and progress.
+- **Friends online.** F12 opens on **Friends**: invite, join, and **Friends online**, every other
+  player drawn on this land with their position (`x, z`), whose land they stand on and how many steps
+  away they are, refreshed four times a second.
+- **Chat.** On friends' joined worlds, **Press Enter to talk**: <kbd>Enter</kbd> opens the line,
+  <kbd>Enter</kbd> sends it and <kbd>Esc</kbd> closes it. A line is at most 200 characters and goes
+  only to verified friends, each of whom may send at most 5 lines per 5 seconds. Lines live in memory
+  only: never saved and never in a history.
+- **The rest of the door.** Below Join a world come **Friends' worlds** (**Go to their door**), four
+  **Quick travel** slots (a place you have been, or a friend's join code), the keepsakes you carry
+  home, and the notes visitors left on your land (**Keep it**). The folded **Advanced** part holds
+  where the world lives, **Invite links**, **Who may come in**, **People**,
+  **Recorded on a public chain** and **This world's records**. No service address is shown anywhere
+  outside Settings.
+
+### Joined worlds, under the hood (continents)
+
+A world kept on one device joins friends peer to peer. Its join code (the door number in code and
+in older builds, `plateOf`) never changes and is also the code of the **continent** it opens: the
+technical name for worlds joined into one land over y-webrtc. A world shared on a world service
+cannot join one (`continent-world-attached`); its **Invite friends** block points to an invite link
+instead. Each world keeps its own origin, seed and save. Joining gives it an anchor, and territory
+belongs to the nearest anchor. A save's ENS name carries its join code, which is how a name leads to
+a code.
+
+- **What crosses:** each world's descriptor, witnessed chunks, notes, live positions (awareness
+  only, never saved) and chat lines. A note a visitor leaves on your land waits at your door until
+  you choose **Keep it**; then it becomes a note in your world's history, signed by you.
+- **What never crosses:** cartridge bytes, rules, story, errands and foes.
+- **Trust:** nothing is exchanged until a peer's hello matches the continent code, protocol and
+  physics version. After that, every entry is checked on arrival. A peer may write only its own
+  world and chunks, may leave notes on anyone's land, and can never overwrite a chunk or a note. A
+  chat line is cleaned and capped on both ends, and its sender's name comes from that peer's own
+  presence, never from the message.
+- **Signaling:** public y-webrtc servers by default. You can run your own
+  (`PORT=4444 node node_modules/y-webrtc/bin/server.js`) and add it under
+  **Settings → Advanced settings → Signaling servers**, where it can be tested before you save.
+- **Relay across networks:** friends meet directly when their routers allow it (STUN). Behind a VPN,
+  a strict NAT or a firewall there is no direct path, so a TURN relay carries the data: the relay
+  service (`src/turn`, a Cloudflare Worker) mints short-lived Cloudflare Realtime TURN credentials and
+  keeps the TURN key to itself; the app asks it at `UNMAPPED_TURN_URL` (`bun run turn:dev` locally,
+  `bun run turn:deploy` for real; the key goes in `.cache/turn/dev.env` or `wrangler secret put`).
+  One side with a relay is enough. With none, a friend who is found but cannot be reached is shown
+  as "Your friend was found, but the connection could not open" after 20 s.
+
+### Shared worlds, under the hood (a world service)
 
 A world's land is a signed, append-only history. Each witnessed place, note, chapter, gift and beat
 is one entry, signed by the device that wrote it; every device has its own Ed25519 key. A new world
-lives on your device alone and plays offline. To share it, add a world service under
-**Settings → Shared worlds**, then at home press <kbd>E</kbd> (**Open the door**) and choose
-**Share on …** in the door's **Sharing** section. The service orders the entries, checks each one
-the same way the app does, relays them, and keeps them while you are away. It never calls a model
-and holds no model key. You can run one with `bun run service` (see [Development](#development)).
+lives on your device alone and plays offline. To share it through a world service, list one under
+**Settings → Advanced settings → Shared worlds**, then open your door's **Advanced** part and choose
+**Make an invite link**. A world still on this device only is first shared on the first service in
+that list; the door never names it, and with no service listed it offers no invite link. The
+service orders the entries, checks each one the same way the app does, relays them, and keeps them
+while you are away. It never calls a model and holds no model key. You can run one with
+`bun run service` (see [Development](#development)).
 
-- **Invites.** Under **Invites**, **Create an invite** makes a link (`unmapped://join?…`) with a set
-  number of uses and days. A friend pastes it in **Worlds → Join a world**, chooses
-  **Look at the world**, then **Join and play**. An invite that is used up, expired or revoked is
-  refused.
-- **Who may come in.** **Private**, **Friends** (the default: you and the members you invited) or
-  **Public** (anyone with the world's id may visit and leave notes, signposts and gifts; only members
-  write places). Under **People**, an owner can **Remove** a member, who then can neither read nor
-  write; what they wrote stays. **Make co-owner** gives another device every right an owner has, so
-  the world outlives the loss of one device.
+- **Invite links.** Under **Invite links**, **Make an invite link** makes a link
+  (`unmapped://join?…`) for a set number of people (1–20) and days (1–30); it is shown only once. A
+  friend pastes it in **Worlds → Join a world**, chooses **Look at the world**, then
+  **Join and play**. An invite that is used up, expired or revoked is refused.
+- **Who may come in.** **Only me**, **Friends** (the default: you and the friends you invited) or
+  **Everyone** (anyone with the world's id may visit and leave notes, signposts and gifts; only
+  invited friends write places). Under **People**, an owner can **Remove** a friend, who then can
+  neither read nor write; what they wrote stays. **Make co-owner** gives another device every right
+  an owner has, so the world outlives the loss of one device.
 - **Witnessed once, for everyone.** A place someone has witnessed is drawn from the history with no
   model call. When two people walk into the same unwritten place, the service lets one of them write
   it; the other watches the same text arrive, and both get the same entry.
@@ -361,49 +444,32 @@ and holds no model key. You can run one with `bun run service` (see [Development
   place beyond the town ring that nobody has tended for 28 quiet days fades into fog; its old telling
   stays in the history as a legend (傳說), and the place can be witnessed anew. Home, chapters and
   places never fog. A world kept on one device beats when it opens.
-- **Rumours.** A beat picks real events, such as a member clearing a chapter, and residents pass
+- **Rumours.** A beat picks real events, such as a friend clearing a chapter, and residents pass
   them on ("They say…"). A rumour may name only the event it cites; the app and the service both
   refuse one that names anything else. A device writes a beat's rumours with its own model, one call
-  at most, when **Settings → Shared worlds → Write rumors in the background** allows it: by default
-  only for worlds you own, and never on the free allowance.
+  at most, when **Settings → Advanced settings → Shared worlds → Write rumors in the background**
+  allows it: by default only for worlds you own, and never on the free allowance.
 - **Gifts, presence and emotes.** Leave a gift for whoever gets there first. If two people take it
-  at once, one gets it and the other is told "Someone took it first." Online members see each other
+  at once, one gets it and the other is told "Someone took it first." Online friends see each other
   walk, and <kbd>T</kbd> opens **Emote**. Presence is never saved.
 - **Old saves come along.** The first time this build opens an older save, it writes the save's
   land, lore, notes, places, chapters and deeds into a world history. It never changes or deletes the
   source files, running it again adds nothing, and whatever does not fit stays on this device and is
   listed. An older build can still open the same folder, and this build then catches up what it wrote.
-- **Worlds outlive their servers.** **Worlds → World files** exports a `.world` file and imports one
-  after an offline check. If a world's service is gone, import its file into another world service
-  (`bun run service -- import`), then an owner chooses **Move to another service**; members follow
-  with the move link. A world or file made with newer physics is refused.
-
-## Play together: continents
-
-Continents are the older way to play together, kept for worlds that live only on one device. A
-world shared on a world service cannot join one (`continent-world-attached`). Every such world has a
-stable **door number** (門牌), which is also the code of the continent it opens. Open your door to
-friends in game, or pick a world and enter a friend's door number, or the ENS name of their save, in
-**Worlds → Continent** (a save's name carries its door number). Each
-world keeps its own origin, seed and save. Joining gives it an anchor, and territory belongs to the
-nearest anchor.
-
-- **What crosses:** each world's descriptor, witnessed chunks, notes, and live positions (awareness
-  only, never saved). A note a visitor leaves on your land waits at your door until you choose
-  **Keep it**; then it becomes a note in your world's history, signed by you.
-- **What never crosses:** cartridge bytes, rules, story, errands and foes.
-- **Trust:** nothing is exchanged until a peer's hello matches the continent code, protocol and
-  physics version. After that, every entry is checked on arrival. A peer may write only its own
-  world and chunks, may leave notes on anyone's land, and can never overwrite a chunk or a note.
-- **Signaling:** public y-webrtc servers by default. You can run your own
-  (`PORT=4444 node node_modules/y-webrtc/bin/server.js`) and add it under
-  **Settings → Signaling servers**, where it can be tested before you save.
+- **Worlds outlive their servers.** A world's **More** in **Worlds → My worlds** has
+  **Export .world**, and **Worlds → Join a world → More: join from a .world file** checks a file
+  offline and brings it in (**Bring it in**). If a world's service is gone, import its file into
+  another world service (`bun run service -- import`). The form an owner used to move the world onto
+  that service is no longer shown (the function stays in the code); a friend who gets a move link
+  pastes it in **Join a world** and chooses **Follow the world**. A world or file made with newer
+  physics is refused.
 
 ## Accounts, the allowance and pictures
 
-None of this is needed to play with a local model or your own key. With no gateway configured,
-**Settings → Account** and **Settings → Plan** say so (`gateway-not-configured`), and Settings →
-Model offers no Free allowance.
+None of this is needed to play with a local model or your own key. These settings sit under
+**Settings → Advanced settings**. With no gateway configured, **Account** and **Plan** there say so
+(`gateway-not-configured`), and Settings → Model offers no Free allowance. The account holds only
+this device's allowance on the gateway; it is not your passkey.
 
 - **The generation gateway** (`bun run gateway`) is a metered, OpenAI-compatible endpoint. It is
   separate from the world service and never learns which world a call is for. An account is a set of
@@ -415,12 +481,12 @@ Model offers no Free allowance.
 - **The allowance.** A call reserves credits, then settles on the tokens it used; a cancelled call
   releases its hold. The app shows the allowance as a share, credits, and this computer's calls and
   tokens, never as money. When it runs out, a call is refused (`quota-exhausted`) with its ways out:
-  your own key, a local model, a plan, or the monthly reset. **Settings → Plan** lists the plans of
-  the gateway's billing provider (Stripe); a gateway without one sells nothing
+  your own key, a local model, a plan, or the monthly reset. **Settings → Advanced settings → Plan**
+  lists the plans of the gateway's billing provider (Stripe); a gateway without one sells nothing
   (`billing-not-configured`).
-- **Pictures.** **Settings → Images** chooses who draws: OpenAI, Qwen-Image-2512 or Qwen-Image-2.1 on
-  a server you name (`QWEN_IMAGE_BASE_URL`), or the gateway when you have no image key. Every picture
-  keeps a licence record, and a published revision lists its pictures' licences in
+- **Pictures.** **Settings → Advanced settings → Images** chooses who draws: OpenAI, Qwen-Image-2512
+  or Qwen-Image-2.1 on a server you name (`QWEN_IMAGE_BASE_URL`), or the gateway when you have no
+  image key. Every picture keeps a licence record, and a published revision lists its pictures' licences in
   `assets/licences.json`. **Commercial mode** (`UNMAPPED_COMMERCIAL=1`, or a gateway that says so)
   refuses a provider whose licence does not allow commercial use, and refuses to publish a new
   picture whose licence is non-commercial or unknown. A picture inherited unchanged is listed, not
@@ -472,21 +538,24 @@ is set up.
 - **ENSv2 names for worlds, saves and players (Sepolia).** Everything hangs in one tree under
   `unmapped.eth`: a world is `<label>.unmapped.eth`, a remix sits under its parent's name, a save is
   `<save>.<cartridge>.unmapped.eth`, and a player is `<you>.players.unmapped.eth`; saves and players
-  are held by the player's own passkey account. The names are in the game, not only in menus:
-  right after **Build and play** a world can be named (you pick the label, so a world called 霧之港
-  can be `misty-harbor.unmapped.eth`) and put on the market; the player card shows the run's name;
-  clearing a chapter offers to record the run, or move its name to the new checkpoint, with one
-  passkey signature; and a friend can walk onto your continent by typing your save's name. In
-  **Worlds → Cartridges** a player names, repoints or launches a revision, and **Open by ENS name**
-  follows a name back to the exact revision, or to a save's checkpoint. The records hold only the
-  id, version and content hash (for a save: its sha256, the pinned version, one line of progress and
-  its door number); a backup restored on another machine finds its name by hash.
+  are held by the player's own passkey account. That is the one passkey in
+  **Settings → Your passkey**: one button (**Set up my passkey**) links it, and your player name
+  sits under it. The names are in the game, not only in menus: right after **Build and play** a
+  world can be named (you pick the label, so a world called 霧之港 can be
+  `misty-harbor.unmapped.eth`) and put on the market; the player card leads with the world's name,
+  its ENS name first; clearing a chapter offers to record the run, or move its name to the new
+  checkpoint, with one passkey signature; and a friend joins your world by typing your save's name in
+  **Join a world**. In a world's **More** in **Worlds → My worlds** a player names, repoints or
+  launches a revision and records a run's name, and **Join a world** follows a world's name back to
+  the exact revision (**Play this world**) and a save's name to its join code. The records hold only
+  the id, version and content hash (for a save: its sha256, the pinned version, one line of progress
+  and its join code); a backup restored on another machine finds its name by hash.
 - **Provenance ledger.** [`contracts/src/UnwrittenLedger.sol`](contracts/src/UnwrittenLedger.sol)
   records who published which hash and what it was remixed from, plus short player notes. Content
   never goes on chain.
-- **Light chain for shared worlds (Sepolia).** An owner can choose **Record beats** in the
-  door's **Recorded on a public chain** section. The world service then writes each beat's
-  fingerprint (the world's id, the entry number and hashes) to
+- **Light chain for shared worlds (Sepolia).** An owner can choose **Record it** under
+  **Recorded on a public chain** in the door's **Advanced** part. The world service then writes each
+  beat's fingerprint (the world's id, the entry number and hashes) to
   [`WorldProvenance`](contracts/src/provenance/WorldProvenance.sol) and pays for it; nobody needs a
   wallet, and the app only reads the chain and compares it with its own copy. The contract is
   deployed on Sepolia at [`0xF625…Ef02`](https://sepolia.etherscan.io/address/0xF625ec3c228e3BCE34977C0b7e97BD591291Ef02); set `UNMAPPED_PROVENANCE_*` (see `.env.example`) for the door to
@@ -498,9 +567,10 @@ is set up.
   settled and traded. In **Worlds → Market** a player bids, settles, buys and pays out royalties with
   a passkey. There is no wallet and no ETH, and no key in the app: the passkey owns a small account
   contract, and a gas station (a Cloudflare Worker, `src/relay`) pays for exactly the market's own
-  actions. A world's name holder launches it from the app (**Worlds → Cartridges**, or right after
-  building it); a remix only after its parent, priced in the parent's token. A read-only auction page runs at
-  https://unmapped-auction.gimmychang.workers.dev. See [`docs/demo/lineage-market.md`](docs/demo/lineage-market.md),
+  actions. A world's name holder launches it from the app (a world's **More** in
+  **Worlds → My worlds**, or right after building it); a remix only after its parent, priced in the
+  parent's token. A read-only auction page runs at https://unmapped-auction.gimmychang.workers.dev.
+  See [`docs/demo/lineage-market.md`](docs/demo/lineage-market.md),
   [`docs/plans/lineage-market.md`](docs/plans/lineage-market.md) and
   [`contracts/README.md`](contracts/README.md).
 
@@ -530,7 +600,7 @@ screenshots.
 | ENSv2 cartridge names on Sepolia (the older `ens:setup` parent, since removed) | ✅ verified | [ensv2-cartridge-names](docs/e2e/milestone-ensv2-cartridge-names/result.md) |
 | ENS names in the lineage tree: a remix cartridge, a player's save, its update, a restored backup found by hash | ✅ verified on Sepolia | [lineage-names](docs/e2e/milestone-lineage-names/result.md) |
 | Gas station: no key in the app | ✅ verified (the app flows against the station run locally; the deployed Worker sent a live faucet transaction) | [lineage-relay](docs/e2e/milestone-lineage-relay/result.md) |
-| ENS in the game: naming right after Create (a chosen label for a Chinese name), launching from the app, the name on the player card, recording and moving a run's name after chapters (with its door), a remix from the Remix button named under its parent and launched in its token, a friend joining a continent by a save's name | ✅ verified on Sepolia (a virtual authenticator stood in for Touch ID; the station ran locally from this build); the chapter card's update button was not clicked (the same update went through Saves) | [ens-in-game](docs/e2e/milestone-ens-in-game/result.md) |
+| ENS in the game: naming right after Create (a chosen label for a Chinese name), launching from the app, the name on the player card, recording and moving a run's name after chapters (with its door), a remix from the Remix button named under its parent and launched in its token, a friend joining a continent by a save's name | ✅ verified on Sepolia (a virtual authenticator stood in for Touch ID; the station ran locally from this build); the chapter card's update button was not clicked (the same update went through Saves) (menus renamed since; see above) | [ens-in-game](docs/e2e/milestone-ens-in-game/result.md) |
 | Player names (`<you>.players.unmapped.eth`): claimed with a passkey, shown in place of `0x…` and on a continent; the chapter card's record and update | ✅ verified on Sepolia through the deployed gas station | [ens-players](docs/e2e/milestone-ens-players/result.md) |
 | Lineage market: bid, settle, buy and royalties from the app with a passkey | ✅ verified on Sepolia (a virtual authenticator stood in for Touch ID); three generations in the dry run only | [lineage-demo](docs/e2e/milestone-lineage-demo/result.md) · [lineage-market](docs/e2e/milestone-lineage-market/result.md) |
 | Shared world: a friend joins by invite and walks what you witnessed with 0 model calls; you see their place after a restart, with no call | ✅ verified with a local world service | [p3-offline-visit](docs/e2e/milestone-rev6-p3-offline-visit/result.md) |
@@ -540,7 +610,7 @@ screenshots.
 | Variants (異聞): two offline tellings of one place, one stands and one is kept | ✅ verified | [p3-variant](docs/e2e/milestone-rev6-p3-variant/result.md) |
 | Beats: fog, legends (傳說) and seasons, on a world service and on a world kept on one device; the same fingerprints on the service and both apps; a re-witness of a fogged place | ✅ verified with a test clock (92 days); after a fix the town ring no longer says "fading into mist" | [p3-fog](docs/e2e/milestone-rev6-p3-fog/result.md) · [p3-local-beat](docs/e2e/milestone-rev6-p3-local-beat/result.md) |
 | Rumours bound to real events; uncited or wrong names refused by the service and by the app | ✅ verified; "They say…" read on the owner's device only | [p3-rumors](docs/e2e/milestone-rev6-p3-rumors/result.md) |
-| The door: private, friends and public; one-time invites (used, expired, revoked refused); removing a member | ✅ verified; after a fix main also refuses a removed member's writes before signing, and entries already waiting are listed as refused | [p3-door](docs/e2e/milestone-rev6-p3-door/result.md) |
+| The door: private, friends and public; one-time invites (used, expired, revoked refused); removing a member (menus renamed since; see above) | ✅ verified; after a fix main also refuses a removed member's writes before signing, and entries already waiting are listed as refused | [p3-door](docs/e2e/milestone-rev6-p3-door/result.md) |
 | Gifts: two people take one gift, one gets it, the other's bag is unchanged and says "Someone took it first." | ✅ verified with the gift panel open; the toast with the panel closed not seen | [p3-gift-race](docs/e2e/milestone-rev6-p3-gift-race/result.md) |
 | Presence and emotes in both looks on two machines | ✅ verified; largest step 0.13 tiles per frame at 60 Hz; in the 16-bit look names sit on a plate (fixed after the run) | [p3-presence](docs/e2e/milestone-rev6-p3-presence/result.md) |
 | Backups of a save in a world: restore, a diverged history kept beside, adoption on another device | ✅ verified; witnessing on the adopted world not run with a model | [p3-backup](docs/e2e/milestone-rev6-p3-backup/result.md) |
@@ -557,6 +627,13 @@ screenshots.
 | Phone-sized browser proof: join by invite, the land, walking by touch, notes offline and after a reload, seeing a desktop player | ✅ verified in a headless 375 × 812 browser on the dev page, including a world on the built-in cartridge; no real phone | [p4-mobile-proof](docs/e2e/milestone-rev6-p4-mobile-proof/result.md) |
 | No servers at all: no screen asks for an account; walking, notes, the door with no world service, and `.world` export, offline check and import on a second device | ✅ verified; later, Apple's on-device model (inside the app) wrote Create's world cards, but its 4K context refuses a witness (`model-context-too-small`); llama.cpp and Ollama were not installed | [p4-no-servers](docs/e2e/milestone-rev6-p4-no-servers/result.md) · [integrated-journey](docs/e2e/milestone-rev6-integrated-journey/result.md) |
 | One world through everything: Create → play → share → watch a place written together → co-owner → a phone joins and walks → `.world` to another device → Apple on-device → quit and continue | ✅ verified in one run; 0 renderer errors on six clients; the same 21-entry history on the service and every device; 12 paid calls | [integrated-journey](docs/e2e/milestone-rev6-integrated-journey/result.md) |
+| **Worlds → My worlds** as one list: Start a new adventure first, Resume on every save, Start on every installed world not played yet; inviting friends (from a played world), the ENS name, `.world` export, backup, upgrade, older versions, drafts, remix, `.cartridge` export and launch behind a row's More; restoring a backup and importing a world under the list's More | ✅ verified: the list, Start a new adventure (in Play 2.7 s) and Resume; the actions under More were not clicked in this run | [simplify-one-world](docs/e2e/milestone-simplify-one-world/result.md) |
+| **Worlds → Join a world**'s one field: an ENS name looked up first (a save's name → its join code, a world's name → Play this world), else a join code (bringing one of your worlds), an invite link or a move link; a `.world` file under More | ✅ verified with a join code (joined in 2.2 s through the relay, VPN on); ENS names, invite and move links not run this time | [simplify-play-together](docs/e2e/milestone-simplify-play-together/result.md) |
+| **F12 → Friends** (the console's first tab, and the same blocks at the home door): Invite friends, Join a world, and Friends online with each one's position, whose land they stand on and their distance in steps; the room panel is gone | ✅ verified: invite, join, and friends online with positions that follow the walk | [simplify-play-together](docs/e2e/milestone-simplify-play-together/result.md) · [simplify-one-world](docs/e2e/milestone-simplify-one-world/result.md) |
+| Chat on friends' joined worlds: Enter to talk, verified friends only, 200 characters a line, at most 5 lines per friend per 5 s, memory only | ✅ verified both ways across the relay (VPN on): a line arrives within 0.65 s, typing never walks | [simplify-play-together](docs/e2e/milestone-simplify-play-together/result.md) |
+| Settings with one passkey: Language, Model, Your passkey (one button, the player name under it); Account, Plan, Images, Signaling servers, Shared worlds and build info folded under Advanced settings; the Data Key unlock moved to F12 → World | ✅ verified: the screen and its folds; creating a passkey was not run | [simplify-one-world](docs/e2e/milestone-simplify-one-world/result.md) |
+| Play: the player card's world name (ENS first) and plain Goal line, provider, model, tokens, FPS and seed moved to F12, the first-run How to play card and the dock's How to play button | ✅ verified: Goal line, How to play card and Help button, no machinery on screen | [simplify-one-world](docs/e2e/milestone-simplify-one-world/result.md) |
+| Friends' worlds meet across networks: a TURN relay (the relay service `src/turn` mints short-lived Cloudflare Realtime TURN credentials; `UNMAPPED_TURN_URL`), and "your friend was found, but the connection could not open" when neither side has one | ✅ verified on one machine behind NordVPN: STUN alone never connected; through the relay 2.2 s (`relay/udp turn.cloudflare.com`, RTT 77–141 ms); one side's relay is enough; with none, the message after 22.4 s. Two real networks and the deployed Worker not run yet | [simplify-play-together](docs/e2e/milestone-simplify-play-together/result.md) |
 | Stripe checkout (test mode and live), Qwen-Image on your own GPU endpoint | ⏳ not run; each needs a person | — |
 | Companions | 🚧 in the rules, not yet drawn or followed on the land | — |
 | Windows / Linux | ❔ untested; packaging targets macOS only | — |
@@ -644,14 +721,15 @@ src/
 ├── gateway/     the generation gateway (Bun): device-key accounts, the allowance ledger, upstreams, billing
 ├── browser/     the phone-sized browser proof: its own window.seed, WebCrypto key, IndexedDB, sw.js
 └── renderer/
-    ├── app/        screens and HUD: title, create, play, land, console
+    ├── app/        screens and HUD: title, library, create, play, land, friends, console
     ├── engine2d/   open land: movement, collision, targets, story gates (16-bit canvas)
     ├── hd2d/       three.js HD-2D diorama renderer and the title backdrop
     ├── engine/     R3F scenes for places, combat loop, palettes
     ├── narrative/  witness / chapter / place generation: prompt → chat → parse → repair
     ├── history/    a world's history on this device: the fold, the land drawn from it, writes to main
     ├── mobile/     the phone shell the browser proof mounts: land view, touch pad, notes
-    ├── net/        continents: y-webrtc rooms, gate, signaling; world services; presence
+    ├── net/        continents (friends' joined worlds): y-webrtc rooms, gate, signaling, chat;
+    │               world services; presence
     ├── identity/   passkey PRF, keychain fallback, AES-GCM, ENS name lookup
     ├── works/      AI Worlds sandboxed player
     ├── i18n/       en · zh-TW · ja string tables

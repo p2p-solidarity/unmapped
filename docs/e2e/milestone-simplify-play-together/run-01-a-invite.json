@@ -1,0 +1,66 @@
+{
+ "port": 9335,
+ "actions": [
+  {
+   "cdp": {
+    "method": "Emulation.setFocusEmulationEnabled",
+    "params": {
+     "enabled": true
+    }
+   }
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "世界"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "繼續"
+  },
+  {
+   "repeat": {
+    "times": 30,
+    "until": "(async()=>{const S=await import('/state/index.ts'); return S.useSessionStore.getState().screen==='play'})()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "hold": "F12",
+   "ms": 80
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "邀請朋友"
+  },
+  {
+   "repeat": {
+    "times": 20,
+    "until": "(()=>/等朋友/.test(document.querySelector('[data-layer=console]')?.innerText ?? ''))()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(async()=>{const m=await import('/net/iceServers.ts'); return {relay:m.hasRelay(), code: document.querySelector('[data-layer=console]')?.innerText.match(/加入碼\\n([A-Z0-9]{6})/)?.[1]}})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-play-together/a-01-invite.jpg"
+  }
+ ]
+}

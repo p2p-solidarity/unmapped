@@ -1,0 +1,166 @@
+{
+ "env": {
+  "userData": "fresh empty temporary directory via AETHER_TEST_USER_DATA ($TMPDIR/ud-simplify-a)",
+  "launch": "mkdir -p \"$TMPDIR/ud-simplify-a\" && AETHER_TEST_USER_DATA=\"$TMPDIR/ud-simplify-a\" bun run dev --remoteDebuggingPort 9335",
+  "debugPort": 9335,
+  "locale": "zh-TW (system default)",
+  "build": "main at 845f5f1 (the six simplify commits) plus this run's two fixes (the HUD drops the seed from the world's name; a brand-new world no longer toasts 'brought up to date')",
+  "note": "Port 9333 held another app on the owner's real userData, so this run used 9335. The two fixes landed by HMR mid-run: screenshots 01–03 predate them, 04 onward show them."
+ },
+ "model": "openai · gpt-5.4-mini (a fresh userData's default: Cloud API, key from .env)",
+ "actions": [
+  {
+   "wait": 1500
+  },
+  {
+   "cdp": {
+    "method": "Emulation.setFocusEmulationEnabled",
+    "params": {
+     "enabled": true
+    }
+   }
+  },
+  {
+   "eval": "({lang: document.documentElement.lang, menu:[...document.querySelectorAll('button')].filter(b=>b.offsetParent).map(b=>b.innerText.trim()).slice(0,8)})"
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-one-world/01-title.jpg"
+  },
+  {
+   "clickText": "世界"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "({heading: document.querySelector('h2')?.innerText, buttons:[...document.querySelectorAll('button')].filter(b=>b.offsetParent).map(b=>b.innerText.trim()).slice(0,20)})"
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-one-world/02-my-worlds.jpg"
+  },
+  {
+   "eval": "window.__t0=performance.now(); true"
+  },
+  {
+   "clickText": "開始"
+  },
+  {
+   "repeat": {
+    "times": 30,
+    "until": "(async()=>{const S=await import('/state/index.ts'); return S.useSessionStore.getState().screen==='play' && !!document.querySelector('[data-layer]')})()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); return {ms: Math.round(performance.now()-window.__t0), screen:S.useSessionStore.getState().screen, layers:[...document.querySelectorAll('[data-layer]')].filter(l=>l.getClientRects().length>0).map(l=>({layer:l.getAttribute('data-layer'), text:l.innerText.slice(0,400)})), focus: document.activeElement?.innerText?.slice(0,40)}})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-one-world/03-how-to-play.jpg"
+  },
+  {
+   "clickText": "知道了"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-one-world/04-goal.jpg"
+  },
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "[...document.querySelectorAll('[data-layer]')].filter(l=>l.getClientRects().length>0).map(l=>({layer:l.getAttribute('data-layer'), text:l.innerText.slice(0,900)}))"
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-one-world/05-door.jpg"
+  },
+  {
+   "clickText": "關閉"
+  },
+  {
+   "wait": 500
+  },
+  {
+   "hold": "F12",
+   "ms": 80
+  },
+  {
+   "wait": 900
+  },
+  {
+   "eval": "document.querySelector('[data-layer=console]')?.innerText.slice(0,700)"
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-one-world/06-f12-friends.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 500
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "設定"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "[...document.querySelectorAll('[role=dialog] h2, [role=dialog] h3, [role=dialog] button')].filter(e=>e.offsetParent).map(e=>e.innerText.trim()).slice(0,30)"
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-one-world/07-settings.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 700
+  },
+  {
+   "clickText": "世界"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "加入世界"
+  },
+  {
+   "wait": 900
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-one-world/08-join-a-world.jpg"
+  },
+  {
+   "clickText": "我的世界"
+  },
+  {
+   "wait": 900
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-one-world/09-my-worlds-one-save.jpg"
+  }
+ ]
+}

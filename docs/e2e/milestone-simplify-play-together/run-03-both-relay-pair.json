@@ -1,0 +1,8 @@
+{
+ "port": "9335 then 9336",
+ "actions": [
+  {
+   "eval": "(async()=>{const {getActiveContinent}=await import('/net/continent.ts'); const c=getActiveContinent(); const conn=[...c.provider.room.webrtcConns.values()].find(x=>x.connected); const pc=conn?.peer?._pc; if(!pc) return null; const st=await pc.getStats(); const byId=new Map(); st.forEach(s=>byId.set(s.id,s)); let pair=null; st.forEach(s=>{ if(s.type==='transport' && s.selectedCandidatePairId) pair=byId.get(s.selectedCandidatePairId)}); const l=byId.get(pair?.localCandidateId), r=byId.get(pair?.remoteCandidateId); return {local:l&&(l.candidateType+'/'+l.protocol+' '+(l.url??'')), remote:r&&r.candidateType, rttMs:Math.round((pair?.currentRoundTripTime??0)*1000)}})()"
+  }
+ ]
+}

@@ -1,0 +1,11 @@
+{
+ "port": 9335,
+ "actions": [
+  {
+   "eval": "document.querySelector('[data-layer=console]')?.innerText.split('拉朋友進來')[1]?.slice(0,330)"
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-play-together/a-02-f12-friends.jpg"
+  }
+ ]
+}

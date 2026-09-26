@@ -1,0 +1,32 @@
+{
+ "port": 9336,
+ "actions": [
+  {
+   "hold": "F12",
+   "ms": 80
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "document.querySelector('[data-layer=console]')?.innerText.split('在線的朋友')[1]?.slice(0,120)"
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-play-together/b-03-f12-friends.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 400
+  },
+  {
+   "hold": "KeyA",
+   "ms": 1800
+  },
+  {
+   "wait": 1200
+  }
+ ]
+}

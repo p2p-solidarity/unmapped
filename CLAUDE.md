@@ -40,7 +40,7 @@ read by the main process; `.env` keys are also read in main as a fallback.
 Two optional Bun servers; neither is needed to play (see their sections):
 
 ```bash
-UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8787 --data "$TMPDIR/svc"   # a world service: Settings → Shared worlds → ws://127.0.0.1:8787
+UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8787 --data "$TMPDIR/svc"   # a world service: Settings → Advanced settings → Shared worlds → ws://127.0.0.1:8787
 bun run gateway -- --port 8788 --data "$TMPDIR/gw"                           # the generation gateway: UNMAPPED_GATEWAY_URL=http://127.0.0.1:8788
 ```
 
@@ -124,13 +124,13 @@ view or an account status, never a value. Every `UNMAPPED_*` / `QWEN_IMAGE_*` va
   cannot break the engine.
 
 ### Rule 8. Import direction
-`shared ← dsl ← { main, renderer, service }`; `shared ← gateway`; `shared ← dsl ← renderer ← browser`.
+`shared ← dsl ← { main, renderer, service }`; `shared ← gateway`; `shared ← turn`; `shared ← dsl ← renderer ← browser`.
 `renderer` never imports `main`; `main` never imports `renderer`. `dsl` has no React/Electron
 imports (it must run in vitest, in main and in the service). The world service (`src/service`)
 imports only `@shared` and `@dsl` (verdicts, `.world` files; plus viem and the committed
 `contracts/WorldProvenance.json` for its chain recorder); the gateway (`src/gateway`) only
 `@shared`; the browser proof (`src/browser`) `@shared`, `@dsl` and `@renderer`, never `main`. Nothing in `src/`
-imports `service`, `gateway` or `browser` — only their tests and `scripts/`. `tsconfig.node.json`
+imports `service`, `gateway`, `turn` or `browser` — only their tests and `scripts/`. `tsconfig.node.json`
 compiles main, service, gateway and scripts with an `@main/*` alias, so the compiler does not
 enforce this for service or gateway: check imports by hand. `@main` / `@renderer` also resolve in
 `tsconfig.test.json` and `vitest.config.ts`, for tests only; `tsconfig.browser.json` has no `@main`.
@@ -208,6 +208,7 @@ src/
 ├── gateway/       the generation gateway (Bun): device-key accounts, quota ledger, upstreams, billing/
 ├── browser/       the browser proof (Vite page): its own window.seed, WebCrypto key, IndexedDB, sw.js
 ├── relay/         the lineage market's gas station (Cloudflare Worker)
+├── turn/          the relay service for friends' worlds: mints Cloudflare Realtime TURN credentials (Worker)
 └── renderer/
     ├── app/       screens: title (WorldsScreen), library/ (Worlds), create/, Play (HUD), Console (F12)
     ├── engine2d/  the land and places in 2D (the one engine players see); hd2d/ is the land's HD-2D look
@@ -497,11 +498,26 @@ export function TitleDiorama({ seedText }): JSX.Element;   // App's MenuBackdrop
   workspaces and IPC) was deleted; do not bring it back.
 
 ### Title, Worlds and input (`app/WorldsScreen.tsx`, `app/library/`, `@shared/input`, `renderer/input/`)
-- The title has exactly four entries: Continue · Worlds · Create World · Settings (today's System
-  panel, a `role="dialog"` layer: Language, Model, Account, Plan, Images, Signaling servers, Shared
-  worlds, build info, unlock). Worlds is the `library` screen: sections New game (the built-in
-  world), Saves, Join a world, World files, Cartridges, Continent, Market, and Archive when legacy
-  worlds exist (`library/sections.ts` — a new section is one entry there). Do not add title entries.
+- **The player sees one world, one way to play together, one passkey** (docs/plans/simplify-together.md;
+  the owner's bar: a 70-year-old can play it). Player-visible words: 世界 / world, 加入世界 / Join a
+  world, 邀請朋友 / Invite friends, 加入碼 / join code (the door number), 朋友 / friend, ENS name
+  before any code. 卡帶 / cartridge, 存檔 as a section, 大陸 / continent, 房間 / room and 門牌 never
+  appear in the library, HUD, door or F12; a service address is never shown outside Settings. One
+  obvious button per screen; everything else folds under 更多 / 進階.
+- The title has exactly four entries: Continue · Worlds · Create World · Settings (a `role="dialog"`
+  layer: Language, Model, 你的 passkey, and 進階設定 folded: Account, Plan, Images, Signaling servers,
+  Shared worlds, build info). Worlds is the `library` screen: sections 我的世界 / My worlds (one list:
+  開始新的冒險 = New game on the built-in world, every save → 繼續, every installed world without a
+  save → 開始; all else behind a row's 更多), 加入世界 / Join a world (one field: ENS name first, then
+  a join code, an invite link or a move link; a `.world` file under 更多), Market, and Archive when
+  legacy worlds exist (`library/sections.ts` — a new section is one entry there). Do not add title
+  entries or sections that join or list worlds another way.
+- Play: the player card leads with the world's name (ENS first) and a plain 目標 line
+  (`hud/Goal.tsx`); machinery (provider, model, tokens, FPS, seed, chunk) lives in F12 only. A first
+  run shows `hud/HowToPlay.tsx` (a device preference; the dock's 說明 reopens it). F12 opens on
+  朋友 / Friends: invite, join, and every other player on this land with tile coordinates and
+  distance. On a continent, Enter opens a P2P chat (memory only, verified peers only, never saved).
+  The Data Key unlock lives in F12 → 世界 (it only serves the encrypted legacy export).
 - One action map for keys, pads and touch (`@shared/input`: standard-mapping layout, dead zones, menu
   actions). `useGamepad()` (mounted once in App) polls `navigator.getGamepads()`: in Play with no
   layer open it makes the key each pad action is bound to count as held/pressed in the same
@@ -580,12 +596,12 @@ export function saveFingerprint(instancesDir, instanceId, cartridgesDir?): Resul
   ABC234`, `@shared/doorCode`), written with `describe` whenever it differs.
 - A save's fingerprint is sha256 of canonical JSON of what a `.spire-backup` carries (save state
   without `updatedAt`, karma, written land), never ids or paths, so a restored backup hashes the same;
-  Worlds → Saves finds an existing save name by that hash (`SaveRecorded` logs), else the newest one
+  Worlds → My worlds (a save row's 更多) finds an existing save name by that hash (`SaveRecorded` logs), else the newest one
   this passkey holds. Progress is one English line from real state ("2 chapters cleared · 14 deeds";
   a history-mode save's clears in progress.json count too).
 - **Player names.** The registry has no player kind: the operator registered the directory
   `players.<root>` once (`bun run lineage:demo players`), and a player's name is a `recordSave` under it
-  whose `unwritten.save` is the sha256 of the passkey's public key. One per account. Worlds → Market
+  whose `unwritten.save` is the sha256 of the passkey's public key. One per account. Settings → 你的 passkey and Worlds → Market
   shows it in place of `0x…`, "Use as my player name" makes it the name others see on a continent, and
   every holder/owner line shows player names (`playerNames`).
 - **Launch from the app.** The holder of a current cartridge name puts it on the market
@@ -595,8 +611,8 @@ export function saveFingerprint(instancesDir, instanceId, cartridgesDir?): Resul
   cleared, a card offers to move the save's name to the new checkpoint (or record it) with one passkey
   signature. Create's last step offers to name the new world before entering it. A friend's door field
   takes a door number or a save's ENS name (its door comes from `description`).
-- Worlds → Cartridges shows each revision's name (free / this version / the player's, older / someone
-  else's, other version / another cartridge), names, repoints or launches it; "Open by ENS name" follows
+- Worlds → My worlds (a row's 更多) shows each revision's name (free / this version / the player's, older / someone
+  else's, other version / another cartridge), names, repoints or launches it; Join a world's field follows
   a name back to a revision, and a save's name to its checkpoint. `ENSV2_SEPOLIA` (`ensCalls.ts`) is the
   deployment the Universal Resolver walks today (`ens_v2_sepolia_20260916`); this build's resolver takes
   DNS-encoded names. The older `ens:setup` parent and the F12 `aether.seed` lookup were removed.
@@ -673,14 +689,18 @@ export function useContinentSync(continent): void;   // publish own world, read 
   land, and never overwrites a chunk or a note), then zod-checked and re-parsed by the DSL.
 - Signaling (`net/signaling.ts`): `signalingServers()` — the per-device list in localStorage
   `unwritten.signaling` (ws/wss URLs, e.g. y-webrtc's bundled server for a two-process E2E), else
-  `DEFAULT_SIGNALING`; Settings → Signaling servers views, tests (`probeSignaling`: a real
+  `DEFAULT_SIGNALING`; Settings → Advanced settings → Signaling servers views, tests (`probeSignaling`: a real
   publish relayed between two sockets), saves and resets it. A continent retries a handshake stuck
   for 12 s (`retryStuckSignaling`) and, with no server and no verified peer for 20 s, shows the
-  error `continent-signaling-unreachable` until one answers. Cartridge bytes, rules, story,
+  error `continent-signaling-unreachable` until one answers. Peer connections take `iceServers` from
+  main (`net/ice.ts` → `net/iceServers.ts`): public STUN, plus short-lived Cloudflare Realtime TURN
+  credentials from the relay service (`src/turn`, `UNMAPPED_TURN_URL`), so friends behind a VPN, a
+  strict NAT or a firewall still meet; the Worker keeps the TURN API token. A friend found through
+  signaling whose connection has not opened for 20 s shows `continent-peer-unreachable`. Cartridge bytes, rules, story,
   errands and foes never cross; worlds from different cartridges can merge. Positions ride awareness
   in continent tiles. `landModel`/renderers take an optional `TerritoryMap` so each territory is
   drawn and collided with its owner's seed. Offset markers + foreign doors: `engine2d/continentLayer.ts`.
-- The old same-cartridge session room (`room.ts`/`sync.ts`/`RoomPanel`) is only for bounded scenes and
+- The old same-cartridge session room (`room.ts`/`sync.ts`/`RoomPanel`, no longer reachable from the UI) is only for bounded scenes and
   refuses open land (`room-open-land`). `patches/y-webrtc@10.3.0.patch`: the lower peer id alone
   initiates (upstream glare left one-way data channels).
 
@@ -777,7 +797,7 @@ export function landFromHistory(now: WorldNow, legacy?): LandFromHistory;   seen
   Chapters claim `chapter:eN`, rumor batches `rumors:<beat>`. Walking never waits for this.
 - Every view (marks, traces, "They say…" rumor rows, mist, season tint) skips hidden events.
   Presence (`net/worldPresence.ts`) is attached + online + in Play only, emotes on T / LB, never saved.
-- The rumor switch (Settings → Shared worlds) is on for the owner, off for members, and off
+- The rumor switch (Settings → Advanced settings → Shared worlds) is on for the owner, off for members, and off
   whenever the route would be hosted: an allowance is never spent in the background by default.
 
 ### `src/gateway` (the generation gateway, Bun)
@@ -815,9 +835,9 @@ export async function routeFor(config: InferenceConfig, deps: RouteDeps): Promis
   ways out). A silent reroute would change who pays and which model writes the world.
 - `endpointFor` (`keys.ts`) is the only source of a key's endpoint. The gateway URL is
   `UNMAPPED_GATEWAY_URL`, else the baked `GATEWAY_URL` (null: dev builds have no gateway).
-- Settings → Account signs in with the device key (token in `provider-keys/hosted.key`). A 401 on a
+- Settings → Advanced settings → Account signs in with the device key (token in `provider-keys/hosted.key`). A 401 on a
   saved token deletes exactly that record, so a `.env` token is used next; `.env` is never deleted.
-  Settings → Plan is `ready` or `error`, never `idle`; checkout opens the system browser
+  Settings → Advanced settings → Plan is `ready` or `error`, never `idle`; checkout opens the system browser
   (`UNMAPPED_BILLING_BROWSER=none` only logs the URL).
 
 ### Images and licences (`src/main/images`, `@shared/{images,licence}`)
@@ -849,7 +869,7 @@ window.seed.bundle.{ list(), export(worldId), inspect(), import(token, name), mo
 - `world.json`'s `protocol` is what the packed log's fold needs (`protocolFor`), not the build's:
   a file stating less than its history needs is refused (`bundle-protocol-understated`), one stating
   more is accepted (files exported before this rule all say 2 and are signed).
-- Import (Worlds → World files) is `join` from a file: the log by the backup rule, a save pinned to
+- Import (Worlds → Join a world → 更多 → .world) is `join` from a file: the log by the backup rule, a save pinned to
   the genesis revision, seed, language and physics (`import-physics-pin`), then `ensure`.
 - Bringing a world back: `service -- import` serves a mirror; an owner or co-owner rehosts with
   `world.attach` (old receipts still verify); members follow `unmapped://world?w=<id>&svc=<url>`,
@@ -889,6 +909,7 @@ window.seed.bundle.{ list(), export(worldId), inspect(), import(token, name), mo
 | Var | Read by | Meaning |
 | --- | --- | --- |
 | `UNMAPPED_GATEWAY_URL`, `UNMAPPED_GATEWAY_KEY` | main (`inference/config.ts`, `keys.ts`) | the gateway; a `.env` account token (fallback) |
+| `UNMAPPED_TURN_URL` | main (`net/ice.ts`) | the relay service (src/turn) that mints TURN credentials for friends' worlds; empty = STUN only |
 | `UNMAPPED_COMMERCIAL` | main (`images/commercial.ts`) | `1` = commercial mode |
 | `QWEN_IMAGE_BASE_URL`, `QWEN_IMAGE_API_KEY` | main (`inference/keys.ts`) | the Qwen-Image server and its key (fallback) |
 | `UNMAPPED_PROVENANCE_RPC_URL` / `_ADDRESS` / `_CHAIN_ID` | main (`chain/provenance.ts`) | read-only light chain |

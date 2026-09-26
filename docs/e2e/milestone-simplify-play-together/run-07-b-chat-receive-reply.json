@@ -1,0 +1,52 @@
+{
+ "port": 9336,
+ "actions": [
+  {
+   "repeat": {
+    "times": 40,
+    "until": "(async()=>{const S=await import('/state/index.ts'); return S.useChatStore.getState().lines.length>0})()",
+    "actions": [
+     {
+      "wait": 100
+     }
+    ]
+   }
+  },
+  {
+   "eval": "Date.now()"
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); return S.useChatStore.getState().lines.map(l=>({name:l.name??null, text:l.text}))})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-play-together/b-04-chat-received.jpg"
+  },
+  {
+   "eval": "(async()=>{const p=(await import('/engine/playerProbe.ts')).samplePlayer(); window.__before=[p.x,p.z]; return true})()"
+  },
+  {
+   "hold": "Enter",
+   "ms": 60
+  },
+  {
+   "wait": 400
+  },
+  {
+   "type": "聽得到！wasd 不會亂走"
+  },
+  {
+   "hold": "KeyD",
+   "ms": 800
+  },
+  {
+   "eval": "(async()=>{const p=(await import('/engine/playerProbe.ts')).samplePlayer(); return {moved: Math.hypot(p.x-window.__before[0], p.z-window.__before[1]).toFixed(3)}})()"
+  },
+  {
+   "hold": "Enter",
+   "ms": 60
+  },
+  {
+   "wait": 300
+  }
+ ]
+}

@@ -1,0 +1,60 @@
+{
+ "port": 9336,
+ "actions": [
+  {
+   "cdp": {
+    "method": "Emulation.setFocusEmulationEnabled",
+    "params": {
+     "enabled": true
+    }
+   }
+  },
+  {
+   "clickText": "世界"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "加入世界"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(()=>{const f=[...document.querySelectorAll('input')].find(i=>i.offsetParent); f.focus(); return true})()"
+  },
+  {
+   "type": "K96S2G"
+  },
+  {
+   "wait": 900
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-play-together/b-01-join-code.jpg"
+  },
+  {
+   "eval": "window.__t0=performance.now(); true"
+  },
+  {
+   "clickText": "加入"
+  },
+  {
+   "repeat": {
+    "times": 120,
+    "until": "(async()=>{const {getActiveContinent}=await import('/net/continent.ts'); const c=getActiveContinent(); return !!c && [...c.gate.verifiedWorlds()].length>0})()",
+    "actions": [
+     {
+      "wait": 250
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(async()=>{const {getActiveContinent}=await import('/net/continent.ts'); const c=getActiveContinent(); return {ms:Math.round(performance.now()-window.__t0), peers:c?.peerCount(), verified:c?[...c.gate.verifiedWorlds()].length:null}})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-play-together/b-02-joined.jpg"
+  }
+ ]
+}

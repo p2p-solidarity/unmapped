@@ -1,0 +1,38 @@
+{
+ "port": 9335,
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "hold": "Enter",
+   "ms": 60
+  },
+  {
+   "wait": 400
+  },
+  {
+   "type": "你好！我是阿公，聽得到嗎？"
+  },
+  {
+   "eval": "window.__sentAt=Date.now(); true"
+  },
+  {
+   "hold": "Enter",
+   "ms": 60
+  },
+  {
+   "wait": 300
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-play-together/a-03-chat-sent.jpg"
+  },
+  {
+   "eval": "window.__sentAt"
+  }
+ ]
+}
