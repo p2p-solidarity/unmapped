@@ -39,3 +39,10 @@ export const LAND_2D_PALETTE = {
   continent: "#9fd8c8",
   remote: "#ffe29a",
 } as const;
+
+/**
+ * The season of the world's last beat (rev 6 phase 3, D13), as a colour the 16-bit canvas
+ * multiplies into the day's wash: spring fresh, summer warm, autumn amber, winter cold and pale.
+ * Indexed by season (0 spring … 3 winter); a land without a history is not tinted.
+ */
+export const LAND_2D_SEASON = ["#f1faea", "#fff4dc", "#ffe0bd", "#e2ebfa"] as const;

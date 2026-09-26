@@ -20,7 +20,7 @@ import { sceneForRun } from "../engine/combat/encounter";
 import { behaviorForKit, LEGACY_TPS_KIT, resolveSceneKit } from "../engine/kits/registry";
 import { landTargets } from "../engine/landTargets";
 import { registerPlayerProbe, registerPoseProbe } from "../engine/playerProbe";
-import { getRemotePlayers } from "../engine/remoteRoster";
+import { sampleRemotePlayers } from "../engine/remoteRoster";
 import { nearestTarget, sceneTargets, triggersWithin, triggerTarget } from "../engine/targets";
 import { isSprinting, matchesAction, moveAxis, useKeys } from "../engine/useKeys";
 import { loadAtlases } from "./atlases";
@@ -32,6 +32,7 @@ import { canStandAt } from "./landModel";
 import { hd2dSurface, type LandSurface, pixelSurface } from "./landSurface";
 import { placeTargets } from "./placeLayer";
 import { type StoryView, storyTargets } from "./storyLayer";
+import { useTraceFrame } from "./traceLayer";
 import { useLandCombat } from "./useLandCombat";
 import { findPath, type Point, type Route, STUCK_SECONDS, steer } from "./walkTo";
 
@@ -127,6 +128,7 @@ export function LandView2D({
     () => continentMarkers({ anchor, self, worlds }),
     [anchor, self, worlds],
   );
+  const traces = useTraceFrame();
   const opened = useEngineStore((state) => state.openedTreasures);
   const teleport = useEngineStore((state) => state.teleport);
   const [atlases, setAtlases] = useState<SpriteAtlases | null>(null);
@@ -312,6 +314,7 @@ export function LandView2D({
     progress,
     story,
     targets,
+    traces,
   });
   live.current = {
     chapter,
@@ -327,6 +330,7 @@ export function LandView2D({
     progress,
     story,
     targets,
+    traces,
   };
 
   useEffect(() => {
@@ -479,8 +483,9 @@ export function LandView2D({
         chapter: state.chapter,
         goal: route.current?.points.at(-1) ?? null,
         land: state.land,
-        others: getRemotePlayers(),
+        others: sampleRemotePlayers(now),
         continent: state.continent,
+        traces: state.traces,
         light: landLightAt(position.x, position.z, now),
         now,
       });

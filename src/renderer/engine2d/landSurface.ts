@@ -11,6 +11,7 @@ import { createHd2dRenderer } from "../hd2d/renderer";
 import { type Player2D, renderLandFrame, type SpriteAtlases } from "./canvasRenderer";
 import type { DayLight } from "./dayClock";
 import type { StoryMarker, StoryView } from "./storyLayer";
+import type { TraceFrame } from "./traceLayer";
 import type { Foe, ShotTrace } from "./useLandCombat";
 
 export interface SurfaceFrame {
@@ -38,6 +39,8 @@ export interface SurfaceFrame {
   others: readonly RemotePlayer[];
   /** Offset markers and doors of the continent's worlds. */
   continent: readonly StoryMarker[];
+  /** Mist, signposts and gifts from the world's history. */
+  traces?: TraceFrame;
   light: DayLight;
   now: number;
 }
@@ -112,6 +115,7 @@ export function hd2dSurface(
         land: frame.land,
         others: frame.others,
         continent: frame.continent,
+        traces: frame.traces,
         light: frame.light,
         focus: frame.player,
         player: frame.player,

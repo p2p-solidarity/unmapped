@@ -18,6 +18,7 @@ import { MARKET } from "./market";
 import { MODEL } from "./model";
 import type { Phrase } from "./phrase";
 import { PLACE_VIEW } from "./placeView";
+import { RUMORS } from "./rumors";
 import { TITLE } from "./title";
 import { TOGETHER } from "./together";
 import { TRACES } from "./traces";
@@ -42,6 +43,7 @@ export const STRINGS = {
   market: MARKET,
   model: MODEL,
   placeView: PLACE_VIEW,
+  rumors: RUMORS,
   title: TITLE,
   together: TOGETHER,
   traces: TRACES,

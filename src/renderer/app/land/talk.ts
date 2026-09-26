@@ -1,8 +1,13 @@
 // Talking on open land reads words that were written when the place was witnessed. There is no
 // model call here and never will be (plan.md §1.4): a resident whose words were never written says
 // so honestly instead of improvising.
+//
+// A resident also passes on the news (rev 6 phase 3, D14): the live rumors a beat gave them to
+// tell, read from the world's history as stored words — "They say…" under what they say, still
+// with no model call (`rumorsHeardBy`, shown by RumorRow).
 
 import { parseDialogue } from "@dsl";
+import { type RumorView, rumorsFor } from "@renderer/history";
 import {
   foreignAt,
   useContinentStore,
@@ -11,18 +16,50 @@ import {
   useWorldStore,
 } from "@renderer/state";
 import { dialogueKey } from "@shared/cartridge";
-import { chunkKey } from "@shared/chunks";
+import { type ChunkCoord, chunkKey } from "@shared/chunks";
+import type { WorldNow } from "@shared/history/types";
 import { parseLandTarget } from "@shared/land";
 import { errored, ready } from "@shared/result";
 
 const UNWRITTEN_HINT =
   "Residents' words are written once, when their place is witnessed; talking never asks the model.";
 
+/** Where a resident lives and who they are: a witnessed one's land target, else chunk (0, 0). */
+function residentOf(npcId: string): { coord: ChunkCoord; id: string } {
+  const target = parseLandTarget(npcId);
+  return { coord: target?.coord ?? { cx: 0, cz: 0 }, id: target?.npcId ?? npcId };
+}
+
+/** How many rumors a resident passes on at once, newest first. */
+export const RUMORS_TOLD = 3;
+
+/**
+ * What a resident has heard (D14): the live rumors whose slot names them as the listener, newest
+ * beat first, from the stored words alone. A resident of another world's land (a continent) tells
+ * none, and neither does one whose home was witnessed anew after the beat chose its listener:
+ * someone else lives there now, whatever their id.
+ */
+export function rumorsHeardBy(
+  npcId: string,
+  rumors: readonly RumorView[],
+  now: WorldNow | null,
+): RumorView[] {
+  if (now === null || rumors.length === 0) return [];
+  const { coord, id } = residentOf(npcId);
+  if (foreignAt(coord) !== null) return [];
+  const home = now.chunks[chunkKey(coord)];
+  if (home === undefined) return [];
+  const upTo = new Map(now.beats.map((beat) => [beat.id, beat.body.upTo]));
+  return rumorsFor(rumors, coord, id)
+    .filter((rumor) => home.live.n <= (upTo.get(rumor.beat) ?? -1))
+    .slice(0, RUMORS_TOLD);
+}
+
 /** Opens the stored dialogue of `npcId` (a witnessed resident or an authored one on open land). */
 export function talkOnLand(npcId: string): void {
   const session = useSessionStore.getState();
   const target = parseLandTarget(npcId);
-  const coord = target?.coord ?? { cx: 0, cz: 0 };
+  const coord = residentOf(npcId).coord;
   const key = chunkKey(coord);
   // On a continent, a resident of another world's land speaks the words its owner's world wrote.
   const foreign = foreignAt(coord) !== null;

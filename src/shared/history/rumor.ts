@@ -3,7 +3,7 @@
 // code-unit comparisons and ASCII-only case folding (D4): the service and every client judge a
 // rumor the same way.
 //
-// Slots: events in (previous beat, upTo] of the kinds in RUMOR_KINDS, written by the owner or a
+// Slots: events in (previous beat, upTo] of the kinds in RUMOR_KINDS, written by an owner or a
 // member, live, not hidden, not pending — never notes or gifts, so no player-typed text or
 // player-made item name reaches an NPC's mouth — ranked by (kind priority, n); the first six with
 // a listener are taken. The listener is a resident of a standing chunk 1–3 rings from where it
@@ -65,10 +65,13 @@ function listeners(now: WorldNow, where: ChunkCoord, fog: ReadonlySet<string>): 
   return out.sort((a, b) => a.cx - b.cx || a.cz - b.cz || compareText(a.npc, b.npc));
 }
 
-/** Whether an event may be retold: live, shown, shared, by the owner or a member, still standing. */
+/**
+ * Whether an event may be retold: live, shown, shared, by an owner (the genesis author, or a
+ * co-owner: phase 4 D5) or a member, still standing.
+ */
 function retellable(now: WorldNow, ref: EventRef): boolean {
   if (ref.status !== "live" || ref.pending || now.hidden[ref.id] === true) return false;
-  if (ref.author !== now.owner && now.members[ref.author] === undefined) return false;
+  if (now.owners[ref.author] === undefined && now.members[ref.author] === undefined) return false;
   if (ref.kind !== "witness" || ref.where === null) return true;
   const chunk = now.chunks[chunkKey(ref.where)];
   return chunk !== undefined && chunk.live.id === ref.id && chunkStands(now, chunk);

@@ -11,6 +11,7 @@
 // §1.4). The model-resolved path above is left to bounded scenes and the legacy archive.
 
 import { ErrandActions } from "@renderer/app/land/ErrandActions";
+import { RumorRow } from "@renderer/app/land/RumorRow";
 import { errorLine, useT } from "@renderer/i18n";
 import { startDialogue } from "@renderer/narrative/dialogue";
 import { persistProgress } from "@renderer/narrative/persist";
@@ -184,6 +185,7 @@ export function DialogueCard() {
         {ready !== null ? (
           <div style={columnStyle}>
             <Text variant="bodyLarge">{ready.line}</Text>
+            {witnessed && !inPlace ? <RumorRow npcId={npcId} /> : null}
             {witnessed && !inPlace ? <ErrandActions npcId={npcId} /> : null}
 
             {resolving !== null ? (

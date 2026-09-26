@@ -18,8 +18,8 @@ export {
   MOOD_TINT,
   WATER_LIGHT,
 } from "./daylight";
-export { HD2D_GRADE, HD2D_PALETTE } from "./hd2d";
-export { LAND_2D_PALETTE } from "./land2d";
+export { HD2D_GRADE, HD2D_PALETTE, HD2D_SEASON } from "./hd2d";
+export { LAND_2D_PALETTE, LAND_2D_SEASON } from "./land2d";
 export { MONSTER_LOOK, type MonsterLook, type MonsterShape } from "./monsters";
 export {
   type GeoKey,

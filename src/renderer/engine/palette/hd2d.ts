@@ -56,3 +56,16 @@ export const HD2D_GRADE = {
   saturation: 1.12,
   vignette: 0.38,
 } as const;
+
+/**
+ * The season of the world's last beat (rev 6 phase 3, D13) over the diorama: each colour
+ * multiplies one part of the day's light — the air (haze, fog and sky fill), the sun, and the
+ * bounced ground fill. Indexed by season (0 spring … 3 winter); a land without a history keeps
+ * the day's light as it is.
+ */
+export const HD2D_SEASON = [
+  { air: "#eef8ea", sun: "#f6ffea", ground: "#e8f6d8" },
+  { air: "#fff6e2", sun: "#fff2d8", ground: "#fff0d0" },
+  { air: "#ffe6c8", sun: "#ffe2bc", ground: "#f4d2a8" },
+  { air: "#e6eef8", sun: "#e8eeff", ground: "#dde6f2" },
+] as const;

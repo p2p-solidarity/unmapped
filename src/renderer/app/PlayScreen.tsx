@@ -23,6 +23,7 @@ import { useErrandArrivals } from "./land/errands";
 import { ForeignDoorCard } from "./land/ForeignDoorCard";
 import { NotePanel } from "./land/NotePanel";
 import { OtherworldLayer } from "./land/OtherworldLayer";
+import { useRumorBatch } from "./land/rumors";
 import { useWitness } from "./land/witness";
 import { TweakPanel } from "./TweakPanel";
 import { runBlocksPlay } from "./useInputLock";
@@ -99,6 +100,7 @@ export function PlayScreen() {
   useWorldVisits();
   useWorldLink();
   useWitness();
+  useRumorBatch();
   useErrandArrivals();
 
   // Losing on a generated floor: it regenerates identically from the save, so retrying is honest.

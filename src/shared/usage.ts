@@ -24,6 +24,8 @@ export const USAGE_PURPOSES = [
   "tweak",
   "work",
   "image",
+  /** A beat's rumor batch (rev 6 phase 3, D14): one call, and its repairs, per beat at most. */
+  "rumor",
 ] as const;
 export type UsagePurpose = (typeof USAGE_PURPOSES)[number];
 

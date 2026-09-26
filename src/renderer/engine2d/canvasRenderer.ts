@@ -19,8 +19,11 @@ import type { DayLight, Rgb } from "./dayClock";
 import { keepsakeItems } from "./keepsakes";
 import { cachedTerrain, landTileAt } from "./landModel";
 import { drawRift, placeMarkers } from "./placeLayer";
+import { drawPresencePixel } from "./presenceLayer";
 import { drawPropShape } from "./propShapes";
+import { seasonLight } from "./seasonTint";
 import { drawStoryCompass, type StoryMarker, type StoryView, storyMarkers } from "./storyLayer";
+import { drawMistPixel, type TraceFrame, traceItemsPixel } from "./traceLayer";
 import type { Foe, ShotTrace } from "./useLandCombat";
 
 export type SpriteAtlases = Record<AtlasId, HTMLImageElement | HTMLCanvasElement>;
@@ -61,6 +64,8 @@ export interface LandFrame {
   others?: readonly RemotePlayer[];
   /** Offset markers and doors of the continent's worlds. */
   continent?: readonly StoryMarker[];
+  /** Mist, signposts and gifts from the world's history (./traceLayer). */
+  traces?: TraceFrame;
   now: number;
   light?: DayLight;
 }
@@ -105,15 +110,17 @@ export function renderLandFrame(frame: LandFrame): void {
   items.sort((a, b) => a.z - b.z);
   for (const item of items) item.draw();
   drawShot(frame, transform);
+  drawMistPixel(frame);
   drawVignette(ctx, width, height);
   if (frame.light !== undefined) {
     ctx.save();
     ctx.globalCompositeOperation = "multiply";
-    ctx.fillStyle = cssRgb(frame.light.wash);
+    ctx.fillStyle = cssRgb(seasonLight(frame.light).wash);
     ctx.fillRect(0, 0, width, height);
     ctx.restore();
   }
   if (frame.story !== null) drawStoryCompass(ctx, width, height, tileSize, player, frame.story);
+  drawPresencePixel(frame);
 }
 
 function drawGround(frame: LandFrame, transform: ScreenTransform): void {
@@ -279,6 +286,7 @@ function collectScenery(frame: LandFrame, transform: ScreenTransform): DrawItem[
     pushMarker(items, frame, transform, x, z, LAND_2D_PALETTE.door, "門");
   }
   items.push(...keepsakeItems(frame, transform));
+  items.push(...traceItemsPixel(frame));
   const places = placeMarkers(frame.places ?? []);
   // An otherworld's rift lies on the ground: under its crest and anyone standing on it.
   for (const rift of places) {

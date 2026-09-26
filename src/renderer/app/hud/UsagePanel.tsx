@@ -30,6 +30,7 @@ const PURPOSE_LABEL: Record<UsagePurpose, StringKey> = {
   tweak: "usage.purposeTweak",
   work: "usage.purposeWork",
   image: "usage.purposeImage",
+  rumor: "rumors.usagePurpose",
 };
 
 const OUTCOME_LABEL: Record<UsageOutcome, StringKey> = {

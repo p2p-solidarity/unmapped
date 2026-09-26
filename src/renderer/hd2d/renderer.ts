@@ -9,6 +9,9 @@ import { HD2D_PALETTE, LAND_2D_PALETTE } from "../engine/palette";
 import type { RemotePlayer } from "../engine/remoteRoster";
 import { type Player2D, SHOT_TRACE_MS, type SpriteAtlases } from "../engine2d/canvasRenderer";
 import type { DayLight, Rgb } from "../engine2d/dayClock";
+import { drawPresenceHd2d } from "../engine2d/presenceLayer";
+import { withSeason } from "../engine2d/seasonTint";
+import { drawTracesHd2d, type TraceFrame } from "../engine2d/traceLayer";
 import type { ShotTrace } from "../engine2d/useLandCombat";
 import { ACTOR_COLUMN, ACTOR_FRAME, WALK_FRAMES } from "./assets";
 import { createCloudShade } from "./clouds";
@@ -40,6 +43,8 @@ export interface Hd2dFrame extends LandSource {
   goal?: { x: number; z: number } | null;
   /** Other players on the continent, in this world's tiles. */
   others?: readonly RemotePlayer[];
+  /** Mist, signposts and gifts from the world's history (engine2d/traceLayer). */
+  traces?: TraceFrame;
   now: number;
   light?: DayLight;
 }
@@ -221,7 +226,8 @@ export function createHd2dRenderer(
   };
 
   return {
-    render(frame) {
+    render(input) {
+      const frame = withSeason(input);
       resize(frame.width, frame.height);
       if (frame.light !== undefined) {
         const light = frame.light;
@@ -318,6 +324,8 @@ export function createHd2dRenderer(
           frame.goal ?? null,
           seconds,
         );
+        drawTracesHd2d(overlay, camera, size, frame);
+        drawPresenceHd2d(overlay, camera, size, frame);
       }
     },
     // A ray from the camera through the click, onto the ground plane (plateaus and basins are

@@ -3,8 +3,14 @@
 // challenge), save and clear. The door offers these when its owner shares a world; a world already
 // shared keeps the service it was shared on.
 //
-// One row per concern, each its own section below the list.
+// One row per concern, each its own section below the list. WP7 appends the rumor switch here.
 
+import {
+  type RumorChoice,
+  rumorChoice,
+  setRumorSwitch,
+  useRumorChoice,
+} from "@renderer/app/land/rumors";
 import { formatNumber, useT } from "@renderer/i18n";
 import {
   parseServiceList,
@@ -163,6 +169,46 @@ function ServiceList(): JSX.Element {
   );
 }
 
+/**
+ * WP7 (rev 6 phase 3, D14): whether this device writes a shared world's rumors in the background,
+ * with its own model and key. A per-device preference: auto (on for the worlds this device owns, off
+ * for the others), or the player's own on / off.
+ */
+function RumorSwitch(): JSX.Element {
+  const t = useT();
+  const choice = useRumorChoice();
+  const [error, setError] = useState<AppError | null>(null);
+  const pick = (next: RumorChoice): void => {
+    if (next === rumorChoice()) return;
+    const saved = setRumorSwitch(next);
+    setError(saved.ok ? null : saved.error);
+  };
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: space.xs }}>
+      <Text variant="label">{t("rumors.switchHeading")}</Text>
+      <Text variant="caption" tone="dim">
+        {t("rumors.switchIntro")}
+      </Text>
+      <div style={{ display: "flex", gap: space.xs, alignItems: "center", flexWrap: "wrap" }}>
+        <Text variant="body">{t("rumors.switchLabel")}</Text>
+        <Button variant="chip" active={choice === "auto"} onClick={() => pick("auto")}>
+          {t("rumors.switchAuto")}
+        </Button>
+        <Button variant="chip" active={choice === "off"} onClick={() => pick("off")}>
+          {t("rumors.switchOff")}
+        </Button>
+        <Button variant="chip" active={choice === "on"} onClick={() => pick("on")}>
+          {t("rumors.switchOn")}
+        </Button>
+      </div>
+      <Text variant="caption" tone="muted">
+        {t("rumors.switchNote")}
+      </Text>
+      {error === null ? null : <ErrorBlock error={error} />}
+    </div>
+  );
+}
+
 export function SharedWorldsPanel(): JSX.Element {
   const t = useT();
   return (
@@ -172,6 +218,7 @@ export function SharedWorldsPanel(): JSX.Element {
         {t("world.servicesIntro")}
       </Text>
       <ServiceList />
+      <RumorSwitch />
     </section>
   );
 }
