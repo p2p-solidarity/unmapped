@@ -1,0 +1,16 @@
+{
+  "step": "12",
+  "app": "OpenAI run",
+  "port": 9340,
+  "what": "Worlds → Start (New game on the built-in world) → Play. The origin chunk (0,0) is witnessed on entry and chapter 1 (e1, gate at chunk (2,0)) is written in the background; wait for both and read the origin witness and chapter 1's people",
+  "actions": [
+    {"clickText": "Worlds"},
+    {"wait": 1200},
+    {"clickText": "Start"},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); window.__w0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance && S.useLandStore.getState().progress !== null) return { ms: Date.now() - window.__w0, language: S.useWorldStore.getState().genesis?.language }; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + S.useSessionStore.getState().screen })()"},
+    {"repeat": {"times": 240, "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['0,0']; const e1 = S.useLandStore.getState().progress?.episodes?.e1?.stage; return c !== undefined && c.status !== 'writing' && e1 !== undefined && e1 !== null })()", "actions": [{"wait": 500}]}},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); const E = await import('/engine2d/chapterLayer.ts'); const st = S.useLandStore.getState(); const c = st.chunks['0,0']; const e1 = st.progress?.episodes?.e1?.stage; const ch = e1 ? E.readChapter(e1.source) : null; return JSON.stringify({ ms: Date.now() - window.__w0, origin: { status: c?.status, name: c?.scene?.name ?? null, residents: c?.scene?.npcs?.map(n => n.name) ?? null }, chapter1: e1 ? { kind: e1.kind, name: ch?.name ?? null, people: ch?.npcs?.map(n => n.name) ?? null } : null, lore: st.lore.map(n => n.kind + ': ' + n.label) }) })()"},
+    {"wait": 600},
+    {"shot": "docs/e2e/milestone-rev6-witness-names-4k/12-openai-origin-and-chapter.jpg"}
+  ]
+}

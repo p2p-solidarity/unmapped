@@ -38,6 +38,10 @@ export interface TurnInput {
   grammar?: string | null;
   /** The answer's program shape (Apple's on-device model decodes against it); never with tools. */
   program?: ProgramShape;
+  /** The answer's JSON Schema (Apple's on-device model decodes against it); never with tools. */
+  schema?: Record<string, unknown>;
+  /** The least answer the turn can use; a small local context refuses the call below it. */
+  minTokens?: number;
   onDelta?(text: string): void;
 }
 
@@ -88,6 +92,8 @@ export async function runTurn(input: TurnInput): Promise<Result<TurnResult>> {
         // llama.cpp refuses a grammar together with tools, and a tool turn needs tools.
         grammar: schemas.length === 0 ? (input.grammar ?? null) : null,
         ...(schemas.length === 0 && input.program !== undefined ? { program: input.program } : {}),
+        ...(schemas.length === 0 && input.schema !== undefined ? { schema: input.schema } : {}),
+        ...(input.minTokens === undefined ? {} : { minTokens: input.minTokens }),
         stop: [],
         tools: schemas,
       },

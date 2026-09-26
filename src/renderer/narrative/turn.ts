@@ -55,6 +55,12 @@ export interface NarrativeTurnInput {
   grammar?: string | null;
   /** The program's shape for a provider that decodes against one (Apple's on-device model). */
   program?: ProgramShape;
+  /** A guided answer's JSON Schema (Apple's on-device model decodes against it). */
+  schema?: Record<string, unknown>;
+  /** The least answer the turn can use (a small local context refuses the call below it). */
+  minTokens?: number;
+  /** The route's whole context is small: the world sections are assembled compact. */
+  compact?: boolean;
   signal?: AbortSignal;
   onDelta?(text: string): void;
 }
@@ -108,6 +114,7 @@ export async function runNarrativeTurn(input: NarrativeTurnInput): Promise<Resul
         language: input.language,
         signal: input.signal,
         ...(input.coord === undefined ? {} : { coord: input.coord }),
+        ...(input.compact === true ? { compact: true } : {}),
       },
       useTools: input.useTools ?? false,
       maxSteps: input.maxSteps,
@@ -115,6 +122,8 @@ export async function runNarrativeTurn(input: NarrativeTurnInput): Promise<Resul
       temperature: input.temperature,
       grammar: input.grammar ?? null,
       ...(input.program === undefined ? {} : { program: input.program }),
+      ...(input.schema === undefined ? {} : { schema: input.schema }),
+      ...(input.minTokens === undefined ? {} : { minTokens: input.minTokens }),
       onDelta: input.onDelta,
     });
     if (!result.ok) return fail(result.error);

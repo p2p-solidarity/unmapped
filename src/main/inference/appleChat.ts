@@ -6,7 +6,8 @@
 // The bridge budgets the answer with the model's own token counter, so main's estimate (`fitOutput`,
 // which reads CJK text about 1.75× too long for this model) is not used here: main sends the task's
 // maximum and its minimum useful answer, and the bridge refuses when that minimum does not fit.
-// A request with a `program` shape is answered under guided generation (ChatProgram.swift).
+// A request with a `program` shape is answered under guided generation (ChatProgram.swift); one
+// with a `schema` too, and its text is then the answer's JSON (Chat.swift).
 //
 // Everything the helper sends is untrusted until the schemas below accept it.
 
@@ -98,6 +99,7 @@ export async function runAppleChat(
 ): Promise<Result<AppleChatStep>> {
   let malformed: string | null = null;
   const program = request.tools.length === 0 ? request.program : undefined;
+  const schema = request.tools.length === 0 && program === undefined ? request.schema : undefined;
   const answered = await call(
     {
       messages: request.messages,
@@ -106,6 +108,7 @@ export async function runAppleChat(
       minTokens: Math.min(minTokens, request.maxTokens),
       temperature: request.temperature,
       ...(program === undefined ? {} : { program }),
+      ...(schema === undefined ? {} : { schema }),
     },
     {
       signal,

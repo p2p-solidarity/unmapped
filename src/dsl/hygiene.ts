@@ -1,6 +1,7 @@
 // Prose hygiene for witnessed chunks (after Zero's hygiene pass): the land must sound like people
 // living somewhere, not like an assistant or a fortune cookie, and it must not re-declare what the
-// world already remembers. Every hit is a repair-round complaint, never a silent rewrite. (A Lore
+// world already remembers — nor call a place by a coordinate, nor give a new resident the name of
+// someone who already lives nearby or in the story. Every hit is a repair-round complaint, never a silent rewrite. (A Lore
 // that merely re-declares a known name is folded into the known node by the parser before this
 // runs; only a place named like an existing one still reaches the check below.)
 
@@ -17,6 +18,14 @@ const VAGUE =
   /\b(mysterious (power|force|energy)|ancient secrets?|untold secrets?|fabric of (reality|fate)|beyond (words|comprehension))\b|神秘的?力量|古老的秘密|不可言說|難以言喻|命運的齒輪|神秘的氣息|未知的力量|古の秘密|神秘の力/i;
 
 const CJK = /[぀-ヿ㐀-鿿]/;
+
+/**
+ * A place named like the prompt's own bookkeeping: "Chunk 2,0", "(2, 0)", "區塊", or an id such as
+ * "old_well". The model echoed the prompt's "chunk (2, 0)" as a name before the prompt stopped
+ * saying it; this keeps it from coming back.
+ */
+const BOOKKEEPING_NAME =
+  /\bchunks?\b|區塊|区块|チャンク|-?\d+\s*[,，、]\s*-?\d+|^[a-z0-9]+(?:_[a-z0-9]+)+$/i;
 
 export interface HygieneInput {
   name: string;
@@ -41,9 +50,29 @@ function texts(input: HygieneInput): { where: string; text: string }[] {
 
 export function hygieneIssues(
   input: HygieneInput,
-  ctx: { lore: readonly LoreNode[]; language: string },
+  ctx: { lore: readonly LoreNode[]; language: string; names?: readonly string[] },
 ): OpenUIError[] {
   const issues: OpenUIError[] = [];
+  if (BOOKKEEPING_NAME.test(input.name.trim())) {
+    issues.push(
+      propError(
+        "Chunk",
+        `"${input.name}" is not a name anyone would call a place.`,
+        'Name it the way the locals do: a word or two for what stands or happens there. Never a coordinate, "chunk" or an id.',
+      ),
+    );
+  }
+  const taken = new Set((ctx.names ?? []).map((name) => name.trim().toLowerCase()));
+  for (const npc of input.npcs) {
+    if (!taken.has(npc.name.trim().toLowerCase())) continue;
+    issues.push(
+      propError(
+        "NPC",
+        `${npc.id} is called "${npc.name}", like someone who already lives nearby or in the story.`,
+        "Give every new resident a name nobody nearby has.",
+      ),
+    );
+  }
   const simplified = texts(input).find(({ text }) => slipsIntoSimplified(ctx.language, text));
   if (simplified !== undefined) {
     issues.push(
@@ -76,15 +105,20 @@ export function hygieneIssues(
   }
   const known = new Set(ctx.lore.map((node) => node.label.trim().toLowerCase()));
   for (const node of input.lore) {
-    if (known.has(node.label.trim().toLowerCase())) {
-      issues.push(
-        propError(
-          "Lore",
-          `"${node.label}" is already the name of something the world remembers.`,
-          "Link to the existing node instead of declaring it again, or give this one its own name.",
-        ),
-      );
-    }
+    if (!known.has(node.label.trim().toLowerCase())) continue;
+    issues.push(
+      node.kind === "place"
+        ? propError(
+            "Chunk",
+            `"${node.label}" is already the name of another place.`,
+            "This is a different place: give it a name of its own.",
+          )
+        : propError(
+            "Lore",
+            `"${node.label}" is already the name of something the world remembers.`,
+            "Link to the existing node instead of declaring it again, or give this one its own name.",
+          ),
+    );
   }
   if (/^(zh|ja)\b/i.test(ctx.language) && !CJK.test(input.name)) {
     issues.push(

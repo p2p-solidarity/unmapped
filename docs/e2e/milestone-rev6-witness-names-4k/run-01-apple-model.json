@@ -1,0 +1,78 @@
+{
+ "step": "01",
+ "app": "Apple run (fresh userData, UI zh-TW = system default)",
+ "port": 9340,
+ "what": "Title → 設定 (Settings) → 模型 (Model) → 這台電腦 (On this computer) → Apple 裝置端 (Apple on-device) → 使用這個模型 (Use this model) → 檢查連線 (Check connection); read the panel and the inference store",
+ "actions": [
+  {
+   "repeat": {
+    "times": 60,
+    "until": "(() => [...document.querySelectorAll('button')].some(b => b.innerText.trim() === '設定'))()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "設定"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('模型')); s?.scrollIntoView({ block: 'start' }); return !!s })()"
+  },
+  {
+   "repeat": {
+    "times": 40,
+    "until": "(() => [...document.querySelectorAll('section')].some(x => x.innerText.startsWith('模型')))()",
+    "actions": [
+     {
+      "wait": 250
+     }
+    ]
+   }
+  },
+  {
+   "clickText": "這台電腦"
+  },
+  {
+   "wait": 600
+  },
+  {
+   "clickText": "Apple 裝置端"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "使用這個模型"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "window.__t0 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "檢查連線"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 60; i++) { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('模型')); const t = s?.innerText ?? ''; if (!/檢查中|正在檢查/.test(t) && i > 3) return { ms: Math.round(performance.now() - window.__t0), model: t.slice(0, 600) }; await new Promise(r => setTimeout(r, 250)); } return 'still checking' })()"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const st = S.useInferenceStore.getState(); return JSON.stringify({ config: st.config && { kind: st.config.kind, model: st.config.model, sidecar: st.config.sidecar ?? null }, probe: st.probe }) })()"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-witness-names-4k/01-apple-model.jpg"
+  }
+ ]
+}

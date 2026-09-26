@@ -108,6 +108,9 @@ view or an account status, never a value. Every `UNMAPPED_*` / `QWEN_IMAGE_*` va
 ### Rule 7. DSL is the truth, the model is a guest
 - The model only ever writes OpenUI Lang programs against our libraries (`src/dsl`). No JSON
   blobs, no JS, no `eval`, no `new Function`.
+  The one guided exception: on a small on-device model (Apple, a window under 8K) the model fills a
+  JSON Schema made from the dialect's own zod shapes (`programShape`, `chunkAnswer`), and the host
+  writes that answer back as an OpenUI Lang program the parser checks — the program stays the truth.
 - Parse with `@openuidev/lang-core` (`createParser(library.toJSONSchema())`), convert with
   `toSceneGraph / toDialogue / toItem`, and **repair** by re-prompting with `OpenUIError[]` at
   most twice (`src/dsl/repair.ts`). Unparseable after that → `error` state, not a fallback scene.
@@ -897,8 +900,9 @@ chain-live,mobile-proof,no-servers}`; progress rows 30–39 summarise them. `mil
 walks one world through all of it (Create → play → share → together → co-owner → phone → `.world`
 → Apple on-device → quit and continue). Not run, because each needs a person: Stripe checkout (test
 and live), Qwen-Image on a GPU endpoint, a real phone, and witnessing
-on a local model (Apple's 4K context refuses a witness with `model-context-too-small`; no llama.cpp
-or Ollama here). A flow you change is unverified again until its folder is re-run (Rule 2).
+on llama.cpp or Ollama (none here). Witnessing on Apple's 4K model runs guided (a compact prompt and
+a chunk schema): `milestone-rev6-witness-names-4k`. A flow you change is unverified again until its
+folder is re-run (Rule 2).
 
 ## Verify before claiming done
 1. `bun run check` must pass (typecheck, lint, line limit, and the few isolated tests in `tests/`).

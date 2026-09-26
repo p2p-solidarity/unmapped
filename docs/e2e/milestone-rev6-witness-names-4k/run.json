@@ -1,0 +1,31 @@
+{
+ "flow": "rev6-witness-names-4k",
+ "env": {
+  "build": "origin/main 81601d2 as a git archive snapshot ($SCR/tree) + this change's files copied in (native/afm-bridge/Sources/AFMBridge/Chat.swift, src/dsl/{chunkAnswer,hygiene,index,repair}.ts, src/dsl/parse/chunk.ts, src/dsl/prompts/{chunk,chunkCompact}.ts, src/harness/{turn,types}.ts, src/harness/builtins/worldContext.ts, src/main/inference/{appleChat,ipc}.ts, src/renderer/app/land/witness.ts, src/renderer/narrative/{pipeline,program,turn,witness}.ts, src/shared/llm.ts); none of them differ between HEAD 12c29e7 and origin/main. node_modules and .env symlinked; native/afm-bridge built from the snapshot's own sources (swift build -c debug, 13.6 s); the renderer's Vite cacheDir private and its port fixed to 5199 — both only in the snapshot's electron.vite.config.ts",
+  "snapshot": "git archive origin/main | tar -x -C $SCR/tree; cp <the files above> $SCR/tree/...; ln -s $R/node_modules $R/.env $SCR/tree/; perl -0pi -e 's/renderer: \\{\\n    plugins:/renderer: {\\n    cacheDir: resolve(__dirname, \".vite-cache\"),\\n    server: { port: 5199, strictPort: true },\\n    plugins:/' $SCR/tree/electron.vite.config.ts; (cd $SCR/tree && swift build -c debug --package-path native/afm-bridge)",
+  "launch": "mkdir -p $SCR/<ud>; (cd $SCR/tree && AETHER_TEST_USER_DATA=$SCR/<ud> bunx electron-vite dev --remoteDebuggingPort 9340)   # ud-apple3 for steps 01-04, ud-openai for 11-15; each app closed with {cdp: Browser.close} before the next",
+  "driver": "CDP_PORT=9340 bun scripts/cdp-drive.ts \"$(cat docs/e2e/milestone-rev6-witness-names-4k/<step file>)\" from the repo root (shot paths are repo-relative)",
+  "ui": "Apple run: zh-TW (system default), so the world and its witnesses are Traditional Chinese — the larger case for a 4K context. OpenAI run: switched to English in step 11, so the world is en-US",
+  "platform": "macOS 27.0, Apple Silicon, Apple Intelligence on (no fm serve), Bun 1.3.6, Electron 44.3.0",
+  "window": "1440 × 841 CSS px at scale 2 (screenshots 2880 × 1682)"
+ },
+ "model": {
+  "apple": "apple-fm system through the in-app afm-bridge (Settings → Model → 這台電腦 → Apple 裝置端), context 4096 (source: model)",
+  "openai": "openai gpt-5.4-mini, key from the repo .env (the default a fresh userData gets); no context window, so the full witness prompt"
+ },
+ "steps": [
+  { "step": "01", "app": "Apple", "file": "run-01-apple-model.json" },
+  { "step": "02", "app": "Apple", "file": "run-02-apple-newgame-origin.json" },
+  { "step": "03", "app": "Apple", "file": "run-03-apple-witness-1-0.json" },
+  { "step": "04", "app": "Apple", "file": "run-04-apple-witness-2-0.json" },
+  { "step": "11", "app": "OpenAI", "file": "run-11-openai-settings.json" },
+  { "step": "12", "app": "OpenAI", "file": "run-12-openai-newgame.json" },
+  { "step": "13", "app": "OpenAI", "file": "run-13-openai-witness-1-0.json" },
+  { "step": "14", "app": "OpenAI", "file": "run-14-openai-witness-2-0.json" },
+  { "step": "15", "app": "OpenAI", "file": "run-15-openai-names-check.json" }
+ ],
+ "earlier attempts": [
+  "a1 (ud-apple): steps 01-03 before the place-name fix; the (1,0) witness failed (see result.md). Screenshots a1-*.",
+  "a2 (ud-apple2): step 01 ran before the title was ready and never switched the model, so step 02 ran on openai; abandoned (4 openai calls, in model-calls.txt). Step 01 now waits for the title and the Model section. Screenshots a2-*."
+ ]
+}

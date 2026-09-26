@@ -64,6 +64,8 @@ export interface ChunkContext {
   authored?: readonly NpcSpec[];
   /** The prop kinds this world is built from (its bible's style); absent means any kind. */
   props?: readonly PropKind[];
+  /** Names already in use nearby and in the story; a new resident may not take one. */
+  names?: readonly string[];
 }
 
 export interface WitnessedDraft extends WitnessedErrands {

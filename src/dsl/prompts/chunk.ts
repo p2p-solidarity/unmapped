@@ -1,7 +1,10 @@
 // The witnessing prompt (plan.md §5). The pipeline registers these pieces as harness sections in
 // this order: bible core → bible style → Chunk spec → hot lore (world context) → neighbours → this
-// chunk's ground → output contract. Everything here is bounded: a small model reads all of it on
-// every witnessing.
+// chunk's ground → names already in use → output contract. Everything here is bounded: a small
+// model reads all of it on every witnessing. A route whose whole context is small (Apple's 4K) gets
+// the compact pieces of ./chunkCompact.ts instead.
+//
+// The prompt never calls the place "chunk (x, z)": the model echoed that as the place's name.
 
 import type { WorldBible } from "@shared/cartridge";
 import { CHUNK_SIZE, type ChunkCoord, type ChunkHole, type ChunkTerrain } from "@shared/chunks";
@@ -53,6 +56,11 @@ const TALL: readonly PropKind[] = [
   "pipe_stack",
 ];
 
+/** What this world can raise as a landmark, in words ("a big tree" always can). */
+export function landmarkKinds(props: readonly PropKind[]): string {
+  return [...TALL.filter((kind) => props.includes(kind)), "a big tree"].join(", ");
+}
+
 /** The DSL section: the Chunk components, the rules a repair round enforces, one example. */
 export function chunkSpec(ctx: ChunkPromptContext): string {
   const hole =
@@ -66,10 +74,12 @@ export function chunkSpec(ctx: ChunkPromptContext): string {
       "You are the land of this world being seen for the first time. Write ONLY an OpenUI Lang program: no prose, no markdown, no code fences, no comments. The first line is the root statement.",
     additionalRules: [
       `Write every word the player reads — place and resident names, lines, answers, lore — in ${languageName(ctx.language)}. Ids and statement names (left of =) stay ascii snake_case.`,
+      `${PLACE_NAME_RULE} It is the Chunk's first argument and its "place" Lore's label.`,
+      'Every new resident gets a name of their own, never one listed under "Names already in use".',
       `Coordinates are this chunk's own tiles: every x and z is 0..${CHUNK_SIZE - 1}.`,
       ...hole,
       `${CHUNK_LIMITS.minNpcs} to ${CHUNK_LIMITS.maxNpcs} NPCs, each with exactly one Talk. 3 to ${CHUNK_LIMITS.maxProps} Props, at most ${CHUNK_LIMITS.maxWalls} Walls.`,
-      `At least one Prop is tall enough to be seen from far away (${[...TALL.filter((kind) => ctx.props.includes(kind)), "a big tree"].join(", ")}) — it is this place's landmark.`,
+      `At least one Prop is tall enough to be seen from far away (${landmarkKinds(ctx.props)}) — it is this place's landmark.`,
       `Props this world is built from: ${ctx.props.join(", ")}.${ctx.look === null || ctx.props.length < PROP_KINDS.length ? "" : " Use only the ones that fit the bible's look."}`,
       `A Choice action is one of ${WITNESS_ACTIONS.join(", ")}. gives is [] or one small keepsake.`,
       `Lore: exactly one "place" node named like the Chunk, at least one "custom" — a small rule people here keep — and up to ${CHUNK_LIMITS.maxLore - 2} more (person, event, object).`,
@@ -82,6 +92,26 @@ export function chunkSpec(ctx: ChunkPromptContext): string {
     ],
     examples: [CHUNK_EXAMPLE],
   });
+}
+
+/** What a place is called: said in the full prompt, the compact one and the answer's schema. */
+export const PLACE_NAME_RULE =
+  'The place\'s name is a real name the locals use: a word or two for what stands or happens there. Never a coordinate, never the word "chunk", never an id.';
+
+/**
+ * What already has a name around here — the places nearby, the residents of the neighbouring
+ * places and the story's people — so this place and every new resident get names of their own
+ * (two Brams stood by one gate, and a small model named a place after the one next door).
+ */
+export function namesSection(names: readonly string[], places: readonly string[] = []): string {
+  if (names.length === 0 && places.length === 0) return "";
+  const list = (values: readonly string[]) => values.map((one) => clampText(one, 40)).join(", ");
+  return [
+    "## Names already in use",
+    ...(places.length === 0 ? [] : [`Places nearby: ${list(places)}. This is another place.`]),
+    ...(names.length === 0 ? [] : [`People nearby or in the story: ${list(names)}.`]),
+    "Give this place and every new resident a name of their own.",
+  ].join("\n");
 }
 
 export function bibleSections(bible: WorldBible): { core: string; style: string } {
@@ -112,6 +142,7 @@ export interface NeighbourSummary {
 export function neighbourSection(
   here: ChunkCoord,
   neighbours: readonly NeighbourSummary[],
+  customChars = 120,
 ): string {
   if (neighbours.length === 0) {
     return "## Neighbouring places\n- none witnessed yet: nobody nearby remembers anything about this place";
@@ -121,14 +152,22 @@ export function neighbourSection(
     const customs =
       one.customs.length === 0
         ? ""
-        : ` — customs: ${one.customs.map((c) => clampText(c, 120)).join("; ")}`;
+        : ` — customs: ${one.customs.map((c) => clampText(c, customChars)).join("; ")}`;
     return `- ${direction}: ${clampText(one.name, 40)}${customs}`;
   });
   return `## Neighbouring places\n${lines.join("\n")}`;
 }
 
-/** What the ground of this chunk already is, in words, so the residents fit where they stand. */
-export function terrainSection(terrain: ChunkTerrain): string {
+/**
+ * What the ground of this chunk already is, in words, so the residents fit where they stand.
+ * `where` names a spot as the answer does (a guided answer speaks of parts, not tiles); with it,
+ * the authored village is not mentioned, since no part the answer can name lies inside it.
+ */
+export function terrainSection(
+  terrain: ChunkTerrain,
+  where: (x: number, z: number) => string = (x, z) => `tile (${x}, ${z})`,
+  village = true,
+): string {
   const tiles = CHUNK_SIZE * CHUNK_SIZE;
   const covered = (tile: string): number =>
     terrain.patches
@@ -138,7 +177,7 @@ export function terrainSection(terrain: ChunkTerrain): string {
   const trees = terrain.props.filter((prop) => prop.kind === "tree");
   const giant = trees.some((tree) => tree.scale >= 3);
   const lines = [
-    `- chunk (${terrain.coord.cx}, ${terrain.coord.cz}); base ground ${terrain.floor.tile}`,
+    `- base ground ${terrain.floor.tile}`,
     `- water ${share("water")}, shore sand ${share("sand")}, bare stone ${share("stone")}`,
     `- ${trees.length} trees${giant ? ", one of them a giant tree that towers over the land" : ""}, ${terrain.props.filter((p) => p.kind === "rock").length} rocks`,
   ];
@@ -148,11 +187,9 @@ export function terrainSection(terrain: ChunkTerrain): string {
     const zs = water.map((patch) => patch.z);
     const cx = Math.round(xs.reduce((a, b) => a + b, 0) / xs.length);
     const cz = Math.round(zs.reduce((a, b) => a + b, 0) / zs.length);
-    lines.push(
-      `- the water lies around tile (${cx}, ${cz}); keep people and buildings on dry ground`,
-    );
+    lines.push(`- the water lies around ${where(cx, cz)}; keep people and buildings on dry ground`);
   }
-  if (terrain.hole !== null) {
+  if (terrain.hole !== null && village) {
     lines.push(`- the authored village fills x < ${terrain.hole.width}, z < ${terrain.hole.depth}`);
   }
   return `## This chunk's ground\n${lines.join("\n")}`;
@@ -170,6 +207,6 @@ They already exist: do not declare them as NPC again. Write exactly one Talk for
 ${lines.join("\n")}`;
 }
 
-export function chunkOutputSection(coord: ChunkCoord): string {
-  return `## Output\nWrite the Chunk program for chunk (${coord.cx}, ${coord.cz}) now. The program only.`;
+export function chunkOutputSection(): string {
+  return "## Output\nWrite the Chunk program for this place now. The program only.";
 }

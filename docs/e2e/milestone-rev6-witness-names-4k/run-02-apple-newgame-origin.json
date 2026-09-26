@@ -1,0 +1,21 @@
+{
+  "step": "02",
+  "app": "Apple run",
+  "port": 9340,
+  "what": "Close Settings; 世界 (Worlds) → 開始 (Start, New game on the built-in world); wait for Play; the origin chunk (0,0) is witnessed on entry — wait for it (up to 240 s) and read what was written",
+  "actions": [
+    {"hold": "Escape", "ms": 80},
+    {"wait": 600},
+    {"clickText": "世界"},
+    {"wait": 1200},
+    {"clickText": "開始"},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); window.__w0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance && S.useLandStore.getState().progress !== null) return { ms: Date.now() - window.__w0, screen: s.screen, language: S.useWorldStore.getState().genesis?.language }; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + S.useSessionStore.getState().screen })()"},
+    {"wait": 1500},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, c00: S.useLandStore.getState().chunks['0,0']?.status ?? 'absent' }) })()"},
+    {"shot": "docs/e2e/milestone-rev6-witness-names-4k/02-apple-origin-writing.jpg"},
+    {"repeat": {"times": 480, "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['0,0']; return c !== undefined && c.status !== 'writing' })()", "actions": [{"wait": 500}]}},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['0,0']; const lore = S.useLandStore.getState().lore.filter(n => n.coord.cx === 0 && n.coord.cz === 0); return JSON.stringify({ ms: Date.now() - window.__w0, status: c?.status, error: c?.status === 'failed' ? c.error : null, name: c?.scene?.name ?? null, residents: c?.scene?.npcs?.map(n => ({ id: n.id, name: n.name, role: n.role, x: n.x, z: n.z })) ?? null, props: c?.scene?.props?.map(p => p.kind + '@' + p.x + ',' + p.z) ?? null, lines: c?.dialogues ? Object.values(c.dialogues).map(d => d.line) : null, lore: lore.map(n => n.kind + ': ' + n.label + ' — ' + n.text) }) })()"},
+    {"wait": 800},
+    {"shot": "docs/e2e/milestone-rev6-witness-names-4k/02-apple-origin-written.jpg"}
+  ]
+}

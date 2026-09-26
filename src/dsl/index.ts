@@ -4,6 +4,13 @@
 //   prompt  →  model  →  normalizeOutput  →  parse*  →  SceneGraph / DialogueGraph / ItemSpec
 //                                    └─ on DslError → repairPrompt → model (at most twice)
 
+export {
+  CHUNK_ANSWER_LIMITS,
+  type ChunkAnswerContext,
+  chunkAnswerSchema,
+  partOf,
+  writeChunkProgram,
+} from "./chunkAnswer";
 export { DEFAULT_RULES_SOURCE } from "./defaultRules";
 export { sceneGrammar } from "./grammar";
 export { type MigrationPlan, planMigration } from "./history/migrate";
@@ -93,9 +100,15 @@ export {
   chunkOutputSection,
   chunkSpec,
   type NeighbourSummary,
+  namesSection,
   neighbourSection,
   terrainSection,
 } from "./prompts/chunk";
+export {
+  type CompactWitnessContext,
+  compactBibleSection,
+  compactWitnessRules,
+} from "./prompts/chunkCompact";
 export { dialoguePrompt } from "./prompts/dialogue";
 export { itemPrompt } from "./prompts/item";
 export { isMeshPart, MESH_DNA_GROUPS, MESH_DNA_PARTS } from "./prompts/meshDna";
@@ -117,7 +130,7 @@ export {
   SEASON_NAMES,
 } from "./prompts/rumor";
 export { SCENE_EXAMPLES, scenePrompt } from "./prompts/scene";
-export { repairPrompt } from "./repair";
+export { repairNote, repairPrompt } from "./repair";
 export { DIALOGUE_PROPS } from "./schemas/dialogue";
 export { ITEM_PROPS } from "./schemas/item";
 export { accentFor, ROLE_LOOK, type RoleLook } from "./schemas/looks";

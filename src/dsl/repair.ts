@@ -44,3 +44,24 @@ export function repairPrompt(source: string, error: DslError): string {
   );
   return parts.join("\n\n");
 }
+
+/** At most this many complaints go into a brief repair. */
+const BRIEF_COMPLAINTS = 6;
+
+/**
+ * The complaints alone, for a repair round that asks for the whole answer anew instead of a fixed
+ * program (a guided answer on a 4K context, which cannot hold the rejected program twice). The
+ * model never saw statement names there, so none are quoted.
+ */
+export function repairNote(error: DslError): string {
+  const complaints = error.errors.slice(0, BRIEF_COMPLAINTS).map((item) => {
+    const fix = item.hint === undefined || item.hint === "" ? "" : ` ${item.hint}`;
+    return `- ${item.message}${fix}`;
+  });
+  const why = `${error.message}${error.hint === undefined ? "" : ` ${error.hint}`}`;
+  return [
+    "## Your last answer was refused",
+    ...(complaints.length === 0 ? [`- ${why}`] : complaints),
+    "Answer again from the start, with every one of these fixed.",
+  ].join("\n");
+}

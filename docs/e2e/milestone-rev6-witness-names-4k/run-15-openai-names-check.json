@@ -1,0 +1,10 @@
+{
+  "step": "15",
+  "app": "OpenAI run",
+  "port": 9340,
+  "what": "Read every written chunk and chapter 1: place names, residents, lore; list the names that were in use for (1,0) and (2,0) (neighbours' residents + chapter people, as namesInUse gathers them) and check no place is named like a coordinate and no resident reuses a chapter person's name",
+  "actions": [
+    {"eval": "(async () => { const S = await import('/state/index.ts'); const E = await import('/engine2d/chapterLayer.ts'); const st = S.useLandStore.getState(); const e1 = st.progress?.episodes?.e1?.stage; const chapter = e1 ? E.readChapter(e1.source)?.npcs.map(n => n.name) ?? [] : []; const chunks = Object.fromEntries(Object.entries(st.chunks).filter(([, c]) => c.status === 'written').map(([k, c]) => [k, { name: c.scene.name, residents: c.scene.npcs.map(n => n.name) }])); const around = (cx, cz) => Object.entries(chunks).filter(([k]) => { const [x, z] = k.split(',').map(Number); return Math.max(Math.abs(x - cx), Math.abs(z - cz)) === 1; }).flatMap(([, c]) => c.residents); const bookkeeping = /\\bchunks?\\b|-?\\d+\\s*[,，、]\\s*-?\\d+|^[a-z0-9]+(?:_[a-z0-9]+)+$/i; const reused = Object.entries(chunks).filter(([k]) => k !== '0,0').flatMap(([k, c]) => c.residents.filter(n => chapter.includes(n)).map(n => k + ':' + n)); return JSON.stringify({ chapter1People: chapter, chunks, namesInUseAt: { '1,0': [...new Set([...around(1, 0).filter((_, i) => true), ...chapter])], '2,0': [...new Set([...around(2, 0), ...chapter])] }, bookkeepingNames: Object.values(chunks).map(c => c.name).filter(n => bookkeeping.test(n)), witnessResidentsReusingChapterNames: reused, lore: st.lore.map(n => n.id + ' [' + n.kind + '] ' + n.label + ' — ' + n.text + ' {' + n.links.join(', ') + '}') }) })()"},
+    {"shot": "docs/e2e/milestone-rev6-witness-names-4k/15-openai-end.jpg"}
+  ]
+}

@@ -1,0 +1,37 @@
+# Every model call of this run, from main's stdout ([inference] done/fail) and the renderer's [repair] lines.
+# Apple attempt 1 (fresh userData ud-apple, before the place-name fix; steps 01-03; screenshots a1-*)
+[inference] done bd1934f8-ad7c-4bf4-bd3f-776dfc7f8410 · witness · apple-fm system · 26540 ms · max 1500 · 2038+617 tokens (0 cached) · ctx 4096
+[inference] done 6536ab41-37f8-4c83-9996-1ab4a30a23d9 · chapter · apple-fm system · 41465 ms · max 1784 · 2288+301 tokens (0 cached) · ctx 4096
+[renderer:WARN] [repair] 1/2 · dsl-invalid-props · 4 statement(s) of the Chapter program are invalid. · field "/role" expects one of ["merchant", "monk", "smith", "farmer", "guard", "child", "elder", "bard", "stranger"] but got "農夫"
+[inference] fail 7e7fb9f1-b60f-4c4c-a40b-27bb48a6405d · chapter · apple-fm system · 179 ms · model-context-too-small
+[inference] done 9763ef87-3a16-4fde-9563-3362b3658249 · witness · apple-fm system · 30235 ms · max 1500 · 2241+811 tokens (0 cached) · ctx 4096
+[renderer:WARN] [repair] 1/2 · dsl-invalid-chunk · 1 problem(s) with this Chunk program. · "翠峰" is already the name of something the world remembers.
+[inference] done 67cf2639-b2b2-4893-9cb6-310b5e677ab6 · witness · apple-fm system · 33071 ms · max 1500 · 2297+969 tokens (0 cached) · ctx 4096
+[renderer:WARN] [repair] 2/2 · dsl-invalid-chunk · 1 problem(s) with this Chunk program. · "翠峰" is already the name of something the world remembers.
+[inference] done a1745d90-7ed7-4114-8178-10d11f952704 · witness · apple-fm system · 27997 ms · max 1500 · 2297+773 tokens (0 cached) · ctx 4096
+
+# Apple attempt 2 (ud-apple2): step 01 clicked Settings before the title was ready, the model stayed openai, and step 02 ran on it (screenshots a2-*). Abandoned.
+[inference] done 99d3c4f8-c749-413c-add7-c1d1b75b7bf6 · chapter · openai gpt-5.4-mini · 4012 ms · max 2400 · 2167+812 tokens (0 cached)
+[renderer:WARN] [repair] 1/2 · dsl-invalid-name · Statement names must be ascii: npc_阿澄, talk_阿澄, choice_阿澄_1, choice_阿澄_2, npc_秀, talk_秀, choice_秀_1, choice_秀_2, npc_老片, talk_老片, choice_老片_1, choice_老片_2, choice_老片_3, treasure_車票夾. · "npc_阿澄" is not an ascii name, so the statement was lost.
+[inference] done 6c8fe886-29ef-4503-88b7-3c01ced8a067 · witness · openai gpt-5.4-mini · 4526 ms · max 3200 · 3400+1048 tokens (0 cached)
+[renderer:WARN] [repair] 1/2 · dsl-invalid-chunk · 3 problem(s) with this Chunk program. · Lore id "" is empty, repeated or already taken here.
+[inference] done a65d1df8-b39e-4d37-94f6-f215a70131bc · chapter · openai gpt-5.4-mini · 2341 ms · max 2400 · 4439+652 tokens (1792 cached)
+[inference] done c1d2f0cb-0df7-41ea-8a60-6a07856fe63f · witness · openai gpt-5.4-mini · 3770 ms · max 3200 · 5481+1075 tokens (2816 cached)
+
+# Apple run (ud-apple3; steps 01-04, the recorded run)
+[inference] done 3f23d959-0868-422e-aa9c-29efcb10bd1f · chapter · apple-fm system · 18263 ms · max 1784 · 2288+193 tokens (0 cached) · ctx 4096
+[renderer:WARN] [repair] 1/2 · dsl-invalid-props · 2 statement(s) of the Chapter program are invalid. · field "/action" expects one of ["talk", "trade", "open_exit", "craft", "leave"] but got "look"
+[inference] done 62854741-06a1-4c91-b1cf-fcc212c772b3 · witness · apple-fm system · 42539 ms · max 1500 · 2051+697 tokens (0 cached) · ctx 4096
+[inference] done 26c0defb-602e-48d8-93d9-df56c8da3cef · chapter · apple-fm system · 34854 ms · max 1218 · 2854+187 tokens (0 cached) · ctx 4096
+[renderer:WARN] [repair] 2/2 · dsl-invalid-props · 1 statement(s) of the Chapter program are invalid. · field "/action" expects one of ["talk", "trade", "open_exit", "craft", "leave"] but got "pass"
+[inference] done e558ef13-e0e7-498e-9853-6087208f230e · chapter · apple-fm system · 10277 ms · max 1167 · 2905+181 tokens (0 cached) · ctx 4096
+[inference] done e17016ab-8a2b-401f-9116-4f17a35ce343 · witness · apple-fm system · 37769 ms · max 1500 · 2271+865 tokens (0 cached) · ctx 4096
+[inference] done a1bc325e-38d8-4c04-b38c-7f192e01daa4 · witness · apple-fm system · 25261 ms · max 1500 · 2365+655 tokens (0 cached) · ctx 4096
+[renderer:WARN] [repair] 1/2 · dsl-invalid-chunk · 3 problem(s) with this Chunk program. · resident_1 is called "志雄", like someone who already lives nearby or in the story.
+[inference] done 79c9bd3f-ab04-48f4-bbd9-4954e22a8631 · witness · apple-fm system · 23782 ms · max 1500 · 2482+695 tokens (0 cached) · ctx 4096
+
+# OpenAI run (ud-openai; steps 11-15)
+[inference] done 21896fc4-a254-4860-85fa-72a5dafa0878 · witness · openai gpt-5.4-mini · 5381 ms · max 3200 · 3402+1164 tokens (2304 cached)
+[inference] done 5df3aed1-7c30-4606-b797-0a7e895e157f · chapter · openai gpt-5.4-mini · 5851 ms · max 2400 · 2157+892 tokens (1792 cached)
+[inference] done fb50d8fb-c4be-44df-99f2-a2e1f79f581a · witness · openai gpt-5.4-mini · 4791 ms · max 3200 · 3592+1016 tokens (2304 cached)
+[inference] done de9bf664-702d-4415-a985-1f9209eb1eb5 · witness · openai gpt-5.4-mini · 6157 ms · max 3200 · 3739+1381 tokens (2816 cached)

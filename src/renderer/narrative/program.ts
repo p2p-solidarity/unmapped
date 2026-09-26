@@ -22,6 +22,8 @@ export interface ProgramChatRequest {
   temperature: number;
   grammar: string | null;
   program?: ProgramShape;
+  schema?: Record<string, unknown>;
+  minTokens?: number;
 }
 
 export type ProgramChat = (
@@ -64,7 +66,19 @@ export interface ProgramSpec<T, E extends AppError> {
   grammar?: string | null;
   /** The program's shape for a provider that decodes against one (Apple's on-device model). */
   program?: ProgramShape;
+  /**
+   * A guided answer (Apple's on-device model on a 4K context): the model fills JSON held to
+   * `schema`, `write` turns it into the program text that `parse` checks, and a JSON that cannot
+   * be written is a repair round like a parse error. `brief` then asks again with only the
+   * complaints — the answer is written anew, and a 4K context cannot hold the rejected program
+   * twice beside the prompt.
+   */
+  schema?: Record<string, unknown>;
+  write?(answer: string): Result<string, E>;
+  brief?(error: E): string;
   maxTokens?: number;
+  /** The least answer this task can use (a small local context refuses the call below it). */
+  minTokens?: number;
   temperature?: number;
   maxRepairs?: number;
   onDelta?(text: string): void;
@@ -109,6 +123,8 @@ export async function runProgram<T, E extends AppError>(
         temperature: spec.temperature ?? 0.8,
         grammar: spec.grammar ?? null,
         ...(spec.program === undefined ? {} : { program: spec.program }),
+        ...(spec.schema === undefined ? {} : { schema: spec.schema }),
+        ...(spec.minTokens === undefined ? {} : { minTokens: spec.minTokens }),
       },
       spec.onDelta,
     );
@@ -116,8 +132,12 @@ export async function runProgram<T, E extends AppError>(
     if (!response.ok) return fail(response.error);
     usage = addUsage(usage, response.value.usage);
 
-    const source = spec.normalize(response.value.text);
-    const parsed = spec.parse(source);
+    const written =
+      spec.write === undefined
+        ? ({ ok: true, value: spec.normalize(response.value.text) } as const)
+        : spec.write(response.value.text);
+    const source = written.ok ? written.value : response.value.text;
+    const parsed = written.ok ? spec.parse(source) : written;
     let failure: E;
     if (parsed.ok) {
       if (spec.accept === undefined) return ok({ source, graph: parsed.value, usage });
@@ -144,11 +164,17 @@ export async function runProgram<T, E extends AppError>(
     // Only the latest attempt goes back (the repair prompt quotes it again): earlier rounds would
     // fill a small local context with programs that were already rejected.
     if (round < maxRepairs) {
-      messages = [
-        ...opening,
-        { role: "assistant", content: source },
-        { role: "user", content: spec.repair(source, failure) },
-      ];
+      messages =
+        spec.brief === undefined
+          ? [
+              ...opening,
+              { role: "assistant", content: source },
+              { role: "user", content: spec.repair(source, failure) },
+            ]
+          : [
+              { role: "system", content: spec.system },
+              { role: "user", content: `${spec.user}\n\n${spec.brief(failure)}` },
+            ];
     }
   }
 

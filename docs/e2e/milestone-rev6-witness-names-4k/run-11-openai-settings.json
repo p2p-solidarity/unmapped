@@ -1,0 +1,20 @@
+{
+  "step": "11",
+  "app": "OpenAI run (fresh userData; the model is the default the .env key gives: openai gpt-5.4-mini)",
+  "port": 9340,
+  "what": "Title → 設定 → English (UI and so the new world's language); read the Model section and the inference store (openai, gpt-5.4-mini, no context window: the full prompt)",
+  "actions": [
+    {"repeat": {"times": 60, "until": "(() => [...document.querySelectorAll('button')].some(b => b.innerText.trim() === '設定'))()", "actions": [{"wait": 500}]}},
+    {"wait": 1500},
+    {"clickText": "設定"},
+    {"wait": 800},
+    {"clickText": "English"},
+    {"wait": 1200},
+    {"eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); if (!s) return 'no Model section'; s.scrollIntoView({ block: 'start' }); return s.innerText.slice(0, 600) })()"},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 40; i++) { const st = S.useInferenceStore.getState(); if (st.probe.status === 'ready') return JSON.stringify({ lang: document.documentElement.lang, config: st.config && { kind: st.config.kind, model: st.config.model }, probe: { reachable: st.probe.value.reachable, context: st.probe.value.context } }); await new Promise(r => setTimeout(r, 250)); } return 'probe not ready' })()"},
+    {"wait": 300},
+    {"shot": "docs/e2e/milestone-rev6-witness-names-4k/11-openai-model.jpg"},
+    {"hold": "Escape", "ms": 80},
+    {"wait": 600}
+  ]
+}

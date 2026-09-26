@@ -43,6 +43,7 @@ import { createSidecar } from "./sidecar";
 const CONTEXT_TTL_MS = 60_000;
 
 const MAX_CONTENT = 200_000;
+const MAX_ANSWER_SCHEMA = 32_000;
 
 const toolCallSchema = z.object({
   id: z.string().min(1).max(256),
@@ -108,6 +109,11 @@ const chatRequestSchema = z.object({
   tools: z.array(toolSchemaSchema).max(64),
   minTokens: z.number().int().min(1).max(32_768).optional(),
   program: programShapeSchema.optional(),
+  // A guided answer's JSON Schema: read by Apple's bridge only, which accepts a small subset.
+  schema: z
+    .record(z.string(), z.unknown())
+    .refine((schema) => JSON.stringify(schema).length <= MAX_ANSWER_SCHEMA, "schema too large")
+    .optional(),
   usage: usageTagSchema,
 });
 

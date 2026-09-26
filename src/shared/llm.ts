@@ -258,6 +258,12 @@ export interface ChatRequest {
   grammar: string | null;
   /** The answer's program shape (Apple's on-device model only); never sent with tools. */
   program?: ProgramShape;
+  /**
+   * A JSON Schema the answer is decoded against (Apple's on-device model only; never with tools or
+   * `program`): the answer's text is then that JSON, which the caller writes into its program.
+   * The renderer sends it only when the route is Apple's, so no other provider ever sees it.
+   */
+  schema?: Record<string, unknown>;
   stop: string[];
   /** Tools the model may call this step; empty = plain completion. */
   tools: ToolSchema[];

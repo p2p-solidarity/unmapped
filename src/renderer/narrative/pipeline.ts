@@ -39,7 +39,12 @@ function harnessChat(
   purpose: PromptPurpose,
   task: UsagePurpose,
   language: string,
-  extra: { sections?: readonly TurnSection[]; coord?: ChunkCoord; signal?: AbortSignal } = {},
+  extra: {
+    sections?: readonly TurnSection[];
+    coord?: ChunkCoord;
+    signal?: AbortSignal;
+    compact?: boolean;
+  } = {},
 ): ProgramChat {
   return async (request, onDelta) => {
     const spec = request.messages
@@ -58,6 +63,8 @@ function harnessChat(
       temperature: request.temperature,
       grammar: request.grammar,
       ...(request.program === undefined ? {} : { program: request.program }),
+      ...(request.schema === undefined ? {} : { schema: request.schema }),
+      ...(request.minTokens === undefined ? {} : { minTokens: request.minTokens }),
       onDelta,
     });
     if (!turn.ok) return fail(turn.error);
@@ -81,7 +88,18 @@ export interface GenerateProgramInput<T> {
   grammar?: string | null;
   /** The program's shape for a provider that decodes against one (Apple's on-device model). */
   program?: ProgramShape;
+  /**
+   * A guided answer: JSON held to `schema` (Apple only), which `write` turns into the program text
+   * `parse` checks; `brief` words a repair round as the complaints alone (see `ProgramSpec`).
+   */
+  schema?: Record<string, unknown>;
+  write?(answer: string): Result<string, DslError>;
+  brief?(error: DslError): string;
+  /** The route's whole context is small: world sections are assembled compact. */
+  compact?: boolean;
   maxTokens?: number;
+  /** The least answer this task can use (a small local context refuses the call below it). */
+  minTokens?: number;
   temperature?: number;
   onDelta?(text: string): void;
   /** Aborts the model call in flight (`chat(..., { signal })`) and stops between repair rounds. */
@@ -112,8 +130,9 @@ export function generateProgram<T>(input: GenerateProgramInput<T>): Promise<Resu
     ...(input.sections === undefined ? {} : { sections: input.sections }),
     ...(input.coord === undefined ? {} : { coord: input.coord }),
     ...(input.signal === undefined ? {} : { signal: input.signal }),
+    ...(input.compact === undefined ? {} : { compact: input.compact }),
   };
-  const { accept, ...spec } = input;
+  const { accept, compact: _compact, ...spec } = input;
   return runProgram<T, DslError>(harnessChat(input.purpose, input.task, input.language, extra), {
     ...spec,
     normalize: normalizeOutput,

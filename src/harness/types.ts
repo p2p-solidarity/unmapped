@@ -32,6 +32,11 @@ export interface AssembleContext {
   language: string;
   /** The chunk of open land this turn is about; hot lore is activated around it. */
   coord?: ChunkCoord;
+  /**
+   * The route's whole context is small (Apple's 4K on-device model): world sections keep only what
+   * the turn needs — fewer lore lines, no flags or inventory for a witnessing.
+   */
+  compact?: boolean;
   signal?: AbortSignal;
 }
 

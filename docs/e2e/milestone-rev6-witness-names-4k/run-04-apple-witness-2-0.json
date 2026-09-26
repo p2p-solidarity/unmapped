@@ -1,0 +1,63 @@
+{
+ "step": "04",
+ "app": "Apple run",
+ "port": 9340,
+ "what": "Walk on east along the z=16 ford into unwritten (2,0), chapter 1's gate chunk; wait for the witness (up to 240 s); read the chunk: name, residents, props, words, lore, errand; the names in use it was given",
+ "actions": [
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const p = S.useLandStore.getState().progress; return JSON.stringify({ episodes: Object.fromEntries(Object.entries(p?.episodes ?? {}).map(([k, v]) => [k, { cleared: v.cleared, stage: v.stage ? v.stage.kind : null }])) }) })()"
+  },
+  {
+   "pad": {
+    "toward": "[48.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "eval": "window.__w1 = Date.now(); 'mark'"
+  },
+  {
+   "pad": {
+    "toward": "[68.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, c20: S.useLandStore.getState().chunks['2,0']?.status ?? 'absent' }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-witness-names-4k/04-apple-2-0-writing.jpg"
+  },
+  {
+   "repeat": {
+    "times": 480,
+    "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['2,0']; return c !== undefined && c.status !== 'writing' })()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const c = S.useLandStore.getState().chunks['2,0']; const w = H.worldNow()?.chunks['2,0']; const lore = S.useLandStore.getState().lore.filter(n => n.coord.cx === 2 && n.coord.cz === 0); return JSON.stringify({ ms: Date.now() - window.__w1, status: c?.status, error: c?.status === 'failed' ? c.error : null, name: c?.scene?.name ?? null, residents: c?.scene?.npcs?.map(n => n.name + ' (' + n.role + ' @' + n.x + ',' + n.z + ')') ?? null, scene: w?.live.body.scene ?? null, dialogues: w?.live.body.dialogues ?? null, errands: w?.live.body.errands ?? null, lore: lore.map(n => n.kind + ': ' + n.label + ' — ' + n.text + ' [' + n.links.join(', ') + ']') }) })()"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-witness-names-4k/04-apple-2-0-written.jpg"
+  }
+ ]
+}

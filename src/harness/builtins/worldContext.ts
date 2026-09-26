@@ -26,6 +26,9 @@ const KARMA_WINDOW = 12;
 /** Old tales shown beside the hot lore, at most (they never crowd out what stands now). */
 const OLD_TALES = 4;
 
+/** A compact assembly (a 4K route): this many hot lore lines and old tales, each cut this short. */
+const COMPACT_LORE = { hot: 4, old: 1, chars: 140 } as const;
+
 /** D5: a taken gift enters the inventory as `gift-<8 of its event id>`. */
 export const GIFT_ITEM_PREFIX = "gift-";
 
@@ -100,14 +103,24 @@ function loreText(
 ): string {
   const coord = a.coord ?? world.coord;
   if (coord === null || coord === undefined) return "";
-  const hot = activate(lore, { coord, karma: world.karma });
+  const compact = a.compact === true;
+  const all = activate(lore, { coord, karma: world.karma });
   // The air is what stands now: old tales are told, but they do not set the regional tone.
-  const tone = regionalTone(hot);
+  const tone = regionalTone(all);
+  const hot = compact ? all.slice(0, COMPACT_LORE.hot) : all;
+  const said = (text: string): string =>
+    compact && text.length > COMPACT_LORE.chars
+      ? `${text.slice(0, COMPACT_LORE.chars - 1)}…`
+      : text;
   const lines = hot.map(
     ({ node }) =>
-      `- ${node.id} [${node.kind}] ${node.label} — ${node.text} (chunk ${node.coord.cx},${node.coord.cz}; tone ${node.tone.toFixed(1)})`,
+      `- ${node.id} [${node.kind}] ${node.label} — ${said(node.text)} (chunk ${node.coord.cx},${node.coord.cz}; tone ${node.tone.toFixed(1)})`,
   );
-  const old = activate(world.legends ?? [], { coord, karma: [], limit: OLD_TALES });
+  const old = activate(world.legends ?? [], {
+    coord,
+    karma: [],
+    limit: compact ? COMPACT_LORE.old : OLD_TALES,
+  });
   return block("lore", [
     `hot lore around chunk ${coord.cx},${coord.cz}, hottest first; regional tone ${tone.toFixed(2)}`,
     ...(lines.length === 0 ? ["- nothing witnessed nearby yet"] : lines),
@@ -164,15 +177,21 @@ const notForRumors =
   (world, a) =>
     a.purpose === "rumor" ? "" : render(world, a);
 
+/** A compact witnessing (a 4K route) has no room for what it never uses: flags, the inventory. */
+const notCompactChunk =
+  (render: Render): Render =>
+  (world, a) =>
+    a.compact === true && a.purpose === "chunk" ? "" : render(world, a);
+
 /** Each section renders from the snapshot, or contributes nothing at all. */
 const SECTIONS: readonly { name: string; offset: number; render: Render }[] = [
   { name: "world:floor", offset: 0, render: sceneBound(floorText) },
   { name: "world:npcs", offset: 1, render: sceneBound(npcText) },
   { name: "world:monsters", offset: 2, render: sceneBound(monsterText) },
   { name: "world:quests", offset: 3, render: sceneBound(questText) },
-  { name: "world:flags", offset: 4, render: notForRumors(flagText) },
+  { name: "world:flags", offset: 4, render: notCompactChunk(notForRumors(flagText)) },
   { name: "world:karma", offset: 5, render: notForRumors(karmaText) },
-  { name: "world:inventory", offset: 6, render: notForRumors(inventoryText) },
+  { name: "world:inventory", offset: 6, render: notCompactChunk(notForRumors(inventoryText)) },
   { name: "world:season", offset: 7, render: seasonText },
 ];
 

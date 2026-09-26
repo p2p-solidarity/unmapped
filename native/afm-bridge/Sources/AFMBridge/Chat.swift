@@ -14,6 +14,10 @@ import FoundationModels
 // The budget is the model's own: the transcript, the prompt and any schema are counted with
 // `tokenCount`, the answer gets what is left of the context (at most `maxTokens`), and a task whose
 // `minTokens` does not fit is refused before anything is generated.
+//
+// A request with a `schema` (the JSON Schema subset `dynamicSchema` reads) is answered under guided
+// generation and its text is the answer's JSON: the host writes that into its own program and
+// parses it like any other answer. Properties are generated in the order `required` lists them.
 
 struct ChatToolCallWire: Codable, Sendable {
     let id: String
@@ -42,6 +46,7 @@ private struct ChatRequest: Decodable, Sendable {
     let minTokens: Int
     let temperature: Double
     let program: ProgramShapeWire?
+    let schema: JSONValue?
 }
 
 /// Room for the chat template's own tokens around the counted entries.
@@ -92,7 +97,7 @@ func chat(payload: JSONValue, emit: @escaping PartialEmitter) async -> Operation
         request = try decodePayload(
             ChatRequest.self,
             payload: payload,
-            allowedKeys: ["messages", "tools", "maxTokens", "minTokens", "temperature", "program"]
+            allowedKeys: ["messages", "tools", "maxTokens", "minTokens", "temperature", "program", "schema"]
         )
     } catch {
         return invalidPayload(
@@ -105,6 +110,9 @@ func chat(payload: JSONValue, emit: @escaping PartialEmitter) async -> Operation
     }
     if let program = request.program, !request.tools.isEmpty || program.args.isEmpty {
         return invalidPayload("a program answer needs at least one argument and no tools.")
+    }
+    if request.schema != nil, !request.tools.isEmpty || request.program != nil {
+        return invalidPayload("a schema answer takes no tools and no program shape.")
     }
 
     let log = ToolCallLog()
@@ -125,7 +133,11 @@ func chat(payload: JSONValue, emit: @escaping PartialEmitter) async -> Operation
             )
         }
         (entries, prompt) = try chatTranscript(request.messages, tools: tools)
-        schema = try request.program.map(programSchema)
+        if let answer = request.schema {
+            schema = try GenerationSchema(root: dynamicSchema(named: "Answer", answer), dependencies: [])
+        } else {
+            schema = try request.program.map(programSchema)
+        }
     } catch let error as ChatSetupError {
         return invalidPayload(error.message)
     } catch {
@@ -174,6 +186,15 @@ func chat(payload: JSONValue, emit: @escaping PartialEmitter) async -> Operation
             }
             try Task.checkCancellation()
             if let last { await advance(to: programText(program, last, done: true)) }
+        } else if let schema {
+            var last: GeneratedContent?
+            for try await snapshot in session.streamResponse(to: prompt, schema: schema, options: options) {
+                try Task.checkCancellation()
+                last = snapshot.content
+                await advance(to: snapshot.content.jsonString)
+            }
+            try Task.checkCancellation()
+            if let last { await advance(to: last.jsonString) }
         } else {
             for try await snapshot in session.streamResponse(to: prompt, options: options) {
                 try Task.checkCancellation()
@@ -278,8 +299,9 @@ private func textSegment(_ content: String) -> Transcript.Segment {
     .text(Transcript.TextSegment(content: content))
 }
 
-/// The JSON Schema subset `defineTool` emits (object → string with optional enum, number or
-/// integer with bounds, boolean, array) as a schema the model's decoder enforces.
+/// The JSON Schema subset `defineTool` and answer schemas use (object in `required` order → string
+/// with an optional enum or pattern, number or integer with bounds, boolean, array with optional
+/// minItems/maxItems) as a schema the model's decoder enforces.
 @available(macOS 27.0, *)
 private func dynamicSchema(named name: String, _ node: JSONValue) throws -> DynamicGenerationSchema {
     guard let object = node.objectValue, let type = object["type"]?.stringValue else {
@@ -291,11 +313,14 @@ private func dynamicSchema(named name: String, _ node: JSONValue) throws -> Dyna
     switch type {
     case "object":
         let properties = object["properties"]?.objectValue ?? [:]
-        let required = Set((object["required"]?.arrayValue ?? []).compactMap(\.stringValue))
+        let listed = (object["required"]?.arrayValue ?? []).compactMap(\.stringValue)
+        let required = Set(listed)
+        // A JSON object has no order, so the model writes the properties in `required`'s order.
+        let rank = { (key: String) in listed.firstIndex(of: key) ?? listed.count }
         return DynamicGenerationSchema(
             name: name,
             description: description,
-            properties: try properties.keys.sorted().map { key in
+            properties: try properties.keys.sorted { (rank($0), $0) < (rank($1), $1) }.map { key in
                 let child = properties[key] ?? .null
                 return DynamicGenerationSchema.Property(
                     name: key,
@@ -309,6 +334,16 @@ private func dynamicSchema(named name: String, _ node: JSONValue) throws -> Dyna
         let choices = (object["enum"]?.arrayValue ?? []).compactMap(\.stringValue)
         if !choices.isEmpty {
             return DynamicGenerationSchema(name: name, description: description, anyOf: choices)
+        }
+        if var pattern = object["pattern"]?.stringValue {
+            // The guide holds the whole value to the pattern, so JSON Schema's anchors are dropped.
+            if pattern.hasPrefix("^") { pattern.removeFirst() }
+            if pattern.hasSuffix("$") { pattern.removeLast() }
+            do {
+                return DynamicGenerationSchema(type: String.self, guides: [.pattern(try Regex(pattern))])
+            } catch {
+                throw ChatSetupError(message: "schema \(name) has an invalid pattern.")
+            }
         }
         return DynamicGenerationSchema(type: String.self)
     case "integer":
@@ -327,7 +362,12 @@ private func dynamicSchema(named name: String, _ node: JSONValue) throws -> Dyna
         guard let items = object["items"] else {
             throw ChatSetupError(message: "tool schema \(name) is an array without items.")
         }
-        return DynamicGenerationSchema(arrayOf: try dynamicSchema(named: "\(name)_item", items))
+        let bound = { (key: String) in object[key]?.numberValue.map { Int($0) } }
+        return DynamicGenerationSchema(
+            arrayOf: try dynamicSchema(named: "\(name)_item", items),
+            minimumElements: bound("minItems"),
+            maximumElements: bound("maxItems")
+        )
     default:
         throw ChatSetupError(message: "tool schema \(name) has unsupported type \(type).")
     }
