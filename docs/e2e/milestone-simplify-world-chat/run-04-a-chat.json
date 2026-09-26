@@ -1,0 +1,40 @@
+{
+ "port": 9335,
+ "actions": [
+  {
+   "clickText": "關閉"
+  },
+  {
+   "wait": 600
+  },
+  {
+   "hold": "Enter",
+   "ms": 60
+  },
+  {
+   "wait": 400
+  },
+  {
+   "eval": "!!document.querySelector('[data-layer=chat]')"
+  },
+  {
+   "type": "阿公歡迎！這是我的世界"
+  },
+  {
+   "eval": "window.__sentAt=Date.now(); true"
+  },
+  {
+   "hold": "Enter",
+   "ms": 60
+  },
+  {
+   "wait": 600
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-world-chat/a-03-chat-sent.jpg"
+  },
+  {
+   "eval": "window.__sentAt"
+  }
+ ]
+}

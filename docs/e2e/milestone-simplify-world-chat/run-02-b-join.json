@@ -1,0 +1,87 @@
+{
+ "port": 9336,
+ "note": "<LINK> is the value run-01's last eval returned",
+ "actions": [
+  {
+   "cdp": {
+    "method": "Emulation.setFocusEmulationEnabled",
+    "params": {
+     "enabled": true
+    }
+   }
+  },
+  {
+   "clickText": "世界"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "加入世界"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(()=>{const f=[...document.querySelectorAll('input')].find(i=>i.offsetParent); f.focus(); return true})()"
+  },
+  {
+   "type": "<LINK>"
+  },
+  {
+   "wait": 900
+  },
+  {
+   "clickText": "看看這個世界"
+  },
+  {
+   "repeat": {
+    "times": 30,
+    "until": "(()=>[...document.querySelectorAll('button')].some(b=>b.offsetParent && /加入並開始/.test(b.innerText)))()",
+    "actions": [
+     {
+      "wait": 400
+     }
+    ]
+   }
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-world-chat/b-01-invite-preview.jpg"
+  },
+  {
+   "eval": "(()=>{const f=[...document.querySelectorAll('input')].filter(i=>i.offsetParent).at(-1); f.focus(); f.select?.(); return f.value})()"
+  },
+  {
+   "type": "阿公"
+  },
+  {
+   "eval": "window.__t0=performance.now(); true"
+  },
+  {
+   "clickText": "加入並開始玩"
+  },
+  {
+   "repeat": {
+    "times": 60,
+    "until": "(async()=>{const S=await import('/state/index.ts'); return S.useSessionStore.getState().screen==='play'})()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "eval": "Math.round(performance.now()-window.__t0)"
+  },
+  {
+   "wait": 3000
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-world-chat/b-02-joined-play.jpg"
+  },
+  {
+   "clickText": "知道了"
+  }
+ ]
+}

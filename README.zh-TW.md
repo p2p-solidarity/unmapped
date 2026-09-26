@@ -332,9 +332,9 @@ usage.jsonl                       每次模型呼叫一行：用途、模型、t
   你的大地和進度都保留。
 - **在線的朋友。** F12 一打開就是**朋友**：邀請、加入，以及**在線的朋友**——這片大地上畫出來的每一位其他玩家，
   附上位置（`x, z`）、他站在誰的土地上、離你幾步，每秒更新四次。
-- **聊天。** 在和朋友連起來的世界裡，**按 Enter 說話**：<kbd>Enter</kbd> 打開輸入列，<kbd>Enter</kbd> 送出，
+- **聊天。** 在和朋友連起來的世界裡，以及透過世界服務共享的世界裡，**按 Enter 說話**：<kbd>Enter</kbd> 打開輸入列，<kbd>Enter</kbd> 送出，
   <kbd>Esc</kbd> 關閉。一句最多 200 個字，只送給驗證過的朋友；每位朋友每 5 秒最多 5 句。聊天只存在記憶體裡：
-  不存檔，也不進任何歷史。
+  不存檔，也不進任何歷史。在共享的世界裡，服務把每一句轉給在場的朋友、自己什麼都不留；主人和成員能說話，訪客只能看。
 - **門的其他部分。** 加入世界下面是**朋友的世界**（**前往他們的門**）、四格**快速移動**（去過的地方，或朋友的
   加入碼）、你帶回家的紀念品，以及訪客留在你大地上的留言（**收下**）。收起來的**進階**裡有：世界放在哪裡、
   **邀請連結**、**誰可以進來**、**一起玩的人**、**記錄在公開的區塊鏈上**，以及**這個世界的紀錄**。除了設定以外，
@@ -538,6 +538,7 @@ skills: [skills]
 | **世界 → 加入世界** 的單一欄位：先查 ENS 名稱（存檔的名稱 → 它的加入碼，世界的名稱 → 開始玩這個世界），否則是加入碼（帶著你的一個世界過去）、邀請連結或搬家連結；`.world` 檔在更多裡 | ✅ 已用加入碼驗證（開著 VPN，經中繼 2.2 秒連上）；ENS 名稱、邀請連結與搬家連結這次沒跑 | [simplify-play-together](docs/e2e/milestone-simplify-play-together/result.md) |
 | **F12 → 朋友**（主控台的第一個分頁，家門上也是同樣的區塊）：邀請朋友、加入世界，以及在線的朋友：每個人的位置、站在誰的土地上、離你幾步；房間面板已拿掉 | ✅ 已驗證：邀請、加入，以及在線的朋友與會跟著走動更新的位置 | [simplify-play-together](docs/e2e/milestone-simplify-play-together/result.md) · [simplify-one-world](docs/e2e/milestone-simplify-one-world/result.md) |
 | 在和朋友連起來的世界裡聊天：按 Enter 說話，只送給驗證過的朋友，一句 200 個字，每位朋友每 5 秒最多 5 句，只存在記憶體 | ✅ 已驗證雙向（開著 VPN、經中繼）：一句話 0.65 秒內到，打字時不會走動 | [simplify-play-together](docs/e2e/milestone-simplify-play-together/result.md) |
+| 透過世界服務共享的世界裡聊天（`unmapped-service/2`）：主人與成員可以說話，服務只轉給聽得到的朋友、什麼都不留；舊版 app 或舊服務不會收到聊天訊框 | ✅ 已驗證：0.5 秒做出邀請連結且看不到伺服器、0.7 秒加入、A → B 一句 0.92 秒到、打字不會走動，服務與兩個 app 的檔案裡都沒有聊天內容 | [simplify-world-chat](docs/e2e/milestone-simplify-world-chat/result.md) |
 | 只有一把 passkey 的設定：語言、模型、你的 passkey（一個按鈕，玩家名稱在它底下）；帳號、方案、圖片、信令伺服器、共享世界與版本資訊收在進階設定裡；Data Key 解鎖移到 F12 → 世界 | ✅ 已驗證：畫面與收合；建立 passkey 這次沒跑 | [simplify-one-world](docs/e2e/milestone-simplify-one-world/result.md) |
 | 遊玩：玩家卡片上的世界名稱（ENS 優先）與一行白話的目標；供應商、模型、token、FPS 與種子移到 F12；第一次玩的怎麼玩說明卡與工具列的說明按鈕 | ✅ 已驗證：目標那一行、怎麼玩說明卡與說明按鈕，畫面上沒有機制數字 | [simplify-one-world](docs/e2e/milestone-simplify-one-world/result.md) |
 | 朋友的世界能跨網路連上：TURN 中繼（中繼服務 `src/turn` 產生短效的 Cloudflare Realtime TURN 憑證；`UNMAPPED_TURN_URL`），兩邊都沒有中繼時直接說「找到朋友了，但連不上」 | ✅ 在開著 NordVPN 的同一台機器上驗證：只有 STUN 一直連不上；經中繼 2.2 秒連上（`relay/udp turn.cloudflare.com`，來回 77–141 毫秒）；只要一方有中繼就能連；兩方都沒有時 22.4 秒後顯示提示。已部署的 Worker（預設）同樣 2.4 秒連上。兩個真實網路還沒跑 | [simplify-play-together](docs/e2e/milestone-simplify-play-together/result.md) |

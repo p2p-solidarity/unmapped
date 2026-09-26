@@ -1,0 +1,20 @@
+{
+ "env": {
+  "service": "UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8787 --data \"$TMPDIR/svc-chat\" (fresh; /v1/health says version unmapped-service/2)",
+  "appA": "AETHER_TEST_USER_DATA=\"$TMPDIR/ud-chat-a\" bun run dev --remoteDebuggingPort 9335 (fresh; its world service list set by eval: localStorage 'unwritten.worldServices' = 'ws://127.0.0.1:8787', a device preference)",
+  "appB": "AETHER_TEST_USER_DATA=\"$TMPDIR/ud-chat-b\" bun run dev --remoteDebuggingPort 9336 (fresh; no service configured — the invite names it)",
+  "machine": "the same Mac, NordVPN on (the service is a WebSocket on loopback, so no relay is involved)",
+  "storageCheck": "grep -rla '<the chat lines>' \"$TMPDIR/svc-chat\" \"$TMPDIR/ud-chat-a\" \"$TMPDIR/ud-chat-b\" and the service's stdout log",
+  "build": "main at b85c0e8 plus shared-world chat (this change)"
+ },
+ "model": "openai · gpt-5.4-mini (.env) for A's background chapter; sharing, joining and chat call no model",
+ "order": [
+  "run-01-a-share.json",
+  "run-02-b-join.json",
+  "run-03-both-presence.json",
+  "run-04-a-chat.json",
+  "run-05-b-receive-reply.json",
+  "run-06-a-receive.json"
+ ],
+ "replay": "CDP_PORT=<port> bun scripts/cdp-drive.ts \"$(jq -c .actions <file>)\""
+}

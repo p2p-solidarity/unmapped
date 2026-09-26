@@ -1,0 +1,90 @@
+{
+ "port": 9335,
+ "actions": [
+  {
+   "cdp": {
+    "method": "Emulation.setFocusEmulationEnabled",
+    "params": {
+     "enabled": true
+    }
+   }
+  },
+  {
+   "eval": "localStorage.setItem('unwritten.worldServices','ws://127.0.0.1:8787'); localStorage.getItem('unwritten.worldServices')"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "世界"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "開始"
+  },
+  {
+   "repeat": {
+    "times": 30,
+    "until": "(async()=>{const S=await import('/state/index.ts'); return S.useSessionStore.getState().screen==='play'})()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "clickText": "知道了"
+  },
+  {
+   "wait": 600
+  },
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "▸ 進階"
+  },
+  {
+   "wait": 900
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-world-chat/a-01-door-advanced.jpg"
+  },
+  {
+   "eval": "window.__t0=performance.now(); true"
+  },
+  {
+   "clickText": "建立邀請連結"
+  },
+  {
+   "repeat": {
+    "times": 40,
+    "until": "(()=>/unmapped:\\/\\/join\\?/.test([...document.querySelectorAll('[data-layer=door] input, [data-layer=door] textarea')].map(i=>i.value).join(' ') + (document.querySelector('[data-layer=door]')?.innerText ?? '')))()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(()=>{const door=document.querySelector('[data-layer=door]'); const vals=[...door.querySelectorAll('input, textarea')].map(i=>i.value); const link=(vals.join(' ')+' '+door.innerText).match(/unmapped:\\/\\/join\\?[^\\s\"]+/)?.[0]; window.__link=link; return {ms:Math.round(performance.now()-window.__t0), hasService: /127\\.0\\.0\\.1|ws:\\/\\//.test(door.innerText)}})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-world-chat/a-02-invite-link.jpg"
+  },
+  {
+   "eval": "window.__link"
+  }
+ ]
+}

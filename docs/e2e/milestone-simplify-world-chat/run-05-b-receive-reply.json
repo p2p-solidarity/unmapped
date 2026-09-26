@@ -1,0 +1,52 @@
+{
+ "port": 9336,
+ "actions": [
+  {
+   "repeat": {
+    "times": 40,
+    "until": "(async()=>{const S=await import('/state/index.ts'); return S.useChatStore.getState().lines.length>1})()",
+    "actions": [
+     {
+      "wait": 100
+     }
+    ]
+   }
+  },
+  {
+   "eval": "Date.now()"
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); return S.useChatStore.getState().lines.map(l=>(l.mine?'(me)':(l.name??'(friend)'))+': '+l.text)})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-world-chat/b-03-chat-received.jpg"
+  },
+  {
+   "eval": "(async()=>{const p=(await import('/engine/playerProbe.ts')).samplePlayer(); window.__before=[p.x,p.z]; return true})()"
+  },
+  {
+   "hold": "Enter",
+   "ms": 60
+  },
+  {
+   "wait": 400
+  },
+  {
+   "type": "謝謝！我是阿公，看得到你 wasd"
+  },
+  {
+   "hold": "KeyD",
+   "ms": 600
+  },
+  {
+   "eval": "(async()=>{const p=(await import('/engine/playerProbe.ts')).samplePlayer(); return Math.hypot(p.x-window.__before[0], p.z-window.__before[1]).toFixed(3)})()"
+  },
+  {
+   "hold": "Enter",
+   "ms": 60
+  },
+  {
+   "wait": 500
+  }
+ ]
+}

@@ -516,7 +516,8 @@ export function TitleDiorama({ seedText }): JSX.Element;   // App's MenuBackdrop
   (`hud/Goal.tsx`); machinery (provider, model, tokens, FPS, seed, chunk) lives in F12 only. A first
   run shows `hud/HowToPlay.tsx` (a device preference; the dock's 說明 reopens it). F12 opens on
   朋友 / Friends: invite, join, and every other player on this land with tile coordinates and
-  distance. On a continent, Enter opens a P2P chat (memory only, verified peers only, never saved).
+  distance. With friends, Enter opens a chat (memory only, never saved): on a continent peer to peer
+  through the gate (verified peers only), in a shared world through its service (`net/worldChat.ts`).
   The Data Key unlock lives in F12 → 世界 (it only serves the encrypted legacy export).
 - One action map for keys, pads and touch (`@shared/input`: standard-mapping layout, dead zones, menu
   actions). `useGamepad()` (mounted once in App) polls `navigator.getGamepads()`: in Play with no
@@ -744,8 +745,13 @@ UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8787 --data <dir> [--browser-o
 bun run service -- import <file.world> --data <dir>   |   export <worldId> --data <dir> [--out <file>]
 ```
 - Stores and relays signed history, computes verdicts, runs `admit` and beats (6 h), holds claim
-  leases (90 s, renewed by deltas, ≤ 10 min), relays presence and streams. It never calls a model,
-  holds no model key, and never changes or deletes an entry.
+  leases (90 s, renewed by deltas, ≤ 10 min), relays presence, streams and chat. It never calls a
+  model, holds no model key, and never changes or deletes an entry.
+- Chat (`src/service/chat.ts`): `hear` marks a session that reads `chat`; owners and members say
+  lines (visitors and invitees: `chat-members-only`), cleaned with `readChatText`, ≤ 5 per 5 s
+  (`quota-chat`), relayed to hearing readers and kept nowhere. The challenge says
+  `unmapped-service/2`; main sends `hear`/`chat` only to a service that says ≥ 2
+  (`serviceSpeaksChat`), since an older one would close the socket on an unknown frame.
 - One WebSocket (`/v1/ws`), frames ≤ 256 KiB read by `readToService` / `readFromService` on both
   sides; blobs over HTTP (`/v1/worlds/<id>/blobs/<sha256 hex>`, signed `X-Unmapped-Auth` ±300 s).
   Limits are host flags answered with `quota-*`; only protocol violations close a socket. Visitors

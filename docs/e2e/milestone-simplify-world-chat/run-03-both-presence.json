@@ -1,0 +1,8 @@
+{
+ "port": "9335 then 9336",
+ "actions": [
+  {
+   "eval": "(async()=>{const R=await import('/engine/remoteRoster.ts'); const W=await import('/net/worldPresence.ts'); const hint=[...document.querySelectorAll('*')].find(e=>e.children.length===0 && /按 Enter 說話/.test(e.textContent))?.textContent ?? null; return {live: W.presenceWorld()!==null, others: R.sampleRemotePlayers(performance.now()).map(p=>p.name), hint}})()"
+  }
+ ]
+}

@@ -1,0 +1,22 @@
+{
+ "port": 9335,
+ "actions": [
+  {
+   "repeat": {
+    "times": 40,
+    "until": "(async()=>{const S=await import('/state/index.ts'); return S.useChatStore.getState().lines.length>1})()",
+    "actions": [
+     {
+      "wait": 100
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); return S.useChatStore.getState().lines.map(l=>(l.mine?'(me)':(l.name??'(friend)'))+': '+l.text)})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-simplify-world-chat/a-04-chat-reply.jpg"
+  }
+ ]
+}
