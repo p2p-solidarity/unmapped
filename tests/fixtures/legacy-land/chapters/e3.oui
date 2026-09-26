@@ -1,0 +1,8 @@
+root = Chapter("Chimney Bathhouse", "Share a word with each neighbour before the bath water cools.", [fumi, nishi, talk_fumi, talk_nishi, tag_box])
+fumi = NPC("fumi", "Fumi", "elder", "calm", "#7a5c4a")
+nishi = NPC("nishi", "Nishi", "smith", "joyful", "#5a6f7a")
+talk_fumi = Talk("fumi", "First fire of the year. Take your time, the water keeps.", [c1])
+c1 = Choice("Thank her", "talk", "Fumi carves your name into a wooden tag.", [])
+talk_nishi = Talk("nishi", "Mended the power line on the hill today. The bath lights flicker less now.", [c2])
+c2 = Choice("Ask about the line", "talk", "Nishi says the hill wire sings in the cold.", [])
+tag_box = Treasure("locker_tag", ["wooden locker tag"])

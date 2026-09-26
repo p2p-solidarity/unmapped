@@ -1,0 +1,3 @@
+root = Errands([e1, k1])
+e1 = Find("lost_trowel", "hana", "I dropped my trowel somewhere near the fence posts. Could you look?", 6, 22, "pole_tag", "There it is. Take this tag; it came off the first pole they put up here.")
+k1 = Item("pole_tag", "Tin pole tag", "charm", 1, "hums faintly before rain", null, ["charm_bell"], ["memory", "weather"], "A tin number plate from an old utility pole, worn smooth at the corners.")

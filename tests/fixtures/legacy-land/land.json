@@ -1,0 +1,373 @@
+{
+  "player": "Aki",
+  "language": "en",
+  "cartridge": {
+    "cartridgeId": "aether-land",
+    "version": "1.3.0"
+  },
+  "runtimePin": {
+    "cartridge": {
+      "cartridgeId": "aether-land",
+      "version": "1.3.0",
+      "contentHash": "sha256:57f17e0d3e1504466da111ee6eae2e55720b812a2b07afdad932e7f72467e81b"
+    },
+    "moduleLock": {
+      "entries": [
+        {
+          "moduleId": "tps_camera",
+          "version": "1",
+          "source": "builtin",
+          "provides": ["camera:third_person"],
+          "requires": [],
+          "deterministic": true,
+          "implementedBy": "src/renderer/engine/CameraRig.tsx (orbit branch)"
+        },
+        {
+          "moduleId": "grounded_physics",
+          "version": "1",
+          "source": "builtin",
+          "provides": ["physics:grounded"],
+          "requires": [],
+          "deterministic": false,
+          "implementedBy": "src/renderer/engine/Player.tsx (Rapier kinematic capsule, static colliders)"
+        },
+        {
+          "moduleId": "realtime_timing",
+          "version": "1",
+          "source": "builtin",
+          "provides": ["timing:realtime"],
+          "requires": [],
+          "deterministic": false,
+          "implementedBy": "src/renderer/engine/Player.tsx useFrame loop (no scheduler, wall-clock pacing)"
+        },
+        {
+          "moduleId": "offline_session",
+          "version": "1",
+          "source": "builtin",
+          "provides": ["network:offline"],
+          "requires": [],
+          "deterministic": true,
+          "implementedBy": "single-process play; no session protocol involved"
+        },
+        {
+          "moduleId": "run_progression",
+          "version": "1",
+          "source": "builtin",
+          "provides": ["progression:run_based", "progression:score_run", "progression:stat_growth"],
+          "requires": [],
+          "deterministic": true,
+          "implementedBy": "src/shared/progression.ts + renderer/state/runStore.ts"
+        },
+        {
+          "moduleId": "narrative_layer",
+          "version": "1",
+          "source": "builtin",
+          "provides": ["content:narrative"],
+          "requires": [],
+          "deterministic": false,
+          "implementedBy": "src/renderer/narrative (scene / dialogue / item generation against the DSL)"
+        }
+      ]
+    },
+    "modLock": {
+      "entries": [],
+      "lockHash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "profileHash": "sha256:1a9d91423555b3e6ce0220fae9429b9146860bd10ff9be3ff74c778a7c5d1371",
+    "effectiveHash": "sha256:6757b72877acf961ad7a96f5ee2bf08222bd95add69baec1e364e55321653b1e",
+    "physicsVersion": 1
+  },
+  "createdAt": "2026-09-22T08:00:00.000Z",
+  "updatedAt": "2026-09-25T19:07:30.000Z",
+  "save": {
+    "currentSceneId": "origin",
+    "flags": {},
+    "inventory": {
+      "items": [
+        {
+          "id": "k_umbrella",
+          "name": "Umbrella tag",
+          "kind": "charm",
+          "power": 1,
+          "perk": "brings a lost thing to mind",
+          "curse": null,
+          "meshDna": ["charm_feather"],
+          "archetype": ["memory"],
+          "flavor": "A paper tag with the shelter's stamp and a name in pencil."
+        }
+      ],
+      "materials": [
+        "dried persimmon",
+        "dried fish",
+        "straw hat",
+        "seed tin",
+        "child's kite",
+        "wooden locker tag"
+      ]
+    },
+    "player": null,
+    "party": null,
+    "mutation": null,
+    "completedSceneIds": [],
+    "position": {
+      "sceneId": "origin",
+      "x": -15.5,
+      "y": 0,
+      "z": -14.1,
+      "yaw": 0
+    },
+    "land": {
+      "errands": {
+        "1,0:lost_trowel": "done",
+        "0,1:dried_fish": "reached",
+        "-1,0:tide_word": "accepted",
+        "1,1:lost_umbrella": "done"
+      },
+      "home": {
+        "cx": 0,
+        "cz": 0,
+        "keepsakes": [
+          {
+            "id": "pole_tag",
+            "name": "Tin pole tag",
+            "kind": "charm",
+            "power": 1,
+            "perk": "hums faintly before rain",
+            "curse": null,
+            "meshDna": ["charm_bell"],
+            "archetype": ["memory", "weather"],
+            "flavor": "A tin number plate from an old utility pole, worn smooth at the corners."
+          }
+        ]
+      },
+      "door": [
+        {
+          "kind": "place",
+          "cx": 1,
+          "cz": 0,
+          "label": "Pole Row Crossing"
+        },
+        {
+          "kind": "place",
+          "cx": 0,
+          "cz": 1,
+          "label": "Breakwater Steps"
+        },
+        null,
+        null
+      ],
+      "episodes": {
+        "e1": {
+          "draftId": "$draft:last-bus",
+          "work": "$work:last-bus",
+          "playId": "$play:last-bus",
+          "cleared": true,
+          "summary": "You listened to everyone at the last stop until the bus came."
+        },
+        "e2": {
+          "draftId": null,
+          "work": null,
+          "playId": null,
+          "cleared": true,
+          "summary": "Find what the night wind scattered over the terraces and take it back.",
+          "stage": {
+            "kind": "land",
+            "source": "$file:chapters/e2.oui",
+            "seed": "$uint32:e2",
+            "found": ["straw_hat", "seed_tin", "kite"],
+            "felled": [],
+            "met": ["miyo"]
+          }
+        },
+        "e3": {
+          "draftId": null,
+          "work": null,
+          "playId": null,
+          "cleared": true,
+          "summary": "Share a word with each neighbour before the bath water cools.",
+          "stage": {
+            "kind": "land",
+            "source": "$file:chapters/e3.oui",
+            "seed": "$uint32:e3",
+            "found": ["locker_tag"],
+            "felled": [],
+            "met": ["fumi", "nishi"]
+          }
+        },
+        "e4": {
+          "draftId": null,
+          "work": null,
+          "playId": null,
+          "cleared": false,
+          "summary": null,
+          "stage": {
+            "kind": "side",
+            "source": "$file:chapters/e4/source.oui",
+            "dialogues": {
+              "genzo": "$file:chapters/e4/dialogue/genzo.oui"
+            },
+            "seed": "$uint32:e4",
+            "found": [],
+            "felled": [],
+            "met": []
+          }
+        }
+      },
+      "storyCarry": {
+        "timetable": "the 4:10 bus",
+        "What the Wind Took": ["straw hat", "seed tin", "child's kite"],
+        "First Fire at the Bathhouse": ["wooden locker tag"]
+      },
+      "storyMore": [
+        {
+          "id": "e4",
+          "title": "The Linemen's Stairs",
+          "place": "Steel Tower Hill",
+          "kind": "climb",
+          "brief": "Autumn clears the air, and the steel tower on the hill shows every rung. Genzo, who mends the power line, asks you to climb the linemen's stairs and bring down the signal lamp left on the top landing.",
+          "cx": 2,
+          "cz": -1
+        }
+      ],
+      "places": [
+        {
+          "id": "p1",
+          "title": "Rail Cutting Run",
+          "cx": 2,
+          "cz": -1,
+          "cleared": true,
+          "kind": "side",
+          "seed": "$uint32:p1",
+          "source": "$file:places/p1/source.oui",
+          "dialogues": {
+            "aya": "$file:places/p1/dialogue/aya.oui"
+          }
+        },
+        {
+          "id": "p2",
+          "title": "Firefly Jar",
+          "cx": -1,
+          "cz": -1,
+          "cleared": false,
+          "kind": "otherworld",
+          "work": "$work:firefly-jar",
+          "playId": "$play:firefly-jar"
+        }
+      ]
+    }
+  },
+  "notes": [
+    {
+      "key": "n1",
+      "author": "Aki",
+      "at": "2026-09-22T08:12:43.512Z",
+      "coord": {
+        "cx": 1,
+        "cz": 0,
+        "x": 20,
+        "z": 11
+      },
+      "anchors": ["pole_row@1,0"],
+      "text": "Tapped the pole twice. The crossing light came on anyway.",
+      "contests": null
+    },
+    {
+      "key": "n2",
+      "author": "Mika",
+      "at": "2026-09-23T11:02:19.204Z",
+      "coord": {
+        "cx": 0,
+        "cz": 1,
+        "x": 9,
+        "z": 23
+      },
+      "anchors": [],
+      "text": "防波堤のいちばん上の段に貝がらが七つ。誰が数えているんだろう。",
+      "contests": null
+    },
+    {
+      "key": "n3",
+      "author": "Aki",
+      "at": "2026-09-23T11:12:36.118Z",
+      "coord": {
+        "cx": 0,
+        "cz": 1,
+        "x": 10,
+        "z": 22
+      },
+      "anchors": ["breakwater_steps@0,1"],
+      "text": "Only five shells when I came by. Kei says the tide takes two.",
+      "contests": "$note:n2"
+    },
+    {
+      "key": "n4",
+      "author": "Aki",
+      "at": "2026-09-24T10:38:02.340Z",
+      "coord": {
+        "cx": 1,
+        "cz": 1,
+        "x": 8,
+        "z": 13
+      },
+      "anchors": ["lost_shelter@1,1"],
+      "text": "Left my spare umbrella on Chie's shelf for whoever needs it.",
+      "contests": null
+    }
+  ],
+  "works": {
+    "last-bus": {
+      "files": "works/last-bus",
+      "title": "The Twice-a-Day Bus",
+      "request": "Late summer at the last bus stop. A few people wait for the afternoon bus; the player listens to each of them until it comes.",
+      "summary": "Press Enter to hear each person at the last stop; when everyone has spoken, the bus comes.",
+      "draftCreatedAt": "2026-09-23T09:20:00.000Z",
+      "candidateCreatedAt": "2026-09-23T09:20:04.000Z",
+      "settledAt": "2026-09-23T09:21:40.000Z",
+      "publishedAt": "2026-09-23T09:22:10.000Z",
+      "play": {
+        "title": "The Twice-a-Day Bus",
+        "states": [
+          {
+            "heard": 3,
+            "arrived": true
+          }
+        ],
+        "carry": {
+          "timetable": "the 4:10 bus"
+        },
+        "completions": [
+          {
+            "world": 0,
+            "summary": "You listened to everyone at the last stop until the bus came.",
+            "at": "2026-09-23T09:58:47.310Z"
+          }
+        ],
+        "createdAt": "2026-09-23T09:22:30.000Z",
+        "updatedAt": "2026-09-23T09:58:47.310Z"
+      }
+    },
+    "firefly-jar": {
+      "files": "works/firefly-jar",
+      "title": "Firefly Jar",
+      "request": "A small game: catch fireflies over the paddies at dusk with a glass jar.",
+      "summary": "Move the jar with the arrow keys and press Space to catch fireflies; five fill the jar.",
+      "draftCreatedAt": "2026-09-25T18:30:00.000Z",
+      "candidateCreatedAt": "2026-09-25T18:30:04.000Z",
+      "settledAt": "2026-09-25T18:31:52.000Z",
+      "publishedAt": "2026-09-25T18:32:20.000Z",
+      "play": {
+        "title": "Firefly Jar",
+        "states": [
+          {
+            "caught": 2,
+            "done": false
+          }
+        ],
+        "carry": null,
+        "completions": [],
+        "createdAt": "2026-09-25T19:01:05.000Z",
+        "updatedAt": "2026-09-25T19:06:44.000Z"
+      }
+    }
+  }
+}

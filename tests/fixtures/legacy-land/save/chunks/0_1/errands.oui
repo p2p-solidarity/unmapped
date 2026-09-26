@@ -1,0 +1,3 @@
+root = Errands([e1, k1])
+e1 = Deliver("dried_fish", "sato", "Take this dried fish to Hana at Pole Row Crossing. She trades me greens for it.", "pole_row@1,0", "salt_tin", "She got it? Then keep the tin; it has held salt for thirty summers.")
+k1 = Item("salt_tin", "Salt tin", "tool", 2, "keeps anything dry", null, ["shell_round"], ["sea", "keeping"], "A dented tin with a lid that still shuts tight.")

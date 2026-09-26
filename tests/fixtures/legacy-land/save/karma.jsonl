@@ -1,0 +1,29 @@
+{"at":"2026-09-22T08:04:12.118Z","floor":1,"npcId":null,"choice":"Pole Row Crossing","action":"witness","effect":"Two taps at dusk","cx":1,"cz":0}
+{"at":"2026-09-22T08:05:40.502Z","floor":1,"npcId":"hana","choice":"Share the shade","action":"trade","effect":"Hana hands you a dried persimmon from her apron.","cx":1,"cz":0}
+{"at":"2026-09-22T08:06:02.771Z","floor":1,"npcId":"hana","choice":"accepted lost_trowel","action":"request","effect":"I dropped my trowel somewhere near the fence posts. Could you look?","cx":1,"cz":0}
+{"at":"2026-09-22T08:09:31.046Z","floor":1,"npcId":null,"choice":"found for lost_trowel","action":"request","effect":"","cx":1,"cz":0}
+{"at":"2026-09-22T08:10:05.390Z","floor":1,"npcId":"hana","choice":"finished lost_trowel","action":"request","effect":"There it is. Take this tag; it came off the first pole they put up here. → Tin pole tag","cx":1,"cz":0}
+{"at":"2026-09-22T08:12:43.590Z","floor":1,"npcId":null,"choice":"Aki","action":"note","effect":"left a note","cx":1,"cz":0}
+{"at":"2026-09-22T08:20:18.233Z","floor":1,"npcId":null,"choice":"Breakwater Steps","action":"witness","effect":"A shell on the top step","cx":0,"cz":1}
+{"at":"2026-09-22T08:22:50.917Z","floor":1,"npcId":"sato","choice":"Ask about the fish","action":"trade","effect":"Sato wraps a strip of dried fish in newspaper for you.","cx":0,"cz":1}
+{"at":"2026-09-22T08:23:30.064Z","floor":1,"npcId":"sato","choice":"accepted dried_fish","action":"request","effect":"Take this dried fish to Hana at Pole Row Crossing. She trades me greens for it.","cx":0,"cz":1}
+{"at":"2026-09-22T08:31:07.655Z","floor":1,"npcId":null,"choice":"arrived for dried_fish","action":"request","effect":"Take this dried fish to Hana at Pole Row Crossing. She trades me greens for it.","cx":1,"cz":0}
+{"at":"2026-09-23T09:58:47.402Z","floor":1,"npcId":null,"choice":"cleared episode The Twice-a-Day Bus","action":"witness","effect":"You listened to everyone at the last stop until the bus came.","cx":2,"cz":0}
+{"at":"2026-09-23T10:06:21.480Z","floor":1,"npcId":null,"choice":"Unmanned Station","action":"witness","effect":"A bow to the empty bench","cx":-1,"cz":0}
+{"at":"2026-09-23T10:08:03.127Z","floor":1,"npcId":"yuki","choice":"accepted tide_word","action":"request","effect":"Go down to Breakwater Steps and tell me how high the tide came.","cx":-1,"cz":0}
+{"at":"2026-09-23T10:31:48.809Z","floor":1,"npcId":null,"choice":"crossed Rail Cutting Run","action":"witness","effect":"Cross the flooded rail cutting to the footbridge at the far end.","cx":2,"cz":-1}
+{"at":"2026-09-23T11:12:36.201Z","floor":1,"npcId":null,"choice":"Aki","action":"note","effect":"left a different version of a note","cx":0,"cz":1}
+{"at":"2026-09-24T09:03:10.338Z","floor":1,"npcId":"chapter:e2:miyo","choice":"I will look","action":"talk","effect":"Miyo points down the terrace paths.","cx":-2,"cz":2}
+{"at":"2026-09-24T09:05:22.014Z","floor":1,"npcId":null,"choice":"opened straw_hat","action":"trade","effect":"straw hat"}
+{"at":"2026-09-24T09:07:40.561Z","floor":1,"npcId":null,"choice":"opened seed_tin","action":"trade","effect":"seed tin"}
+{"at":"2026-09-24T09:09:55.702Z","floor":1,"npcId":null,"choice":"opened kite","action":"trade","effect":"child's kite"}
+{"at":"2026-09-24T09:09:55.731Z","floor":1,"npcId":null,"choice":"cleared chapter What the Wind Took","action":"witness","effect":"Find what the night wind scattered over the terraces and take it back.","cx":-2,"cz":2}
+{"at":"2026-09-24T09:41:12.450Z","floor":1,"npcId":"chapter:e3:fumi","choice":"Thank her","action":"talk","effect":"Fumi carves your name into a wooden tag.","cx":0,"cz":-3}
+{"at":"2026-09-24T09:42:30.096Z","floor":1,"npcId":null,"choice":"opened locker_tag","action":"trade","effect":"wooden locker tag"}
+{"at":"2026-09-24T09:43:58.612Z","floor":1,"npcId":null,"choice":"cleared chapter First Fire at the Bathhouse","action":"witness","effect":"Share a word with each neighbour before the bath water cools.","cx":0,"cz":-3}
+{"at":"2026-09-24T09:44:05.283Z","floor":1,"npcId":"chapter:e3:nishi","choice":"Ask about the line","action":"talk","effect":"Nishi says the hill wire sings in the cold.","cx":0,"cz":-3}
+{"at":"2026-09-24T10:30:40.925Z","floor":1,"npcId":null,"choice":"Lost-and-Found Shelter","action":"witness","effect":"A tag for every thing","cx":1,"cz":1}
+{"at":"2026-09-24T10:33:15.370Z","floor":1,"npcId":"chie","choice":"accepted lost_umbrella","action":"request","effect":"A grey umbrella blew off the bench in the wind. It must be caught somewhere on the verge.","cx":1,"cz":1}
+{"at":"2026-09-24T10:35:48.207Z","floor":1,"npcId":null,"choice":"found for lost_umbrella","action":"request","effect":"","cx":1,"cz":1}
+{"at":"2026-09-24T10:36:20.918Z","floor":1,"npcId":"chie","choice":"finished lost_umbrella","action":"request","effect":"That is the one. Keep this tag; it matches the umbrella's. → Umbrella tag","cx":1,"cz":1}
+{"at":"2026-09-24T10:38:02.415Z","floor":1,"npcId":null,"choice":"Aki","action":"note","effect":"left a note","cx":1,"cz":1}

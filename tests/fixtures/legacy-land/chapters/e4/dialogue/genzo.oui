@@ -1,0 +1,3 @@
+root = Dialogue("genzo", "The linemen's stairs go all the way up the hill. Bring the lamp down from the top landing for me.", [c1, c2])
+c1 = Choice("Start climbing", "talk", "Genzo points at the first landing.", [])
+c2 = Choice("Catch your breath", "leave", "Genzo waits by the fence.", [])

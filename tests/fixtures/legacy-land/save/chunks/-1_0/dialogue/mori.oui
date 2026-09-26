@@ -1,0 +1,2 @@
+root = Dialogue("mori", "Nobody has sold tickets here since spring. I still sweep the platform.", [c1])
+c1 = Choice("Help him sweep", "talk", "Mori hands you the second broom without a word.", [])

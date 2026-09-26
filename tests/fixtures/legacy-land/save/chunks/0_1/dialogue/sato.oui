@@ -1,0 +1,2 @@
+root = Dialogue("sato", "Salt wind today. Good for drying fish, bad for the paint.", [c1])
+c1 = Choice("Ask about the fish", "trade", "Sato wraps a strip of dried fish in newspaper for you.", ["dried fish"])

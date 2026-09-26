@@ -1,0 +1,7 @@
+root = Scene("Steel Tower Hill", "countryside", [floor1, sky1, light1, genzo, signal_lamp, top_landing])
+floor1 = Floor(20, 20, "stone")
+sky1 = Sky("#aebfcc", "#d9dfe2", 0.03)
+light1 = Light("ambient", "#f2e6d0", 0.7)
+genzo = NPC("genzo", "Genzo", 1, 1, "smith", "calm", "#556070")
+signal_lamp = Treasure("signal_lamp", 1, 1, ["signal lamp"])
+top_landing = Quest("top_landing", "Climb the linemen's stairs to the top landing of the steel tower.")

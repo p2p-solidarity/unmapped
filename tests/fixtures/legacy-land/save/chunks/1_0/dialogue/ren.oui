@@ -1,0 +1,2 @@
+root = Dialogue("ren", "Tap the pole twice before you cross at dusk. Once for you, once for whoever walks here next.", [c1])
+c1 = Choice("Tap the pole", "talk", "Ren nods as if he heard it ring.", [])

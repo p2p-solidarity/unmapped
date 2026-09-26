@@ -1,0 +1,17 @@
+body {
+  margin: 0;
+  background: #e8dcc0;
+  color: #3a3226;
+  font-family: serif;
+}
+
+p {
+  max-width: 32em;
+  margin: 2em auto 0;
+  font-size: 1.2em;
+}
+
+.hint {
+  font-size: 0.9em;
+  opacity: 0.7;
+}

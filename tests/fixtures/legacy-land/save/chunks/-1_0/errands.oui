@@ -1,0 +1,3 @@
+root = Errands([e1, k1])
+e1 = Guide("tide_word", "yuki", "Go down to Breakwater Steps and tell me how high the tide came.", "breakwater_steps@0,1", "ticket_stub", "Only to the third step? Then the sea is calm. Keep this.")
+k1 = Item("ticket_stub", "Punched ticket stub", "charm", 1, "reminds you of the way back", null, ["charm_feather"], ["travel", "memory"], "A paper stub punched at a station that no longer sells tickets.")

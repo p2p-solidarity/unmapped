@@ -1,0 +1,3 @@
+root = Dialogue("chie", "Everything anyone leaves in the shelter comes to my shelf. Most of it goes home again, in the end.", [c1, c2])
+c1 = Choice("Ask about the shelf", "talk", "Chie shows you a tag with a name on it for every thing.", [])
+c2 = Choice("Look at the shelf", "leave", "Chie goes back to writing tags.", [])

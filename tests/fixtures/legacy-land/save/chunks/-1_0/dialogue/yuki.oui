@@ -1,0 +1,3 @@
+root = Dialogue("yuki", "I wait for the last train to hear what the sea sounds like tonight. Nobody from the steps comes up anymore.", [c1, c2])
+c1 = Choice("Offer to go down", "talk", "Yuki writes the tide times on your palm.", [])
+c2 = Choice("Sit a while", "leave", "Yuki hums a tune with no end.", [])

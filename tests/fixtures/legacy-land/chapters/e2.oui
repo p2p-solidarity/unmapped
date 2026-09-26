@@ -1,0 +1,8 @@
+root = Chapter("Windmill Terraces", "Find what the night wind scattered over the terraces and take it back.", [miyo, talk_miyo, hat, tin, kite])
+miyo = NPC("miyo", "Miyo", "farmer", "calm", "#8f9b5a")
+talk_miyo = Talk("miyo", "Such a wind last night. My straw hat went over the wall, and the seed tin with it.", [c1, c2])
+c1 = Choice("I will look", "talk", "Miyo points down the terrace paths.", [])
+c2 = Choice("Ask about the windmill", "talk", "Miyo says it only turns the wrong way before a storm.", [])
+hat = Treasure("straw_hat", ["straw hat"])
+tin = Treasure("seed_tin", ["seed tin"])
+kite = Treasure("kite", ["child's kite"])

@@ -1,0 +1,2 @@
+root = Dialogue("nobu", "I find the things, Chie writes the tags. I found a whole bicycle bell once.", [c1])
+c1 = Choice("Ask what he found today", "talk", "Nobu empties his pockets: a button, a bolt, a bottle cap.", [])

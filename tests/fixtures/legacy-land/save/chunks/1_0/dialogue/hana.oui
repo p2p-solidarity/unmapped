@@ -1,0 +1,3 @@
+root = Dialogue("hana", "Hot again. The cicadas started before the milk truck did.", [c1, c2])
+c1 = Choice("Ask about the poles", "talk", "Hana says the line hums louder before rain.", [])
+c2 = Choice("Share the shade", "trade", "Hana hands you a dried persimmon from her apron.", ["dried persimmon"])

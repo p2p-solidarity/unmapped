@@ -1,0 +1,3 @@
+root = Dialogue("kei", "The tide took two shells off the top step last night. I put them back.", [c1, c2])
+c1 = Choice("Count the shells", "talk", "Kei counts seven, then five, then gives up laughing.", [])
+c2 = Choice("Wave goodbye", "leave", "Kei waves back with a wet hand.", [])

@@ -1,0 +1,3 @@
+root = Dialogue("aya", "The old cutting floods every spring, so we hop the sleepers. Mind the loose one.", [c1, c2])
+c1 = Choice("Race her", "talk", "Aya is already three sleepers ahead.", [])
+c2 = Choice("Take it slow", "leave", "Aya shrugs and runs on.", [])
