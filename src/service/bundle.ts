@@ -127,7 +127,11 @@ export function importWorld(
     const added = store.addBlob(world, hex, blob);
     if (!added.ok) return added;
   }
-  writeImported(store, world, { v: 1, at, file: sha256File(bytes), head: opened.manifest.head });
+  // Only a world this file brought here is a mirror: re-importing the log a service already holds
+  // (its own export, say) never marks a world it attached itself.
+  if (!held) {
+    writeImported(store, world, { v: 1, at, file: sha256File(bytes), head: opened.manifest.head });
+  }
   return ok({ world, report, again: held });
 }
 
