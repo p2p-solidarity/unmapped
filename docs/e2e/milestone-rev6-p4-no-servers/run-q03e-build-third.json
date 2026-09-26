@@ -1,0 +1,28 @@
+{
+ "step": "q3e",
+ "app": "CDP 9345, Create's build step showing dsl-invalid-props after the second Build (6 origin calls in all); the capture listener from q3d is still installed (window.__qcap is cleared first): press Build and play a third time; wait for published / Play / an error (up to 10 min)",
+ "actions": [
+  {
+   "eval": "(() => { window.__qcap.length = 0; return [...document.querySelectorAll('button')].map(b => ({ text: b.innerText.trim(), disabled: b.disabled })).filter(b => b.text) })()"
+  },
+  {
+   "eval": "window.__q = window.__q || {}; window.__q.b1 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Build and play"
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); const errs0 = (document.body.innerText.match(/Error \u00b7 /g) ?? []).length; for(let i=0;i<2400;i++){if(/Your world is published/.test(document.body.innerText)){return {buildToPublishedMs: Math.round(performance.now()-window.__q.b1), panel: document.body.innerText.slice(0,600)};} if(S.useSessionStore.getState().screen==='play') return {wentStraightToPlayMs: Math.round(performance.now()-window.__q.b1)}; if(/Error \u00b7 /.test(document.body.innerText) && !/Writing the place you wake in/.test(document.body.innerText)) return {atMs: Math.round(performance.now()-window.__q.b1), error: [...document.querySelectorAll('*')].filter(e => /^Error \u00b7 /.test((e.innerText ?? '').trim())).map(e => e.parentElement?.innerText ?? e.innerText).slice(-1)[0]}; await new Promise(r=>setTimeout(r,250));} return {timeout:true, body: document.body.innerText.slice(0,800)};})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q03-11-build-third.jpg"
+  },
+  {
+   "eval": "JSON.stringify(window.__qcap.map(c => ({ id: c.id, type: c.type, usage: c.usage, error: c.error && c.error.code, text: c.text })))"
+  }
+ ],
+ "note": "Recorded run: the first version of this file had the poll replaced by the screenshot by mistake, so it clicked Build and returned at once; actions 4\u20136 (poll, shot, capture) were then sent as a separate call while the build ran. This file is the intended sequence."
+}

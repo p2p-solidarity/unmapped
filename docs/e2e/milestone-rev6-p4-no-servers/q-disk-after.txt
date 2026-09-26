@@ -1,0 +1,41 @@
+# Disk after the Qwen run (userData $SCR/ud, three launches)
+
+## inference.json
+{
+  "kind": "llamacpp",
+  "baseUrl": "http://127.0.0.1:8080/v1",
+  "model": "local",
+  "apiKeyEnv": null,
+  "sidecar": {
+    "binaryPath": "/opt/homebrew/bin/llama-server",
+    "modelPath": "/Users/kidney/models/Qwen3.5-4B-Q4_K_M.gguf",
+    "port": 8080,
+    "ctxSize": 16384
+  }
+}
+
+## usage.jsonl by launch window, purpose, provider, outcome (numbers only; the ledger holds no prompt or answer)
+bible    llamacpp  local              done   scope=create · calls 1 · in 1153 · out 239 · cached 0 · ms 13772
+image    openai    gpt-image-1-mini   failed scope=create · calls 3 · in 0 · out 0 · cached 0 · ms 4
+story    llamacpp  local              done   scope=create · calls 1 · in 539 · out 452 · cached 0 · ms 22102
+origin   llamacpp  local              done   scope=create · calls 21 · in 73122 · out 8492 · cached 49392 · ms 446768
+chapter  llamacpp  local              done   scope=instance · calls 2 · in 5582 · out 944 · cached 2233 · ms 99121
+witness  llamacpp  local              done   scope=instance · calls 15 · in 76409 · out 16324 · cached 41694 · ms 824988
+total rows 43
+
+## history log (histories/<world>/log.jsonl): n, kind, and for a witness its chunk, name and residents
+#1 genesis at 2026-09-26T07:44:40.478Z
+#2 profile at 2026-09-26T07:44:40.478Z
+#3 chapter at 2026-09-26T07:46:20.251Z
+#4 witness at 2026-09-26T07:50:03.909Z name "Hiraoka's Edge" npcs ["hiro:Hiro", "miya:Miyu"]
+#5 witness at 2026-09-26T07:55:11.762Z name "The Water's Mouth" npcs ["sato:Sato", "kana:Kana", "hiro:Hiro"]
+#6 visit at 2026-09-26T07:55:55.530Z
+
+## instance saves/*/progress.json → episodes
+{"e1": {"cleared": false, "summary": null, "found": [], "felled": [], "met": ["bus1"]}}
+
+## Create draft
+create.cb1b17a7ff560385 step idea look {"pictures": [], "chosen": null, "skipped": true} chapters 5
+
+## cartridges
+['aether-land'] ['1.0.0', '1.1.0', '1.2.0', '1.3.0']

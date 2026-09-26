@@ -1,0 +1,104 @@
+{
+ "step": "q4d",
+ "app": "CDP 9345, helper installed: walk the z = 16 ford east with the pad (RB sprint): into chunk (1, 0) and wait until Qwen's witness settles (up to 10 min), then into (2, 0) and wait, then to chapter 1's gate at (80.5, 16.5); read each chunk's name, residents and props, and the chapter",
+ "actions": [
+  {
+   "eval": "window.__q = window.__q || {}; window.__q.k0 = performance.now(); 'mark'"
+  },
+  {
+   "pad": {
+    "toward": "[16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[40.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "eval": "(async()=>JSON.stringify({ atMs: Math.round(performance.now() - window.__q.k0), state: await window.__e2e.state(), hud: document.body.innerText.split('\\n').filter(Boolean).slice(3, 8) }))()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q04-02-witnessing-1-0.jpg"
+  },
+  {
+   "repeat": {
+    "times": 1200,
+    "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['1,0']; return c !== undefined && c.status !== 'writing' })()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = S.useLandStore.getState().chunks['1,0']; const w = n.chunks['1,0']; return JSON.stringify({ settledAfterMs: Math.round(performance.now() - window.__q.k0), status: c?.status, name: c?.scene?.name ?? null, npcs: c?.scene ? c.scene.npcs.map(p => p.id + ':' + p.name + ':' + p.role) : null, props: c?.scene ? c.scene.props.map(p => p.kind) : null, error: c?.error ? c.error.code + ' \u00b7 ' + c.error.message.slice(0, 300) : null, head: n.head.n, live: w ? { n: w.live.n, author: w.live.author } : null }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q04-03-witnessed-1-0.jpg"
+  },
+  {
+   "eval": "window.__q.k0 = performance.now(); 'mark'"
+  },
+  {
+   "pad": {
+    "toward": "[72.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "eval": "(async()=>JSON.stringify({ atMs: Math.round(performance.now() - window.__q.k0), state: await window.__e2e.state(), hud: document.body.innerText.split('\\n').filter(Boolean).slice(3, 8) }))()"
+  },
+  {
+   "repeat": {
+    "times": 1200,
+    "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['2,0']; return c !== undefined && c.status !== 'writing' })()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = S.useLandStore.getState().chunks['2,0']; const w = n.chunks['2,0']; return JSON.stringify({ settledAfterMs: Math.round(performance.now() - window.__q.k0), status: c?.status, name: c?.scene?.name ?? null, npcs: c?.scene ? c.scene.npcs.map(p => p.id + ':' + p.name + ':' + p.role) : null, props: c?.scene ? c.scene.props.map(p => p.kind) : null, error: c?.error ? c.error.code + ' \u00b7 ' + c.error.message.slice(0, 300) : null, head: n.head.n, live: w ? { n: w.live.n, author: w.live.author } : null }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q04-04-failed-2-0.jpg"
+  },
+  {
+   "pad": {
+    "toward": "[79.5, 16.5]",
+    "within": 1.2,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(async()=>JSON.stringify({chapter: await window.__e2e.chapter(), state: await window.__e2e.state()}))()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q04-05-at-chapter-gate.jpg"
+  }
+ ]
+}

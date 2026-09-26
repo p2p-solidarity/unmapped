@@ -1,0 +1,67 @@
+{
+ "step": "q6b",
+ "app": "launch 2 (CDP 9345), hand-started llama-server: Escape; Create World \u2192 Continue (the draft of launch 1; q4a left it at the idea step) \u2192 the forward button of each step (Continue to the world / look / without a picture / story / build, nothing rewritten) \u2192 install the capture listener \u2192 Build and play once (a sixth build; the origin call carries the Scene GBNF when the provider is llama.cpp) \u2192 wait for published / Play / an error",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "Create World"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => document.body.innerText.split('\\n').filter(Boolean).slice(0, 20))()"
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(() => document.body.innerText.split('\\n').filter(Boolean).slice(0, 12))()"
+  },
+  {
+   "repeat": {
+    "times": 6,
+    "until": "[...document.querySelectorAll('button')].some(b => b.innerText.trim() === 'Build and play')",
+    "actions": [
+     {
+      "eval": "(() => { const want = ['Continue to build', 'Continue to the story', 'Continue without a picture', 'Continue to the look', 'Continue to the world']; for (const w of want) { const b = [...document.querySelectorAll('button')].find(x => x.innerText.trim() === w && !x.disabled); if (b) { b.click(); return w; } } return null })()"
+     },
+     {
+      "wait": 1500
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(() => { if (!window.__qcapOn) { window.__qcap = []; window.seed.inference.onEvent((e) => { if (e.type === 'done' || e.type === 'error') window.__qcap.push({ id: e.id, type: e.type, at: Date.now(), text: e.text ?? null, usage: e.usage ?? null, error: e.error ?? null }); }); window.__qcapOn = true; } return document.querySelector('[data-quote]')?.innerText ?? null })()"
+  },
+  {
+   "eval": "window.__q = window.__q || {}; window.__q.b1 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Build and play"
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); const errs0 = (document.body.innerText.match(/Error \u00b7 /g) ?? []).length; for(let i=0;i<2400;i++){if(/Your world is published/.test(document.body.innerText)){return {buildToPublishedMs: Math.round(performance.now()-window.__q.b1), panel: document.body.innerText.slice(0,600)};} if(S.useSessionStore.getState().screen==='play') return {wentStraightToPlayMs: Math.round(performance.now()-window.__q.b1)}; if(/Error \u00b7 /.test(document.body.innerText) && !/Writing the place you wake in/.test(document.body.innerText)) return {atMs: Math.round(performance.now()-window.__q.b1), error: [...document.querySelectorAll('*')].filter(e => /^Error \u00b7 /.test((e.innerText ?? '').trim())).map(e => e.parentElement?.innerText ?? e.innerText).slice(-1)[0]}; await new Promise(r=>setTimeout(r,250));} return {timeout:true, body: document.body.innerText.slice(0,800)};})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q06-01-build-own-server.jpg"
+  },
+  {
+   "eval": "JSON.stringify(window.__qcap.map(c => ({ id: c.id, type: c.type, usage: c.usage, error: c.error && c.error.code, text: c.text })))"
+  }
+ ],
+ "note": "Recorded run: the first try of this file clicked only 'Continue to build', which the idea step does not have, so it never built; that poll was stopped by hand and the steps from action 8 on were sent again as a separate call with the forward loop above (this file)."
+}

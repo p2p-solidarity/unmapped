@@ -1,0 +1,24 @@
+{
+ "step": "q3c",
+ "app": "CDP 9345, Create at the story step (5 chapters): Continue to build; read the quote; Build and play (the origin scene is written by Qwen with the Scene GBNF); wait for 'Your world is published' or Play (up to 10 min); Enter the world; wait for Play; read the chapter status",
+ "actions": [
+  {"clickText": "Continue to build"},
+  {"eval": "(async()=>{for(let i=0;i<80;i++){const q=document.querySelector('[data-quote]'); if(q&&q.innerText.includes('This draft')) return q.innerText; await new Promise(r=>setTimeout(r,250));} return document.querySelector('[data-quote]')?.innerText ?? document.body.innerText.slice(0, 1500);})()"},
+  {"eval": "document.querySelector('[data-quote]')?.scrollIntoView({block:'center'}); true"},
+  {"wait": 300},
+  {"shot": "docs/e2e/milestone-rev6-p4-no-servers/q03-06-build-quote.jpg"},
+  {"eval": "window.__q = window.__q || {}; window.__q.b0 = performance.now(); 'mark'"},
+  {"clickText": "Build and play"},
+  {"wait": 3000},
+  {"eval": "(() => ({ lines: document.body.innerText.split('\\n').filter(Boolean).slice(0, 30) }))()"},
+  {"shot": "docs/e2e/milestone-rev6-p4-no-servers/q03-07-building.jpg"},
+  {"eval": "(async()=>{const S=await import('/state/index.ts'); for(let i=0;i<2400;i++){if(/Your world is published/.test(document.body.innerText)){return {buildToPublishedMs: Math.round(performance.now()-window.__q.b0), panel: document.body.innerText.slice(0,600)};} if(S.useSessionStore.getState().screen==='play') return {wentStraightToPlayMs: Math.round(performance.now()-window.__q.b0)}; if(/Error · /.test(document.body.innerText)) return {atMs: Math.round(performance.now()-window.__q.b0), error: [...document.querySelectorAll('*')].filter(e => /^Error · /.test((e.innerText ?? '').trim())).map(e => e.parentElement?.innerText ?? e.innerText).slice(-1)[0]}; await new Promise(r=>setTimeout(r,250));} return {timeout:true, body: document.body.innerText.slice(0,800)};})()"},
+  {"shot": "docs/e2e/milestone-rev6-p4-no-servers/q03-08-build-1-error.jpg"},
+  {"eval": "window.__q.e0 = performance.now(); 'mark'"},
+  {"clickText": "Enter the world"},
+  {"eval": "(async()=>{const S=await import('/state/index.ts'); for(let i=0;i<960;i++){const s=S.useSessionStore.getState(); if(s.screen==='play'&&s.activeInstance){return {buildToPlayMs: Math.round(performance.now()-window.__q.b0), enterToPlayMs: Math.round(performance.now()-window.__q.e0), cartridge: s.activeInstance.cartridge.manifest.cartridgeId + '@' + s.activeInstance.cartridge.manifest.version, instance: s.activeInstance.instance.instanceId};} await new Promise(r=>setTimeout(r,250));} return document.body.innerText.slice(0,600);})()"},
+  {"wait": 1500},
+  {"eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useWorldStore.getState(); const g = w.scene.status === 'ready' ? w.scene.value : null; return JSON.stringify({ writingAhead: document.body.innerText.match(/Writing the next chapter[^\\n]*/)?.[0] ?? null, usage: document.body.innerText.match(/This world:[^\\n]*/)?.[0] ?? null, origin: g && { name: g.name ?? null, biome: g.biome ?? null, floor: g.floor ?? null, npcs: (g.npcs ?? []).map(n => n.id + ':' + n.name + ':' + n.role), props: (g.props ?? []).length, lights: (g.lights ?? []).length } }) })()"},
+  {"shot": "docs/e2e/milestone-rev6-p4-no-servers/q03-09-build-1-no-play.jpg"}
+ ]
+}

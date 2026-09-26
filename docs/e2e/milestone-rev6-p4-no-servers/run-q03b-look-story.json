@@ -1,0 +1,22 @@
+{
+ "step": "q3b",
+ "app": "CDP 9345, Create at the world step (7 cards): Continue to the look; read what the look step says with no image provider (no key, no gateway); the story streams meanwhile; Continue without a picture; wait on the story step until 'Continue to build' is enabled (up to 10 min); read the chapters and the usage line",
+ "actions": [
+  {"eval": "window.__q = window.__q || {}; window.__q.l0 = performance.now(); 'mark'"},
+  {"clickText": "Continue to the look"},
+  {"wait": 2500},
+  {"eval": "(() => ({ lines: document.body.innerText.split('\\n').filter(Boolean).slice(0, 40), story: document.querySelector('[data-stream-preview=story]')?.innerText.slice(0, 300) ?? null }))()"},
+  {"shot": "docs/e2e/milestone-rev6-p4-no-servers/q03-03-look-no-provider.jpg"},
+  {"eval": "(() => { const all = [...document.querySelectorAll('*')].filter(e => /^Error · /.test((e.innerText ?? '').trim())); const blocks = all.filter(e => !all.some(o => o !== e && e.contains(o))); return blocks.map(b => (b.parentElement?.innerText ?? b.innerText)); })()"},
+  {"eval": "window.__q.s0 = performance.now(); 'mark'"},
+  {"clickText": "Continue without a picture"},
+  {"wait": 1500},
+  {"eval": "(() => ({ lines: document.body.innerText.split('\\n').filter(Boolean).slice(0, 30) }))()"},
+  {"shot": "docs/e2e/milestone-rev6-p4-no-servers/q03-04-story-streaming.jpg"},
+  {"eval": "(async()=>{for(let i=0;i<2400;i++){const b=[...document.querySelectorAll('button')].find(x=>x.innerText.trim()==='Continue to build'); if(b&&!b.disabled) return {storyReadyAfterLookMs:Math.round(performance.now()-window.__q.l0), afterSkipMs: Math.round(performance.now()-window.__q.s0)}; if(/Error · /.test(document.body.innerText)) return {atMs: Math.round(performance.now()-window.__q.l0), error: [...document.querySelectorAll('*')].filter(e => /^Error · /.test((e.innerText ?? '').trim())).map(e => e.parentElement?.innerText ?? e.innerText).slice(-1)[0]}; await new Promise(r=>setTimeout(r,250));} return {timeout: true, body: document.body.innerText.slice(0,800)};})()"},
+  {"wait": 800},
+  {"eval": "(async () => { const r = await window.seed.createDrafts.list(); const d = await window.seed.createDrafts.read(r.value[0].draftId); const v = d.value; return JSON.stringify({ step: v.step, look: v.look, story: v.story?.episodes?.map(e => ({ id: e.id, kind: e.kind, title: e.title, gate: e.gate ?? null, beat: (e.beat ?? e.summary ?? '').slice(0, 200), people: e.people ?? null })) ?? v.story, usage: document.querySelector('[data-usage-line]')?.innerText ?? null }) })()"},
+  {"eval": "(() => ({ lines: document.body.innerText.split('\\n').filter(Boolean).slice(0, 80) }))()"},
+  {"shot": "docs/e2e/milestone-rev6-p4-no-servers/q03-05-story.jpg"}
+ ]
+}

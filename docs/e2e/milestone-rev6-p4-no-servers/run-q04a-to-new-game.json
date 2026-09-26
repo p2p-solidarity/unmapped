@@ -1,0 +1,22 @@
+{
+ "step": "q4a",
+ "app": "CDP 9345: Create never reached a world (5 builds failed), so play runs on the built-in world with Qwen writing: leave Create (Back ×3 → idea step, Back to the title ×2 — the first goes to Create's draft list), Worlds → New game → Start; wait for Play; read the HUD, the story and chapter 1's status (Qwen writes it in the background)",
+ "actions": [
+  {"eval": "(async () => { const S = await import('/state/index.ts'); return S.useSessionStore.getState().screen })()"},
+  {"repeat": {"times": 4, "until": "[...document.querySelectorAll('button')].some(b => b.innerText.trim() === 'Back to the title')", "actions": [{"clickText": "Back"}, {"wait": 1000}]}},
+  {"clickText": "Back to the title"},
+  {"wait": 1200},
+  {"clickText": "Back to the title"},
+  {"wait": 1200},
+  {"eval": "(async () => { const S = await import('/state/index.ts'); return { screen: S.useSessionStore.getState().screen, buttons: [...document.querySelectorAll('button')].map(b => b.innerText.trim()).filter(Boolean).slice(0, 12) } })()"},
+  {"clickText": "Worlds"},
+  {"wait": 1200},
+  {"eval": "(() => { const m = document.querySelector('main') ?? document.body; return m.innerText.slice(0, 1200) })()"},
+  {"eval": "window.__q = window.__q || {}; window.__q.p0 = performance.now(); 'mark'"},
+  {"clickText": "Start"},
+  {"eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance && S.useLandStore.getState().progress !== null) return { ms: Math.round(performance.now() - window.__q.p0), cartridge: s.activeInstance.cartridge.manifest.cartridgeId + '@' + s.activeInstance.cartridge.manifest.version, instance: s.activeInstance.instance.instanceId }; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + S.useSessionStore.getState().screen })()"},
+  {"wait": 2500},
+  {"eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const S = await import('/state/index.ts'); const p = P.samplePlayer(); const lines = document.body.innerText.split('\\n').filter(Boolean); const st = S.useSessionStore.getState().activeInstance?.cartridge.story; return JSON.stringify({ pos: p && [Number(p.x.toFixed(2)), Number(p.z.toFixed(2))], chunk: S.useEngineStore.getState().chunk, story: st && (st.episodes ?? st.chapters ?? st).map?.((e) => ({ id: e.id, kind: e.kind, title: e.title, place: e.place ?? null })), hud: lines.slice(0, 40) }) })()"},
+  {"shot": "docs/e2e/milestone-rev6-p4-no-servers/q04-00-new-game.jpg"}
+ ]
+}

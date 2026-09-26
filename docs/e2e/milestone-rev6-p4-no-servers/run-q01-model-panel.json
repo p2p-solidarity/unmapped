@@ -1,0 +1,15 @@
+{
+ "step": "q1",
+ "app": "CDP 9345, fresh userData, UI in the system language (zh-TW): Settings → English; read Settings → Model as it first opens (the default config, what this computer has, the route); read the store and detectLocal; no click on a model yet",
+ "actions": [
+  {"eval": "(() => ({ title: document.body.innerText.split('\\n').filter(Boolean), buttons: [...document.querySelectorAll('button')].map(b => b.innerText.trim()).filter(Boolean) }))()"},
+  {"clickText": "設定"},
+  {"wait": 1000},
+  {"clickText": "English"},
+  {"wait": 2500},
+  {"eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); s?.scrollIntoView({ block: 'start' }); return { model: s?.innerText, buttons: [...(s?.querySelectorAll('button') ?? [])].map(b => ({ text: b.innerText.trim(), disabled: b.disabled })), inputs: [...(s?.querySelectorAll('input') ?? [])].map(i => ({ label: i.closest('label')?.innerText ?? null, value: i.value })) } })()"},
+  {"eval": "(async () => { const S = await import('/state/index.ts'); const st = S.useInferenceStore.getState(); const d = await window.seed.inference.detectLocal(); return JSON.stringify({ config: st.config, probe: st.probe, sidecar: st.sidecar ?? null, detectLocal: d }) })()"},
+  {"wait": 300},
+  {"shot": "docs/e2e/milestone-rev6-p4-no-servers/q01-00-model-default.jpg"}
+ ]
+}

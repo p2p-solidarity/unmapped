@@ -1,0 +1,10 @@
+{
+ "step": "q4b",
+ "app": "CDP 9345, in Play on aether-land 1.3.0 at spawn, after the first Qwen writes settled (chapter 1 ahead, and the spawn chunk (0, 0) witnessed on entry): read the land store's chunks, chapter e1's stage, the world's history head and the HUD; read what Qwen wrote (window.__qcap)",
+ "actions": [
+  {"eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const L = S.useLandStore.getState(); const p = L.progress; return JSON.stringify({ chunks: Object.fromEntries(Object.entries(L.chunks).map(([k, c]) => [k, { status: c.status, name: c.scene?.name ?? null, npcs: c.scene ? c.scene.npcs.map(x => x.id + ':' + x.name + ':' + x.role) : null, props: c.scene ? c.scene.props.length : null, error: c.error ? c.error.code + ' · ' + c.error.message.slice(0, 300) : null }])), e1: p?.episodes?.e1 ?? null, head: n?.head.n, history: Object.fromEntries(Object.entries(n?.chunks ?? {}).map(([k, w]) => [k, { n: w.live.n, npcs: w.live.body.index?.npcs?.map(q => q.id + ':' + q.name) ?? null }])) }) })()"},
+  {"eval": "(() => { const lines = document.body.innerText.split('\\n').filter(Boolean); return lines.slice(0, 45) })()"},
+  {"shot": "docs/e2e/milestone-rev6-p4-no-servers/q04-01-first-writes.jpg"},
+  {"eval": "JSON.stringify(window.__qcap.slice(-5).map(c => ({ id: c.id, type: c.type, usage: c.usage, error: c.error && c.error.code, text: c.text })))"}
+ ]
+}

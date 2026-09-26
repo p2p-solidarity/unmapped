@@ -1,0 +1,63 @@
+vite v8.3.0 building ssr environment for development...
+transforming...
+✓ 357 modules transformed.
+rendering chunks...
+out/main/chunks/heart-BgeRAx0t.png                          3.12 kB
+out/main/chunks/samurai_green-XToNlHMv.png                  4.78 kB
+out/main/chunks/samurai_blue-YZHMdpFI.png                   5.53 kB
+out/main/chunks/ninja_blue-COU3McFS.png                     6.13 kB
+out/main/chunks/tileset_floor-B7205uFr.png                 29.61 kB
+out/main/chunks/tileset_village_abandoned-BqZ8VUQR.png     31.77 kB
+out/main/index.js                                       1,289.50 kB
+
+✓ built in 109ms
+
+electron main process built successfully
+
+-----
+
+vite v8.3.0 building ssr environment for development...
+transforming...
+✓ 122 modules transformed.
+rendering chunks...
+out/preload/index.js  224.04 kB
+
+✓ built in 21ms
+
+electron preload scripts built successfully
+
+-----
+
+dev server running for the electron renderer process at:
+
+  ➜  Local:   http://localhost:5198/
+  ➜  Network: use --host to expose
+
+starting electron app...
+
+
+DevTools listening on ws://127.0.0.1:9345/devtools/browser/508a1bb6-bfda-44cd-a88a-db389eb0a1c8
+[apple-local] native-helper-start: spawn $SCR/snap/native/afm-bridge/.build/debug/afm-bridge ENOENT
+[renderer:LOG] [vite] connecting... (http://localhost:5198/@vite/client:883)
+[renderer:LOG] [vite] connected. (http://localhost:5198/@vite/client:996)
+[renderer:LOG] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold (http://localhost:5198/@fs$SCR/snap/.vite-cache/deps/client-CBEMz44o.js?v=d53eca13:15861)
+[inference] chat ad3785b5-0e87-4436-a183-e4c795c15dec · 2 messages · 0 tools
+[inference] done ad3785b5-0e87-4436-a183-e4c795c15dec · origin · llamacpp local · 19435 ms · max 2200 · 2748+292 tokens (0 cached) · ctx 16384
+[renderer:WARN] [repair] 1/2 · dsl-invalid-props · 4 statement(s) of the Scene program are invalid. · missing required field "/fog" — signature: Sky(color*: string, fog*: string, fogDensity*: number) (http://localhost:5198/@vite/client:299)
+[inference] chat 637b97b2-1a75-4b1e-8a2c-79ac905b80c8 · 4 messages · 0 tools
+5:10:44 PM [vite] (client) [console.warn] [repair] 1/2 · dsl-invalid-props · 4 statement(s) of the Scene program are invalid. · missing required field "/fog" — signature: Sky(color*: string, fog*: string, fogDensity*: number)
+[inference] done 637b97b2-1a75-4b1e-8a2c-79ac905b80c8 · origin · llamacpp local · 14909 ms · max 2200 · 3668+307 tokens (2744 cached) · ctx 16384
+[renderer:WARN] [repair] 2/2 · dsl-invalid-props · 2 statement(s) have arguments the engine cannot use. · Prop(...) has invalid arguments — tint: Invalid input: expected string, received object; dynamic: Invalid input: expected boolean, received string (http://localhost:5198/@vite/client:299)
+5:10:59 PM [vite] (client) [console.warn] [repair] 2/2 · dsl-invalid-props · 2 statement(s) have arguments the engine cannot use. · Prop(...) has invalid arguments — tint: Invalid input: expected string, received object; dynamic: Invalid input: expected boolean, received string
+[inference] chat 2ca904bc-0630-4a13-93a9-8b651be0c4a2 · 4 messages · 0 tools
+[inference] done 2ca904bc-0630-4a13-93a9-8b651be0c4a2 · origin · llamacpp local · 14992 ms · max 2200 · 3568+311 tokens (2744 cached) · ctx 16384
+[inference] chat 8f30f9a1-f471-4772-93a0-a5b2d29a406f · 2 messages · 0 tools
+[inference] done 8f30f9a1-f471-4772-93a0-a5b2d29a406f · witness · llamacpp local · 84833 ms · max 3200 · 3691+1808 tokens (0 cached) · ctx 16384
+[renderer:WARN] [repair] 1/2 · dsl-orphaned-statement · Defined but never used: rock_16, rock_17, rock_18, rock_19, rock_20, rock_21, rock_22, rock_23, rock_24, rock_25, rock_26, rock_27, rock_28, rock_29, rock_30, rock_31, rock_32, rock_33, rock_34, rock_ (http://localhost:5198/@vite/client:299)
+[inference] chat 6160357c-7f84-4ce9-ab47-b048db782f84 · 4 messages · 0 tools
+5:13:32 PM [vite] (client) [console.warn] [repair] 1/2 · dsl-orphaned-statement · Defined but never used: rock_16, rock_17, rock_18, rock_19, rock_20, rock_21, rock_22, rock_23, rock_24, rock_25, rock_26, rock_27, rock_28, rock_29, rock_30, rock_31, rock_32, rock_33, rock_34, rock_
+[inference] done 6160357c-7f84-4ce9-ab47-b048db782f84 · witness · llamacpp local · 96862 ms · max 3200 · 7982+2058 tokens (3687 cached) · ctx 16384
+[renderer:WARN] [repair] 2/2 · dsl-invalid-chunk · 2 problem(s) with this Chunk program. · NPC(...) has invalid arguments — held: Invalid option: expected one of "none"|"staff"|"sword"|"lantern"|"basket"|"scroll"|"hammer"|"bow"|"fan"|"lute"|"spear" (http://localhost:5198/@vite/client:299)
+[inference] chat d53fea85-19e3-40d1-901c-08e993e9940a · 4 messages · 0 tools
+5:15:09 PM [vite] (client) [console.warn] [repair] 2/2 · dsl-invalid-chunk · 2 problem(s) with this Chunk program. · NPC(...) has invalid arguments — held: Invalid option: expected one of "none"|"staff"|"sword"|"lantern"|"basket"|"scroll"|"hammer"|"bow"|"fan"|"lute"|"spear"
+[inference] done d53fea85-19e3-40d1-901c-08e993e9940a · witness · llamacpp local · 111039 ms · max 3200 · 8019+2348 tokens (3687 cached) · ctx 16384

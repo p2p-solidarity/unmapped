@@ -1,0 +1,38 @@
+{
+ "step": "q4f",
+ "app": "CDP 9345, standing in chunk (2, 0) whose witness failed (dsl-orphaned-statement after 2 repairs): press 'Retry witnessing' on the HUD, as a player would; wait until it settles (up to 10 min); read the chunk; read what Qwen wrote (window.__qcap, cleared first)",
+ "actions": [
+  {
+   "eval": "(() => document.body.innerText.split('\\n').filter(Boolean).slice(3, 8))()"
+  },
+  {
+   "eval": "window.__q.k0 = performance.now(); window.__qcap.length = 0; 'mark'"
+  },
+  {
+   "clickText": "Retry witnessing"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "repeat": {
+    "times": 1200,
+    "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['2,0']; return c !== undefined && c.status !== 'writing' })()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = S.useLandStore.getState().chunks['2,0']; const w = n.chunks['2,0']; return JSON.stringify({ settledAfterMs: Math.round(performance.now() - window.__q.k0), status: c?.status, name: c?.scene?.name ?? null, npcs: c?.scene ? c.scene.npcs.map(p => p.id + ':' + p.name + ':' + p.role) : null, props: c?.scene ? c.scene.props.map(p => p.kind) : null, error: c?.error ? c.error.code + ' \u00b7 ' + c.error.message.slice(0, 300) : null, head: n.head.n, live: w ? { n: w.live.n, author: w.live.author } : null }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q04-08-retry-2-0.jpg"
+  },
+  {
+   "eval": "JSON.stringify(window.__qcap.map(c => ({ id: c.id, type: c.type, usage: c.usage, error: c.error && c.error.code, text: c.text })))"
+  }
+ ]
+}

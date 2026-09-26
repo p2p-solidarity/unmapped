@@ -1,0 +1,14 @@
+{
+ "step": "q6a",
+ "app": "launch 2 (CDP 9345, same userData; no LLAMA_ARG_* env): llama-server started by hand with the recommended command plus --log-file, -lv 1 (request bodies in the log), --log-timestamps --log-prefix, on :8080, so its own timings can be read. Title (English is kept) → Settings → Model: read the panel (the saved config is still the sidecar one, stopped); Check connection against the hand-started server; read the probe",
+ "actions": [
+  {"clickText": "Settings"},
+  {"wait": 1200},
+  {"eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); s?.scrollIntoView({ block: 'start' }); return s?.innerText })()"},
+  {"eval": "window.__q = { p: performance.now() }; 'mark'"},
+  {"clickText": "Check connection"},
+  {"eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 80; i++) { const p = S.useInferenceStore.getState().probe; if (p.status === 'ready' && i > 2) return JSON.stringify({ probe: p.value, sidecar: S.useInferenceStore.getState().sidecar }); await new Promise(r => setTimeout(r, 250)); } return 'still checking' })()"},
+  {"eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); return s?.innerText })()"},
+  {"shot": "docs/e2e/milestone-rev6-p4-no-servers/q06-00-own-server.jpg"}
+ ]
+}

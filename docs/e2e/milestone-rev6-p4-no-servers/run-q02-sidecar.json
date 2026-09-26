@@ -1,0 +1,24 @@
+{
+ "step": "q2",
+ "app": "CDP 9345, Settings → Model open, llama.cpp · GGUF is the current model (the default here: no cloud key, no gateway, no Apple bridge), model file empty. (a) Start local server as it is; (b) the model file: 'Choose a GGUF model…' opens a native open panel that CDP cannot drive and main has no E2E override for, so the same IPC the panel calls after a pick + 'Use this model' (window.seed.inference.setConfig with sidecar.modelPath = ~/models/Qwen3.5-4B-Q4_K_M.gguf) is called and the store updated as the panel does; (c) Start local server; wait for ready; (d) Check connection; read the probe (model ids, context)",
+ "actions": [
+  {"eval": "window.__q = { t0: performance.now() }; 'mark'"},
+  {"clickText": "Start local server"},
+  {"wait": 1500},
+  {"eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); return s?.innerText })()"},
+  {"eval": "(async () => { const S = await import('/state/index.ts'); const cur = S.useInferenceStore.getState().config; const next = { ...cur, sidecar: { ...cur.sidecar, modelPath: '/Users/kidney/models/Qwen3.5-4B-Q4_K_M.gguf' } }; const r = await window.seed.inference.setConfig(next); if (r.ok) S.useInferenceStore.getState().setConfig(r.value); return JSON.stringify(r) })()"},
+  {"wait": 800},
+  {"eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); return { model: s?.innerText, buttons: [...(s?.querySelectorAll('button') ?? [])].map(b => ({ text: b.innerText.trim(), disabled: b.disabled })) } })()"},
+  {"eval": "window.__q.start = performance.now(); 'mark'"},
+  {"clickText": "Start local server"},
+  {"eval": "(async () => { const S = await import('/state/index.ts'); const seen = []; for (let i = 0; i < 400; i++) { const sc = S.useInferenceStore.getState().sidecar; const k = sc?.state + ':' + (sc?.pid ?? ''); if (seen[seen.length - 1]?.k !== k) seen.push({ k, atMs: Math.round(performance.now() - window.__q.start) }); if (sc?.state === 'ready' || sc?.state === 'error') return JSON.stringify({ seen, sidecar: sc }); await new Promise(r => setTimeout(r, 250)); } return JSON.stringify({ seen, timeout: true }) })()"},
+  {"wait": 1000},
+  {"eval": "window.__q.probe = performance.now(); 'mark'"},
+  {"clickText": "Check connection"},
+  {"eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 80; i++) { const p = S.useInferenceStore.getState().probe; if (p.status === 'ready' && i > 2) return JSON.stringify({ ms: Math.round(performance.now() - window.__q.probe), probe: p.value }); await new Promise(r => setTimeout(r, 250)); } return 'still checking' })()"},
+  {"wait": 500},
+  {"eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); s?.scrollIntoView({ block: 'start' }); return s?.innerText })()"},
+  {"wait": 300},
+  {"shot": "docs/e2e/milestone-rev6-p4-no-servers/q02-00-sidecar-ready.jpg"}
+ ]
+}

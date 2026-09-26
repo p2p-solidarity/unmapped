@@ -1,0 +1,53 @@
+vite v8.3.0 building ssr environment for development...
+transforming...
+✓ 357 modules transformed.
+rendering chunks...
+out/main/chunks/heart-BgeRAx0t.png                          3.12 kB
+out/main/chunks/samurai_green-XToNlHMv.png                  4.78 kB
+out/main/chunks/samurai_blue-YZHMdpFI.png                   5.53 kB
+out/main/chunks/ninja_blue-COU3McFS.png                     6.13 kB
+out/main/chunks/tileset_floor-B7205uFr.png                 29.61 kB
+out/main/chunks/tileset_village_abandoned-BqZ8VUQR.png     31.77 kB
+out/main/index.js                                       1,289.50 kB
+
+✓ built in 110ms
+
+electron main process built successfully
+
+-----
+
+vite v8.3.0 building ssr environment for development...
+transforming...
+✓ 122 modules transformed.
+rendering chunks...
+out/preload/index.js  224.04 kB
+
+✓ built in 22ms
+
+electron preload scripts built successfully
+
+-----
+
+dev server running for the electron renderer process at:
+
+  ➜  Local:   http://localhost:5198/
+  ➜  Network: use --host to expose
+
+starting electron app...
+
+
+DevTools listening on ws://127.0.0.1:9345/devtools/browser/ae87112c-570c-4649-9818-ced64d5e03b8
+[apple-local] native-helper-start: spawn $SCR/snap/native/afm-bridge/.build/debug/afm-bridge ENOENT
+[renderer:LOG] [vite] connecting... (http://localhost:5198/@vite/client:883)
+[renderer:LOG] [vite] connected. (http://localhost:5198/@vite/client:996)
+[renderer:LOG] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold (http://localhost:5198/@fs$SCR/snap/.vite-cache/deps/client-CBEMz44o.js?v=d53eca13:15861)
+[inference] chat bbe8fad0-9e36-4d5b-a4bd-18d64ff39ffa · 2 messages · 0 tools
+[inference] done bbe8fad0-9e36-4d5b-a4bd-18d64ff39ffa · origin · llamacpp local · 21377 ms · max 2200 · 2748+363 tokens (0 cached) · ctx 16384
+[renderer:WARN] [repair] 1/2 · dsl-invalid-props · 5 statement(s) have arguments the engine cannot use. · Prop(...) has invalid arguments — tint: Invalid input: expected string, received object; dynamic: Invalid input: expected boolean, received string (http://localhost:5198/@vite/client:299)
+[inference] chat d2d1d14b-eea7-4a9f-aae6-d179ae43fe3b · 4 messages · 0 tools
+5:08:21 PM [vite] (client) [console.warn] [repair] 1/2 · dsl-invalid-props · 5 statement(s) have arguments the engine cannot use. · Prop(...) has invalid arguments — tint: Invalid input: expected string, received object; dynamic: Invalid input: expected boolean, received string
+[inference] done d2d1d14b-eea7-4a9f-aae6-d179ae43fe3b · origin · llamacpp local · 14393 ms · max 2200 · 3924+313 tokens (2744 cached) · ctx 16384
+5:08:36 PM [vite] (client) [console.warn] [repair] 2/2 · dsl-invalid-props · 3 statement(s) have arguments the engine cannot use. · NPC(...) has invalid arguments — body: Invalid option: expected one of "slim"|"stout"|"tall"|"child"|"elder"; hat: Invalid option: expected one of "none"|"straw"|"hood"|"crown"|"helm"|"horns"|"ribbon"
+[renderer:WARN] [repair] 2/2 · dsl-invalid-props · 3 statement(s) have arguments the engine cannot use. · NPC(...) has invalid arguments — body: Invalid option: expected one of "slim"|"stout"|"tall"|"child"|"elder"; hat: Invalid option: expected one of "none"|"straw"|"hood"|"crown"|"helm"|"horns"|"ribbon" (http://localhost:5198/@vite/client:299)
+[inference] chat 804a1afc-150b-46bc-a0b8-03c23abd1508 · 4 messages · 0 tools
+[inference] done 804a1afc-150b-46bc-a0b8-03c23abd1508 · origin · llamacpp local · 14172 ms · max 2200 · 3856+313 tokens (2744 cached) · ctx 16384

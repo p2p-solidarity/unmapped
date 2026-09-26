@@ -1,0 +1,8 @@
+{
+ "step": "q5",
+ "app": "CDP 9345, in Play in chunk (2, 0) after both witnesses: read the HUD (FPS, usage), the sidecar state and the probe; screenshot. Then (shell) ps / vmmap on llama-server, count [renderer:ERR] in main's log, close the app with close-app.ts (CDP Browser.close) and lsof 9345, 5198 and 8080",
+ "actions": [
+  {"eval": "(async () => { const S = await import('/state/index.ts'); const st = S.useInferenceStore.getState(); const l = document.body.innerText.split('\\n').filter(Boolean); return JSON.stringify({ sidecar: st.sidecar, probe: st.probe, hud: l.filter(x => /FPS|This world|LAND|Story|ONLINE|llama/.test(x)) }) })()"},
+  {"shot": "docs/e2e/milestone-rev6-p4-no-servers/q05-00-health.jpg"}
+ ]
+}

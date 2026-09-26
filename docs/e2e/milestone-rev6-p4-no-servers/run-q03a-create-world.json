@@ -1,0 +1,26 @@
+{
+ "step": "q3a",
+ "app": "CDP 9345, Settings open, Qwen 4B on the app's sidecar (ready): Escape; Create World → Start a new game; type a few words; read the readiness block; Write the world; wait for the 7 world cards (up to 10 min); read the cards, the derived name and the draft's usage line",
+ "actions": [
+  {"hold": "Escape", "ms": 80},
+  {"wait": 800},
+  {"clickText": "Create World"},
+  {"wait": 1500},
+  {"clickText": "Start a new game"},
+  {"wait": 2500},
+  {"clickText": "In one sentence, what is this land?"},
+  {"type": "Salt-marsh villages where herons carry the mail."},
+  {"wait": 400},
+  {"eval": "(() => { window.__q = window.__q || {}; return { lines: document.body.innerText.split('\\n').filter(Boolean).slice(0, 40) } })()"},
+  {"shot": "docs/e2e/milestone-rev6-p4-no-servers/q03-00-idea.jpg"},
+  {"eval": "window.__q.w0 = performance.now(); 'mark'"},
+  {"clickText": "Write the world"},
+  {"eval": "(async()=>{for(let i=0;i<600;i++){const p=document.querySelector('[data-stream-preview=world]'); if(p&&p.innerText.length>40)return {firstTextAtMs:Math.round(performance.now()-window.__q.w0),text:p.innerText.slice(0,300)}; if(/Error · /.test(document.body.innerText)) return {error: document.body.innerText.match(/Error · [^\\n]*\\n[^\\n]*\\n?[^\\n]*/)?.[0]}; await new Promise(r=>setTimeout(r,100));} return 'no world stream preview in 60 s';})()"},
+  {"shot": "docs/e2e/milestone-rev6-p4-no-servers/q03-01-world-streaming.jpg"},
+  {"eval": "(async()=>{for(let i=0;i<2400;i++){if(document.querySelectorAll('[data-card]').length===7 && !document.querySelector('[data-stream-preview=world]')){return {worldMs:Math.round(performance.now()-window.__q.w0)};} if(/Error · /.test(document.body.innerText)) return {atMs: Math.round(performance.now()-window.__q.w0), error: [...document.querySelectorAll('*')].filter(e => /^Error · /.test((e.innerText ?? '').trim())).map(e => e.parentElement?.innerText ?? e.innerText).slice(-1)[0]}; await new Promise(r=>setTimeout(r,250));} return {timeout: true, body: document.body.innerText.slice(0,800)};})()"},
+  {"wait": 800},
+  {"eval": "({derivedName: [...document.querySelectorAll('input')].map(i => (i.closest('label')?.innerText ?? '').split('\\n')[0] + ' = ' + i.value), cards: [...document.querySelectorAll('[data-card]')].map(c => ({ card: c.dataset.card, text: c.querySelector('textarea')?.value })), usage: document.querySelector('[data-usage-line]')?.innerText ?? null})"},
+  {"eval": "document.querySelector('[data-card]')?.scrollIntoView({block:'start'}); true"},
+  {"shot": "docs/e2e/milestone-rev6-p4-no-servers/q03-02-world-cards.jpg"}
+ ]
+}

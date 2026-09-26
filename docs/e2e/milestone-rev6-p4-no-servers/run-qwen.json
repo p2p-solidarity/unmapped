@@ -1,0 +1,919 @@
+{
+ "env": {
+  "scratch": "SCR = a fresh empty dir (this run: the session scratchpad .../scratchpad/p4qwen); mkdir -p $SCR/snap $SCR/ud $SCR/files",
+  "tree": "git archive origin/main (81601d2) | tar -x -C $SCR/snap; ln -s <repo>/node_modules $SCR/snap/node_modules; no .env in $SCR/snap; electron.vite.config.ts renderer section gets cacheDir: resolve(__dirname, '.vite-cache') and server: { port: 5198, strictPort: true }",
+  "servers": "no world service, no gateway, no own keys, no signaling run by this test; before launch 1 nothing listened on 9345, 5198 or 8080 (lsof)",
+  "model": "Qwen3.5-4B-Q4_K_M.gguf (2,740,937,888 bytes, unsloth/Qwen3.5-4B-GGUF) at ~/models; llama.cpp from Homebrew 0.5.0 (build b11146-7fe450e19) at /opt/homebrew/bin/llama-server",
+  "launch1": "cd $SCR/snap && env OPENAI_API_KEY= THESYS_API_KEY= UNMAPPED_GATEWAY_URL= UNMAPPED_GATEWAY_KEY= UNMAPPED_COMMERCIAL= LLAMA_ARG_LOG_FILE=$SCR/files/llama-server.log LLAMA_ARG_LOG_TIMESTAMPS=1 LLAMA_ARG_LOG_PREFIX=1 LLAMA_ARG_LOG_VERBOSITY=1 AETHER_TEST_USER_DATA=$SCR/ud bunx electron-vite dev --remoteDebuggingPort 9345 > $SCR/files/main-launch1.log 2>&1   (ps eww on Electron main: the five keys present and empty; the LLAMA_ARG_* variables reach the app's sidecar. LLAMA_ARG_LOG_VERBOSITY=1 means errors only in llama.cpp 0.5.0, so the sidecar's log file stayed empty: a mistake of this run, see result.md). llama-server is started by the app (Settings \u2192 Model \u2192 Start local server)",
+  "launch2": "after launch 1 is closed: /opt/homebrew/bin/llama-server -m ~/models/Qwen3.5-4B-Q4_K_M.gguf --port 8080 --ctx-size 16384 --jinja --log-file $SCR/files/llama-manual.log -lv 1 --log-timestamps --log-prefix (the -lv 1 again left the log empty), then the same app command without the LLAMA_ARG_* variables (> main-launch2.log)",
+  "launch3": "after launch 2 and its server are stopped: /opt/homebrew/bin/llama-server -m ~/models/Qwen3.5-4B-Q4_K_M.gguf --port 8080 --ctx-size 16384 --jinja --log-file $SCR/files/llama-launch3.log -lv 5 --log-timestamps --log-prefix, then the same app command (> main-launch3.log)",
+  "driver": "from the repo root: CDP_PORT=9345 bun scripts/cdp-drive.ts \"$(cat docs/e2e/milestone-rev6-p4-no-servers/<step>.json)\" (scripts/cdp-drive.ts is identical to origin/main's)",
+  "close": "CDP_PORT=9345 bun $SCR/close-app.ts (close-app.ts.txt), again if 9345 still listens; kill -TERM the hand-started llama-server; lsof -nP -iTCP:9345 -iTCP:5198 -iTCP:8080 -sTCP:LISTEN",
+  "system": "macOS 27.0 (26A428), 16 GB Apple Silicon, Bun 1.3.6, Electron 44.3.0 (Chrome 152); other sessions' apps were running on the machine; UI zh-TW until q1 switches it to English"
+ },
+ "model": "Qwen 3.5 4B Q4_K_M on llama.cpp: launch 1 through the app-managed sidecar (Settings \u2192 Model \u2192 Start local server), launches 2 and 3 through a llama-server started by hand on :8080. 40 chat calls (bible 1, story 1, origin 21, chapter 2, witness 15), all answered; 3 image calls refused (no-api-key).",
+ "sequence": [
+  "launch 1",
+  "run-q01-model-panel.json",
+  "run-q02-sidecar.json",
+  "run-q03a-create-world.json",
+  "run-q03b-look-story.json",
+  "run-q03c-build.json",
+  "run-q03d-build-retry.json",
+  "run-q03e-build-third.json",
+  "run-q03f-build-more.json",
+  "run-q04a-to-new-game.json",
+  "run-q04b-first-writes.json",
+  "run-q04c-helper.json",
+  "run-q04d-walk-witness.json",
+  "run-q04e-talk.json",
+  "run-q04f-retry-witness.json",
+  "run-q05-health.json",
+  "shell: ps / vmmap on the sidecar; count [renderer:ERR]; close-app.ts; lsof",
+  "launch 2 (own llama-server)",
+  "run-q06a-own-server.json",
+  "run-q06b-build-own-server.json",
+  "shell: close-app.ts \u00d72; kill -TERM llama-server; lsof",
+  "launch 3 (own llama-server, -lv 5)",
+  "run-q07a-build-launch3.json",
+  "run-q07b-witness-launch3.json",
+  "shell: ps / vmmap; close-app.ts \u00d72; kill -TERM llama-server; lsof"
+ ],
+ "actions": [
+  {
+   "note": "run-q01-model-panel.json: CDP 9345, fresh userData, UI in the system language (zh-TW): Settings \u2192 English; read Settings \u2192 Model as it first opens (the default config, what this computer has, the route); read the store and detectLocal; no click on a model yet"
+  },
+  {
+   "eval": "(() => ({ title: document.body.innerText.split('\\n').filter(Boolean), buttons: [...document.querySelectorAll('button')].map(b => b.innerText.trim()).filter(Boolean) }))()"
+  },
+  {
+   "clickText": "\u8a2d\u5b9a"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "English"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); s?.scrollIntoView({ block: 'start' }); return { model: s?.innerText, buttons: [...(s?.querySelectorAll('button') ?? [])].map(b => ({ text: b.innerText.trim(), disabled: b.disabled })), inputs: [...(s?.querySelectorAll('input') ?? [])].map(i => ({ label: i.closest('label')?.innerText ?? null, value: i.value })) } })()"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const st = S.useInferenceStore.getState(); const d = await window.seed.inference.detectLocal(); return JSON.stringify({ config: st.config, probe: st.probe, sidecar: st.sidecar ?? null, detectLocal: d }) })()"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q01-00-model-default.jpg"
+  },
+  {
+   "note": "run-q02-sidecar.json: CDP 9345, Settings \u2192 Model open, llama.cpp \u00b7 GGUF is the current model (the default here: no cloud key, no gateway, no Apple bridge), model file empty. (a) Start local server as it is; (b) the model file: 'Choose a GGUF model\u2026' opens a native open panel that CDP cannot drive and main has no E2E override for, so the same IPC the panel calls after a pick + 'Use this model' (window.seed.inference.setConfig with sidecar.modelPath = ~/models/Qwen3.5-4B-Q4_K_M.gguf) is called and the store updated as the panel does; (c) Start local server; wait for ready; (d) Check connection; read the probe (model ids, context)"
+  },
+  {
+   "eval": "window.__q = { t0: performance.now() }; 'mark'"
+  },
+  {
+   "clickText": "Start local server"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); return s?.innerText })()"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const cur = S.useInferenceStore.getState().config; const next = { ...cur, sidecar: { ...cur.sidecar, modelPath: '/Users/kidney/models/Qwen3.5-4B-Q4_K_M.gguf' } }; const r = await window.seed.inference.setConfig(next); if (r.ok) S.useInferenceStore.getState().setConfig(r.value); return JSON.stringify(r) })()"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); return { model: s?.innerText, buttons: [...(s?.querySelectorAll('button') ?? [])].map(b => ({ text: b.innerText.trim(), disabled: b.disabled })) } })()"
+  },
+  {
+   "eval": "window.__q.start = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Start local server"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const seen = []; for (let i = 0; i < 400; i++) { const sc = S.useInferenceStore.getState().sidecar; const k = sc?.state + ':' + (sc?.pid ?? ''); if (seen[seen.length - 1]?.k !== k) seen.push({ k, atMs: Math.round(performance.now() - window.__q.start) }); if (sc?.state === 'ready' || sc?.state === 'error') return JSON.stringify({ seen, sidecar: sc }); await new Promise(r => setTimeout(r, 250)); } return JSON.stringify({ seen, timeout: true }) })()"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "window.__q.probe = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Check connection"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 80; i++) { const p = S.useInferenceStore.getState().probe; if (p.status === 'ready' && i > 2) return JSON.stringify({ ms: Math.round(performance.now() - window.__q.probe), probe: p.value }); await new Promise(r => setTimeout(r, 250)); } return 'still checking' })()"
+  },
+  {
+   "wait": 500
+  },
+  {
+   "eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); s?.scrollIntoView({ block: 'start' }); return s?.innerText })()"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q02-00-sidecar-ready.jpg"
+  },
+  {
+   "note": "run-q03a-create-world.json: CDP 9345, Settings open, Qwen 4B on the app's sidecar (ready): Escape; Create World \u2192 Start a new game; type a few words; read the readiness block; Write the world; wait for the 7 world cards (up to 10 min); read the cards, the derived name and the draft's usage line"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "Create World"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Start a new game"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "clickText": "In one sentence, what is this land?"
+  },
+  {
+   "type": "Salt-marsh villages where herons carry the mail."
+  },
+  {
+   "wait": 400
+  },
+  {
+   "eval": "(() => { window.__q = window.__q || {}; return { lines: document.body.innerText.split('\\n').filter(Boolean).slice(0, 40) } })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q03-00-idea.jpg"
+  },
+  {
+   "eval": "window.__q.w0 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Write the world"
+  },
+  {
+   "eval": "(async()=>{for(let i=0;i<600;i++){const p=document.querySelector('[data-stream-preview=world]'); if(p&&p.innerText.length>40)return {firstTextAtMs:Math.round(performance.now()-window.__q.w0),text:p.innerText.slice(0,300)}; if(/Error \u00b7 /.test(document.body.innerText)) return {error: document.body.innerText.match(/Error \u00b7 [^\\n]*\\n[^\\n]*\\n?[^\\n]*/)?.[0]}; await new Promise(r=>setTimeout(r,100));} return 'no world stream preview in 60 s';})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q03-01-world-streaming.jpg"
+  },
+  {
+   "eval": "(async()=>{for(let i=0;i<2400;i++){if(document.querySelectorAll('[data-card]').length===7 && !document.querySelector('[data-stream-preview=world]')){return {worldMs:Math.round(performance.now()-window.__q.w0)};} if(/Error \u00b7 /.test(document.body.innerText)) return {atMs: Math.round(performance.now()-window.__q.w0), error: [...document.querySelectorAll('*')].filter(e => /^Error \u00b7 /.test((e.innerText ?? '').trim())).map(e => e.parentElement?.innerText ?? e.innerText).slice(-1)[0]}; await new Promise(r=>setTimeout(r,250));} return {timeout: true, body: document.body.innerText.slice(0,800)};})()"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "({derivedName: [...document.querySelectorAll('input')].map(i => (i.closest('label')?.innerText ?? '').split('\\n')[0] + ' = ' + i.value), cards: [...document.querySelectorAll('[data-card]')].map(c => ({ card: c.dataset.card, text: c.querySelector('textarea')?.value })), usage: document.querySelector('[data-usage-line]')?.innerText ?? null})"
+  },
+  {
+   "eval": "document.querySelector('[data-card]')?.scrollIntoView({block:'start'}); true"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q03-02-world-cards.jpg"
+  },
+  {
+   "note": "run-q03b-look-story.json: CDP 9345, Create at the world step (7 cards): Continue to the look; read what the look step says with no image provider (no key, no gateway); the story streams meanwhile; Continue without a picture; wait on the story step until 'Continue to build' is enabled (up to 10 min); read the chapters and the usage line"
+  },
+  {
+   "eval": "window.__q = window.__q || {}; window.__q.l0 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Continue to the look"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(() => ({ lines: document.body.innerText.split('\\n').filter(Boolean).slice(0, 40), story: document.querySelector('[data-stream-preview=story]')?.innerText.slice(0, 300) ?? null }))()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q03-03-look-no-provider.jpg"
+  },
+  {
+   "eval": "(() => { const all = [...document.querySelectorAll('*')].filter(e => /^Error \u00b7 /.test((e.innerText ?? '').trim())); const blocks = all.filter(e => !all.some(o => o !== e && e.contains(o))); return blocks.map(b => (b.parentElement?.innerText ?? b.innerText)); })()"
+  },
+  {
+   "eval": "window.__q.s0 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Continue without a picture"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => ({ lines: document.body.innerText.split('\\n').filter(Boolean).slice(0, 30) }))()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q03-04-story-streaming.jpg"
+  },
+  {
+   "eval": "(async()=>{for(let i=0;i<2400;i++){const b=[...document.querySelectorAll('button')].find(x=>x.innerText.trim()==='Continue to build'); if(b&&!b.disabled) return {storyReadyAfterLookMs:Math.round(performance.now()-window.__q.l0), afterSkipMs: Math.round(performance.now()-window.__q.s0)}; if(/Error \u00b7 /.test(document.body.innerText)) return {atMs: Math.round(performance.now()-window.__q.l0), error: [...document.querySelectorAll('*')].filter(e => /^Error \u00b7 /.test((e.innerText ?? '').trim())).map(e => e.parentElement?.innerText ?? e.innerText).slice(-1)[0]}; await new Promise(r=>setTimeout(r,250));} return {timeout: true, body: document.body.innerText.slice(0,800)};})()"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(async () => { const r = await window.seed.createDrafts.list(); const d = await window.seed.createDrafts.read(r.value[0].draftId); const v = d.value; return JSON.stringify({ step: v.step, look: v.look, story: v.story?.episodes?.map(e => ({ id: e.id, kind: e.kind, title: e.title, gate: e.gate ?? null, beat: (e.beat ?? e.summary ?? '').slice(0, 200), people: e.people ?? null })) ?? v.story, usage: document.querySelector('[data-usage-line]')?.innerText ?? null }) })()"
+  },
+  {
+   "eval": "(() => ({ lines: document.body.innerText.split('\\n').filter(Boolean).slice(0, 80) }))()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q03-05-story.jpg"
+  },
+  {
+   "note": "run-q03c-build.json: CDP 9345, Create at the story step (5 chapters): Continue to build; read the quote; Build and play (the origin scene is written by Qwen with the Scene GBNF); wait for 'Your world is published' or Play (up to 10 min); Enter the world; wait for Play; read the chapter status"
+  },
+  {
+   "clickText": "Continue to build"
+  },
+  {
+   "eval": "(async()=>{for(let i=0;i<80;i++){const q=document.querySelector('[data-quote]'); if(q&&q.innerText.includes('This draft')) return q.innerText; await new Promise(r=>setTimeout(r,250));} return document.querySelector('[data-quote]')?.innerText ?? document.body.innerText.slice(0, 1500);})()"
+  },
+  {
+   "eval": "document.querySelector('[data-quote]')?.scrollIntoView({block:'center'}); true"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q03-06-build-quote.jpg"
+  },
+  {
+   "eval": "window.__q = window.__q || {}; window.__q.b0 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Build and play"
+  },
+  {
+   "wait": 3000
+  },
+  {
+   "eval": "(() => ({ lines: document.body.innerText.split('\\n').filter(Boolean).slice(0, 30) }))()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q03-07-building.jpg"
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); for(let i=0;i<2400;i++){if(/Your world is published/.test(document.body.innerText)){return {buildToPublishedMs: Math.round(performance.now()-window.__q.b0), panel: document.body.innerText.slice(0,600)};} if(S.useSessionStore.getState().screen==='play') return {wentStraightToPlayMs: Math.round(performance.now()-window.__q.b0)}; if(/Error \u00b7 /.test(document.body.innerText)) return {atMs: Math.round(performance.now()-window.__q.b0), error: [...document.querySelectorAll('*')].filter(e => /^Error \u00b7 /.test((e.innerText ?? '').trim())).map(e => e.parentElement?.innerText ?? e.innerText).slice(-1)[0]}; await new Promise(r=>setTimeout(r,250));} return {timeout:true, body: document.body.innerText.slice(0,800)};})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q03-08-build-1-error.jpg"
+  },
+  {
+   "eval": "window.__q.e0 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Enter the world"
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); for(let i=0;i<960;i++){const s=S.useSessionStore.getState(); if(s.screen==='play'&&s.activeInstance){return {buildToPlayMs: Math.round(performance.now()-window.__q.b0), enterToPlayMs: Math.round(performance.now()-window.__q.e0), cartridge: s.activeInstance.cartridge.manifest.cartridgeId + '@' + s.activeInstance.cartridge.manifest.version, instance: s.activeInstance.instance.instanceId};} await new Promise(r=>setTimeout(r,250));} return document.body.innerText.slice(0,600);})()"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useWorldStore.getState(); const g = w.scene.status === 'ready' ? w.scene.value : null; return JSON.stringify({ writingAhead: document.body.innerText.match(/Writing the next chapter[^\\n]*/)?.[0] ?? null, usage: document.body.innerText.match(/This world:[^\\n]*/)?.[0] ?? null, origin: g && { name: g.name ?? null, biome: g.biome ?? null, floor: g.floor ?? null, npcs: (g.npcs ?? []).map(n => n.id + ':' + n.name + ':' + n.role), props: (g.props ?? []).length, lights: (g.lights ?? []).length } }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q03-09-build-1-no-play.jpg"
+  },
+  {
+   "note": "run-q03d-build-retry.json: CDP 9345, Create's build step showing dsl-invalid-props after the first Build (3 origin calls). Install a read-only listener on window.seed.inference.onEvent that keeps each finished call's text (window.__qcap), so what Qwen wrote can be read back; list the buttons; press Build and play again; wait for published / Play / an error (up to 10 min)"
+  },
+  {
+   "eval": "(() => { if (!window.__qcapOn) { window.__qcap = []; window.seed.inference.onEvent((e) => { if (e.type === 'done' || e.type === 'error') window.__qcap.push({ id: e.id, type: e.type, at: Date.now(), text: e.text ?? null, usage: e.usage ?? null, error: e.error ?? null }); }); window.__qcapOn = true; } return [...document.querySelectorAll('button')].map(b => ({ text: b.innerText.trim(), disabled: b.disabled })).filter(b => b.text) })()"
+  },
+  {
+   "eval": "window.__q = window.__q || {}; window.__q.b1 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Build and play"
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); const errs0 = (document.body.innerText.match(/Error \u00b7 /g) ?? []).length; for(let i=0;i<2400;i++){if(/Your world is published/.test(document.body.innerText)){return {buildToPublishedMs: Math.round(performance.now()-window.__q.b1), panel: document.body.innerText.slice(0,600)};} if(S.useSessionStore.getState().screen==='play') return {wentStraightToPlayMs: Math.round(performance.now()-window.__q.b1)}; if(/Error \u00b7 /.test(document.body.innerText) && !/Writing the place you wake in/.test(document.body.innerText)) return {atMs: Math.round(performance.now()-window.__q.b1), error: [...document.querySelectorAll('*')].filter(e => /^Error \u00b7 /.test((e.innerText ?? '').trim())).map(e => e.parentElement?.innerText ?? e.innerText).slice(-1)[0]}; await new Promise(r=>setTimeout(r,250));} return {timeout:true, body: document.body.innerText.slice(0,800)};})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q03-10-build-retry.jpg"
+  },
+  {
+   "eval": "JSON.stringify(window.__qcap.map(c => ({ id: c.id, type: c.type, usage: c.usage, error: c.error && c.error.code, text: c.text })))"
+  },
+  {
+   "note": "run-q03e-build-third.json: CDP 9345, Create's build step showing dsl-invalid-props after the second Build (6 origin calls in all); the capture listener from q3d is still installed (window.__qcap is cleared first): press Build and play a third time; wait for published / Play / an error (up to 10 min)"
+  },
+  {
+   "eval": "(() => { window.__qcap.length = 0; return [...document.querySelectorAll('button')].map(b => ({ text: b.innerText.trim(), disabled: b.disabled })).filter(b => b.text) })()"
+  },
+  {
+   "eval": "window.__q = window.__q || {}; window.__q.b1 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Build and play"
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); const errs0 = (document.body.innerText.match(/Error \u00b7 /g) ?? []).length; for(let i=0;i<2400;i++){if(/Your world is published/.test(document.body.innerText)){return {buildToPublishedMs: Math.round(performance.now()-window.__q.b1), panel: document.body.innerText.slice(0,600)};} if(S.useSessionStore.getState().screen==='play') return {wentStraightToPlayMs: Math.round(performance.now()-window.__q.b1)}; if(/Error \u00b7 /.test(document.body.innerText) && !/Writing the place you wake in/.test(document.body.innerText)) return {atMs: Math.round(performance.now()-window.__q.b1), error: [...document.querySelectorAll('*')].filter(e => /^Error \u00b7 /.test((e.innerText ?? '').trim())).map(e => e.parentElement?.innerText ?? e.innerText).slice(-1)[0]}; await new Promise(r=>setTimeout(r,250));} return {timeout:true, body: document.body.innerText.slice(0,800)};})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q03-11-build-third.jpg"
+  },
+  {
+   "eval": "JSON.stringify(window.__qcap.map(c => ({ id: c.id, type: c.type, usage: c.usage, error: c.error && c.error.code, text: c.text })))"
+  },
+  {
+   "note": "run-q03f-build-more.json: CDP 9345, Create's build step showing dsl-invalid-props after the third Build (9 origin calls in all); window.__qcap cleared: press Build and play a fourth time and, if it fails, a fifth (repeat until published / Play, at most 2 rounds); wait up to 10 min per round"
+  },
+  {
+   "repeat": {
+    "times": 2,
+    "until": "(async()=>{const S=await import('/state/index.ts'); return /Your world is published/.test(document.body.innerText) || S.useSessionStore.getState().screen==='play'})()",
+    "actions": [
+     {
+      "eval": "(() => { window.__qcap.length = 0; return [...document.querySelectorAll('button')].map(b => ({ text: b.innerText.trim(), disabled: b.disabled })).filter(b => b.text) })()"
+     },
+     {
+      "eval": "window.__q = window.__q || {}; window.__q.b1 = performance.now(); 'mark'"
+     },
+     {
+      "clickText": "Build and play"
+     },
+     {
+      "wait": 2000
+     },
+     {
+      "eval": "(async()=>{const S=await import('/state/index.ts'); const errs0 = (document.body.innerText.match(/Error \u00b7 /g) ?? []).length; for(let i=0;i<2400;i++){if(/Your world is published/.test(document.body.innerText)){return {buildToPublishedMs: Math.round(performance.now()-window.__q.b1), panel: document.body.innerText.slice(0,600)};} if(S.useSessionStore.getState().screen==='play') return {wentStraightToPlayMs: Math.round(performance.now()-window.__q.b1)}; if(/Error \u00b7 /.test(document.body.innerText) && !/Writing the place you wake in/.test(document.body.innerText)) return {atMs: Math.round(performance.now()-window.__q.b1), error: [...document.querySelectorAll('*')].filter(e => /^Error \u00b7 /.test((e.innerText ?? '').trim())).map(e => e.parentElement?.innerText ?? e.innerText).slice(-1)[0]}; await new Promise(r=>setTimeout(r,250));} return {timeout:true, body: document.body.innerText.slice(0,800)};})()"
+     },
+     {
+      "shot": "docs/e2e/milestone-rev6-p4-no-servers/q03-12-build-more.jpg"
+     },
+     {
+      "eval": "JSON.stringify(window.__qcap.map(c => ({ id: c.id, type: c.type, usage: c.usage, error: c.error && c.error.code, text: c.text })))"
+     }
+    ]
+   }
+  },
+  {
+   "note": "run-q04a-to-new-game.json: CDP 9345: Create never reached a world (5 builds failed), so play runs on the built-in world with Qwen writing: leave Create (Back \u00d73 \u2192 idea step, Back to the title \u00d72 \u2014 the first goes to Create's draft list), Worlds \u2192 New game \u2192 Start; wait for Play; read the HUD, the story and chapter 1's status (Qwen writes it in the background)"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); return S.useSessionStore.getState().screen })()"
+  },
+  {
+   "repeat": {
+    "times": 4,
+    "until": "[...document.querySelectorAll('button')].some(b => b.innerText.trim() === 'Back to the title')",
+    "actions": [
+     {
+      "clickText": "Back"
+     },
+     {
+      "wait": 1000
+     }
+    ]
+   }
+  },
+  {
+   "clickText": "Back to the title"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Back to the title"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); return { screen: S.useSessionStore.getState().screen, buttons: [...document.querySelectorAll('button')].map(b => b.innerText.trim()).filter(Boolean).slice(0, 12) } })()"
+  },
+  {
+   "clickText": "Worlds"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "(() => { const m = document.querySelector('main') ?? document.body; return m.innerText.slice(0, 1200) })()"
+  },
+  {
+   "eval": "window.__q = window.__q || {}; window.__q.p0 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Start"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance && S.useLandStore.getState().progress !== null) return { ms: Math.round(performance.now() - window.__q.p0), cartridge: s.activeInstance.cartridge.manifest.cartridgeId + '@' + s.activeInstance.cartridge.manifest.version, instance: s.activeInstance.instance.instanceId }; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + S.useSessionStore.getState().screen })()"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const S = await import('/state/index.ts'); const p = P.samplePlayer(); const lines = document.body.innerText.split('\\n').filter(Boolean); const st = S.useSessionStore.getState().activeInstance?.cartridge.story; return JSON.stringify({ pos: p && [Number(p.x.toFixed(2)), Number(p.z.toFixed(2))], chunk: S.useEngineStore.getState().chunk, story: st && (st.episodes ?? st.chapters ?? st).map?.((e) => ({ id: e.id, kind: e.kind, title: e.title, place: e.place ?? null })), hud: lines.slice(0, 40) }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q04-00-new-game.jpg"
+  },
+  {
+   "note": "run-q04b-first-writes.json: CDP 9345, in Play on aether-land 1.3.0 at spawn, after the first Qwen writes settled (chapter 1 ahead, and the spawn chunk (0, 0) witnessed on entry): read the land store's chunks, chapter e1's stage, the world's history head and the HUD; read what Qwen wrote (window.__qcap)"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const L = S.useLandStore.getState(); const p = L.progress; return JSON.stringify({ chunks: Object.fromEntries(Object.entries(L.chunks).map(([k, c]) => [k, { status: c.status, name: c.scene?.name ?? null, npcs: c.scene ? c.scene.npcs.map(x => x.id + ':' + x.name + ':' + x.role) : null, props: c.scene ? c.scene.props.length : null, error: c.error ? c.error.code + ' \u00b7 ' + c.error.message.slice(0, 300) : null }])), e1: p?.episodes?.e1 ?? null, head: n?.head.n, history: Object.fromEntries(Object.entries(n?.chunks ?? {}).map(([k, w]) => [k, { n: w.live.n, npcs: w.live.body.index?.npcs?.map(q => q.id + ':' + q.name) ?? null }])) }) })()"
+  },
+  {
+   "eval": "(() => { const lines = document.body.innerText.split('\\n').filter(Boolean); return lines.slice(0, 45) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q04-01-first-writes.jpg"
+  },
+  {
+   "eval": "JSON.stringify(window.__qcap.slice(-5).map(c => ({ id: c.id, type: c.type, usage: c.usage, error: c.error && c.error.code, text: c.text })))"
+  },
+  {
+   "note": "run-q04c-helper.json: CDP 9345, in Play on aether-land 1.3.0 at spawn (8.5, 8.5), chapter 1 written by Qwen, spawn chunk (0,0) witness failed: install the page helper (verbatim from docs/e2e/milestone-rev6-integrated-journey/run-03a-a-walk-to-gate.json, first eval) and read chapter 1: its gate, people and treasures"
+  },
+  {
+   "eval": "(() => {\n  const e2e = (window.__e2e = window.__e2e || {});\n  // Shared modules are served under /@fs/<absolute path>; read that URL from a renderer module\n  // that imports them, so the helper runs on any checkout.\n  e2e.shared = async (name) => {\n    e2e.urls = e2e.urls || {};\n    if (!e2e.urls[name]) {\n      const code = await (await fetch('/engine2d/LandView2D.tsx')).text();\n      const found = code.match(new RegExp('\"(/@fs/[^\"]*/src/shared/' + name + '\\\\.ts[^\"]*)\"'));\n      e2e.urls[name] = found ? found[1] : null;\n    }\n    return import(e2e.urls[name]);\n  };\n  e2e.pos = async () => {\n    const p = (await import('/engine/playerProbe.ts')).samplePlayer();\n    return p === null ? null : [Math.round(p.x * 10) / 10, Math.round(p.z * 10) / 10];\n  };\n  // What a player sees of the current chapter: its gate, its people and treasures (world tiles).\n  e2e.chapter = async () => {\n    const S = await import('/state/index.ts');\n    const L = await import('/engine2d/chapterLayer.ts');\n    const M = await import('/engine2d/landModel.ts');\n    const story = await e2e.shared('story');\n    const land = await e2e.shared('land');\n    const session = S.useSessionStore.getState();\n    const world = S.useWorldStore.getState();\n    const landState = S.useLandStore.getState();\n    const active = session.activeInstance;\n    if (!active || world.scene.status !== 'ready' || !active.cartridge.story) return null;\n    const progress = landState.progress;\n    const episodes = story.storyEpisodes(active.cartridge.story, progress?.storyMore);\n    const next = story.nextEpisode(episodes, progress?.episodes ?? {});\n    if (!next) return { cleared: true, episodes: progress?.episodes ?? {} };\n    const gate = story.episodeGate(next);\n    const stage = progress?.episodes?.[next.id]?.stage ?? null;\n    const base = { id: next.id, title: next.title, gate: [gate.x, gate.z], written: stage !== null };\n    if (!stage || stage.kind !== 'land') return { ...base, kind: stage?.kind ?? null };\n    const draft = L.readChapter(stage.source);\n    if (!draft) return { ...base, unreadable: true };\n    const seed = land.landSeedOf(active.instance.save);\n    const graph = world.scene.value;\n    const residents = L.residentTiles ? L.residentTiles(landState.chunks) : new Set();\n    const free = (x, z) => !residents.has(x + ',' + z) && M.canStandAt(graph, seed, landState.chunks, x + 0.5, z + 0.5, null);\n    const scene = L.chapterScene(next, stage, draft, free);\n    return {\n      ...base,\n      npcs: scene.npcs.map((n) => ({ id: n.id, name: n.name, at: [n.x + 0.5, n.z + 0.5],\n        met: stage.met.includes(n.id.split(':')[2]) })),\n      treasures: scene.treasures.map((t) => ({ id: t.id, at: [t.x + 0.5, t.z + 0.5],\n        found: stage.found.includes(t.id.split(':')[2]) })),\n      monsters: scene.monsters.length,\n      met: stage.met, found: stage.found,\n    };\n  };\n  // The next thing of the chapter still to do: the nearest unmet person or unopened treasure.\n  e2e.nextTodo = async () => {\n    const c = await e2e.chapter();\n    const at = await e2e.pos();\n    if (!c || !c.npcs || !at) return null;\n    const todo = [...c.npcs.filter((n) => !n.met), ...c.treasures.filter((t) => !t.found)];\n    todo.sort((a, b) => Math.hypot(a.at[0] - at[0], a.at[1] - at[1]) - Math.hypot(b.at[0] - at[0], b.at[1] - at[1]));\n    return todo[0] ?? null;\n  };\n  // Where a player would stand to face it: a free spot next to it from which it, and nothing else\n  // (the gate, a neighbour, a resident of the land), is the nearest thing when A is pressed.\n  e2e.others = async () => {\n    const S = await import('/state/index.ts');\n    const c = await e2e.chapter();\n    // [x, z, reach]: a gate reaches 0.8 tiles further than a person (engine2d/storyLayer).\n    const points = c && c.gate ? [[c.gate[0], c.gate[1], 0.8]] : [];\n    if (c && c.npcs) points.push(...c.npcs.map((n) => [...n.at, 0]), ...c.treasures.filter((t) => !t.found).map((t) => [...t.at, 0]));\n    for (const [key, chunk] of Object.entries(S.useLandStore.getState().chunks)) {\n      if (chunk.status !== 'written') continue;\n      const [cx, cz] = key.split(',').map(Number);\n      for (const n of chunk.scene.npcs) points.push([cx * 32 + n.x + 0.5, cz * 32 + n.z + 0.5, 0]);\n    }\n    return points;\n  };\n  e2e.spot = async () => {\n    const t = await e2e.nextTodo();\n    const at = await e2e.pos();\n    if (!t || !at) return null;\n    const S = await import('/state/index.ts');\n    const M = await import('/engine2d/landModel.ts');\n    const land = await e2e.shared('land');\n    const active = S.useSessionStore.getState().activeInstance;\n    const graph = S.useWorldStore.getState().scene.value;\n    const seed = land.landSeedOf(active.instance.save);\n    const chunks = S.useLandStore.getState().chunks;\n    const others = (await e2e.others()).filter((p) => Math.hypot(p[0] - t.at[0], p[1] - t.at[1]) > 0.01);\n    const spots = [];\n    for (const r of [0.8, 1.2]) {\n      for (let i = 0; i < 16; i += 1) {\n        const a = (i / 16) * Math.PI * 2;\n        const p = [t.at[0] + Math.cos(a) * r, t.at[1] + Math.sin(a) * r];\n        if (!M.canStandAt(graph, seed, chunks, p[0], p[1], null)) continue;\n        const nearestOther = Math.min(...others.map((o) => Math.hypot(o[0] - p[0], o[1] - p[1]) - o[2]));\n        if (nearestOther <= r + 0.3) continue;\n        spots.push(p);\n      }\n    }\n    spots.sort((a, b) => Math.hypot(a[0] - at[0], a[1] - at[1]) - Math.hypot(b[0] - at[0], b[1] - at[1]));\n    return spots[0] ?? t.at;\n  };\n  e2e.state = async () => {\n    const S = await import('/state/index.ts');\n    const s = S.useSessionStore.getState();\n    const en = S.useEngineStore.getState();\n    const layer = [...document.querySelectorAll('[data-layer], [role=dialog]')].filter((l) => l.getClientRects().length > 0).map((l) => l.getAttribute('data-layer') ?? l.getAttribute('role'));\n    return {\n      screen: s.screen, input: document.documentElement.dataset.input ?? null,\n      pos: await e2e.pos(), chunk: en.chunk, nearby: en.nearby && { kind: en.nearby.kind, id: en.nearby.id, label: en.nearby.label },\n      locked: en.inputLocked, dialogue: s.dialogue?.status ?? null, speaker: s.dialogueSpeaker,\n      episodeOpen: s.episodeOpen, layers: layer,\n      focus: document.activeElement && document.activeElement !== document.body ? (document.activeElement.innerText || document.activeElement.getAttribute('aria-label') || document.activeElement.tagName).slice(0, 60) : null,\n    };\n  };\n  return Object.keys(e2e);\n})()\n"
+  },
+  {
+   "eval": "(async()=>JSON.stringify({chapter: await window.__e2e.chapter(), state: await window.__e2e.state()}))()"
+  },
+  {
+   "note": "run-q04d-walk-witness.json: CDP 9345, helper installed: walk the z = 16 ford east with the pad (RB sprint): into chunk (1, 0) and wait until Qwen's witness settles (up to 10 min), then into (2, 0) and wait, then to chapter 1's gate at (80.5, 16.5); read each chunk's name, residents and props, and the chapter"
+  },
+  {
+   "eval": "window.__q = window.__q || {}; window.__q.k0 = performance.now(); 'mark'"
+  },
+  {
+   "pad": {
+    "toward": "[16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[40.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "eval": "(async()=>JSON.stringify({ atMs: Math.round(performance.now() - window.__q.k0), state: await window.__e2e.state(), hud: document.body.innerText.split('\\n').filter(Boolean).slice(3, 8) }))()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q04-02-witnessing-1-0.jpg"
+  },
+  {
+   "repeat": {
+    "times": 1200,
+    "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['1,0']; return c !== undefined && c.status !== 'writing' })()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = S.useLandStore.getState().chunks['1,0']; const w = n.chunks['1,0']; return JSON.stringify({ settledAfterMs: Math.round(performance.now() - window.__q.k0), status: c?.status, name: c?.scene?.name ?? null, npcs: c?.scene ? c.scene.npcs.map(p => p.id + ':' + p.name + ':' + p.role) : null, props: c?.scene ? c.scene.props.map(p => p.kind) : null, error: c?.error ? c.error.code + ' \u00b7 ' + c.error.message.slice(0, 300) : null, head: n.head.n, live: w ? { n: w.live.n, author: w.live.author } : null }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q04-03-witnessed-1-0.jpg"
+  },
+  {
+   "eval": "window.__q.k0 = performance.now(); 'mark'"
+  },
+  {
+   "pad": {
+    "toward": "[72.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "eval": "(async()=>JSON.stringify({ atMs: Math.round(performance.now() - window.__q.k0), state: await window.__e2e.state(), hud: document.body.innerText.split('\\n').filter(Boolean).slice(3, 8) }))()"
+  },
+  {
+   "repeat": {
+    "times": 1200,
+    "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['2,0']; return c !== undefined && c.status !== 'writing' })()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = S.useLandStore.getState().chunks['2,0']; const w = n.chunks['2,0']; return JSON.stringify({ settledAfterMs: Math.round(performance.now() - window.__q.k0), status: c?.status, name: c?.scene?.name ?? null, npcs: c?.scene ? c.scene.npcs.map(p => p.id + ':' + p.name + ':' + p.role) : null, props: c?.scene ? c.scene.props.map(p => p.kind) : null, error: c?.error ? c.error.code + ' \u00b7 ' + c.error.message.slice(0, 300) : null, head: n.head.n, live: w ? { n: w.live.n, author: w.live.author } : null }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q04-04-failed-2-0.jpg"
+  },
+  {
+   "pad": {
+    "toward": "[79.5, 16.5]",
+    "within": 1.2,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(async()=>JSON.stringify({chapter: await window.__e2e.chapter(), state: await window.__e2e.state()}))()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q04-05-at-chapter-gate.jpg"
+  },
+  {
+   "note": "run-q04e-talk.json: CDP 9345, at chapter 1's gate: talk to its first unmet person (Kenji, written by Qwen as part of chapter 1: the chapter's own words, no model call): stand beside him, A to talk, A through the lines until the dialogue closes; count [inference] lines in main's log before/after (shell)"
+  },
+  {
+   "eval": "window.__e2e.nextTodo = async () => { const c = await window.__e2e.chapter(); return c && c.npcs ? (c.npcs.find(n => !n.met) ?? null) : null; }; window.__e2e.nextTodo().then(t => JSON.stringify(t))"
+  },
+  {
+   "pad": {
+    "toward": "window.__e2e.spot()",
+    "within": 0.3,
+    "timeoutMs": 15000
+   }
+  },
+  {
+   "eval": "window.__e2e.state().then(s=>JSON.stringify(s.nearby))"
+  },
+  {
+   "repeat": {
+    "times": 1,
+    "until": "(async()=>{const s=await window.__e2e.state(); const t=await window.__e2e.nextTodo(); return !t || !s.nearby || s.nearby.id!==t.id})()",
+    "actions": [
+     {
+      "pad": {
+       "buttons": [
+        0
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(async()=>{const s=await window.__e2e.state(); const S=await import('/state/index.ts'); const d=S.useSessionStore.getState().dialogue; return JSON.stringify({dialogue:s.dialogue, speaker:s.speaker, text: document.body.innerText.split('\\n').filter(Boolean).slice(-14)})})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q04-06-talking.jpg"
+  },
+  {
+   "repeat": {
+    "times": 6,
+    "until": "(async()=>{const S=await import('/state/index.ts'); return S.useSessionStore.getState().dialogue===null})()",
+    "actions": [
+     {
+      "pad": {
+       "buttons": [
+        0
+       ],
+       "ms": 200
+      }
+     },
+     {
+      "wait": 700
+     }
+    ]
+   }
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); const p=S.useLandStore.getState().progress; return JSON.stringify({dialogue: S.useSessionStore.getState().dialogue, e1: p?.episodes?.e1?.stage && {met: p.episodes.e1.stage.met, found: p.episodes.e1.stage.found}, cleared: p?.episodes?.e1?.cleared ?? false})})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q04-07-after-talk.jpg"
+  },
+  {
+   "note": "run-q04f-retry-witness.json: CDP 9345, standing in chunk (2, 0) whose witness failed (dsl-orphaned-statement after 2 repairs): press 'Retry witnessing' on the HUD, as a player would; wait until it settles (up to 10 min); read the chunk; read what Qwen wrote (window.__qcap, cleared first)"
+  },
+  {
+   "eval": "(() => document.body.innerText.split('\\n').filter(Boolean).slice(3, 8))()"
+  },
+  {
+   "eval": "window.__q.k0 = performance.now(); window.__qcap.length = 0; 'mark'"
+  },
+  {
+   "clickText": "Retry witnessing"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "repeat": {
+    "times": 1200,
+    "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['2,0']; return c !== undefined && c.status !== 'writing' })()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = S.useLandStore.getState().chunks['2,0']; const w = n.chunks['2,0']; return JSON.stringify({ settledAfterMs: Math.round(performance.now() - window.__q.k0), status: c?.status, name: c?.scene?.name ?? null, npcs: c?.scene ? c.scene.npcs.map(p => p.id + ':' + p.name + ':' + p.role) : null, props: c?.scene ? c.scene.props.map(p => p.kind) : null, error: c?.error ? c.error.code + ' \u00b7 ' + c.error.message.slice(0, 300) : null, head: n.head.n, live: w ? { n: w.live.n, author: w.live.author } : null }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q04-08-retry-2-0.jpg"
+  },
+  {
+   "eval": "JSON.stringify(window.__qcap.map(c => ({ id: c.id, type: c.type, usage: c.usage, error: c.error && c.error.code, text: c.text })))"
+  },
+  {
+   "note": "run-q05-health.json: CDP 9345, in Play in chunk (2, 0) after both witnesses: read the HUD (FPS, usage), the sidecar state and the probe; screenshot. Then (shell) ps / vmmap on llama-server, count [renderer:ERR] in main's log, close the app with close-app.ts (CDP Browser.close) and lsof 9345, 5198 and 8080"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const st = S.useInferenceStore.getState(); const l = document.body.innerText.split('\\n').filter(Boolean); return JSON.stringify({ sidecar: st.sidecar, probe: st.probe, hud: l.filter(x => /FPS|This world|LAND|Story|ONLINE|llama/.test(x)) }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q05-00-health.jpg"
+  }
+ ],
+ "actionsLaunch2": [
+  {
+   "note": "run-q06a-own-server.json: launch 2 (CDP 9345, same userData; no LLAMA_ARG_* env): llama-server started by hand with the recommended command plus --log-file, -lv 1 (request bodies in the log), --log-timestamps --log-prefix, on :8080, so its own timings can be read. Title (English is kept) \u2192 Settings \u2192 Model: read the panel (the saved config is still the sidecar one, stopped); Check connection against the hand-started server; read the probe"
+  },
+  {
+   "clickText": "Settings"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); s?.scrollIntoView({ block: 'start' }); return s?.innerText })()"
+  },
+  {
+   "eval": "window.__q = { p: performance.now() }; 'mark'"
+  },
+  {
+   "clickText": "Check connection"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 80; i++) { const p = S.useInferenceStore.getState().probe; if (p.status === 'ready' && i > 2) return JSON.stringify({ probe: p.value, sidecar: S.useInferenceStore.getState().sidecar }); await new Promise(r => setTimeout(r, 250)); } return 'still checking' })()"
+  },
+  {
+   "eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); return s?.innerText })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q06-00-own-server.jpg"
+  },
+  {
+   "note": "run-q06b-build-own-server.json: launch 2 (CDP 9345), hand-started llama-server: Escape; Create World \u2192 Continue (the draft of launch 1; q4a left it at the idea step) \u2192 the forward button of each step (Continue to the world / look / without a picture / story / build, nothing rewritten) \u2192 install the capture listener \u2192 Build and play once (a sixth build; the origin call carries the Scene GBNF when the provider is llama.cpp) \u2192 wait for published / Play / an error"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "Create World"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => document.body.innerText.split('\\n').filter(Boolean).slice(0, 20))()"
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(() => document.body.innerText.split('\\n').filter(Boolean).slice(0, 12))()"
+  },
+  {
+   "repeat": {
+    "times": 6,
+    "until": "[...document.querySelectorAll('button')].some(b => b.innerText.trim() === 'Build and play')",
+    "actions": [
+     {
+      "eval": "(() => { const want = ['Continue to build', 'Continue to the story', 'Continue without a picture', 'Continue to the look', 'Continue to the world']; for (const w of want) { const b = [...document.querySelectorAll('button')].find(x => x.innerText.trim() === w && !x.disabled); if (b) { b.click(); return w; } } return null })()"
+     },
+     {
+      "wait": 1500
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(() => { if (!window.__qcapOn) { window.__qcap = []; window.seed.inference.onEvent((e) => { if (e.type === 'done' || e.type === 'error') window.__qcap.push({ id: e.id, type: e.type, at: Date.now(), text: e.text ?? null, usage: e.usage ?? null, error: e.error ?? null }); }); window.__qcapOn = true; } return document.querySelector('[data-quote]')?.innerText ?? null })()"
+  },
+  {
+   "eval": "window.__q = window.__q || {}; window.__q.b1 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Build and play"
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); const errs0 = (document.body.innerText.match(/Error \u00b7 /g) ?? []).length; for(let i=0;i<2400;i++){if(/Your world is published/.test(document.body.innerText)){return {buildToPublishedMs: Math.round(performance.now()-window.__q.b1), panel: document.body.innerText.slice(0,600)};} if(S.useSessionStore.getState().screen==='play') return {wentStraightToPlayMs: Math.round(performance.now()-window.__q.b1)}; if(/Error \u00b7 /.test(document.body.innerText) && !/Writing the place you wake in/.test(document.body.innerText)) return {atMs: Math.round(performance.now()-window.__q.b1), error: [...document.querySelectorAll('*')].filter(e => /^Error \u00b7 /.test((e.innerText ?? '').trim())).map(e => e.parentElement?.innerText ?? e.innerText).slice(-1)[0]}; await new Promise(r=>setTimeout(r,250));} return {timeout:true, body: document.body.innerText.slice(0,800)};})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q06-01-build-own-server.jpg"
+  },
+  {
+   "eval": "JSON.stringify(window.__qcap.map(c => ({ id: c.id, type: c.type, usage: c.usage, error: c.error && c.error.code, text: c.text })))"
+  }
+ ],
+ "actionsLaunch3": [
+  {
+   "note": "run-q07a-build-launch3.json: launch 3 (CDP 9345, same userData): llama-server started by hand with the recommended command plus --log-file, -lv 5 (debug: request bodies), --log-timestamps --log-prefix, so its own timings and the request bodies can be read. Title \u2192 Create World \u2192 Continue (the draft) \u2192 forward buttons \u2192 capture listener \u2192 Build and play once (the seventh build) \u2192 wait"
+  },
+  {
+   "clickText": "Create World"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => document.body.innerText.split('\\n').filter(Boolean).slice(0, 20))()"
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(() => document.body.innerText.split('\\n').filter(Boolean).slice(0, 12))()"
+  },
+  {
+   "repeat": {
+    "times": 6,
+    "until": "[...document.querySelectorAll('button')].some(b => b.innerText.trim() === 'Build and play')",
+    "actions": [
+     {
+      "eval": "(() => { const want = ['Continue to build', 'Continue to the story', 'Continue without a picture', 'Continue to the look', 'Continue to the world']; for (const w of want) { const b = [...document.querySelectorAll('button')].find(x => x.innerText.trim() === w && !x.disabled); if (b) { b.click(); return w; } } return null })()"
+     },
+     {
+      "wait": 1500
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(() => { if (!window.__qcapOn) { window.__qcap = []; window.seed.inference.onEvent((e) => { if (e.type === 'done' || e.type === 'error') window.__qcap.push({ id: e.id, type: e.type, at: Date.now(), text: e.text ?? null, usage: e.usage ?? null, error: e.error ?? null }); }); window.__qcapOn = true; } return document.querySelector('[data-quote]')?.innerText ?? null })()"
+  },
+  {
+   "eval": "window.__q = window.__q || {}; window.__q.b1 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Build and play"
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); const errs0 = (document.body.innerText.match(/Error \u00b7 /g) ?? []).length; for(let i=0;i<2400;i++){if(/Your world is published/.test(document.body.innerText)){return {buildToPublishedMs: Math.round(performance.now()-window.__q.b1), panel: document.body.innerText.slice(0,600)};} if(S.useSessionStore.getState().screen==='play') return {wentStraightToPlayMs: Math.round(performance.now()-window.__q.b1)}; if(/Error \u00b7 /.test(document.body.innerText) && !/Writing the place you wake in/.test(document.body.innerText)) return {atMs: Math.round(performance.now()-window.__q.b1), error: [...document.querySelectorAll('*')].filter(e => /^Error \u00b7 /.test((e.innerText ?? '').trim())).map(e => e.parentElement?.innerText ?? e.innerText).slice(-1)[0]}; await new Promise(r=>setTimeout(r,250));} return {timeout:true, body: document.body.innerText.slice(0,800)};})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q07-00-build-launch3.jpg"
+  },
+  {
+   "eval": "JSON.stringify(window.__qcap.map(c => ({ id: c.id, type: c.type, usage: c.usage, error: c.error && c.error.code, text: c.text })))"
+  },
+  {
+   "note": "run-q07b-witness-launch3.json: launch 3 (CDP 9345), debug-logged hand-started llama-server: leave Create to the title (Back \u00d7n, Back to the title \u00d72), Continue (the built-in world's save from launch 1), re-install the helper, walk the z = 16 ford east into chunk (3, 0) and wait for Qwen's witness (up to 10 min)"
+  },
+  {
+   "repeat": {
+    "times": 4,
+    "until": "[...document.querySelectorAll('button')].some(b => b.innerText.trim() === 'Back to the title')",
+    "actions": [
+     {
+      "clickText": "Back"
+     },
+     {
+      "wait": 1000
+     }
+    ]
+   }
+  },
+  {
+   "clickText": "Back to the title"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Back to the title"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance && S.useLandStore.getState().progress !== null) return { ms: Date.now() - t0, cartridge: s.activeInstance.cartridge.manifest.cartridgeId + '@' + s.activeInstance.cartridge.manifest.version }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(() => {\n  const e2e = (window.__e2e = window.__e2e || {});\n  // Shared modules are served under /@fs/<absolute path>; read that URL from a renderer module\n  // that imports them, so the helper runs on any checkout.\n  e2e.shared = async (name) => {\n    e2e.urls = e2e.urls || {};\n    if (!e2e.urls[name]) {\n      const code = await (await fetch('/engine2d/LandView2D.tsx')).text();\n      const found = code.match(new RegExp('\"(/@fs/[^\"]*/src/shared/' + name + '\\\\.ts[^\"]*)\"'));\n      e2e.urls[name] = found ? found[1] : null;\n    }\n    return import(e2e.urls[name]);\n  };\n  e2e.pos = async () => {\n    const p = (await import('/engine/playerProbe.ts')).samplePlayer();\n    return p === null ? null : [Math.round(p.x * 10) / 10, Math.round(p.z * 10) / 10];\n  };\n  // What a player sees of the current chapter: its gate, its people and treasures (world tiles).\n  e2e.chapter = async () => {\n    const S = await import('/state/index.ts');\n    const L = await import('/engine2d/chapterLayer.ts');\n    const M = await import('/engine2d/landModel.ts');\n    const story = await e2e.shared('story');\n    const land = await e2e.shared('land');\n    const session = S.useSessionStore.getState();\n    const world = S.useWorldStore.getState();\n    const landState = S.useLandStore.getState();\n    const active = session.activeInstance;\n    if (!active || world.scene.status !== 'ready' || !active.cartridge.story) return null;\n    const progress = landState.progress;\n    const episodes = story.storyEpisodes(active.cartridge.story, progress?.storyMore);\n    const next = story.nextEpisode(episodes, progress?.episodes ?? {});\n    if (!next) return { cleared: true, episodes: progress?.episodes ?? {} };\n    const gate = story.episodeGate(next);\n    const stage = progress?.episodes?.[next.id]?.stage ?? null;\n    const base = { id: next.id, title: next.title, gate: [gate.x, gate.z], written: stage !== null };\n    if (!stage || stage.kind !== 'land') return { ...base, kind: stage?.kind ?? null };\n    const draft = L.readChapter(stage.source);\n    if (!draft) return { ...base, unreadable: true };\n    const seed = land.landSeedOf(active.instance.save);\n    const graph = world.scene.value;\n    const residents = L.residentTiles ? L.residentTiles(landState.chunks) : new Set();\n    const free = (x, z) => !residents.has(x + ',' + z) && M.canStandAt(graph, seed, landState.chunks, x + 0.5, z + 0.5, null);\n    const scene = L.chapterScene(next, stage, draft, free);\n    return {\n      ...base,\n      npcs: scene.npcs.map((n) => ({ id: n.id, name: n.name, at: [n.x + 0.5, n.z + 0.5],\n        met: stage.met.includes(n.id.split(':')[2]) })),\n      treasures: scene.treasures.map((t) => ({ id: t.id, at: [t.x + 0.5, t.z + 0.5],\n        found: stage.found.includes(t.id.split(':')[2]) })),\n      monsters: scene.monsters.length,\n      met: stage.met, found: stage.found,\n    };\n  };\n  // The next thing of the chapter still to do: the nearest unmet person or unopened treasure.\n  e2e.nextTodo = async () => {\n    const c = await e2e.chapter();\n    const at = await e2e.pos();\n    if (!c || !c.npcs || !at) return null;\n    const todo = [...c.npcs.filter((n) => !n.met), ...c.treasures.filter((t) => !t.found)];\n    todo.sort((a, b) => Math.hypot(a.at[0] - at[0], a.at[1] - at[1]) - Math.hypot(b.at[0] - at[0], b.at[1] - at[1]));\n    return todo[0] ?? null;\n  };\n  // Where a player would stand to face it: a free spot next to it from which it, and nothing else\n  // (the gate, a neighbour, a resident of the land), is the nearest thing when A is pressed.\n  e2e.others = async () => {\n    const S = await import('/state/index.ts');\n    const c = await e2e.chapter();\n    // [x, z, reach]: a gate reaches 0.8 tiles further than a person (engine2d/storyLayer).\n    const points = c && c.gate ? [[c.gate[0], c.gate[1], 0.8]] : [];\n    if (c && c.npcs) points.push(...c.npcs.map((n) => [...n.at, 0]), ...c.treasures.filter((t) => !t.found).map((t) => [...t.at, 0]));\n    for (const [key, chunk] of Object.entries(S.useLandStore.getState().chunks)) {\n      if (chunk.status !== 'written') continue;\n      const [cx, cz] = key.split(',').map(Number);\n      for (const n of chunk.scene.npcs) points.push([cx * 32 + n.x + 0.5, cz * 32 + n.z + 0.5, 0]);\n    }\n    return points;\n  };\n  e2e.spot = async () => {\n    const t = await e2e.nextTodo();\n    const at = await e2e.pos();\n    if (!t || !at) return null;\n    const S = await import('/state/index.ts');\n    const M = await import('/engine2d/landModel.ts');\n    const land = await e2e.shared('land');\n    const active = S.useSessionStore.getState().activeInstance;\n    const graph = S.useWorldStore.getState().scene.value;\n    const seed = land.landSeedOf(active.instance.save);\n    const chunks = S.useLandStore.getState().chunks;\n    const others = (await e2e.others()).filter((p) => Math.hypot(p[0] - t.at[0], p[1] - t.at[1]) > 0.01);\n    const spots = [];\n    for (const r of [0.8, 1.2]) {\n      for (let i = 0; i < 16; i += 1) {\n        const a = (i / 16) * Math.PI * 2;\n        const p = [t.at[0] + Math.cos(a) * r, t.at[1] + Math.sin(a) * r];\n        if (!M.canStandAt(graph, seed, chunks, p[0], p[1], null)) continue;\n        const nearestOther = Math.min(...others.map((o) => Math.hypot(o[0] - p[0], o[1] - p[1]) - o[2]));\n        if (nearestOther <= r + 0.3) continue;\n        spots.push(p);\n      }\n    }\n    spots.sort((a, b) => Math.hypot(a[0] - at[0], a[1] - at[1]) - Math.hypot(b[0] - at[0], b[1] - at[1]));\n    return spots[0] ?? t.at;\n  };\n  e2e.state = async () => {\n    const S = await import('/state/index.ts');\n    const s = S.useSessionStore.getState();\n    const en = S.useEngineStore.getState();\n    const layer = [...document.querySelectorAll('[data-layer], [role=dialog]')].filter((l) => l.getClientRects().length > 0).map((l) => l.getAttribute('data-layer') ?? l.getAttribute('role'));\n    return {\n      screen: s.screen, input: document.documentElement.dataset.input ?? null,\n      pos: await e2e.pos(), chunk: en.chunk, nearby: en.nearby && { kind: en.nearby.kind, id: en.nearby.id, label: en.nearby.label },\n      locked: en.inputLocked, dialogue: s.dialogue?.status ?? null, speaker: s.dialogueSpeaker,\n      episodeOpen: s.episodeOpen, layers: layer,\n      focus: document.activeElement && document.activeElement !== document.body ? (document.activeElement.innerText || document.activeElement.getAttribute('aria-label') || document.activeElement.tagName).slice(0, 60) : null,\n    };\n  };\n  return Object.keys(e2e);\n})()\n"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const L = S.useLandStore.getState(); return JSON.stringify({ state: await window.__e2e.state(), chunks: Object.fromEntries(Object.entries(L.chunks).map(([k, c]) => [k, { status: c.status, name: c.scene?.name ?? null, npcs: c.scene ? c.scene.npcs.map(x => x.name) : null }])) }) })()"
+  },
+  {
+   "eval": "window.__q = window.__q || {}; window.__q.k0 = performance.now(); 'mark'"
+  },
+  {
+   "pad": {
+    "toward": "[80.5, 16.5]",
+    "within": 1.5,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 60000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[104.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "eval": "(async()=>JSON.stringify({ atMs: Math.round(performance.now() - window.__q.k0), state: await window.__e2e.state(), hud: document.body.innerText.split('\\n').filter(Boolean).slice(3, 8) }))()"
+  },
+  {
+   "repeat": {
+    "times": 1200,
+    "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['3,0']; return c !== undefined && c.status !== 'writing' })()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = S.useLandStore.getState().chunks['3,0']; const w = n.chunks['3,0']; return JSON.stringify({ settledAfterMs: Math.round(performance.now() - window.__q.k0), status: c?.status, name: c?.scene?.name ?? null, npcs: c?.scene ? c.scene.npcs.map(p => p.id + ':' + p.name + ':' + p.role) : null, props: c?.scene ? c.scene.props.map(p => p.kind) : null, error: c?.error ? c.error.code + ' \u00b7 ' + c.error.message.slice(0, 300) : null, head: n.head.n, live: w ? { n: w.live.n, author: w.live.author } : null }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q07-01-failed-3-0.jpg"
+  }
+ ]
+}

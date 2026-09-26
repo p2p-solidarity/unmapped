@@ -1,0 +1,72 @@
+{
+ "step": "q4e",
+ "app": "CDP 9345, at chapter 1's gate: talk to its first unmet person (Kenji, written by Qwen as part of chapter 1: the chapter's own words, no model call): stand beside him, A to talk, A through the lines until the dialogue closes; count [inference] lines in main's log before/after (shell)",
+ "actionsFrom": "docs/e2e/milestone-rev6-integrated-journey/run-03b-a-talk.json (verbatim, screenshot paths renamed)",
+ "actions": [
+  {
+   "eval": "window.__e2e.nextTodo = async () => { const c = await window.__e2e.chapter(); return c && c.npcs ? (c.npcs.find(n => !n.met) ?? null) : null; }; window.__e2e.nextTodo().then(t => JSON.stringify(t))"
+  },
+  {
+   "pad": {
+    "toward": "window.__e2e.spot()",
+    "within": 0.3,
+    "timeoutMs": 15000
+   }
+  },
+  {
+   "eval": "window.__e2e.state().then(s=>JSON.stringify(s.nearby))"
+  },
+  {
+   "repeat": {
+    "times": 1,
+    "until": "(async()=>{const s=await window.__e2e.state(); const t=await window.__e2e.nextTodo(); return !t || !s.nearby || s.nearby.id!==t.id})()",
+    "actions": [
+     {
+      "pad": {
+       "buttons": [
+        0
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(async()=>{const s=await window.__e2e.state(); const S=await import('/state/index.ts'); const d=S.useSessionStore.getState().dialogue; return JSON.stringify({dialogue:s.dialogue, speaker:s.speaker, text: document.body.innerText.split('\\n').filter(Boolean).slice(-14)})})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q04-06-talking.jpg"
+  },
+  {
+   "repeat": {
+    "times": 6,
+    "until": "(async()=>{const S=await import('/state/index.ts'); return S.useSessionStore.getState().dialogue===null})()",
+    "actions": [
+     {
+      "pad": {
+       "buttons": [
+        0
+       ],
+       "ms": 200
+      }
+     },
+     {
+      "wait": 700
+     }
+    ]
+   }
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); const p=S.useLandStore.getState().progress; return JSON.stringify({dialogue: S.useSessionStore.getState().dialogue, e1: p?.episodes?.e1?.stage && {met: p.episodes.e1.stage.met, found: p.episodes.e1.stage.found}, cleared: p?.episodes?.e1?.cleared ?? false})})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/q04-07-after-talk.jpg"
+  }
+ ]
+}

@@ -1,0 +1,147 @@
+vite v8.3.0 building ssr environment for development...
+transforming...
+✓ 357 modules transformed.
+rendering chunks...
+out/main/chunks/heart-BgeRAx0t.png                          3.12 kB
+out/main/chunks/samurai_green-XToNlHMv.png                  4.78 kB
+out/main/chunks/samurai_blue-YZHMdpFI.png                   5.53 kB
+out/main/chunks/ninja_blue-COU3McFS.png                     6.13 kB
+out/main/chunks/tileset_floor-B7205uFr.png                 29.61 kB
+out/main/chunks/tileset_village_abandoned-BqZ8VUQR.png     31.77 kB
+out/main/index.js                                       1,289.50 kB
+
+✓ built in 129ms
+
+electron main process built successfully
+
+-----
+
+vite v8.3.0 building ssr environment for development...
+transforming...
+✓ 122 modules transformed.
+rendering chunks...
+out/preload/index.js  224.04 kB
+
+✓ built in 30ms
+
+electron preload scripts built successfully
+
+-----
+
+dev server running for the electron renderer process at:
+
+  ➜  Local:   http://localhost:5198/
+  ➜  Network: use --host to expose
+
+starting electron app...
+
+
+DevTools listening on ws://127.0.0.1:9345/devtools/browser/30230643-2dd8-4450-9f6f-830a89f53796
+[apple-local] native-helper-start: spawn $SCR/snap/native/afm-bridge/.build/debug/afm-bridge ENOENT
+[renderer:LOG] [vite] connecting... (http://localhost:5198/@vite/client:883)
+[renderer:LOG] [vite] connected. (http://localhost:5198/@vite/client:996)
+[renderer:LOG] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold (http://localhost:5198/@fs$SCR/snap/.vite-cache/deps/client-CBEMz44o.js?v=a001d335:15861)
+[inference] chat 28bf770b-c880-4237-874d-af4102a40507 · 2 messages · 0 tools
+[inference] done 28bf770b-c880-4237-874d-af4102a40507 · bible · llamacpp local · 13771 ms · max 1400 · 1153+239 tokens (0 cached) · ctx 16384
+[inference] chat f346b695-41e2-430d-ad23-f01875bfb707 · 2 messages · 0 tools
+[look] fail 2a25e6a8-d806-4a7d-983a-a047248f0aeb · openai · gpt-image-1-mini · 2 ms · no-api-key
+[look] fail 7d82961a-4671-4c0b-bbf1-c6b44a2baf3b · openai · gpt-image-1-mini · 1 ms · no-api-key
+[look] fail 63b9fd1d-1169-46d2-a3d3-ce04651dc71b · openai · gpt-image-1-mini · 1 ms · no-api-key
+[inference] done f346b695-41e2-430d-ad23-f01875bfb707 · story · llamacpp local · 22101 ms · max 4000 · 539+452 tokens (0 cached) · ctx 16384
+[inference] chat e1c799a0-9fca-4238-ab9e-97c65af4e676 · 2 messages · 0 tools
+[inference] done e1c799a0-9fca-4238-ab9e-97c65af4e676 · origin · llamacpp local · 30014 ms · max 2200 · 2748+403 tokens (0 cached) · ctx 16384
+[renderer:WARN] [repair] 1/2 · dsl-unresolved-reference · Referenced but never defined: tint, tint, tint, tint, tint, tint, tint, tint. (http://localhost:5198/@vite/client:299)
+[inference] chat 6b89b416-d562-4f8a-ba30-69ab2117b6bc · 4 messages · 0 tools
+4:31:05 PM [vite] (client) [console.warn] [repair] 1/2 · dsl-unresolved-reference · Referenced but never defined: tint, tint, tint, tint, tint, tint, tint, tint.
+[inference] done 6b89b416-d562-4f8a-ba30-69ab2117b6bc · origin · llamacpp local · 28032 ms · max 2200 · 3719+546 tokens (2744 cached) · ctx 16384
+[renderer:WARN] [repair] 2/2 · dsl-invalid-props · 16 statement(s) have arguments the engine cannot use. · Prop(...) has invalid arguments — tint: colour override must be a hex colour like "#8ab6ff"; dynamic: Invalid input: expected boolean, received string (http://localhost:5198/@vite/client:299)
+[inference] chat 6ed0b568-8c38-4d05-b57f-02dc13714303 · 4 messages · 0 tools
+4:31:32 PM [vite] (client) [console.warn] [repair] 2/2 · dsl-invalid-props · 16 statement(s) have arguments the engine cannot use. · Prop(...) has invalid arguments — tint: colour override must be a hex colour like "#8ab6ff"; dynamic: Invalid input: expected boolean, received string
+[inference] done 6ed0b568-8c38-4d05-b57f-02dc13714303 · origin · llamacpp local · 26034 ms · max 2200 · 4807+426 tokens (2744 cached) · ctx 16384
+[inference] chat a1a07e37-81d6-44b8-b5d9-7c40a2f1a079 · 2 messages · 0 tools
+[inference] done a1a07e37-81d6-44b8-b5d9-7c40a2f1a079 · origin · llamacpp local · 25039 ms · max 2200 · 2748+519 tokens (2744 cached) · ctx 16384
+[renderer:WARN] [repair] 1/2 · dsl-orphaned-statement · Defined but never used: quest. (http://localhost:5198/@vite/client:299)
+[inference] chat 803adcb3-aad0-47f6-be31-fafdd295d1fa · 4 messages · 0 tools
+4:38:41 PM [vite] (client) [console.warn] [repair] 1/2 · dsl-orphaned-statement · Defined but never used: quest.
+[inference] done 803adcb3-aad0-47f6-be31-fafdd295d1fa · origin · llamacpp local · 28119 ms · max 2200 · 3916+521 tokens (2744 cached) · ctx 16384
+[renderer:WARN] [repair] 2/2 · dsl-invalid-props · 1 statement(s) of the Scene program are invalid. · missing required field "/text" — signature: Quest(id*: string, text*: string) (http://localhost:5198/@vite/client:299)
+[inference] chat ccd7e930-369e-47fc-ae57-7a8645173893 · 4 messages · 0 tools
+4:39:09 PM [vite] (client) [console.warn] [repair] 2/2 · dsl-invalid-props · 1 statement(s) of the Scene program are invalid. · missing required field "/text" — signature: Quest(id*: string, text*: string)
+[inference] done ccd7e930-369e-47fc-ae57-7a8645173893 · origin · llamacpp local · 28295 ms · max 2200 · 3948+525 tokens (2744 cached) · ctx 16384
+[inference] chat fc66a441-529a-48c9-b4b6-215eaa28e5ce · 2 messages · 0 tools
+[inference] done fc66a441-529a-48c9-b4b6-215eaa28e5ce · origin · llamacpp local · 17816 ms · max 2200 · 2748+438 tokens (2744 cached) · ctx 16384
+[renderer:WARN] [repair] 1/2 · dsl-invalid-props · 1 statement(s) have arguments the engine cannot use. · NPC(...) has invalid arguments — accent: trim colour must be a hex colour like "#8ab6ff" (http://localhost:5198/@vite/client:299)
+[inference] chat ed220905-dab5-401c-a40d-14c90e8f51c4 · 4 messages · 0 tools
+4:40:33 PM [vite] (client) [console.warn] [repair] 1/2 · dsl-invalid-props · 1 statement(s) have arguments the engine cannot use. · NPC(...) has invalid arguments — accent: trim colour must be a hex colour like "#8ab6ff"
+[inference] done ed220905-dab5-401c-a40d-14c90e8f51c4 · origin · llamacpp local · 20885 ms · max 2200 · 3773+436 tokens (2744 cached) · ctx 16384
+[renderer:WARN] [repair] 2/2 · dsl-invalid-props · 1 statement(s) have arguments the engine cannot use. · NPC(...) has invalid arguments — accent: trim colour must be a hex colour like "#8ab6ff" (http://localhost:5198/@vite/client:299)
+[inference] chat 3e5ab5ed-0d13-4eda-9380-03b9d7d24b45 · 4 messages · 0 tools
+4:40:54 PM [vite] (client) [console.warn] [repair] 2/2 · dsl-invalid-props · 1 statement(s) have arguments the engine cannot use. · NPC(...) has invalid arguments — accent: trim colour must be a hex colour like "#8ab6ff"
+[inference] done 3e5ab5ed-0d13-4eda-9380-03b9d7d24b45 · origin · llamacpp local · 21502 ms · max 2200 · 3769+441 tokens (2744 cached) · ctx 16384
+[inference] chat 9938fde1-b821-47b2-ad60-caee1b673046 · 2 messages · 0 tools
+[inference] done 9938fde1-b821-47b2-ad60-caee1b673046 · origin · llamacpp local · 16341 ms · max 2200 · 2748+367 tokens (2744 cached) · ctx 16384
+[renderer:WARN] [repair] 1/2 · dsl-invalid-props · 2 statement(s) have arguments the engine cannot use. · NPC(...) has invalid arguments — body: Invalid option: expected one of "slim"|"stout"|"tall"|"child"|"elder"; accent: trim colour must be a hex colour like "#8ab6ff" (http://localhost:5198/@vite/client:299)
+[inference] chat ea55b305-073b-4f50-a3fe-7570582b6736 · 4 messages · 0 tools
+4:42:00 PM [vite] (client) [console.warn] [repair] 1/2 · dsl-invalid-props · 2 statement(s) have arguments the engine cannot use. · NPC(...) has invalid arguments — body: Invalid option: expected one of "slim"|"stout"|"tall"|"child"|"elder"; accent: trim colour must be a hex colour like "#8ab6ff"
+[inference] done ea55b305-073b-4f50-a3fe-7570582b6736 · origin · llamacpp local · 24784 ms · max 2200 · 3734+387 tokens (2744 cached) · ctx 16384
+[renderer:WARN] [repair] 2/2 · dsl-invalid-props · 2 statement(s) of the Scene program are invalid. · NPC takes 11 arg(s), got 13 (2 excess dropped) (http://localhost:5198/@vite/client:299)
+[inference] chat 1f96a724-8bdd-4f46-b701-4169ba0333e2 · 4 messages · 0 tools
+4:42:25 PM [vite] (client) [console.warn] [repair] 2/2 · dsl-invalid-props · 2 statement(s) of the Scene program are invalid. · NPC takes 11 arg(s), got 13 (2 excess dropped)
+[inference] done 1f96a724-8bdd-4f46-b701-4169ba0333e2 · origin · llamacpp local · 20746 ms · max 2200 · 3693+402 tokens (2744 cached) · ctx 16384
+[inference] chat 6fb0dc0f-c36e-4e83-815b-8ff15a0d9ed7 · 2 messages · 0 tools
+[inference] done 6fb0dc0f-c36e-4e83-815b-8ff15a0d9ed7 · origin · llamacpp local · 17791 ms · max 2200 · 2748+394 tokens (2744 cached) · ctx 16384
+[renderer:WARN] [repair] 1/2 · dsl-invalid-props · 2 statement(s) of the Scene program are invalid. · field "/kind" expects one of ["tree", "rock", "torch", "crate", "altar", "well", "statue", "pillar", "fence", "flower", "mushroom", "signpost", "machine_gear", "conveyor", "boiler", "pipe_stack", "cra (http://localhost:5198/@vite/client:299)
+[inference] chat 1fac39ba-d3cb-4943-8cc9-8c7c6dd84403 · 4 messages · 0 tools
+4:43:04 PM [vite] (client) [console.warn] [repair] 1/2 · dsl-invalid-props · 2 statement(s) of the Scene program are invalid. · field "/kind" expects one of ["tree", "rock", "torch", "crate", "altar", "well", "statue", "pillar", "fence", "flower", "mushroom", "signpost", "machine_gear", "conveyor", "boiler", "pipe_stack", "cra
+[inference] done 1fac39ba-d3cb-4943-8cc9-8c7c6dd84403 · origin · llamacpp local · 20663 ms · max 2200 · 3820+392 tokens (2744 cached) · ctx 16384
+[renderer:WARN] [repair] 2/2 · dsl-invalid-props · 1 statement(s) of the Scene program are invalid. · missing required field "/text" — signature: Quest(id*: string, text*: string) (http://localhost:5198/@vite/client:299)
+[inference] chat 4d7db908-cc3d-4b18-8151-5c3ea5c3e038 · 4 messages · 0 tools
+4:43:24 PM [vite] (client) [console.warn] [repair] 2/2 · dsl-invalid-props · 1 statement(s) of the Scene program are invalid. · missing required field "/text" — signature: Quest(id*: string, text*: string)
+[inference] done 4d7db908-cc3d-4b18-8151-5c3ea5c3e038 · origin · llamacpp local · 21408 ms · max 2200 · 3691+396 tokens (2744 cached) · ctx 16384
+[inference] chat 997f9043-9992-4926-a71e-65b76f76aa50 · 2 messages · 0 tools
+[inference] chat c48a86af-2911-4291-8695-cc1bbd9ae2ab · 2 messages · 0 tools
+[inference] done c48a86af-2911-4291-8695-cc1bbd9ae2ab · chapter · llamacpp local · 53281 ms · max 2400 · 2237+457 tokens (0 cached) · ctx 16384
+[renderer:WARN] [repair] 1/2 · dsl-orphaned-statement · Defined but never used: talk_bus1, c1, c2, talk_bus2, c3, c4, talk_bus3, c5, c6. (http://localhost:5198/@vite/client:299)
+[inference] chat bb31e7dc-b1e7-47a1-bf6e-21862bf22d82 · 4 messages · 0 tools
+4:45:34 PM [vite] (client) [console.warn] [repair] 1/2 · dsl-orphaned-statement · Defined but never used: talk_bus1, c1, c2, talk_bus2, c3, c4, talk_bus3, c5, c6.
+[inference] done 997f9043-9992-4926-a71e-65b76f76aa50 · witness · llamacpp local · 73961 ms · max 3200 · 3444+694 tokens (0 cached) · ctx 16384
+[renderer:WARN] [repair] 1/2 · dsl-orphaned-statement · Defined but never used: o3_crossing. (http://localhost:5198/@vite/client:299)
+[inference] chat a6165ded-1156-4cce-80f9-ec71826ff0c6 · 4 messages · 0 tools
+4:45:54 PM [vite] (client) [console.warn] [repair] 1/2 · dsl-orphaned-statement · Defined but never used: o3_crossing.
+[inference] done bb31e7dc-b1e7-47a1-bf6e-21862bf22d82 · chapter · llamacpp local · 45819 ms · max 2400 · 3345+487 tokens (2233 cached) · ctx 16384
+[inference] done a6165ded-1156-4cce-80f9-ec71826ff0c6 · witness · llamacpp local · 49599 ms · max 3200 · 4968+868 tokens (3440 cached) · ctx 16384
+[renderer:WARN] [repair] 2/2 · dsl-orphaned-statement · Defined but never used: elder_t_talk, child_a_talk, child_b_talk, c1, c2, c3. (http://localhost:5198/@vite/client:299)
+[inference] chat 996bb356-3ed1-483a-a327-afe56dbb067a · 4 messages · 0 tools
+4:46:44 PM [vite] (client) [console.warn] [repair] 2/2 · dsl-orphaned-statement · Defined but never used: elder_t_talk, child_a_talk, child_b_talk, c1, c2, c3.
+[inference] done 996bb356-3ed1-483a-a327-afe56dbb067a · witness · llamacpp local · 46172 ms · max 3200 · 5359+892 tokens (3440 cached) · ctx 16384
+[inference] chat 019e9474-bef8-497c-8c13-13e94492d35a · 2 messages · 0 tools
+[inference] done 019e9474-bef8-497c-8c13-13e94492d35a · witness · llamacpp local · 30961 ms · max 3200 · 3423+468 tokens (0 cached) · ctx 16384
+[renderer:WARN] [repair] 1/2 · dsl-invalid-chunk · 5 problem(s) with this Chunk program. · NPC hiro has 0 Talk statements. (http://localhost:5198/@vite/client:299)
+[inference] chat 12825250-df92-4c6c-914e-1a892781da06 · 4 messages · 0 tools
+4:48:56 PM [vite] (client) [console.warn] [repair] 1/2 · dsl-invalid-chunk · 5 problem(s) with this Chunk program. · NPC hiro has 0 Talk statements.
+[inference] done 12825250-df92-4c6c-914e-1a892781da06 · witness · llamacpp local · 31413 ms · max 3200 · 4670+634 tokens (3419 cached) · ctx 16384
+[renderer:WARN] [repair] 2/2 · dsl-invalid-chunk · 2 problem(s) with this Chunk program. · Lore the_sand_coin links to "hiraoka_edge", which is neither known lore nor Lore in this program. (http://localhost:5198/@vite/client:299)
+[inference] chat da811406-cfd7-4601-94c1-b3a0540e4958 · 4 messages · 0 tools
+4:49:28 PM [vite] (client) [console.warn] [repair] 2/2 · dsl-invalid-chunk · 2 problem(s) with this Chunk program. · Lore the_sand_coin links to "hiraoka_edge", which is neither known lore nor Lore in this program.
+[inference] done da811406-cfd7-4601-94c1-b3a0540e4958 · witness · llamacpp local · 35537 ms · max 3200 · 4887+638 tokens (3419 cached) · ctx 16384
+[inference] chat fecd3ebd-18b6-4fa0-b159-3d545d5aafd5 · 2 messages · 0 tools
+[inference] done fecd3ebd-18b6-4fa0-b159-3d545d5aafd5 · witness · llamacpp local · 26747 ms · max 3200 · 3543+616 tokens (2907 cached) · ctx 16384
+[renderer:WARN] [repair] 1/2 · dsl-invalid-props · 2 statement(s) of the Chunk program are invalid. · field "/archetype" expects array but got string (http://localhost:5198/@vite/client:299)
+[inference] chat 0e08b6bc-d6c4-4e68-9360-67ee26aeed1c · 4 messages · 0 tools
+4:50:34 PM [vite] (client) [console.warn] [repair] 1/2 · dsl-invalid-props · 2 statement(s) of the Chunk program are invalid. · field "/archetype" expects array but got string
+[inference] done 0e08b6bc-d6c4-4e68-9360-67ee26aeed1c · witness · llamacpp local · 29010 ms · max 3200 · 5025+619 tokens (3539 cached) · ctx 16384
+[renderer:WARN] [repair] 2/2 · dsl-invalid-chunk · 7 problem(s) with this Chunk program. · The place has 0 residents. (http://localhost:5198/@vite/client:299)
+[inference] chat cf4e5092-f99c-47dc-a085-2a0e56a76f27 · 4 messages · 0 tools
+4:51:03 PM [vite] (client) [console.warn] [repair] 2/2 · dsl-invalid-chunk · 7 problem(s) with this Chunk program. · The place has 0 residents.
+[inference] done cf4e5092-f99c-47dc-a085-2a0e56a76f27 · witness · llamacpp local · 32644 ms · max 3200 · 5171+723 tokens (3539 cached) · ctx 16384
+[inference] chat 16b8b8ba-d5ce-46a0-a268-c36428fe633d · 2 messages · 0 tools
+[inference] done 16b8b8ba-d5ce-46a0-a268-c36428fe633d · witness · llamacpp local · 45466 ms · max 3200 · 3543+1168 tokens (3539 cached) · ctx 16384
+[renderer:WARN] [repair] 1/2 · dsl-orphaned-statement · Defined but never used: shoreline2, shoreline3, shoreline4, shoreline5, shoreline6, shoreline7, shoreline8, shoreline9, shoreline10, shoreline11, shoreline12, shoreline13, shoreline14, shoreline15, sh (http://localhost:5198/@vite/client:299)
+[inference] chat 375ddf49-ad2d-4909-820a-65eee289127b · 4 messages · 0 tools
+4:53:01 PM [vite] (client) [console.warn] [repair] 1/2 · dsl-orphaned-statement · Defined but never used: shoreline2, shoreline3, shoreline4, shoreline5, shoreline6, shoreline7, shoreline8, shoreline9, shoreline10, shoreline11, shoreline12, shoreline13, shoreline14, shoreline15, sh
+[inference] done 375ddf49-ad2d-4909-820a-65eee289127b · witness · llamacpp local · 58466 ms · max 3200 · 6285+1292 tokens (3539 cached) · ctx 16384
+[renderer:WARN] [repair] 2/2 · dsl-invalid-chunk · 5 problem(s) with this Chunk program. · The place has 0 residents. (http://localhost:5198/@vite/client:299)
+[inference] chat 1c5445e5-748c-460a-8e40-af431fed6dc7 · 4 messages · 0 tools
+4:53:59 PM [vite] (client) [console.warn] [repair] 2/2 · dsl-invalid-chunk · 5 problem(s) with this Chunk program. · The place has 0 residents.
+[inference] done 1c5445e5-748c-460a-8e40-af431fed6dc7 · witness · llamacpp local · 72267 ms · max 3200 · 6399+1498 tokens (3539 cached) · ctx 16384
+[world] hfc5txeshdcj… visit of 2 chunks written on quit
