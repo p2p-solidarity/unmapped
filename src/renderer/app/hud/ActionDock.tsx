@@ -1,5 +1,6 @@
 // Bottom dock + the "press E" prompt. The prompt text is resolved by the engine (nearbyPrompt);
-// the dock is pure chrome — every button toggles state that already exists.
+// the dock is pure chrome — every button toggles state that already exists, and How to play opens
+// the Hud's card again (./HowToPlay).
 
 import { useT } from "@renderer/i18n";
 import { useEngineStore, useSessionStore } from "@renderer/state";
@@ -47,7 +48,7 @@ export function NearbyPrompt(): JSX.Element | null {
   );
 }
 
-export function ActionDock(): JSX.Element {
+export function ActionDock({ onHelp }: { onHelp(): void }): JSX.Element {
   const toggleConsole = useSessionStore((state) => state.toggleConsole);
   const toggleTweak = useSessionStore((state) => state.toggleTweak);
   const setScreen = useSessionStore((state) => state.setScreen);
@@ -79,6 +80,16 @@ export function ActionDock(): JSX.Element {
         style={dockButton}
       >
         {t("hud.dockHome")}
+      </Button>
+      <Button
+        variant="secondary"
+        onClick={() => {
+          if (document.pointerLockElement !== null) document.exitPointerLock();
+          onHelp();
+        }}
+        style={dockButton}
+      >
+        {t("hud.dockHelp")}
       </Button>
       <Button variant="secondary" onClick={() => toggleTweak()} style={dockButton}>
         {t("hud.dockTweak")}

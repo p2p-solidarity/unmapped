@@ -5,7 +5,8 @@
 // shared job of `chapterJobs.ts`: a gate's card opened meanwhile adopts it rather than restarting
 // it, and no new job starts while a card is open. A failure is never retried on its own, because
 // that burns tokens — the card says what failed and offers Retry. Every stop aborts the model call
-// itself. Pausing is a per-device preference (localStorage, Rule 2).
+// itself. Pausing is a per-device preference (localStorage, Rule 2). With no model set up at all the
+// card stays away: the HUD's goal line and top-right card say where to fix it (Settings → Model).
 
 import { useRefreshProbe } from "@renderer/app/inferenceSync";
 import {
@@ -28,6 +29,8 @@ import { storyEpisodes, storyStep } from "@shared/story";
 import { type CSSProperties, type JSX, useCallback, useEffect, useRef, useState } from "react";
 
 const PAUSE_KEY = "unwritten.story.prefetchPaused";
+
+const NO_MODEL = "story-no-model";
 
 function readPaused(): boolean {
   try {
@@ -58,9 +61,9 @@ function modelProblem(
 ): AppError | "waiting" | null {
   if (config === null) {
     return {
-      code: "story-no-model",
+      code: NO_MODEL,
       message: "No model is configured, so the next chapter is not written ahead.",
-      hint: "Configure a provider in Console → Inference. Walking and played episodes still work.",
+      hint: "Set up a provider in Settings → Model. Walking and chapters already played still work.",
     };
   }
   if (probe.status === "idle" || probe.status === "loading") return "waiting";
@@ -68,7 +71,7 @@ function modelProblem(
     return {
       code: "story-model-offline",
       message: "The model is not reachable, so the next chapter is not written ahead.",
-      hint: "Start the model or check the provider in Console → Inference, then Retry.",
+      hint: "Start the model or check the provider in Settings → Model, then Retry.",
     };
   }
   return null;
@@ -286,7 +289,9 @@ export function EpisodePrefetch(): JSX.Element | null {
     );
   }
 
-  const shown = error ?? failed ?? (model === "waiting" ? null : model);
+  // No model set up at all: the goal line and the top-right card already say where to fix it, and
+  // there is nothing to retry here until Settings → Model changes (which probes again by itself).
+  const shown = error ?? failed ?? (model === "waiting" || model?.code === NO_MODEL ? null : model);
   if (shown === null) return null;
   return (
     <Surface variant="overlay" padding="sm" style={card}>

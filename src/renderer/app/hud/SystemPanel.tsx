@@ -1,110 +1,64 @@
-// Right HUD card: the state of the machinery behind the world — which model is answering, whether
-// it is reachable, whether it is thinking right now, who else is in the room, and the frame rate.
-// Every value comes from a store; nothing here is decorative.
+// Right HUD card: one plain line, only when it matters right now — the AI is not set up or cannot be
+// reached (with where to fix it: Settings → Model), something is being written, friends on this
+// land (the continent line), or friends in a legacy room. With nothing to say there is no card at
+// all. The machinery itself (provider, model, probe, latency, FPS, tokens, usage) is in F12.
 
-import { ASSETS } from "@renderer/assets";
-import { type StringKey, useT } from "@renderer/i18n";
-import { useEngineStore, useSessionStore } from "@renderer/state";
-import { colors, radius, Surface, space, Text } from "@renderer/ui";
+import { errorLine, useT } from "@renderer/i18n";
+import { type ContinentStatus, useContinentStore } from "@renderer/state";
+import { colors, Surface, Text } from "@renderer/ui";
 import type { JSX } from "react";
-import type { HudSummary, InferenceSummary, ProviderState } from "./summary";
-import { WorldUsage } from "./UsagePanel";
+import type { HudSummary } from "./summary";
 
-const DOT: Record<ProviderState, string> = {
-  unconfigured: colors.textDim,
-  unprobed: colors.textDim,
-  probing: colors.gold,
-  online: colors.success,
-  offline: colors.danger,
-  error: colors.danger,
-};
-
-const STATE_LABEL: Record<ProviderState, StringKey> = {
-  unconfigured: "hud.stateUnconfigured",
-  unprobed: "hud.stateUnprobed",
-  probing: "hud.stateProbing",
-  online: "hud.stateOnline",
-  offline: "hud.stateOffline",
-  error: "hud.stateError",
-};
-
-function Dot({ color }: { color: string }): JSX.Element {
-  return (
-    <span
-      style={{
-        width: 6,
-        height: 6,
-        borderRadius: "50%",
-        background: color,
-        boxShadow: `0 0 8px ${color}`,
-      }}
-    />
-  );
+function ModelLine({ summary }: { summary: HudSummary }): JSX.Element | null {
+  const t = useT();
+  const { state, thinking } = summary.inference;
+  if (state === "unconfigured") {
+    return (
+      <Text variant="body" tone="danger">
+        {t("hud.modelMissing")}
+      </Text>
+    );
+  }
+  if (state === "offline" || state === "error") {
+    return (
+      <Text variant="body" tone="danger">
+        {t("hud.modelOffline")}
+      </Text>
+    );
+  }
+  return thinking > 0 ? (
+    <Text variant="caption" tone="accent">
+      {t("hud.writingNow")}
+    </Text>
+  ) : null;
 }
 
-function FpsCaption(): JSX.Element {
-  const fps = useEngineStore((state) => state.fps);
+function ContinentLine({ status }: { status: ContinentStatus }): JSX.Element | null {
+  const t = useT();
+  if (status.kind === "off") return null;
+  if (status.kind === "error") {
+    return (
+      <Text variant="caption" tone="danger">
+        {t("continent.hudError", { code: status.code, reason: errorLine(status.error) })}
+      </Text>
+    );
+  }
   return (
-    <Text variant="caption" tone="dim" mono>
-      {fps > 0 ? `${Math.round(fps)} FPS` : "— FPS"}
+    <Text variant="caption" tone={status.kind === "live" ? "success" : "muted"}>
+      {status.kind === "live"
+        ? t("continent.hudLive", { code: status.code, n: status.peers })
+        : t("continent.hudConnecting", { code: status.code })}
     </Text>
   );
 }
 
-function ThinkingBadge({ thinking }: { thinking: number }): JSX.Element | null {
+export function SystemPanel({ summary }: { summary: HudSummary }): JSX.Element | null {
   const t = useT();
-  if (thinking === 0) return null;
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 6,
-        padding: "2px 8px",
-        background: colors.accentSoft,
-        borderRadius: radius.pill,
-        border: `1px solid ${colors.accent}`,
-      }}
-    >
-      <Dot color={colors.accent} />
-      <Text variant="caption" tone="accent">
-        {thinking === 1 ? t("hud.thinkingOne") : t("hud.thinkingMany", { n: thinking })}
-      </Text>
-    </div>
-  );
-}
-
-function ProviderLine({ inference }: { inference: InferenceSummary }): JSX.Element {
-  const model = inference.model;
-  const provider = inference.provider;
-  const t = useT();
-  return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 1 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <Dot color={DOT[inference.state]} />
-        <Text variant="caption" tone="accent" mono style={{ letterSpacing: 0.5 }}>
-          {t(STATE_LABEL[inference.state])}
-        </Text>
-      </div>
-      <Text variant="caption" tone="muted" mono>
-        {provider === null
-          ? t("hud.noInferenceConfig")
-          : `${provider}${model === null ? "" : ` · ${model}`}`}
-      </Text>
-      {inference.detail === null ? null : (
-        <Text variant="caption" tone="dim" mono>
-          {inference.detail}
-        </Text>
-      )}
-    </div>
-  );
-}
-
-export function SystemPanel({ summary }: { summary: HudSummary }): JSX.Element {
-  const t = useT();
-  const instanceId = useSessionStore(
-    (state) => state.activeInstance?.instance.meta.instanceId ?? null,
-  );
+  const continent = useContinentStore((state) => state.status);
+  const { state, thinking } = summary.inference;
+  const model =
+    state === "unconfigured" || state === "offline" || state === "error" || thinking > 0;
+  if (!model && continent.kind === "off" && summary.peers === null) return null;
   return (
     <Surface
       variant="overlay"
@@ -112,35 +66,18 @@ export function SystemPanel({ summary }: { summary: HudSummary }): JSX.Element {
       style={{
         pointerEvents: "auto",
         alignItems: "flex-end",
+        maxWidth: 340,
         borderRight: `3px solid ${colors.accent}`,
-        gap: 6,
+        gap: 4,
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: space.sm }}>
-        <ProviderLine inference={summary.inference} />
-        <img
-          src={ASSETS.seedCore}
-          alt={t("hud.seedCore")}
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: radius.md,
-            border: `1px solid ${colors.accent}`,
-            boxShadow: `0 0 10px ${colors.accentSoft}`,
-          }}
-        />
-      </div>
-
-      <div style={{ display: "flex", alignItems: "center", gap: space.sm }}>
-        <ThinkingBadge thinking={summary.inference.thinking} />
-        {summary.peers === null ? null : (
-          <Text variant="caption" tone="muted" mono>
-            {t("hud.peers", { n: summary.peers })}
-          </Text>
-        )}
-        <FpsCaption />
-      </div>
-      <WorldUsage scope={instanceId === null ? null : { kind: "instance", id: instanceId }} />
+      <ModelLine summary={summary} />
+      <ContinentLine status={continent} />
+      {summary.peers === null ? null : (
+        <Text variant="caption" tone="muted">
+          {t("hud.peers", { n: summary.peers })}
+        </Text>
+      )}
     </Surface>
   );
 }

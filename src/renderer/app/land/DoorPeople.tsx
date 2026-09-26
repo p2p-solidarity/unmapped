@@ -1,6 +1,7 @@
 // The door's people (rev 6 phase 3, D8, WP8; phase 4, D5): the world's owners — its maker while it
-// owns the world, then its co-owners — then members and removed keys, each row told apart by its
-// kind. An owner removes a member, makes a member a co-owner, or ends another owner's ownership
+// owns the world, then its co-owners — then invited friends (members) and removed ones, each row
+// told apart by a word for its kind. A person with no name shows a short key, the only way to tell
+// two unnamed rows apart. An owner removes a member, makes a member a co-owner, or ends another owner's ownership
 // (never the last one's: main refuses `owner-last` too). Every action asks first, goes through
 // `window.seed.world.*` and shows its Result; the door reads itself again after it.
 
@@ -15,13 +16,13 @@ import { shortKey, useAction } from "./worldDoor";
 const column = { display: "flex", flexDirection: "column", gap: space.xs } as const;
 const row = { display: "flex", flexWrap: "wrap", gap: space.xs, alignItems: "center" } as const;
 
-/** What each row kind says after the name; a new kind adds one entry. */
-const PERSON_TAG: Record<DoorRowKind, (person: DoorPerson) => string> = {
-  owner: () => translate("world.personOwner"),
-  "co-owner": (person) => translate("world.personCoOwner", { n: person.n ?? 0 }),
-  member: (person) => translate("world.personMember", { n: person.n ?? 0 }),
-  removed: (person) => translate("world.personRemoved", { n: person.n ?? 0 }),
-};
+/** What each row kind says after the name (a word, never an entry number); one entry per kind. */
+const PERSON_TAG = {
+  owner: "world.personOwner",
+  "co-owner": "world.personCoOwner",
+  member: "world.personMember",
+  removed: "world.personRemoved",
+} as const satisfies Record<DoorRowKind, string>;
 
 /** What an owner's "Remove" ends on each row kind: a membership, an ownership, or nothing. */
 const REMOVABLE: Record<DoorRowKind, "member" | "owner" | null> = {
@@ -97,7 +98,7 @@ export function People({
       </Text>
       {door.people.map((person) => {
         const name = personName(person);
-        const tag = PERSON_TAG[person.kind](person);
+        const tag = t(PERSON_TAG[person.kind]);
         const extra = [
           person.pending ? t("world.personWaiting") : "",
           person.me ? t("world.personYou") : "",

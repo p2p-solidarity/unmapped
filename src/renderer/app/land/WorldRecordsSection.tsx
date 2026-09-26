@@ -1,8 +1,10 @@
 // The world's own lists at the door (rev 6 phase 3, D6, D11, D18): what the world refused of this
-// device's entries (each with its reason, listed until dismissed — Rule 2: never dropped silently),
-// what moving this save into its history kept on this device only (one item at a time), and how
-// many entries a newer build wrote that this one keeps but cannot show. Nothing shows when all three
-// are empty, and nothing for a save without a world.
+// device's changes (each with its reason, listed until dismissed — Rule 2: never dropped silently),
+// what moving this save into the shared world kept on this device only (one item at a time), and
+// how many things a newer version of the game wrote that this one keeps but cannot show. Nothing
+// shows when all three are empty, and nothing for a save without a world. They live in the door's
+// folded Advanced group (./WorldDoorSection renders `WorldRecords`); the HUD's refused line still
+// says when something waits there.
 
 import { errorLine, formatDateTime, translate, useT } from "@renderer/i18n";
 import { useHistoryStore } from "@renderer/state";
@@ -136,7 +138,15 @@ function SkippedPager({ skipped }: { skipped: readonly Skipped[] }): JSX.Element
   );
 }
 
-export function WorldRecordsSection(): JSX.Element | null {
+/**
+ * Kept for the door's older mount: the records now sit inside the door's Advanced group
+ * (./WorldDoorSection), so this renders nothing and the door never lists them twice.
+ */
+export function WorldRecordsSection(): null {
+  return null;
+}
+
+export function WorldRecords(): JSX.Element | null {
   const t = useT();
   const world = useHistoryStore((state) => state.world);
   // idle: no world (a legacy save); error: the land and the door say why already.

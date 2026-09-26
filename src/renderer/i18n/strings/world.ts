@@ -1,18 +1,18 @@
-// A shared world (rev 6 phase 3, WP8): Settings → Shared worlds (the device's world services), the
-// door's sharing section (where the world lives, who may come in, invites, people), the library's
-// "Join a world" section, and the save badges (local / shared on … / joined from …). Phase 4 adds
-// the door's co-owners (D5) and the light chain: the owners' opt-in and the chain's answer (D6).
+// A shared world (rev 6 phase 3, WP8): Settings → Advanced settings → Shared worlds (the device's world services), the
+// door's Advanced group (where the world lives, invite links, who may come in, people — never a
+// service address), the library's "Join a world" section, and the save badges. Phase 4 adds the
+// door's co-owners (D5) and the light chain: the owners' opt-in and the chain's answer (D6).
 
 import type { Phrase } from "./phrase";
 
 export const WORLD = {
-  // ── Settings → Shared worlds ───────────────────────────────────────────────────────────────
+  // ── Settings → Advanced settings → Shared worlds ───────────────────────────────────────────────
   servicesHeading: { en: "Shared worlds", "zh-TW": "共享世界", ja: "共有ワールド" },
   servicesIntro: {
     en: "A world service keeps a shared world's history, so the friends you invite can visit it even while you are offline. List the services this device uses.",
     "zh-TW":
-      "世界服務保存共享世界的歷史，讓你邀請的夥伴在你離線時也能來訪。請列出這台裝置使用的服務。",
-    ja: "ワールドサービスは共有ワールドの歴史を預かり、招いた仲間があなたのオフライン中でも訪れられるようにします。この端末で使うサービスを並べてください。",
+      "世界服務保存共享世界的歷史，讓你邀請的朋友在你離線時也能來訪。請列出這台裝置使用的服務。",
+    ja: "ワールドサービスは共有ワールドの歴史を預かり、招いた友だちがあなたのオフライン中でも訪れられるようにします。この端末で使うサービスを並べてください。",
   },
   servicesNone: {
     en: "This device lists no world service yet: every world stays on this device until you add one.",
@@ -38,9 +38,9 @@ export const WORLD = {
   servicesSave: { en: "Save", "zh-TW": "儲存", ja: "保存" },
   servicesClear: { en: "Clear the list", "zh-TW": "清空清單", ja: "リストを空にする" },
   servicesSaved: {
-    en: "Saved. The door offers these services the next time you share a world.",
-    "zh-TW": "已儲存。下次共享世界時，門會列出這些服務。",
-    ja: "保存しました。次にワールドを共有するとき、扉がこれらのサービスを示します。",
+    en: "Saved. The door's “Make an invite link” uses the first service in this list.",
+    "zh-TW": "已儲存。門上的「建立邀請連結」會使用清單中的第一個服務。",
+    ja: "保存しました。扉の「招待リンクをつくる」は、このリストの最初のサービスを使います。",
   },
   servicesUntested: {
     en: "Not tested yet.",
@@ -92,47 +92,62 @@ export const WORLD = {
     ja: "一度このワールドで遊ぶと、友だちと共有できるようになります。",
   },
 
-  // ── The door: where the world lives ────────────────────────────────────────────────────────
-  doorSection: { en: "Sharing", "zh-TW": "共享", ja: "共有" },
+  // ── The door: where the world lives (inside 進階; never a service address) ────────────────
+  doorSection: { en: "Advanced", "zh-TW": "進階", ja: "詳細" },
   working: { en: "Working…", "zh-TW": "處理中…", ja: "処理中…" },
-  doorReading: {
-    en: "Reading this world's door…",
-    "zh-TW": "正在讀取這個世界的門…",
-    ja: "このワールドの扉を読み込んでいます…",
+  doorReading: { en: "Reading…", "zh-TW": "正在讀取…", ja: "読み込んでいます…" },
+  whereLocal: {
+    en: "Only on this device — not shared with friends yet.",
+    "zh-TW": "只在這台裝置上，還沒和朋友共享。",
+    ja: "この端末だけにあります。まだ友だちと共有していません。",
+  },
+  whereShared: {
+    en: "Shared with friends.",
+    "zh-TW": "已經和朋友共享。",
+    ja: "友だちと共有しています。",
+  },
+  whereJoined: {
+    en: "{owner}'s world — you joined it.",
+    "zh-TW": "這是 {owner} 的世界，你已經加入。",
+    ja: "{owner} のワールドに参加しています。",
   },
   linkOffline: {
-    en: "Offline: your changes wait here and go out when the service answers.",
-    "zh-TW": "離線：你的變更會在這裡等著，服務回應後就送出。",
-    ja: "オフライン：変更はここで待ち、サービスが応答したら送られます。",
+    en: "Offline: your changes wait here and go out when you are back online.",
+    "zh-TW": "離線中：你的變更會先留在這裡，連上後就送出。",
+    ja: "オフライン：変更はここで待ち、つながったら送られます。",
   },
   linkConnecting: { en: "Connecting…", "zh-TW": "連線中…", ja: "接続中…" },
   linkOnline: { en: "Online", "zh-TW": "已連線", ja: "オンライン" },
   linkDiverged: {
-    en: "Sync stopped: the service's history is not this device's.",
-    "zh-TW": "同步已停止：服務上的歷史和這台裝置的不一樣。",
-    ja: "同期を止めました：サービスの歴史がこの端末のものと違います。",
+    en: "Syncing stopped: this copy and your friends' copy no longer match.",
+    "zh-TW": "同步停住了：這裡的世界和朋友那邊的不一樣了。",
+    ja: "同期を止めました：ここのワールドと友だちのものが食い違っています。",
   },
   linkRefused: {
-    en: "The service refused this device.",
-    "zh-TW": "服務拒絕了這台裝置。",
-    ja: "サービスがこの端末を拒みました。",
+    en: "This device was turned away.",
+    "zh-TW": "這台裝置被拒絕了。",
+    ja: "この端末は断られました。",
   },
   pendingCount: {
-    en: "{n} {n|change|changes} not yet shared",
-    "zh-TW": "{n} 項變更尚未共享",
-    ja: "{n} 件の変更がまだ共有されていません",
+    en: "{n} {n|change|changes} not sent yet",
+    "zh-TW": "{n} 項變更還沒送出",
+    ja: "{n} 件の変更がまだ送られていません",
   },
   refusedCount: {
-    en: "{n} of your {n|change was|changes were} refused",
-    "zh-TW": "你有 {n} 項變更被拒絕",
-    ja: "あなたの変更のうち {n} 件が拒否されました",
+    en: "{n} of your {n|change was|changes were} not accepted",
+    "zh-TW": "你有 {n} 項變更沒被接受",
+    ja: "あなたの変更のうち {n} 件が受け入れられませんでした",
   },
   roleOwner: {
     en: "You own this world.",
     "zh-TW": "你是這個世界的主人。",
     ja: "あなたはこのワールドの持ち主です。",
   },
-  roleMember: { en: "You are a member.", "zh-TW": "你是成員。", ja: "あなたはメンバーです。" },
+  roleMember: {
+    en: "You are an invited friend.",
+    "zh-TW": "你是受邀的朋友。",
+    ja: "あなたは招かれた友だちです。",
+  },
   roleVisitor: { en: "You are visiting.", "zh-TW": "你正在來訪。", ja: "あなたは訪問中です。" },
   roleRemoved: {
     en: "The owner removed you from this world.",
@@ -140,45 +155,37 @@ export const WORLD = {
     ja: "持ち主があなたをこのワールドから外しました。",
   },
 
-  // ── The door: sharing a local world (owner) ────────────────────────────────────────────────
-  shareHeading: { en: "Share this world", "zh-TW": "共享這個世界", ja: "このワールドを共有する" },
+  // ── The door: making an invite link (owner; the first world service, never named) ──────────
   shareIntro: {
-    en: "Choose a world service. This world's history goes there, so the friends you invite can visit, even while you are offline.",
-    "zh-TW": "選一個世界服務。這個世界的歷史會放到那裡，讓你邀請的夥伴即使在你離線時也能來訪。",
-    ja: "ワールドサービスを選んでください。このワールドの歴史がそこへ移り、招いた仲間はあなたがオフラインでも訪れられます。",
+    en: "Making a link shares this world, so friends can visit even while you are offline.",
+    "zh-TW": "建立連結後，這個世界就會和朋友共享，你不在線時朋友也能來。",
+    ja: "リンクをつくるとこのワールドが共有され、あなたがオフラインでも友だちが来られます。",
   },
-  shareCoOwnerTip: {
-    en: "Once it is shared, make another device of yours a co-owner: a world only one device owns can no longer change its door or move to another service if that device is lost.",
-    "zh-TW":
-      "共享之後，請把你的另一台裝置設為共同主人：只有一台裝置擁有的世界，一旦那台裝置遺失，就再也無法改變門或搬到別的服務。",
-    ja: "共有したら、あなたの別の端末を共同の持ち主にしてください。1 台の端末だけが持つワールドは、その端末をなくすと扉を変えることも別のサービスへ移すこともできなくなります。",
-  },
-  shareOn: { en: "Share on {service}", "zh-TW": "共享到 {service}", ja: "{service} で共有" },
   sharing: {
-    en: "Sharing: sending this world's history to the service…",
-    "zh-TW": "共享中：正在把這個世界的歷史送到服務…",
-    ja: "共有中：このワールドの歴史をサービスへ送っています…",
+    en: "Sharing this world…",
+    "zh-TW": "正在共享這個世界…",
+    ja: "このワールドを共有しています…",
   },
 
   // ── The door: who may come in (owner) ──────────────────────────────────────────────────────
   accessHeading: { en: "Who may come in", "zh-TW": "誰可以進來", ja: "だれが入れるか" },
-  accessPrivate: { en: "Private", "zh-TW": "私人", ja: "非公開" },
-  accessFriends: { en: "Friends", "zh-TW": "夥伴", ja: "仲間" },
-  accessPublic: { en: "Public", "zh-TW": "公開", ja: "公開" },
+  accessPrivate: { en: "Only me", "zh-TW": "只有我", ja: "自分だけ" },
+  accessFriends: { en: "Friends", "zh-TW": "朋友", ja: "友だち" },
+  accessPublic: { en: "Everyone", "zh-TW": "所有人", ja: "だれでも" },
   accessPrivateNote: {
-    en: "Only you read and write this world.",
-    "zh-TW": "只有你能讀寫這個世界。",
-    ja: "このワールドを読み書きできるのはあなただけです。",
+    en: "Only you can come in and add to this world.",
+    "zh-TW": "只有你能進來、在這個世界留下東西。",
+    ja: "入って書き加えられるのはあなただけです。",
   },
   accessFriendsNote: {
-    en: "You and the members you invited read and write.",
-    "zh-TW": "你和你邀請的成員都能讀寫。",
-    ja: "あなたと招いたメンバーが読み書きできます。",
+    en: "You and the friends you invited can come in and add to it.",
+    "zh-TW": "你和你邀請的朋友都能進來、留下東西。",
+    ja: "あなたと招いた友だちが入って書き加えられます。",
   },
   accessPublicNote: {
-    en: "Anyone with this world's id may visit and leave notes, signposts and gifts; members write as with Friends.",
-    "zh-TW": "任何知道這個世界 id 的人都能來訪並留下留言、路標和禮物；成員的權限和「夥伴」相同。",
-    ja: "このワールドの id を知っていればだれでも訪れて、書き置き・道しるべ・贈り物を残せます。メンバーは「仲間」と同じく書けます。",
+    en: "Anyone who finds this world may visit and leave notes, signposts and gifts; invited friends keep what they could do.",
+    "zh-TW": "任何人都能來訪並留下留言、路標和禮物；你邀請的朋友能做的事不變。",
+    ja: "だれでも訪れて、メモ・道しるべ・贈り物を残せます。招いた友だちはこれまでどおりです。",
   },
   accessSet: {
     en: "The door is now: {policy}.",
@@ -186,25 +193,33 @@ export const WORLD = {
     ja: "扉はいま「{policy}」です。",
   },
   accessWaiting: {
-    en: "(not yet shared)",
-    "zh-TW": "（尚未共享）",
-    ja: "（まだ共有されていません）",
+    en: "(not sent yet)",
+    "zh-TW": "（還沒送出）",
+    ja: "（まだ送られていません）",
   },
 
-  // ── The door: invites (owner) ──────────────────────────────────────────────────────────────
-  invitesHeading: { en: "Invites", "zh-TW": "邀請", ja: "招待" },
-  inviteUses: { en: "Uses (1–20)", "zh-TW": "可用次數（1–20）", ja: "使える回数（1–20）" },
-  inviteDays: { en: "Days valid (1–30)", "zh-TW": "有效天數（1–30）", ja: "有効日数（1–30）" },
-  inviteCreate: { en: "Create an invite", "zh-TW": "建立邀請", ja: "招待をつくる" },
+  // ── The door: invite links (owner) ─────────────────────────────────────────────────────────
+  invitesHeading: { en: "Invite links", "zh-TW": "邀請連結", ja: "招待リンク" },
+  inviteUses: {
+    en: "How many people (1–20)",
+    "zh-TW": "幾個人可以用（1–20）",
+    ja: "使える人数（1–20）",
+  },
+  inviteDays: {
+    en: "Good for how many days (1–30)",
+    "zh-TW": "有效幾天（1–30）",
+    ja: "有効な日数（1–30）",
+  },
+  inviteCreate: { en: "Make an invite link", "zh-TW": "建立邀請連結", ja: "招待リンクをつくる" },
   inviteCreating: {
-    en: "Making the invite…",
-    "zh-TW": "正在建立邀請…",
-    ja: "招待をつくっています…",
+    en: "Making the link…",
+    "zh-TW": "正在建立連結…",
+    ja: "リンクをつくっています…",
   },
   inviteReady: {
-    en: "Send this link to the friend you invite. It is shown only now: this device keeps no copy.",
-    "zh-TW": "把這個連結傳給你邀請的夥伴。它只在此刻顯示：這台裝置不會留下副本。",
-    ja: "このリンクを招く仲間に送ってください。表示されるのは今だけで、この端末には控えが残りません。",
+    en: "Send this link to your friend. It is shown only now: copy it before you close the door.",
+    "zh-TW": "把這個連結傳給朋友。它只會在現在出現：關上門之前先複製。",
+    ja: "このリンクを友だちに送ってください。表示されるのは今だけです。扉を閉じる前にコピーしてください。",
   },
   inviteLink: { en: "Invite link", "zh-TW": "邀請連結", ja: "招待リンク" },
   inviteCopy: { en: "Copy the link", "zh-TW": "複製連結", ja: "リンクをコピー" },
@@ -219,14 +234,14 @@ export const WORLD = {
     ja: "コピーできませんでした：{reason}。リンクを選択して手でコピーしてください。",
   },
   invitesNone: {
-    en: "No invites made on this device yet.",
-    "zh-TW": "這台裝置還沒有建立任何邀請。",
-    ja: "この端末でつくった招待はまだありません。",
+    en: "No invite links made yet.",
+    "zh-TW": "還沒有建立任何邀請連結。",
+    ja: "招待リンクはまだありません。",
   },
   inviteRow: {
-    en: "{nonce}… · used {used} of {uses} · until {exp}",
-    "zh-TW": "{nonce}… · 已用 {used}／{uses} 次 · 期限 {exp}",
-    ja: "{nonce}… · {uses} 回中 {used} 回使用 · {exp} まで",
+    en: "Used {used} of {uses} · until {exp}",
+    "zh-TW": "已用 {used}／{uses} 次 · 到 {exp}",
+    ja: "{uses} 回中 {used} 回使用 · {exp} まで",
   },
   inviteOpen: { en: "open", "zh-TW": "可用", ja: "有効" },
   inviteUsedUp: { en: "used up", "zh-TW": "已用完", ja: "使い切り" },
@@ -234,36 +249,28 @@ export const WORLD = {
   inviteRevoked: { en: "revoked", "zh-TW": "已撤回", ja: "取り消し済み" },
   inviteRevoke: { en: "Revoke", "zh-TW": "撤回", ja: "取り消す" },
   inviteRevokedDone: {
-    en: "Invite revoked: nobody can join with it any more.",
-    "zh-TW": "已撤回邀請：再也沒有人能用它加入。",
-    ja: "招待を取り消しました。もうだれもこれで参加できません。",
+    en: "Link revoked: nobody can join with it any more.",
+    "zh-TW": "已撤回連結：再也沒有人能用它加入。",
+    ja: "リンクを取り消しました。もうだれもこれで参加できません。",
   },
 
   // ── The door: people ───────────────────────────────────────────────────────────────────────
-  peopleHeading: { en: "People", "zh-TW": "成員", ja: "メンバー" },
+  peopleHeading: { en: "People", "zh-TW": "一起玩的人", ja: "一緒に遊ぶ人" },
   personOwner: { en: "owner", "zh-TW": "主人", ja: "持ち主" },
-  personMember: {
-    en: "member since entry {n}",
-    "zh-TW": "自第 {n} 筆起為成員",
-    ja: "{n} 番目の記録からメンバー",
-  },
-  personRemoved: {
-    en: "removed at entry {n}",
-    "zh-TW": "於第 {n} 筆被移除",
-    ja: "{n} 番目の記録で外されました",
-  },
+  personMember: { en: "friend", "zh-TW": "朋友", ja: "友だち" },
+  personRemoved: { en: "removed", "zh-TW": "已移除", ja: "外されました" },
   personWaiting: {
-    en: "(not yet shared)",
-    "zh-TW": "（尚未共享）",
-    ja: "（まだ共有されていません）",
+    en: "(not sent yet)",
+    "zh-TW": "（還沒送出）",
+    ja: "（まだ送られていません）",
   },
   personYou: { en: "(you)", "zh-TW": "（你）", ja: "（あなた）" },
   personUnnamed: { en: "unnamed", "zh-TW": "未命名", ja: "名前なし" },
   personRemove: { en: "Remove", "zh-TW": "移除", ja: "外す" },
   personRemoveAsk: {
-    en: "Remove {name}? From now on they can neither read nor write this world; what they wrote stays.",
-    "zh-TW": "要移除 {name} 嗎？從現在起對方不能再讀寫這個世界；對方寫過的內容會留下。",
-    ja: "{name} を外しますか？これからはこのワールドを読むことも書くこともできません。書いたものは残ります。",
+    en: "Remove {name}? From now on they can't come in; what they left stays.",
+    "zh-TW": "要移除 {name} 嗎？從現在起對方不能再進來；對方留下的東西會保留。",
+    ja: "{name} を外しますか？これからは入れなくなります。残したものはそのままです。",
   },
   personRemoveConfirm: { en: "Remove them", "zh-TW": "確定移除", ja: "外す" },
   personRemovedDone: {
@@ -272,23 +279,19 @@ export const WORLD = {
     ja: "{name} を外しました。",
   },
   peopleNoMembers: {
-    en: "Nobody has joined yet.",
-    "zh-TW": "還沒有人加入。",
-    ja: "まだだれも参加していません。",
+    en: "No friends have joined yet.",
+    "zh-TW": "還沒有朋友加入。",
+    ja: "まだ友だちは参加していません。",
   },
 
   // ── The door: co-owners (phase 4, D5) ──────────────────────────────────────────────────────
-  personCoOwner: {
-    en: "co-owner since entry {n}",
-    "zh-TW": "自第 {n} 筆起為共同主人",
-    ja: "{n} 番目の記録から共同の持ち主",
-  },
+  personCoOwner: { en: "co-owner", "zh-TW": "共同主人", ja: "共同の持ち主" },
   personMakeOwner: { en: "Make co-owner", "zh-TW": "設為共同主人", ja: "共同の持ち主にする" },
   personMakeOwnerAsk: {
-    en: "Make {name} a co-owner? Their device can then do everything yours can here: change the door, invite and remove people, add and remove owners, and move the world to another service. Any owner can undo it.",
+    en: "Make {name} a co-owner? Their device can then do everything yours can here: change who may come in, invite and remove people, add and remove owners, and move the world. Any owner can undo it.",
     "zh-TW":
-      "要把 {name} 設為共同主人嗎？之後對方的裝置能在這裡做你能做的一切：改變門、邀請與移除成員、增減主人，以及把世界搬到別的服務。任何一位主人都能撤銷。",
-    ja: "{name} を共同の持ち主にしますか？その端末は、ここであなたと同じことがすべてできるようになります：扉を変える、人を招く・外す、持ち主を加える・外す、ワールドを別のサービスへ移す。どの持ち主でも取り消せます。",
+      "要把 {name} 設為共同主人嗎？之後對方的裝置能在這裡做你能做的一切：改變誰可以進來、邀請與移除朋友、增減主人，以及把世界搬到別處。任何一位主人都能撤銷。",
+    ja: "{name} を共同の持ち主にしますか？その端末は、ここであなたと同じことがすべてできるようになります：だれが入れるかを変える、人を招く・外す、持ち主を加える・外す、ワールドを移す。どの持ち主でも取り消せます。",
   },
   personMakeOwnerConfirm: {
     en: "Make them a co-owner",
@@ -302,10 +305,10 @@ export const WORLD = {
   },
   personRemoveOwner: { en: "Remove as owner", "zh-TW": "取消主人身分", ja: "持ち主から外す" },
   personRemoveOwnerAsk: {
-    en: "Stop {name} owning this world? What they wrote stays; if they joined as a member, they stay a member.",
+    en: "Stop {name} owning this world? What they left stays; if they joined as a friend, they stay one.",
     "zh-TW":
-      "要取消 {name} 的主人身分嗎？對方寫過的內容會留下；如果對方是以成員身分加入的，仍會是成員。",
-    ja: "{name} をこのワールドの持ち主から外しますか？書いたものは残ります。メンバーとして参加していたなら、メンバーのままです。",
+      "要取消 {name} 的主人身分嗎？對方留下的東西會保留；如果對方是以朋友身分加入的，仍然是朋友。",
+    ja: "{name} をこのワールドの持ち主から外しますか？残したものはそのままです。友だちとして参加していたなら、友だちのままです。",
   },
   personRemoveOwnerConfirm: {
     en: "Remove them as owner",
@@ -318,10 +321,10 @@ export const WORLD = {
     ja: "{name} はもうこのワールドの持ち主ではありません。",
   },
   ownersOnlyOne: {
-    en: "Only one device owns this world. If it is lost, nobody can change the door or move the world to another service. Make a member's device, or another device of yours, a co-owner.",
+    en: "Only one device owns this world. If it is lost, nobody can change who may come in or move the world. Make a friend's device, or another of yours, a co-owner.",
     "zh-TW":
-      "只有一台裝置擁有這個世界。一旦它遺失，就沒有人能改變門或把世界搬到別的服務。請把某位成員的裝置、或你的另一台裝置設為共同主人。",
-    ja: "このワールドを持つ端末は 1 台だけです。それをなくすと、だれも扉を変えたりワールドを別のサービスへ移したりできません。メンバーの端末か、あなたの別の端末を共同の持ち主にしてください。",
+      "只有一台裝置擁有這個世界。一旦它遺失，就沒有人能改變誰可以進來或搬移世界。請把朋友的裝置、或你的另一台裝置設為共同主人。",
+    ja: "このワールドを持つ端末は 1 台だけです。それをなくすと、だれが入れるかを変えたりワールドを移したりできなくなります。友だちの端末か、あなたの別の端末を共同の持ち主にしてください。",
   },
 
   // ── The door: the light chain (phase 4, D6) ────────────────────────────────────────────────
@@ -331,12 +334,12 @@ export const WORLD = {
     ja: "公開チェーンへの記録",
   },
   chainRecordOff: { en: "Don't record", "zh-TW": "不記錄", ja: "記録しない" },
-  chainRecordOn: { en: "Record beats", "zh-TW": "記錄節拍", ja: "拍を記録する" },
+  chainRecordOn: { en: "Record it", "zh-TW": "記錄", ja: "記録する" },
   chainNote: {
-    en: "When on, this world's service writes a fingerprint of each beat to a public blockchain: the world's id, the entry number and hashes, never what anyone wrote. It is public metadata: anyone can read it, and it cannot be taken back. The service writes it and pays for it; nobody here signs anything or needs a wallet. Off unless an owner turns it on.",
+    en: "When on, a fingerprint of this world is written to a public blockchain now and then — never what anyone wrote. Anyone can read it and it cannot be taken back. Nobody here signs anything or needs a wallet. Off unless an owner turns it on.",
     "zh-TW":
-      "開啟後，這個世界的服務會把每個節拍的指紋寫到公開的區塊鏈上：世界的 id、紀錄編號與雜湊值，絕不包含任何人寫的內容。這是公開的中繼資料：任何人都讀得到，而且無法收回。由服務寫入並支付費用；這裡的人不必簽署任何東西，也不需要錢包。除非有主人開啟，否則保持關閉。",
-    ja: "オンにすると、このワールドのサービスが拍ごとの指紋を公開ブロックチェーンに書き込みます：ワールドの id、記録の番号とハッシュだけで、だれかが書いた中身は含みません。これは公開のメタデータで、だれでも読めて、取り消せません。書き込みと費用はサービスが受け持ち、ここではだれも署名せず、ウォレットも要りません。持ち主がオンにしない限りオフです。",
+      "開啟後，會不時把這個世界的指紋寫到公開的區塊鏈上，絕不包含任何人寫的內容。任何人都讀得到，而且無法收回。這裡的人不必簽署任何東西，也不需要錢包。除非有主人開啟，否則保持關閉。",
+    ja: "オンにすると、このワールドの指紋がときどき公開ブロックチェーンに書き込まれます。だれかが書いた中身は含みません。だれでも読めて、取り消せません。ここではだれも署名せず、ウォレットも要りません。持ち主がオンにしない限りオフです。",
   },
   chainSet: {
     en: "Recording is now: {state}.",
@@ -344,35 +347,34 @@ export const WORLD = {
     ja: "記録はいま「{state}」です。",
   },
   chainOnMember: {
-    en: "This world's owners asked its service to record each beat's fingerprint on a public chain (hashes only, never what anyone wrote).",
-    "zh-TW":
-      "這個世界的主人請它的服務把每個節拍的指紋記錄在公開的區塊鏈上（只有雜湊值，絕不包含任何人寫的內容）。",
-    ja: "このワールドの持ち主は、拍ごとの指紋を公開チェーンに記録するようサービスに頼んでいます（ハッシュだけで、だれかが書いた中身は含みません）。",
+    en: "This world's owners have it recorded on a public chain (fingerprints only, never what anyone wrote).",
+    "zh-TW": "這個世界的主人把它記錄在公開的區塊鏈上（只有指紋，絕不包含任何人寫的內容）。",
+    ja: "このワールドの持ち主は、公開チェーンに記録しています（指紋だけで、だれかが書いた中身は含みません）。",
   },
   chainOffMember: {
-    en: "This world's owners have not asked for its beats to be recorded on a chain.",
-    "zh-TW": "這個世界的主人沒有要求把節拍記錄在區塊鏈上。",
-    ja: "このワールドの持ち主は、拍をチェーンに記録するよう頼んでいません。",
+    en: "This world's owners have not asked for it to be recorded on a chain.",
+    "zh-TW": "這個世界的主人沒有把它記錄在區塊鏈上。",
+    ja: "このワールドの持ち主は、チェーンへの記録を頼んでいません。",
   },
   provenanceChecking: {
     en: "Comparing this copy with the chain…",
-    "zh-TW": "正在把這份副本和鏈上的紀錄比對…",
+    "zh-TW": "正在把這份世界和鏈上的紀錄比對…",
     ja: "この写しをチェーンの記録と照らし合わせています…",
   },
   provenanceMatches: {
-    en: "The chain matches your copy at entry {n}.",
-    "zh-TW": "鏈上的紀錄和你的副本在第 {n} 筆一致。",
-    ja: "チェーンの記録は、{n} 番目の記録であなたの写しと一致します。",
+    en: "The chain matches your copy.",
+    "zh-TW": "鏈上的紀錄和你的一致。",
+    ja: "チェーンの記録はあなたの写しと一致します。",
   },
   provenanceDiffers: {
-    en: "The chain differs from your copy at entry {n}.",
-    "zh-TW": "鏈上的紀錄和你的副本在第 {n} 筆不一致。",
-    ja: "チェーンの記録は、{n} 番目の記録であなたの写しと食い違います。",
+    en: "The chain does not match your copy.",
+    "zh-TW": "鏈上的紀錄和你的不一致。",
+    ja: "チェーンの記録はあなたの写しと食い違います。",
   },
   provenanceNotSynced: {
-    en: "Recorded from entry {n} on; this copy has not synced that far yet.",
-    "zh-TW": "鏈上從第 {n} 筆起有紀錄；這份副本還沒同步到那裡。",
-    ja: "{n} 番目の記録から記録されていますが、この写しはまだそこまで同期していません。",
+    en: "The chain is ahead of your copy; yours has not caught up yet.",
+    "zh-TW": "鏈上的紀錄比你的新；你的還沒同步到那裡。",
+    ja: "チェーンの記録のほうが新しく、あなたの写しはまだ追いついていません。",
   },
   provenanceNotRecorded: {
     en: "Not recorded on the chain.",
@@ -380,9 +382,9 @@ export const WORLD = {
     ja: "チェーンには記録されていません。",
   },
   provenanceUnverified: {
-    en: "{n} {n|stream|streams} on the chain did not verify and {n|was|were} ignored.",
-    "zh-TW": "鏈上有 {n} 條紀錄串無法驗證，已略過。",
-    ja: "チェーン上の {n} 本の記録列は検証できなかったため、無視しました。",
+    en: "{n} {n|record|records} on the chain could not be checked and {n|was|were} ignored.",
+    "zh-TW": "鏈上有 {n} 筆紀錄無法確認，已略過。",
+    ja: "チェーン上の {n} 件の記録は確かめられなかったため、無視しました。",
   },
   provenanceOff: {
     en: "No chain is set up on this device, so nothing is compared. Everything else works as usual.",
@@ -393,21 +395,21 @@ export const WORLD = {
 
   // ── The door: redeeming an invite for a restored save (D7) ─────────────────────────────────
   redeemHeading: {
-    en: "Redeem an invite for this save",
-    "zh-TW": "為這個存檔兌換邀請",
-    ja: "このセーブで招待を使う",
+    en: "Join this world with an invite",
+    "zh-TW": "用邀請加入這個世界",
+    ja: "招待でこのワールドに参加する",
   },
   redeemIntro: {
-    en: "This save belongs to someone else's shared world. Paste an invite from its owner to make this device a member.",
-    "zh-TW": "這個存檔屬於別人的共享世界。貼上主人給你的邀請，讓這台裝置成為成員。",
-    ja: "このセーブはほかの人の共有ワールドのものです。持ち主からの招待を貼り付けると、この端末がメンバーになります。",
+    en: "This is someone else's world. Paste an invite link from its owner to join it.",
+    "zh-TW": "這是別人的世界。貼上主人給你的邀請連結，就能加入。",
+    ja: "これはほかの人のワールドです。持ち主の招待リンクを貼り付けると参加できます。",
   },
-  redeem: { en: "Redeem", "zh-TW": "兌換", ja: "使う" },
-  redeeming: { en: "Redeeming…", "zh-TW": "兌換中…", ja: "処理中…" },
+  redeem: { en: "Join", "zh-TW": "加入", ja: "参加する" },
+  redeeming: { en: "Joining…", "zh-TW": "加入中…", ja: "参加しています…" },
   redeemed: {
-    en: "This device is now a member of this world.",
-    "zh-TW": "這台裝置現在是這個世界的成員了。",
-    ja: "この端末はこのワールドのメンバーになりました。",
+    en: "You have joined this world.",
+    "zh-TW": "你已經加入這個世界了。",
+    ja: "このワールドに参加しました。",
   },
 
   // ── Worlds → Join a world ──────────────────────────────────────────────────────────────────

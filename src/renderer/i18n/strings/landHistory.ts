@@ -1,59 +1,54 @@
 // The land on its world's history (rev 6 phase 3, WP5): what opening a save did to its world, and
-// the land's own history lines in the HUD.
+// the land's own lines in the HUD. Plain words: no "history", "entries" or "service" for players.
 
 import type { Phrase } from "./phrase";
 
 export const LAND_HISTORY = {
   // ── Opening a save (world.ensure) ─────────────────────────────────────────────────────────
   reading: {
-    en: "Reading this world's history…",
-    "zh-TW": "正在讀取這個世界的歷史…",
-    ja: "この世界の歴史を読み込んでいます…",
+    en: "Opening this world…",
+    "zh-TW": "正在打開這個世界…",
+    ja: "このワールドを開いています…",
   },
   migrated: {
-    en: "This save's land now lives in its world's history ({n} {n|entry|entries}).",
-    "zh-TW": "這個存檔的土地已移入世界的歷史（{n} 筆）。",
-    ja: "このセーブの土地は世界の歴史に移りました（{n} 件）。",
+    en: "This world was brought up to date, so friends can share it now ({n} {n|thing|things} kept).",
+    "zh-TW": "這個世界已經更新好，現在可以和朋友一起玩了（保留了 {n} 項）。",
+    ja: "このワールドを新しくしました。友だちと一緒に遊べます（{n} 件を引き継ぎ）。",
   },
   caughtUp: {
-    en: "An older build changed this save: {n} {n|thing|things} added to its world.",
-    "zh-TW": "較舊的版本改動過這個存檔：世界補上了 {n} 項。",
-    ja: "古いビルドがこのセーブを変更していました：世界に {n} 件を追加しました。",
+    en: "An older version of the game changed this world: {n} {n|thing was|things were} added.",
+    "zh-TW": "舊版的遊戲改動過這個世界：補上了 {n} 項。",
+    ja: "古いバージョンのゲームがこのワールドを変えていました：{n} 件を追加しました。",
   },
   skipped: {
-    en: "{n} {n|thing stays|things stay} on this device only and {n|is|are} not in the shared history.",
-    "zh-TW": "有 {n} 項只留在這台裝置上，沒有進入共享的歷史。",
-    ja: "{n} 件はこの端末だけに残り、共有の歴史には入っていません。",
+    en: "{n} {n|thing stays|things stay} on this device only; friends won't see {n|it|them}.",
+    "zh-TW": "有 {n} 項只留在這台裝置上，朋友看不到。",
+    ja: "{n} 件はこの端末だけに残り、友だちには見えません。",
   },
   adjusted: {
-    en: "{n} {n|thing was|things were} adjusted on the way in (a place moved, a note's link dropped).",
-    "zh-TW": "移入時調整了 {n} 項（地點挪位、手記的連結失效等）。",
-    ja: "移行時に {n} 件を調整しました（場所の移動、手記のリンク切れなど）。",
+    en: "{n} {n|thing was|things were} moved a little on the way (a place, a note's link).",
+    "zh-TW": "有 {n} 項稍微調整過（地點挪了一下、留言的連結等）。",
+    ja: "{n} 件を少し調整しました（場所の移動、メモのリンクなど）。",
   },
   adopted: {
-    en: "This world was made on another device; this device now keeps its own copy of it.",
-    "zh-TW": "這個世界是在另一台裝置上建立的；現在這台裝置保有它自己的一份。",
-    ja: "この世界は別の端末で作られました。この端末は自分の写しを持つようになりました。",
+    en: "This world was made on another device; this one now keeps its own copy.",
+    "zh-TW": "這個世界是在另一台裝置上建立的；現在這台裝置也有自己的一份。",
+    ja: "このワールドは別の端末で作られました。この端末にも自分の写しができました。",
   },
   lost: {
-    en: "{n} {n|progress entry|progress entries} could not be carried over to this device's copy.",
-    "zh-TW": "有 {n} 筆進度無法帶到這台裝置的副本。",
-    ja: "{n} 件の進行状況をこの端末の写しに引き継げませんでした。",
+    en: "{n} {n|piece|pieces} of progress could not be carried over to this device.",
+    "zh-TW": "有 {n} 項進度沒辦法帶到這台裝置。",
+    ja: "{n} 件の進行状況をこの端末に引き継げませんでした。",
   },
   // ── The HUD's land line ───────────────────────────────────────────────────────────────────
-  legacyOnly: {
-    en: "Kept on this device only — not in the world's shared history.",
-    "zh-TW": "只存在這台裝置 — 不在世界共享的歷史中。",
-    ja: "この端末だけに保存 — 世界の共有の歴史にはありません。",
-  },
   provisional: {
-    en: "Not shared yet — waiting for the world's service.",
-    "zh-TW": "尚未分享 — 等待世界服務。",
-    ja: "未共有 — 世界サービスを待っています。",
+    en: "Not sent to friends yet — it goes when you are back online.",
+    "zh-TW": "還沒送給朋友 — 連上網路後就會送出。",
+    ja: "まだ友だちに届いていません — つながったら送られます。",
   },
   writingElsewhere: {
-    en: "Someone else is writing this place…",
-    "zh-TW": "有人正在寫下這個地方…",
-    ja: "誰かがこの場所を書いています…",
+    en: "A friend is drawing this place…",
+    "zh-TW": "朋友正在畫出這裡…",
+    ja: "友だちがこの場所を描いています…",
   },
 } satisfies Record<string, Phrase>;

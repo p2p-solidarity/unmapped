@@ -2,8 +2,8 @@
 // An owner (the maker or a co-owner) turns "record this world's beats on chain" on or off — a
 // `chain` event, off unless an owner turns it on — after reading plainly that what gets recorded
 // is public metadata. Everyone sees whether it is on, and what the chain says about this device's
-// copy: it matches at entry n, it differs at n, it is recorded further than this copy has synced,
-// or it is not recorded. With no chain set up on this device (`provenance-not-configured`) that is
+// copy: it matches, it differs, it is recorded further than this copy has synced, or it is not
+// recorded — in words, without entry numbers (the door lives in the folded Advanced group). With no chain set up on this device (`provenance-not-configured`) that is
 // one calm line, not an error: the chain can be switched off entirely and the door still works.
 
 import { useT } from "@renderer/i18n";
@@ -80,11 +80,11 @@ function Verdict({ report }: { report: ProvenanceReport }): JSX.Element {
   const unverified = report.streams.filter((stream) => stream.trust !== "verified").length;
   const line =
     verdict.status === "matches"
-      ? { text: t("world.provenanceMatches", { n: verdict.upTo }), tone: "success" as const }
+      ? { text: t("world.provenanceMatches"), tone: "success" as const }
       : verdict.status === "differs"
-        ? { text: t("world.provenanceDiffers", { n: verdict.upTo }), tone: "danger" as const }
+        ? { text: t("world.provenanceDiffers"), tone: "danger" as const }
         : verdict.status === "not-synced"
-          ? { text: t("world.provenanceNotSynced", { n: verdict.upTo }), tone: "muted" as const }
+          ? { text: t("world.provenanceNotSynced"), tone: "muted" as const }
           : { text: t("world.provenanceNotRecorded"), tone: "muted" as const };
   return (
     <>

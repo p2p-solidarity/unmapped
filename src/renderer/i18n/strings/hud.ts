@@ -9,47 +9,46 @@ export const HUD = {
   ...HUD_PANELS,
   ...HUD_ENS,
 
-  // ── Key hints ──────────────────────────────────────────────────────────────────────────────
+  // ── Key hints (only the keys needed now; the dock's buttons show N, V and F12) ─────────────
   controlsLandArmed: {
-    en: "WASD / Click Move · Shift Sprint · Space/F Fire · Click a foe to shoot · E Interact · N Notes · V Look",
-    "zh-TW":
-      "WASD / 點擊 移動 · Shift 衝刺 · Space/F 開火 · 點擊敵人射擊 · E 互動 · N 留言 · V 畫面",
-    ja: "WASD / クリック 移動 · Shift ダッシュ · Space/F 射撃 · 敵をクリックで射撃 · E 調べる · N メモ · V 表示",
+    en: "WASD Walk · F Fire · E Talk / open · Esc Leave",
+    "zh-TW": "WASD 走路 · F 開火 · E 說話／打開 · Esc 離開",
+    ja: "WASD 歩く · F 撃つ · E 話す／開ける · Esc 戻る",
   },
   controlsLand: {
-    en: "WASD / Click Move · Shift Sprint · E Interact · N Notes · V Look",
-    "zh-TW": "WASD / 點擊 移動 · Shift 衝刺 · E 互動 · N 留言 · V 畫面",
-    ja: "WASD / クリック 移動 · Shift ダッシュ · E 調べる · N メモ · V 表示",
+    en: "WASD Walk · E Talk / open · Esc Leave",
+    "zh-TW": "WASD 走路 · E 說話／打開 · Esc 離開",
+    ja: "WASD 歩く · E 話す／開ける · Esc 戻る",
   },
   controlsLand3d: {
-    en: "WASD Move · Shift Sprint · Space Jump · E Interact · N Notes · V Camera",
-    "zh-TW": "WASD 移動 · Shift 衝刺 · Space 跳躍 · E 互動 · N 留言 · V 鏡頭",
-    ja: "WASD 移動 · Shift ダッシュ · Space ジャンプ · E 調べる · N メモ · V カメラ",
+    en: "WASD Walk · Space Jump · E Talk / open · Esc Leave",
+    "zh-TW": "WASD 走路 · Space 跳 · E 說話／打開 · Esc 離開",
+    ja: "WASD 歩く · Space ジャンプ · E 話す／開ける · Esc 戻る",
   },
   controlsFpsArmed: {
-    en: "WASD Move · LMB Fire · R End turn · F Flashlight · E Interact",
-    "zh-TW": "WASD 移動 · 左鍵 開火 · R 結束回合 · F 手電筒 · E 互動",
-    ja: "WASD 移動 · 左クリック 射撃 · R ターン終了 · F ライト · E 調べる",
+    en: "WASD Walk · Click Fire · R End turn · E Interact · Esc Leave",
+    "zh-TW": "WASD 走路 · 左鍵 開火 · R 結束回合 · E 互動 · Esc 離開",
+    ja: "WASD 歩く · クリック 撃つ · R ターン終了 · E 調べる · Esc 戻る",
   },
   controlsFps: {
-    en: "WASD Move · F Flashlight · E Interact",
-    "zh-TW": "WASD 移動 · F 手電筒 · E 互動",
-    ja: "WASD 移動 · F ライト · E 調べる",
+    en: "WASD Walk · F Flashlight · E Interact · Esc Leave",
+    "zh-TW": "WASD 走路 · F 手電筒 · E 互動 · Esc 離開",
+    ja: "WASD 歩く · F ライト · E 調べる · Esc 戻る",
   },
   controlsSide: {
-    en: "A/D Move · Space Jump · E Interact",
-    "zh-TW": "A/D 移動 · Space 跳躍 · E 互動",
-    ja: "A/D 移動 · Space ジャンプ · E 調べる",
+    en: "A/D Walk · Space Jump · E Interact · Esc Leave",
+    "zh-TW": "A/D 走路 · Space 跳 · E 互動 · Esc 離開",
+    ja: "A/D 歩く · Space ジャンプ · E 調べる · Esc 戻る",
   },
   controlsTopdown: {
-    en: "WASD Move · E Interact",
-    "zh-TW": "WASD 移動 · E 互動",
-    ja: "WASD 移動 · E 調べる",
+    en: "WASD Walk · E Interact · Esc Leave",
+    "zh-TW": "WASD 走路 · E 互動 · Esc 離開",
+    ja: "WASD 歩く · E 調べる · Esc 戻る",
   },
   controlsTps: {
-    en: "WASD Move · Shift Sprint · Space Jump · E Interact",
-    "zh-TW": "WASD 移動 · Shift 衝刺 · Space 跳躍 · E 互動",
-    ja: "WASD 移動 · Shift ダッシュ · Space ジャンプ · E 調べる",
+    en: "WASD Walk · Space Jump · E Interact · Esc Leave",
+    "zh-TW": "WASD 走路 · Space 跳 · E 互動 · Esc 離開",
+    ja: "WASD 歩く · Space ジャンプ · E 調べる · Esc 戻る",
   },
 
   // ── The "press E" prompt ───────────────────────────────────────────────────────────────────
@@ -71,9 +70,10 @@ export const HUD = {
 
   // ── Dock ───────────────────────────────────────────────────────────────────────────────────
   dockHome: { en: "← Home", "zh-TW": "← 主頁", ja: "← ホーム" },
-  dockTweak: { en: "Tweak rules", "zh-TW": "調整機制", ja: "ルール調整" },
-  dockConsole: { en: "Console", "zh-TW": "主控台", ja: "コンソール" },
+  dockTweak: { en: "Change the world", "zh-TW": "修改世界", ja: "世界を変える" },
+  dockConsole: { en: "Friends & more", "zh-TW": "朋友・更多", ja: "友だち・その他" },
   dockNotes: { en: "Notes", "zh-TW": "留言", ja: "メモ" },
+  dockHelp: { en: "How to play", "zh-TW": "說明", ja: "遊び方" },
   dockLook: { en: "Look: {look}", "zh-TW": "畫面：{look}", ja: "表示：{look}" },
   dockCamLocked: {
     en: "Cam: {mode} · scene locked",
@@ -81,23 +81,36 @@ export const HUD = {
     ja: "カメラ：{mode} · シーン固定",
   },
 
+  // ── How to play (the first time Play opens on this device, and the dock's button) ─────────
+  helpTitle: { en: "How to play", "zh-TW": "怎麼玩", ja: "遊び方" },
+  helpWalk: { en: "Walk", "zh-TW": "走路", ja: "歩く" },
+  helpInteract: {
+    en: "Talk, open, go in",
+    "zh-TW": "說話、打開、進去",
+    ja: "話す・開ける・入る",
+  },
+  helpArrow: {
+    en: "Follow the arrow to the next chapter",
+    "zh-TW": "跟著箭頭，走到下一章",
+    ja: "矢印をたどって次の章へ",
+  },
+  helpFriends: { en: "Play with friends", "zh-TW": "和朋友一起玩", ja: "友だちと遊ぶ" },
+  helpChat: { en: "Chat", "zh-TW": "聊天", ja: "チャット" },
+  helpFriendsPad: {
+    en: "Walk to your home door and press {key} to play with friends",
+    "zh-TW": "走到家門按 {key}，和朋友一起玩",
+    ja: "家の扉で {key} を押すと、友だちと遊べます",
+  },
+  helpOk: { en: "Got it", "zh-TW": "知道了", ja: "わかった" },
+
   // ── Player card ────────────────────────────────────────────────────────────────────────────
   noWorldLoaded: { en: "No world loaded", "zh-TW": "尚未載入世界", ja: "ワールド未読み込み" },
   floorBadge: { en: "FLOOR {floor}", "zh-TW": "第 {floor} 層", ja: "{floor} 階" },
-  readSeed: { en: "SEED", "zh-TW": "種子", ja: "シード" },
-  readLand: { en: "LAND", "zh-TW": "大地", ja: "大地" },
-  readKarma: { en: "KARMA", "zh-TW": "因果", ja: "カルマ" },
-  karmaEntries: { en: "{n} {n|entry|entries}", "zh-TW": "{n} 筆", ja: "{n} 件" },
   readCarried: { en: "CARRIED", "zh-TW": "背包", ja: "持ち物" },
   carried: {
     en: "{items} {items|item|items} · {mats} {mats|mat|mats}",
     "zh-TW": "道具 {items} · 素材 {mats}",
     ja: "アイテム {items} · 素材 {mats}",
-  },
-  lastChoice: {
-    en: "Last choice: {choice}",
-    "zh-TW": "上次選擇：{choice}",
-    ja: "直前の選択：{choice}",
   },
   sceneNotParsed: { en: "Scene not parsed", "zh-TW": "場景未解析", ja: "シーン未解析" },
   biome: { en: "Biome", "zh-TW": "地貌", ja: "バイオーム" },
@@ -111,37 +124,6 @@ export const HUD = {
   biome_snowfield: { en: "Snowfield", "zh-TW": "雪原", ja: "雪原" },
   biome_lava_forge: { en: "Lava forge", "zh-TW": "熔岩鍛爐", ja: "溶岩の鍛冶場" },
   biome_countryside: { en: "Countryside", "zh-TW": "鄉間", ja: "田園" },
-  storyCount: {
-    en: "Story {done}/{total}",
-    "zh-TW": "故事 {done}/{total}",
-    ja: "ストーリー {done}/{total}",
-  },
-  chapterCount: {
-    en: "Chapter {n} · {done} cleared",
-    "zh-TW": "第 {n} 章 · 已完成 {done}",
-    ja: "第 {n} 章 · クリア {done}",
-  },
-  storyNext: {
-    en: "next: {title} ({place})",
-    "zh-TW": "下一章：{title}（{place}）",
-    ja: "次：{title}（{place}）",
-  },
-  storyLast: {
-    en: "the story has reached its last chapter",
-    "zh-TW": "故事已經來到最後一章",
-    ja: "ストーリーは最終章です",
-  },
-  storyUnwritten: {
-    en: "the next chapter is not written yet",
-    "zh-TW": "下一章還沒寫好",
-    ja: "次の章はまだ書かれていません",
-  },
-  chapterLeft: {
-    en: "talk {talk} · find {find}",
-    "zh-TW": "交談 {talk} · 尋找 {find}",
-    ja: "会話 {talk} · 探索 {find}",
-  },
-  chapterDefeat: { en: "defeat {defeat}", "zh-TW": "擊倒 {defeat}", ja: "撃破 {defeat}" },
   noFloorLoaded: {
     en: "No floor loaded.",
     "zh-TW": "尚未載入這一層。",
@@ -158,35 +140,127 @@ export const HUD = {
     ja: "この階に進行中のクエストはありません。",
   },
 
-  // ── Where you stand on the land ────────────────────────────────────────────────────────────
-  landWritten: { en: "WRITTEN · {name}", "zh-TW": "已記 · {name}", ja: "記録済み · {name}" },
-  landWitnessing: { en: "WITNESSING…", "zh-TW": "顯影中…", ja: "観測中…" },
-  landFailed: { en: "FAILED · {reason}", "zh-TW": "失敗 · {reason}", ja: "失敗 · {reason}" },
-  retryWitness: { en: "Retry witnessing", "zh-TW": "重新顯影", ja: "もう一度観測" },
-  cancelWitness: { en: "Cancel witnessing", "zh-TW": "取消顯影", ja: "観測をやめる" },
-  witnessCancelled: {
-    en: "Witnessing cancelled; nothing was written here.",
-    "zh-TW": "已取消顯影；這裡沒有寫下任何東西。",
-    ja: "観測をやめました。ここには何も書かれていません。",
+  // ── The goal: one plain sentence about what to do now (open land) ─────────────────────────
+  goalHeading: { en: "Goal", "zh-TW": "目標", ja: "目標" },
+  goalChapter: { en: "Goal · {title}", "zh-TW": "目標 · {title}", ja: "目標 · {title}" },
+  goalTalk: {
+    en: "Find {name} and press E to talk",
+    "zh-TW": "去找{name}，按 E 和他說話",
+    ja: "{name}を探して、E で話しかけよう",
   },
-  landUnwritten: { en: "UNWRITTEN", "zh-TW": "未記", ja: "未記録" },
+  goalTalkMore: {
+    en: "Find {name} and press E to talk ({n} people left)",
+    "zh-TW": "去找{name}，按 E 和他說話（還有 {n} 個人）",
+    ja: "{name}を探して、E で話しかけよう（あと {n} 人）",
+  },
+  goalFind: {
+    en: "Find the treasure and press E to open it",
+    "zh-TW": "找到寶箱，按 E 打開",
+    ja: "宝箱を見つけて、E で開けよう",
+  },
+  goalFindMore: {
+    en: "Find the treasures and press E to open them ({n} left)",
+    "zh-TW": "找到寶箱，按 E 打開（還有 {n} 個）",
+    ja: "宝箱を見つけて、E で開けよう（あと {n} 個）",
+  },
+  goalDefeat: {
+    en: "Beat the monster nearby",
+    "zh-TW": "打倒附近的怪物",
+    ja: "近くの魔物を倒そう",
+  },
+  goalDefeatMore: {
+    en: "Beat the monsters nearby ({n} left)",
+    "zh-TW": "打倒附近的怪物（還有 {n} 隻）",
+    ja: "近くの魔物を倒そう（あと {n} 体）",
+  },
+  goalAlmost: {
+    en: "This chapter is almost done…",
+    "zh-TW": "這一章快完成了…",
+    ja: "この章はもうすぐクリアです…",
+  },
+  goalGate: {
+    en: "Follow the arrow to the gate and press E to begin",
+    "zh-TW": "跟著箭頭走到入口，按 E 開始",
+    ja: "矢印をたどって入口へ行き、E で始めよう",
+  },
+  goalEnter: {
+    en: "Follow the arrow to the gate and press E to go in",
+    "zh-TW": "跟著箭頭走到入口，按 E 進去",
+    ja: "矢印をたどって入口へ行き、E で入ろう",
+  },
+  goalWriting: {
+    en: "Writing this chapter — please wait a moment…",
+    "zh-TW": "正在寫這一章，請稍等…",
+    ja: "この章を書いています。少しお待ちください…",
+  },
+  goalFailed: {
+    en: "This chapter could not be written. Go to the gate and press E to try again",
+    "zh-TW": "這一章沒寫成。走到入口，按 E 再試一次",
+    ja: "この章を書けませんでした。入口で E を押して、もう一度ためそう",
+  },
+  goalNeedsSetup: {
+    en: "To write the story, first set it up in Settings → Model",
+    "zh-TW": "要先到「設定 → 模型」設定好，故事才寫得出來",
+    ja: "物語を書くには、まず「設定 → モデル」で設定してください",
+  },
+  goalOffline: {
+    en: "The story is waiting: the AI can't be reached. Check Settings → Model",
+    "zh-TW": "故事先停著：現在連不上 AI，請到「設定 → 模型」看看",
+    ja: "物語は止まっています：AI につながりません。「設定 → モデル」を確認してください",
+  },
+  goalAllDone: {
+    en: "Every chapter so far is done! You will be told when the next one is ready",
+    "zh-TW": "目前的章節都完成了！下一章準備好會告訴你",
+    ja: "ここまでの章はすべてクリア！次の章ができたらお知らせします",
+  },
+  goalEnded: {
+    en: "The story is complete! Keep walking and exploring",
+    "zh-TW": "故事完結了！可以繼續到處走走",
+    ja: "物語は完結しました！このまま自由に歩いてみよう",
+  },
+  goalExplore: {
+    en: "Walk around and see this land",
+    "zh-TW": "到處走走，看看這片土地",
+    ja: "あちこち歩いて、この土地を見てみよう",
+  },
+  goalPlace: {
+    en: "Find the way out at the far end",
+    "zh-TW": "找到最裡面的出口",
+    ja: "いちばん奥の出口を見つけよう",
+  },
 
-  // ── System card ────────────────────────────────────────────────────────────────────────────
-  stateUnconfigured: { en: "NO PROVIDER", "zh-TW": "未設定模型", ja: "プロバイダーなし" },
-  stateUnprobed: { en: "NOT PROBED", "zh-TW": "尚未偵測", ja: "未確認" },
-  stateProbing: { en: "PROBING…", "zh-TW": "偵測中…", ja: "確認中…" },
-  stateOnline: { en: "ONLINE", "zh-TW": "連線中", ja: "オンライン" },
-  stateOffline: { en: "UNREACHABLE", "zh-TW": "無法連線", ja: "接続できません" },
-  stateError: { en: "PROBE FAILED", "zh-TW": "偵測失敗", ja: "確認に失敗" },
-  noInferenceConfig: { en: "no inference config", "zh-TW": "沒有推論設定", ja: "推論設定なし" },
-  seedCore: { en: "Seed Core", "zh-TW": "種子核心", ja: "シードコア" },
-  thinkingOne: { en: "Neural Inference…", "zh-TW": "模型思考中…", ja: "モデル推論中…" },
-  thinkingMany: {
-    en: "Neural Stream ({n})",
-    "zh-TW": "模型串流（{n}）",
-    ja: "モデル応答中（{n}）",
+  // ── Where you stand on the land: only what matters right now ──────────────────────────────
+  landWitnessing: {
+    en: "Drawing this land…",
+    "zh-TW": "正在畫出這片土地…",
+    ja: "この土地を描いています…",
   },
-  peers: { en: "{n} {n|peer|peers}", "zh-TW": "{n} 位夥伴", ja: "仲間 {n} 人" },
+  landFailed: {
+    en: "This land could not be drawn: {reason}",
+    "zh-TW": "這片土地沒畫出來：{reason}",
+    ja: "この土地を描けませんでした：{reason}",
+  },
+  retryWitness: { en: "Try again", "zh-TW": "再試一次", ja: "もう一度" },
+  cancelWitness: { en: "Stop", "zh-TW": "停止", ja: "やめる" },
+  witnessCancelled: {
+    en: "Stopped; nothing was drawn here.",
+    "zh-TW": "已停止；這裡還沒畫出來。",
+    ja: "やめました。ここはまだ描かれていません。",
+  },
+
+  // ── Top-right: one plain line, only when it matters ───────────────────────────────────────
+  modelMissing: {
+    en: "New land and story can't be drawn yet: set up Settings → Model",
+    "zh-TW": "還不能畫出新的土地和故事：請到「設定 → 模型」設定",
+    ja: "まだ新しい土地や物語を描けません：「設定 → モデル」で設定してください",
+  },
+  modelOffline: {
+    en: "Can't reach the AI right now: check Settings → Model",
+    "zh-TW": "現在連不上 AI：請到「設定 → 模型」看看",
+    ja: "いま AI につながりません：「設定 → モデル」を確認してください",
+  },
+  writingNow: { en: "Writing…", "zh-TW": "正在寫…", ja: "書いています…" },
+  peers: { en: "{n} {n|friend|friends}", "zh-TW": "{n} 位朋友", ja: "友だち {n} 人" },
 
   // ── Turn panel ─────────────────────────────────────────────────────────────────────────────
   sysRealtime: { en: "Real-time", "zh-TW": "即時", ja: "リアルタイム" },
@@ -257,7 +331,7 @@ export const HUD = {
   },
   backToLibrary: { en: "Back to library", "zh-TW": "回到主頁", ja: "ホームに戻る" },
   keepLooking: { en: "Keep looking around", "zh-TW": "繼續四處看看", ja: "もう少し見て回る" },
-  cartridgeComplete: { en: "CARTRIDGE COMPLETE", "zh-TW": "卡帶完結", ja: "カートリッジ完了" },
+  cartridgeComplete: { en: "STORY COMPLETE", "zh-TW": "故事完結", ja: "物語の終わり" },
   stayFinale: { en: "Stay in the finale", "zh-TW": "留在終章", ja: "フィナーレに残る" },
   floorNotWritten: {
     en: "Floor {floor} was not written",
@@ -272,11 +346,15 @@ export const HUD = {
     "zh-TW": "正在編織第 {floor} 層…",
     ja: "{floor} 階を編んでいます…",
   },
-  waitingHost: { en: "Waiting for host…", "zh-TW": "等待房主…", ja: "ホストを待っています…" },
+  waitingHost: {
+    en: "Waiting for the friend who leads…",
+    "zh-TW": "等待帶頭的朋友…",
+    ja: "先導する友だちを待っています…",
+  },
   hostLoading: {
-    en: "Host is loading next scene…",
-    "zh-TW": "房主正在載入下一個場景…",
-    ja: "ホストが次のシーンを読み込み中…",
+    en: "The friend who leads is loading the next scene…",
+    "zh-TW": "帶頭的朋友正在載入下一個場景…",
+    ja: "先導する友だちが次のシーンを読み込み中…",
   },
   reachingEnding: { en: "Reaching the ending…", "zh-TW": "正在前往結局…", ja: "エンディングへ…" },
   loadingNextScene: {
@@ -285,9 +363,9 @@ export const HUD = {
     ja: "次のシーンを読み込み中…",
   },
   hostOnlyDepths: {
-    en: "Only the host can take a room into the depths.",
-    "zh-TW": "只有房主能帶整個房間進入深層。",
-    ja: "深層へ進めるのはルームのホストだけです。",
+    en: "Only the friend who leads can take everyone into the depths.",
+    "zh-TW": "只有帶頭的朋友能帶大家進入深層。",
+    ja: "深層へ進めるのは先導する友だちだけです。",
   },
   sceneNotReady: {
     en: "The current scene is not ready to expand.",
@@ -319,9 +397,9 @@ export const HUD = {
   found: { en: "Found: {loot}", "zh-TW": "找到：{loot}", ja: "入手：{loot}" },
   chestEmpty: { en: "The chest is empty.", "zh-TW": "寶箱是空的。", ja: "宝箱は空でした。" },
   noCombatWeakness: {
-    en: "Combat is not in this build yet — the model gave it weakness: {weakness}",
-    "zh-TW": "這個版本還沒有戰鬥 — 模型給它的弱點是：{weakness}",
-    ja: "このビルドにはまだ戦闘がありません — モデルが決めた弱点：{weakness}",
+    en: "There is no fighting here yet — its weakness: {weakness}",
+    "zh-TW": "這裡還不能戰鬥 — 它的弱點是：{weakness}",
+    ja: "ここではまだ戦えません — 弱点：{weakness}",
   },
   noCombat: {
     en: "Combat is not in this build yet.",

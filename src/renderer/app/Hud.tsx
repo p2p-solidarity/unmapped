@@ -1,5 +1,8 @@
-// Heads-up display: The Seed VRMMO aesthetic, but every readout is a store value (Rule 2).
-// Layout only — the three cards live in ./hud, the numbers in ./hud/summary.ts.
+// Heads-up display: every readout is a store value (Rule 2), and only what the player needs now is
+// shown — the world and its goal (left), a line about the AI or friends when it matters (right), the
+// "press E" prompt, a short key row and the dock. Layout only — the cards live in ./hud, the numbers
+// in ./hud/summary.ts. The first time Play opens on this device, How to play (./hud/HowToPlay)
+// stands over it; the dock's button opens it again.
 
 import { type StringKey, useT } from "@renderer/i18n";
 import { padControlsHint, useInputDevice } from "@renderer/input";
@@ -11,8 +14,10 @@ import {
   useWorldStore,
 } from "@renderer/state";
 import { colors, radius, space, Text, zIndex } from "@renderer/ui";
-import { type JSX, useMemo } from "react";
+import { type JSX, useMemo, useState } from "react";
 import { ActionDock, NearbyPrompt } from "./hud/ActionDock";
+import { HowToPlay, howToPlaySeen } from "./hud/HowToPlay";
+import { useOpenLand } from "./hud/openLand";
 import { PlayerCard } from "./hud/PlayerCard";
 import { Reticle } from "./hud/Reticle";
 import { SystemPanel } from "./hud/SystemPanel";
@@ -48,6 +53,13 @@ export function Hud(): JSX.Element {
   const cameraMode = useEngineStore((state) => state.cameraMode);
   const armed = useEncounterStore((state) => state.weapon !== null);
   const openLand = useEngineStore((state) => state.chunk !== null);
+  const landWorld = useOpenLand();
+  const story = useSessionStore(
+    (state) => (state.activeInstance?.cartridge.story ?? null) !== null,
+  );
+  const [help, setHelp] = useState(() => !howToPlaySeen());
+  // Shown over a drawn world only: while it loads, the loading card is what the player reads.
+  const sceneReady = useWorldStore((state) => state.scene.status === "ready");
   const t = useT();
   // Touch shows the pad's glyphs too: the on-screen touch pad is laid out like one.
   const pad = useInputDevice() !== "keys";
@@ -91,7 +103,10 @@ export function Hud(): JSX.Element {
       >
         <PlayerCard summary={summary} />
         <TurnPanel />
-        <SystemPanel summary={summary} />
+        {/* Holds the right edge when the card has nothing to say, so the turn panel stays put. */}
+        <div style={{ display: "flex", justifyContent: "flex-end", minWidth: 0 }}>
+          <SystemPanel summary={summary} />
+        </div>
       </div>
 
       {cameraMode === "fps" ? <Reticle /> : null}
@@ -124,9 +139,12 @@ export function Hud(): JSX.Element {
       </div>
 
       <div style={{ display: "flex", justifyContent: "center", pointerEvents: "auto" }}>
-        <ActionDock />
+        <ActionDock onHelp={() => setHelp(true)} />
       </div>
       <TogetherLayer />
+      {help && sceneReady ? (
+        <HowToPlay story={story} openLand={landWorld} onClose={() => setHelp(false)} />
+      ) : null}
     </div>
   );
 }

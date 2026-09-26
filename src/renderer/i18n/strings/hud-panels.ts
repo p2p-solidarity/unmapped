@@ -54,9 +54,9 @@ export const HUD_PANELS = {
     ja: "アイテムを追加：{name}",
   },
   previewStructural: {
-    en: "{kind} changes cartridge structure",
-    "zh-TW": "{kind} 會改變卡帶結構",
-    ja: "{kind} はカートリッジの構造を変えます",
+    en: "{kind} changes the world's structure",
+    "zh-TW": "{kind} 會改變世界的結構",
+    ja: "{kind} はワールドの構造を変えます",
   },
 
   // ── Tweak panel: mod revisions ─────────────────────────────────────────────────────────────
@@ -69,10 +69,10 @@ export const HUD_PANELS = {
     ja: "この大地にステージを追加",
   },
   tweakRulesNote: {
-    en: "Describe a weapon, monsters, pacing, a squad or a scene change. Anything the cartridge lacks for it is added for you. Review the proposal, then publish a new cartridge version; your current run stays on its original version.",
+    en: "Describe a weapon, monsters, pacing, a squad or a scene change. Anything the world lacks for it is added for you. Review the proposal, then publish a new version of the world; your current run stays on its original version.",
     "zh-TW":
-      "描述一把武器、怪物、節奏、隊伍或場景的變化。卡帶缺少的功能會自動補上。檢查變更提案後，再發布新的卡帶版本；目前的遊玩進度會留在原本的版本。",
-    ja: "武器、モンスター、テンポ、部隊、シーンの変更などを書いてください。カートリッジに足りない機能は自動で追加されます。変更案を確認してから新しいバージョンを公開します。今のプレイは元のバージョンのままです。",
+      "描述一把武器、怪物、節奏、隊伍或場景的變化。世界缺少的功能會自動補上。檢查變更提案後，再發布世界的新版本；目前的遊玩進度會留在原本的版本。",
+    ja: "武器、モンスター、テンポ、部隊、シーンの変更などを書いてください。ワールドに足りない機能は自動で追加されます。変更案を確認してから新しいバージョンを公開します。今のプレイは元のバージョンのままです。",
   },
   tweakPlaceNote: {
     en: "A side-scrolling course, a grid dungeon or an otherworld (one of your AI worlds), added to this save now. You walk into it from its entrance on the land and come back out where you went in, with what you found.",
@@ -81,9 +81,9 @@ export const HUD_PANELS = {
     ja: "横スクロールのコース、グリッドのダンジョン、または異界（あなたの AI ワールド）を今このセーブに加えます。大地の入口から入り、見つけた物を持って入った場所に戻ってきます。",
   },
   tweakNeedsCartridge: {
-    en: "Open a published v2 cartridge to create a mod revision.",
-    "zh-TW": "開啟已發布的 v2 卡帶，才能建立模組修訂版。",
-    ja: "MOD 版をつくるには、公開済みの v2 カートリッジを開いてください。",
+    en: "Open a published v2 world to create a mod revision.",
+    "zh-TW": "開啟已發布的 v2 世界，才能建立模組修訂版。",
+    ja: "MOD 版をつくるには、公開済みの v2 ワールドを開いてください。",
   },
   requestedChange: { en: "Requested change", "zh-TW": "想要的變更", ja: "変えたい内容" },
   requestedPlaceholder: {
@@ -134,9 +134,9 @@ export const HUD_PANELS = {
   orbitPreview: { en: "Orbit preview", "zh-TW": "環繞預覽", ja: "回転プレビュー" },
   playtestChanges: { en: "Playtest changes", "zh-TW": "試玩變更", ja: "変更を試遊" },
   publishedNote: {
-    en: "Published {name} {version}. The original cartridge and save are unchanged.",
-    "zh-TW": "已發布 {name} {version}。原本的卡帶和存檔都沒有改變。",
-    ja: "{name} {version} を公開しました。元のカートリッジとセーブはそのままです。",
+    en: "Published {name} {version}. The original version and your progress are unchanged.",
+    "zh-TW": "已發布 {name} {version}。原本的版本和你的進度都沒有改變。",
+    ja: "{name} {version} を公開しました。元のバージョンとあなたの進行はそのままです。",
   },
   generateProposal: { en: "Generate proposal", "zh-TW": "生成變更提案", ja: "変更案を生成" },
   approvePublish: {
@@ -180,10 +180,10 @@ export const HUD_PANELS = {
     ja: "ステージを書いています…",
   },
   placeMade: {
-    en: "Its entrance stands on the land now (chunk {cx}, {cz}). Walk to its marker and press E. It is part of this save: nothing else changed.",
+    en: "Its entrance stands on the land now (at {cx}, {cz}). Walk to its marker and press E. It is part of this world: nothing else changed.",
     "zh-TW":
-      "入口已經出現在大地上（區塊 {cx}, {cz}）。走到標記旁按 E。它屬於這個存檔，其他東西都沒有改變。",
-    ja: "入口が大地に現れました（チャンク {cx}, {cz}）。目印まで歩いて E を押してください。このセーブの一部で、ほかは何も変わっていません。",
+      "入口已經出現在大地上（位置 {cx}, {cz}）。走到標記旁按 E。它屬於這個世界，其他東西都沒有改變。",
+    ja: "入口が大地に現れました（位置 {cx}, {cz}）。目印まで歩いて E を押してください。このワールドの一部で、ほかは何も変わっていません。",
   },
   addPlace: { en: "Add this place", "zh-TW": "新增這個關卡", ja: "このステージを追加" },
 
