@@ -7,10 +7,15 @@
 // ownership, receipts — before anything is written: a device never signs a history it cannot prove.
 // It may hold 80 MiB (`world-too-large` past that); packs keep P3 D9's blob limits. Entries go in
 // with a fixed 1980 mtime; packs are already compressed zips and are stored as they are.
+//
+// world.json's `protocol` is `protocolFor` the log's own fold — the lowest protocol that folds it as
+// this build does, as the service asks of an `open` — never this build's `WORLD_PROTOCOL`: a world
+// without co-owners or a chain opt-in stays readable by a protocol-1 build, and a protocol-3 writer
+// will not lock protocol-2 readers out of a world that never used protocol 3.
 
 import type { ContentHash } from "@shared/cartridge";
 import { hashOrder } from "@shared/hashOrder";
-import { openGenesis } from "@shared/history/fold";
+import { emptyNow, foldEntries, openGenesis } from "@shared/history/fold";
 import { contentHash, utf8, utf8Length } from "@shared/history/ids";
 import { verifyLog } from "@shared/history/log";
 import type { LogEntry } from "@shared/history/types";
@@ -24,8 +29,9 @@ import {
   WORLD_BUNDLE_FORMAT,
   type WorldBundleManifest,
 } from "@shared/worldBundle";
-import { WORLD_PROTOCOL } from "@shared/worldProtocol";
+import { protocolFor } from "@shared/worldProtocol";
 import { type Zippable, zipSync } from "fflate";
+import { verdictEntries } from "./verdict";
 
 export interface BundleBlob {
   hash: ContentHash;
@@ -109,7 +115,7 @@ export function buildWorldBundle(
     format: WORLD_BUNDLE_FORMAT,
     worldId,
     head: { n: last.n, chain: last.chain },
-    protocol: WORLD_PROTOCOL,
+    protocol: protocolFor(foldEntries(emptyNow(genesis.value), verdictEntries(entries))),
     physicsVersion: genesis.value.body.physicsVersion,
     genesisPack: input.genesisPack?.hash ?? null,
     files,

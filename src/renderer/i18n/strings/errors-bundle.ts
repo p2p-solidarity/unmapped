@@ -109,6 +109,11 @@ export const BUNDLE_ERRORS: Record<string, ErrorText> = {
     "檔案的描述與它的歷史記載的物理版本不同。",
     "ファイルの説明と歴史とで物理のバージョンが違います。",
   ),
+  "bundle-protocol-understated": problem(
+    "The file states an older world protocol than its history needs.",
+    "檔案宣告的世界協定版本比它的歷史需要的舊。",
+    "ファイルが示すワールドプロトコルが、歴史に必要な版より古くなっています。",
+  ),
   "import-physics-pin": {
     message: {
       en: "This world keeps physics this build would not give a new save.",

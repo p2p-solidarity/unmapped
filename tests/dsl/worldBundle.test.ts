@@ -20,6 +20,11 @@
 // 12. A zip bomb, or one entry declared larger than a blob, is inflated before it is refused.
 // 13. The exporter signs a history that does not verify, or one over 80 MiB.
 // 14. A world.json edited after signing still shows a valid signature.
+// 15. world.json states a lower world protocol than its log's fold needs, so a protocol-1 reader
+//     opens a co-owned world it would fold apart.
+// 16. The writer states its own protocol, not the log's, so an older reader refuses a file it reads.
+// 17. A file from before 16 was fixed (a one-owner world stated as 2) is refused.
+// 18. A world.json stating a protocol this build does not speak passes.
 
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -44,6 +49,7 @@ import {
   bundleSignText,
   type WorldBundleManifest,
 } from "@shared/worldBundle";
+import { WORLD_PROTOCOL } from "@shared/worldProtocol";
 import { strFromU8, strToU8, zipSync } from "fflate";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { v2CartridgeInput } from "../fixtures/v2";
@@ -483,6 +489,36 @@ describe("verifyWorldBundle", () => {
     const report = verifyWorldBundle(files);
     expect(report.signature).toBe("invalid");
     expect(report.problems.map((p) => p.code)).toEqual(["bundle-signature-invalid"]);
+  });
+});
+
+describe("world.json's protocol", () => {
+  const oneOwner = () => bundleOf(new LocalWorld({ ...GENESIS, cartridge }).entries, { works: [] });
+  const stated = (files: ReadonlyMap<string, Uint8Array>, protocol: number) =>
+    resigned(new Map(files), { ...manifestOf(files), protocol });
+
+  it("refuses a co-owned world stated as protocol 1 (15)", () => {
+    const files = bundleOf(localWorld().entries);
+    expect(manifestOf(files).protocol).toBe(2);
+    const report = verifyWorldBundle(stated(files, 1));
+    expect(report.problems.map((p) => [p.check, p.code])).toEqual([
+      [7, "bundle-protocol-understated"],
+    ]);
+  });
+
+  it("writes a one-owner world as protocol 1, which verifies (16)", () => {
+    const files = oneOwner();
+    expect(manifestOf(files).protocol).toBe(1);
+    expect(codes(files)).toEqual([]);
+  });
+
+  it("still verifies a one-owner world stated as 2, as every earlier export said (17)", () => {
+    // Overstating only turns older readers away; those files are signed and cannot be rewritten.
+    expect(codes(stated(oneOwner(), 2))).toEqual([]);
+  });
+
+  it("refuses a protocol this build does not speak (18)", () => {
+    expect(codes(stated(oneOwner(), WORLD_PROTOCOL + 1))).toEqual(["protocol-newer"]);
   });
 });
 

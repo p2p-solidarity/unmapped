@@ -833,6 +833,9 @@ window.seed.bundle.{ list(), export(worldId), inspect(), import(token, name), mo
 - Limits are checked from the central directory before inflating. Verification returns a report
   (hashes, log, verdicts, fold, beats, packs, physics, protocol), never a boolean; any problem
   refuses an import. Offline: `bun run verify-world -- <file.world> [--json]`.
+- `world.json`'s `protocol` is what the packed log's fold needs (`protocolFor`), not the build's:
+  a file stating less than its history needs is refused (`bundle-protocol-understated`), one stating
+  more is accepted (files exported before this rule all say 2 and are signed).
 - Import (Worlds → World files) is `join` from a file: the log by the backup rule, a save pinned to
   the genesis revision, seed, language and physics (`import-physics-pin`), then `ensure`.
 - Bringing a world back: `service -- import` serves a mirror; an owner or co-owner rehosts with

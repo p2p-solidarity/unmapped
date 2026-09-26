@@ -18,10 +18,13 @@
 //      equal the genesis's, and it is the latest `pack` event's blob when there is one;
 //   6. every work pack a place or chapter names: present, `checkContent`, `workContentHash`, and
 //      exactly the announced revision;
-//   7. the physics version (and the world protocol) this build supports.
+//   7. the physics version (and the world protocol) this build supports, and a world.json protocol
+//      no lower than the fold needs (`protocolFor`). A higher one is accepted: every file written
+//      before the writer recorded `protocolFor` states 2, and overstating only turns older readers
+//      away, while understating would let one fold a co-owned world apart.
 //
 // Nothing is trusted from world.json but what the log and the blobs prove: its head, services and
-// physics are compared with theirs, never used in their place.
+// physics are compared with theirs (its protocol from below), never used in their place.
 
 import { type ArchiveEntry, readArchiveDirectory, unzipWithin } from "@shared/archive";
 import { canonicalJson } from "@shared/canonical";
@@ -53,7 +56,7 @@ import {
   type WorldBundleReport,
   worldBundleManifestSchema,
 } from "@shared/worldBundle";
-import { WORLD_PROTOCOL } from "@shared/worldProtocol";
+import { protocolFor, WORLD_PROTOCOL } from "@shared/worldProtocol";
 import { strFromU8 } from "fflate";
 import { entryVerdict } from "./verdict";
 
@@ -502,12 +505,24 @@ export function openWorldBundle(files: ReadonlyMap<string, Uint8Array>): {
   const supported = checkPhysics(physics);
   if (!supported.ok) problem(7, supported.error.code, supported.error.message);
   if (manifest.protocol > WORLD_PROTOCOL) {
-    problem(7, "protocol-newer", `This file is world protocol ${manifest.protocol}.`);
+    problem(
+      7,
+      "protocol-newer",
+      `This file is world protocol ${manifest.protocol}; this build speaks ${WORLD_PROTOCOL}.`,
+    );
   }
   // Verdicts and beats are only defined under physics this build reproduces.
   const now = supported.ok
     ? foldAndBeats(genesis.value, entries, report, problem)
     : emptyNow(genesis.value);
+  const needs = protocolFor(now);
+  if (supported.ok && manifest.protocol < needs) {
+    problem(
+      7,
+      "bundle-protocol-understated",
+      `world.json states world protocol ${manifest.protocol}; its history needs ${needs}.`,
+    );
+  }
   checkPacks(manifest, genesis.value, now, blobs, report, problem);
   const opened: OpenedWorldBundle = {
     manifest,
