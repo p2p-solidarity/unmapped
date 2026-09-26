@@ -18,6 +18,7 @@ import { Reticle } from "./hud/Reticle";
 import { SystemPanel } from "./hud/SystemPanel";
 import { type HudSummary, hudSummary } from "./hud/summary";
 import { TurnPanel } from "./hud/TurnPanel";
+import { TogetherLayer } from "./land/TogetherPanel";
 
 function useHudSummary(): HudSummary {
   const meta = useWorldStore((state) => state.meta);
@@ -48,7 +49,8 @@ export function Hud(): JSX.Element {
   const armed = useEncounterStore((state) => state.weapon !== null);
   const openLand = useEngineStore((state) => state.chunk !== null);
   const t = useT();
-  const pad = useInputDevice() === "pad";
+  // Touch shows the pad's glyphs too: the on-screen touch pad is laid out like one.
+  const pad = useInputDevice() !== "keys";
   const line: StringKey = openLand
     ? cameraMode === "topdown"
       ? armed
@@ -124,6 +126,7 @@ export function Hud(): JSX.Element {
       <div style={{ display: "flex", justifyContent: "center", pointerEvents: "auto" }}>
         <ActionDock />
       </div>
+      <TogetherLayer />
     </div>
   );
 }

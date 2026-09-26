@@ -214,6 +214,37 @@ export const NET_ERRORS: Record<string, ErrorText> = {
       ja: "先に コンソール → マルチプレイ でルームを抜けてください。",
     },
   },
+  "continent-world-attached": {
+    message: {
+      en: "This world is shared through a world service, so it cannot also join a continent.",
+      "zh-TW": "這個世界已經透過世界服務分享，不能再加入大陸。",
+      ja: "この世界はワールドサービスで共有されているため、大陸には加われません。",
+    },
+    hint: {
+      en: "Friends join it with an invite from its door instead; continents are for worlds kept on this device only.",
+      "zh-TW": "請改用門上的邀請讓夥伴加入；大陸只給只存在這台裝置上的世界。",
+      ja: "代わりに扉の招待で仲間を迎えてください。大陸はこの端末だけにある世界のためのものです。",
+    },
+  },
+  "world-not-migrated": {
+    message: {
+      en: "This save has no world history yet.",
+      "zh-TW": "這個存檔還沒有世界歷史。",
+      ja: "このセーブにはまだ世界の歴史がありません。",
+    },
+    hint: {
+      en: "Walk its land once in Play, then try again.",
+      "zh-TW": "先在遊戲中走一趟它的大地，再試一次。",
+      ja: "一度プレイでその大地を歩いてから、もう一度試してください。",
+    },
+  },
+  "note-invalid": {
+    message: {
+      en: "That note cannot be kept: it has no words or no name.",
+      "zh-TW": "這則留言無法收下：它沒有內容或沒有署名。",
+      ja: "このメモは残せません。本文か名前がありません。",
+    },
+  },
   "room-open-land": {
     message: {
       en: "Open land is shared as a continent, not through a room.",

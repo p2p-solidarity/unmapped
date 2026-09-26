@@ -9,6 +9,7 @@
 //   B (1)            jump (a place's climb; fires when armed)    back (Escape)
 //   X (2)            fire                                        —
 //   Y (3)            notes (the land's N key)                    —
+//   LB (4)           emote (the land's T key: the emote wheel)   —
 //   RB (5)           sprint                                      —
 //   Start (9)        menu (Escape: the same as Esc in Play)      menu (Escape)
 //
@@ -73,8 +74,10 @@ export interface PadSnapshot {
   axes: readonly number[];
 }
 
+const CONTROLS = ["a", "b", "x", "y", "lb", "rb", "start", "up", "down", "left", "right"] as const;
+
 /** A control of the pad; the four directions merge the D-pad with the left stick. */
-export type PadControl = "a" | "b" | "x" | "y" | "rb" | "start" | "up" | "down" | "left" | "right";
+export type PadControl = (typeof CONTROLS)[number];
 
 /**
  * The keys the engine falls back to when a cartridge binds nothing (the same lists its consumers
@@ -99,6 +102,12 @@ export const DEFAULT_BINDINGS: Readonly<Record<InputAction, readonly InputCode[]
 /** The land's notes key: not a cartridge action, so no cartridge can rebind it. */
 export const NOTES_CODE = "KeyN";
 
+/**
+ * The land's emote key (rev 6 phase 3, D17): opens the emote wheel. Not a cartridge action either;
+ * G is taken by `grab`, so the wheel is T on the keyboard and LB on the pad.
+ */
+export const EMOTE_CODE = "KeyT";
+
 /** What a control means in play: a gameplay action, the notes key, or the menu (Escape). */
 export type PlayInput =
   | { kind: "action"; action: InputAction }
@@ -114,6 +123,7 @@ export const PLAY_LAYOUT: Readonly<Record<PadControl, PlayInput>> = {
   b: { kind: "action", action: "jump" },
   x: { kind: "action", action: "fire" },
   y: { kind: "code", code: NOTES_CODE },
+  lb: { kind: "code", code: EMOTE_CODE },
   rb: { kind: "action", action: "sprint" },
   start: { kind: "menu" },
 };
@@ -134,7 +144,7 @@ const pressed = (snapshot: PadSnapshot, index: number): boolean =>
 /** The controls a snapshot holds. Stick directions count only past `deadZone` (radial). */
 export function padControls(snapshot: PadSnapshot, deadZone = PAD_DEAD_ZONE): Set<PadControl> {
   const held = new Set<PadControl>();
-  for (const name of ["a", "b", "x", "y", "rb", "start", "up", "down", "left", "right"] as const) {
+  for (const name of CONTROLS) {
     if (pressed(snapshot, PAD_BUTTON[name])) held.add(name);
   }
   const x = snapshot.axes[PAD_AXIS.lx] ?? 0;
@@ -196,6 +206,7 @@ export const PAD_GLYPH: Readonly<Record<PadControl, string>> = {
   b: "B",
   x: "X",
   y: "Y",
+  lb: "LB",
   rb: "RB",
   start: "Start",
   up: "✚",
@@ -217,6 +228,7 @@ const KEY_TO_PAD: Readonly<Record<string, PadControl>> = {
   "↵": "a",
   E: "a",
   N: "y",
+  T: "lb",
   "↑": "up",
   "↓": "down",
   "←": "left",

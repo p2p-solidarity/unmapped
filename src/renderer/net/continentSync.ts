@@ -1,10 +1,16 @@
 // Keeps this world and the continent in step (plan.md §8). This world writes its own entry, the
 // chunks it witnessed and the notes left on its land; it reads everyone else's, shifted into its
-// own coordinates (continentView.ts), into `useContinentStore`. A note someone left on this world's
-// land is kept in this save's notes.jsonl. Positions go through awareness in continent tiles.
+// own coordinates (continentView.ts), into `useContinentStore`. Positions go through awareness in
+// continent tiles.
+//
+// Rev 6 phase 3 (D12): this world's land comes from its history's fold (`useLandStore`). A note
+// someone else left on this land waits for the owner to keep it (continentActions'
+// `offerVisitorNotes`); it is never kept by itself. A world that turns out to be attached to a
+// world service leaves the continent (`continent-world-attached`).
 
 import { serializeScene } from "@dsl";
 import { setNotePublisher } from "@renderer/app/land/notes";
+import { subscribeOpenWorld } from "@renderer/app/land/together";
 import { type Facing4, samplePlayer, samplePose } from "@renderer/engine/playerProbe";
 import { type RemotePlayer, setRemotePlayers } from "@renderer/engine/remoteRoster";
 import { errorLine, translate } from "@renderer/i18n";
@@ -20,7 +26,15 @@ import {
 import { landSeedOf, type WitnessedChunk } from "@shared/land";
 import { useEffect } from "react";
 import type * as Y from "yjs";
-import type { Continent } from "./continent";
+import { type Continent, getActiveContinent } from "./continent";
+import {
+  clearVisitorNotes,
+  leaveContinent,
+  offerVisitorNotes,
+  refreshWorldBadges,
+  WORLD_ATTACHED,
+  worldAttached,
+} from "./continentActions";
 import {
   continentMaps,
   publishChunks,
@@ -85,22 +99,13 @@ function ownChunks(): WitnessedChunk[] {
 }
 
 /**
- * A note left on this world's land by someone else: keep it with the land's notes. It is the
- * visitor's act, not the owner's, so it never becomes a line of the owner's private karma.
+ * Notes someone else left on this world's land wait for the owner to keep them (D12): offered at
+ * the door, never written by themselves. A visitor's note never becomes a line of the owner's karma.
  */
-function keepVisitorNotes(doc: Y.Doc, worldId: string): void {
-  const land = useLandStore.getState();
-  if (land.instanceId !== worldId) return;
-  const theirs = readContinent(doc).notes.get(worldId) ?? [];
-  for (const note of theirs) {
-    if (land.notes.some((one) => one.id === note.id)) continue;
-    useLandStore.getState().addNote(note);
-    void window.seed.instances.appendNote({ instanceId: worldId, note }).then((stored) => {
-      if (stored.ok) return;
-      useSessionStore
-        .getState()
-        .toast("danger", translate("identity.noteNotKept", { reason: errorLine(stored.error) }));
-    });
+function offerNotes(doc: Y.Doc, worldId: string): void {
+  if (useLandStore.getState().instanceId !== worldId) return;
+  for (const visitor of offerVisitorNotes(readContinent(doc).notes.get(worldId) ?? [])) {
+    useSessionStore.getState().toast("info", translate("together.noteArrived", { name: visitor }));
   }
 }
 
@@ -159,7 +164,7 @@ export function useContinentSync(continent: Continent | null): void {
       }
       const view = buildContinentView(snapshot, worldId, online());
       if (view !== null) useContinentStore.getState().setView(view);
-      keepVisitorNotes(doc, worldId);
+      offerNotes(doc, worldId);
     };
 
     const players = (): void => {
@@ -270,11 +275,23 @@ export function useContinentSync(continent: Continent | null): void {
       });
     }, POSITION_MS);
 
+    // An attached world stays off continents: one that turns out to be (its history opened, or
+    // main's badge arrived after the door opened) leaves at once and says why.
+    const attached = (): void => {
+      if (getActiveContinent() !== continent || !worldAttached(worldId)) return;
+      leaveContinent();
+      useSessionStore.getState().toast("danger", errorLine(WORLD_ATTACHED));
+    };
+    const offOpen = subscribeOpenWorld(attached);
+    void refreshWorldBadges().then(attached);
+
     publish();
     refresh();
     status();
 
     return () => {
+      offOpen();
+      clearVisitorNotes();
       clearInterval(timer);
       clearInterval(statusTimer);
       for (const map of [maps.worlds, maps.chunks, maps.notes]) map.unobserve(onDoc);

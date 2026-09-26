@@ -19,6 +19,7 @@ import { MODEL } from "./model";
 import type { Phrase } from "./phrase";
 import { PLACE_VIEW } from "./placeView";
 import { TITLE } from "./title";
+import { TOGETHER } from "./together";
 import { USAGE } from "./usage";
 import { WORKS } from "./works";
 import { WORLD } from "./world";
@@ -41,6 +42,7 @@ export const STRINGS = {
   model: MODEL,
   placeView: PLACE_VIEW,
   title: TITLE,
+  together: TOGETHER,
   usage: USAGE,
   works: WORKS,
   world: WORLD,
