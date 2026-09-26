@@ -12,15 +12,17 @@ family tree (50 / 30 / 20 across generations) to whoever holds each world's ENS 
 
 | Our contract | The Uniswap part it uses |
 | --- | --- |
-| [`LineageRegistry.sol`](contracts/src/lineage/LineageRegistry.sol) — `launch` (line 143), `_startAuction` (lines 244–282), `graduate` (line 196) | Liquidity Launcher `LBPStrategy` v3.1.0 and the CCA factory v2.1.0, as deployed on Sepolia |
-| [`LineageHook.sol`](contracts/src/lineage/LineageHook.sol) — permissions (line 63), `_beforeInitialize` (line 96), `_afterSwap` (line 104), `claim` (line 83) | v4 hooks: `beforeInitialize`, `afterSwap`, `afterSwapReturnDelta` |
+| [`LineageRegistry.sol`](contracts/src/lineage/LineageRegistry.sol) — `launch` (line 249), `_startAuction` (lines 348–393, `initializeDistribution` at 386 and the auction-address check at 392), `graduate` (line 260) | Liquidity Launcher `LBPStrategy` v3.1.0 and the CCA factory v2.1.0, as deployed on Sepolia |
+| [`LineageHook.sol`](contracts/src/lineage/LineageHook.sol) — permissions (line 63), `_beforeInitialize` (line 96), `_afterSwap` (line 104), `_split` (line 122), `claim` (line 83) | v4 hooks: `beforeInitialize`, `afterSwap`, `afterSwapReturnDelta` |
 | [`LineageRouter.sol`](contracts/src/lineage/LineageRouter.sol) | v4 `unlock`: buy or sell along a whole family line in one call |
 | [`LaunchTypes.sol`](contracts/src/lineage/LaunchTypes.sol) | the launcher and CCA structs, copied by hand |
 
-Deployed on Sepolia on 2026-09-26: registry `0x439F5982163D4D4AbA6FAB2bF494d866bD2B5237`, hook
-`0x0f1167F421fD246c5C78cF88a26f225cb3336044`, router `0x57C5Ea5F82a132c6F2f8FF42133c354027A1609C`.
-The full dry run (three generations of launch → auction → graduation → swaps → royalties) is in
-[`docs/e2e/milestone-lineage-market/`](docs/e2e/milestone-lineage-market/result.md).
+Live on Sepolia (2026-09-26, the name-first v2 that `unmapped.eth` points at): registry
+`0xda8051e3e2855C125AAd6050f97Ea64cf203dAf6`, hook `0x59FA49D974B4564Eade17EDDC4a3CCf8D819a044`,
+router `0x2201fBDB7f17BD687d8965B9Dc2Ae000689039BE`. The first world's auction ran there with
+four passkey bids and cleared at 0.018636 USDC, 86% above its 0.009999 floor, then graduated into
+a v4 pool. The full dry run (three generations of launch → auction → graduation → swaps →
+royalties) is in [`docs/e2e/milestone-lineage-market/`](docs/e2e/milestone-lineage-market/result.md).
 
 ## What was great
 
@@ -77,11 +79,13 @@ The full dry run (three generations of launch → auction → graduation → swa
    "the pool is open", so our scripts always check for `Migrated` in the logs.
 9. **Where the leftovers go.** The full-range position NFT goes to `positionRecipient` (for us the
    registry, where it is now locked), and collecting its fees needs your own PositionManager
-   actions. Unused LP reserve and the non-LP part of what was raised go to `recipient`. With a single
-   bidder the price stayed at the floor and ~450,000 of the 500,000 reserved tokens came back.
+   actions. Unused LP reserve and the non-LP part of what was raised go to `recipient`. In our dry
+   run, with a single bidder, the price stayed at the floor and ~450,000 of the 500,000 reserved
+   tokens came back.
 
-Not tested yet, so no feedback: auctions with many bidders moving the price, a real
-`MigrationFailed`, and exact-output swaps through the hook.
+Not tested yet, so no feedback: a real `MigrationFailed` and exact-output swaps through the hook.
+(Several bidders moving the price did happen on Sepolia: +84% and +86% over the floor on our two
+deployments — the clearing math behaved exactly as documented.)
 
 ## Suggestions for CCA
 

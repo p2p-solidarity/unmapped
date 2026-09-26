@@ -32,33 +32,34 @@
 | --- | --- | --- |
 | 0:00–0:30 | A 在大地上走，一塊新地顯影 | 「玩家用幾個字就能做出一個 AI 世界，也能改編別人的世界。改編會形成血緣。我們想讓血緣上的每一代都分到後代的價值。」 |
 | 0:30–1:20 | 市場：根世界 `aether-land.unmapped.eth` 的拍賣紀錄與畢業後的池子 | 「每個世界的代幣先用 Uniswap 的 Continuous Clearing Auction 賣，價格由出價清算，而且用父世界的代幣計價——子世界值多少，是用父世界的單位量的。」 |
-| 1:20–2:20 | 現場發行一個改編世界、出價（passkey 簽名；見下方「簽名的限制」） | 「玩家沒有錢包、沒有 ETH；簽名的是 passkey 帳戶，gas 由我們的中繼器付。」 |
+| 1:20–2:20 | 現場發行一個改編世界、出價（passkey 簽名；見下方「簽名的限制」） | 「玩家沒有錢包、沒有 ETH，app 裡也沒有私鑰；簽名的是 passkey 帳戶，gas 由 Cloudflare 上的 gas station 付，它改不了你簽的內容。」 |
 | 2:20–3:20 | 用 MockUSDC 沿血緣買一個子世界的代幣，然後看每一代累積的權利金 | 「router 在一次 unlock 裡走完整條血緣；每一跳，我們的 v4 hook 在 `afterSwap` 抽 1%，依 50／30／20 往上分。」 |
 | 3:20–3:50 | 領取權利金 | 「錢付給 ENS 名字的持有人，不是寫死的地址——名字轉手，權利金跟著走。」 |
 | 3:50–4:00 | 收尾 | 「CCA 負責公平定價，v4 hook 負責血緣分潤；這兩塊都是 Uniswap 堆疊。我們卡過的九個地方和對 CCA 的建議寫在 `FEEDBACK.md`——最想要的是：每個版本一個介面套件，和把人類價格換成 Q96 的 helper。」 |
 
 市場畫面的按鈕與等待時間以 ENSv2 那邊的 `docs/demo/lineage-market.md` 為準（例如改編世界的拍賣大約 10 分鐘，現場發行後要接一個事先拍賣完的世界來示範交易）。app 入口：「世界」→「市場」。
 
-### 鏈上現況（Sepolia 真實交易，[milestone-lineage-demo](../e2e/milestone-lineage-demo/result.md)）
+### 鏈上現況（Sepolia 真實交易。v1：[milestone-lineage-demo](../e2e/milestone-lineage-demo/result.md)；v2 name-first：ENSv2 session 2026-09-26 回報，最終 E2E 待補）
 
 | 項目 | 狀態 |
 | --- | --- |
-| 根世界 `aether-land.unmapped.eth` 的 CCA 拍賣（LBPStrategy v3.1.0＋CCA factory v2.1.0） | **已結束**：5 筆 passkey 出價，清算價 0.018395 USDC（底價 0.009999，**+84%**），募得 9,070 USDC，50 萬顆全數領走 |
-| 結算並畢業成 v4 池（app 的「結算拍賣」，不需簽名，中繼器付 gas） | 5 × `exitBid`＋5 × `claimTokens`＋`graduate`（`0x218ae77b…f6bb`） |
-| 用 passkey 經池子買入 10 USDC（系統瀏覽器簽名） | 買到 535.39 AETHERLAND，hook 抽 5.408——**剛好 1%**（`0x0aca30e5…d55f`） |
-| 發放分潤給 ENS 名字的持有人 | 5.408 AETHERLAND 付給 `0x8eEC…51C3`（`0x3161c788…d819`）。根世界是第一代，所以 1% 全歸它；50／30／20 的三代分帳看 `bun run lineage:market --dry-run` |
+| **v2（現在 `unmapped.eth` 指向的）** 根世界 aether-land 1.3.0 的 CCA 拍賣 | **已結束**：4 筆 passkey 出價（3 個種子＋1 筆從 app 出、在瀏覽器簽名、由 gas station 送出），清算價 0.018636 USDC（底價 0.009999，**+86%**），募得 9,025 USDC |
+| v2 結算並畢業成 v4 池（app 的「結算拍賣」，不需簽名） | 4 × exit＋4 × claim＋`graduate`（`0xac7221df…3f63`，650,770 gas），池子開在 0.018636；全部經 gas station，app 裡沒有私鑰 |
+| v1（舊部署）根世界拍賣 | 5 筆 passkey 出價，清算 0.018395 USDC（+84%），募得 9,070 USDC |
+| 用 passkey 經池子買入 10 USDC（系統瀏覽器簽名） | v1 上真實：買到 535.39 AETHERLAND，hook 抽 5.408——**剛好 1%**（`0x0aca30e5…d55f`）；v2 上待最終 E2E |
+| 發放分潤給 ENS 名字的持有人 | v1 上真實：5.408 AETHERLAND 付給 `0x8eEC…51C3`（`0x3161c788…d819`）；v2 上待最終 E2E。根世界是第一代，所以 1% 全歸它；50／30／20 的三代分帳看 `bun run lineage:market --dry-run` |
 | 3 跳買入的權利金 7.30／10.95／18.25（50／30／20 精確） | 只在模擬中 |
-| 玩家不需要錢包：passkey 擁有一個 PasskeyAccount，main 組好批次、passkey 簽摘要、中繼器只付 gas；鏈上用 OpenZeppelin WebAuthn＋EIP-7951 P-256 precompile 驗章 | precompile 驗章在 Sepolia 上真實通過；重放、竄改、別的 passkey 在模擬中都被拒 |
+| 玩家不需要錢包、app 也不放私鑰：passkey 擁有一個 PasskeyAccount，main 組好批次、passkey 簽摘要，Cloudflare 上的 gas station 只付 gas；鏈上用 OpenZeppelin WebAuthn＋EIP-7951 P-256 precompile 驗章 | 驗章在 Sepolia 上真實通過；v2 的出價與結算都經 gas station 送出；重放、竄改、別的 passkey 在模擬中被拒，gas station 在本機測試拒絕 6 種惡意請求 |
 
 **台上的圖**：公開的唯讀拍賣頁 https://unmapped-auction.gimmychang.workers.dev（現在顯示 GRADUATED · POOL OPEN）畫出清算價逐塊上升、出價（標 PASSKEY）、池子與家族樹，比 Etherscan 好講。操作手冊：`docs/demo/lineage-market.md`。
 
-**現場要出價**：根世界的池子已經開了，要現場示範拍賣就先發行一個新的改編世界：`bun run lineage:demo launch <label> --parent 0x5e8e39c25cEa96F3ED4d6B03c1fc17213453ae7f --blocks 50`（約 10 分鐘）。中繼器 `0x8eEC…51C3` 的 Sepolia ETH 要維持在 0.02 以上。
+**現場要出價**：根世界的池子已經開了，要現場示範拍賣就先發行一個新的改編世界（約 10 分鐘的拍賣；指令與新合約參數以 `docs/demo/lineage-market.md` 為準）。**gas station 的金鑰要由你本人跑 `wrangler secret put` 設好**，否則 `/status` 顯示 relayer null、所有鏈上動作都會失敗。
 
 **簽名**：Electron 開發版叫不出 Touch ID，所以 app 會在 Chrome／Safari 開一個本機頁面完成那一次簽名。E2E 用的是虛擬驗證器，**真的用手指按 Touch ID 還沒測過——上台前在 demo 用的 Mac 上排練一次**。
 
 ## 要講清楚、不能講過頭的
 
 - 可以說：合約已在 Sepolia 真實部署；發行、拍賣、畢業、多跳交易、權利金、名字轉手、四種拒絕情境已在真實合約上模擬通過。
-- 模擬裡每場拍賣只有一個出價者，清算價從沒高過底價；Sepolia 上根世界的真實拍賣有 5 筆出價，清算價從底價 0.009999 推到 0.018395（+84%）。畢業失敗（`MigrationFailed`）和 exact-output 交易沒有跑過。被問到價格發現時照實說。
+- 模擬裡每場拍賣只有一個出價者；Sepolia 上的真實拍賣：v1 5 筆出價 +84%、v2 4 筆出價 +86%。畢業失敗（`MigrationFailed`）和 exact-output 交易沒有跑過。被問到價格發現時照實說。
 - 已知限制（評審可能問）：registry 持有的全範圍流動性目前不能提出，LP 手續費也沒人收；沒用到的 LP 儲備歸世界擁有者。
-- 可以說「app 裡用 passkey 出價、結算、買入、發放分潤都在 Sepolia 真實交易過」；三代分帳與名字轉手仍只在模擬中。
+- 可以說「app 裡用 passkey 出價、結算、買入、發放分潤都在 Sepolia 真實交易過」（買入與分潤是在 v1 上）；三代分帳與名字轉手仍只在模擬中。
