@@ -12,6 +12,7 @@
 // entry k + 1. An invitee opens with `join` (the invite and the proof bound to its own key, D8).
 
 import { z } from "zod";
+import { CHAT_MAX_CHARS } from "./continentHello";
 import { inviteSchema } from "./history/bodies";
 import { storedEventSchema } from "./history/event";
 import { AUTHOR_KEY, CHAIN, EVENT_ID, NONCE, SIGNATURE, utf8Length } from "./history/ids";
@@ -112,6 +113,23 @@ export const presenceSchema: z.ZodType<Presence> = z.strictObject({
     .nullable(),
 });
 
+// ── Chat (simplify-together) ──────────────────────────────────────────────────────────────────
+//
+// Friends in a shared world talk through its service: `chat` goes up, the service relays it to the
+// world's other readers that sent `hear`, and keeps nothing. A service older than CHAT_SERVICE_VERSION
+// would read either frame as a protocol violation and close the socket, so main sends them only to a
+// service whose challenge says it speaks chat; and the service sends `chat` only to a session that
+// said `hear`, so an older app never receives a frame it cannot read.
+
+/** The first `unmapped-service/<n>` that relays chat. */
+export const CHAT_SERVICE_VERSION = 2;
+
+/** Whether a service's challenge `version` relays chat (`unmapped-service/2` and later). */
+export function serviceSpeaksChat(version: string): boolean {
+  const match = /^unmapped-service\/(\d{1,4})$/.exec(version);
+  return match !== null && Number(match[1]) >= CHAT_SERVICE_VERSION;
+}
+
 // ── Claims (D15) ─────────────────────────────────────────────────────────────────────────────
 
 export type ClaimTarget =
@@ -189,6 +207,8 @@ export type ToService =
   | { t: "release"; world: string; target: ClaimTarget }
   | { t: "stream"; world: string; sid: string; k: number; text?: string; end?: StreamEnd }
   | { t: "presence"; world: string; p: Presence | null }
+  | { t: "hear"; world: string }
+  | { t: "chat"; world: string; text: string }
   | { t: "close"; world: string };
 
 export type OpenedRole = "owner" | "member" | "visitor" | "invitee";
@@ -220,6 +240,7 @@ export type FromService =
       end?: StreamEnd;
     }
   | { t: "presence"; world: string; from: string; p: Presence | null }
+  | { t: "chat"; world: string; from: string; text: string }
   | { t: "refused"; world: string; error: AppError };
 
 const world = z.string().regex(EVENT_ID);
@@ -228,6 +249,11 @@ const sid = z.string().regex(/^[A-Za-z0-9_-]{8,64}$/);
 const count = z.number().int().min(0).max(Number.MAX_SAFE_INTEGER);
 const streamText = z.string().max(FRAME_LIMITS.streamChars);
 const streamEnd = z.enum(["done", "abort"]);
+/** A chat line on the wire; both ends clean it again with `readChatText` before use. */
+const chatText = z
+  .string()
+  .min(1)
+  .max(CHAT_MAX_CHARS * 4);
 /** chain(0) is the world id itself; later links are sha256 hashes. */
 const chainLink = z.union([z.string().regex(CHAIN), z.string().regex(EVENT_ID)]);
 const headSchema: z.ZodType<Head> = z.strictObject({ n: count, chain: chainLink });
@@ -275,6 +301,8 @@ const toServiceSchema: z.ZodType<ToService> = z.discriminatedUnion("t", [
     end: streamEnd.optional(),
   }),
   z.strictObject({ t: z.literal("presence"), world, p: presenceSchema.nullable() }),
+  z.strictObject({ t: z.literal("hear"), world }),
+  z.strictObject({ t: z.literal("chat"), world, text: chatText }),
   z.strictObject({ t: z.literal("close"), world }),
 ]);
 
@@ -324,6 +352,7 @@ const fromServiceSchema: z.ZodType<FromService> = z.discriminatedUnion("t", [
     end: streamEnd.optional(),
   }),
   z.strictObject({ t: z.literal("presence"), world, from: key, p: presenceSchema.nullable() }),
+  z.strictObject({ t: z.literal("chat"), world, from: key, text: chatText }),
   z.strictObject({
     t: z.literal("refused"),
     world: z.union([world, z.literal("")]),

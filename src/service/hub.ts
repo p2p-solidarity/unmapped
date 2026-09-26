@@ -32,6 +32,7 @@ import {
 } from "@shared/worldProtocol";
 import type { Upload } from "./attach";
 import { handleAttach } from "./attach";
+import { handleChat, handleHear, stopHearing } from "./chat";
 import {
   dropSessionLeases,
   expireLeases,
@@ -52,7 +53,7 @@ import { serviceVerdict, type VerdictFn } from "./verdict";
 import { wireError } from "./wire";
 import { type Draft, loadWorld, type ServiceWorld, SNAPSHOT_EVERY } from "./world";
 
-export const SERVICE_VERSION = "unmapped-service/1";
+export const SERVICE_VERSION = "unmapped-service/2";
 
 /** One socket, as the transport sees it. */
 export interface Peer {
@@ -323,6 +324,12 @@ export class Hub {
       case "presence":
         this.presence(session, frame);
         return;
+      case "hear":
+        handleHear(this, session, frame);
+        return;
+      case "chat":
+        handleChat(this, session, frame);
+        return;
       case "close":
         this.closeWorld(session, frame.world);
         return;
@@ -482,6 +489,7 @@ export class Hub {
 
   closeWorld(session: Session, world: string): void {
     if (!session.worlds.delete(world)) return;
+    stopHearing(session, world);
     this.subscribers.get(world)?.delete(session);
     dropSessionLeases(this, session, world);
     const key = session.key ?? "";
