@@ -1,0 +1,313 @@
+{
+  "contract": "WorldProvenance",
+  "solc": "0.8.37+commit.f401782d.Emscripten.clang",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "BadSignatureLength",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "LengthMismatch",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "recorder",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "worldId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "StreamAlreadyOpen",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "recorder",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "worldId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "StreamNotOpen",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "worldId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint64",
+          "name": "recorded",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint64",
+          "name": "upTo",
+          "type": "uint64"
+        }
+      ],
+      "name": "UpToNotRising",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "recorder",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "worldId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "upTo",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "chain",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "fingerprint",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "prevBlock",
+          "type": "uint64"
+        }
+      ],
+      "name": "BeatRecorded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "recorder",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "worldId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "sequencerKey",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "cartridgeHash",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "ownerKey",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes",
+          "name": "genesisSig",
+          "type": "bytes"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes",
+          "name": "sequencerSig",
+          "type": "bytes"
+        }
+      ],
+      "name": "StreamOpened",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "worldId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "cartridgeHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "ownerKey",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes",
+          "name": "genesisSig",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "sequencerKey",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes",
+          "name": "sequencerSig",
+          "type": "bytes"
+        }
+      ],
+      "name": "openStream",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32[]",
+          "name": "worldIds",
+          "type": "bytes32[]"
+        },
+        {
+          "internalType": "uint64[]",
+          "name": "upTos",
+          "type": "uint64[]"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "chains",
+          "type": "bytes32[]"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "fingerprints",
+          "type": "bytes32[]"
+        }
+      ],
+      "name": "recordBeats",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "worldId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "sequencerKey",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "start",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "count",
+          "type": "uint256"
+        }
+      ],
+      "name": "recorders",
+      "outputs": [
+        {
+          "internalType": "address[]",
+          "name": "page",
+          "type": "address[]"
+        },
+        {
+          "internalType": "uint256",
+          "name": "total",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "recorder",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "worldId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "streamOf",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "bool",
+              "name": "open",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint64",
+              "name": "upTo",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "openedBlock",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "lastBlock",
+              "type": "uint64"
+            }
+          ],
+          "internalType": "struct WorldProvenance.Stream",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080604052348015600e575f5ffd5b50610a078061001c5f395ff3fe608060405234801561000f575f5ffd5b506004361061004a575f3560e01c80632262af911461004e5780632904b18f1461007857806350bf0f23146100df5780638052b121146100f4575b5f5ffd5b61006161005c366004610656565b610107565b60405161006f929190610685565b60405180910390f35b61008b6100863660046106da565b61021c565b60405161006f91905f6080820190508251151582526001600160401b0360208401511660208301526001600160401b0360408401511660408301526001600160401b03606084015116606083015292915050565b6100f26100ed366004610756565b6102a8565b005b6100f261010236600461085d565b61052d565b5f8481526001602090815260408083208684529091528120805460609290919082861015610154578461013a87856108ef565b1061014e576101498587610902565b610156565b82610156565b855b905061016286826108ef565b6001600160401b0381111561017957610179610915565b6040519080825280602002602001820160405280156101a2578160200160208202803683370190505b509350855b81811015610210578281815481106101c1576101c1610929565b5f918252602090912001546001600160a01b0316856101e089846108ef565b815181106101f0576101f0610929565b6001600160a01b03909216602092830291909101909101526001016101a7565b50505094509492505050565b60408051608080820183525f808352602080840182905283850182905260609384018290526001600160a01b0387168252818152848220868352815290849020845192830185525460ff8116151583526001600160401b036101008204811692840192909252600160481b8104821694830194909452600160881b909304909216908201525b92915050565b8685811415806102b85750838114155b806102c35750818114155b156102e4576040516001621398b960e31b0319815260040160405180910390fd5b5f5b8181101561052157335f908152602081905260408120818c8c8581811061030f5761030f610929565b602090810292909201358352508101919091526040015f20805490915060ff1661037e57338b8b8481811061034657610346610929565b6040516361382c5760e11b81526001600160a01b03909416600485015260200291909101356024830152506044015b60405180910390fd5b5f89898481811061039157610391610929565b90506020020160208101906103a6919061093d565b82549091506001600160401b03610100909104811690821611610419578b8b848181106103d5576103d5610929565b845460405163d93c2ae360e01b81526020929092029093013560048201526101009092046001600160401b0390811660248401528316604483015250606401610375565b8154436001600160401b03908116600160881b90810267ffffffffffffffff60881b19858416610100021678ffffffffffffffff0000000000000000ffffffffffffffff0019851617178555909104168c8c8581811061047b5761047b610929565b90506020020135336001600160a01b03167fdeec8651c11b7dfceba501ec127a05ef9b74e4ec8cadc654b583ae7d59ca168e848c8c898181106104c0576104c0610929565b905060200201358b8b8a8181106104d9576104d9610929565b604080516001600160401b03968716815260208082019690965291909402929092013582840152509186166060830152519081900360800190a35050508060010190506102e6565b50505050505050505050565b335f908152602081815260408083208b84529091529020805460ff161561057057604051637294249760e11b8152336004820152602481018a9052604401610375565b604085141580610581575060408214155b1561059f5760405163d7bad83f60e01b815260040160405180910390fd5b80546001600160401b034316600160481b0270ffffffffffffffff0000000000000000ff1990911617600190811782555f8a8152602082815260408083208884528252808320805494850181558352912090910180546001600160a01b03191633908117909155905185918b917f6cd5c0df0fcb59bc0e646d1e491b7bafb6b5b4fbbf8b527bf9450c648c35f3bd90610643908d908d908d908d908c908c90610992565b60405180910390a4505050505050505050565b5f5f5f5f60808587031215610669575f5ffd5b5050823594602084013594506040840135936060013592509050565b604080825283519082018190525f9060208501906060840190835b818110156106c75783516001600160a01b03168352602093840193909201916001016106a0565b5050602093909301939093525092915050565b5f5f604083850312156106eb575f5ffd5b82356001600160a01b0381168114610701575f5ffd5b946020939093013593505050565b5f5f83601f84011261071f575f5ffd5b5081356001600160401b03811115610735575f5ffd5b6020830191508360208260051b850101111561074f575f5ffd5b9250929050565b5f5f5f5f5f5f5f5f6080898b03121561076d575f5ffd5b88356001600160401b03811115610782575f5ffd5b61078e8b828c0161070f565b90995097505060208901356001600160401b038111156107ac575f5ffd5b6107b88b828c0161070f565b90975095505060408901356001600160401b038111156107d6575f5ffd5b6107e28b828c0161070f565b90955093505060608901356001600160401b03811115610800575f5ffd5b61080c8b828c0161070f565b999c989b5096995094979396929594505050565b5f5f83601f840112610830575f5ffd5b5081356001600160401b03811115610846575f5ffd5b60208301915083602082850101111561074f575f5ffd5b5f5f5f5f5f5f5f5f60c0898b031215610874575f5ffd5b88359750602089013596506040890135955060608901356001600160401b0381111561089e575f5ffd5b6108aa8b828c01610820565b9096509450506080890135925060a08901356001600160401b038111156108cf575f5ffd5b61080c8b828c01610820565b634e487b7160e01b5f52601160045260245ffd5b818103818111156102a2576102a26108db565b808201808211156102a2576102a26108db565b634e487b7160e01b5f52604160045260245ffd5b634e487b7160e01b5f52603260045260245ffd5b5f6020828403121561094d575f5ffd5b81356001600160401b0381168114610963575f5ffd5b9392505050565b81835281816020850137505f828201602090810191909152601f909101601f19169091010190565b868152856020820152608060408201525f6109b160808301868861096a565b82810360608401526109c481858761096a565b999850505050505050505056fea2646970667358221220edc5bfca1cac8092558fbf18bb7f9edf96875de55191a369ba433be07d379b1564736f6c63430008250033"
+}
