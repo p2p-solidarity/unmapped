@@ -9,6 +9,8 @@
 //   4. A claim is granted for what is already written, or to a key that may not write it; a
 //      refusal leaves the client waiting (it must get `claimed: refused` with the code before it).
 //   5. A lease outlives its target being written, or its holder's disconnect.
+//   6. The holder claims again (a second connection with its key, after a reconnect) and gets the
+//      old lease back: its new stream, numbered from 0, is dropped silently until the lease expires.
 
 import { signJoinProof } from "@shared/history/sign";
 import { describe, expect, it } from "vitest";
@@ -99,6 +101,47 @@ describe("leases (1, 2, 5)", () => {
     expect(viewer.last("stream")).toMatchObject({ sid, end: "abort" });
     probe.send({ t: "claim", world: id, target: chunk(5) });
     expect(probe.last("claimed")?.status).toBe("granted");
+  });
+});
+
+describe("claiming again (6)", () => {
+  it("gives a holder that claims again from a new connection a fresh stream viewers follow", () => {
+    const { hub, clock, id, owner, viewer } = world();
+    owner.send({ t: "claim", world: id, target: chunk(3) });
+    const first = owner.last("claimed")?.sid ?? "";
+    owner.send({ t: "stream", world: id, sid: first, k: 0, text: "Scene(" });
+    owner.send({ t: "stream", world: id, sid: first, k: 1, text: "Floor(" });
+    viewer.send({ t: "claim", world: id, target: chunk(3) });
+    expect(viewer.last("claimed")).toMatchObject({ status: "writing", sid: first });
+
+    clock.tick(30_000);
+    const again = new Client(hub, OWNER);
+    again.open(id);
+    again.send({ t: "claim", world: id, target: chunk(3) });
+    const claimed = again.last("claimed");
+    expect(claimed?.status).toBe("granted");
+    const second = claimed?.sid ?? "";
+    expect(second).not.toBe(first);
+    expect(viewer.last("stream")).toMatchObject({ sid: first, end: "abort" });
+
+    again.send({ t: "stream", world: id, sid: second, k: 0, text: "Scene(" });
+    expect(again.codes()).toEqual([]);
+    expect(viewer.last("stream")).toMatchObject({ sid: second, k: 0, text: "Scene(" });
+    viewer.send({ t: "claim", world: id, target: chunk(3) });
+    expect(viewer.last("claimed")).toMatchObject({
+      status: "writing",
+      sid: second,
+      text: "Scene(",
+    });
+
+    // The fresh lease keeps the first grant's time: at 610 s it is past 10 minutes from the first
+    // claim (it would still stand at 580 s from the second).
+    for (let k = 1; k < 11; k += 1) {
+      clock.tick(58_000);
+      again.send({ t: "stream", world: id, sid: second, k, text: "." });
+      hub.sweep();
+    }
+    expect(viewer.last("stream")).toMatchObject({ sid: second, end: "abort" });
   });
 });
 

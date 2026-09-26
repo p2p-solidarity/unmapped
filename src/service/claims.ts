@@ -182,12 +182,12 @@ export function handleClaim(hub: Hub, session: Session, frame: Frame<"claim">): 
     hub.send(session, { ...answer, status: "writing", sid: held.sid, by: held.by, ...text });
     return;
   }
-  if (held !== null) {
-    held.session = session;
-    held.renewedAt = Math.min(real, held.grantedAt + hub.limits.leaseMaxMs);
-    hub.send(session, { ...answer, status: "granted", sid: held.sid });
-    return;
-  }
+  // The holder claims again (a new connection after a reconnect, or a new try on this one): its
+  // generation starts over with a fresh relay numbering frames from 0, so the old stream ends for
+  // viewers (they claim again and follow the new one) and this claim gets a fresh lease. It keeps
+  // the first grant's time, so claiming again never stretches a lease past its 10 minutes.
+  const since = held?.grantedAt ?? real;
+  if (held !== null) abortLease(hub, held);
   const mine = hub.leases.inWorld(world.id).filter((lease) => lease.by === key).length;
   if (mine >= hub.limits.claimsPerAuthor) {
     refuseClaim(hub, session, frame, {
@@ -214,7 +214,7 @@ export function handleClaim(hub: Hub, session: Session, frame: Frame<"claim">): 
     sid: newSid(),
     by: key,
     session,
-    grantedAt: real,
+    grantedAt: since,
     renewedAt: real,
     text: "",
     k: -1,
