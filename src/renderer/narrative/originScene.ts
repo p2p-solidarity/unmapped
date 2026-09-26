@@ -9,11 +9,11 @@ import {
   type NewWorldContext,
   originIssues,
   originPrompt,
-  parseScene,
+  originUnfit,
+  parseOrigin,
   sceneGrammar,
   serializeScene,
 } from "@dsl";
-import { dslError } from "@dsl/parse/program";
 import { usageTag } from "@renderer/llm";
 import { worldPropKinds } from "@shared/bible";
 import type { WorldBible } from "@shared/cartridge";
@@ -96,15 +96,6 @@ export interface Origin {
   route: OriginRoute;
 }
 
-function unfit(issues: ReturnType<typeof originIssues>): DslError {
-  return dslError({
-    code: "dsl-origin-unfit",
-    message: `${issues.length} problem(s) make this place unfit to start in.`,
-    hint: issues.map((issue) => `${issue.message} ${issue.hint ?? ""}`.trim()).join(" "),
-    errors: issues,
-  });
-}
-
 export async function generateOrigin(input: OriginInput): Promise<Result<Origin>> {
   const config = await window.seed.inference.getConfig();
   if (input.signal?.aborted === true) return aborted();
@@ -124,13 +115,12 @@ async function viaChat(config: InferenceConfig, input: OriginInput): Promise<Res
   const requestId = crypto.randomUUID();
   const providerId = providerIdFor(config.kind);
   let attempt = 0;
-  // Parsing and the origin checks are one step, so an unfit place is repaired like a typo.
+  // Parsing and the origin checks are one step, so an unfit place is repaired like a typo — and
+  // in the same round as the program's own mistakes.
   const parse = (source: string): Result<SceneGraph, DslError> => {
     attempt += 1;
-    const parsed = parseScene(source);
-    if (!parsed.ok) return reportRepair(parsed);
-    const issues = originIssues(parsed.value, worldPropKinds(input.bible));
-    return issues.length === 0 ? parsed : reportRepair({ ok: false, error: unfit(issues) });
+    const parsed = parseOrigin(source, worldPropKinds(input.bible));
+    return parsed.ok ? parsed : reportRepair(parsed);
   };
   const reportRepair = <E extends AppError>(failed: { ok: false; error: E }) => {
     if (attempt <= MAX_REPAIRS) {
@@ -197,7 +187,7 @@ async function viaBridge(input: OriginInput): Promise<Result<SceneGraph>> {
     if (!origin.ok) return origin;
     issues = originIssues(origin.value.graph, props);
   }
-  return issues.length > 0 ? fail(unfit(issues)) : ok(origin.value.graph);
+  return issues.length > 0 ? fail(originUnfit(issues)) : ok(origin.value.graph);
 }
 
 function sceneRequest(

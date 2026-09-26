@@ -4,10 +4,12 @@
 
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
+import { join } from "node:path";
 import type { MainContext } from "@main/context";
 import { IPC } from "@shared/ipc";
 import type { SidecarConfig, SidecarStatus } from "@shared/llm";
 import { fail, ok, type Result } from "@shared/result";
+import { ANSI_COLOUR, createLineLog, SIDECAR_LOG } from "./sidecarLog";
 
 export const HEALTH_INTERVAL_MS = 500;
 export const HEALTH_TIMEOUT_MS = 60_000;
@@ -43,8 +45,6 @@ export interface RingBuffer {
 }
 
 /** Keeps only the last `capacity` non-empty lines so an error message stays readable. */
-const ANSI_COLOUR = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g");
-
 export function createRingBuffer(capacity: number = STDERR_LINES): RingBuffer {
   let buffer: string[] = [];
   return {
@@ -111,6 +111,8 @@ export function createSidecar(ctx: MainContext): Sidecar {
   let status: SidecarStatus = { ...STOPPED };
   let child: ReturnType<typeof spawn> | null = null;
   const stderr = createRingBuffer();
+  // Everything it says also goes to <userData>/logs/llama-server.log (bounded, main-only).
+  const log = createLineLog(join(ctx.userData, SIDECAR_LOG));
 
   function setStatus(next: SidecarStatus): void {
     status = next;
@@ -145,22 +147,32 @@ export function createSidecar(ctx: MainContext): Sidecar {
     stderr.clear();
     setStatus({ state: "starting", pid: null, port: config.port, message: null });
 
+    const startedAt = Date.now();
     const proc = spawn(config.binaryPath, sidecarArgs(config), {
       stdio: ["ignore", "pipe", "pipe"],
     });
     child = proc;
+    log.note(`start pid ${proc.pid ?? "?"}: ${config.binaryPath} ${sidecarArgs(config).join(" ")}`);
     proc.stderr?.setEncoding("utf8");
-    proc.stderr?.on("data", (chunk: string) => stderr.push(chunk));
+    proc.stderr?.on("data", (chunk: string) => {
+      stderr.push(chunk);
+      log.write(chunk, "stderr");
+    });
     proc.stdout?.setEncoding("utf8");
-    proc.stdout?.on("data", (chunk: string) => stderr.push(chunk));
+    proc.stdout?.on("data", (chunk: string) => {
+      stderr.push(chunk);
+      log.write(chunk, "stdout");
+    });
 
     let exited = false;
     proc.on("error", (e: Error) => {
       exited = true;
       stderr.push(e.message);
+      log.note(`error: ${e.message}`);
     });
-    proc.on("exit", (code) => {
+    proc.on("exit", (code, signal) => {
       exited = true;
+      log.note(`exit pid ${proc.pid ?? "?"}: code ${String(code)}, signal ${String(signal)}`);
       if (child === proc) child = null;
       if (status.state === "ready" || status.state === "starting") {
         setStatus({
@@ -181,6 +193,7 @@ export function createSidecar(ctx: MainContext): Sidecar {
       setStatus({ state: "error", pid: null, port: config.port, message });
       return fail({ ...health.error, message });
     }
+    log.note(`ready on :${config.port} after ${Date.now() - startedAt} ms`);
     setStatus({ state: "ready", pid: proc.pid ?? null, port: config.port, message: null });
     return ok(status);
   }
@@ -203,6 +216,7 @@ export function createSidecar(ctx: MainContext): Sidecar {
 
   ctx.onBeforeQuit(async () => {
     await stop();
+    await log.close();
   });
 
   return { start, stop, status: () => status };

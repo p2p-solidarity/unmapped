@@ -263,7 +263,10 @@ export type EpisodeText = Omit<StoryEpisode, "id" | "cx" | "cz">;
 /**
  * Reads the story line protocol: an optional `@@logline` section, then `@@episode` blocks with
  * `title:`, `place:`, `kind:` and `brief:` lines (a brief may run over several lines), up to
- * `@@end`. Fields are cut to their limits; whether anything is missing is the caller's check.
+ * `@@end`. An `@@end` after each block (the format's one example ends so) closes that block and
+ * the next `@@episode` goes on; nothing outside a block is read, and a second `@@logline` (the
+ * whole plan written again) ends the reply. Fields are cut to their limits; whether anything is
+ * missing is the caller's check.
  * `numbers[i]` is the chapter number written on episode i's header (`@@episode 3`), else null.
  */
 export function readStoryBlocks(reply: string): {
@@ -294,6 +297,7 @@ export function readStoryBlocks(reply: string): {
     if (/^```/.test(line)) continue;
     if (/^@@logline\b/i.test(line)) {
       flush();
+      if (logline !== "" || episodes.length > 0) break;
       section = "logline";
       continue;
     }
@@ -307,7 +311,7 @@ export function readStoryBlocks(reply: string): {
     if (/^@@end\b/i.test(line)) {
       flush();
       section = null;
-      break;
+      continue;
     }
     if (section === "logline" && line !== "") logline = `${logline} ${line}`.trim();
     if (section === "episode") {

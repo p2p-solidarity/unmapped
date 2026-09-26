@@ -1,14 +1,13 @@
-import { builtinAssetKind } from "@shared/assets";
-import { propError } from "./program";
 // Readers for everything the player walks on or bumps into: the floor plane, the tile patches
 // painted over it, the platforms raised above it, walls and props.
 
 import type { OpenUIError } from "@openuidev/lang-core";
+import { builtinAssetKind } from "@shared/assets";
 import type { FloorSpec, PatchSpec, PlatformSpec, PropSpec, WallSpec } from "@shared/world";
 import { clampFloat, clampInt, LIMITS } from "../limits";
 import { toHex } from "../schemas/common";
 import { SCENE_PROPS } from "../schemas/scene";
-import { type ChildNode, readProps } from "./program";
+import { type ChildNode, isPlaceholder, propError, readProps } from "./program";
 import type { SceneScope } from "./sceneScope";
 
 /** The one Floor of the program (the first, if a confused model wrote several). */
@@ -74,18 +73,21 @@ export function readWall(child: ChildNode, scope: SceneScope): WallSpec | null {
 export function readProp(child: ChildNode, scope: SceneScope): PropSpec | null {
   const p = readProps(SCENE_PROPS.Prop, child, scope.issues);
   if (p === null) return null;
-  if (p.assetId != null && builtinAssetKind(p.assetId) !== p.kind) {
+  // Any string is an asset id to the schema, so "none" there is read as left out here.
+  const assetId = p.assetId == null || isPlaceholder(p.assetId) ? null : p.assetId;
+  if (assetId !== null && builtinAssetKind(assetId) !== p.kind) {
     scope.issues.push(
       propError(
         "Prop",
-        `Asset ${p.assetId} is missing or does not match ${p.kind}.`,
-        "Use the installed asset ID for this prop kind.",
+        `Asset ${assetId} is missing or does not match ${p.kind}.`,
+        "Use the installed asset ID for this prop kind, or leave assetId out.",
+        child.statementId,
       ),
     );
     return null;
   }
   return {
-    ...(p.assetId == null ? {} : { assetId: p.assetId }),
+    ...(assetId === null ? {} : { assetId }),
     kind: p.kind,
     x: scope.x(p.x),
     z: scope.z(p.z),

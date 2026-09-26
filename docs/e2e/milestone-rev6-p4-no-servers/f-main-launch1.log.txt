@@ -1,0 +1,169 @@
+vite v8.3.0 building ssr environment for development...
+transforming...
+✓ 366 modules transformed.
+rendering chunks...
+out/main/chunks/heart-BgeRAx0t.png                          3.12 kB
+out/main/chunks/samurai_green-XToNlHMv.png                  4.78 kB
+out/main/chunks/samurai_blue-YZHMdpFI.png                   5.53 kB
+out/main/chunks/ninja_blue-COU3McFS.png                     6.13 kB
+out/main/chunks/tileset_floor-B7205uFr.png                 29.61 kB
+out/main/chunks/tileset_village_abandoned-BqZ8VUQR.png     31.77 kB
+out/main/index.js                                       1,310.25 kB
+
+✓ built in 116ms
+
+electron main process built successfully
+
+-----
+
+vite v8.3.0 building ssr environment for development...
+transforming...
+✓ 122 modules transformed.
+rendering chunks...
+out/preload/index.js  224.04 kB
+
+✓ built in 22ms
+
+electron preload scripts built successfully
+
+-----
+
+dev server running for the electron renderer process at:
+
+  ➜  Local:   http://localhost:5198/
+  ➜  Network: use --host to expose
+
+starting electron app...
+
+
+DevTools listening on ws://127.0.0.1:9345/devtools/browser/8374dca7-67d3-40fa-b0b3-81ae3901699e
+[apple-local] native-helper-start: spawn /private/tmp/claude-501/-Users-kidney-Workspace-Hackathon-unmapped/f9f28666-cad2-48fd-9df0-065e8d1d73c3/scratchpad/qfix/snap/native/afm-bridge/.build/debug/afm-bridge ENOENT
+[renderer:LOG] [vite] connecting... (http://localhost:5198/@vite/client:883)
+[renderer:LOG] [vite] connected. (http://localhost:5198/@vite/client:996)
+[renderer:LOG] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold (http://localhost:5198/@fs/private/tmp/claude-501/-Users-kidney-Workspace-Hackathon-unmapped/f9f28666-cad2-48fd-9df0-065e8d1d73c3/scratchpad/qfix/snap/.vite-cache/deps/client-CBEMz44o.js?v=79f9c7e1:15861)
+[inference] chat 22615021-4559-4fed-8bb3-475980db1027 · 2 messages · 0 tools
+[inference] done 22615021-4559-4fed-8bb3-475980db1027 · bible · llamacpp local · 18916 ms · max 1400 · 1153+396 tokens (0 cached) · ctx 16384
+[renderer:WARN] [repair] 1/2 · dsl-duplicate-id · Defined more than once: root. 2 statement(s) of the Bible program are invalid. · root is defined more than once, so only its last definition would be kept. (http://localhost:5198/@vite/client:299)
+[inference] chat 6413eb79-8181-408a-a335-76d9bb593475 · 4 messages · 0 tools
+5:47:28 PM [vite] (client) [console.warn] [repair] 1/2 · dsl-duplicate-id · Defined more than once: root. 2 statement(s) of the Bible program are invalid. · root is defined more than once, so only its last definition would be kept.
+[inference] done 6413eb79-8181-408a-a335-76d9bb593475 · bible · llamacpp local · 8742 ms · max 1400 · 2232+132 tokens (1149 cached) · ctx 16384
+[renderer:WARN] [repair] 2/2 · dsl-invalid-props · 2 statement(s) of the Bible program are invalid. · field "/taboos" expects array but got string (http://localhost:5198/@vite/client:299)
+5:47:36 PM [vite] (client) [console.warn] [repair] 2/2 · dsl-invalid-props · 2 statement(s) of the Bible program are invalid. · field "/taboos" expects array but got string
+[inference] chat 0c6ab363-9240-43e9-ae75-26ced418d43b · 4 messages · 0 tools
+[inference] done 0c6ab363-9240-43e9-ae75-26ced418d43b · bible · llamacpp local · 6808 ms · max 1400 · 1632+132 tokens (1149 cached) · ctx 16384
+[inference] chat 2cbf21b5-bb48-484f-ade0-846528e0408d · 2 messages · 0 tools
+[inference] done 2cbf21b5-bb48-484f-ade0-846528e0408d · bible · llamacpp local · 7262 ms · max 1400 · 1153+191 tokens (1149 cached) · ctx 16384
+[inference] chat 8656b574-ad5a-4260-87c9-352307b99c4d · 2 messages · 0 tools
+[look] fail ab3edc3b-8d2d-4a94-820a-ce3706932d93 · openai · gpt-image-1-mini · 0 ms · no-api-key
+[look] fail 7a9575b5-0292-4b5d-b226-38570521d31a · openai · gpt-image-1-mini · 0 ms · no-api-key
+[look] fail f22ca647-aa53-41d8-abcb-1a009d636326 · openai · gpt-image-1-mini · 0 ms · no-api-key
+[inference] done 8656b574-ad5a-4260-87c9-352307b99c4d · story · llamacpp local · 16158 ms · max 4000 · 491+384 tokens (0 cached) · ctx 16384
+[renderer:WARN] [repair] story 1/2 · story-reply-invalid · The story plan is incomplete: episodes — Too small: expected array to have >=3 items (http://localhost:5198/@vite/client:299)
+[inference] chat 66fd8f28-5b21-461c-8ea8-7da0fd6e4e8f · 4 messages · 0 tools
+5:48:55 PM [vite] (client) [console.warn] [repair] story 1/2 · story-reply-invalid · The story plan is incomplete: episodes — Too small: expected array to have >=3 items
+[inference] done 66fd8f28-5b21-461c-8ea8-7da0fd6e4e8f · story · llamacpp local · 24150 ms · max 4000 · 933+584 tokens (487 cached) · ctx 16384
+[renderer:WARN] [repair] story 2/2 · story-reply-invalid · The story plan is incomplete: episodes — Too small: expected array to have >=3 items (http://localhost:5198/@vite/client:299)
+[inference] chat c4fe0787-cba9-4f57-9929-523f6073ba77 · 6 messages · 0 tools
+5:49:20 PM [vite] (client) [console.warn] [repair] story 2/2 · story-reply-invalid · The story plan is incomplete: episodes — Too small: expected array to have >=3 items
+[inference] done c4fe0787-cba9-4f57-9929-523f6073ba77 · story · llamacpp local · 24028 ms · max 4000 · 1575+584 tokens (929 cached) · ctx 16384
+5:51:02 PM [vite] (client) hmr update /app/create/CreateGameScreen.tsx, /app/create/StoryStep.tsx, /app/create/WorldStep.tsx, /app/create/StreamPreview.tsx, /app/land/ChapterPanel.tsx, /app/PlayScreen.tsx, /works/EpisodePrefetch.tsx, /app/land/OtherworldLayer.tsx, /app/PlaceMaker.tsx, /app/land/OtherworldPicker.tsx, /app/hud/PlayerCard.tsx, /app/create/LookStep.tsx, /app/hud/LandStatus.tsx, /app/App.tsx, /hd2d/TitleDiorama.tsx, /engine2d/LandView2D.tsx, /app/land/DoorPanel.tsx, /app/land/ForeignDoorCard.tsx and 42 more
+5:51:02 PM [vite] (client) hmr invalidate /app/create/WorldStep.tsx Could not Fast Refresh ("patchBible" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[renderer:LOG] [vite] hot updated: /app/create/CreateGameScreen.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/create/StoryStep.tsx (http://localhost:5198/@vite/client:964)
+5:51:02 PM [vite] (client) hmr update /app/create/CreateGameScreen.tsx
+[renderer:LOG] [vite] invalidate /app/create/WorldStep.tsx: Could not Fast Refresh ("patchBible" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/create/WorldStep.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] invalidate /app/create/StreamPreview.tsx: Could not Fast Refresh ("readBibleStream" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports (http://localhost:5198/@vite/client:964)
+5:51:02 PM [vite] (client) hmr invalidate /app/create/StreamPreview.tsx Could not Fast Refresh ("readBibleStream" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[renderer:LOG] [vite] hot updated: /app/create/StreamPreview.tsx (http://localhost:5198/@vite/client:964)
+5:51:02 PM [vite] (client) hmr update /app/create/CreateGameScreen.tsx, /app/create/LookStep.tsx
+[renderer:LOG] [vite] hot updated: /app/land/ChapterPanel.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/PlayScreen.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /works/EpisodePrefetch.tsx (http://localhost:5198/@vite/client:964)
+5:51:02 PM [vite] (client) hmr invalidate /engine2d/LandView2D.tsx Could not Fast Refresh ("isOpenLand2D" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[renderer:LOG] [vite] hot updated: /app/land/OtherworldLayer.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/PlaceMaker.tsx (http://localhost:5198/@vite/client:964)
+5:51:02 PM [vite] (client) hmr update /app/PlayScreen.tsx, /app/App.tsx, /app/console/MultiplayerTab.tsx, /app/market/PlayerName.tsx, /net/RoomPanel.tsx
+[renderer:LOG] [vite] hot updated: /app/land/OtherworldPicker.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/hud/PlayerCard.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/create/LookStep.tsx (http://localhost:5198/@vite/client:964)
+5:51:02 PM [vite] (client) hmr invalidate /app/land/ContinentSection.tsx Could not Fast Refresh ("continentOk" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[renderer:LOG] [vite] hot updated: /app/hud/LandStatus.tsx (http://localhost:5198/@vite/client:964)
+5:51:02 PM [vite] (client) hmr update /app/land/DoorPanel.tsx, /app/land/ForeignDoorCard.tsx
+[renderer:LOG] [vite] hot updated: /app/App.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /hd2d/TitleDiorama.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] invalidate /engine2d/LandView2D.tsx: Could not Fast Refresh ("isOpenLand2D" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /engine2d/LandView2D.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/land/DoorPanel.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/land/ForeignDoorCard.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] invalidate /app/land/ContinentSection.tsx: Could not Fast Refresh ("continentOk" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/land/ContinentSection.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/title/ContinentPanel.tsx (http://localhost:5198/@vite/client:964)
+5:51:02 PM [vite] (client) hmr invalidate /app/title/CartridgesPanel.tsx Could not Fast Refresh ("isCompatible" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[renderer:LOG] [vite] hot updated: /engine/SandboxApp.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/console/WorldTab.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/title/ArchivePanel.tsx (http://localhost:5198/@vite/client:964)
+5:51:02 PM [vite] (client) hmr update /app/WorkspaceScreen.tsx, /app/library/LibraryScreen.tsx, /app/library/SavesPanel.tsx
+[renderer:LOG] [vite] hot updated: /app/WorldsScreen.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/console/MultiplayerTab.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/market/PlayerName.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /net/RoomPanel.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/TweakPanel.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] invalidate /app/title/CartridgesPanel.tsx: Could not Fast Refresh ("isCompatible" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/title/CartridgesPanel.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/library/JoinWorld.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/library/NewGamePanel.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/library/SavesPanel.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/library/WorldBundleActions.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /narrative/ui/DialogueCard.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /narrative/ui/AltarPanel.tsx (http://localhost:5198/@vite/client:964)
+5:51:02 PM [vite] (client) hmr invalidate /app/land/TogetherPanel.tsx Could not Fast Refresh ("readProgramStream" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[renderer:LOG] [vite] hot updated: /app/create/BuildStep.tsx (http://localhost:5198/@vite/client:964)
+5:51:02 PM [vite] (client) hmr update /app/Hud.tsx
+[renderer:LOG] [vite] hot updated: /app/title/SharedWorldsPanel.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/land/RumorRow.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /engine/ScenePreviewCanvas.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/ChangeProposalPanel.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/land/ChapterNameOffer.tsx (http://localhost:5198/@vite/client:964)
+5:51:02 PM [vite] (client) hmr invalidate /app/library/WorldBadges.tsx Could not Fast Refresh ("useWorldBadges" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[renderer:LOG] [vite] hot updated: /app/land/NotePanel.tsx (http://localhost:5198/@vite/client:964)
+5:51:02 PM [vite] (client) hmr update /app/library/SavesPanel.tsx
+[renderer:LOG] [vite] hot updated: /app/land/ErrandActions.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/land/TracePanel.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/land/WorldRecordsSection.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/land/VariantsPanel.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/title/SystemPanel.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/market/CartridgeEns.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/market/MarketPanel.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/market/EnsNames.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/hud/EnsChip.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/title/CartridgeName.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/title/ContinentSaveName.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] invalidate /app/land/TogetherPanel.tsx: Could not Fast Refresh ("readProgramStream" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/land/TogetherPanel.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/land/EmoteWheel.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/land/WorldDoorSection.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/land/DoorChain.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/land/DoorPeople.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] invalidate /app/library/WorldBadges.tsx: Could not Fast Refresh ("useWorldBadges" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/library/WorldBadges.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /engine2d/place/PlaceView2D.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/create/CreateGameScreen.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/create/CreateGameScreen.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/create/LookStep.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/PlayScreen.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/App.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/console/MultiplayerTab.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/market/PlayerName.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /net/RoomPanel.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/land/DoorPanel.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/land/ForeignDoorCard.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/WorkspaceScreen.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/library/LibraryScreen.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/library/SavesPanel.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/Hud.tsx (http://localhost:5198/@vite/client:964)
+[renderer:LOG] [vite] hot updated: /app/library/SavesPanel.tsx (http://localhost:5198/@vite/client:964)
+[quit] requested; closing windows
+[quit] windows closed 112 ms after the request; page calls finished
+[quit] 7 cleanups done 222 ms after the request: registerInferenceIpc 0 ms · registerAccountIpc 1 ms · appleLocalHelper 3 ms · startWorldsWatcher 2 ms · registerWorldIpc 1 ms · startModsWatcher 1 ms · createSidecar 108 ms
+[quit] exit 0 222 ms after the request

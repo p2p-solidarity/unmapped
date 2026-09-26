@@ -1,0 +1,176 @@
+What Qwen 3.5 4B (Q4_K_M) wrote in the origin calls of the builds after the fix (window.__qcap: the renderer's read-only onEvent listener), then each answer replayed through the same parser (refuseRedefined + parseOrigin with the world's prop list, which is every kind: neither bible has a Props line). The replayed complaints match the [repair] lines in f-main-launch2.log.txt.
+
+######## idea 1 (run-f03-build-1.json): build 1 = calls 1-3, build 2 = calls 4-5
+===== call 1 · 6491a3be-f5cf-49a2-9b92-0ff092badefc · usage {"prompt": 2694, "completion": 422, "cached": 0}
+root = Scene("Driftwood Point", "countryside", [floor, sky, sun, house1, house2, tree1, tree2, fence1, fence2, rock1, rock2, well1, sign1, elder, child, merchant])
+floor = Floor(18, 18, "sand")
+sky = Sky("#e8eaf6", "#cfd8dc", 0.05)
+sun = Light("ambient", "#fff9c4", 4)
+house1 = Prop("house", 4, 4, 1, "#81d4fa")
+house2 = Prop("house", 14, 4, 1, "#81d4fa")
+tree1 = Prop("tree", 2, 10, 1)
+tree2 = Prop("tree", 16, 10, 1)
+fence1 = Prop("fence", 8, 2, 1)
+fence2 = Prop("fence", 8, 16, 1)
+rock1 = Prop("rock", 10, 2, 1)
+rock2 = Prop("rock", 10, 16, 1)
+well1 = Prop("well", 10, 8, 1)
+sign1 = Prop("signpost", 12, 8, 1)
+elder = NPC("elder", "Elian", 5, 5, "elder", "calm", "#455a64", "hood", "basket")
+child = NPC("child", "Kip", 12, 2, "child", "joyful", "#ffcc80")
+merchant = NPC("merchant", "Mara", 15, 15, "merchant", "mournful", "#78909c", "straw", "basket")
+===== call 2 · 81973653-1d1b-4bea-93ec-c88ebe714ba2 · usage {"prompt": 3807, "completion": 438, "cached": 2690}
+root = Scene("Driftwood Point", "countryside", [floor, sky, sun, house1, house2, tree1, tree2, fence1, fence2, rock1, rock2, well1, sign1, elder, child, merchant])
+floor = Floor(18, 18, "sand")
+sky = Sky("#e8eaf6", "#cfd8dc", 0.05)
+sun = Light("sun", "#fff3d6", 1.2)
+house1 = Prop("house", 4, 4, 1, "#81d4fa")
+house2 = Prop("house", 14, 4, 1, "#81d4fa")
+tree1 = Prop("tree", 2, 10, 1)
+tree2 = Prop("tree", 16, 10, 1)
+fence1 = Prop("fence", 8, 2, 1)
+fence2 = Prop("fence", 8, 16, 1)
+rock1 = Prop("rock", 10, 2, 1)
+rock2 = Prop("rock", 10, 16, 1)
+well1 = Prop("well", 10, 8, 1)
+sign1 = Prop("signpost", 12, 8, 1)
+elder = NPC("elder", "Elian", 5, 5, "elder", "calm", "#455a64", "hood", "basket", "slim")
+child = NPC("child", "Kip", 12, 2, "child", "joyful", "#ffcc80", "child", "hood")
+merchant = NPC("merchant", "Mara", 15, 15, "merchant", "mournful", "#78909c", "straw", "basket", "tall")
+===== call 3 · 8c445dec-fa9e-4e56-8356-13c43a0fc42f · usage {"prompt": 3815, "completion": 438, "cached": 2690}
+root = Scene("Driftwood Point", "countryside", [floor, sky, sun, house1, house2, tree1, tree2, fence1, fence2, rock1, rock2, well1, sign1, elder, child, merchant])
+floor = Floor(18, 18, "sand")
+sky = Sky("#e8eaf6", "#cfd8dc", 0.05)
+sun = Light("sun", "#fff3d6", 1.2)
+house1 = Prop("house", 4, 4, 1, "#81d4fa")
+house2 = Prop("house", 14, 4, 1, "#81d4fa")
+tree1 = Prop("tree", 2, 10, 1)
+tree2 = Prop("tree", 16, 10, 1)
+fence1 = Prop("fence", 8, 2, 1)
+fence2 = Prop("fence", 8, 16, 1)
+rock1 = Prop("rock", 10, 2, 1)
+rock2 = Prop("rock", 10, 16, 1)
+well1 = Prop("well", 10, 8, 1)
+sign1 = Prop("signpost", 12, 8, 1)
+elder = NPC("elder", "Elian", 5, 5, "elder", "calm", "#455a64", "hood", "basket", "slim")
+child = NPC("child", "Kip", 12, 2, "child", "joyful", "#ffcc80", "child", "hood")
+merchant = NPC("merchant", "Mara", 15, 15, "merchant", "mournful", "#78909c", "straw", "basket", "tall")
+===== call 4 · feaba22c-7a1c-468f-882a-d8d6654de734 · usage {"prompt": 2694, "completion": 365, "cached": 2690}
+root = Scene("First Shore", "countryside", [ground, sky, sun, house1, house2, rock1, rock2, tree1, tree2, sign1, fence1, fence2, well1])
+ground = Floor(20, 20, "sand")
+sky = Sky("#e8e4d9", "#d6d3c8", 0.08)
+sun = Light("sun", "#f5f2e3", 4)
+house1 = Prop("house", 4, 4, 1)
+house2 = Prop("house", 12, 8, 1)
+rock1 = Prop("rock", 2, 2, 1)
+rock2 = Prop("rock", 18, 16, 1)
+tree1 = Prop("tree", 6, 10, 1)
+tree2 = Prop("tree", 14, 12, 1)
+sign1 = Prop("signpost", 8, 14, 1)
+fence1 = Prop("fence", 3, 12, 1)
+fence2 = Prop("fence", 17, 6, 1)
+well1 = Prop("well", 10, 2, 1)
+oliver = NPC("oliver", "Oliver", 7, 7, "farmer", "calm", "#5d6d4a")
+elara = NPC("elara", "Elara", 11, 10, "elder", "wary", "#7d8d9a")
+===== call 5 · ad8702ca-8f72-4169-9cf7-52d23284de72 · usage {"prompt": 3563, "completion": 371, "cached": 2690}
+root = Scene("First Shore", "countryside", [ground, sky, sun, house1, house2, rock1, rock2, tree1, tree2, sign1, fence1, fence2, well1, oliver, elara])
+ground = Floor(20, 20, "sand")
+sky = Sky("#e8e4d9", "#d6d3c8", 0.08)
+sun = Light("sun", "#f5f2e3", 4)
+house1 = Prop("house", 4, 4, 1)
+house2 = Prop("house", 12, 8, 1)
+rock1 = Prop("rock", 2, 2, 1)
+rock2 = Prop("rock", 18, 16, 1)
+tree1 = Prop("tree", 6, 10, 1)
+tree2 = Prop("tree", 14, 12, 1)
+sign1 = Prop("signpost", 8, 14, 1)
+fence1 = Prop("fence", 3, 12, 1)
+fence2 = Prop("fence", 17, 6, 1)
+well1 = Prop("well", 10, 2, 1)
+oliver = NPC("oliver", "Oliver", 7, 7, "farmer", "calm", "#5d6d4a")
+elara = NPC("elara", "Elara", 11, 10, "elder", "wary", "#7d8d9a")
+
+######## idea 2 (run-f06-build-2.json): build 1 = calls 1-3
+===== call 1 · bd152330-bb87-4f2f-89a5-7948e2ef1c09 · usage {"prompt": 2751, "completion": 425, "cached": 0}
+root = Scene("Wake of the Tea", "countryside", [ground, sky, sun, house1, house2, fence1, fence2, tree1, tree2, tree3, rock1, rock2, sign1, quest1])
+ground = Floor(20, 20, "grass")
+sky = Sky("#e3f2fd", "#dceefb", 0.15)
+sun = Light("sun", "#ffef9a", 4)
+house1 = Prop("house", 3, 8, 1)
+house2 = Prop("house", 17, 12, 1)
+fence1 = Prop("fence", 2, 2, 1)
+fence2 = Prop("fence", 19, 19, 1)
+tree1 = Prop("tree", 5, 5, 1)
+tree2 = Prop("tree", 12, 15, 1)
+tree3 = Prop("tree", 18, 3, 1)
+rock1 = Prop("rock", 7, 10, 1)
+rock2 = Prop("rock", 14, 7, 1)
+sign1 = Prop("signpost", 9, 9, 1)
+quest1 = Quest("The train waits for those who know the way.")
+oldman_chen = NPC("oldman_chen", "Old Man Chen", 8, 4, "elder", "calm", "#5d4a3b")
+girl_lin = NPC("girl_lin", "Girl Lin", 14, 6, "child", "joyful", "#6d7d4a")
+farmer_wang = NPC("farmer_wang", "Farmer Wang", 12, 18, "farmer", "wary", "#7a6b5c")
+===== call 2 · e1d495ff-5c10-47a4-91ec-f8947535a36e · usage {"prompt": 3833, "completion": 437, "cached": 2747}
+root = Scene("Wake of the Tea", "countryside", [ground, sky, sun, house1, house2, fence1, fence2, tree1, tree2, tree3, rock1, rock2, sign1, quest1, oldman_chen, girl_lin, farmer_wang])
+ground = Floor(20, 20, "grass")
+sky = Sky("#e3f2fd", "#dceefb", 0.15)
+sun = Light("sun", "#ffef9a", 4)
+house1 = Prop("house", 3, 8, 1)
+house2 = Prop("house", 17, 12, 1)
+fence1 = Prop("fence", 2, 2, 1)
+fence2 = Prop("fence", 19, 19, 1)
+tree1 = Prop("tree", 5, 5, 1)
+tree2 = Prop("tree", 12, 15, 1)
+tree3 = Prop("tree", 18, 3, 1)
+rock1 = Prop("rock", 7, 10, 1)
+rock2 = Prop("rock", 14, 7, 1)
+sign1 = Prop("signpost", 9, 9, 1)
+quest1 = Quest("The train waits for those who know the way.")
+oldman_chen = NPC("oldman_chen", "Old Man Chen", 8, 4, "elder", "calm", "#5d4a3b")
+girl_lin = NPC("girl_lin", "Girl Lin", 14, 6, "child", "joyful", "#6d7d4a")
+farmer_wang = NPC("farmer_wang", "Farmer Wang", 12, 18, "farmer", "wary", "#7a6b5c")
+===== call 3 · 7c28fd69-5885-481b-a9f8-42a2c60d2f50 · usage {"prompt": 3784, "completion": 441, "cached": 2747}
+root = Scene("Wake of the Tea", "countryside", [ground, sky, sun, house1, house2, fence1, fence2, tree1, tree2, tree3, rock1, rock2, sign1, quest1, oldman_chen, girl_lin, farmer_wang])
+ground = Floor(20, 20, "grass")
+sky = Sky("#e3f2fd", "#dceefb", 0.15)
+sun = Light("sun", "#ffef9a", 4)
+house1 = Prop("house", 3, 8, 1)
+house2 = Prop("house", 17, 12, 1)
+fence1 = Prop("fence", 2, 2, 1)
+fence2 = Prop("fence", 19, 19, 1)
+tree1 = Prop("tree", 5, 5, 1)
+tree2 = Prop("tree", 12, 15, 1)
+tree3 = Prop("tree", 18, 3, 1)
+rock1 = Prop("rock", 7, 10, 1)
+rock2 = Prop("rock", 14, 7, 1)
+sign1 = Prop("signpost", 9, 9, 1)
+quest1 = Quest("quest1", "The train waits for those who know the way.")
+oldman_chen = NPC("oldman_chen", "Old Man Chen", 8, 4, "elder", "calm", "#5d4a3b")
+girl_lin = NPC("girl_lin", "Girl Lin", 14, 6, "child", "joyful", "#6d7d4a")
+farmer_wang = NPC("farmer_wang", "Farmer Wang", 12, 18, "farmer", "wary", "#7a6b5c")
+
+######## replay
+### idea 1 (f03) call 1 {"prompt":2694,"completion":422,"cached":0}
+dsl-invalid-props: 2 statement(s) have arguments the engine cannot use. 1 problem(s) make this place unfit to start in.
+  - elder, merchant [NPC] NPC(...) has invalid arguments — body: Invalid option: expected one of "slim"|"stout"|"tall"|"child"|"elder"; hat: Invalid option: expected one of "none"|"straw"|"hood"|"crown"|"helm"|"horns"|"ribbon"|"halo"|"headband"
+  - (root) [Light] There is no sun.
+### idea 1 (f03) call 2 {"prompt":3807,"completion":438,"cached":2690}
+dsl-invalid-props: 2 statement(s) have arguments the engine cannot use.
+  - elder, merchant [NPC] NPC(...) has invalid arguments — body: Invalid option: expected one of "slim"|"stout"|"tall"|"child"|"elder"; hat: Invalid option: expected one of "none"|"straw"|"hood"|"crown"|"helm"|"horns"|"ribbon"|"halo"|"headband"; held: Invalid option: expected one of "none"|"staff"|"sword"|"lantern"|"basket"|"scroll"|"hammer"|"bow"|"fan"|"lute"|"spear"
+### idea 1 (f03) call 3 {"prompt":3815,"completion":438,"cached":2690}
+dsl-invalid-props: 2 statement(s) have arguments the engine cannot use.
+  - elder, merchant [NPC] NPC(...) has invalid arguments — body: Invalid option: expected one of "slim"|"stout"|"tall"|"child"|"elder"; hat: Invalid option: expected one of "none"|"straw"|"hood"|"crown"|"helm"|"horns"|"ribbon"|"halo"|"headband"; held: Invalid option: expected one of "none"|"staff"|"sword"|"lantern"|"basket"|"scroll"|"hammer"|"bow"|"fan"|"lute"|"spear"
+### idea 1 (f03) call 4 {"prompt":2694,"completion":365,"cached":2690}
+dsl-orphaned-statement: Defined but never used: oliver, elara.
+  orphaned: oliver, elara
+### idea 1 (f03) call 5 {"prompt":3563,"completion":371,"cached":2690}
+ACCEPTED: npcs 2, props 10, quests 0
+### idea 2 (f06) call 1 {"prompt":2751,"completion":425,"cached":0}
+dsl-invalid-props: 1 statement(s) of the Scene program are invalid. Defined but never used: oldman_chen, girl_lin, farmer_wang.
+  - quest1 [Quest] missing required field "/text" — signature: Quest(id*: string, text*: string)
+  orphaned: oldman_chen, girl_lin, farmer_wang
+### idea 2 (f06) call 2 {"prompt":3833,"completion":437,"cached":2747}
+dsl-invalid-props: 1 statement(s) of the Scene program are invalid.
+  - quest1 [Quest] missing required field "/text" — signature: Quest(id*: string, text*: string)
+### idea 2 (f06) call 3 {"prompt":3784,"completion":441,"cached":2747}
+ACCEPTED: npcs 3, props 10, quests 1

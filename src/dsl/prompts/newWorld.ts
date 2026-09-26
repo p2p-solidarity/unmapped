@@ -6,10 +6,14 @@
 import type { OpenUIError } from "@openuidev/lang-core";
 import { worldPropKinds } from "@shared/bible";
 import type { WorldBible } from "@shared/cartridge";
+import { ok, type Result } from "@shared/result";
 import { BIOMES, PROP_KINDS, type PropKind, type SceneGraph, type Tile } from "@shared/world";
 import { bibleLibrary, scenePromptLibrary } from "../libraries";
 import { clampText } from "../limits";
-import { propError } from "../parse/program";
+import { mergeDslErrors } from "../parse/complaints";
+import { dslError, failWith, propError } from "../parse/program";
+import { readScene } from "../parse/scene";
+import type { DslError } from "../types";
 import { languageName } from "./shared";
 
 export interface NewWorldContext {
@@ -88,7 +92,8 @@ export function originPrompt(ctx: NewWorldContext, bible: WorldBible): string {
       "Exactly one Sky and one sun Light: a daytime sky in the colours of this world.",
       `1 to 3 NPCs who live here. 4 to 20 Props from ${props.join(", ")}${fit}.`,
       "Walls only as short pieces of a building; no Wall may touch the edge of the Floor — every side stays open.",
-      "No Monster, Treasure, Exit, Trigger or Platform. At most one Quest.",
+      "No Monster, Treasure, Exit, Trigger or Platform. At most one Quest(id, text).",
+      'Stop a call after the last argument you need: leave the optional ones (marked ?) out, never write "none", "" or a word for them. Every colour is a "#rrggbb" string.',
       "The player wakes on the centre tile: keep it empty.",
       "root = Scene(name, biome, [children]) and the children list MUST include exactly one Floor.",
       "The example shows syntax only. Never reuse its words, places, biome or props.",
@@ -97,11 +102,27 @@ export function originPrompt(ctx: NewWorldContext, bible: WorldBible): string {
   });
 }
 
+/** How far a program with mistakes could be read (`readScene`), for the origin checks. */
+export interface OriginReading {
+  /** Components with a statement being sent back anyway: what they add is not called missing. */
+  refused: ReadonlySet<string>;
+  /** The root's children by component as written, readable or not: what counts as too many. */
+  written: ReadonlyMap<string, number>;
+}
+
+const READ_IN_FULL: OriginReading = { refused: new Set(), written: new Map() };
+
 /**
  * What makes an origin scene unfit for open land; each is a repair-round complaint. `props` is the
  * world's own prop list (its bible's style); a prop outside it is sent back like any other issue.
+ * `reading` keeps a program with mistakes from being told "0 residents" about residents refused
+ * only for a colour, and still tells it "5 residents" when two of the five were readable.
  */
-export function originIssues(graph: SceneGraph, props?: readonly PropKind[]): OpenUIError[] {
+export function originIssues(
+  graph: SceneGraph,
+  props?: readonly PropKind[],
+  reading: OriginReading = READ_IN_FULL,
+): OpenUIError[] {
   const issues: OpenUIError[] = [];
   const { width, depth } = graph.floor;
   if (!ORIGIN_TILES.includes(graph.floor.tile)) {
@@ -155,13 +176,46 @@ export function originIssues(graph: SceneGraph, props?: readonly PropKind[]): Op
       ),
     );
   }
-  if (graph.npcs.length < 1 || graph.npcs.length > 3) {
-    issues.push(
-      propError("NPC", `The scene has ${graph.npcs.length} residents.`, "Write 1 to 3 NPCs."),
-    );
+  const residents = Math.max(graph.npcs.length, reading.written.get("NPC") ?? 0);
+  if ((residents < 1 && !reading.refused.has("NPC")) || residents > 3) {
+    issues.push(propError("NPC", `The scene has ${residents} residents.`, "Write 1 to 3 NPCs."));
   }
-  if (!graph.lights.some((light) => light.kind === "sun")) {
+  if (!graph.lights.some((light) => light.kind === "sun") && !reading.refused.has("Light")) {
     issues.push(propError("Light", "There is no sun.", 'Add Light("sun", "#fff3d6", 1.2).'));
   }
   return issues;
+}
+
+/** The origin checks' complaints as one repair-round error. */
+export function originUnfit(issues: readonly OpenUIError[]): DslError {
+  return dslError({
+    code: "dsl-origin-unfit",
+    message: `${issues.length} problem(s) make this place unfit to start in.`,
+    hint: issues.map((issue) => `${issue.message} ${issue.hint ?? ""}`.trim()).join(" "),
+    errors: [...issues],
+  });
+}
+
+/**
+ * The place the player wakes in: its program and its fit in one step, so one repair round hears
+ * about both. A program with mistakes is still checked for fit as far as it could be read.
+ */
+export function parseOrigin(
+  source: string,
+  props?: readonly PropKind[],
+): Result<SceneGraph, DslError> {
+  const read = readScene(source);
+  const issues = read.graph === null ? [] : originIssues(read.graph, props, read);
+  const error = mergeDslErrors([read.error, issues.length === 0 ? null : originUnfit(issues)]);
+  if (error !== null) return failWith(error);
+  if (read.graph === null) {
+    return failWith(
+      dslError({
+        code: "dsl-parse",
+        message: "No Scene program could be read from the answer.",
+        hint: 'End with root = Scene("<place name>", "<biome>", [ ... ]).',
+      }),
+    );
+  }
+  return ok(read.graph);
 }

@@ -1,0 +1,28 @@
+{
+ "step": "a1",
+ "app": "CDP 9345, fresh userData, the snapshot with the fix, AETHER_TEST_MODEL_PATH=~/models/Qwen3.5-4B-Q4_K_M.gguf in main's environment. Settings → English; Model: llama.cpp · GGUF is the default; press 'Choose a GGUF model…' (main answers with the override instead of a native panel), then 'Use this model', then 'Start local server'; wait for ready; Check connection",
+ "actions": [
+  {"clickText": "設定"},
+  {"wait": 1000},
+  {"clickText": "English"},
+  {"wait": 2500},
+  {"eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); s?.scrollIntoView({ block: 'start' }); return s?.innerText })()"},
+  {"clickText": "Choose a GGUF model…"},
+  {"wait": 800},
+  {"eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); return { model: s?.innerText, buttons: [...(s?.querySelectorAll('button') ?? [])].map(b => ({ text: b.innerText.trim(), disabled: b.disabled })) } })()"},
+  {"clickText": "Use this model"},
+  {"wait": 1200},
+  {"eval": "(async () => { const S = await import('/state/index.ts'); return JSON.stringify(S.useInferenceStore.getState().config) })()"},
+  {"eval": "window.__q = { start: performance.now() }; 'mark'"},
+  {"clickText": "Start local server"},
+  {"eval": "(async () => { const S = await import('/state/index.ts'); const seen = []; for (let i = 0; i < 400; i++) { const sc = S.useInferenceStore.getState().sidecar; const k = sc?.state + ':' + (sc?.pid ?? ''); if (seen[seen.length - 1]?.k !== k) seen.push({ k, atMs: Math.round(performance.now() - window.__q.start) }); if (sc?.state === 'ready' || sc?.state === 'error') return JSON.stringify({ seen, sidecar: sc }); await new Promise(r => setTimeout(r, 250)); } return JSON.stringify({ seen, timeout: true }) })()"},
+  {"wait": 1000},
+  {"eval": "window.__q.probe = performance.now(); 'mark'"},
+  {"clickText": "Check connection"},
+  {"eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 80; i++) { const p = S.useInferenceStore.getState().probe; if (p.status === 'ready' && i > 2) return JSON.stringify({ ms: Math.round(performance.now() - window.__q.probe), probe: p.value }); await new Promise(r => setTimeout(r, 250)); } return 'still checking' })()"},
+  {"wait": 500},
+  {"eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); s?.scrollIntoView({ block: 'start' }); return s?.innerText })()"},
+  {"wait": 300},
+  {"shot": "docs/e2e/milestone-rev6-p4-no-servers/a01-00-sidecar-ready.jpg"}
+ ]
+}

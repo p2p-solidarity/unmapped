@@ -1,0 +1,71 @@
+{
+ "step": "f6",
+ "app": "CDP 9345, Create at idea 2's story step: Continue to build; read the quote; Build and play (Qwen writes the origin with the Scene GBNF; the fixed parser reports every kind of mistake per round); wait for 'Your world is published' / Play / an error (up to 10 min); on an error press Build and play again (at most 3 builds in all); Enter the world; wait for Play; read the origin, the chapter status and what Qwen wrote",
+ "actions": [
+  {
+   "clickText": "Continue to build"
+  },
+  {
+   "eval": "(async()=>{for(let i=0;i<80;i++){const q=document.querySelector('[data-quote]'); if(q&&q.innerText.includes('This draft')) return q.innerText; await new Promise(r=>setTimeout(r,250));} return document.querySelector('[data-quote]')?.innerText ?? document.body.innerText.slice(0, 1500);})()"
+  },
+  {
+   "eval": "document.querySelector('[data-quote]')?.scrollIntoView({block:'center'}); true"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/f06-00-quote.jpg"
+  },
+  {
+   "eval": "window.__qcap.length = 0; window.__q.builds = []; 'mark'"
+  },
+  {
+   "repeat": {
+    "times": 3,
+    "until": "(async()=>{const S=await import('/state/index.ts'); return /Your world is published/.test(document.body.innerText) || S.useSessionStore.getState().screen==='play'})()",
+    "actions": [
+     {
+      "eval": "window.__q.b0 = performance.now(); window.__q.cap0 = window.__qcap.length; 'mark'"
+     },
+     {
+      "clickText": "Build and play"
+     },
+     {
+      "wait": 2000
+     },
+     {
+      "eval": "(async()=>{const S=await import('/state/index.ts'); for(let i=0;i<2400;i++){const ms=Math.round(performance.now()-window.__q.b0); if(/Your world is published/.test(document.body.innerText)){window.__q.builds.push({published:ms, calls: window.__qcap.length-window.__q.cap0}); return window.__q.builds;} if(S.useSessionStore.getState().screen==='play'){window.__q.builds.push({play:ms, calls: window.__qcap.length-window.__q.cap0}); return window.__q.builds;} if(/Error · /.test(document.body.innerText) && !/Writing the place you wake in/.test(document.body.innerText)){window.__q.builds.push({errorAt:ms, calls: window.__qcap.length-window.__q.cap0, error: [...document.querySelectorAll('*')].filter(e => /^Error · /.test((e.innerText ?? '').trim())).map(e => e.parentElement?.innerText ?? e.innerText).slice(-1)[0]}); return window.__q.builds;} await new Promise(r=>setTimeout(r,250));} return {timeout:true, body: document.body.innerText.slice(0,800)};})()"
+     },
+     {
+      "shot": "docs/e2e/milestone-rev6-p4-no-servers/f06-01-built.jpg"
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(() => ({ lines: document.body.innerText.split('\\n').filter(Boolean).slice(0, 30) }))()"
+  },
+  {
+   "eval": "window.__q.e0 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Enter the world"
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); for(let i=0;i<960;i++){const s=S.useSessionStore.getState(); if(s.screen==='play'&&s.activeInstance){return {enterToPlayMs: Math.round(performance.now()-window.__q.e0), cartridge: s.activeInstance.cartridge.manifest.cartridgeId + '@' + s.activeInstance.cartridge.manifest.version, instance: s.activeInstance.instance.instanceId};} await new Promise(r=>setTimeout(r,250));} return document.body.innerText.slice(0,600);})()"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useWorldStore.getState(); const g = w.scene.status === 'ready' ? w.scene.value : null; const P = await import('/engine/playerProbe.ts'); const p = P.samplePlayer(); return JSON.stringify({ builds: window.__q.builds, pos: p && [Number(p.x.toFixed(2)), Number(p.z.toFixed(2))], hud: document.body.innerText.split('\\n').filter(Boolean).slice(0, 12), origin: g && { name: g.name, biome: g.biome, floor: g.floor, npcs: g.npcs.map(n => n.id + ':' + n.name + ':' + n.role + ':' + n.body + '/' + n.hat + '/' + n.held + '/' + n.accent), props: g.props.map(p => p.kind), lights: g.lights.map(l => l.kind), sky: g.sky, quests: g.quests } }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/f06-02-play.jpg"
+  },
+  {
+   "eval": "JSON.stringify(window.__qcap.map(c => ({ id: c.id, type: c.type, usage: c.usage, error: c.error && c.error.code, text: c.text })))"
+  }
+ ]
+}

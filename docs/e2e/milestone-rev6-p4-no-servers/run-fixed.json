@@ -1,0 +1,21 @@
+{
+ "env": {
+  "scratch": "SCR = a fresh empty dir (this run: the session scratchpad .../scratchpad/qfix); mkdir -p $SCR/snap $SCR/ud $SCR/files",
+  "tree": "git archive origin/main (27e623d) | tar -x -C $SCR/snap, then this change's files copied over it (src/dsl/{index.ts,parse/program.ts,parse/complaints.ts,parse/scene.ts,parse/sceneTerrain.ts,prompts/newWorld.ts}, src/main/inference/{modelIpc.ts,sidecar.ts,sidecarLog.ts}, src/renderer/narrative/{originScene.ts,pipeline.ts}, src/shared/story.ts, and the two tests); src/dsl/grammar.ts is origin/main's; ln -s <repo>/node_modules $SCR/snap/node_modules; no .env; electron.vite.config.ts renderer section gets cacheDir: resolve(__dirname, '.vite-cache') and server: { port: 5198, strictPort: true }",
+  "launch": "cd $SCR/snap && env OPENAI_API_KEY= THESYS_API_KEY= UNMAPPED_GATEWAY_URL= UNMAPPED_GATEWAY_KEY= UNMAPPED_COMMERCIAL= AETHER_TEST_MODEL_PATH=$HOME/models/Qwen3.5-4B-Q4_K_M.gguf AETHER_TEST_USER_DATA=$SCR/ud bunx electron-vite dev --remoteDebuggingPort 9345 > $SCR/files/main-launch<N>.log 2>&1",
+  "servers": "none: no world service, no gateway, no own key. llama-server is started by the app (Settings → Model → Choose a GGUF model… answered by AETHER_TEST_MODEL_PATH → Use this model → Start local server) on :8080. Before each launch nothing listened on 9345, 5198 or 8080",
+  "driver": "from the repo root: CDP_PORT=9345 bun scripts/cdp-drive.ts \"$(cat docs/e2e/milestone-rev6-p4-no-servers/<step>.json)\"",
+  "close": "CDP_PORT=9345 bun $SCR/close-app.ts (close-app.ts.txt); the app stops its own llama-server on quit; lsof -nP -iTCP:9345 -iTCP:5198 -iTCP:8080 -sTCP:LISTEN → nothing",
+  "system": "macOS 27.0, 16 GB Apple Silicon, Bun 1.3.6, Electron 44.3.0; llama.cpp 0.5.0 from Homebrew; other sessions' apps were running on the machine"
+ },
+ "model": "Qwen 3.5 4B Q4_K_M (~/models/Qwen3.5-4B-Q4_K_M.gguf, 2,740,937,888 bytes) on the app's llama-server sidecar (-c 16384 --jinja -ngl 99), with the Scene GBNF of origin/main (structural only)",
+ "sequence": [
+  "launch 1 (userData ud-launch1): run-a01-model-sidecar.json, run-a02a-create-world.json, run-a02b-create-world-retry.json — stopped at the story step (story-reply-invalid ×3: the story parser stopped at the first @@end); src/shared/story.ts fixed, copied into the snapshot; close-app.ts",
+  "launch 2 (fresh userData ud-launch2): run-f01-model-sidecar.json, run-f02-create-1.json, run-f03-build-1.json, run-f04a-chapter.json, run-f04b-walk-witness.json, run-f04c-second-chunk.json, Escape to the title, run-f05-create-2.json, run-f06-build-2.json; close-app.ts"
+ ],
+ "actions": [
+  {
+   "note": "the actions are the step files named in sequence, each replayed as-is"
+  }
+ ]
+}

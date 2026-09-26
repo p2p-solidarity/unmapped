@@ -25,13 +25,14 @@ import { sceneLibrary } from "../libraries";
 import { clampText, LIMITS, truncate } from "../limits";
 import { SCENE_PROPS } from "../schemas/scene";
 import type { DslError } from "../types";
+import { mergeDslErrors } from "./complaints";
 import {
   type ChildNode,
   childrenOf,
   createDialect,
   dslError,
   failWith,
-  parseRoot,
+  readProgram,
 } from "./program";
 import {
   readContract,
@@ -153,51 +154,21 @@ function collect(
   return { buckets: out, duplicateIds: scope.duplicates() };
 }
 
-/** Walk a parsed `Scene` root into the engine's SceneGraph. */
-export function toSceneGraph(root: ElementNode): Result<SceneGraph, DslError> {
-  const issues: OpenUIError[] = [];
-  const head = HEAD.safeParse(root.props);
-  if (!head.success) {
-    return failWith(
-      dslError({
-        code: "dsl-invalid-props",
-        message: `Scene(name, biome, children) is wrong: ${head.error.issues
-          .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
-          .join("; ")}`,
-        hint: 'Write root = Scene("<floor name>", "<biome>", [ ... ]) with a biome from the list.',
-      }),
-    );
-  }
+/** Where the other statements' arguments are still checked when there is no Floor to stand on. */
+const STAND_IN_FLOOR: FloorSpec = {
+  width: LIMITS.floor.max,
+  depth: LIMITS.floor.max,
+  tile: "grass",
+};
 
-  const children = childrenOf(root);
-  const floor = readFloor(children, issues);
-  if (floor === null) {
-    return failWith(
-      issues.length > 0
-        ? invalidProps(issues)
-        : dslError({
-            code: "dsl-missing-floor",
-            message: "The scene has no usable Floor, so there is nothing to stand on.",
-            hint: `Add exactly one Floor(width, depth, tile) with width and depth between ${LIMITS.floor.min} and ${LIMITS.floor.max}, and list it in the Scene children.`,
-          }),
-    );
-  }
-
-  const { buckets, duplicateIds } = collect(children, floor, issues);
-  if (issues.length > 0) return failWith(invalidProps(issues));
-  if (duplicateIds.length > 0) {
-    return failWith(
-      dslError({
-        code: "dsl-duplicate-id",
-        message: `These ids are used more than once: ${duplicateIds.join(", ")}.`,
-        hint: "Give every NPC, Monster, Treasure, Trigger and Quest its own unique ascii snake_case id.",
-      }),
-    );
-  }
-
-  return ok({
-    name: clampText(head.data.name, LIMITS.text.name),
-    biome: head.data.biome,
+function graphOf(
+  head: { name: string; biome: SceneGraph["biome"] },
+  floor: FloorSpec,
+  buckets: Buckets,
+): SceneGraph {
+  return {
+    name: clampText(head.name, LIMITS.text.name),
+    biome: head.biome,
     contract: buckets.contracts[0] ?? null,
     floor,
     patches: truncate(buckets.patches, LIMITS.maxPatches),
@@ -212,11 +183,105 @@ export function toSceneGraph(root: ElementNode): Result<SceneGraph, DslError> {
     sky: buckets.skies[0] ?? null,
     triggers: truncate(buckets.triggers, LIMITS.maxTriggers),
     quests: truncate(buckets.quests, LIMITS.maxQuests),
+  };
+}
+
+/**
+ * Walk a parsed `Scene` root as far as it goes: every statement is checked even when the head or
+ * the Floor is wrong, so one round names every mistake. `refused` gains the components whose
+ * statements were sent back; the graph is null when there is no head or no floor.
+ */
+function readRoot(
+  root: ElementNode,
+  refused: Set<string>,
+): { graph: SceneGraph | null; parts: DslError[]; written: Map<string, number> } {
+  const parts: DslError[] = [];
+  const issues: OpenUIError[] = [];
+  const head = HEAD.safeParse(root.props);
+  if (!head.success) {
+    parts.push(
+      dslError({
+        code: "dsl-invalid-props",
+        message: `Scene(name, biome, children) is wrong: ${head.error.issues
+          .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
+          .join("; ")}`,
+        hint: 'Write root = Scene("<floor name>", "<biome>", [ ... ]) with a biome from the list.',
+      }),
+    );
+  }
+
+  const children = childrenOf(root);
+  const written = new Map<string, number>();
+  for (const child of children) written.set(child.typeName, (written.get(child.typeName) ?? 0) + 1);
+  const floor = readFloor(children, issues);
+  // A Floor refused for its arguments is already a complaint; asking for one would add a second.
+  if (floor === null && issues.length === 0 && !refused.has("Floor")) {
+    parts.push(
+      dslError({
+        code: "dsl-missing-floor",
+        message: "The scene has no usable Floor, so there is nothing to stand on.",
+        hint: `Add exactly one Floor(width, depth, tile) with width and depth between ${LIMITS.floor.min} and ${LIMITS.floor.max}, and list it in the Scene children.`,
+      }),
+    );
+  }
+
+  const { buckets, duplicateIds } = collect(children, floor ?? STAND_IN_FLOOR, issues);
+  for (const issue of issues) if (issue.component !== undefined) refused.add(issue.component);
+  if (issues.length > 0) parts.push(invalidProps(issues));
+  if (duplicateIds.length > 0) {
+    parts.push(
+      dslError({
+        code: "dsl-duplicate-id",
+        message: `These ids are used more than once: ${duplicateIds.join(", ")}.`,
+        hint: "Give every NPC, Monster, Treasure, Trigger and Quest its own unique ascii snake_case id.",
+      }),
+    );
+  }
+  const graph = head.success && floor !== null ? graphOf(head.data, floor, buckets) : null;
+  return { graph, parts, written };
+}
+
+const unreadable = (): DslError =>
+  dslError({
+    code: "dsl-parse",
+    message: "No Scene program could be read from the answer.",
+    hint: 'End with root = Scene("<floor name>", "<biome>", [ ... ]).',
   });
+
+/** Walk a parsed `Scene` root into the engine's SceneGraph. */
+export function toSceneGraph(root: ElementNode): Result<SceneGraph, DslError> {
+  const read = readRoot(root, new Set());
+  const error = mergeDslErrors(read.parts);
+  if (error !== null) return failWith(error);
+  return read.graph === null ? failWith(unreadable()) : ok(read.graph);
+}
+
+/** A Scene program read as far as it goes, with everything wrong with it (null: nothing). */
+export interface SceneReading {
+  /** What could be read. With an error beside it, it is only for further checks — never kept. */
+  graph: SceneGraph | null;
+  error: DslError | null;
+  /** Components (public names) with a statement that was sent back or never used. */
+  refused: ReadonlySet<string>;
+  /** The root's children by component as the model wrote them, readable or not. */
+  written: ReadonlyMap<string, number>;
+}
+
+/** One Scene program, every kind of mistake in it at once (see `parseOrigin` for the origin's). */
+export function readScene(source: string): SceneReading {
+  const program = readProgram(dialect, source);
+  const refused = new Set(program.refused);
+  if (program.root === null) {
+    return { graph: null, error: program.error, refused, written: new Map() };
+  }
+  const read = readRoot(program.root, refused);
+  const error = mergeDslErrors([program.error, ...read.parts]);
+  return { graph: read.graph, error, refused, written: read.written };
 }
 
 /** Parse one `Scene` program (fences, prose and <think> blocks tolerated). */
 export function parseScene(source: string): Result<SceneGraph, DslError> {
-  const root = parseRoot(dialect, source);
-  return root.ok ? toSceneGraph(root.value) : root;
+  const read = readScene(source);
+  if (read.error !== null) return failWith(read.error);
+  return read.graph === null ? failWith(unreadable()) : ok(read.graph);
 }

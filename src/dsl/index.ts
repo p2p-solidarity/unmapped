@@ -87,6 +87,7 @@ export { parseDialogue, toDialogue } from "./parse/dialogue";
 export { type ErrandLand, parseErrands, readErrands } from "./parse/errand";
 export { parseItem, toItem } from "./parse/item";
 export { type PlaceContext, type PlaceDraft, parsePlace } from "./parse/place";
+export { refuseRedefined } from "./parse/program";
 export { parseRules } from "./parse/rules";
 export {
   normalRumorText,
@@ -95,7 +96,7 @@ export {
   type RumorDraft,
   serializeRumors,
 } from "./parse/rumor";
-export { parseScene, toSceneGraph } from "./parse/scene";
+export { parseScene, readScene, type SceneReading, toSceneGraph } from "./parse/scene";
 export { BIBLE_SHAPE, programShape } from "./programShape";
 export { ARCHETYPE_GUIDE } from "./prompts/archetypes";
 export {
@@ -131,6 +132,8 @@ export {
   ORIGIN_EXAMPLE,
   originIssues,
   originPrompt,
+  originUnfit,
+  parseOrigin,
 } from "./prompts/newWorld";
 export { PLACE_EXAMPLE } from "./prompts/place";
 export {

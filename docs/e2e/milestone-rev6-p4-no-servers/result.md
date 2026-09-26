@@ -282,3 +282,142 @@ Qwen's programs for builds 2–5, chapter 1, the (0, 0) witness and the (2, 0) r
 - `q-disk-after.txt`: `inference.json`, `usage.jsonl` by purpose, the history log, e1's progress and
   the draft.
 - Screenshots `q01-00` to `q07-02`.
+
+## Create on Qwen 4B, after the fix
+
+The same Qwen 3.5 4B on the app's own llama-server sidecar, after these changes: every kind of
+mistake goes back in one repair round, a placeholder in an optional argument reads as the argument
+left out, a statement the model defines twice goes back to it, the GGUF chooser has an E2E override,
+the sidecar keeps a log, and the story plan reads an `@@end` after each chapter. The Scene GBNF is
+still origin/main's structural one; a per-component grammar was tried and not kept (end of this
+section).
+
+**Verdict: pass for Create.** Two ideas, three builds: both ideas built and entered Play. Before the
+fix, 0 of 7 builds did.
+
+### Replay
+
+```bash
+SCR=$(mktemp -d); R=<repo root>; D=docs/e2e/milestone-rev6-p4-no-servers
+mkdir -p $SCR/snap $SCR/ud $SCR/files
+git -C $R archive origin/main | tar -x -C $SCR/snap          # 27e623d
+# copy this change's files over it (list in run-fixed.json → env.tree); no .env
+ln -s $R/node_modules $SCR/snap/node_modules
+# $SCR/snap/electron.vite.config.ts, renderer section, add:
+#   cacheDir: resolve(__dirname, ".vite-cache"), server: { port: 5198, strictPort: true },
+cp $D/close-app.ts.txt $SCR/close-app.ts
+blank="OPENAI_API_KEY= THESYS_API_KEY= UNMAPPED_GATEWAY_URL= UNMAPPED_GATEWAY_KEY= UNMAPPED_COMMERCIAL="
+(cd $SCR/snap && env $blank AETHER_TEST_MODEL_PATH=$HOME/models/Qwen3.5-4B-Q4_K_M.gguf \
+  AETHER_TEST_USER_DATA=$SCR/ud bunx electron-vite dev --remoteDebuggingPort 9345 > $SCR/files/main.log 2>&1) &
+cd $R; step() { CDP_PORT=9345 bun scripts/cdp-drive.ts "$(cat $D/$1)"; }
+for s in f01-model-sidecar f02-create-1 f03-build-1 f04a-chapter f04b-walk-witness f04c-second-chunk; do step run-$s.json; done
+CDP_PORT=9345 bun scripts/cdp-drive.ts '[{"hold":"Escape","ms":80}]'                          # to the title
+step run-f05-create-2.json; step run-f06-build-2.json
+CDP_PORT=9345 bun $SCR/close-app.ts; lsof -nP -iTCP:9345 -iTCP:5198 -iTCP:8080 -sTCP:LISTEN   # nothing
+```
+
+`run-fixed.json` has the env, the model and the sequence. Launch 2 is the f-series above, on a fresh
+userData. Launch 1 (the a-series) came first and is described below.
+
+### The a-series (launch 1): what it found
+
+- `run-a01-model-sidecar.json`: Settings → Model → **Choose a GGUF model…** answered with the
+  override (no native panel): "Model file: /Users/kidney/models/Qwen3.5-4B-Q4_K_M.gguf". Then Use this
+  model and Start local server: `starting` at 23 ms, `ready` at 3,786 ms (`a01-00`).
+- `run-a02a-create-world.json`: the first Write the world failed after 3 bible calls. Round 1:
+  Qwen wrote the same `root = Bible(...)` statement three times, and taboos as a string: "dsl-duplicate-id ·
+  Defined more than once: root. 2 statement(s) of the Bible program are invalid". Round 2: "field
+  "/taboos" expects array but got string". The third answer was refused for the same reason.
+- `run-a02b-create-world-retry.json`: Write the world again gave 7 cards (1 call, 7,262 ms,
+  `a02-00`). The story step then failed after 3 calls: "story-reply-invalid · The story plan is
+  incomplete: episodes — Too small: expected array to have >=3 items" (`a02-01`). But Qwen had written
+  5, 8 and 8 chapters, each closed by its own `@@end` (the format's one example ends so), and the
+  story parser stopped at the first `@@end`. Fixed in `src/shared/story.ts`: `@@end` closes one block,
+  and a second `@@logline` ends the reply. Its test (`tests/shared/storyReply.test.ts`) was written
+  first and failed 2 of 3 before the change. Launch 1 was closed; launch 2 ran on a fresh userData.
+
+### What was checked (launch 2)
+
+| # | Expected | Observed | Verdict |
+| --- | --- | --- | --- |
+| F1 | The GGUF chooser works over CDP; the app starts llama-server | "Choose a GGUF model…" then Use this model set `sidecar.modelPath` to the override. Start local server: `starting` (pid 97957) at 29 ms, **`ready` at 3,545 ms**. Check connection: "Connected · 2 ms", 16384 token context (server) (`f01-00`) | pass |
+| F2 | The sidecar keeps a log | `<userData>/logs/llama-server.log`: `[unmapped] start pid 97957: /opt/homebrew/bin/llama-server -m … -c 16384 --jinja --host 127.0.0.1 -ngl 99`, `[unmapped] ready on :8080 after 3528 ms`, every llama-server line with its arrival time, and `[unmapped] exit pid 97957: code 0, signal null` on quit. 532 lines / 73,845 bytes over launch 2 at llama.cpp's default verbosity (3), with a prompt and a generation timing line for each of its 36 requests (29 from the app, 7 the grammar probes of item 4 below) and no prompt text. Generation over the app's 36 calls in both launches (7 + 29): **11.7–27.0 tok/s** (the low end while a chapter and a witness ran at once) (`f-llama-server-launch2.log.txt`) | pass |
+| F3 | Idea 1 → world → story | "Salt-marsh villages where herons carry the mail." Write the world: 7 cards in **15,849 ms**, bible 2 calls (8,727 + 7,075 ms), 1 repair ("missing required field "/look""). Continue to the look: 3 sketches refused `no-api-key`; Continue without a picture. The story was ready **25,682 ms** after Continue to the look: 1 call (25,553 ms, 437+636 tokens), 5 chapters: The Grey Wind (meet) · The High Salts (climb) · The Broken Quill (search) · The Fog Lift (maze) · The First Delivery (meet) (`f02-00` to `f02-02`) | pass |
+| F4 | Idea 1 builds and enters | Quote: about 2,760 input tokens for the first call (real: 2,694), "Cost: free — this model runs on your own machine." **Build 1 failed** after 67,811 ms (3 calls). **Build 2 went straight to Play after 31,936 ms** (2 calls). Cartridge `salt-marsh-villages-where-f9f055@1.0.0`; origin "First Shore", countryside, 20×20 sand, Oliver (farmer) and Elara (elder), 10 props, a sun; the player at (10.5, 10.5). HUD: "This world: 8 calls · 19,775 in / 2,942 out · 11,909 cached" (`f03-00` to `f03-02`) | pass |
+| F5 | Idea 2 → world → story | "A mountain valley of tea terraces where an old railway still runs once a week." 7 cards in **11,584 ms** (1 bible call, 11,455 ms). Story ready **17,872 ms** after Continue to the look: 2 calls (3,163 ms with 38 output tokens, refused as fewer than 3 chapters; then 14,582 ms), 5 chapters: The First Green (meet) · Roots and Rust (search) · The High Climb (climb) · The Silent Maze (maze) · The Return Train (meet) (`f05-00` to `f05-02`) | pass |
+| F6 | Idea 2 builds and enters | Quote: about 2,828 input tokens (real: 2,751). **Build 1 went straight to Play after 66,809 ms** (3 calls). Cartridge `a-mountain-valley-of-tea-e9cd4f@1.0.0`; origin "Wake of the Tea", countryside, 20×20 grass, Old Man Chen (elder), Girl Lin (child) and Farmer Wang (farmer), 10 props, a sun, the quest "The train waits for those who know the way." HUD: "This world: 6 calls · 12,623 in / 1,912 out · 5,990 cached" (`f06-00` to `f06-02`) | pass |
+| F7 | Chapter 1 written in the background (idea 1) | "The Grey Wind": 2 calls (36,178 ms 2101+262; 26,344 ms 2766+330), 1 repair ("dsl-invalid-chapter · NPC keeper has 0 Talk statements"), accepted: history entry n4. Pip and Barnaby, 2 treasures, 0 foes, gate at (80.5, 16.5); HUD "Carry the note from the baker's daughter to the keeper, … · talk 2 · find 2" (`f04-00`) | pass |
+| F8 | Walk to the chapter 1 gate and witness one chunk (idea 1) | The pad walked the z = 16 ford into (1, 0) in 8.4 s. **(1, 0) written** 86.1 s into the walk: 2 calls (42,294 ms 3280+813; 38,529 ms 5145+812), 1 repair (a Prop kind outside the list). "Dusk Ledge", Maren (elder), 16 props (10 of them rocks): history entry n5 (`f04-01`, `f04-02`). Then to the gate: arrived at (78.9, 16.5) in 5.7 s, nearby = `episode:e1` "The Grey Wind" (`f04-03`) | pass |
+| F9 | Chunk writes that did not land | Idea 1, **(0, 0) on entry**: 3 calls (63,114 / 35,054 / 32,230 ms). Rounds: unused Lore (house1_lore, house2_lue, gulls_edge_custom), unused (house1_lue); final "dsl-invalid-chunk · 7 problem(s) with this Chunk program. 8 statement(s) stand inside the authored village (x < 20 and z < 20). (still invalid after 2 repair rounds)". Idea 1, **(2, 0)**: 3 calls (35,097 / 43,559 / 43,642 ms), 126.0 s. Rounds: a Lore link to "driftwood_bay@1,0" (3 problems, then 1); final "dsl-invalid-chunk · 2 problem(s) with this Chunk program. maren is called "Maren", like someone who already lives nearby or in the story. (still invalid after 2 repair rounds)" (`f04-04`). Idea 2, **(0, 0) on entry**: 3 calls (68,808 / 38,226 / 35,926 ms). Rounds: "7 problem(s) … NPC(...) has invalid arguments — accent: …", then "Referenced but never defined: rocks. Defined but never used: rock1, rock2, rock3."; no witness entry followed before quit (the app's last call ended 09:06:02, the quit came at 09:21:42 in the sidecar log) | recorded |
+| F10 | Chapter 1 (idea 2) | "The First Green": 2 calls (46,303 / 39,383 ms), 1 repair ("Defined but never used: talk_chen, talk_lin, talk_wang, c1, c2, c3"), accepted: history entry n4 | pass |
+| F11 | Stop everything | close-app.ts: "[quit] 7 cleanups done 579 ms after the request: … createSidecar 424 ms", "[quit] exit 0". The sidecar log ends with its exit line. lsof on 9345, 5198 and 8080: nothing; no llama-server process | pass |
+
+#### The builds, before and after (origin calls; `[repair]` lines from the renderer)
+
+| | Builds | Built | Origin calls | Repairs | Time per build |
+| --- | --- | --- | --- | --- | --- |
+| Before (7 builds above) | 7 | **0** | 21 | 14 | 49.5–84.4 s to an error |
+| After (launch 2) | 3 | **2** (both ideas) | 8 | 5 | 67.8 s to an error; 31.9 s and 66.8 s to Play |
+
+| Build | Round 1 | Round 2 | Round 3 | Tokens in / out |
+| --- | --- | --- | --- | --- |
+| Idea 1 · 1 (failed) | **invalid arguments** (elder, merchant: a hat and a held item written in the body and hat places) **+ origin fit** ("There is no sun": the Light was `"ambient"`) | invalid arguments (the same two; Qwen appended a body at the end instead of moving the others; the sun was fixed) | the same: final "dsl-invalid-props · 2 statement(s) have arguments the engine cannot use. NPC(...) has invalid arguments — body: …; hat: …; held: … (still invalid after 2 repair rounds)" | 10,316 / 1,298 |
+| Idea 1 · 2 (built) | **unused statements** (oliver, elara were not in the root's array) | accepted | — | 6,257 / 736 |
+| Idea 2 · 1 (built) | **invalid arguments** (`Quest` with only its text) **+ unused statements** (oldman_chen, girl_lin, farmer_wang) | invalid arguments (the Quest; the residents were fixed) | accepted (`Quest("quest1", …)`) | 10,368 / 1,303 |
+
+In round 1 of idea 2, the three unused residents did not also draw a "0 residents" complaint. The
+origin checks skip counts of a kind whose statements are being sent back anyway.
+
+What the fix does to the before-run's answers. This is a replay, not an app run: the 12 origin answers
+kept in `q-model-outputs.txt`, parsed by this change's parser (`f-model-outputs.txt` has this run's):
+
+- 2 are accepted as written. Build 4's first answer (body, hat, held and accent all `"none"`) and
+  build 3's second (accent `""`). So builds 3 and 4 would have ended at their second and first answer.
+- Build 2's first answer now draws, in one round: the unused quest, that quest's missing `text`, three
+  residents' bad body or hat, and "5 residents". Before, that round said only "Defined but never used: quest".
+- Build 5's first answer now draws the Prop kind "heron", the Quest's missing `text` and "0
+  residents" in one round. Before, it drew only the Prop kind.
+
+### Found on the way
+
+1. Items 3, 4 and 5 of the Qwen run above are fixed.
+   - A name defined twice goes back to the model: `refuseRedefined` runs on model output in
+     `generateProgram`. Stored content keeps "the last definition wins". 41 stored programs were
+     checked (every program in tests/fixtures and the four built-in cartridges): 0 define a name twice.
+   - The GGUF chooser has `AETHER_TEST_MODEL_PATH`.
+   - The sidecar keeps a log (F2).
+2. The build that failed was positional: Qwen wrote hat and held values into the body and hat places.
+   Asked to fix it, it appended a value instead of moving them. A parser cannot tell which value was
+   meant for which place, so this stays a repair.
+3. Witnessing is still the weak part on Qwen: 1 of 4 chunk writes landed here (11 calls). The
+   refusals were the witness's own checks: statements inside the authored village, a resident name
+   reused from the next chunk, and a Lore link to a place's id. That path belongs to another agent.
+4. **A per-component Scene grammar was tried and not kept.** It gave each call its arguments in order,
+   with enum literals, `"#rrggbb"` colours, `null` for a skipped optional and a bounded arity.
+   - Against captured answers (a GBNF recogniser in scratch): it accepted `ORIGIN_EXAMPLE`, the 5 scene
+     fixtures and both accepted answers of this run. Of the 16 answers (both runs) this parser refuses,
+     it refused 14. The other two had residents missing from the root's array, or none at all: nothing
+     a grammar sees. It also refused the 2 old answers the parser now accepts, for their `"none"` and `""`.
+   - Sent straight to this run's llama-server with a short prompt of its own (not the app's prompt):
+     - With thinking on (no `chat_template_kwargs`), 2 calls spent all 700 tokens on whitespace.
+     - With `enable_thinking: false` (as the app sends), 5 calls of 8.8–13.9 s each matched the grammar.
+     - But in 2 of those 5, Qwen left the Scene's children empty (`[]`) with every statement unused.
+       One wrote the Scene's parts inline and then a second `root = Quest(...)`, and one listed
+       nonsense names.
+   - No app build ran with it. So it is left out, and the draft is not in the tree.
+5. Not run:
+   - Playing chapter 1 through (talking to Pip and Barnaby, opening the finds).
+   - Witnessing on idea 2 beyond the spawn chunk.
+   - A third idea.
+   - Ollama.
+
+### Files (this section)
+
+- `run-fixed.json`: the env, the model and the sequence of both launches.
+- Step files: `run-a01-…`, `run-a02a-…`, `run-a02b-…` (launch 1), and `run-f01-…` to `run-f06-…` (launch 2).
+- `f-main-launch1.log.txt`, `f-main-launch2.log.txt`: the app logs, with every `[inference]` and
+  `[repair]` line quoted above.
+- `f-llama-server-launch1.log.txt`, `f-llama-server-launch2.log.txt`: the sidecar logs the app wrote
+  (launch 2's also holds the grammar probes of item 4, after 09:07).
+- `f-model-outputs.txt`: what Qwen wrote in the 8 origin calls, and each one replayed through the parser.
+- Screenshots `a01-00`, `a02-00`, `a02-01`, and `f01-00` to `f06-02`.

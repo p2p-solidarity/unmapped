@@ -1,0 +1,23 @@
+{
+ "step": "f4c",
+ "app": "CDP 9345, at chapter 1's gate on the idea-1 world, chunk (2, 0) being witnessed: wait until it settles (up to 10 min) and read it; then Escape and read the menu",
+ "actions": [
+  {
+   "repeat": {
+    "times": 1200,
+    "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['2,0']; return c !== undefined && c.status !== 'writing' })()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['2,0']; return JSON.stringify({ settledAfterMs: Math.round(performance.now() - window.__q.k0), status: c?.status, name: c?.scene?.name ?? null, npcs: c?.scene ? c.scene.npcs.map(p => p.id + ':' + p.name + ':' + p.role) : null, props: c?.scene ? c.scene.props.length : null, error: c?.error ? c.error.code + ' · ' + c.error.message.slice(0, 300) : null }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/f04-04-chunk-2-0.jpg"
+  }
+ ]
+}

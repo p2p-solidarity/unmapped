@@ -1,0 +1,109 @@
+{
+ "step": "f5",
+ "app": "CDP 9345, on the title after Escape from Play on the idea-1 world: the same as f2 (run-f02-create-1.json) with idea 2, a different place and look",
+ "actions": [
+  {
+   "eval": "(() => { if (!window.__qcapOn) { window.__qcap = []; window.seed.inference.onEvent((e) => { if (e.type === 'done' || e.type === 'error') window.__qcap.push({ id: e.id, type: e.type, at: Date.now(), text: e.text ?? null, usage: e.usage ?? null, error: e.error ?? null }); }); window.__qcapOn = true; } window.__q = { tries: [] }; return 'listening' })()"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "Create World"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Start a new game"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "clickText": "In one sentence, what is this land?"
+  },
+  {
+   "type": "A mountain valley of tea terraces where an old railway still runs once a week."
+  },
+  {
+   "wait": 400
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/f05-00-idea.jpg"
+  },
+  {
+   "repeat": {
+    "times": 3,
+    "until": "document.querySelectorAll('[data-card]').length === 7",
+    "actions": [
+     {
+      "eval": "window.__q.w0 = performance.now(); 'mark'"
+     },
+     {
+      "clickText": "Write the world"
+     },
+     {
+      "wait": 1500
+     },
+     {
+      "eval": "(async()=>{for(let i=0;i<2400;i++){if(document.querySelectorAll('[data-card]').length===7 && !document.querySelector('[data-stream-preview=world]')){window.__q.tries.push({world:'ok',ms:Math.round(performance.now()-window.__q.w0)}); return window.__q.tries;} if(/Error · /.test(document.body.innerText) && !document.querySelector('[data-stream-preview=world]')) {window.__q.tries.push({world:'error',ms:Math.round(performance.now()-window.__q.w0), error: [...document.querySelectorAll('*')].filter(e => /^Error · /.test((e.innerText ?? '').trim())).map(e => e.parentElement?.innerText ?? e.innerText).slice(-1)[0]}); return window.__q.tries;} await new Promise(r=>setTimeout(r,250));} return {timeout: true};})()"
+     }
+    ]
+   }
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "({name: [...document.querySelectorAll('input')].map(i => (i.closest('label')?.innerText ?? '').split('\\n')[0] + ' = ' + i.value).slice(0, 1), cards: [...document.querySelectorAll('[data-card]')].map(c => ({ card: c.dataset.card, text: c.querySelector('textarea')?.value }))})"
+  },
+  {
+   "eval": "document.querySelector('[data-card]')?.scrollIntoView({block:'start'}); true"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/f05-01-world-cards.jpg"
+  },
+  {
+   "eval": "window.__q.l0 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Continue to the look"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "clickText": "Continue without a picture"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "repeat": {
+    "times": 3,
+    "until": "[...document.querySelectorAll('button')].some(x => x.innerText.trim() === 'Continue to build' && !x.disabled)",
+    "actions": [
+     {
+      "eval": "(async()=>{for(let i=0;i<2400;i++){const b=[...document.querySelectorAll('button')].find(x=>x.innerText.trim()==='Continue to build'); if(b&&!b.disabled){window.__q.tries.push({story:'ok',msSinceLook:Math.round(performance.now()-window.__q.l0)}); return window.__q.tries;} if(/Error · story/.test(document.body.innerText)) {window.__q.tries.push({story:'error',msSinceLook:Math.round(performance.now()-window.__q.l0), error: [...document.querySelectorAll('*')].filter(e => /^Error · /.test((e.innerText ?? '').trim())).map(e => e.parentElement?.innerText ?? e.innerText).slice(-1)[0]}); return window.__q.tries;} await new Promise(r=>setTimeout(r,250));} return {timeout: true};})()"
+     },
+     {
+      "eval": "(() => { const b = [...document.querySelectorAll('button')].find(x => x.innerText.trim() === 'Continue to build'); if (b && !b.disabled) return 'ready'; const w = [...document.querySelectorAll('button')].find(x => x.innerText.trim() === 'Write the story'); w?.click(); return w ? 'pressed Write the story' : 'no button' })()"
+     },
+     {
+      "wait": 1500
+     }
+    ]
+   }
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(async () => { const r = await window.seed.createDrafts.list(); const d = await window.seed.createDrafts.read(r.value[0].draftId); const v = d.value; return JSON.stringify({ tries: window.__q.tries, step: v.step, look: v.look, story: v.story?.episodes?.map(e => ({ id: e.id, kind: e.kind, title: e.title, place: e.place })) ?? v.story }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-no-servers/f05-02-story.jpg"
+  }
+ ]
+}

@@ -181,9 +181,9 @@ bun run dev        # main + preload + renderer（HMR 対応）
 | プロバイダー | 既定のエンドポイント | キー | エンドツーエンド検証 |
 | --- | --- | --- | --- |
 | OpenAI | `https://api.openai.com/v1` · `gpt-5.4-mini` | 設定 → モデル、または `.env` の `OPENAI_API_KEY` | ✅ つくる、観測、章、場所 |
-| llama.cpp | `http://127.0.0.1:8080/v1` | 不要 | 未検証 |
+| llama.cpp | `http://127.0.0.1:8080/v1` | 不要 | アプリ自身の llama-server で Qwen 3.5 4B：「世界をつくる」が完成（3 回中 2 回）、章 ✅。観測は 4 回中 1 回（[no-servers](docs/e2e/milestone-rev6-p4-no-servers/result.md)） |
 | Ollama | `http://127.0.0.1:11434/v1` · `qwen3.5:4b` | 不要 | 未検証（検出のみ確認） |
-| Apple Foundation Models | アプリ内（Swift ブリッジ経由、サーバーなし） | 不要 | 会話・ツール・キャンセル・「世界をつくる」✅、作成後のプレイ（観測・章）は未検証（[apple-in-app](docs/e2e/milestone-apple-in-app/result.md) · [apple-create](docs/e2e/milestone-apple-create/result.md)） |
+| Apple Foundation Models | アプリ内（Swift ブリッジ経由、サーバーなし） | 不要 | 会話・ツール・キャンセル・「世界をつくる」・観測・章 ✅、すべて 4K のコンテキスト内でガイド付き生成（[apple-in-app](docs/e2e/milestone-apple-in-app/result.md) · [apple-create](docs/e2e/milestone-apple-create/result.md) · [witness-4k](docs/e2e/milestone-rev6-witness-names-4k/result.md) · [chapter-apple](docs/e2e/milestone-rev6-chapter-apple/result.md)） |
 | vLLM + [`thesysdev/OUI-1`](https://huggingface.co/thesysdev) | `http://127.0.0.1:8000/v1` | 不要 | 未検証 |
 | OpenUI Gateway | `https://api.thesys.dev/v1/embed` | `THESYS_API_KEY` | 未検証 |
 | 無料枠（UNMAPPED 生成ゲートウェイ） | `UNMAPPED_GATEWAY_URL`（開発版にはなし） | 設定 → アカウント、または `.env` の `UNMAPPED_GATEWAY_KEY` | 経路・計量・キャンセル・画像 ✅（テスト用の上流のみで検証、[p4-quota](docs/e2e/milestone-rev6-p4-quota/result.md)） |
@@ -504,7 +504,7 @@ UNMAPPED はバージョン `0.1.0`、動作はする初期段階の研究版で
 | 2 つのアプリプロセス間の大陸 | ✅ 検証済み（ローカルのシグナリング） | [rev6-land](docs/e2e/milestone-rev6-land/result.md) · [visitor-position](docs/e2e/milestone-rev6-followup-visitor-position/result.md) · [signaling](docs/e2e/milestone-rev6-followup-signaling/result.md) |
 | `.cartridge` の書き出しと読み込み、`.spire-backup` の復元 | ✅ 検証済み。ハッシュが一致 | [rev6-land](docs/e2e/milestone-rev6-land/result.md) |
 | クラウドモデル（OpenAI `gpt-5.4-mini`）と使用量台帳 | ✅ 検証済み | [model-switch](docs/e2e/milestone-model-switch/result.md) · [rev6-create](docs/e2e/milestone-rev6-create/result.md) |
-| ローカルモデルでの生成（llama.cpp、Ollama、Apple） | ⏳ Apple はアプリ内で「世界をつくる」を最後まで実行できる、4K のコンテキストにはまだ観測と章が収まらない、llama.cpp と Ollama の生成は未検証 | [model-switch](docs/e2e/milestone-model-switch/result.md) · [apple-in-app](docs/e2e/milestone-apple-in-app/result.md) · [apple-create](docs/e2e/milestone-apple-create/result.md) |
+| ローカルモデルでの生成（llama.cpp、Ollama、Apple） | ✅ Apple は 4K のコンテキスト内で「世界をつくる」・観測・章を書ける（ガイド付き）。llama.cpp の Qwen 3.5 4B は世界を完成でき（3 回中 2 回）章も書く、観測は 4 回中 1 回。Ollama は未実行 | [model-switch](docs/e2e/milestone-model-switch/result.md) · [apple-in-app](docs/e2e/milestone-apple-in-app/result.md) · [apple-create](docs/e2e/milestone-apple-create/result.md) · [witness-4k](docs/e2e/milestone-rev6-witness-names-4k/result.md) · [chapter-apple](docs/e2e/milestone-rev6-chapter-apple/result.md) · [no-servers](docs/e2e/milestone-rev6-p4-no-servers/result.md) |
 | AI ワールド（サンドボックスのインタラクティブワールド） | ✅ 検証済み | [acceptance](docs/experiments/interactive-works-acceptance.md) |
 | Sepolia 上の ENSv2 カートリッジ名（以前の `ens:setup` の親、削除済み） | ✅ 検証済み | [ensv2-cartridge-names](docs/e2e/milestone-ensv2-cartridge-names/result.md) |
 | 名前ツリーの ENS 名：リミックスのカートリッジ、プレイヤーのセーブ、更新、復元したバックアップのハッシュ照合 | ✅ Sepolia で検証済み | [lineage-names](docs/e2e/milestone-lineage-names/result.md) |

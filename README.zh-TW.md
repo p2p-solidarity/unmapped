@@ -165,9 +165,9 @@ bun run dev        # main + preload + renderer，支援 HMR
 | 提供者 | 預設端點 | 金鑰 | 端到端驗證 |
 | --- | --- | --- | --- |
 | OpenAI | `https://api.openai.com/v1` · `gpt-5.4-mini` | 設定 → 模型，或 `.env` 的 `OPENAI_API_KEY` | ✅ 創作、見證、章節、地點 |
-| llama.cpp | `http://127.0.0.1:8080/v1` | 不需要 | 尚未 |
+| llama.cpp | `http://127.0.0.1:8080/v1` | 不需要 | Qwen 3.5 4B 跑在 app 自己的 llama-server：「創造世界」建得出來（3 次成功 2 次）、章節 ✅；見證 4 次成 1 次（[no-servers](docs/e2e/milestone-rev6-p4-no-servers/result.md)） |
 | Ollama | `http://127.0.0.1:11434/v1` · `qwen3.5:4b` | 不需要 | 尚未（僅驗證偵測） |
-| Apple Foundation Models | 在應用程式內（它的 Swift 橋接；沒有伺服器） | 不需要 | 對話、工具、取消與「創造世界」✅；建立後的遊玩（見證、章節）尚未（[apple-in-app](docs/e2e/milestone-apple-in-app/result.md) · [apple-create](docs/e2e/milestone-apple-create/result.md)） |
+| Apple Foundation Models | 在應用程式內（它的 Swift 橋接；沒有伺服器） | 不需要 | 對話、工具、取消、「創造世界」、見證與章節 ✅，都在 4K 上下文內以結構化引導完成（[apple-in-app](docs/e2e/milestone-apple-in-app/result.md) · [apple-create](docs/e2e/milestone-apple-create/result.md) · [witness-4k](docs/e2e/milestone-rev6-witness-names-4k/result.md) · [chapter-apple](docs/e2e/milestone-rev6-chapter-apple/result.md)） |
 | vLLM 搭配 [`thesysdev/OUI-1`](https://huggingface.co/thesysdev) | `http://127.0.0.1:8000/v1` | 不需要 | 尚未 |
 | OpenUI Gateway | `https://api.thesys.dev/v1/embed` | `THESYS_API_KEY` | 尚未 |
 | 免費額度（UNMAPPED 生成閘道） | `UNMAPPED_GATEWAY_URL`（開發版沒有） | 設定 → 帳號，或 `.env` 的 `UNMAPPED_GATEWAY_KEY` | 路線、計量、取消與圖片 ✅，只以測試上游驗證（[p4-quota](docs/e2e/milestone-rev6-p4-quota/result.md)） |
@@ -448,7 +448,7 @@ skills: [skills]
 | 兩個 app 程序之間的大陸 | ✅ 已驗證（本機信令） | [rev6-land](docs/e2e/milestone-rev6-land/result.md) · [visitor-position](docs/e2e/milestone-rev6-followup-visitor-position/result.md) · [signaling](docs/e2e/milestone-rev6-followup-signaling/result.md) |
 | `.cartridge` 匯出／匯入、`.spire-backup` 還原 | ✅ 已驗證，雜湊相同 | [rev6-land](docs/e2e/milestone-rev6-land/result.md) |
 | 雲端模型（OpenAI `gpt-5.4-mini`）與用量帳本 | ✅ 已驗證 | [model-switch](docs/e2e/milestone-model-switch/result.md) · [rev6-create](docs/e2e/milestone-rev6-create/result.md) |
-| 本機模型生成（llama.cpp、Ollama、Apple） | ⏳ Apple 已能在應用程式內完整走完「創造世界」；它的 4K 上下文還放不下見證與章節；llama.cpp 與 Ollama 生成尚未 | [model-switch](docs/e2e/milestone-model-switch/result.md) · [apple-in-app](docs/e2e/milestone-apple-in-app/result.md) · [apple-create](docs/e2e/milestone-apple-create/result.md) |
+| 本機模型生成（llama.cpp、Ollama、Apple） | ✅ Apple 在 4K 上下文內寫得出「創造世界」、見證與章節（結構化引導）；llama.cpp 上的 Qwen 3.5 4B 建得出世界（3 次成功 2 次）並寫出章節，見證 4 次成 1 次；Ollama 未跑 | [model-switch](docs/e2e/milestone-model-switch/result.md) · [apple-in-app](docs/e2e/milestone-apple-in-app/result.md) · [apple-create](docs/e2e/milestone-apple-create/result.md) · [witness-4k](docs/e2e/milestone-rev6-witness-names-4k/result.md) · [chapter-apple](docs/e2e/milestone-rev6-chapter-apple/result.md) · [no-servers](docs/e2e/milestone-rev6-p4-no-servers/result.md) |
 | AI 世界（沙箱互動世界） | ✅ 已驗證 | [acceptance](docs/experiments/interactive-works-acceptance.md) |
 | Sepolia 上的 ENSv2 卡帶名稱（舊的 `ens:setup` 上層名稱，已移除） | ✅ 已驗證 | [ensv2-cartridge-names](docs/e2e/milestone-ensv2-cartridge-names/result.md) |
 | 名稱樹裡的 ENS 名稱：改編卡帶、玩家存檔、更新、還原後用雜湊找到名稱 | ✅ 已在 Sepolia 驗證 | [lineage-names](docs/e2e/milestone-lineage-names/result.md) |

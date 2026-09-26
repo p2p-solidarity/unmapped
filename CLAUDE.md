@@ -115,6 +115,11 @@ view or an account status, never a value. Every `UNMAPPED_*` / `QWEN_IMAGE_*` va
 - Parse with `@openuidev/lang-core` (`createParser(library.toJSONSchema())`), convert with
   `toSceneGraph / toDialogue / toItem`, and **repair** by re-prompting with `OpenUIError[]` at
   most twice (`src/dsl/repair.ts`). Unparseable after that → `error` state, not a fallback scene.
+  One round carries every kind of mistake at once (structure, names, arguments, the dialect's and
+  the origin's checks; ≤ 12 grouped lines, `src/dsl/parse/complaints.ts`). A placeholder ("none",
+  "", "null") in an optional argument the field cannot hold reads as left out; a required one is
+  never guessed. A name the model defines twice goes back (`refuseRedefined`, model output only);
+  stored content keeps the parser's "last definition wins", so nothing accepted before stops opening.
 - Every numeric prop is clamped to the ranges in `src/dsl/limits.ts` so a hallucinated `x=9000`
   cannot break the engine.
 
@@ -330,7 +335,7 @@ Components take **positional** args in zod key order (required first). Enums com
 - `inference/` owns `InferenceConfig` persistence (`inference.json` in userData), the OpenAI-SDK
   client (the effective config from `routeFor`, see "Routing, account and billing"), streaming →
   `inference:event`, abort, `/v1/models` probe, and the `llama-server` sidecar (spawn, health poll,
-  kill on quit). Apple's on-device model (`apple-fm`) is answered inside the app by the afm-bridge
+  kill on quit; everything it prints goes to `<userData>/logs/llama-server.log`, 2 MB, then `.1`). Apple's on-device model (`apple-fm`) is answered inside the app by the afm-bridge
   `chat` method (`appleChat.ts`: streamed partials, host tool calls, cancel) — never `fm serve`, no
   port, no `sudo fm license`; a saved `fm serve` config is read as Apple-in-app. The bridge budgets
   every Apple call with the model's own `tokenCount` (main sends `maxTokens` + `minTokens`, never its
@@ -890,6 +895,7 @@ window.seed.bundle.{ list(), export(worldId), inspect(), import(token, name), mo
 | `UNMAPPED_BILLING_BROWSER` | main (`billing/billing.ts`) | `none` logs the billing URL (E2E) |
 | `UNMAPPED_TEST_CLOCK_DAYS` | main (`histories/clock.ts`) | shifts main's world clock; only with `AETHER_TEST_USER_DATA` |
 | `AETHER_TEST_WORLD_PATH` | main (`bundles/dialog.ts`) | answers the `.world` dialogs; unpackaged + `AETHER_TEST_USER_DATA` only |
+| `AETHER_TEST_MODEL_PATH` | main (`inference/modelIpc.ts`) | an absolute `.gguf` path "Choose a GGUF model…" answers with; unpackaged + `AETHER_TEST_USER_DATA` only |
 | `UNMAPPED_SERVICE_TEST`, `SERVICE_CHAIN_*`, `SERVICE_PROVENANCE_ADDRESS` | service | test mode; the chain recorder |
 | `UNMAPPED_GATEWAY_TEST`, `GATEWAY_*`, `STRIPE_*`, upstream `keyEnv`s | gateway | test clock; commercial, live billing, CORS; keys |
 
@@ -904,8 +910,9 @@ migrated-share,together,variant,presence,fog,rumors,door,gift-race,continent}` a
 chain-live,mobile-proof,no-servers}`; progress rows 30–39 summarise them. `milestone-rev6-integrated-journey`
 walks one world through all of it (Create → play → share → together → co-owner → phone → `.world`
 → Apple on-device → quit and continue). Not run, because each needs a person: Stripe checkout (test
-and live), Qwen-Image on a GPU endpoint, a real phone, and witnessing
-on llama.cpp or Ollama (none here). Witnessing on Apple's 4K model runs guided (a compact prompt and
+and live), Qwen-Image on a GPU endpoint, a real phone, and Ollama. A local Qwen 3.5 4B on the app's
+llama.cpp sidecar builds a world in Create and witnesses on the land (`milestone-rev6-p4-no-servers`,
+"Create on Qwen 4B, after the fix"). Witnessing on Apple's 4K model runs guided (a compact prompt and
 a chunk schema): `milestone-rev6-witness-names-4k`. A flow you change is unverified again until its
 folder is re-run (Rule 2).
 

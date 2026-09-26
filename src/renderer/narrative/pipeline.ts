@@ -8,7 +8,7 @@
 // program *is* the output, and a grammar and a tool call cannot both constrain one completion.
 
 import type { DslError } from "@dsl";
-import { normalizeOutput, repairPrompt } from "@dsl";
+import { normalizeOutput, refuseRedefined, repairPrompt } from "@dsl";
 import { ORDER, type PromptPurpose } from "@harness";
 import { useInferenceStore } from "@renderer/state/inferenceStore";
 import type { ChunkCoord } from "@shared/chunks";
@@ -135,6 +135,9 @@ export function generateProgram<T>(input: GenerateProgramInput<T>): Promise<Resu
   const { accept, compact: _compact, ...spec } = input;
   return runProgram<T, DslError>(harnessChat(input.purpose, input.task, input.language, extra), {
     ...spec,
+    // What the model writes (never stored content) may not define a name twice: the parser would
+    // keep the last one without a word, so it goes back with the rest of the round's complaints.
+    parse: (source) => refuseRedefined(source, input.parse(source)),
     normalize: normalizeOutput,
     repair: repairPrompt,
     ...(accept === undefined

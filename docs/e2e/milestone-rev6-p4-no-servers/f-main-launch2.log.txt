@@ -1,0 +1,143 @@
+vite v8.3.0 building ssr environment for development...
+transforming...
+✓ 366 modules transformed.
+rendering chunks...
+out/main/chunks/heart-BgeRAx0t.png                          3.12 kB
+out/main/chunks/samurai_green-XToNlHMv.png                  4.78 kB
+out/main/chunks/samurai_blue-YZHMdpFI.png                   5.53 kB
+out/main/chunks/ninja_blue-COU3McFS.png                     6.13 kB
+out/main/chunks/tileset_floor-B7205uFr.png                 29.61 kB
+out/main/chunks/tileset_village_abandoned-BqZ8VUQR.png     31.77 kB
+out/main/index.js                                       1,310.25 kB
+
+✓ built in 116ms
+
+electron main process built successfully
+
+-----
+
+vite v8.3.0 building ssr environment for development...
+transforming...
+✓ 122 modules transformed.
+rendering chunks...
+out/preload/index.js  224.04 kB
+
+✓ built in 27ms
+
+electron preload scripts built successfully
+
+-----
+
+dev server running for the electron renderer process at:
+
+  ➜  Local:   http://localhost:5198/
+  ➜  Network: use --host to expose
+
+starting electron app...
+
+
+DevTools listening on ws://127.0.0.1:9345/devtools/browser/987aeea4-86d6-4894-b534-aff64ec3443b
+[apple-local] native-helper-start: spawn /private/tmp/claude-501/-Users-kidney-Workspace-Hackathon-unmapped/f9f28666-cad2-48fd-9df0-065e8d1d73c3/scratchpad/qfix/snap/native/afm-bridge/.build/debug/afm-bridge ENOENT
+[renderer:LOG] [vite] connecting... (http://localhost:5198/@vite/client:883)
+[renderer:LOG] [vite] connected. (http://localhost:5198/@vite/client:996)
+[renderer:LOG] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold (http://localhost:5198/@fs/private/tmp/claude-501/-Users-kidney-Workspace-Hackathon-unmapped/f9f28666-cad2-48fd-9df0-065e8d1d73c3/scratchpad/qfix/snap/.vite-cache/deps/client-CBEMz44o.js?v=d2512732:15861)
+[inference] chat c5c7e307-f0ce-4ca0-a0e9-d738d4648c9d · 2 messages · 0 tools
+[inference] done c5c7e307-f0ce-4ca0-a0e9-d738d4648c9d · bible · llamacpp local · 8727 ms · max 1400 · 1153+131 tokens (0 cached) · ctx 16384
+[renderer:WARN] [repair] 1/2 · dsl-invalid-props · 1 statement(s) of the Bible program are invalid. · missing required field "/look" — signature: Bible(premise*: string, tone*: string, rules*: array, taboos*: array, naming*: string, voice*: string, look*: string) (http://localhost:5198/@vite/client:299)
+[inference] chat 05b79b7a-1f1f-4cd0-95f9-03bc45816ca2 · 4 messages · 0 tools
+5:52:47 PM [vite] (client) [console.warn] [repair] 1/2 · dsl-invalid-props · 1 statement(s) of the Bible program are invalid. · missing required field "/look" — signature: Bible(premise*: string, tone*: string, rules*: array, taboos*: array, naming*: string, voice*: string, look*: string)
+[inference] done 05b79b7a-1f1f-4cd0-95f9-03bc45816ca2 · bible · llamacpp local · 7075 ms · max 1400 · 1612+141 tokens (1149 cached) · ctx 16384
+[inference] chat 7c48bc22-2f9a-4fec-94cf-c4e255880264 · 2 messages · 0 tools
+[look] fail cbd2d945-65e8-4577-b901-a29dbf4f16b0 · openai · gpt-image-1-mini · 1 ms · no-api-key
+[look] fail e4f2dc4a-eeb7-438c-8d19-f331259960fa · openai · gpt-image-1-mini · 0 ms · no-api-key
+[look] fail d19a17da-aea1-48cd-8496-f34070b51272 · openai · gpt-image-1-mini · 0 ms · no-api-key
+[inference] done 7c48bc22-2f9a-4fec-94cf-c4e255880264 · story · llamacpp local · 25553 ms · max 4000 · 437+636 tokens (0 cached) · ctx 16384
+[inference] chat 6491a3be-f5cf-49a2-9b92-0ff092badefc · 2 messages · 0 tools
+[inference] done 6491a3be-f5cf-49a2-9b92-0ff092badefc · origin · llamacpp local · 24955 ms · max 2200 · 2694+422 tokens (0 cached) · ctx 16384
+[renderer:WARN] [repair] 1/2 · dsl-invalid-props · 2 statement(s) have arguments the engine cannot use. 1 problem(s) make this place unfit to start in. · NPC(...) has invalid arguments — body: Invalid option: expected one of "slim"|"stout"|"tall"|"child"|"elder"; hat: Invalid option: expected one of "none"|"straw"|"hood"|"crown"|"helm"|"horns"|"ribbon" (http://localhost:5198/@vite/client:299)
+[inference] chat 81973653-1d1b-4bea-93ec-c88ebe714ba2 · 4 messages · 0 tools
+5:54:10 PM [vite] (client) [console.warn] [repair] 1/2 · dsl-invalid-props · 2 statement(s) have arguments the engine cannot use. 1 problem(s) make this place unfit to start in. · NPC(...) has invalid arguments — body: Invalid option: expected one of "slim"|"stout"|"tall"|"child"|"elder"; hat: Invalid option: expected one of "none"|"straw"|"hood"|"crown"|"helm"|"horns"|"ribbon"
+[inference] done 81973653-1d1b-4bea-93ec-c88ebe714ba2 · origin · llamacpp local · 21312 ms · max 2200 · 3807+438 tokens (2690 cached) · ctx 16384
+[renderer:WARN] [repair] 2/2 · dsl-invalid-props · 2 statement(s) have arguments the engine cannot use. · NPC(...) has invalid arguments — body: Invalid option: expected one of "slim"|"stout"|"tall"|"child"|"elder"; hat: Invalid option: expected one of "none"|"straw"|"hood"|"crown"|"helm"|"horns"|"ribbon" (http://localhost:5198/@vite/client:299)
+[inference] chat 8c445dec-fa9e-4e56-8356-13c43a0fc42f · 4 messages · 0 tools
+5:54:31 PM [vite] (client) [console.warn] [repair] 2/2 · dsl-invalid-props · 2 statement(s) have arguments the engine cannot use. · NPC(...) has invalid arguments — body: Invalid option: expected one of "slim"|"stout"|"tall"|"child"|"elder"; hat: Invalid option: expected one of "none"|"straw"|"hood"|"crown"|"helm"|"horns"|"ribbon"
+[inference] done 8c445dec-fa9e-4e56-8356-13c43a0fc42f · origin · llamacpp local · 21406 ms · max 2200 · 3815+438 tokens (2690 cached) · ctx 16384
+[inference] chat feaba22c-7a1c-468f-882a-d8d6654de734 · 2 messages · 0 tools
+[inference] done feaba22c-7a1c-468f-882a-d8d6654de734 · origin · llamacpp local · 14232 ms · max 2200 · 2694+365 tokens (2690 cached) · ctx 16384
+[renderer:WARN] [repair] 1/2 · dsl-orphaned-statement · Defined but never used: oliver, elara. (http://localhost:5198/@vite/client:299)
+[inference] chat ad8702ca-8f72-4169-9cf7-52d23284de72 · 4 messages · 0 tools
+5:55:07 PM [vite] (client) [console.warn] [repair] 1/2 · dsl-orphaned-statement · Defined but never used: oliver, elara.
+[inference] done ad8702ca-8f72-4169-9cf7-52d23284de72 · origin · llamacpp local · 17542 ms · max 2200 · 3563+371 tokens (2690 cached) · ctx 16384
+[inference] chat 32eb901b-e842-487b-8808-7477c880b542 · 2 messages · 0 tools
+[inference] chat 352a9a2d-fa70-437e-8313-425f7cef6816 · 2 messages · 0 tools
+[inference] done 352a9a2d-fa70-437e-8313-425f7cef6816 · chapter · llamacpp local · 36178 ms · max 2400 · 2101+262 tokens (0 cached) · ctx 16384
+[renderer:WARN] [repair] 1/2 · dsl-invalid-chapter · 1 problem(s) with this Chapter program. · NPC keeper has 0 Talk statements. (http://localhost:5198/@vite/client:299)
+[inference] chat 1aaa1d44-09b4-4754-8990-beb938e47ddb · 4 messages · 0 tools
+5:56:02 PM [vite] (client) [console.warn] [repair] 1/2 · dsl-invalid-chapter · 1 problem(s) with this Chapter program. · NPC keeper has 0 Talk statements.
+[inference] done 1aaa1d44-09b4-4754-8990-beb938e47ddb · chapter · llamacpp local · 26344 ms · max 2400 · 2766+330 tokens (2097 cached) · ctx 16384
+[inference] done 32eb901b-e842-487b-8808-7477c880b542 · witness · llamacpp local · 63114 ms · max 3200 · 3384+602 tokens (0 cached) · ctx 16384
+[renderer:WARN] [repair] 1/2 · dsl-orphaned-statement · Defined but never used: house1_lore, house2_lue, gulls_edge_custom. (http://localhost:5198/@vite/client:299)
+[inference] chat 5386d88b-d114-4fd6-8f1d-ad99d989af6d · 4 messages · 0 tools
+5:56:29 PM [vite] (client) [console.warn] [repair] 1/2 · dsl-orphaned-statement · Defined but never used: house1_lore, house2_lue, gulls_edge_custom.
+[inference] done 5386d88b-d114-4fd6-8f1d-ad99d989af6d · witness · llamacpp local · 35054 ms · max 3200 · 4746+720 tokens (3380 cached) · ctx 16384
+[renderer:WARN] [repair] 2/2 · dsl-orphaned-statement · Defined but never used: house1_lue. (http://localhost:5198/@vite/client:299)
+[inference] chat cf66b5ba-fa55-49b5-9448-b86022f0b05d · 4 messages · 0 tools
+5:57:04 PM [vite] (client) [console.warn] [repair] 2/2 · dsl-orphaned-statement · Defined but never used: house1_lue.
+[inference] done cf66b5ba-fa55-49b5-9448-b86022f0b05d · witness · llamacpp local · 32230 ms · max 3200 · 4960+676 tokens (3380 cached) · ctx 16384
+[inference] chat b43eb7a6-d29c-413f-b3ac-1fefab5dc223 · 2 messages · 0 tools
+[inference] done b43eb7a6-d29c-413f-b3ac-1fefab5dc223 · witness · llamacpp local · 42294 ms · max 3200 · 3280+813 tokens (0 cached) · ctx 16384
+[renderer:WARN] [repair] 1/2 · dsl-invalid-props · 1 statement(s) of the Chunk program are invalid. · field "/kind" expects one of ["tree", "rock", "torch", "crate", "altar", "well", "statue", "pillar", "fence", "flower", "mushroom", "signpost", "machine_gear", "conveyor", "boiler", "pipe_stack", "cra (http://localhost:5198/@vite/client:299)
+[inference] chat 23f489e8-9b6f-4c44-9b65-fb645b7cb477 · 4 messages · 0 tools
+5:58:41 PM [vite] (client) [console.warn] [repair] 1/2 · dsl-invalid-props · 1 statement(s) of the Chunk program are invalid. · field "/kind" expects one of ["tree", "rock", "torch", "crate", "altar", "well", "statue", "pillar", "fence", "flower", "mushroom", "signpost", "machine_gear", "conveyor", "boiler", "pipe_stack", "cra
+[inference] done 23f489e8-9b6f-4c44-9b65-fb645b7cb477 · witness · llamacpp local · 38529 ms · max 3200 · 5145+812 tokens (3276 cached) · ctx 16384
+[inference] chat aa2eb496-7bc0-45ce-b355-4c0da318c731 · 2 messages · 0 tools
+[inference] done aa2eb496-7bc0-45ce-b355-4c0da318c731 · witness · llamacpp local · 35097 ms · max 3200 · 3443+841 tokens (2764 cached) · ctx 16384
+[renderer:WARN] [repair] 1/2 · dsl-invalid-chunk · 3 problem(s) with this Chunk program. · Lore driftwood_bay links to "driftwood_bay@1,0", which is neither known lore nor Lore in this program. (http://localhost:5198/@vite/client:299)
+[inference] chat 26d63c2c-6fa1-4ca3-82a7-818eb5c2ca5c · 4 messages · 0 tools
+5:59:58 PM [vite] (client) [console.warn] [repair] 1/2 · dsl-invalid-chunk · 3 problem(s) with this Chunk program. · Lore driftwood_bay links to "driftwood_bay@1,0", which is neither known lore nor Lore in this program.
+[inference] done 26d63c2c-6fa1-4ca3-82a7-818eb5c2ca5c · witness · llamacpp local · 43559 ms · max 3200 · 5383+911 tokens (3439 cached) · ctx 16384
+[renderer:WARN] [repair] 2/2 · dsl-invalid-chunk · 1 problem(s) with this Chunk program. · Lore driftwood_bay links to "driftwood_bay@1,0", which is neither known lore nor Lore in this program. (http://localhost:5198/@vite/client:299)
+[inference] chat 7deb1fd1-ac8a-42fa-8f5f-31b620bc1f70 · 4 messages · 0 tools
+6:00:42 PM [vite] (client) [console.warn] [repair] 2/2 · dsl-invalid-chunk · 1 problem(s) with this Chunk program. · Lore driftwood_bay links to "driftwood_bay@1,0", which is neither known lore nor Lore in this program.
+[inference] done 7deb1fd1-ac8a-42fa-8f5f-31b620bc1f70 · witness · llamacpp local · 43642 ms · max 3200 · 5431+913 tokens (3439 cached) · ctx 16384
+[inference] chat 80b0b4d2-1c2e-40db-9a9c-6801230d3f1f · 2 messages · 0 tools
+[inference] done 80b0b4d2-1c2e-40db-9a9c-6801230d3f1f · bible · llamacpp local · 11455 ms · max 1400 · 1159+197 tokens (0 cached) · ctx 16384
+[inference] chat 2e931381-8366-4aa5-aef0-44c1bfa76382 · 2 messages · 0 tools
+[look] fail 1b276c46-03b9-42d1-b3e7-a0b20c46c52e · openai · gpt-image-1-mini · 1 ms · no-api-key
+[look] fail 9f01a957-6b6a-40a4-9a93-8391f8c75992 · openai · gpt-image-1-mini · 0 ms · no-api-key
+[look] fail 05b07e45-da94-404b-8b00-369980dc992c · openai · gpt-image-1-mini · 0 ms · no-api-key
+[inference] done 2e931381-8366-4aa5-aef0-44c1bfa76382 · story · llamacpp local · 3163 ms · max 4000 · 500+38 tokens (0 cached) · ctx 16384
+[renderer:WARN] [repair] story 1/2 · story-reply-invalid · The story plan is incomplete: episodes — Too small: expected array to have >=3 items (http://localhost:5198/@vite/client:299)
+[inference] chat 3a830ee8-e875-4358-97d8-c412d4509bb5 · 4 messages · 0 tools
+6:02:08 PM [vite] (client) [console.warn] [repair] story 1/2 · story-reply-invalid · The story plan is incomplete: episodes — Too small: expected array to have >=3 items
+[inference] done 3a830ee8-e875-4358-97d8-c412d4509bb5 · story · llamacpp local · 14582 ms · max 4000 · 596+374 tokens (496 cached) · ctx 16384
+[inference] chat bd152330-bb87-4f2f-89a5-7948e2ef1c09 · 2 messages · 0 tools
+[inference] done bd152330-bb87-4f2f-89a5-7948e2ef1c09 · origin · llamacpp local · 25053 ms · max 2200 · 2751+425 tokens (0 cached) · ctx 16384
+[renderer:WARN] [repair] 1/2 · dsl-invalid-props · 1 statement(s) of the Scene program are invalid. Defined but never used: oldman_chen, girl_lin, farmer_wang. · missing required field "/text" — signature: Quest(id*: string, text*: string) (http://localhost:5198/@vite/client:299)
+[inference] chat e1d495ff-5c10-47a4-91ec-f8947535a36e · 4 messages · 0 tools
+6:02:57 PM [vite] (client) [console.warn] [repair] 1/2 · dsl-invalid-props · 1 statement(s) of the Scene program are invalid. Defined but never used: oldman_chen, girl_lin, farmer_wang. · missing required field "/text" — signature: Quest(id*: string, text*: string)
+[inference] done e1d495ff-5c10-47a4-91ec-f8947535a36e · origin · llamacpp local · 20712 ms · max 2200 · 3833+437 tokens (2747 cached) · ctx 16384
+[renderer:WARN] [repair] 2/2 · dsl-invalid-props · 1 statement(s) of the Scene program are invalid. · missing required field "/text" — signature: Quest(id*: string, text*: string) (http://localhost:5198/@vite/client:299)
+6:03:18 PM [vite] (client) [console.warn] [repair] 2/2 · dsl-invalid-props · 1 statement(s) of the Scene program are invalid. · missing required field "/text" — signature: Quest(id*: string, text*: string)
+[inference] chat 7c28fd69-5885-481b-a9f8-42a2c60d2f50 · 4 messages · 0 tools
+[inference] done 7c28fd69-5885-481b-a9f8-42a2c60d2f50 · origin · llamacpp local · 20711 ms · max 2200 · 3784+441 tokens (2747 cached) · ctx 16384
+[inference] chat fe3228af-99ec-45c8-89ad-0106e56dd62d · 2 messages · 0 tools
+[inference] chat 694de86a-afbf-434c-b7ac-8e5ce6c5fe7c · 2 messages · 0 tools
+[inference] done 694de86a-afbf-434c-b7ac-8e5ce6c5fe7c · chapter · llamacpp local · 46303 ms · max 2400 · 2158+400 tokens (0 cached) · ctx 16384
+[renderer:WARN] [repair] 1/2 · dsl-orphaned-statement · Defined but never used: talk_chen, talk_lin, talk_wang, c1, c2, c3. (http://localhost:5198/@vite/client:299)
+6:04:25 PM [vite] (client) [console.warn] [repair] 1/2 · dsl-orphaned-statement · Defined but never used: talk_chen, talk_lin, talk_wang, c1, c2, c3.
+[inference] chat fc9a3b4e-ca9c-44ad-869e-f5b822255a2f · 4 messages · 0 tools
+[inference] done fe3228af-99ec-45c8-89ad-0106e56dd62d · witness · llamacpp local · 68808 ms · max 3200 · 3474+672 tokens (0 cached) · ctx 16384
+[renderer:WARN] [repair] 1/2 · dsl-invalid-chunk · 7 problem(s) with this Chunk program. · NPC(...) has invalid arguments — accent: trim colour must be a hex colour like "#8ab6ff" (http://localhost:5198/@vite/client:299)
+[inference] chat 66cf3793-cf6d-457b-9a77-07a040f95844 · 4 messages · 0 tools
+6:04:47 PM [vite] (client) [console.warn] [repair] 1/2 · dsl-invalid-chunk · 7 problem(s) with this Chunk program. · NPC(...) has invalid arguments — accent: trim colour must be a hex colour like "#8ab6ff"
+[inference] done fc9a3b4e-ca9c-44ad-869e-f5b822255a2f · chapter · llamacpp local · 39383 ms · max 2400 · 3129+420 tokens (2154 cached) · ctx 16384
+[inference] done 66cf3793-cf6d-457b-9a77-07a040f95844 · witness · llamacpp local · 38226 ms · max 3200 · 5261+665 tokens (3470 cached) · ctx 16384
+[renderer:WARN] [repair] 2/2 · dsl-unresolved-reference · Referenced but never defined: rocks. Defined but never used: rock1, rock2, rock3. (http://localhost:5198/@vite/client:299)
+[inference] chat 9db1166c-f6bf-42c6-863d-1ad31d29bc6c · 4 messages · 0 tools
+6:05:26 PM [vite] (client) [console.warn] [repair] 2/2 · dsl-unresolved-reference · Referenced but never defined: rocks. Defined but never used: rock1, rock2, rock3.
+[inference] done 9db1166c-f6bf-42c6-863d-1ad31d29bc6c · witness · llamacpp local · 35926 ms · max 3200 · 5030+748 tokens (3470 cached) · ctx 16384
+[quit] requested; closing windows
+[quit] windows closed 149 ms after the request; page calls finished
+[quit] 7 cleanups done 579 ms after the request: registerInferenceIpc 2 ms · registerAccountIpc 1 ms · appleLocalHelper 10 ms · startWorldsWatcher 9 ms · startModsWatcher 0 ms · registerWorldIpc 103 ms · createSidecar 424 ms
+[quit] exit 0 580 ms after the request

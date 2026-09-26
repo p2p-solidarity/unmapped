@@ -1,0 +1,32 @@
+{
+ "step": "a2a",
+ "app": "CDP 9345, Settings open, Qwen 4B on the app's sidecar (ready). Install a read-only listener on window.seed.inference.onEvent that keeps each finished call (window.__qcap). Escape; Create World → Start a new game; type idea 1; Write the world; wait for the 7 cards; Continue to the look (no image provider: the sketches are refused); Continue without a picture; wait until 'Continue to build' is enabled; read the chapters",
+ "actions": [
+  {"eval": "(() => { if (!window.__qcapOn) { window.__qcap = []; window.seed.inference.onEvent((e) => { if (e.type === 'done' || e.type === 'error') window.__qcap.push({ id: e.id, type: e.type, at: Date.now(), text: e.text ?? null, usage: e.usage ?? null, error: e.error ?? null }); }); window.__qcapOn = true; } window.__q = {}; return 'listening' })()"},
+  {"hold": "Escape", "ms": 80},
+  {"wait": 800},
+  {"clickText": "Create World"},
+  {"wait": 1500},
+  {"clickText": "Start a new game"},
+  {"wait": 2500},
+  {"clickText": "In one sentence, what is this land?"},
+  {"type": "Salt-marsh villages where herons carry the mail."},
+  {"wait": 400},
+  {"eval": "window.__q.w0 = performance.now(); 'mark'"},
+  {"clickText": "Write the world"},
+  {"eval": "(async()=>{for(let i=0;i<2400;i++){if(document.querySelectorAll('[data-card]').length===7 && !document.querySelector('[data-stream-preview=world]')){return {worldMs:Math.round(performance.now()-window.__q.w0)};} if(/Error · /.test(document.body.innerText)) return {atMs: Math.round(performance.now()-window.__q.w0), error: [...document.querySelectorAll('*')].filter(e => /^Error · /.test((e.innerText ?? '').trim())).map(e => e.parentElement?.innerText ?? e.innerText).slice(-1)[0]}; await new Promise(r=>setTimeout(r,250));} return {timeout: true, body: document.body.innerText.slice(0,800)};})()"},
+  {"wait": 800},
+  {"eval": "({name: [...document.querySelectorAll('input')].map(i => (i.closest('label')?.innerText ?? '').split('\\n')[0] + ' = ' + i.value), cards: [...document.querySelectorAll('[data-card]')].map(c => ({ card: c.dataset.card, text: c.querySelector('textarea')?.value }))})"},
+  {"eval": "document.querySelector('[data-card]')?.scrollIntoView({block:'start'}); true"},
+  {"shot": "docs/e2e/milestone-rev6-p4-no-servers/a02-00-world-cards.jpg"},
+  {"eval": "window.__q.l0 = performance.now(); 'mark'"},
+  {"clickText": "Continue to the look"},
+  {"wait": 2500},
+  {"clickText": "Continue without a picture"},
+  {"wait": 1500},
+  {"eval": "(async()=>{for(let i=0;i<2400;i++){const b=[...document.querySelectorAll('button')].find(x=>x.innerText.trim()==='Continue to build'); if(b&&!b.disabled) return {storyReadyAfterLookMs:Math.round(performance.now()-window.__q.l0)}; if(/Error · /.test(document.body.innerText) && !/Continue without a picture/.test(document.body.innerText)) return {atMs: Math.round(performance.now()-window.__q.l0), error: [...document.querySelectorAll('*')].filter(e => /^Error · /.test((e.innerText ?? '').trim())).map(e => e.parentElement?.innerText ?? e.innerText).slice(-1)[0]}; await new Promise(r=>setTimeout(r,250));} return {timeout: true, body: document.body.innerText.slice(0,800)};})()"},
+  {"wait": 800},
+  {"eval": "(async () => { const r = await window.seed.createDrafts.list(); const d = await window.seed.createDrafts.read(r.value[0].draftId); const v = d.value; return JSON.stringify({ step: v.step, look: v.look, story: v.story?.episodes?.map(e => ({ id: e.id, kind: e.kind, title: e.title })) ?? v.story }) })()"},
+  {"shot": "docs/e2e/milestone-rev6-p4-no-servers/a02-01-story-error.jpg"}
+ ]
+}

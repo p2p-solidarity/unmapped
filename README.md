@@ -187,9 +187,9 @@ Next, open **Title → Settings → Model** and choose where the words come from
 | Provider | Default endpoint | Key | Verified end to end |
 | --- | --- | --- | --- |
 | OpenAI | `https://api.openai.com/v1` · `gpt-5.4-mini` | Settings → Model, or `OPENAI_API_KEY` in `.env` | ✅ Create, witnessing, chapters, places |
-| llama.cpp | `http://127.0.0.1:8080/v1` | none | not yet |
+| llama.cpp | `http://127.0.0.1:8080/v1` | none | Qwen 3.5 4B on the app's own llama-server: Create builds (2 of 3 builds), chapters ✅; witnessing lands 1 of 4 ([no-servers](docs/e2e/milestone-rev6-p4-no-servers/result.md)) |
 | Ollama | `http://127.0.0.1:11434/v1` · `qwen3.5:4b` | none | not yet (detection only) |
-| Apple Foundation Models | inside the app (its Swift bridge; no server) | none | chat, tools, cancel and Create ✅; play after Create (witnessing, chapters) not yet ([apple-in-app](docs/e2e/milestone-apple-in-app/result.md) · [apple-create](docs/e2e/milestone-apple-create/result.md)) |
+| Apple Foundation Models | inside the app (its Swift bridge; no server) | none | chat, tools, cancel, Create, witnessing and chapters ✅ inside its 4K context, guided ([apple-in-app](docs/e2e/milestone-apple-in-app/result.md) · [apple-create](docs/e2e/milestone-apple-create/result.md) · [witness-4k](docs/e2e/milestone-rev6-witness-names-4k/result.md) · [chapter-apple](docs/e2e/milestone-rev6-chapter-apple/result.md)) |
 | vLLM serving [`thesysdev/OUI-1`](https://huggingface.co/thesysdev) | `http://127.0.0.1:8000/v1` | none | not yet |
 | OpenUI Gateway | `https://api.thesys.dev/v1/embed` | `THESYS_API_KEY` | not yet |
 | Free allowance (the UNMAPPED generation gateway) | `UNMAPPED_GATEWAY_URL` (dev builds have none) | Settings → Account, or `UNMAPPED_GATEWAY_KEY` in `.env` | routing, metering, cancel and pictures ✅ against a test upstream only ([p4-quota](docs/e2e/milestone-rev6-p4-quota/result.md)) |
@@ -525,7 +525,7 @@ screenshots.
 | Continents across two app processes | ✅ verified with local signaling | [rev6-land](docs/e2e/milestone-rev6-land/result.md) · [visitor-position](docs/e2e/milestone-rev6-followup-visitor-position/result.md) · [signaling](docs/e2e/milestone-rev6-followup-signaling/result.md) |
 | `.cartridge` export/import, `.spire-backup` restore | ✅ verified, identical hashes | [rev6-land](docs/e2e/milestone-rev6-land/result.md) |
 | Cloud model (OpenAI `gpt-5.4-mini`), usage ledger | ✅ verified | [model-switch](docs/e2e/milestone-model-switch/result.md) · [rev6-create](docs/e2e/milestone-rev6-create/result.md) |
-| Local model generation (llama.cpp, Ollama, Apple) | ⏳ Apple runs Create end to end inside the app; its 4K context does not yet fit witnessing or chapters; llama.cpp and Ollama generation not yet | [model-switch](docs/e2e/milestone-model-switch/result.md) · [apple-in-app](docs/e2e/milestone-apple-in-app/result.md) · [apple-create](docs/e2e/milestone-apple-create/result.md) |
+| Local model generation (llama.cpp, Ollama, Apple) | ✅ Apple writes Create, witnesses and chapters inside its 4K context (guided); Qwen 3.5 4B on llama.cpp builds a world (2 of 3 builds) and writes chapters, witnesses land 1 of 4; Ollama not run | [model-switch](docs/e2e/milestone-model-switch/result.md) · [apple-in-app](docs/e2e/milestone-apple-in-app/result.md) · [apple-create](docs/e2e/milestone-apple-create/result.md) · [witness-4k](docs/e2e/milestone-rev6-witness-names-4k/result.md) · [chapter-apple](docs/e2e/milestone-rev6-chapter-apple/result.md) · [no-servers](docs/e2e/milestone-rev6-p4-no-servers/result.md) |
 | AI Worlds (sandboxed interactive worlds) | ✅ verified | [acceptance](docs/experiments/interactive-works-acceptance.md) |
 | ENSv2 cartridge names on Sepolia (the older `ens:setup` parent, since removed) | ✅ verified | [ensv2-cartridge-names](docs/e2e/milestone-ensv2-cartridge-names/result.md) |
 | ENS names in the lineage tree: a remix cartridge, a player's save, its update, a restored backup found by hash | ✅ verified on Sepolia | [lineage-names](docs/e2e/milestone-lineage-names/result.md) |
