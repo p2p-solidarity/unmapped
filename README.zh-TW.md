@@ -141,7 +141,7 @@ bun run dev        # main + preload + renderer，支援 HMR
 | OpenAI | `https://api.openai.com/v1` · `gpt-5.4-mini` | 設定 → 模型，或 `.env` 的 `OPENAI_API_KEY` | ✅ 創作、見證、章節、地點 |
 | llama.cpp | `http://127.0.0.1:8080/v1` | 不需要 | 尚未 |
 | Ollama | `http://127.0.0.1:11434/v1` · `qwen3.5:4b` | 不需要 | 尚未（僅驗證偵測） |
-| Apple Foundation Models | `fm serve`，位於 `127.0.0.1:11535` | 不需要（需先執行一次 `sudo fm license`） | 尚未（僅驗證偵測） |
+| Apple Foundation Models | 在應用程式內（它的 Swift 橋接；沒有伺服器） | 不需要 | 對話、工具、取消與「創造世界」✅；建立後的遊玩（見證、章節）尚未（[apple-in-app](docs/e2e/milestone-apple-in-app/result.md) · [apple-create](docs/e2e/milestone-apple-create/result.md)） |
 | vLLM 搭配 [`thesysdev/OUI-1`](https://huggingface.co/thesysdev) | `http://127.0.0.1:8000/v1` | 不需要 | 尚未 |
 | OpenUI Gateway | `https://api.thesys.dev/v1/embed` | `THESYS_API_KEY` | 尚未 |
 | 任何 OpenAI 相容伺服器 | 你的網址 | 選填 | — |
@@ -330,7 +330,7 @@ skills: [skills]
 | 兩個 app 程序之間的大陸 | ✅ 已驗證（本機信令） | [rev6-land](docs/e2e/milestone-rev6-land/result.md) · [visitor-position](docs/e2e/milestone-rev6-followup-visitor-position/result.md) · [signaling](docs/e2e/milestone-rev6-followup-signaling/result.md) |
 | `.cartridge` 匯出／匯入、`.spire-backup` 還原 | ✅ 已驗證，雜湊相同 | [rev6-land](docs/e2e/milestone-rev6-land/result.md) |
 | 雲端模型（OpenAI `gpt-5.4-mini`）與用量帳本 | ✅ 已驗證 | [model-switch](docs/e2e/milestone-model-switch/result.md) · [rev6-create](docs/e2e/milestone-rev6-create/result.md) |
-| 本機模型生成（llama.cpp、Ollama、Apple） | ⏳ 已驗證偵測，生成尚未 | [model-switch](docs/e2e/milestone-model-switch/result.md) |
+| 本機模型生成（llama.cpp、Ollama、Apple） | ⏳ Apple 已能在應用程式內完整走完「創造世界」；它的 4K 上下文還放不下見證與章節；llama.cpp 與 Ollama 生成尚未 | [model-switch](docs/e2e/milestone-model-switch/result.md) · [apple-in-app](docs/e2e/milestone-apple-in-app/result.md) · [apple-create](docs/e2e/milestone-apple-create/result.md) |
 | AI 世界（沙箱互動世界） | ✅ 已驗證 | [acceptance](docs/experiments/interactive-works-acceptance.md) |
 | Sepolia 上的 ENSv2 卡帶名稱（舊的 `ens:setup` 上層名稱） | ✅ 已驗證 | [ensv2-cartridge-names](docs/e2e/milestone-ensv2-cartridge-names/result.md) |
 | 名稱樹裡的 ENS 名稱：改編卡帶、玩家存檔、更新、還原後用雜湊找到名稱 | ✅ 已在 Sepolia 驗證 | [lineage-names](docs/e2e/milestone-lineage-names/result.md) |

@@ -11,6 +11,7 @@ export type NativeMethod =
   | "planWorld"
   | "generateEvents"
   | "generateLayout"
+  | "chat"
   | "cancel";
 
 export interface NativeRequest {

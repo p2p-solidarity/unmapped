@@ -83,6 +83,7 @@ export {
   serializeRumors,
 } from "./parse/rumor";
 export { parseScene, toSceneGraph } from "./parse/scene";
+export { BIBLE_SHAPE, programShape } from "./programShape";
 export { ARCHETYPE_GUIDE } from "./prompts/archetypes";
 export { CHAPTER_EXAMPLE, type ChapterPromptContext, chapterPrompt } from "./prompts/chapter";
 export {

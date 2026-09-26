@@ -19,7 +19,7 @@ import { getWorldHarness } from "@renderer/harness/worldHarness";
 import { chat } from "@renderer/llm/client";
 import { usageTag } from "@renderer/llm/usage";
 import type { ChunkCoord } from "@shared/chunks";
-import type { ChatMessage, ChatUsage } from "@shared/llm";
+import type { ChatMessage, ChatUsage, ProgramShape } from "@shared/llm";
 import { fail, ok, type Result, toError } from "@shared/result";
 import type { UsagePurpose } from "@shared/usage";
 
@@ -53,6 +53,8 @@ export interface NarrativeTurnInput {
   maxTokens?: number;
   temperature?: number;
   grammar?: string | null;
+  /** The program's shape for a provider that decodes against one (Apple's on-device model). */
+  program?: ProgramShape;
   signal?: AbortSignal;
   onDelta?(text: string): void;
 }
@@ -112,6 +114,7 @@ export async function runNarrativeTurn(input: NarrativeTurnInput): Promise<Resul
       maxTokens: input.maxTokens,
       temperature: input.temperature,
       grammar: input.grammar ?? null,
+      ...(input.program === undefined ? {} : { program: input.program }),
       onDelta: input.onDelta,
     });
     if (!result.ok) return fail(result.error);

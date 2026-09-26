@@ -59,6 +59,16 @@ enum JSONValue: Codable, Sendable, Equatable {
         guard case let .string(value) = self else { return nil }
         return value
     }
+
+    var arrayValue: [JSONValue]? {
+        guard case let .array(value) = self else { return nil }
+        return value
+    }
+
+    var numberValue: Double? {
+        guard case let .number(value) = self else { return nil }
+        return value
+    }
 }
 
 func jsonValue<T: Encodable>(_ value: T) throws -> JSONValue {
@@ -103,6 +113,7 @@ enum RequestMethod: String, Sendable {
     case planWorld
     case generateEvents
     case generateLayout
+    case chat
     case cancel
 }
 

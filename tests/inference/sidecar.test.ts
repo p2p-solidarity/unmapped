@@ -25,12 +25,4 @@ describe("sidecarArgs", () => {
       "99",
     ]);
   });
-
-  it("runs Apple's model as fm serve on the configured port", () => {
-    expect(sidecarArgs({ ...config, binaryPath: "/usr/bin/fm", port: 11535 })).toEqual([
-      "serve",
-      "--port",
-      "11535",
-    ]);
-  });
 });

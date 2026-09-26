@@ -35,10 +35,9 @@ export const MODEL_ERRORS: Record<string, ErrorText> = {
       ja: "モデルに接続できません。",
     },
     hint: {
-      en: "Start the model server (llama-server, Ollama or Apple's fm), or check the endpoint in Settings → Model.",
-      "zh-TW":
-        "請啟動模型伺服器（llama-server、Ollama 或 Apple 的 fm），或到「設定 → 模型」檢查端點。",
-      ja: "モデルのサーバー（llama-server・Ollama・Apple の fm）を起動するか、「設定 → モデル」でエンドポイントを確認してください。",
+      en: "Start the model server (llama-server or Ollama), or check the endpoint in Settings → Model.",
+      "zh-TW": "請啟動模型伺服器（llama-server 或 Ollama），或到「設定 → 模型」檢查端點。",
+      ja: "モデルのサーバー（llama-server・Ollama）を起動するか、「設定 → モデル」でエンドポイントを確認してください。",
     },
   },
   auth: {
@@ -154,7 +153,58 @@ export const MODEL_ERRORS: Record<string, ErrorText> = {
     hint: HINT.disk,
   },
 
-  // ── Local servers: llama-server and Apple's fm ─────────────────────────────────────────────
+  // ── Apple's on-device model, answered inside the app by its Swift bridge ─────────────────────
+  "apple-unavailable": {
+    message: {
+      en: "Apple's on-device model runs only in the macOS app.",
+      "zh-TW": "Apple 的裝置端模型只能在 macOS 版應用程式中執行。",
+      ja: "Apple のオンデバイスモデルは macOS 版アプリでのみ動作します。",
+    },
+    hint: HINT.otherModel,
+  },
+  "bridge.unavailable": {
+    message: {
+      en: "Apple's on-device model is not available on this Mac right now.",
+      "zh-TW": "這台 Mac 目前無法使用 Apple 的裝置端模型。",
+      ja: "この Mac では現在 Apple のオンデバイスモデルを使えません。",
+    },
+    hint: {
+      en: "Turn on Apple Intelligence in System Settings and let its model finish downloading, or choose another model in Settings → Model.",
+      "zh-TW":
+        "請到「系統設定」開啟 Apple Intelligence 並等待模型下載完成，或到「設定 → 模型」改用其他模型。",
+      ja: "システム設定で Apple Intelligence をオンにしてモデルのダウンロード完了を待つか、「設定 → モデル」で別のモデルを選んでください。",
+    },
+  },
+  "bridge.refused": {
+    message: {
+      en: "Apple's on-device model declined this request.",
+      "zh-TW": "Apple 的裝置端模型拒絕了這個請求。",
+      ja: "Apple のオンデバイスモデルがこのリクエストを断りました。",
+    },
+    hint: {
+      en: "Try again with different words, or choose another model in Settings → Model.",
+      "zh-TW": "請換個說法再試一次，或到「設定 → 模型」改用其他模型。",
+      ja: "言い回しを変えてもう一度試すか、「設定 → モデル」で別のモデルを選んでください。",
+    },
+  },
+  "bridge.unsupported_language": {
+    message: {
+      en: "Apple's on-device model does not support this language.",
+      "zh-TW": "Apple 的裝置端模型不支援這個語言。",
+      ja: "Apple のオンデバイスモデルはこの言語に対応していません。",
+    },
+    hint: HINT.otherModel,
+  },
+  "bridge.busy": {
+    message: {
+      en: "Apple's on-device model is busy or still getting ready.",
+      "zh-TW": "Apple 的裝置端模型忙碌中或尚未準備好。",
+      ja: "Apple のオンデバイスモデルは混み合っているか、まだ準備中です。",
+    },
+    hint: HINT.retryModel,
+  },
+
+  // ── Local servers: llama-server ────────────────────────────────────────────────────────────
   "no-sidecar-config": {
     message: {
       en: "This provider has no local server to start.",
@@ -174,10 +224,9 @@ export const MODEL_ERRORS: Record<string, ErrorText> = {
       ja: "ローカルモデルのサーバープログラムが見つかりません。",
     },
     hint: {
-      en: "Install llama.cpp (brew install llama.cpp); Apple's model needs a Mac with Apple Intelligence.",
-      "zh-TW":
-        "請安裝 llama.cpp（brew install llama.cpp）；Apple 的模型需要支援 Apple Intelligence 的 Mac。",
-      ja: "llama.cpp をインストールしてください（brew install llama.cpp）。Apple のモデルには Apple Intelligence 対応の Mac が必要です。",
+      en: "Install llama.cpp (brew install llama.cpp), then choose it again in Settings → Model.",
+      "zh-TW": "請安裝 llama.cpp（brew install llama.cpp），再到「設定 → 模型」重新選擇。",
+      ja: "llama.cpp をインストールし（brew install llama.cpp）、「設定 → モデル」で選び直してください。",
     },
   },
   "model-missing": {

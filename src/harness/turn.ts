@@ -7,7 +7,7 @@
 // tool loop and an abort are all values, never exceptions.
 
 import type { Context } from "@deepseek-ai/cordis";
-import type { ChatMessage, ChatUsage } from "@shared/llm";
+import type { ChatMessage, ChatUsage, ProgramShape } from "@shared/llm";
 import { err, fail, ok, type Result, toError } from "@shared/result";
 import "./events";
 import type {
@@ -36,6 +36,8 @@ export interface TurnInput {
   temperature?: number;
   /** GBNF grammar; only sent when no tools are offered, since the two cannot be combined. */
   grammar?: string | null;
+  /** The answer's program shape (Apple's on-device model decodes against it); never with tools. */
+  program?: ProgramShape;
   onDelta?(text: string): void;
 }
 
@@ -85,6 +87,7 @@ export async function runTurn(input: TurnInput): Promise<Result<TurnResult>> {
         temperature: input.temperature ?? TURN_DEFAULTS.temperature,
         // llama.cpp refuses a grammar together with tools, and a tool turn needs tools.
         grammar: schemas.length === 0 ? (input.grammar ?? null) : null,
+        ...(schemas.length === 0 && input.program !== undefined ? { program: input.program } : {}),
         stop: [],
         tools: schemas,
       },

@@ -7,7 +7,6 @@ import { errorLine, useT } from "@renderer/i18n";
 import { useInferenceStore } from "@renderer/state";
 import { Button, ErrorBlock, space, Text, TextField } from "@renderer/ui";
 import {
-  APPLE_FM_SIDECAR,
   type InferenceConfig,
   type KeyStatusMap,
   type LocalDetection,
@@ -34,7 +33,6 @@ function cloudKey(kind: ProviderKind): TypedKeyProvider | null {
 }
 
 function option(kind: ProviderKind, detection: LocalDetection | null): InferenceConfig {
-  if (kind === "apple-fm") return { ...PROVIDER_PRESETS[kind], sidecar: { ...APPLE_FM_SIDECAR } };
   if (kind === "llamacpp") {
     return {
       ...PROVIDER_PRESETS[kind],
@@ -58,7 +56,7 @@ function option(kind: ProviderKind, detection: LocalDetection | null): Inference
 
 function localAvailable(kind: ProviderKind, found: LocalDetection | null): boolean {
   if (found === null) return false;
-  if (kind === "apple-fm") return found.apple.bridge && found.apple.fmCli;
+  if (kind === "apple-fm") return found.apple.available;
   if (kind === "ollama") return found.ollama.reachable;
   if (kind === "llamacpp") return found.llamacpp.binaryPath !== null;
   return false;
@@ -209,7 +207,9 @@ export function ModelPanel(): JSX.Element {
               ? errorLine(found.error)
               : localAvailable(selected.kind, detected)
                 ? t("model.available")
-                : t("model.notInstalled")}
+                : selected.kind === "apple-fm" && detected?.apple.reason
+                  ? t("model.appleReason", { reason: detected.apple.reason })
+                  : t("model.notInstalled")}
         </Text>
       ) : null}
       {selected.kind === "ollama" && detected?.ollama.models.length ? (

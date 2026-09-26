@@ -9,6 +9,11 @@ export const HINT = {
     "zh-TW": "請再試一次，或到「設定 → 模型」換用較大的模型。",
     ja: "もう一度試すか、「設定 → モデル」でより大きなモデルに切り替えてください。",
   },
+  otherModel: {
+    en: "Choose another model in Settings → Model.",
+    "zh-TW": "請到「設定 → 模型」改用其他模型。",
+    ja: "「設定 → モデル」で別のモデルを選んでください。",
+  },
   checkModel: {
     en: "Check the model in Settings → Model, then try again.",
     "zh-TW": "請到「設定 → 模型」檢查模型，然後再試一次。",

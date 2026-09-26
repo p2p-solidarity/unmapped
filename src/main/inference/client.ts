@@ -156,11 +156,9 @@ export function mapProviderError(
       hint:
         config.kind === "llamacpp"
           ? "start llama-server (llama-server -m <model>.gguf --port 8080 --jinja) or fix baseUrl"
-          : config.kind === "apple-fm"
-            ? "select Apple on-device in Settings → Model (it starts fm serve); run `sudo fm license` once first"
-            : config.kind === "hosted"
-              ? "check UNMAPPED_GATEWAY_URL in .env and that the gateway is running, or use your own key or a local model in Settings → Model"
-              : `check the endpoint (${config.baseUrl}) in Settings → Model and that the server is running`,
+          : config.kind === "hosted"
+            ? "check UNMAPPED_GATEWAY_URL in .env and that the gateway is running, or use your own key or a local model in Settings → Model"
+            : `check the endpoint (${config.baseUrl}) in Settings → Model and that the server is running`,
     });
   }
   // The gateway answers in its own codes, before the stream or as a `data: {"error":…}` event in it.

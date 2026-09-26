@@ -319,6 +319,8 @@ New Game 進畫面就重測，且「Make this world」不再被探測結果鎖�
 - 實機：apple-fm 設定 → System 面板 `offline — … YOU HAVE NOT AGREED … run sudo fm license`（本機未同意條款，未能再往下）；
   預設設定 + OpenAI key → `online · 130 model(s)`，進遊戲顯影成功。
 
+（2026-09-26 起已取代：Apple 的對話改由 app 內的 afm-bridge `chat` 方法回答，不再啟動 `fm serve`、沒有連接埠、不需 `sudo fm license`；舊的 `fm serve` 設定讀進來時改寫成 app 內 Apple。見 [apple-in-app](docs/e2e/milestone-apple-in-app/result.md)。）
+
 provider 沒做／沒驗到：
 - **Apple 模型生成完全沒驗到**（需要使用者自己 `sudo fm license`）。串流、`stop`、`max_tokens` 是否被 fm serve 支援未知；
   顯影 prompt 約 3.8k tokens + 最多 3.2k 輸出，可能超過 Apple 模型的 context，屆時會以錯誤顯示、區塊維持未記。

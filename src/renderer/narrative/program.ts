@@ -10,7 +10,7 @@
 
 import { addUsage } from "@harness";
 import { isContentRefusal } from "@shared/history/repairable";
-import type { ChatMessage, ChatUsage } from "@shared/llm";
+import type { ChatMessage, ChatUsage, ProgramShape } from "@shared/llm";
 import type { AppError, Result } from "@shared/result";
 import { fail, ok } from "@shared/result";
 
@@ -21,6 +21,7 @@ export interface ProgramChatRequest {
   maxTokens: number;
   temperature: number;
   grammar: string | null;
+  program?: ProgramShape;
 }
 
 export type ProgramChat = (
@@ -61,6 +62,8 @@ export interface ProgramSpec<T, E extends AppError> {
   /** Builds the USER turn that asks the model to patch the failing statements. */
   repair(source: string, error: E): string;
   grammar?: string | null;
+  /** The program's shape for a provider that decodes against one (Apple's on-device model). */
+  program?: ProgramShape;
   maxTokens?: number;
   temperature?: number;
   maxRepairs?: number;
@@ -105,6 +108,7 @@ export async function runProgram<T, E extends AppError>(
         maxTokens: spec.maxTokens ?? 1600,
         temperature: spec.temperature ?? 0.8,
         grammar: spec.grammar ?? null,
+        ...(spec.program === undefined ? {} : { program: spec.program }),
       },
       spec.onDelta,
     );

@@ -39,7 +39,7 @@ final class BridgeRuntimeTests: XCTestCase {
         let runtime = BridgeRuntime(
             writer: writer,
             runtimeAvailabilityOverride: true,
-            executor: { _, _ in
+            executor: { _, _, _ in
                 try? await Task.sleep(for: .seconds(5))
                 return .result(.object(["late": .bool(true)]))
             }
@@ -64,6 +64,56 @@ final class BridgeRuntimeTests: XCTestCase {
             $0["requestId"] as? String == "cancel-1" && $0["type"] as? String == "result"
         }
         XCTAssertEqual((cancelResult?["payload"] as? [String: Any])?["cancelled"] as? Bool, true)
+    }
+
+    // Guards: a streamed chat numbers its partial events between accepted and the terminal event,
+    // and a cancel after partials takes the next number. Main's transport kills the helper on any
+    // gap or repeat, so a wrong number here would end every request in flight.
+    func testPartialEventsAreNumberedBeforeTheTerminalEvent() async throws {
+        let recorder = LineRecorder()
+        let runtime = BridgeRuntime(
+            writer: NDJSONWriter(sink: recorder.append),
+            runtimeAvailabilityOverride: true,
+            executor: { _, _, emit in
+                await emit(.object(["delta": .string("a")]))
+                await emit(.object(["delta": .string("b")]))
+                return .result(.object(["text": .string("ab")]))
+            }
+        )
+
+        await runtime.submit(line: requestLine(id: "chat-1", method: "chat"))
+        await runtime.finishInput()
+
+        let events = try recorder.events()
+        XCTAssertEqual(events.map { $0["type"] as? String }, ["accepted", "partial", "partial", "result"])
+        XCTAssertEqual(events.map { $0["seq"] as? Int }, [1, 2, 3, 4])
+    }
+
+    func testCancelAfterPartialEventsTakesTheNextSequence() async throws {
+        let recorder = LineRecorder()
+        let runtime = BridgeRuntime(
+            writer: NDJSONWriter(sink: recorder.append),
+            runtimeAvailabilityOverride: true,
+            executor: { _, _, emit in
+                await emit(.object(["delta": .string("a")]))
+                try? await Task.sleep(for: .seconds(5))
+                await emit(.object(["delta": .string("late")]))
+                return .result(.object(["text": .string("late")]))
+            }
+        )
+
+        await runtime.submit(line: requestLine(id: "chat-2", method: "chat"))
+        while try recorder.events().count < 2 { try await Task.sleep(for: .milliseconds(10)) }
+        await runtime.submit(line: requestLine(
+            id: "cancel-2",
+            method: "cancel",
+            payload: ["targetRequestId": "chat-2"]
+        ))
+        await runtime.finishInput()
+
+        let target = try recorder.events().filter { $0["requestId"] as? String == "chat-2" }
+        XCTAssertEqual(target.map { $0["type"] as? String }, ["accepted", "partial", "cancelled"])
+        XCTAssertEqual(target.map { $0["seq"] as? Int }, [1, 2, 3])
     }
 }
 

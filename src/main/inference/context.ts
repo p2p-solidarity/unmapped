@@ -4,7 +4,7 @@
 // windows dwarf every task here, so nothing is clamped for them.
 
 import {
-  APPLE_FM_SIDECAR,
+  APPLE_FM_CONTEXT_TOKENS,
   type ContextWindow,
   type InferenceConfig,
   OLLAMA_ORIGIN,
@@ -77,7 +77,7 @@ export async function readContextWindow(
     case "hosted":
       return null;
     case "apple-fm":
-      return { tokens: bridgeTokens ?? APPLE_FM_SIDECAR.ctxSize, source: "model" };
+      return { tokens: bridgeTokens ?? APPLE_FM_CONTEXT_TOKENS, source: "model" };
     case "llamacpp": {
       const served = await llamaProps(config.baseUrl);
       if (served !== null) return { tokens: served, source: "server" };

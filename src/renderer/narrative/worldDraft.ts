@@ -4,7 +4,7 @@
 // every unlocked chapter after a note on the whole story. Every call is aborted by its signal and
 // repaired at most twice (Rule 7); none returns anything the model did not write.
 
-import { biblePrompt, parseBible } from "@dsl";
+import { BIBLE_SHAPE, biblePrompt, parseBible } from "@dsl";
 import {
   type BibleFields,
   type BiblePart,
@@ -53,6 +53,9 @@ export async function writeBible(idea: WorldIdea, io: CallIo): Promise<Result<Bi
     task: "bible",
     language: idea.language,
     parse: parseBible,
+    // Apple's on-device model fills the seven parts under guided generation; everyone else
+    // writes the program as text.
+    program: BIBLE_SHAPE,
     maxTokens: 1400,
     temperature: 0.9,
     signal: io.signal,

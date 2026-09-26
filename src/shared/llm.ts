@@ -44,10 +44,12 @@ export const PROVIDER_PRESETS: Record<ProviderKind, Omit<InferenceConfig, "sidec
     model: "gpt-5.4-mini",
     apiKeyEnv: "OPENAI_API_KEY",
   },
-  // Apple Foundation Models, on device: `fm serve` speaks Chat Completions; "system" is its only model.
+  // Apple Foundation Models, on device, answered inside the app by the bundled Swift bridge (no
+  // server, no port). The address is a reserved .invalid name that is never contacted; "system" is
+  // the only model. Main rewrites any saved Apple config to exactly this (`parseConfig`).
   "apple-fm": {
     kind: "apple-fm",
-    baseUrl: "http://127.0.0.1:11535/v1",
+    baseUrl: "http://apple-fm.invalid/v1",
     model: "system",
     apiKeyEnv: null,
   },
@@ -81,15 +83,8 @@ export const PROVIDER_PRESETS: Record<ProviderKind, Omit<InferenceConfig, "sidec
   },
 };
 
-/** macOS ships the Apple Foundation Models CLI here; `fm serve` is its Chat Completions server. */
-export const APPLE_FM_BINARY = "/usr/bin/fm";
-
-export const APPLE_FM_SIDECAR: SidecarConfig = {
-  binaryPath: APPLE_FM_BINARY,
-  modelPath: "",
-  port: 11535,
-  ctxSize: 4096,
-};
+/** Apple's on-device context when the bridge cannot say (it reports its own when it runs). */
+export const APPLE_FM_CONTEXT_TOKENS = 4096;
 
 export type SidecarState = "stopped" | "starting" | "ready" | "error";
 export interface SidecarStatus {
@@ -198,12 +193,11 @@ export const OLLAMA_ORIGIN = "http://127.0.0.1:11434";
 
 export interface LocalDetection {
   apple: {
-    /** The app's Foundation Models bridge (writes structured scenes). */
-    bridge: boolean;
-    bridgeReason: string | null;
+    /** The app's own Foundation Models bridge answers chat (it also writes structured scenes). */
+    available: boolean;
+    /** Why not, as the bridge says it (`apple_intelligence_not_enabled`, …); null when available. */
+    reason: string | null;
     contextTokens: number | null;
-    /** `/usr/bin/fm`, whose `fm serve` answers every other chat. */
-    fmCli: boolean;
   };
   ollama: { reachable: boolean; models: string[]; latencyMs: number };
   /** The first allowed llama-server that exists, or null when llama.cpp is not installed. */
@@ -234,6 +228,26 @@ export interface ToolSchema {
   parameters: Record<string, unknown>;
 }
 
+/** One argument of a program answer: its words, or a bounded list of them. */
+export interface ProgramArg {
+  name: string;
+  description: string;
+  kind: "text" | "list";
+  minItems?: number;
+  maxItems?: number;
+}
+
+/**
+ * An answer that is one root call of text and text lists (a world bible), for a provider that
+ * decodes against a schema: Apple's on-device model fills the arguments in order and writes
+ * `root = <root>(…)` itself. Every other provider ignores it and writes the program as text; either
+ * way the program is parsed like any other (Rule 7).
+ */
+export interface ProgramShape {
+  root: string;
+  args: ProgramArg[];
+}
+
 export interface ChatRequest {
   /** Client-generated id used to correlate ChatEvents and aborts. */
   id: string;
@@ -242,6 +256,8 @@ export interface ChatRequest {
   temperature: number;
   /** GBNF grammar (llama.cpp only). Ignored by providers that do not support it and when tools are present. */
   grammar: string | null;
+  /** The answer's program shape (Apple's on-device model only); never sent with tools. */
+  program?: ProgramShape;
   stop: string[];
   /** Tools the model may call this step; empty = plain completion. */
   tools: ToolSchema[];

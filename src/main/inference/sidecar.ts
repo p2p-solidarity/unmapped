@@ -6,7 +6,7 @@ import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import type { MainContext } from "@main/context";
 import { IPC } from "@shared/ipc";
-import { APPLE_FM_BINARY, type SidecarConfig, type SidecarStatus } from "@shared/llm";
+import type { SidecarConfig, SidecarStatus } from "@shared/llm";
 import { fail, ok, type Result } from "@shared/result";
 
 export const HEALTH_INTERVAL_MS = 500;
@@ -19,19 +19,7 @@ const DOWNLOAD_HINT =
   "(e.g. https://huggingface.co/unsloth/Qwen3.5-4B-GGUF → ~/models/Qwen3.5-4B-Q4_K_M.gguf) " +
   "and set it as the sidecar modelPath";
 
-const LICENSE_HINT =
-  "Apple's on-device model needs its terms accepted once: run `sudo fm license` in Terminal, then start again.";
-
-function isAppleFm(config: SidecarConfig): boolean {
-  return config.binaryPath === APPLE_FM_BINARY;
-}
-
-function serverName(config: SidecarConfig): string {
-  return isAppleFm(config) ? "fm serve" : "llama-server";
-}
-
 export function sidecarArgs(config: SidecarConfig): string[] {
-  if (isAppleFm(config)) return ["serve", "--port", String(config.port)];
   return [
     "-m",
     config.modelPath,
@@ -142,13 +130,11 @@ export function createSidecar(ctx: MainContext): Sidecar {
     if (config.binaryPath.length === 0 || !existsSync(config.binaryPath)) {
       return fail({
         code: "binary-missing",
-        message: `${serverName(config)} not found at ${config.binaryPath || "(empty path)"}.`,
-        hint: isAppleFm(config)
-          ? "Apple Foundation Models needs macOS with Apple Intelligence; use the OpenAI preset otherwise."
-          : DOWNLOAD_HINT,
+        message: `llama-server not found at ${config.binaryPath || "(empty path)"}.`,
+        hint: DOWNLOAD_HINT,
       });
     }
-    if (!isAppleFm(config) && (config.modelPath.length === 0 || !existsSync(config.modelPath))) {
+    if (config.modelPath.length === 0 || !existsSync(config.modelPath)) {
       return fail({
         code: "model-missing",
         message: `No .gguf model at ${config.modelPath || "(empty path)"}.`,
@@ -181,9 +167,7 @@ export function createSidecar(ctx: MainContext): Sidecar {
           state: "error",
           pid: null,
           port: config.port,
-          message: `${serverName(config)} exited with code ${String(code)}\n${stderr.tail(10)}${
-            isAppleFm(config) && /AGREED|license/i.test(stderr.tail(10)) ? `\n${LICENSE_HINT}` : ""
-          }`,
+          message: `llama-server exited with code ${String(code)}\n${stderr.tail(10)}`,
         });
       }
     });
@@ -191,8 +175,7 @@ export function createSidecar(ctx: MainContext): Sidecar {
     setStatus({ state: "starting", pid: proc.pid ?? null, port: config.port, message: null });
     const health = await pollHealth(config.port, HEALTH_TIMEOUT_MS, () => !exited);
     if (!health.ok) {
-      const unlicensed = isAppleFm(config) && /AGREED|license/i.test(stderr.tail(10));
-      const message = `${health.error.message}\n${stderr.tail(10)}${unlicensed ? `\n${LICENSE_HINT}` : ""}`;
+      const message = `${health.error.message}\n${stderr.tail(10)}`;
       // Stop first: stopping reports "stopped", and the reason must be what stays on screen.
       await stop();
       setStatus({ state: "error", pid: null, port: config.port, message });

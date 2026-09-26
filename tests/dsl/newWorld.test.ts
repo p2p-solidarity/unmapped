@@ -1,4 +1,4 @@
-import { ORIGIN_EXAMPLE, originIssues, parseScene } from "@dsl/index";
+import { ORIGIN_EXAMPLE, originIssues, parseBible, parseScene } from "@dsl/index";
 import { describe, expect, it } from "vitest";
 
 describe("new world", () => {
@@ -7,6 +7,16 @@ describe("new world", () => {
     const example = parseScene(ORIGIN_EXAMPLE);
     if (!example.ok) throw new Error(example.error.message);
     expect(originIssues(example.value)).toEqual([]);
+  });
+
+  // Apple's bridge writes the bible's literals with JSON escapes (ChatProgram.swift). A quote or a
+  // backslash in the model's words must neither break the program nor change the words.
+  it("reads a bible written with JSON escapes back as the model's own words", () => {
+    const written = String.raw`root = Bible("他說\"風\"來了\\路", "靜", ["a \"b\"", "c\\d", "e/f"], ["x", "y"], "n", "v", "l")`;
+    const bible = parseBible(written);
+    if (!bible.ok) throw new Error(bible.error.message);
+    expect(bible.value.premise).toBe('他說"風"來了\\路');
+    expect(bible.value.rules).toEqual(['a "b"', "c\\d", "e/f"]);
   });
 
   it("sends back an origin that walls in its edges or brings monsters", () => {

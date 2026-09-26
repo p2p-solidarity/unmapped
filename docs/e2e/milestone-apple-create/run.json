@@ -1,0 +1,151 @@
+{
+  "env": {
+    "userData": "fresh temporary directory via AETHER_TEST_USER_DATA, seeded with `seed` as inference.json (Apple on-device selected)",
+    "launch": "mkdir -p \"$TMPDIR/ud-apple-create\" && <write seed to inference.json> && AETHER_TEST_USER_DATA=\"$TMPDIR/ud-apple-create\" bun run dev --remoteDebuggingPort 9361",
+    "replay": "CDP_PORT=9361 bun scripts/cdp-drive.ts \"$(cat docs/e2e/milestone-apple-create/run.json)\"",
+    "debugPort": 9361,
+    "locale": "zh-TW (system default)",
+    "machine": "macOS 27.0 (26A428), Apple Silicon, Apple Intelligence on, /usr/bin/fm terms not accepted",
+    "build": "working tree over 51817a3 with this change (uncommitted); afm-bridge debug build",
+    "seed": {
+      "kind": "apple-fm",
+      "baseUrl": "http://apple-fm.invalid/v1",
+      "model": "system",
+      "apiKeyEnv": null,
+      "sidecar": null
+    },
+    "note": "Driven in consecutive calls against one app; joined here. Model waits are polling evals. The look pictures use the image provider (OpenAI gpt-image-1-mini, key from .env), not Apple. The in-play witnessing and chapter failures were read from the main log and, after a relaunch with AFM_TRACE=1 (a temporary stderr trace in the bridge, removed afterwards), from the bridge's budget and answer lines."
+  },
+  "model": "apple-fm · system for every chat (bible, card rewrite, story, chapter rewrite, chapter 1, witnessing); apple-local scene bridge for the origin",
+  "actions": [
+    {
+      "eval": "window.seed.inference.getConfig().then(c=>c.kind)"
+    },
+    {
+      "eval": "window.__e2e = {}; true"
+    },
+    {
+      "clickText": "創造世界"
+    },
+    {
+      "wait": 1200
+    },
+    {
+      "clickText": "開始新的遊戲"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "eval": "document.querySelectorAll(\"input\")[0].focus(); true"
+    },
+    {
+      "type": "霧散後才浮現的漂流群島，島民用風箏把貨物送到鄰島，每天傍晚要點燈替迷路的風箏引路。"
+    },
+    {
+      "wait": 400
+    },
+    {
+      "eval": "window.__e2e.t0 = Date.now(); true"
+    },
+    {
+      "clickText": "撰寫世界"
+    },
+    {
+      "eval": "(async()=>{for(let i=0;i<1200;i++){if(document.querySelectorAll(\"[data-card]\").length===7){return {worldMs:Date.now()-window.__e2e.t0};} const e=document.body.innerText.match(/錯誤 · [\\w.-]+/); if(e) return {error:e[0]}; await new Promise(r=>setTimeout(r,250));} return \"timeout\";})()"
+    },
+    {
+      "wait": 600
+    },
+    {
+      "eval": "({name: document.querySelectorAll(\"input\")[0].value, usage: document.querySelector(\"[data-usage-line]\")?.innerText})"
+    },
+    {
+      "shot": "docs/e2e/milestone-apple-create/01-world-cards.jpg"
+    },
+    {
+      "eval": "(()=>{const card=document.querySelectorAll(\"[data-card]\")[1]; card.querySelectorAll(\"textarea,input\")[1].focus(); return true})()"
+    },
+    {
+      "type": "更溫暖一點，提到傍晚的燈。"
+    },
+    {
+      "eval": "window.__e2e.r0=Date.now(); window.__e2e.before=document.querySelectorAll(\"[data-card]\")[1].querySelector(\"textarea,input\").value; [...document.querySelectorAll(\"[data-card]\")[1].querySelectorAll(\"button\")].find(b=>b.innerText.trim()===\"重寫這張卡片\").click(); true"
+    },
+    {
+      "eval": "(async()=>{for(let i=0;i<600;i++){const now=document.querySelectorAll(\"[data-card]\")[1].querySelector(\"textarea,input\").value; const busy=[...document.querySelectorAll(\"button\")].some(b=>b.innerText.trim()===\"取消\"||b.innerText.includes(\"停止\")); if(now!==window.__e2e.before&&!busy) return {ms:Date.now()-window.__e2e.r0, now}; await new Promise(r=>setTimeout(r,250));} return \"timeout\";})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-apple-create/02-card-rewritten.jpg"
+    },
+    {
+      "eval": "window.__e2e.l0=Date.now(); true"
+    },
+    {
+      "clickText": "前往看樣子"
+    },
+    {
+      "eval": "(async()=>{for(let i=0;i<900;i++){const t=document.body.innerText; if(!t.includes(\"正在撰寫故事與章節\")) return {ms:Date.now()-window.__e2e.l0, error:(t.match(/錯誤 · [\\w.-]+/)||[null])[0]}; await new Promise(r=>setTimeout(r,250));} return \"timeout\";})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-apple-create/03-look-and-story.jpg"
+    },
+    {
+      "clickText": "選擇草圖 1"
+    },
+    {
+      "wait": 1200
+    },
+    {
+      "clickText": "繼續寫故事"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "shot": "docs/e2e/milestone-apple-create/04-story.jpg"
+    },
+    {
+      "eval": "window.__e2e.snap=()=>[...document.querySelectorAll(\"textarea,input\")].map(e=>e.value).join(\"|\"); window.__e2e.c0=window.__e2e.snap(); window.__e2e.w0=Date.now(); [...document.querySelectorAll(\"button\")].filter(b=>b.innerText.trim()===\"重寫這章\")[1].click(); true"
+    },
+    {
+      "eval": "(async()=>{for(let i=0;i<600;i++){const busy=[...document.querySelectorAll(\"button\")].some(b=>b.innerText.trim()===\"取消\"||b.innerText.includes(\"停止\")); const now=window.__e2e.snap(); if(!busy&&now!==window.__e2e.c0) return {ms:Date.now()-window.__e2e.w0}; await new Promise(r=>setTimeout(r,250));} return \"timeout\";})()"
+    },
+    {
+      "clickText": "前往建立"
+    },
+    {
+      "wait": 2500
+    },
+    {
+      "text": true
+    },
+    {
+      "shot": "docs/e2e/milestone-apple-create/05-build-quote.jpg"
+    },
+    {
+      "eval": "window.__e2e.b0=Date.now(); true"
+    },
+    {
+      "clickText": "建立並開始玩"
+    },
+    {
+      "eval": "(async()=>{for(let i=0;i<1200;i++){const t=document.body.innerText; if(t.includes(\"進入世界\")) return {builtMs:Date.now()-window.__e2e.b0}; const e=t.match(/錯誤 · [\\w.-]+/); if(e) return {error:e[0]}; await new Promise(r=>setTimeout(r,250));} return \"timeout\";})()"
+    },
+    {
+      "clickText": "進入世界"
+    },
+    {
+      "wait": 6000
+    },
+    {
+      "shot": "docs/e2e/milestone-apple-create/06-in-play.jpg"
+    },
+    {
+      "wait": 30000
+    },
+    {
+      "text": true
+    }
+  ]
+}

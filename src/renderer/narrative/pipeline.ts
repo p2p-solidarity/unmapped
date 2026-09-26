@@ -12,7 +12,7 @@ import { normalizeOutput, repairPrompt } from "@dsl";
 import { ORDER, type PromptPurpose } from "@harness";
 import { useInferenceStore } from "@renderer/state/inferenceStore";
 import type { ChunkCoord } from "@shared/chunks";
-import type { ChatMessage } from "@shared/llm";
+import type { ChatMessage, ProgramShape } from "@shared/llm";
 import { type AppError, fail, ok, type Result } from "@shared/result";
 import type { UsagePurpose } from "@shared/usage";
 import { acceptedOf, type Program, type ProgramChat, runProgram } from "./program";
@@ -57,6 +57,7 @@ function harnessChat(
       maxTokens: request.maxTokens,
       temperature: request.temperature,
       grammar: request.grammar,
+      ...(request.program === undefined ? {} : { program: request.program }),
       onDelta,
     });
     if (!turn.ok) return fail(turn.error);
@@ -78,6 +79,8 @@ export interface GenerateProgramInput<T> {
   sections?: readonly TurnSection[];
   coord?: ChunkCoord;
   grammar?: string | null;
+  /** The program's shape for a provider that decodes against one (Apple's on-device model). */
+  program?: ProgramShape;
   maxTokens?: number;
   temperature?: number;
   onDelta?(text: string): void;

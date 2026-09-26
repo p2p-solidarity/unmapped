@@ -127,11 +127,6 @@ export const CONSOLE = {
   },
   fieldPort: { en: "port", "zh-TW": "連接埠", ja: "ポート" },
   fieldCtxSize: { en: "ctxSize", "zh-TW": "上下文長度", ja: "コンテキスト長" },
-  appleFmHint: {
-    en: "Apple's on-device model needs no model file. Accept its terms once with `sudo fm license` in Terminal.",
-    "zh-TW": "Apple 的裝置端模型不需要模型檔。請先在終端機執行一次 `sudo fm license` 同意條款。",
-    ja: "Apple のオンデバイスモデルにモデルファイルは不要です。ターミナルで一度 `sudo fm license` を実行して規約に同意してください。",
-  },
   llamaHint: {
     en: "`brew install llama.cpp` puts llama-server in your Homebrew bin directory; the model path is any .gguf file you downloaded.",
     "zh-TW":

@@ -14,10 +14,10 @@ import { describe, expect, it } from "vitest";
 const tmp = () => mkdtemp(join(tmpdir(), "aether-inference-"));
 
 describe("defaultConfig", () => {
-  it("uses Apple's on-device model when the key is absent and fm exists", () => {
+  it("uses Apple's on-device model when the key is absent and the bridge answers", () => {
     const config = defaultConfig({}, true);
     expect(config.kind).toBe("apple-fm");
-    expect(config.sidecar?.binaryPath).toBe("/usr/bin/fm");
+    expect(config.sidecar).toBeNull();
     expect(parseConfig(config).ok).toBe(true);
   });
 
@@ -113,6 +113,27 @@ describe("loadConfig / saveConfig", () => {
     expect(saved.ok).toBe(true);
     expect(JSON.parse(await readFile(configPath(dir), "utf8"))).toEqual(config);
     await expect(loadConfig(dir, {})).resolves.toEqual(config);
+  });
+
+  // Guards silent loss of the player's choice: a config saved when Apple ran as `fm serve` must read
+  // back as Apple through the bridge, never be refused and replaced by the default provider, and
+  // must never keep a sidecar that spawns /usr/bin/fm.
+  it("reads a config saved for fm serve as Apple inside the app", async () => {
+    const dir = await tmp();
+    const legacy = {
+      kind: "apple-fm",
+      baseUrl: "http://127.0.0.1:11535/v1",
+      model: "system",
+      apiKeyEnv: null,
+      sidecar: { binaryPath: "/usr/bin/fm", modelPath: "", port: 11535, ctxSize: 4096 },
+    };
+    await writeFile(configPath(dir), JSON.stringify(legacy), "utf8");
+    await expect(loadConfig(dir, { OPENAI_API_KEY: "sk-test" })).resolves.toEqual({
+      ...PROVIDER_PRESETS["apple-fm"],
+      sidecar: null,
+    });
+    const spawnFm = { ...PROVIDER_PRESETS.llamacpp, sidecar: legacy.sidecar };
+    expect(parseConfig(spawnFm).ok).toBe(false);
   });
 
   it("refuses to persist an invalid config", async () => {

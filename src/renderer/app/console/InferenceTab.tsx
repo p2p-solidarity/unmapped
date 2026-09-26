@@ -15,7 +15,6 @@ import {
   Text,
 } from "@renderer/ui";
 import {
-  APPLE_FM_BINARY,
   type InferenceConfig,
   PROVIDER_KINDS,
   type SidecarConfig,
@@ -101,7 +100,7 @@ function SidecarFields({
         onChange={(ctx) => onChange({ ...sidecar, ctxSize: numberFromInput(ctx, sidecar.ctxSize) })}
       />
       <Text variant="caption" tone="dim">
-        {sidecar.binaryPath === APPLE_FM_BINARY ? t("console.appleFmHint") : t("console.llamaHint")}
+        {t("console.llamaHint")}
       </Text>
     </>
   );

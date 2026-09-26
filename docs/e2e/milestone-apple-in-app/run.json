@@ -1,0 +1,139 @@
+{
+  "env": {
+    "userData": "fresh temporary directory via AETHER_TEST_USER_DATA, seeded before launch with the inference.json in `seed` (the config the app wrote when Apple ran as `fm serve`)",
+    "launch": "mkdir -p \"$TMPDIR/ud-apple\" && cp <seed as inference.json> \"$TMPDIR/ud-apple/\" && AETHER_TEST_USER_DATA=\"$TMPDIR/ud-apple\" bun run dev --remoteDebuggingPort 9361",
+    "debugPort": 9361,
+    "replay": "CDP_PORT=9361 bun scripts/cdp-drive.ts \"$(cat docs/e2e/milestone-apple-in-app/run.json)\"",
+    "locale": "zh-TW (system default)",
+    "machine": "macOS 27.0 (26A428), Apple Silicon, Apple Intelligence on; `/usr/bin/fm` present but its terms NOT accepted (`fm --help` prints the legal notice and exits)",
+    "build": "main at 51817a3 + this change (uncommitted), afm-bridge 0.3.0 debug build",
+    "seed": {
+      "kind": "apple-fm",
+      "baseUrl": "http://127.0.0.1:11535/v1",
+      "model": "system",
+      "apiKeyEnv": null,
+      "sidecar": {
+        "binaryPath": "/usr/bin/fm",
+        "modelPath": "",
+        "port": 11535,
+        "ctxSize": 4096
+      }
+    },
+    "note": "Driven in consecutive cdp-drive calls against one running app; this list joins them. Model waits are polling evals. OPENAI_API_KEY is in .env (never recorded), which proves the saved Apple choice survives instead of falling back to the OpenAI default."
+  },
+  "model": "apple-fm · system (Apple Foundation Models on device, answered by the app's own afm-bridge `chat` method; no fm serve, no port)",
+  "actions": [
+    {
+      "wait": 1500
+    },
+    {
+      "eval": "window.seed.inference.getConfig().then(c=>({kind:c.kind,baseUrl:c.baseUrl,model:c.model,sidecar:c.sidecar}))"
+    },
+    {
+      "clickText": "設定"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "text": true
+    },
+    {
+      "eval": "(()=>{const h=[...document.querySelectorAll(\"*\")].find(e=>e.innerText&&e.innerText.trim()===\"模型\");h&&h.scrollIntoView({block:\"start\"});return !!h})()"
+    },
+    {
+      "wait": 400
+    },
+    {
+      "shot": "docs/e2e/milestone-apple-in-app/01-settings-model-apple.jpg"
+    },
+    {
+      "hold": "Escape",
+      "ms": 80
+    },
+    {
+      "wait": 600
+    },
+    {
+      "clickText": "創造世界"
+    },
+    {
+      "wait": 1200
+    },
+    {
+      "clickText": "開始新的遊戲"
+    },
+    {
+      "wait": 1200
+    },
+    {
+      "eval": "document.querySelectorAll(\"input\")[0].focus(); document.querySelectorAll(\"input\")[1].value === \"\""
+    },
+    {
+      "type": "霧散後才浮現的漂流群島，島民用風箏把貨物送到鄰島，每天傍晚要點燈替迷路的風箏引路。"
+    },
+    {
+      "wait": 400
+    },
+    {
+      "text": true
+    },
+    {
+      "shot": "docs/e2e/milestone-apple-in-app/02-create-idea.jpg"
+    },
+    {
+      "eval": "window.__e2e = {t0: Date.now(), last: \"\"}; true"
+    },
+    {
+      "clickText": "撰寫世界"
+    },
+    {
+      "eval": "(async()=>{for(let i=0;i<300;i++){const p=document.querySelector(\"[data-stream-preview=world]\"); if(p&&p.innerText.length>200){p.scrollIntoView({block:\"center\"});return {atMs:Date.now()-window.__e2e.t0,len:p.innerText.length}} await new Promise(r=>setTimeout(r,100));} return \"none\";})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-apple-in-app/03-world-streaming.jpg"
+    },
+    {
+      "eval": "(async()=>{for(let i=0;i<1200;i++){const p=document.querySelector(\"[data-stream-preview=world]\"); if(p) window.__e2e.last=p.innerText; else if(window.__e2e.last) return {doneMs:Date.now()-window.__e2e.t0,last:window.__e2e.last.slice(-1500),len:window.__e2e.last.length}; await new Promise(r=>setTimeout(r,100));} return \"timeout\";})()"
+    },
+    {
+      "eval": "({cards:document.querySelectorAll(\"[data-card]\").length, err:(document.body.innerText.match(/錯誤 · [\\w.-]+/)||[null])[0], usage: document.querySelector(\"[data-usage-line]\")?.innerText})"
+    },
+    {
+      "shot": "docs/e2e/milestone-apple-in-app/04-context-refused.jpg"
+    },
+    {
+      "clickText": "英文（美國） · en-US"
+    },
+    {
+      "wait": 400
+    },
+    {
+      "eval": "window.__e2e = {t0: Date.now(), last: \"\"}; true"
+    },
+    {
+      "clickText": "撰寫世界"
+    },
+    {
+      "eval": "(async()=>{for(let i=0;i<300;i++){const p=document.querySelector(\"[data-stream-preview=world]\"); if(p&&p.innerText.length>200){p.scrollIntoView({block:\"center\"});return {atMs:Date.now()-window.__e2e.t0,len:p.innerText.length}} await new Promise(r=>setTimeout(r,100));} return \"none\";})()"
+    },
+    {
+      "shot": "docs/e2e/milestone-apple-in-app/05-en-world-streaming.jpg"
+    },
+    {
+      "eval": "(async()=>{for(let i=0;i<1800;i++){const p=document.querySelector(\"[data-stream-preview=world]\"); if(p) window.__e2e.last=p.innerText; if(document.querySelectorAll(\"[data-card]\").length===7) return {cardsMs:Date.now()-window.__e2e.t0}; const e=document.body.innerText.match(/錯誤 · [\\w.-]+/); if(e&&!p) return {error:e[0], last:window.__e2e.last.slice(-700)}; await new Promise(r=>setTimeout(r,100));} return \"timeout\";})()"
+    },
+    {
+      "eval": "(async () => {\n  const tool = { name: \"give_item\", description: \"Give the player an item from the world. Use when the NPC hands something over.\",\n    parameters: { type: \"object\", properties: { item: { type: \"string\", description: \"the item name\" }, count: { type: \"integer\", minimum: 1, maximum: 5 } }, required: [\"item\", \"count\"], additionalProperties: false } };\n  const run = (id, messages) => new Promise((resolve) => {\n    const deltas = [];\n    const t0 = Date.now();\n    const off = window.seed.inference.onEvent((e) => {\n      if (e.id !== id) return;\n      if (e.type === \"delta\") deltas.push(e.text);\n      else { off(); resolve({ ms: Date.now() - t0, type: e.type, deltas: deltas.length, text: e.text, toolCalls: e.toolCalls, usage: e.usage, error: e.error }); }\n    });\n    window.seed.inference.chat({ id, messages, maxTokens: 300, temperature: 0.5, grammar: null, stop: [], tools: [tool], usage: { purpose: \"resolve\", scope: null } });\n  });\n  const base = [\n    { role: \"system\", content: \"You are Mara, a baker in a quiet village. Use tools only when the world must change.\" },\n    { role: \"user\", content: \"The player chose: Buy two loaves of bread. Intended effect: the player receives 2 bread. Enact it with tools only if the world must change; then answer with one in-world line in English.\" },\n  ];\n  const first = await run(\"e2e-apple-tool-1\", base);\n  if (first.type !== \"done\" || first.toolCalls.length === 0) return { first };\n  const messages = [...base, { role: \"assistant\", content: first.text, toolCalls: first.toolCalls },\n    ...first.toolCalls.map((c) => ({ role: \"tool\", content: JSON.stringify({ ok: true, gave: \"2 bread\" }), toolCallId: c.id, name: c.name }))];\n  const second = await run(\"e2e-apple-tool-2\", messages);\n  return { first, second };\n})()"
+    },
+    {
+      "eval": "(async () => {\n  const id = \"e2e-apple-abort-1\";\n  return await new Promise((resolve) => {\n    let deltas = 0; const t0 = Date.now();\n    const off = window.seed.inference.onEvent((e) => {\n      if (e.id !== id) return;\n      if (e.type === \"delta\") { deltas += 1; if (deltas === 3) window.seed.inference.abort(id); }\n      else { off(); resolve({ ms: Date.now() - t0, deltas, type: e.type, code: e.error?.code ?? null }); }\n    });\n    window.seed.inference.chat({ id, messages: [{ role: \"user\", content: \"Write a long story about a lighthouse keeper, at least ten paragraphs.\" }], maxTokens: 1500, temperature: 0.8, grammar: null, stop: [], tools: [], usage: { purpose: \"resolve\", scope: null } });\n  });\n})()"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "eval": "window.seed.inference.probe().then(p=>p.ok?{reachable:p.value.reachable,ms:p.value.latencyMs,ctx:p.value.context}:p.error)"
+    }
+  ]
+}

@@ -2,7 +2,6 @@
 // fields with that provider's preset while keeping the sidecar block the user configured.
 
 import {
-  APPLE_FM_SIDECAR,
   type InferenceConfig,
   PROVIDER_KINDS,
   PROVIDER_PRESETS,
@@ -23,8 +22,8 @@ export function isProviderKind(value: string): value is ProviderKind {
 }
 
 export function applyProviderPreset(current: InferenceConfig, kind: ProviderKind): InferenceConfig {
-  // Apple's model runs through `fm serve`, which the app starts like a llama-server sidecar.
-  if (kind === "apple-fm") return { ...PROVIDER_PRESETS[kind], sidecar: { ...APPLE_FM_SIDECAR } };
+  // Apple's model runs inside the app through its own bridge: nothing to start or point at.
+  if (kind === "apple-fm") return { ...PROVIDER_PRESETS[kind], sidecar: null };
   return { ...PROVIDER_PRESETS[kind], sidecar: current.sidecar };
 }
 

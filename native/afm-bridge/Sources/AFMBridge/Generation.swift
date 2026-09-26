@@ -265,7 +265,7 @@ private func generationMetrics(
     ])
 }
 
-private func decodePayload<T: Decodable>(
+func decodePayload<T: Decodable>(
     _ type: T.Type,
     payload: JSONValue,
     allowedKeys: Set<String>
@@ -308,7 +308,7 @@ private func validateRequest(sceneID: String, brief: String, language: String) -
     return nil
 }
 
-private func requestError(_ message: String) -> BridgeError {
+func requestError(_ message: String) -> BridgeError {
     BridgeError(
         code: "bridge.invalid_payload",
         message: message,
@@ -317,11 +317,11 @@ private func requestError(_ message: String) -> BridgeError {
     )
 }
 
-private func invalidPayload(_ message: String) -> OperationOutcome {
+func invalidPayload(_ message: String) -> OperationOutcome {
     .failure(requestError(message))
 }
 
-private func generationFailure(_ error: Error) -> OperationOutcome {
+func generationFailure(_ error: Error) -> OperationOutcome {
     .failure(BridgeError(
         code: "bridge.generation_failed",
         message: "Foundation Models generation failed: \(error.localizedDescription)",
@@ -330,7 +330,7 @@ private func generationFailure(_ error: Error) -> OperationOutcome {
     ))
 }
 
-private func cancelledGeneration() -> OperationOutcome {
+func cancelledGeneration() -> OperationOutcome {
     .failure(BridgeError(
         code: "bridge.cancelled",
         message: "Foundation Models generation was cancelled.",

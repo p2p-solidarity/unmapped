@@ -3,8 +3,12 @@ import Foundation
 import FoundationModels
 #endif
 
+/// Sends one `partial` event for the request being executed (a chat delta). Ignored once the
+/// request is terminal, so a cancelled stream can never write after its `cancelled` event.
+typealias PartialEmitter = @Sendable (JSONValue) async -> Void
+
 actor BridgeRuntime {
-    typealias Executor = @Sendable (RequestMethod, JSONValue) async -> OperationOutcome
+    typealias Executor = @Sendable (RequestMethod, JSONValue, PartialEmitter) async -> OperationOutcome
 
     private let writer: NDJSONWriter
     private let runtimeAvailabilityOverride: Bool?
@@ -12,6 +16,8 @@ actor BridgeRuntime {
     private let executor: Executor?
     private var active: [String: Task<Void, Never>] = [:]
     private var terminalRequests: Set<String> = []
+    /// The last `seq` written per open request: partial events sit between accepted and terminal.
+    private var sequences: [String: Int] = [:]
 
     init(
         writer: NDJSONWriter,
@@ -92,7 +98,7 @@ actor BridgeRuntime {
                 error: BridgeError(
                     code: "protocol.unknown_method",
                     message: "Method \(request.method) is not recognized.",
-                    hint: "Use capabilities, planWorld, generateEvents, generateLayout, or cancel.",
+                    hint: "Use capabilities, planWorld, generateEvents, generateLayout, chat, or cancel.",
                     retryable: false
                 )
             )
@@ -117,13 +123,17 @@ actor BridgeRuntime {
             return
         }
 
-        await writer.event(EventEnvelope(requestID: request.requestID, sequence: 1, type: "accepted"))
+        let requestID = request.requestID
+        await writer.event(EventEnvelope(requestID: requestID, sequence: nextSequence(requestID), type: "accepted"))
         let task = Task { [weak self] in
             guard let self else { return }
-            let outcome = await self.execute(method: method, payload: request.payload)
-            await self.finish(requestID: request.requestID, outcome: outcome)
+            let emit: PartialEmitter = { [weak self] payload in
+                await self?.partial(requestID: requestID, payload: payload)
+            }
+            let outcome = await self.execute(method: method, payload: request.payload, emit: emit)
+            await self.finish(requestID: requestID, outcome: outcome)
         }
-        active[request.requestID] = task
+        active[requestID] = task
     }
 
     func finishInput() async {
@@ -135,7 +145,11 @@ actor BridgeRuntime {
         }
     }
 
-    private func execute(method: RequestMethod, payload: JSONValue) async -> OperationOutcome {
+    private func execute(
+        method: RequestMethod,
+        payload: JSONValue,
+        emit: @escaping PartialEmitter
+    ) async -> OperationOutcome {
         if method == .capabilities {
             return .result(capabilitiesPayload())
         }
@@ -154,7 +168,7 @@ actor BridgeRuntime {
         }
 
         if let executor {
-            return await executor(method, payload)
+            return await executor(method, payload, emit)
         }
 
 #if canImport(FoundationModels)
@@ -164,6 +178,8 @@ actor BridgeRuntime {
                 return await generateEvents(payload: payload)
             case .generateLayout:
                 return await generateLayout(payload: payload)
+            case .chat:
+                return await chat(payload: payload, emit: emit)
             case .planWorld:
                 break
             case .capabilities, .cancel:
@@ -175,21 +191,35 @@ actor BridgeRuntime {
         return .failure(unsupportedError(method))
     }
 
+    private func nextSequence(_ requestID: String) -> Int {
+        let next = (sequences[requestID] ?? 0) + 1
+        sequences[requestID] = next
+        return next
+    }
+
+    private func partial(requestID: String, payload: JSONValue) async {
+        guard active[requestID] != nil, !terminalRequests.contains(requestID) else { return }
+        let sequence = nextSequence(requestID)
+        await writer.event(EventEnvelope(requestID: requestID, sequence: sequence, type: "partial", payload: payload))
+    }
+
     private func finish(requestID: String, outcome: OperationOutcome) async {
         active.removeValue(forKey: requestID)
         guard !terminalRequests.contains(requestID) else { return }
         terminalRequests.insert(requestID)
+        let sequence = nextSequence(requestID)
+        sequences.removeValue(forKey: requestID)
 
         switch outcome {
         case let .result(payload):
-            await writer.event(EventEnvelope(requestID: requestID, sequence: 2, type: "result", payload: payload))
+            await writer.event(EventEnvelope(requestID: requestID, sequence: sequence, type: "result", payload: payload))
         case let .failure(error):
-            await writer.event(EventEnvelope(requestID: requestID, sequence: 2, type: "error", error: error))
+            await writer.event(EventEnvelope(requestID: requestID, sequence: sequence, type: "error", error: error))
         }
     }
 
     private func cancel(requestID: String, payload: JSONValue) async {
-        await writer.event(EventEnvelope(requestID: requestID, sequence: 1, type: "accepted"))
+        await writer.event(EventEnvelope(requestID: requestID, sequence: nextSequence(requestID), type: "accepted"))
 
         guard let target = payload.objectValue?["targetRequestId"]?.stringValue, !target.isEmpty else {
             await finish(requestID: requestID, outcome: .failure(BridgeError(
@@ -207,7 +237,9 @@ actor BridgeRuntime {
 
         if wasActive {
             terminalRequests.insert(target)
-            await writer.event(EventEnvelope(requestID: target, sequence: 2, type: "cancelled"))
+            let sequence = nextSequence(target)
+            sequences.removeValue(forKey: target)
+            await writer.event(EventEnvelope(requestID: target, sequence: sequence, type: "cancelled"))
         }
 
         await finish(requestID: requestID, outcome: .result(.object([
@@ -314,11 +346,11 @@ private func capabilitiesPayload() -> JSONValue {
     let vocabulary = emptyLayoutVocabulary
 #endif
 
-    let methods = ["capabilities", "planWorld", "generateEvents", "generateLayout", "cancel"].map { name in
+    let methods = ["capabilities", "planWorld", "generateEvents", "generateLayout", "chat", "cancel"].map { name in
         let status: String
         if name == "capabilities" || name == "cancel" {
             status = "available"
-        } else if (name == "generateEvents" || name == "generateLayout") && generationAvailable {
+        } else if (name == "generateEvents" || name == "generateLayout" || name == "chat") && generationAvailable {
             status = "available"
         } else {
             status = "unsupported"
@@ -331,7 +363,7 @@ private func capabilitiesPayload() -> JSONValue {
 
     return .object([
         "protocolVersion": .number(1),
-        "bridgeVersion": .string("0.2.0"),
+        "bridgeVersion": .string("0.3.0"),
         "platform": .string("macOS"),
         "operatingSystem": .string(ProcessInfo.processInfo.operatingSystemVersionString),
         "foundationModels": availability,

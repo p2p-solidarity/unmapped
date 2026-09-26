@@ -86,7 +86,7 @@ describe("buildChatBody", () => {
     expect(buildChatBody(config({ ...PROVIDER_PRESETS.vllm }), request).grammar).toBeUndefined();
   });
 
-  it("switches thinking off for ollama and vllm, never for Apple's fm serve", () => {
+  it("switches thinking off for ollama and vllm, never for Apple's on-device model", () => {
     for (const kind of ["ollama", "vllm"] as const) {
       expect(
         buildChatBody(config({ ...PROVIDER_PRESETS[kind] }), request).chat_template_kwargs,

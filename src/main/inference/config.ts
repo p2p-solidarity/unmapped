@@ -2,12 +2,9 @@
 // A missing or corrupt file is not an error — it falls back to the default provider so the app
 // still boots (Rule 5: errors are values, and this one has an obvious recovery).
 
-import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import {
-  APPLE_FM_BINARY,
-  APPLE_FM_SIDECAR,
   type InferenceConfig,
   LLAMA_SERVER_PATHS,
   PROVIDER_KINDS,
@@ -57,7 +54,7 @@ export type KeyedChatKind = keyof typeof TRUSTED_API_KEY_ENVS;
 export const GATEWAY_URL: string | null = null;
 
 /** Main-owned Homebrew locations; a same-named executable elsewhere is not trusted. */
-const TRUSTED_SIDECAR_PATHS = new Set<string>([...LLAMA_SERVER_PATHS, APPLE_FM_BINARY]);
+const TRUSTED_SIDECAR_PATHS = new Set<string>(LLAMA_SERVER_PATHS);
 
 /**
  * `z.url()` happily accepts "localhost:8080" (it reads "localhost:" as the protocol), which then
@@ -170,12 +167,12 @@ export function isTrustedInferenceConfig(
     const expected = chatEndpointFor(config.kind, env);
     if (expected === null || !sameEndpoint(config.baseUrl, expected)) return false;
     if (config.kind === "hosted" && config.sidecar !== null) return false;
-  } else if (
-    config.kind === "llamacpp" ||
-    config.kind === "ollama" ||
-    config.kind === "vllm" ||
-    config.kind === "apple-fm"
-  ) {
+  } else if (config.kind === "apple-fm") {
+    // Answered inside the app: nothing to reach, spawn or authenticate.
+    const preset = PROVIDER_PRESETS["apple-fm"];
+    if (config.baseUrl !== preset.baseUrl || config.apiKeyEnv !== null) return false;
+    if (config.sidecar !== null) return false;
+  } else if (config.kind === "llamacpp" || config.kind === "ollama" || config.kind === "vllm") {
     if (config.apiKeyEnv !== null || !isLoopbackEndpoint(config.baseUrl)) return false;
   } else if (config.kind === "custom") {
     if (config.apiKeyEnv !== null) return false;
@@ -198,14 +195,12 @@ export function configPath(userData: string): string {
 
 /**
  * OpenAI when its key is already in the environment; else the free allowance when a gateway is
- * configured (direction item 9: it comes first); else the on-device Apple model; else the local
- * llama.cpp sidecar. An env var that exists but is empty counts as absent — an empty key cannot
+ * configured (direction item 9: it comes first); else the on-device Apple model when the app's
+ * bridge answers chat on this Mac (`hasAppleFm`, asked by the caller); else the local llama.cpp
+ * sidecar. An env var that exists but is empty counts as absent — an empty key cannot
  * authenticate. Development builds have no gateway, so their default is unchanged.
  */
-export function defaultConfig(
-  env: EnvLike = process.env,
-  hasAppleFm: boolean = existsSync(APPLE_FM_BINARY),
-): InferenceConfig {
+export function defaultConfig(env: EnvLike = process.env, hasAppleFm = false): InferenceConfig {
   const key = env.OPENAI_API_KEY;
   if (typeof key === "string" && key.length > 0) {
     return { ...PROVIDER_PRESETS.openai, sidecar: null };
@@ -213,7 +208,7 @@ export function defaultConfig(
   const gateway = gatewayEndpoint(env);
   if (gateway !== null) return { ...PROVIDER_PRESETS.hosted, baseUrl: gateway, sidecar: null };
   // No cloud key: the on-device Apple model when this Mac has it, else a local llama.cpp.
-  if (hasAppleFm) return { ...PROVIDER_PRESETS["apple-fm"], sidecar: { ...APPLE_FM_SIDECAR } };
+  if (hasAppleFm) return { ...PROVIDER_PRESETS["apple-fm"], sidecar: null };
   return { ...PROVIDER_PRESETS.llamacpp, sidecar: { ...DEFAULT_SIDECAR } };
 }
 
@@ -234,16 +229,25 @@ export function parseConfig(raw: unknown, env: EnvLike = process.env): Result<In
       hint: "baseUrl must be an absolute URL ending in /v1 and kind must be a known provider",
     });
   }
-  const config = hostedRewrite(parsed.data, env);
+  const config = hostedRewrite(appleRewrite(parsed.data), env);
   if (!config.ok) return config;
   if (!isTrustedInferenceConfig(config.value, env)) {
     return fail({
       code: "untrusted-config",
       message: "This inference endpoint or credential source is not trusted.",
-      hint: "Use the OpenAI or OpenUI preset, a loopback local server, or a custom endpoint whose key is entered in Settings → Model; sidecars must be llama-server or Apple's fm.",
+      hint: "Use the OpenAI or OpenUI preset, a loopback local server, or a custom endpoint whose key is entered in Settings → Model; sidecars must be llama-server.",
     });
   }
   return config;
+}
+
+/**
+ * Apple's model has one shape: the app's bridge, never a server. A config saved when it ran as
+ * `fm serve` (loopback :11535 plus an `/usr/bin/fm` sidecar) becomes that shape instead of being
+ * refused, so the player's choice survives the move.
+ */
+function appleRewrite(config: InferenceConfig): InferenceConfig {
+  return config.kind === "apple-fm" ? { ...PROVIDER_PRESETS["apple-fm"], sidecar: null } : config;
 }
 
 function hostedRewrite(config: InferenceConfig, env: EnvLike): Result<InferenceConfig> {
@@ -271,13 +275,14 @@ export function gatewayNotConfigured(): AppError {
 export async function loadConfig(
   userData: string,
   env: EnvLike = process.env,
+  hasAppleFm = false,
 ): Promise<InferenceConfig> {
   try {
     const text = await readFile(configPath(userData), "utf8");
     const parsed = parseConfig(JSON.parse(text) as unknown, env);
-    return parsed.ok ? parsed.value : defaultConfig(env);
+    return parsed.ok ? parsed.value : defaultConfig(env, hasAppleFm);
   } catch {
-    return defaultConfig(env);
+    return defaultConfig(env, hasAppleFm);
   }
 }
 

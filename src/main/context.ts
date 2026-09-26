@@ -1,11 +1,15 @@
 import type { SceneProvider } from "@shared/scene-generation";
+import type { AppleChat } from "./inference/appleChat";
 
 // Dependency bag handed to every IPC module in main. Keeps modules free of direct BrowserWindow
 // references so they can be unit-tested with a fake context.
 
 export interface MainContext {
-  /** The app-session Apple provider; null on platforms where its Swift helper cannot run. */
-  appleLocalProvider: SceneProvider | null;
+  /**
+   * The app-session Apple provider: structured scenes and plain chat through one Swift helper the
+   * app starts itself. Null on platforms where it cannot run.
+   */
+  appleLocalProvider: (SceneProvider & AppleChat) | null;
   /** Electron `app.getPath("userData")`. */
   userData: string;
   /** `<userData>/worlds` — created on boot. */

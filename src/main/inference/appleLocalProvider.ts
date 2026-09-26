@@ -3,6 +3,7 @@
 
 import { isDeepStrictEqual } from "node:util";
 import { serializeScene } from "@dsl";
+import type { ChatRequest } from "@shared/llm";
 import type { Result } from "@shared/result";
 import { fail, ok } from "@shared/result";
 import type {
@@ -15,6 +16,12 @@ import type {
 } from "@shared/scene-generation";
 import { BIOMES, PROP_KINDS, TILES } from "@shared/world";
 import { z } from "zod";
+import {
+  type AppleChat,
+  type AppleChatStatus,
+  type AppleChatStep,
+  runAppleChat,
+} from "./appleChat";
 import {
   NATIVE_PROTOCOL_VERSION,
   type NativeEvent,
@@ -208,7 +215,7 @@ function nativeFailure(code: string, message: string, hint?: string): Result<nev
   return fail(hint === undefined ? { code, message } : { code, message, hint });
 }
 
-export class AppleLocalSceneProvider implements SceneProvider {
+export class AppleLocalSceneProvider implements SceneProvider, AppleChat {
   readonly id = "apple-local" as const;
   private sequence = 0;
 
@@ -217,7 +224,7 @@ export class AppleLocalSceneProvider implements SceneProvider {
     private readonly timeoutMs = 120_000,
   ) {}
 
-  async capabilities(): Promise<Result<ProviderCapabilities>> {
+  private async readCapabilities(): Promise<Result<z.infer<typeof capabilitiesSchema>>> {
     const response = await this.request("capabilities", {});
     if (!response.ok) return response;
     const parsed = capabilitiesSchema.safeParse(response.value);
@@ -228,14 +235,54 @@ export class AppleLocalSceneProvider implements SceneProvider {
         parsed.error.issues[0]?.message,
       );
     }
-    const methods = new Map(parsed.data.methods.map((entry) => [entry.method, entry.status]));
+    return ok(parsed.data);
+  }
+
+  /** Chat needs only the running model and a helper new enough to have the method. */
+  async chatStatus(): Promise<Result<AppleChatStatus>> {
+    const parsed = await this.readCapabilities();
+    if (!parsed.ok) return parsed;
+    const { foundationModels, methods } = parsed.value;
+    const method = methods.some((entry) => entry.method === "chat" && entry.status === "available");
+    const available = foundationModels.runtimeAvailable && method;
+    return ok({
+      available,
+      reason: available
+        ? null
+        : foundationModels.runtimeAvailable
+          ? "chat_unsupported"
+          : foundationModels.status,
+      contextTokens: foundationModels.contextTokens ?? null,
+    });
+  }
+
+  chat(
+    request: ChatRequest,
+    minTokens: number,
+    onDelta: (text: string) => void,
+    signal: AbortSignal,
+  ): Promise<Result<AppleChatStep>> {
+    return runAppleChat(
+      (payload, options) => this.request("chat", payload, options.signal, options.onPartial),
+      request,
+      minTokens,
+      onDelta,
+      signal,
+    );
+  }
+
+  async capabilities(): Promise<Result<ProviderCapabilities>> {
+    const read = await this.readCapabilities();
+    if (!read.ok) return read;
+    const capabilities = read.value;
+    const methods = new Map(capabilities.methods.map((entry) => [entry.method, entry.status]));
     const vocabularyMatches =
-      sameOrderedValues(parsed.data.layoutVocabulary.biomes, BIOMES) &&
-      sameOrderedValues(parsed.data.layoutVocabulary.tiles, TILES) &&
-      sameOrderedValues(parsed.data.layoutVocabulary.propKinds, PROP_KINDS);
+      sameOrderedValues(capabilities.layoutVocabulary.biomes, BIOMES) &&
+      sameOrderedValues(capabilities.layoutVocabulary.tiles, TILES) &&
+      sameOrderedValues(capabilities.layoutVocabulary.propKinds, PROP_KINDS);
     const runtimeReady =
-      parsed.data.foundationModels.runtimeAvailable &&
-      parsed.data.foundationModels.guidedGeneration === true &&
+      capabilities.foundationModels.runtimeAvailable &&
+      capabilities.foundationModels.guidedGeneration === true &&
       methods.get("generateEvents") === "available" &&
       methods.get("generateLayout") === "available";
     const available = runtimeReady && vocabularyMatches;
@@ -244,7 +291,7 @@ export class AppleLocalSceneProvider implements SceneProvider {
       available,
       locality: "device",
       constraintModes: ["swift-generable"],
-      contextTokens: parsed.data.foundationModels.contextTokens ?? null,
+      contextTokens: capabilities.foundationModels.contextTokens ?? null,
       supportsStreaming: false,
       supportsReasoning: false,
       supportedPurposes,
@@ -253,7 +300,7 @@ export class AppleLocalSceneProvider implements SceneProvider {
         : {
             unavailableReason: runtimeReady
               ? "native_vocabulary_mismatch"
-              : parsed.data.foundationModels.status,
+              : capabilities.foundationModels.status,
           }),
     });
   }
@@ -377,10 +424,12 @@ export class AppleLocalSceneProvider implements SceneProvider {
     }
   }
 
+  /** A streamed answer's timeout restarts at every partial event: it measures silence, not length. */
   private async request(
     method: NativeMethod,
     payload: unknown,
     signal?: AbortSignal,
+    onPartial?: (payload: unknown) => void,
   ): Promise<Result<unknown>> {
     if (signal?.aborted) {
       return nativeFailure("request-aborted", "Foundation Models generation was cancelled.");
@@ -419,13 +468,22 @@ export class AppleLocalSceneProvider implements SceneProvider {
         );
       };
       const handle = (event: NativeEvent) => {
-        if (event.type === "result") finish(ok(event.payload));
+        if (event.type === "partial") {
+          if (settled || onPartial === undefined) return;
+          clearTimeout(timer);
+          timer = setTimeout(expire, this.timeoutMs);
+          try {
+            onPartial(event.payload);
+          } catch {
+            // Observers cannot break provider execution.
+          }
+        } else if (event.type === "result") finish(ok(event.payload));
         else if (event.type === "error") finish(fail(event.error));
         else if (event.type === "cancelled") {
           finish(nativeFailure("request-aborted", "Foundation Models generation was cancelled."));
         }
       };
-      const timer = setTimeout(() => {
+      const expire = () => {
         void cancelAndFinish(
           nativeFailure(
             "native-helper-timeout",
@@ -433,7 +491,8 @@ export class AppleLocalSceneProvider implements SceneProvider {
             "Retry the request; if it repeats, restart the app or use another provider.",
           ),
         );
-      }, this.timeoutMs);
+      };
+      let timer = setTimeout(expire, this.timeoutMs);
       signal?.addEventListener("abort", abort, { once: true });
       if (signal?.aborted) abort();
       void this.transport

@@ -25,6 +25,7 @@ import { gatewayModels } from "../account/gatewayHttp";
 import { accountService } from "../account/service";
 import { handle } from "../handle";
 import { recordUsage } from "../usage/ipc";
+import { probeApple, streamAppleChat } from "./appleChat";
 import { streamChat } from "./client";
 import { loadConfig, parseConfig, saveConfig } from "./config";
 import { readContextWindow } from "./context";
@@ -72,6 +73,29 @@ const toolSchemaSchema = z.object({
   parameters: z.record(z.string(), z.unknown()),
 });
 
+const identifierSchema = z.string().regex(/^[A-Za-z_][A-Za-z0-9_]{0,63}$/);
+
+/** One root call of words and bounded lists; only Apple's bridge reads it. */
+const programShapeSchema = z
+  .object({
+    root: identifierSchema,
+    args: z
+      .array(
+        z
+          .object({
+            name: identifierSchema,
+            description: z.string().max(400),
+            kind: z.enum(["text", "list"]),
+            minItems: z.number().int().min(0).max(64).optional(),
+            maxItems: z.number().int().min(1).max(64).optional(),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(16),
+  })
+  .strict();
+
 const chatRequestSchema = z.object({
   id: z.string().min(1).max(128),
   // A tool turn appends an assistant + tool message per step, so the budget is larger than the
@@ -83,6 +107,7 @@ const chatRequestSchema = z.object({
   stop: z.array(z.string()).max(8),
   tools: z.array(toolSchemaSchema).max(64),
   minTokens: z.number().int().min(1).max(32_768).optional(),
+  program: programShapeSchema.optional(),
   usage: usageTagSchema,
 });
 
@@ -107,8 +132,15 @@ export function registerInferenceIpc(ctx: MainContext): void {
   const account = accountService(ctx);
   const routeDeps: RouteDeps = { env: process.env, readSaved: readKeyRecord, gatewayModels };
 
+  /** First run on a Mac whose Apple Intelligence answers: the on-device model is the default. */
+  async function appleAnswers(): Promise<boolean> {
+    if (ctx.appleLocalProvider === null) return false;
+    const status = await ctx.appleLocalProvider.chatStatus();
+    return status.ok && status.value.available;
+  }
+
   async function currentConfig(): Promise<InferenceConfig> {
-    if (cached === null) cached = await loadConfig(ctx.userData);
+    if (cached === null) cached = await loadConfig(ctx.userData, process.env, await appleAnswers());
     return cached;
   }
 
@@ -162,13 +194,15 @@ export function registerInferenceIpc(ctx: MainContext): void {
       hosted = routed.value.route === "hosted";
       settled = { ...settled, provider: config.kind, model: config.model };
       const context = hosted ? null : await contextFor(config, false);
-      const result = await streamChat(
-        config,
-        request,
-        (text) => emit({ id: request.id, type: "delta", text }),
-        controller.signal,
-        { apiKey: key?.key ?? null, context },
-      );
+      const onDelta = (text: string) => emit({ id: request.id, type: "delta", text });
+      // Apple's model is answered inside the app by the bridge; every other kind over HTTP.
+      const result =
+        config.kind === "apple-fm"
+          ? await streamAppleChat(ctx.appleLocalProvider, request, onDelta, controller.signal)
+          : await streamChat(config, request, onDelta, controller.signal, {
+              apiKey: key?.key ?? null,
+              context,
+            });
       // A refused account token: drop that saved token so UNMAPPED_GATEWAY_KEY is used next.
       if (!result.ok && hosted && key !== null && isDeadTokenCode(result.error.code)) {
         await account.forgetDeadToken(key);
@@ -246,14 +280,12 @@ export function registerInferenceIpc(ctx: MainContext): void {
     },
   );
 
-  // Apple's model has no daemon of its own: a probe starts `fm serve` whenever it is not running.
-  // Unaccepted terms make fm exit at once, so the renderer's offline re-probe notices
-  // `sudo fm license` within one retry; the reason stays visible as the sidecar's error.
+  // Apple's model has no server: the probe asks the app's own bridge whether it answers chat.
   ipcMain.handle(IPC.inference.probe, async (): Promise<Result<ProbeResult>> => {
     const config = await currentConfig();
-    const idle = sidecar.status().state === "stopped" || sidecar.status().state === "error";
-    if (config.kind === "apple-fm" && config.sidecar !== null && idle) {
-      await sidecar.start(config.sidecar);
+    if (config.kind === "apple-fm") {
+      const reached = await probeApple(ctx.appleLocalProvider);
+      return ok({ ...reached, context: reached.reachable ? await contextFor(config, true) : null });
     }
     // The probe asks where the next call would go, so an own-key-less OpenAI setting probes the
     // gateway when that is where its calls go.

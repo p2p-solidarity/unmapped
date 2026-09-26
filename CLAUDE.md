@@ -324,7 +324,11 @@ Components take **positional** args in zod key order (required first). Enums com
   `inference:event`, abort, `/v1/models` probe, and the `llama-server` sidecar (spawn, health poll,
   kill on quit). Apple's on-device model (`apple-fm`) is answered inside the app by the afm-bridge
   `chat` method (`appleChat.ts`: streamed partials, host tool calls, cancel) — never `fm serve`, no
-  port, no `sudo fm license`; a saved `fm serve` config is read as Apple-in-app.
+  port, no `sudo fm license`; a saved `fm serve` config is read as Apple-in-app. The bridge budgets
+  every Apple call with the model's own `tokenCount` (main sends `maxTokens` + `minTokens`, never its
+  `fitOutput` estimate), and a request with a `program` shape (`programShape` in `src/dsl`, today only
+  `BIBLE_SHAPE`) is answered under guided generation and written back as an OpenUI Lang program the
+  parser still checks — the small model does not close a free-text list.
 - `histories/`, `identity/`, `blobs/`: a world's shared history on this device (see "`src/main/histories`").
   `account/`, `billing/`: the gateway client. `images/`: picture providers and licences.
   `bundles/`: `.world` files and moving worlds. Each has its section below.
