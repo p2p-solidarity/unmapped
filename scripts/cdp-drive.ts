@@ -58,6 +58,12 @@ ws.addEventListener("message", (event) => {
   const msg = JSON.parse(String(event.data));
   if (msg.id !== undefined) pending.get(msg.id)?.(msg);
 });
+// A command that closes the page (e.g. {cdp: {method: "Browser.close"}}) gets no reply: every
+// request still waiting when the socket closes resolves with an error instead of hanging the run.
+ws.addEventListener("close", () => {
+  for (const resolve of pending.values()) resolve({ error: { message: "the page closed" } });
+  pending.clear();
+});
 function send(method: string, params: object = {}): Promise<CdpReply> {
   seq += 1;
   const id = seq;
@@ -247,7 +253,14 @@ async function run(list: any[]): Promise<void> {
           ? (replies[value.slice(1)] ?? value)
           : value,
       );
-      const r = await send(action.cdp.method, params);
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const r = await Promise.race([
+        send(action.cdp.method, params),
+        new Promise<CdpReply>((resolve) => {
+          timer = setTimeout(() => resolve({ error: { message: "no reply within 10 s" } }), 10_000);
+        }),
+      ]);
+      clearTimeout(timer);
       Object.assign(replies, r.result ?? {});
       console.log(JSON.stringify(r.result ?? r.error));
     } else if (action.eval !== undefined) {
