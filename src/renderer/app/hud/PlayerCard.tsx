@@ -13,6 +13,7 @@ import { useT } from "@renderer/i18n";
 import { useRunStore, useWorldStore } from "@renderer/state";
 import { colors, radius, StatePanel, Surface, space, Text } from "@renderer/ui";
 import type { JSX } from "react";
+import { plainSaveName } from "../library/rows";
 import { EnsTitle } from "./EnsChip";
 import { Goal } from "./Goal";
 import { LandStatus } from "./LandStatus";
@@ -108,7 +109,12 @@ export function PlayerCard({ summary }: { summary: HudSummary }): JSX.Element {
         gap: space.sm,
       }}
     >
-      <EnsTitle shown={openLand} worldName={summary.worldName ?? t("hud.noWorldLoaded")} />
+      <EnsTitle
+        shown={openLand}
+        worldName={
+          summary.worldName === null ? t("hud.noWorldLoaded") : plainSaveName(summary.worldName)
+        }
+      />
       {openLand ? (
         <>
           <Goal />

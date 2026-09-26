@@ -154,9 +154,14 @@ function isKeyError(error: AppError): boolean {
   return error.code.startsWith("identity-");
 }
 
-function noticeOf(ensured: WorldEnsured): void {
+/**
+ * What opening the world changed, told once. A first migration is only news when the save had
+ * something to carry (land, notes, signposts); a brand-new world's first open migrates too, and
+ * "brought up to date" would only puzzle a new player.
+ */
+function noticeOf(ensured: WorldEnsured, carried: boolean): void {
   const toast = useSessionStore.getState().toast;
-  if (ensured.migrated) {
+  if (ensured.migrated && carried) {
     toast("info", translate("landHistory.migrated", { n: ensured.status.head.n }));
   }
   if (ensured.added > 0) toast("info", translate("landHistory.caughtUp", { n: ensured.added }));
@@ -250,8 +255,11 @@ export async function openWorldLand(instanceId: string): Promise<void> {
     ensured: ensured.value,
   });
   useLandStore.getState().setPersonal(instanceId, ensured.value.progress);
-  useLandStore.getState().applyWorld(instanceId, landFromHistory(overlay, legacy));
-  noticeOf(ensured.value);
+  const land = landFromHistory(overlay, legacy);
+  useLandStore.getState().applyWorld(instanceId, land);
+  const carried =
+    Object.keys(land.chunks).length > 0 || land.notes.length > 0 || land.signposts.length > 0;
+  noticeOf(ensured.value, carried);
   if (active.missed) void reread(active);
 }
 
