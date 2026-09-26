@@ -17,6 +17,7 @@ import { isCompatible } from "../title/CartridgesPanel";
 import { isCancelled } from "../title/useLibrary";
 import { openInstance } from "../useInstanceLoader";
 import { AUTOFOCUS, useArrowFocus } from "./focus";
+import { useRestoreNotice } from "./RestoreNotice";
 import type { SectionProps } from "./sections";
 
 /** The newest compatible revision of the save's cartridge that is newer than its pin. */
@@ -39,6 +40,7 @@ export function SavesPanel({ data, refresh, onClose }: SectionProps): JSX.Elemen
   const [cursor, setCursor] = useState(0);
   const [busy, setBusy] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
+  const restoreNotice = useRestoreNotice();
 
   const library = data.status === "ready" ? data.value : null;
   const saves = library?.instances ?? [];
@@ -74,6 +76,7 @@ export function SavesPanel({ data, refresh, onClose }: SectionProps): JSX.Elemen
         return;
       }
       toast("success", t("title.restored", { name: result.value.instance.meta.name }));
+      restoreNotice.show(result.value.historyNotice);
       await refresh();
     });
   };
@@ -154,6 +157,7 @@ export function SavesPanel({ data, refresh, onClose }: SectionProps): JSX.Elemen
           {t("title.restoreBackup")}
         </Button>
       </div>
+      {restoreNotice.view}
     </>
   );
 }

@@ -1,6 +1,7 @@
 // Writing a place (地點): the model writes what lives in a course or a dungeon, and what each of
 // its residents says, against the world bible; the host builds the ground around it. Parse → issues
-// → repair ≤ 2 rounds (Rule 7); a place that never parses is an error, never a stand-in.
+// → repair ≤ 2 rounds (Rule 7), a content refusal of the event it becomes counting as one (D5); a
+// place that never parses is an error, never a stand-in.
 
 import { bibleSections, type PlaceDraft, parsePlace } from "@dsl";
 import { dslError } from "@dsl/parse/program";
@@ -13,7 +14,12 @@ import { generateProgram, type Program } from "./pipeline";
 export const PLACE_MAX_TOKENS = 2400;
 
 export function generatePlace(
-  ctx: PlacePromptContext & { bible: WorldBible | null; signal?: AbortSignal },
+  ctx: PlacePromptContext & {
+    bible: WorldBible | null;
+    signal?: AbortSignal;
+    /** Keeps a parsed place (its `place` or `chapter` event); a content refusal is repaired (D5). */
+    accept?: (program: { source: string; graph: PlaceDraft }) => Promise<Result<unknown>>;
+  },
 ): Promise<Result<Program<PlaceDraft>>> {
   const bible = ctx.bible === null ? null : bibleSections(ctx.bible);
   return generateProgram<PlaceDraft>({
@@ -47,6 +53,7 @@ export function generatePlace(
           ],
         }),
     ...(ctx.signal === undefined ? {} : { signal: ctx.signal }),
+    ...(ctx.accept === undefined ? {} : { accept: ctx.accept }),
     maxTokens: PLACE_MAX_TOKENS,
     temperature: 0.9,
   });

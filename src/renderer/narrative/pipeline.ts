@@ -13,9 +13,9 @@ import { ORDER, type PromptPurpose } from "@harness";
 import { useInferenceStore } from "@renderer/state/inferenceStore";
 import type { ChunkCoord } from "@shared/chunks";
 import type { ChatMessage } from "@shared/llm";
-import { fail, ok, type Result } from "@shared/result";
+import { type AppError, fail, ok, type Result } from "@shared/result";
 import type { UsagePurpose } from "@shared/usage";
-import { type Program, type ProgramChat, runProgram } from "./program";
+import { acceptedOf, type Program, type ProgramChat, runProgram } from "./program";
 import { DSL_SECTION, runNarrativeTurn, type TurnSection } from "./turn";
 
 /**
@@ -83,6 +83,25 @@ export interface GenerateProgramInput<T> {
   onDelta?(text: string): void;
   /** Aborts the model call in flight (`chat(..., { signal })`) and stops between repair rounds. */
   signal?: AbortSignal;
+  /**
+   * Commits a program that parsed — usually the append of the event it becomes (D5). A refusal
+   * about the program (`isContentRefusal`: its size, words, lore links) goes back to the model as
+   * a repair round with its code, message and hint, from the same two; any other is returned at
+   * once. Never called once `signal` aborted.
+   */
+  accept?(program: { source: string; graph: T }): Promise<Result<unknown>>;
+}
+
+/** A refusal from main in the shape `repairPrompt` quotes: its code, message and hint. */
+export function refusalAsDslError(error: AppError): DslError {
+  return {
+    code: error.code,
+    message: error.message,
+    ...(error.hint === undefined ? {} : { hint: error.hint }),
+    errors: [],
+    unresolved: [],
+    orphaned: [],
+  };
 }
 
 export function generateProgram<T>(input: GenerateProgramInput<T>): Promise<Result<Program<T>>> {
@@ -91,10 +110,16 @@ export function generateProgram<T>(input: GenerateProgramInput<T>): Promise<Resu
     ...(input.coord === undefined ? {} : { coord: input.coord }),
     ...(input.signal === undefined ? {} : { signal: input.signal }),
   };
+  const { accept, ...spec } = input;
   return runProgram<T, DslError>(harnessChat(input.purpose, input.task, input.language, extra), {
-    ...input,
+    ...spec,
     normalize: normalizeOutput,
     repair: repairPrompt,
+    ...(accept === undefined
+      ? {}
+      : {
+          accept: async (program) => acceptedOf(await accept(program), refusalAsDslError),
+        }),
   });
 }
 

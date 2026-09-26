@@ -99,14 +99,26 @@ export function playerName(): string {
   return generated;
 }
 
+const nameListeners = new Set<(name: string) => void>();
+
+/** Called after the per-device player name really changed (the open world writes a `profile`). */
+export function onPlayerNameChange(listener: (name: string) => void): () => void {
+  nameListeners.add(listener);
+  return () => nameListeners.delete(listener);
+}
+
 export function setPlayerName(name: string): void {
   const trimmed = name.trim();
   if (trimmed.length === 0) return;
+  let before: string | null = null;
   try {
+    before = localStorage.getItem(PLAYER_NAME_KEY);
     localStorage.setItem(PLAYER_NAME_KEY, trimmed);
   } catch {
     // Awareness still receives the profile display name for this room.
   }
+  if (before === trimmed) return;
+  for (const listener of nameListeners) listener(trimmed);
 }
 
 function connections(provider: WebrtcProvider): SignalingConnLike[] {

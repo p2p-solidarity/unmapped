@@ -1,6 +1,7 @@
 // Writing a story chapter for play on the land: the model writes its people, their words, its finds
-// and its foes against the world bible; parse → issues → repair ≤ 2 rounds (Rule 7). A chapter that
-// never parses is an error the player sees, never a stand-in.
+// and its foes against the world bible; parse → issues → repair ≤ 2 rounds (Rule 7), a content
+// refusal of its `chapter` event counting as one (D5). A chapter that never parses is an error the
+// player sees, never a stand-in.
 
 import { bibleSections, type ChapterDraft, type ChapterPromptContext, chapterPrompt } from "@dsl";
 import { parseChapter } from "@dsl/parse/chapter";
@@ -12,7 +13,12 @@ import { generateProgram, type Program } from "./pipeline";
 export const CHAPTER_MAX_TOKENS = 2400;
 
 export function generateChapter(
-  ctx: ChapterPromptContext & { bible: WorldBible | null; signal?: AbortSignal },
+  ctx: ChapterPromptContext & {
+    bible: WorldBible | null;
+    signal?: AbortSignal;
+    /** Keeps a parsed chapter (its `chapter` event); a content refusal is repaired (D5). */
+    accept?: (program: { source: string; graph: ChapterDraft }) => Promise<Result<unknown>>;
+  },
 ): Promise<Result<Program<ChapterDraft>>> {
   const bible = ctx.bible === null ? null : bibleSections(ctx.bible);
   return generateProgram<ChapterDraft>({
@@ -31,6 +37,7 @@ export function generateChapter(
           ],
         }),
     ...(ctx.signal === undefined ? {} : { signal: ctx.signal }),
+    ...(ctx.accept === undefined ? {} : { accept: ctx.accept }),
     maxTokens: CHAPTER_MAX_TOKENS,
     temperature: 0.9,
   });
