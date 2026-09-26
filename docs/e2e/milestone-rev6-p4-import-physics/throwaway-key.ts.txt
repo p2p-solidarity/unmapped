@@ -1,0 +1,4 @@
+// E2E only: the author key of a throwaway secret named on the command line (no secret is printed).
+import { sha256Bytes } from "@shared/history/ids";
+import { authorKeyFor } from "@shared/history/sign";
+console.log(authorKeyFor(sha256Bytes(`p4-import-physics:${process.argv[2] ?? "x"}`)));

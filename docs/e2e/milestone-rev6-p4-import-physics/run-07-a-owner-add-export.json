@@ -1,0 +1,42 @@
+{
+ "step": 7,
+ "app": "A",
+ "port": 9344,
+ "what": "Add one owner.add to the never-attached 1.2.0 world with window.seed.world.addOwner (the preload call the door's people rows use; a local-only world has no member rows to click), naming a throwaway key that is not B's; then leave Play, Worlds → World files → Export .world (the dialog answers $SCR/files/a2.world, overwriting the physics-99 copy)",
+ "actions": [
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); const r = await window.seed.world.addOwner(n.world, 'k6dd3ubd6m3ga5prp5vwrmkll7hwvxtj47lqwkbbrc4b3kptkdlxa'); await new Promise(res => setTimeout(res, 800)); const m = H.worldNow(); return JSON.stringify({ added: r.ok ? r.value : r.error, head: m.head, owners: Object.keys(m.owners ?? {}), kinds: null }) })()"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Worlds"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "World files"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('Worlds on this device'); return t.slice(at, at + 600) })()"
+  },
+  {
+   "clickText": "Export .world"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 80; i++) { const t = document.body.innerText; if (/Wrote .*KiB/.test(t) || /Error/.test(t)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('Worlds on this device'); return t.slice(at, at + 800) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-import-physics/a-04-exported-120.jpg"
+  }
+ ]
+}

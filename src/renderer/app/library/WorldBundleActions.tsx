@@ -30,16 +30,21 @@ import type { SectionProps } from "./sections";
 const column = { display: "flex", flexDirection: "column", gap: space.xs } as const;
 const row = { display: "flex", flexWrap: "wrap", gap: space.xs, alignItems: "center" } as const;
 
-function MoveBlock({ world }: { world: BundleWorld }): JSX.Element {
+function MoveBlock({ world, onMoved }: { world: BundleWorld; onMoved(): void }): JSX.Element {
   const t = useT();
   const services = useMemo(() => worldServices().filter((url) => url !== world.url), [world.url]);
   const [address, setAddress] = useState("");
   const move = useAction<{ url: string }>();
   const run = (url: string): void => {
-    void move.run(async () => {
-      const done = await window.seed.world.attach(world.worldId, url);
-      return done.ok ? ok({ url }) : done;
-    });
+    void move
+      .run(async () => {
+        const done = await window.seed.world.attach(world.worldId, url);
+        return done.ok ? ok({ url }) : done;
+      })
+      .then((result) => {
+        // The row re-reads where the world lives now; this block (and its move link) stays open.
+        if (result?.ok) onMoved();
+      });
   };
   const typed = address.trim();
   return (
@@ -134,13 +139,7 @@ function WorldRow({ world, onMoved }: { world: BundleWorld; onMoved(): void }): 
           {t("bundle.export")}
         </Button>
         {world.owner && world.attached ? (
-          <Button
-            variant="ghost"
-            onClick={() => {
-              if (moving) onMoved();
-              setMoving(!moving);
-            }}
-          >
+          <Button variant="ghost" onClick={() => setMoving(!moving)}>
             {t("bundle.moveHeading")}
           </Button>
         ) : null}
@@ -159,7 +158,7 @@ function WorldRow({ world, onMoved }: { world: BundleWorld; onMoved(): void }): 
           })}
         </Text>
       ) : null}
-      {moving ? <MoveBlock world={world} /> : null}
+      {moving ? <MoveBlock world={world} onMoved={onMoved} /> : null}
     </Surface>
   );
 }
@@ -320,8 +319,9 @@ function ImportBlock({ refresh }: { refresh(): Promise<void> }): JSX.Element {
 export function WorldBundleActions({ refresh, onClose }: SectionProps): JSX.Element {
   const t = useT();
   const [worlds, setWorlds] = useState<Loadable<BundleWorld[]>>(loading());
+  // Re-read in place (no loading state between), so rows stay mounted: a row that just moved shows
+  // its new service and keeps its open move block with the link to send.
   const load = useCallback(async () => {
-    setWorlds(loading());
     setWorlds(fromResult(await window.seed.bundle.list()));
   }, []);
   useEffect(() => {

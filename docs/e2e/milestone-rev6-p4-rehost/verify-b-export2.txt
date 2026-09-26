@@ -1,0 +1,12 @@
+world      hmurplfsx6wzlxrwysnkkkb4htxpdr7as5ufqwmk2k6hdkdio44ga "Lantern Delta"
+cartridge  lantern-delta-9c19fd@1.0.0 sha256:d16ea4abadd7a1f713d8630c4d8bdcc7b7820f70831a564055067d603cc2be46
+head       #15 sha256:beb3f204ea486e5108606e221c62f30813b2fb46da3577fb00cd8c8cdc187e43
+physics    1   protocol 2
+exported   2026-09-26T04:21:49.269Z by khjqwqxgvotpetna673pluom726wj4oolytp3juukeufop3erntcq (signature valid)
+entries    15 by 2 keys; owners 2
+services   ws://127.0.0.1:8797 (kxccio7d3a… from #7), ws://127.0.0.1:8798 (kz5ctdhpyy… from #14)
+beats      0 (0 do not recompute)
+ignored    0 (0 from a newer build)
+packs      2 (1 AI worlds), 33026 bytes in all
+checked in 183 ms
+OK — every check passed.

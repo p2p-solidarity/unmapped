@@ -1,0 +1,1897 @@
+{
+ "flow": "p4-rehost",
+ "env": {
+  "build": "origin/main 8813246, exported with `git archive 8813246 | tar -x -C $SCR/tree` (no git state touched; the repo checkout is at 51817a3, 4 commits behind origin/main). node_modules and .env symlinked to the repo's; native/afm-bridge/.build copied. Copied in from the working tree: other agents' uncommitted history fixes src/main/histories/ensure.ts (adopt only when not an owner), src/dsl/history/migrate{Land,Source}.ts, src/main/instances/saveHash.ts. Snapshot-only line: electron.vite.config.ts renderer `cacheDir: resolve(__dirname, '.vite-cache')`. Steps 1–39 ran on that tree; steps 40–45 (FIX CHECK) ran on it plus this session's fix to src/renderer/app/library/WorldBundleActions.tsx.",
+  "SCR": "/private/tmp/claude-501/-Users-kidney-Workspace-Hackathon-unmapped/f9f28666-cad2-48fd-9df0-065e8d1d73c3/scratchpad/p4d5",
+  "services": "S1 :8797 ($SCR/s1), S2 :8798 ($SCR/s2), S3 :8797 ($SCR/s3, fix check only); all UNMAPPED_SERVICE_TEST=1, run from $SCR/tree",
+  "apps": "cd $SCR/tree && AETHER_TEST_USER_DATA=$SCR/<ud> node_modules/.bin/electron-vite dev --remoteDebuggingPort <port> (the afm-bridge build step of `bun run dev` skipped: another session edits native/afm-bridge). B also AETHER_TEST_WORLD_PATH=$SCR/files/b.world. Fresh empty userData per device: A 9344, B 9345, C 9346, C2 9344 (after A was gone).",
+  "driver": "CDP_PORT=<port> bun scripts/cdp-drive.ts \"$(cat <run-NN file>)\" from the repo root (scripts/cdp-drive.ts is origin/main's)",
+  "quit": "quit.ts <port>: GET /json/version → webSocketDebuggerUrl → Browser.close",
+  "invite": "__INVITE__ is the link the named earlier step returned; substitute it literally (python), never with sed (the link holds '&k=' and '&o=')",
+  "ui": "English chosen in Settings in each app's first step; a relaunch gets a new dev origin port, so localStorage (language, services) starts empty again (steps 41, 43)",
+  "window": "1440 × ~846 CSS px at scale 2, in the background",
+  "platform": "macOS 27.0, Bun 1.3.6, Electron 44.3.0, Vite 8.3.0"
+ },
+ "model": {
+  "provider": "openai",
+  "model": "gpt-5.4-mini",
+  "source": "Settings → Model default on a fresh userData (OPENAI_API_KEY in the repo .env, read by main only)",
+  "pictures": "none drawn: A's images.json chose qwen-image-2512 with no server (3 × [look] fail image-server-unreachable, 2–3 ms); the AI world was asked for CSS shapes only"
+ },
+ "steps": [
+  {
+   "step": 1,
+   "app": "-",
+   "port": null,
+   "what": "snapshot: see env.build",
+   "command": "git archive 8813246 | tar -x -C $SCR/tree; ln -s <repo>/node_modules <repo>/.env $SCR/tree/; cp <repo>/src/{main/histories/ensure.ts,main/instances/saveHash.ts,dsl/history/migrateLand.ts,dsl/history/migrateSource.ts} into the snapshot; renderer cacheDir line in electron.vite.config.ts",
+   "actions": null
+  },
+  {
+   "step": 2,
+   "app": "-",
+   "port": null,
+   "what": "A's image provider: Qwen-Image-2512 with no server, so Create's look step draws nothing",
+   "command": "printf '{\"v\":1,\"provider\":\"qwen-image-2512\"}' > $SCR/udA/images.json",
+   "actions": null
+  },
+  {
+   "step": 3,
+   "app": "-",
+   "port": null,
+   "what": "start S1",
+   "command": "cd $SCR/tree && UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8797 --data $SCR/s1   # key kxccio7d3agoewexptub2rdehodztmzqmrgpif2yqnuesp5etcpea",
+   "actions": null
+  },
+  {
+   "step": 4,
+   "app": "-",
+   "port": null,
+   "what": "start A, B, C (fresh empty userData each)",
+   "command": "cd $SCR/tree && AETHER_TEST_USER_DATA=$SCR/udA node_modules/.bin/electron-vite dev --remoteDebuggingPort 9344; … udB + AETHER_TEST_WORLD_PATH=$SCR/files/b.world … 9345; … udC … 9346",
+   "actions": null
+  },
+  {
+   "step": 5,
+   "app": "A",
+   "port": 9344,
+   "what": "Settings: English; Shared worlds: ws://127.0.0.1:8797 and ws://127.0.0.1:8798, Save, Test",
+   "file": "run-05-a-settings.json",
+   "actions": [
+    {
+     "clickText": "設定"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "English"
+    },
+    {
+     "wait": 600
+    },
+    {
+     "eval": "(() => { const ta = [...document.querySelectorAll('textarea')].find(t => (t.closest('label')?.innerText ?? '').includes('World services') || (t.labels?.[0]?.innerText ?? '').includes('World services')); if (!ta) return 'no field'; ta.scrollIntoView({block: 'center'}); ta.focus(); return ta === document.activeElement })()"
+    },
+    {
+     "type": "ws://127.0.0.1:8797, ws://127.0.0.1:8798"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Save"
+    },
+    {
+     "wait": 400
+    },
+    {
+     "eval": "(() => { const field = [...document.querySelectorAll('textarea')].find(t => t.value.includes('ws://127.0.0.1:8797')); let box = field; while (box && ![...box.querySelectorAll('button')].some(b => b.innerText.trim() === 'Test')) box = box.parentElement; if (!box) return 'no Test'; const btn = [...box.querySelectorAll('button')].find(b => b.innerText.trim() === 'Test'); btn.scrollIntoView({block: 'center'}); btn.click(); return 'clicked Test' })()"
+    },
+    {
+     "wait": 3000
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('ws://127.0.0.1:8797\\n'); return at < 0 ? 'no probe line' : t.slice(at, at + 700) })()"
+    },
+    {
+     "eval": "localStorage.getItem('unwritten.worldServices')"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/a-00-settings-services.jpg"
+    }
+   ]
+  },
+  {
+   "step": 6,
+   "app": "B",
+   "port": 9345,
+   "what": "Settings: English; Shared worlds: ws://127.0.0.1:8797 and ws://127.0.0.1:8798, Save, Test",
+   "file": "run-06-b-settings.json",
+   "actions": [
+    {
+     "clickText": "設定"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "English"
+    },
+    {
+     "wait": 600
+    },
+    {
+     "eval": "(() => { const ta = [...document.querySelectorAll('textarea')].find(t => (t.closest('label')?.innerText ?? '').includes('World services') || (t.labels?.[0]?.innerText ?? '').includes('World services')); if (!ta) return 'no field'; ta.scrollIntoView({block: 'center'}); ta.focus(); return ta === document.activeElement })()"
+    },
+    {
+     "type": "ws://127.0.0.1:8797, ws://127.0.0.1:8798"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Save"
+    },
+    {
+     "wait": 400
+    },
+    {
+     "eval": "(() => { const field = [...document.querySelectorAll('textarea')].find(t => t.value.includes('ws://127.0.0.1:8797')); let box = field; while (box && ![...box.querySelectorAll('button')].some(b => b.innerText.trim() === 'Test')) box = box.parentElement; if (!box) return 'no Test'; const btn = [...box.querySelectorAll('button')].find(b => b.innerText.trim() === 'Test'); btn.scrollIntoView({block: 'center'}); btn.click(); return 'clicked Test' })()"
+    },
+    {
+     "wait": 3000
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('ws://127.0.0.1:8797\\n'); return at < 0 ? 'no probe line' : t.slice(at, at + 700) })()"
+    },
+    {
+     "eval": "localStorage.getItem('unwritten.worldServices')"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/b-00-settings-services.jpg"
+    }
+   ]
+  },
+  {
+   "step": 7,
+   "app": "C",
+   "port": 9346,
+   "what": "Settings: English; Shared worlds: ws://127.0.0.1:8797 and ws://127.0.0.1:8798, Save, Test",
+   "file": "run-07-c-settings.json",
+   "actions": [
+    {
+     "clickText": "設定"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "English"
+    },
+    {
+     "wait": 600
+    },
+    {
+     "eval": "(() => { const ta = [...document.querySelectorAll('textarea')].find(t => (t.closest('label')?.innerText ?? '').includes('World services') || (t.labels?.[0]?.innerText ?? '').includes('World services')); if (!ta) return 'no field'; ta.scrollIntoView({block: 'center'}); ta.focus(); return ta === document.activeElement })()"
+    },
+    {
+     "type": "ws://127.0.0.1:8797, ws://127.0.0.1:8798"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Save"
+    },
+    {
+     "wait": 400
+    },
+    {
+     "eval": "(() => { const field = [...document.querySelectorAll('textarea')].find(t => t.value.includes('ws://127.0.0.1:8797')); let box = field; while (box && ![...box.querySelectorAll('button')].some(b => b.innerText.trim() === 'Test')) box = box.parentElement; if (!box) return 'no Test'; const btn = [...box.querySelectorAll('button')].find(b => b.innerText.trim() === 'Test'); btn.scrollIntoView({block: 'center'}); btn.click(); return 'clicked Test' })()"
+    },
+    {
+     "wait": 3000
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('ws://127.0.0.1:8797\\n'); return at < 0 ? 'no probe line' : t.slice(at, at + 700) })()"
+    },
+    {
+     "eval": "localStorage.getItem('unwritten.worldServices')"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/c-00-settings-services.jpg"
+    }
+   ]
+  },
+  {
+   "step": 8,
+   "app": "A",
+   "port": 9344,
+   "what": "Title → Create World → Start a new game; idea words + name, Explore, English; Write the world; wait for the seven cards",
+   "file": "run-08-a-create-world.json",
+   "actions": [
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 600
+    },
+    {
+     "clickText": "Create World"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "clickText": "Start a new game"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input')].find(x => (x.closest('label')?.innerText ?? '').includes('In one sentence')); f.focus(); return document.activeElement === f })()"
+    },
+    {
+     "type": "A river delta of lantern ferries where boat folk trade stories for passage"
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input')].find(x => (x.closest('label')?.innerText ?? '').includes('World name')); f.focus(); return document.activeElement === f })()"
+    },
+    {
+     "type": "Lantern Delta"
+    },
+    {
+     "wait": 400
+    },
+    {
+     "eval": "window.__t0 = performance.now(); 'mark'"
+    },
+    {
+     "clickText": "Write the world"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 240; i++) { const t = document.body.innerText; if (/Continue to the look/.test(t) && !/Writing the world bible/.test(t)) return { ms: Math.round(performance.now() - window.__t0) }; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + document.body.innerText.slice(0, 1500) })()"
+    },
+    {
+     "wait": 500
+    },
+    {
+     "eval": "document.body.innerText.slice(0, 4000)"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/a-01-create-world-cards.jpg"
+    }
+   ]
+  },
+  {
+   "step": 9,
+   "app": "A",
+   "port": 9344,
+   "what": "Continue to the look: A's image provider is Qwen-Image-2512 with no server (images.json written before launch), so no picture is drawn; the story writes beside it; Continue without a picture",
+   "file": "run-09-a-create-look.json",
+   "actions": [
+    {
+     "eval": "window.__t0 = performance.now(); 'mark'"
+    },
+    {
+     "clickText": "Continue to the look"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 240; i++) { const t = document.body.innerText; if (/The story is ready/.test(t) && !/Drawing/.test(t)) return { ms: Math.round(performance.now() - window.__t0) }; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + document.body.innerText.slice(0, 2000) })()"
+    },
+    {
+     "eval": "document.body.innerText.slice(0, 3000)"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/a-02-create-look-no-picture.jpg"
+    },
+    {
+     "clickText": "Continue without a picture"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "document.body.innerText.slice(0, 5000)"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/a-03-create-story.jpg"
+    }
+   ]
+  },
+  {
+   "step": 10,
+   "app": "A",
+   "port": 9344,
+   "what": "Continue to build (the quote), Build and play; wait for Play; read the world's history (genesis + pack event)",
+   "file": "run-10-a-create-build.json",
+   "actions": [
+    {
+     "clickText": "Continue to build"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 80; i++) { const t = document.body.innerText; if (/Cost:/.test(t)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('What building asks'); return t.slice(Math.max(0, at), at + 1500) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/a-04-create-quote.jpg"
+    },
+    {
+     "eval": "window.__t0 = performance.now(); 'mark'"
+    },
+    {
+     "clickText": "Build and play"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 240; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance) return { ms: Math.round(performance.now() - window.__t0), instance: s.activeInstance.instance?.instanceId ?? null }; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + document.body.innerText.slice(0, 1500) })()"
+    },
+    {
+     "wait": 8000
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); const P = (await import('/engine/playerProbe.ts')).samplePlayer(); return JSON.stringify({ world: n?.world ?? null, head: n?.head, pack: n?.pack ?? null, chunks: n && Object.keys(n.chunks), chapters: n && Object.keys(n.chapters), p: P && [P.x, P.z] }) })()"
+    },
+    {
+     "text": true
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/a-05-play.jpg"
+    }
+   ]
+  },
+  {
+   "step": 11,
+   "app": "A",
+   "port": 9344,
+   "what": "Tweak rules → Add a place → Otherworld (no AI world on this device yet); describe it; Write a new otherworld; wait until the workshop's first candidate is playable",
+   "file": "run-11-a-otherworld-write.json",
+   "actions": [
+    {
+     "clickText": "Tweak rules"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "Add a place"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "Otherworld"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input')].find(x => (x.closest('label')?.innerText ?? '').includes('What is it?')); f.focus(); return document.activeElement === f })()"
+    },
+    {
+     "type": "One small dark room with a round paper lantern in the middle, drawn only with CSS shapes and no pictures or asset images. Clicking the lantern or pressing Space lights it, shows the words The ferry remembers you, and calls host.complete."
+    },
+    {
+     "wait": 300
+    },
+    {
+     "eval": "window.__t0 = performance.now(); 'mark'"
+    },
+    {
+     "clickText": "Write a new otherworld"
+    },
+    {
+     "wait": 3000
+    },
+    {
+     "eval": "(() => [...document.querySelectorAll('[data-layer], [role=dialog]')].map(x => (x.getAttribute('data-layer') ?? 'dialog') + ': ' + x.innerText.slice(0, 2500)).join('\\n---\\n'))()"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 360; i++) { const l = document.querySelector('[data-layer=otherworld]'); const t = l ? l.innerText : ''; if (!/Writing the world|Checking/.test(t)) return { ms: Math.round(performance.now() - window.__t0), text: t.slice(0, 2500) }; await new Promise(r => setTimeout(r, 500)); } return 'timeout' })()"
+    }
+   ]
+  },
+  {
+   "step": 12,
+   "app": "A",
+   "port": 9344,
+   "what": "Save version → the otherworld's entrance is placed on the land; read the history's places",
+   "file": "run-12-a-otherworld-save.json",
+   "actions": [
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/a-06-otherworld-c001.jpg"
+    },
+    {
+     "clickText": "Save version"
+    },
+    {
+     "wait": 3000
+    },
+    {
+     "eval": "(() => [...document.querySelectorAll('[data-layer], [role=dialog], [role=status]')].map(x => (x.getAttribute('data-layer') ?? x.getAttribute('role')) + ': ' + x.innerText.slice(0, 800)).join('\\n---\\n'))()"
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return JSON.stringify({ head: n.head.n, places: n.places }) })()"
+    },
+    {
+     "text": true
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/a-07-otherworld-placed.jpg"
+    }
+   ]
+  },
+  {
+   "step": 13,
+   "app": "A",
+   "port": 9344,
+   "what": "Home, E opens the door; Share on 127.0.0.1:8797; then Create an invite and read the link",
+   "file": "run-13-a-share.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[8.5, 8.5]",
+      "within": 0.8,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "hold": "KeyE",
+     "ms": 120
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); return l ? l.innerText.slice(0, 2500) : 'no door layer' })()"
+    },
+    {
+     "clickText": "Share on 127.0.0.1:8797"
+    },
+    {
+     "eval": "(async () => { const t0 = Date.now(); for (let i = 0; i < 120; i++) { const l = document.querySelector('[data-layer=door]'); const t = l ? l.innerText : ''; if (/Online/.test(t) && /Invites/.test(t)) return { ms: Date.now() - t0 }; await new Promise(r => setTimeout(r, 250)); } const l = document.querySelector('[data-layer=door]'); return 'timeout: ' + (l ? l.innerText.slice(0, 1500) : 'no door') })()"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); return l ? l.innerText.slice(0, 4000) : 'no door layer' })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/a-08-door-shared.jpg"
+    },
+    {
+     "clickText": "Create an invite"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 40; i++) { const l = document.querySelector('[data-layer=door]'); const m = l && /unmapped:\\/\\/join\\?i=[A-Za-z0-9_\\-]+&k=[A-Za-z0-9_\\-]+(&o=[A-Za-z0-9_\\-]+)?/.exec([...l.querySelectorAll('input, textarea')].map(x => x.value).join('\\n') + '\\n' + l.innerText); if (m) { window.__invite = m[0]; return m[0].length; } await new Promise(r => setTimeout(r, 250)); } return 'no link' })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/a-09-invite.jpg"
+    },
+    {
+     "eval": "window.__invite"
+    }
+   ]
+  },
+  {
+   "step": 14,
+   "app": "B",
+   "port": 9345,
+   "what": "Worlds → Join a world, paste __INVITE__ (A's link from step 13), Look at the world, name Bea, Join and play",
+   "file": "run-14-b-join.json",
+   "actions": [
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 600
+    },
+    {
+     "clickText": "Worlds"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "Join a world"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input, textarea')].find(x => (x.closest('label')?.innerText ?? '').includes('Invite link')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+    },
+    {
+     "type": "__INVITE__"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Look at the world"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 40; i++) { if (/Your name in this world/.test(document.body.innerText) || /Error/.test(document.body.innerText)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('Join a world'); return t.slice(at, at + 1200) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/b-01-join-preview.jpg"
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input')].find(x => (x.closest('label')?.innerText ?? '').includes('Your name in this world')); if (!f) return 'no name field'; f.focus(); f.select(); return f.value })()"
+    },
+    {
+     "type": "Bea"
+    },
+    {
+     "eval": "window.__t0 = performance.now(); 'mark'"
+    },
+    {
+     "clickText": "Join and play"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance) return { ms: Math.round(performance.now() - window.__t0), screen: s.screen }; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; return 'timeout: ' + t.slice(t.indexOf('Join a world'), t.indexOf('Join a world') + 1500) })()"
+    },
+    {
+     "wait": 4000
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return JSON.stringify({ world: n.world, head: n.head, places: n.places.map(p => p.body.kind + '@' + p.cx + ',' + p.cz), chunks: Object.keys(n.chunks) }) })()"
+    },
+    {
+     "text": true
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/b-02-joined-play.jpg"
+    }
+   ]
+  },
+  {
+   "step": 15,
+   "app": "A",
+   "port": 9344,
+   "what": "Door → People: Bea's row → Make co-owner → Make them a co-owner; read the rows and the head",
+   "file": "run-15-a-coowner.json",
+   "actions": [
+    {
+     "clickText": "Make co-owner"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "Make them a co-owner"
+    },
+    {
+     "wait": 2000
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); const t = l.innerText; const at = t.indexOf('People'); return t.slice(at, at + 500) })()"
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return JSON.stringify({ head: n.head, owners: n.owners ?? null }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/a-10-door-coowner.jpg"
+    }
+   ]
+  },
+  {
+   "step": 16,
+   "app": "A",
+   "port": 9344,
+   "what": "Close the door; N at home: leave a note on (0,0); then walk the z=16 ford east into chunk (1, 0), which A witnesses",
+   "file": "run-16-a-note-witness.json",
+   "actions": [
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 600
+    },
+    {
+     "hold": "KeyN",
+     "ms": 100
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('[data-layer=notes] input')].find(x => (x.closest('label')?.innerText ?? '').includes('your note')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+    },
+    {
+     "type": "A: the ferry bell hangs by the first reed bend"
+    },
+    {
+     "clickText": "Leave the note"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 800) : 'no notes layer' })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/a-11-note.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 500
+    },
+    {
+     "pad": {
+      "toward": "[16.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[40.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "repeat": {
+      "times": 120,
+      "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['1,0']; return c !== undefined && c.status !== 'writing' })()",
+      "actions": [
+       {
+        "wait": 500
+       }
+      ]
+     }
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = S.useLandStore.getState().chunks['1,0']; return JSON.stringify({ status: c?.status, name: c?.scene?.name ?? null, head: n.head, chunks: Object.keys(n.chunks), notes: (n.notes ?? []).length }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/a-12-witnessed-1-0.jpg"
+    }
+   ]
+  },
+  {
+   "step": 17,
+   "app": "B",
+   "port": 9345,
+   "what": "B (co-owner): N at home: leave a note on (0,0); then walk the x=16 ford south into chunk (0, 1), which B witnesses",
+   "file": "run-17-b-note-witness.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[9.5, 9.5]",
+      "within": 0.8,
+      "buttons": [],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "hold": "KeyN",
+     "ms": 100
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('[data-layer=notes] input')].find(x => (x.closest('label')?.innerText ?? '').includes('your note')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+    },
+    {
+     "type": "B: the tide-chart seller waits south of the bell"
+    },
+    {
+     "clickText": "Leave the note"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 800) : 'no notes layer' })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/b-03-note.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 500
+    },
+    {
+     "pad": {
+      "toward": "[16.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[16.5, 40.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "repeat": {
+      "times": 120,
+      "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['0,1']; return c !== undefined && c.status !== 'writing' })()",
+      "actions": [
+       {
+        "wait": 500
+       }
+      ]
+     }
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = S.useLandStore.getState().chunks['0,1']; return JSON.stringify({ status: c?.status, name: c?.scene?.name ?? null, head: n.head, chunks: Object.keys(n.chunks), notes: (n.notes ?? []).length }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/b-04-witnessed-0-1.jpg"
+    }
+   ]
+  },
+  {
+   "step": 18,
+   "app": "-",
+   "port": null,
+   "what": "S1 is removed and A's userData deleted (a copy of S1's log kept as evidence first)",
+   "command": "cp $SCR/s1/worlds/hmurplfsx6wzlxrwysnkkkb4htxpdr7as5ufqwmk2k6hdkdio44ga/log.jsonl s1-log.jsonl; bun quit.ts 9344 (Browser.close on the browser target); kill -INT <S1 pid>; rm -rf $SCR/udA $SCR/s1",
+   "actions": null
+  },
+  {
+   "step": 19,
+   "app": "B",
+   "port": 9345,
+   "what": "S1 is gone and A's userData deleted. B leaves Play; Worlds → World files; the world's row; Export .world (AETHER_TEST_WORLD_PATH answers the save dialog with $SCR/files/b.world)",
+   "file": "run-19-b-export.json",
+   "actions": [
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "clickText": "Worlds"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "World files"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('Worlds on this device'); return t.slice(at, at + 800) })()"
+    },
+    {
+     "clickText": "Export .world"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 80; i++) { const t = document.body.innerText; if (/Wrote .*KiB/.test(t) || /Error/.test(t)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('Worlds on this device'); return t.slice(at, at + 1000) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/b-05-exported.jpg"
+    }
+   ]
+  },
+  {
+   "step": 20,
+   "app": "-",
+   "port": null,
+   "what": "verify offline (no service is running)",
+   "command": "cp $SCR/files/b.world b-export1.world; cd $SCR/tree && bun run verify-world -- b-export1.world",
+   "actions": null
+  },
+  {
+   "step": 21,
+   "app": "-",
+   "port": null,
+   "what": "S2 imports the file as a mirror, then starts",
+   "command": "cd $SCR/tree && bun run service -- import b-export1.world --data $SCR/s2; UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8798 --data $SCR/s2   # key kz5ctdhpyy4rd7q2hfed6jjuqbuephrqstkrmaylqkjmya3mxelpq",
+   "actions": null
+  },
+  {
+   "step": 22,
+   "app": "B",
+   "port": 9345,
+   "what": "Before any rehost: Worlds → Join a world, paste the move link to S2; Follow → expect move-not-rehosted (S2 holds the log but its latest sequencer names S1)",
+   "file": "run-22-b-move-link-early.json",
+   "actions": [
+    {
+     "clickText": "Join a world"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input, textarea')].find(x => (x.closest('label')?.innerText ?? '').includes('Invite link')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+    },
+    {
+     "type": "unmapped://world?w=hmurplfsx6wzlxrwysnkkkb4htxpdr7as5ufqwmk2k6hdkdio44ga&svc=ws://127.0.0.1:8798"
+    },
+    {
+     "wait": 500
+    },
+    {
+     "clickText": "Follow the world"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 80; i++) { const t = document.body.innerText; if (/Error/.test(t) || /now follows|Following/.test(t) && !/Following the world/.test(t)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('JOIN A WORLD'); return t.slice(at, at + 900) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/b-06-move-link-not-rehosted.jpg"
+    }
+   ]
+  },
+  {
+   "step": 23,
+   "app": "B",
+   "port": 9345,
+   "what": "For the mirror-refusal probe: B (co-owner) goes back into the world (Continue; its service S1 is down), opens the door at home and creates an invite (1 use); the link is read",
+   "file": "run-23-b-invite-for-probe.json",
+   "actions": [
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 800
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "Continue"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 80; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance) return 'play'; await new Promise(r => setTimeout(r, 250)); } return 'timeout ' + S.useSessionStore.getState().screen })()"
+    },
+    {
+     "wait": 3000
+    },
+    {
+     "pad": {
+      "toward": "[8.5, 8.5]",
+      "within": 0.8,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 40000
+     }
+    },
+    {
+     "hold": "KeyE",
+     "ms": 120
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door'; const t = l.innerText; const at = t.indexOf('Sharing'); return t.slice(at, at + 900) })()"
+    },
+    {
+     "clickText": "Create an invite"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 40; i++) { const l = document.querySelector('[data-layer=door]'); const m = l && /unmapped:\\/\\/join\\?i=[A-Za-z0-9_\\-]+&k=[A-Za-z0-9_\\-]+(&o=[A-Za-z0-9_\\-]+)?/.exec([...l.querySelectorAll('input, textarea')].map(x => x.value).join('\\n') + '\\n' + l.innerText); if (m) { window.__invite = m[0]; return m[0].length; } await new Promise(r => setTimeout(r, 250)); } const l = document.querySelector('[data-layer=door]'); return 'no link: ' + (l ? l.innerText.slice(0, 1500) : '') })()"
+    },
+    {
+     "eval": "window.__invite"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/b-07-door-offline-invite.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    }
+   ]
+  },
+  {
+   "step": 24,
+   "app": "-",
+   "port": null,
+   "what": "a submit to the mirror: a probe key opens S2 with B's fresh invite (the __INVITE__ step 23 returned) and submits its member.join",
+   "command": "cd $SCR/tree && bun run world:probe -- --service ws://127.0.0.1:8798 join --link \"__INVITE__\" --key-file $SCR/files/probe-key.json --name Probe",
+   "actions": null
+  },
+  {
+   "step": 25,
+   "app": "B",
+   "port": 9345,
+   "what": "B (co-owner) leaves Play; Worlds → World files → Move to another service → Move to 127.0.0.1:8798 (world.attach → rehost: a sequencer for S2); read the move link",
+   "file": "run-25-b-rehost.json",
+   "actions": [
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "clickText": "Worlds"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "World files"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "clickText": "Move to another service"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('Worlds on this device'); return t.slice(at, at + 1200) })()"
+    },
+    {
+     "eval": "window.__t0 = performance.now(); 'mark'"
+    },
+    {
+     "clickText": "Move to 127.0.0.1:8798"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 160; i++) { const t = document.body.innerText; if (/now lives on/.test(t) || /Error/.test(t)) return { ms: Math.round(performance.now() - window.__t0) }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('Worlds on this device'); return t.slice(at, at + 1500) })()"
+    },
+    {
+     "eval": "JSON.stringify([...document.querySelectorAll('input')].map(x => x.value).filter(v => v.startsWith('unmapped://')))"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/b-08-moved.jpg"
+    }
+   ]
+  },
+  {
+   "step": 26,
+   "app": "-",
+   "port": null,
+   "what": "which key verifies each receipt on S2",
+   "command": "cd $SCR/tree && bun --tsconfig-override tsconfig.node.json e2e-tools/receipts.ts $SCR/s2/worlds/hmurplfsx6wzlxrwysnkkkb4htxpdr7as5ufqwmk2k6hdkdio44ga/log.jsonl 13 S1=<S1 key> S2=<S2 key>   (receipts.ts.txt here)",
+   "actions": null
+  },
+  {
+   "step": 27,
+   "app": "B",
+   "port": 9345,
+   "what": "Close the move block (on the tree that ran, closing is what re-read the list; after this session's fix the row is already current), Export .world again (same scripted path; the first export was copied aside as b-export1.world)",
+   "file": "run-27-b-export2.json",
+   "actions": [
+    {
+     "clickText": "Move to another service"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('Worlds on this device'); return t.slice(at, at + 400) })()"
+    },
+    {
+     "clickText": "Export .world"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 80; i++) { const t = document.body.innerText; if (/Wrote .*KiB/.test(t) || /Error/.test(t)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('Worlds on this device'); return t.slice(at, at + 600) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/b-09-exported-after-move.jpg"
+    }
+   ]
+  },
+  {
+   "step": 28,
+   "app": "-",
+   "port": null,
+   "what": "verify the second export offline",
+   "command": "cp $SCR/files/b.world b-export2.world; bun run verify-world -- b-export2.world",
+   "actions": null
+  },
+  {
+   "step": 29,
+   "app": "B",
+   "port": 9345,
+   "what": "B back into the world (Continue, now online on S2); door at home; Create an invite (1 use) — a co-owner's link carries &o=",
+   "file": "run-29-b-invite-c.json",
+   "actions": [
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "Continue"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 80; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance) return 'play'; await new Promise(r => setTimeout(r, 250)); } return 'timeout ' + S.useSessionStore.getState().screen })()"
+    },
+    {
+     "wait": 3000
+    },
+    {
+     "pad": {
+      "toward": "[8.5, 8.5]",
+      "within": 0.8,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 40000
+     }
+    },
+    {
+     "hold": "KeyE",
+     "ms": 120
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door'; const t = l.innerText; const at = t.indexOf('Sharing'); return t.slice(at, at + 700) })()"
+    },
+    {
+     "clickText": "Create an invite"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 40; i++) { const l = document.querySelector('[data-layer=door]'); const m = l && /unmapped:\\/\\/join\\?i=[A-Za-z0-9_\\-]+&k=[A-Za-z0-9_\\-]+(&o=[A-Za-z0-9_\\-]+)?/.exec([...l.querySelectorAll('input, textarea')].map(x => x.value).join('\\n') + '\\n' + l.innerText); if (m && !m[0].includes(window.__lastInvite ?? '§')) { window.__invite = m[0]; return m[0].length; } await new Promise(r => setTimeout(r, 250)); } return 'no link' })()"
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); const links = [...l.querySelectorAll('input, textarea')].map(x => x.value).filter(v => v.startsWith('unmapped://join')); return JSON.stringify(links.map(v => ({ len: v.length, svc: JSON.parse(atob(v.split('i=')[1].split('&')[0].replace(/-/g, '+').replace(/_/g, '/'))).svc, o: v.includes('&o=') }))) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/b-10-invite-c.jpg"
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); const links = [...l.querySelectorAll('input, textarea')].map(x => x.value).filter(v => v.startsWith('unmapped://join')); return links[links.length - 1] })()"
+    }
+   ]
+  },
+  {
+   "step": 30,
+   "app": "C",
+   "port": 9346,
+   "what": "C: Worlds → Join a world, paste __INVITE__ (step 29's co-owner link with &o=, svc S2), Look at the world, name Cy, Join and play; read head, chain(13), places",
+   "file": "run-30-c-join.json",
+   "actions": [
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 600
+    },
+    {
+     "clickText": "Worlds"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "Join a world"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input, textarea')].find(x => (x.closest('label')?.innerText ?? '').includes('Invite link')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+    },
+    {
+     "type": "__INVITE__"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Look at the world"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 40; i++) { if (/Your name in this world/.test(document.body.innerText) || /Error/.test(document.body.innerText)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('JOIN A WORLD'); return t.slice(at, at + 1200) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/c-01-join-preview.jpg"
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input')].find(x => (x.closest('label')?.innerText ?? '').includes('Your name in this world')); if (!f) return 'no name field'; f.focus(); f.select(); return f.value })()"
+    },
+    {
+     "type": "Cy"
+    },
+    {
+     "eval": "window.__t0 = performance.now(); 'mark'"
+    },
+    {
+     "clickText": "Join and play"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance) return { ms: Math.round(performance.now() - window.__t0), screen: s.screen }; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; return 'timeout: ' + t.slice(t.indexOf('JOIN A WORLD'), t.indexOf('JOIN A WORLD') + 1500) })()"
+    },
+    {
+     "wait": 4000
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return JSON.stringify({ world: n.world, head: n.head, owners: Object.keys(n.owners ?? {}), places: n.places.map(p => p.body.kind + '@' + p.cx + ',' + p.cz + ' ' + (p.body.work?.workId ?? '')), chunks: Object.keys(n.chunks), notes: (n.notes ?? []).length }) })()"
+    },
+    {
+     "text": true
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/c-02-joined-play.jpg"
+    }
+   ]
+  },
+  {
+   "step": 31,
+   "app": "C",
+   "port": 9346,
+   "what": "C walks into A's chunk (1, 0) (drawn from the history, no call), then along the x=16 ford north to the otherworld's entrance at chunk (0, -1) (16.5, -15.5); E enters it; read the sandboxed frame",
+   "file": "run-31-c-land-otherworld.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[16.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[40.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "wait": 2000
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['1,0']; return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, status: c?.status ?? null, name: c?.scene?.name ?? null }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/c-03-a-chunk-1-0.jpg"
+    },
+    {
+     "pad": {
+      "toward": "[16.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[16.5, -14.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 40000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[16.5, -15.5]",
+      "within": 0.6,
+      "buttons": [],
+      "timeoutMs": 15000
+     }
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const p = (await import('/engine/playerProbe.ts')).samplePlayer(); return JSON.stringify({ at: [p.x, p.z], chunk: S.useEngineStore.getState().chunk, nearby: S.useEngineStore.getState().nearby ?? null }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/c-04-at-otherworld.jpg"
+    },
+    {
+     "hold": "KeyE",
+     "ms": 120
+    },
+    {
+     "wait": 5000
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('iframe')].map(x => ({ src: x.src, sandbox: x.getAttribute('sandbox'), allow: x.getAttribute('allow'), w: Math.round(x.getBoundingClientRect().width), h: Math.round(x.getBoundingClientRect().height) })); const layers = [...document.querySelectorAll('[data-layer]')].map(x => x.getAttribute('data-layer') + ': ' + x.innerText.slice(0, 300)); return JSON.stringify({ frames: f, layers }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/c-05-otherworld-open.jpg"
+    }
+   ]
+  },
+  {
+   "step": 32,
+   "app": "B",
+   "port": 9345,
+   "what": "B (now on S2) closes the door and walks the z=16 ford west into chunk (-1, 0), which B witnesses",
+   "file": "run-32-b-witness-new.json",
+   "actions": [
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 600
+    },
+    {
+     "pad": {
+      "toward": "[16.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[-15.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "repeat": {
+      "times": 120,
+      "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['-1,0']; return c !== undefined && c.status !== 'writing' })()",
+      "actions": [
+       {
+        "wait": 500
+       }
+      ]
+     }
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = S.useLandStore.getState().chunks['-1,0']; const w = n.chunks['-1,0']; return JSON.stringify({ status: c?.status, name: c?.scene?.name ?? null, head: n.head, live: w ? { id: w.live.id, n: w.live.n, author: w.live.author } : null }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/b-11-witnessed-minus1-0.jpg"
+    }
+   ]
+  },
+  {
+   "step": 33,
+   "app": "C",
+   "port": 9346,
+   "what": "C leaves the otherworld and walks to B's new chunk (-1, 0); it is drawn from the history (live n=18 by B) with no call",
+   "file": "run-33-c-sees-b-chunk.json",
+   "actions": [
+    {
+     "clickText": "Leave the otherworld"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return JSON.stringify({ head: n.head, frames: document.querySelectorAll('iframe').length }) })()"
+    },
+    {
+     "pad": {
+      "toward": "[16.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 40000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[-15.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "wait": 2000
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = S.useLandStore.getState().chunks['-1,0']; const w = n.chunks['-1,0']; return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, status: c?.status ?? null, name: c?.scene?.name ?? null, head: n.head, live: w ? { n: w.live.n, author: w.live.author } : null }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/c-06-sees-b-chunk.jpg"
+    }
+   ]
+  },
+  {
+   "step": 34,
+   "app": "B",
+   "port": 9345,
+   "what": "B walks home, opens the door and creates a second invite (1 use, &o=) for C2, a fresh device that joins after chunk (0,-1) is written",
+   "file": "run-34-b-invite-c2.json",
+   "actions": [
+    {
+     "wait": 800
+    },
+    {
+     "pad": {
+      "toward": "[8.5, 8.5]",
+      "within": 0.8,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 40000
+     }
+    },
+    {
+     "hold": "KeyE",
+     "ms": 120
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door'; const t = l.innerText; const at = t.indexOf('Sharing'); return t.slice(at, at + 700) })()"
+    },
+    {
+     "clickText": "Create an invite"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 40; i++) { const l = document.querySelector('[data-layer=door]'); const m = l && /unmapped:\\/\\/join\\?i=[A-Za-z0-9_\\-]+&k=[A-Za-z0-9_\\-]+(&o=[A-Za-z0-9_\\-]+)?/.exec([...l.querySelectorAll('input, textarea')].map(x => x.value).join('\\n') + '\\n' + l.innerText); if (m && !m[0].includes(window.__lastInvite ?? '§')) { window.__invite = m[0]; return m[0].length; } await new Promise(r => setTimeout(r, 250)); } return 'no link' })()"
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); const links = [...l.querySelectorAll('input, textarea')].map(x => x.value).filter(v => v.startsWith('unmapped://join')); return JSON.stringify(links.map(v => ({ len: v.length, svc: JSON.parse(atob(v.split('i=')[1].split('&')[0].replace(/-/g, '+').replace(/_/g, '/'))).svc, o: v.includes('&o=') }))) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/b-12-invite-c2.jpg"
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); const links = [...l.querySelectorAll('input, textarea')].map(x => x.value).filter(v => v.startsWith('unmapped://join')); return links[links.length - 1] })()"
+    }
+   ]
+  },
+  {
+   "step": 35,
+   "app": "C2",
+   "port": 9344,
+   "what": "start C2 on A's freed port (fresh userData)",
+   "command": "cd $SCR/tree && AETHER_TEST_USER_DATA=$SCR/udC2 node_modules/.bin/electron-vite dev --remoteDebuggingPort 9344",
+   "actions": null
+  },
+  {
+   "step": 36,
+   "app": "C2",
+   "port": 9344,
+   "what": "Settings: English; Shared worlds: ws://127.0.0.1:8797 and ws://127.0.0.1:8798, Save, Test",
+   "file": "run-36-c2-settings.json",
+   "actions": [
+    {
+     "clickText": "設定"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "English"
+    },
+    {
+     "wait": 600
+    },
+    {
+     "eval": "(() => { const ta = [...document.querySelectorAll('textarea')].find(t => (t.closest('label')?.innerText ?? '').includes('World services') || (t.labels?.[0]?.innerText ?? '').includes('World services')); if (!ta) return 'no field'; ta.scrollIntoView({block: 'center'}); ta.focus(); return ta === document.activeElement })()"
+    },
+    {
+     "type": "ws://127.0.0.1:8797, ws://127.0.0.1:8798"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Save"
+    },
+    {
+     "wait": 400
+    },
+    {
+     "eval": "(() => { const field = [...document.querySelectorAll('textarea')].find(t => t.value.includes('ws://127.0.0.1:8797')); let box = field; while (box && ![...box.querySelectorAll('button')].some(b => b.innerText.trim() === 'Test')) box = box.parentElement; if (!box) return 'no Test'; const btn = [...box.querySelectorAll('button')].find(b => b.innerText.trim() === 'Test'); btn.scrollIntoView({block: 'center'}); btn.click(); return 'clicked Test' })()"
+    },
+    {
+     "wait": 3000
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('ws://127.0.0.1:8797\\n'); return at < 0 ? 'no probe line' : t.slice(at, at + 700) })()"
+    },
+    {
+     "eval": "localStorage.getItem('unwritten.worldServices')"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/c2-00-settings-services.jpg"
+    }
+   ]
+  },
+  {
+   "step": 37,
+   "app": "C2",
+   "port": 9344,
+   "what": "C2 (a fresh device, joined after chunk (0,-1) was written): join with __INVITE__ (step 34's co-owner link), name Cyd; walk into A's chunk (1, 0), along the x=16 ford to the otherworld's entrance in (0, -1), E enters it; then into B's (-1, 0). Every chunk on the way is already in the history, so no call is expected",
+   "file": "run-37-c2-join-walk.json",
+   "actions": [
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 600
+    },
+    {
+     "clickText": "Worlds"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "Join a world"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input, textarea')].find(x => (x.closest('label')?.innerText ?? '').includes('Invite link')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+    },
+    {
+     "type": "__INVITE__"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Look at the world"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 40; i++) { if (/Your name in this world/.test(document.body.innerText) || /Error/.test(document.body.innerText)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('JOIN A WORLD'); return t.slice(at, at + 1200) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/c2-01-join-preview.jpg"
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input')].find(x => (x.closest('label')?.innerText ?? '').includes('Your name in this world')); if (!f) return 'no name field'; f.focus(); f.select(); return f.value })()"
+    },
+    {
+     "type": "Cyd"
+    },
+    {
+     "eval": "window.__t0 = performance.now(); 'mark'"
+    },
+    {
+     "clickText": "Join and play"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance) return { ms: Math.round(performance.now() - window.__t0), screen: s.screen }; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; return 'timeout: ' + t.slice(t.indexOf('JOIN A WORLD'), t.indexOf('JOIN A WORLD') + 1500) })()"
+    },
+    {
+     "wait": 4000
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return JSON.stringify({ world: n.world, head: n.head, owners: Object.keys(n.owners ?? {}), places: n.places.map(p => p.body.kind + '@' + p.cx + ',' + p.cz + ' ' + (p.body.work?.workId ?? '')), chunks: Object.keys(n.chunks), notes: (n.notes ?? []).length }) })()"
+    },
+    {
+     "text": true
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/c2-02-joined-play.jpg"
+    },
+    {
+     "pad": {
+      "toward": "[16.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[40.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "wait": 2000
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['1,0']; return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, status: c?.status ?? null, name: c?.scene?.name ?? null }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/c2-03-a-chunk-1-0.jpg"
+    },
+    {
+     "pad": {
+      "toward": "[16.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[16.5, -14.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 40000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[16.5, -15.5]",
+      "within": 0.6,
+      "buttons": [],
+      "timeoutMs": 15000
+     }
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const p = (await import('/engine/playerProbe.ts')).samplePlayer(); return JSON.stringify({ at: [p.x, p.z], chunk: S.useEngineStore.getState().chunk, nearby: S.useEngineStore.getState().nearby ?? null }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/c2-04-at-otherworld.jpg"
+    },
+    {
+     "hold": "KeyE",
+     "ms": 120
+    },
+    {
+     "wait": 5000
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('iframe')].map(x => ({ src: x.src, sandbox: x.getAttribute('sandbox'), allow: x.getAttribute('allow'), w: Math.round(x.getBoundingClientRect().width), h: Math.round(x.getBoundingClientRect().height) })); const layers = [...document.querySelectorAll('[data-layer]')].map(x => x.getAttribute('data-layer') + ': ' + x.innerText.slice(0, 300)); return JSON.stringify({ frames: f, layers }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/c2-05-otherworld-open.jpg"
+    },
+    {
+     "clickText": "Leave the otherworld"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "pad": {
+      "toward": "[16.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 40000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[-15.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "wait": 2000
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = S.useLandStore.getState().chunks['-1,0']; return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, status: c?.status ?? null, name: c?.scene?.name ?? null, head: n.head }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/c2-06-sees-b-chunk.jpg"
+    }
+   ]
+  },
+  {
+   "step": 38,
+   "app": "-",
+   "port": null,
+   "what": "the chain 1..13 on every copy",
+   "command": "python: sha256 of log.jsonl lines 1..13 and chain(13) on the S1 copy, S2, B, C, C2 (chain-compare.txt)",
+   "actions": null
+  },
+  {
+   "step": 39,
+   "app": "-",
+   "port": null,
+   "what": "stop B, C, C2 and S2",
+   "command": "bun quit.ts 9344; bun quit.ts 9345; bun quit.ts 9346; kill -INT <S2 pid>",
+   "actions": null
+  },
+  {
+   "step": 40,
+   "app": "-",
+   "port": null,
+   "what": "FIX CHECK setup: S2's own CLI export, imported into S3 on :8797 (S2 stays stopped); B relaunched on the fixed tree, C relaunched",
+   "command": "cd $SCR/tree && bun run service -- export hmurplfsx6wzlxrwysnkkkb4htxpdr7as5ufqwmk2k6hdkdio44ga --data $SCR/s2 --out s2-export.world; bun run verify-world -- s2-export.world; bun run service -- import s2-export.world --data $SCR/s3; UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8797 --data $SCR/s3   # key ksxbyjk5y6jerbxmnok36wewhzdvcfcaaxo6d442qhfr26wzqn3la; relaunch B (udB, 9345, same env) and C (udC, 9346)",
+   "actions": null
+  },
+  {
+   "step": 41,
+   "app": "B",
+   "port": 9345,
+   "what": "FIX CHECK (B relaunched on the fixed tree; the dev origin port changed, so localStorage is empty): Settings: English; Shared worlds: ws://127.0.0.1:8797 and ws://127.0.0.1:8798, Save, Test",
+   "file": "run-41-b-settings-again.json",
+   "actions": [
+    {
+     "clickText": "設定"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "English"
+    },
+    {
+     "wait": 600
+    },
+    {
+     "eval": "(() => { const ta = [...document.querySelectorAll('textarea')].find(t => (t.closest('label')?.innerText ?? '').includes('World services') || (t.labels?.[0]?.innerText ?? '').includes('World services')); if (!ta) return 'no field'; ta.scrollIntoView({block: 'center'}); ta.focus(); return ta === document.activeElement })()"
+    },
+    {
+     "type": "ws://127.0.0.1:8797, ws://127.0.0.1:8798"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Save"
+    },
+    {
+     "wait": 400
+    },
+    {
+     "eval": "(() => { const field = [...document.querySelectorAll('textarea')].find(t => t.value.includes('ws://127.0.0.1:8797')); let box = field; while (box && ![...box.querySelectorAll('button')].some(b => b.innerText.trim() === 'Test')) box = box.parentElement; if (!box) return 'no Test'; const btn = [...box.querySelectorAll('button')].find(b => b.innerText.trim() === 'Test'); btn.scrollIntoView({block: 'center'}); btn.click(); return 'clicked Test' })()"
+    },
+    {
+     "wait": 3000
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('ws://127.0.0.1:8797\\n'); return at < 0 ? 'no probe line' : t.slice(at, at + 700) })()"
+    },
+    {
+     "eval": "localStorage.getItem('unwritten.worldServices')"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/b-13-settings-again.jpg"
+    }
+   ]
+  },
+  {
+   "step": 42,
+   "app": "B",
+   "port": 9345,
+   "what": "FIX CHECK: S2 stopped; S3 (a fresh data dir on :8797 with S2's CLI export imported) serves a mirror. B: Worlds → World files → Move to another service → Move to 127.0.0.1:8797. After the move the row must read the new service and head while the move block (and its link) stays open",
+   "file": "run-42-b-move-s3.json",
+   "actions": [
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "Worlds"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "World files"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "clickText": "Move to another service"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('Worlds on this device'); return t.slice(at, at + 700) })()"
+    },
+    {
+     "eval": "window.__t0 = performance.now(); 'mark'"
+    },
+    {
+     "clickText": "Move to 127.0.0.1:8797"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 160; i++) { const t = document.body.innerText; if (/now lives on/.test(t) || /Error/.test(t)) return { ms: Math.round(performance.now() - window.__t0) }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('Worlds on this device'); return t.slice(at, at + 1500) })()"
+    },
+    {
+     "eval": "JSON.stringify({ moveLink: [...document.querySelectorAll('input')].map(x => x.value).filter(v => v.startsWith('unmapped://')), buttons: [...document.querySelectorAll('button')].map(b => b.innerText.trim()).filter(t => t.startsWith('Move')) })"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/b-14-moved-row-updated.jpg"
+    }
+   ]
+  },
+  {
+   "step": 43,
+   "app": "C",
+   "port": 9346,
+   "what": "C relaunched (new dev origin, empty localStorage): Settings: English; Shared worlds: ws://127.0.0.1:8797 and ws://127.0.0.1:8798, Save, Test",
+   "file": "run-43-c-settings-again.json",
+   "actions": [
+    {
+     "clickText": "設定"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "English"
+    },
+    {
+     "wait": 600
+    },
+    {
+     "eval": "(() => { const ta = [...document.querySelectorAll('textarea')].find(t => (t.closest('label')?.innerText ?? '').includes('World services') || (t.labels?.[0]?.innerText ?? '').includes('World services')); if (!ta) return 'no field'; ta.scrollIntoView({block: 'center'}); ta.focus(); return ta === document.activeElement })()"
+    },
+    {
+     "type": "ws://127.0.0.1:8797, ws://127.0.0.1:8798"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Save"
+    },
+    {
+     "wait": 400
+    },
+    {
+     "eval": "(() => { const field = [...document.querySelectorAll('textarea')].find(t => t.value.includes('ws://127.0.0.1:8797')); let box = field; while (box && ![...box.querySelectorAll('button')].some(b => b.innerText.trim() === 'Test')) box = box.parentElement; if (!box) return 'no Test'; const btn = [...box.querySelectorAll('button')].find(b => b.innerText.trim() === 'Test'); btn.scrollIntoView({block: 'center'}); btn.click(); return 'clicked Test' })()"
+    },
+    {
+     "wait": 3000
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('ws://127.0.0.1:8797\\n'); return at < 0 ? 'no probe line' : t.slice(at, at + 700) })()"
+    },
+    {
+     "eval": "localStorage.getItem('unwritten.worldServices')"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/c-07-settings-again.jpg"
+    }
+   ]
+  },
+  {
+   "step": 44,
+   "app": "C",
+   "port": 9346,
+   "what": "C, a plain member whose link.json still names S2 (stopped), follows B's move link to S3: Worlds → Join a world, paste it, Follow the world",
+   "file": "run-44-c-follow-move.json",
+   "note": "As recorded, this poll stopped early on 'Following the world…' (a regex slip); the outcome line and shot were read again by a one-off call right after. The eval here is the corrected wait.",
+   "actions": [
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "Worlds"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "Join a world"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input, textarea')].find(x => (x.closest('label')?.innerText ?? '').includes('Invite link')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+    },
+    {
+     "type": "unmapped://world?w=hmurplfsx6wzlxrwysnkkkb4htxpdr7as5ufqwmk2k6hdkdio44ga&svc=ws%3A%2F%2F127.0.0.1%3A8797"
+    },
+    {
+     "wait": 500
+    },
+    {
+     "clickText": "Follow the world"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 80; i++) { const t = document.body.innerText; if (/Error|now syncs with/.test(t)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('JOIN A WORLD'); return t.slice(at, at + 900) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-rehost/c-08-followed-move.jpg"
+    }
+   ]
+  },
+  {
+   "step": 45,
+   "app": "-",
+   "port": null,
+   "what": "chains after the second move; stop everything; lsof shows nothing of this run listening",
+   "command": "chain-compare-after-s3.txt; bun quit.ts 9345; bun quit.ts 9346; kill -INT <S3 pid>",
+   "actions": null
+  }
+ ]
+}

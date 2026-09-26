@@ -1,0 +1,60 @@
+{
+ "step": 8,
+ "app": "A",
+ "port": 9344,
+ "what": "Title → Create World → Start a new game; idea words + name, Explore, English; Write the world; wait for the seven cards",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "clickText": "Create World"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Start a new game"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('input')].find(x => (x.closest('label')?.innerText ?? '').includes('In one sentence')); f.focus(); return document.activeElement === f })()"
+  },
+  {
+   "type": "A river delta of lantern ferries where boat folk trade stories for passage"
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('input')].find(x => (x.closest('label')?.innerText ?? '').includes('World name')); f.focus(); return document.activeElement === f })()"
+  },
+  {
+   "type": "Lantern Delta"
+  },
+  {
+   "wait": 400
+  },
+  {
+   "eval": "window.__t0 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Write the world"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 240; i++) { const t = document.body.innerText; if (/Continue to the look/.test(t) && !/Writing the world bible/.test(t)) return { ms: Math.round(performance.now() - window.__t0) }; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + document.body.innerText.slice(0, 1500) })()"
+  },
+  {
+   "wait": 500
+  },
+  {
+   "eval": "document.body.innerText.slice(0, 4000)"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/a-01-create-world-cards.jpg"
+  }
+ ]
+}

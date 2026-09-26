@@ -1,0 +1,26 @@
+{
+ "step": 27,
+ "app": "B",
+ "port": 9345,
+ "what": "Close the move block (on the tree that ran, closing is what re-read the list; after this session's fix the row is already current), Export .world again (same scripted path; the first export was copied aside as b-export1.world)",
+ "actions": [
+  {
+   "clickText": "Move to another service"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('Worlds on this device'); return t.slice(at, at + 400) })()"
+  },
+  {
+   "clickText": "Export .world"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 80; i++) { const t = document.body.innerText; if (/Wrote .*KiB/.test(t) || /Error/.test(t)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('Worlds on this device'); return t.slice(at, at + 600) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/b-09-exported-after-move.jpg"
+  }
+ ]
+}

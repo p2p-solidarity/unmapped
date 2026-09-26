@@ -1,0 +1,52 @@
+{
+ "step": 5,
+ "app": "A",
+ "port": 9344,
+ "what": "Worlds → Cartridges: click the aether-land 1.2.0 row (installed on every device by base.ts). The click focuses and confirms the row at once, so it starts a run pinned to 1.2.0 (the recorded 'Play' click found nothing and is dropped here); the land opens and its local-only history is made (genesis on 1.2.0); wait for the origin witness",
+ "actions": [
+  {
+   "clickText": "Cartridges4"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Cartridge · 1.2.0"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-import-physics/a-02-run-120-opening.jpg"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance) return JSON.stringify({ screen: s.screen, pin: s.activeInstance.instance?.runtimePin ?? null }); await new Promise(r => setTimeout(r, 250)); } return 'timeout ' + S.useSessionStore.getState().screen })()"
+  },
+  {
+   "wait": 3000
+  },
+  {
+   "repeat": {
+    "times": 60,
+    "until": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return n !== null && n.chunks['0,0'] !== undefined })()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return JSON.stringify({ world: n?.world, head: n?.head, cartridge: n?.genesis?.body?.cartridge ?? null, physics: n?.genesis?.body?.physicsVersion ?? null, sequencer: n?.sequencer ?? null, chunks: n && Object.keys(n.chunks) }) })()"
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-import-physics/a-03-play-120.jpg"
+  }
+ ]
+}

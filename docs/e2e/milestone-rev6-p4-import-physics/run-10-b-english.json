@@ -1,0 +1,30 @@
+{
+ "step": 10,
+ "app": "B",
+ "port": 9345,
+ "what": "Settings: English (no world service: this flow never shares)",
+ "actions": [
+  {
+   "clickText": "設定"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "English"
+  },
+  {
+   "wait": 600
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "text": true
+  }
+ ]
+}

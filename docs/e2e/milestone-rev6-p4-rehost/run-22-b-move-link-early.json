@@ -1,0 +1,32 @@
+{
+ "step": 22,
+ "app": "B",
+ "port": 9345,
+ "what": "Before any rehost: Worlds → Join a world, paste the move link to S2; Follow → expect move-not-rehosted (S2 holds the log but its latest sequencer names S1)",
+ "actions": [
+  {
+   "clickText": "Join a world"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('input, textarea')].find(x => (x.closest('label')?.innerText ?? '').includes('Invite link')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+  },
+  {
+   "type": "unmapped://world?w=hmurplfsx6wzlxrwysnkkkb4htxpdr7as5ufqwmk2k6hdkdio44ga&svc=ws://127.0.0.1:8798"
+  },
+  {
+   "wait": 500
+  },
+  {
+   "clickText": "Follow the world"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 80; i++) { const t = document.body.innerText; if (/Error/.test(t) || /now follows|Following/.test(t) && !/Following the world/.test(t)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('JOIN A WORLD'); return t.slice(at, at + 900) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/b-06-move-link-not-rehosted.jpg"
+  }
+ ]
+}

@@ -1,0 +1,46 @@
+{
+ "step": 33,
+ "app": "C",
+ "port": 9346,
+ "what": "C leaves the otherworld and walks to B's new chunk (-1, 0); it is drawn from the history (live n=18 by B) with no call",
+ "actions": [
+  {
+   "clickText": "Leave the otherworld"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return JSON.stringify({ head: n.head, frames: document.querySelectorAll('iframe').length }) })()"
+  },
+  {
+   "pad": {
+    "toward": "[16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 40000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[-15.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = S.useLandStore.getState().chunks['-1,0']; const w = n.chunks['-1,0']; return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, status: c?.status ?? null, name: c?.scene?.name ?? null, head: n.head, live: w ? { n: w.live.n, author: w.live.author } : null }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/c-06-sees-b-chunk.jpg"
+  }
+ ]
+}

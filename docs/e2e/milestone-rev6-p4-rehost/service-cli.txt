@@ -1,0 +1,17 @@
+$ bun --tsconfig-override tsconfig.node.json src/service/main.ts import "$SCR/files/b-export1.world" --data "$SCR/s2"
+world service: hmurplfsx6wzlxrwysnkkkb4htxpdr7as5ufqwmk2k6hdkdio44ga imported as a mirror
+  world hmurplfsx6wzlxrwysnkkkb4htxpdr7as5ufqwmk2k6hdkdio44ga "Lantern Delta", 13 entries, head 13
+  owners 2, services 1, beats 0, works 1, blobs 2
+  verify: ok
+
+$ bun --tsconfig-override tsconfig.node.json src/service/main.ts export "hmurplfsx6wzlxrwysnkkkb4htxpdr7as5ufqwmk2k6hdkdio44ga" --data "$SCR/s2" --out "$SCR/files/s2-export.world"
+world service: exported hmurplfsx6wzlxrwysnkkkb4htxpdr7as5ufqwmk2k6hdkdio44ga → $SCR/files/s2-export.world (22643 bytes)
+  world hmurplfsx6wzlxrwysnkkkb4htxpdr7as5ufqwmk2k6hdkdio44ga "Lantern Delta", 19 entries, head 19
+  owners 2, services 2, beats 0, works 1, blobs 2
+  verify: ok
+
+$ bun --tsconfig-override tsconfig.node.json src/service/main.ts import "$SCR/files/s2-export.world" --data "$SCR/s3"
+world service: hmurplfsx6wzlxrwysnkkkb4htxpdr7as5ufqwmk2k6hdkdio44ga imported as a mirror
+  world hmurplfsx6wzlxrwysnkkkb4htxpdr7as5ufqwmk2k6hdkdio44ga "Lantern Delta", 19 entries, head 19
+  owners 2, services 2, beats 0, works 1, blobs 2
+  verify: ok

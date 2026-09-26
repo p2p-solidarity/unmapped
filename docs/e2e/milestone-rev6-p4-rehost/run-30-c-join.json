@@ -1,0 +1,72 @@
+{
+ "step": 30,
+ "app": "C",
+ "port": 9346,
+ "what": "C: Worlds → Join a world, paste __INVITE__ (step 29's co-owner link with &o=, svc S2), Look at the world, name Cy, Join and play; read head, chain(13), places",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "clickText": "Worlds"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "Join a world"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('input, textarea')].find(x => (x.closest('label')?.innerText ?? '').includes('Invite link')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+  },
+  {
+   "type": "__INVITE__"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "clickText": "Look at the world"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 40; i++) { if (/Your name in this world/.test(document.body.innerText) || /Error/.test(document.body.innerText)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('JOIN A WORLD'); return t.slice(at, at + 1200) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/c-01-join-preview.jpg"
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('input')].find(x => (x.closest('label')?.innerText ?? '').includes('Your name in this world')); if (!f) return 'no name field'; f.focus(); f.select(); return f.value })()"
+  },
+  {
+   "type": "Cy"
+  },
+  {
+   "eval": "window.__t0 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Join and play"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance) return { ms: Math.round(performance.now() - window.__t0), screen: s.screen }; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; return 'timeout: ' + t.slice(t.indexOf('JOIN A WORLD'), t.indexOf('JOIN A WORLD') + 1500) })()"
+  },
+  {
+   "wait": 4000
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return JSON.stringify({ world: n.world, head: n.head, owners: Object.keys(n.owners ?? {}), places: n.places.map(p => p.body.kind + '@' + p.cx + ',' + p.cz + ' ' + (p.body.work?.workId ?? '')), chunks: Object.keys(n.chunks), notes: (n.notes ?? []).length }) })()"
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/c-02-joined-play.jpg"
+  }
+ ]
+}

@@ -1,0 +1,67 @@
+{
+ "step": 23,
+ "app": "B",
+ "port": 9345,
+ "what": "For the mirror-refusal probe: B (co-owner) goes back into the world (Continue; its service S1 is down), opens the door at home and creates an invite (1 use); the link is read",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 800
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 80; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance) return 'play'; await new Promise(r => setTimeout(r, 250)); } return 'timeout ' + S.useSessionStore.getState().screen })()"
+  },
+  {
+   "wait": 3000
+  },
+  {
+   "pad": {
+    "toward": "[8.5, 8.5]",
+    "within": 0.8,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 40000
+   }
+  },
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door'; const t = l.innerText; const at = t.indexOf('Sharing'); return t.slice(at, at + 900) })()"
+  },
+  {
+   "clickText": "Create an invite"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 40; i++) { const l = document.querySelector('[data-layer=door]'); const m = l && /unmapped:\\/\\/join\\?i=[A-Za-z0-9_\\-]+&k=[A-Za-z0-9_\\-]+(&o=[A-Za-z0-9_\\-]+)?/.exec([...l.querySelectorAll('input, textarea')].map(x => x.value).join('\\n') + '\\n' + l.innerText); if (m) { window.__invite = m[0]; return m[0].length; } await new Promise(r => setTimeout(r, 250)); } const l = document.querySelector('[data-layer=door]'); return 'no link: ' + (l ? l.innerText.slice(0, 1500) : '') })()"
+  },
+  {
+   "eval": "window.__invite"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/b-07-door-offline-invite.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  }
+ ]
+}

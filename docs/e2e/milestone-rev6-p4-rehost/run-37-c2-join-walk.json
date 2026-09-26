@@ -1,0 +1,186 @@
+{
+ "step": 37,
+ "app": "C2",
+ "port": 9344,
+ "what": "C2 (a fresh device, joined after chunk (0,-1) was written): join with __INVITE__ (step 34's co-owner link), name Cyd; walk into A's chunk (1, 0), along the x=16 ford to the otherworld's entrance in (0, -1), E enters it; then into B's (-1, 0). Every chunk on the way is already in the history, so no call is expected",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "clickText": "Worlds"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "Join a world"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('input, textarea')].find(x => (x.closest('label')?.innerText ?? '').includes('Invite link')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+  },
+  {
+   "type": "__INVITE__"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "clickText": "Look at the world"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 40; i++) { if (/Your name in this world/.test(document.body.innerText) || /Error/.test(document.body.innerText)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('JOIN A WORLD'); return t.slice(at, at + 1200) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/c2-01-join-preview.jpg"
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('input')].find(x => (x.closest('label')?.innerText ?? '').includes('Your name in this world')); if (!f) return 'no name field'; f.focus(); f.select(); return f.value })()"
+  },
+  {
+   "type": "Cyd"
+  },
+  {
+   "eval": "window.__t0 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Join and play"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance) return { ms: Math.round(performance.now() - window.__t0), screen: s.screen }; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; return 'timeout: ' + t.slice(t.indexOf('JOIN A WORLD'), t.indexOf('JOIN A WORLD') + 1500) })()"
+  },
+  {
+   "wait": 4000
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return JSON.stringify({ world: n.world, head: n.head, owners: Object.keys(n.owners ?? {}), places: n.places.map(p => p.body.kind + '@' + p.cx + ',' + p.cz + ' ' + (p.body.work?.workId ?? '')), chunks: Object.keys(n.chunks), notes: (n.notes ?? []).length }) })()"
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/c2-02-joined-play.jpg"
+  },
+  {
+   "pad": {
+    "toward": "[16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[40.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['1,0']; return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, status: c?.status ?? null, name: c?.scene?.name ?? null }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/c2-03-a-chunk-1-0.jpg"
+  },
+  {
+   "pad": {
+    "toward": "[16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[16.5, -14.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 40000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[16.5, -15.5]",
+    "within": 0.6,
+    "buttons": [],
+    "timeoutMs": 15000
+   }
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const p = (await import('/engine/playerProbe.ts')).samplePlayer(); return JSON.stringify({ at: [p.x, p.z], chunk: S.useEngineStore.getState().chunk, nearby: S.useEngineStore.getState().nearby ?? null }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/c2-04-at-otherworld.jpg"
+  },
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 5000
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('iframe')].map(x => ({ src: x.src, sandbox: x.getAttribute('sandbox'), allow: x.getAttribute('allow'), w: Math.round(x.getBoundingClientRect().width), h: Math.round(x.getBoundingClientRect().height) })); const layers = [...document.querySelectorAll('[data-layer]')].map(x => x.getAttribute('data-layer') + ': ' + x.innerText.slice(0, 300)); return JSON.stringify({ frames: f, layers }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/c2-05-otherworld-open.jpg"
+  },
+  {
+   "clickText": "Leave the otherworld"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "pad": {
+    "toward": "[16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 40000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[-15.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = S.useLandStore.getState().chunks['-1,0']; return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, status: c?.status ?? null, name: c?.scene?.name ?? null, head: n.head }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/c2-06-sees-b-chunk.jpg"
+  }
+ ]
+}

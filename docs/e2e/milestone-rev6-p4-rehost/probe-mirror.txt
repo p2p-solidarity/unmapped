@@ -1,0 +1,8 @@
+$ bun --tsconfig-override tsconfig.node.json scripts/world-probe.ts --service "ws://127.0.0.1:8798" join --link "__INVITE__" --key-file "$SCR/files/probe-key.json" --name Probe
+{"scenario":"join","step":"the invite link reads","expect":"ok","got":"ok","ok":true}
+{"scenario":"join","step":"open with the invite","expect":"opened:invitee|opened:member","got":"opened:invitee","ok":true,"detail":"world hmurplfsx6wzlxrwysnkkkb4htxpdr7as5ufqwmk2k6hdkdio44ga, key kwycfgcnhlinekfxygzxkepqpmg6v3l4apkfqc5teb2k5ukasilfa (new $SCR/files/probe-key.json)"}
+{"scenario":"join","step":"submit the member.join","expect":"accepted","got":"world-mirror-only","ok":false,"detail":"world hmurplfsx6wzlxrwysnkkkb4htxpdr7as5ufqwmk2k6hdkdio44ga, key kwycfgcnhlinekfxygzxkepqpmg6v3l4apkfqc5teb2k5ukasilfa (new $SCR/files/probe-key.json)"}
+{"scenario":"join","aborted":"submit the member.join: expected accepted, got world-mirror-only"}
+{"scenario":"join","step":"every frame the service sent reads with readFromService","expect":"0 unreadable","got":"0 unreadable","ok":true}
+{"scenario":"join","summary":true,"steps":4,"failed":1,"ok":false}
+error: script "world:probe" exited with code 1

@@ -1,0 +1,46 @@
+{
+ "step": 44,
+ "app": "C",
+ "port": 9346,
+ "what": "C, a plain member whose link.json still names S2 (stopped), follows B's move link to S3: Worlds → Join a world, paste it, Follow the world",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "Worlds"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "Join a world"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('input, textarea')].find(x => (x.closest('label')?.innerText ?? '').includes('Invite link')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+  },
+  {
+   "type": "unmapped://world?w=hmurplfsx6wzlxrwysnkkkb4htxpdr7as5ufqwmk2k6hdkdio44ga&svc=ws%3A%2F%2F127.0.0.1%3A8797"
+  },
+  {
+   "wait": 500
+  },
+  {
+   "clickText": "Follow the world"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 80; i++) { const t = document.body.innerText; if (/Error|now syncs with/.test(t)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('JOIN A WORLD'); return t.slice(at, at + 900) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/c-08-followed-move.jpg"
+  }
+ ],
+ "note": "As recorded, this poll stopped early on 'Following the world…' (a regex slip); the outcome line and shot were read again by a one-off call right after. The eval here is the corrected wait."
+}

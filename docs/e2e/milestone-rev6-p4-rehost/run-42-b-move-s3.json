@@ -1,0 +1,57 @@
+{
+ "step": 42,
+ "app": "B",
+ "port": 9345,
+ "what": "FIX CHECK: S2 stopped; S3 (a fresh data dir on :8797 with S2's CLI export imported) serves a mirror. B: Worlds → World files → Move to another service → Move to 127.0.0.1:8797. After the move the row must read the new service and head while the move block (and its link) stays open",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "Worlds"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "World files"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Move to another service"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('Worlds on this device'); return t.slice(at, at + 700) })()"
+  },
+  {
+   "eval": "window.__t0 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Move to 127.0.0.1:8797"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 160; i++) { const t = document.body.innerText; if (/now lives on/.test(t) || /Error/.test(t)) return { ms: Math.round(performance.now() - window.__t0) }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('Worlds on this device'); return t.slice(at, at + 1500) })()"
+  },
+  {
+   "eval": "JSON.stringify({ moveLink: [...document.querySelectorAll('input')].map(x => x.value).filter(v => v.startsWith('unmapped://')), buttons: [...document.querySelectorAll('button')].map(b => b.innerText.trim()).filter(t => t.startsWith('Move')) })"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/b-14-moved-row-updated.jpg"
+  }
+ ]
+}

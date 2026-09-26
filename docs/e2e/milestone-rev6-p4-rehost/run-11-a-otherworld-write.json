@@ -1,0 +1,50 @@
+{
+ "step": 11,
+ "app": "A",
+ "port": 9344,
+ "what": "Tweak rules → Add a place → Otherworld (no AI world on this device yet); describe it; Write a new otherworld; wait until the workshop's first candidate is playable",
+ "actions": [
+  {
+   "clickText": "Tweak rules"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "Add a place"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "Otherworld"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('input')].find(x => (x.closest('label')?.innerText ?? '').includes('What is it?')); f.focus(); return document.activeElement === f })()"
+  },
+  {
+   "type": "One small dark room with a round paper lantern in the middle, drawn only with CSS shapes and no pictures or asset images. Clicking the lantern or pressing Space lights it, shows the words The ferry remembers you, and calls host.complete."
+  },
+  {
+   "wait": 300
+  },
+  {
+   "eval": "window.__t0 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Write a new otherworld"
+  },
+  {
+   "wait": 3000
+  },
+  {
+   "eval": "(() => [...document.querySelectorAll('[data-layer], [role=dialog]')].map(x => (x.getAttribute('data-layer') ?? 'dialog') + ': ' + x.innerText.slice(0, 2500)).join('\\n---\\n'))()"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 360; i++) { const l = document.querySelector('[data-layer=otherworld]'); const t = l ? l.innerText : ''; if (!/Writing the world|Checking/.test(t)) return { ms: Math.round(performance.now() - window.__t0), text: t.slice(0, 2500) }; await new Promise(r => setTimeout(r, 500)); } return 'timeout' })()"
+  }
+ ]
+}

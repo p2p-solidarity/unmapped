@@ -1,0 +1,29 @@
+{
+ "step": 12,
+ "app": "A",
+ "port": 9344,
+ "what": "Save version → the otherworld's entrance is placed on the land; read the history's places",
+ "actions": [
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/a-06-otherworld-c001.jpg"
+  },
+  {
+   "clickText": "Save version"
+  },
+  {
+   "wait": 3000
+  },
+  {
+   "eval": "(() => [...document.querySelectorAll('[data-layer], [role=dialog], [role=status]')].map(x => (x.getAttribute('data-layer') ?? x.getAttribute('role')) + ': ' + x.innerText.slice(0, 800)).join('\\n---\\n'))()"
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return JSON.stringify({ head: n.head.n, places: n.places }) })()"
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/a-07-otherworld-placed.jpg"
+  }
+ ]
+}

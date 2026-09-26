@@ -1,0 +1,48 @@
+// E2E fixture only (p4-import-physics, step 1): a `.world` whose world is pinned to physics 99.
+// It reads a real `.world` (the genesis body and its cartridge pack), copies the genesis body with
+// `physicsVersion: 99`, signs that new genesis with a throwaway Ed25519 key (so it is a new world
+// id), sequences it as a local-only log of one entry (no receipt), and writes the file with the
+// same builder main and the service use, signed by the throwaway key.
+//
+//   bun --tsconfig-override tsconfig.node.json e2e-tools/physics99.ts <in.world> <out.world>
+import { readFileSync, writeFileSync } from "node:fs";
+import { verifyWorldFile } from "@dsl/history/worldBundle";
+import { buildWorldBundle } from "@dsl/history/worldBundleWrite";
+import { sha256Bytes } from "@shared/history/ids";
+import { logStart, sequenceEvent } from "@shared/history/log";
+import { authorKeyFor, signEvent, signText } from "@shared/history/sign";
+import type { GenesisEvent } from "@shared/history/types";
+import { bundleSignText } from "@shared/worldBundle";
+
+const [input, output] = process.argv.slice(2) as [string, string];
+const { opened } = verifyWorldFile(new Uint8Array(readFileSync(input)));
+if (opened === null) throw new Error("the input .world does not open");
+const secret = sha256Bytes("p4-import-physics:throwaway-physics-99");
+const author = authorKeyFor(secret);
+const at = new Date().toISOString();
+const genesis = signEvent(
+  {
+    v: 1,
+    world: "",
+    kind: "genesis",
+    author,
+    at,
+    seen: 0,
+    body: { ...opened.genesis.body, name: `${opened.genesis.body.name} (physics 99)`, physicsVersion: 99, createdAt: at },
+  },
+  secret,
+) as GenesisEvent;
+const entry = sequenceEvent(logStart(genesis.id), genesis, at, null);
+const pack = opened.manifest.genesisPack;
+const bytes = pack === null ? undefined : opened.blobs.get(pack);
+if (pack === null || bytes === undefined) throw new Error("the input carries no genesis pack");
+const built = buildWorldBundle({
+  entries: [entry],
+  genesisPack: { hash: pack, bytes },
+  works: [],
+  exportedAt: at,
+  signer: { key: author, sign: (manifest) => signText(secret, bundleSignText(manifest)) },
+});
+if (!built.ok) throw new Error(`${built.error.code}: ${built.error.message}`);
+writeFileSync(output, built.value.bytes);
+console.log(JSON.stringify({ world: genesis.id, author, physicsVersion: 99, bytes: built.value.bytes.length, from: opened.manifest.worldId }));

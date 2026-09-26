@@ -1,0 +1,15 @@
+A  [inference] done 1018eeb3-74d3-4b69-a2e7-99028b059270 · bible · openai gpt-5.4-mini · 2266 ms · max 1400 · 1114+289 tokens (0 cached)
+A  [look] fail 4c38c667-5231-416c-a83b-9fcd54aa64e3 · qwen-image-2512 · Qwen/Qwen-Image-2512 · 2 ms · image-server-unreachable
+A  [look] fail ff392da6-2dbb-4b52-9085-347604db9168 · qwen-image-2512 · Qwen/Qwen-Image-2512 · 3 ms · image-server-unreachable
+A  [look] fail bf104931-7aa7-4875-b252-fcda4979ba37 · qwen-image-2512 · Qwen/Qwen-Image-2512 · 3 ms · image-server-unreachable
+A  [inference] done 340cf75a-e85b-4ff0-888b-5f307028914c · story · openai gpt-5.4-mini · 3095 ms · max 4000 · 517+499 tokens (0 cached)
+A  [inference] done 20f3a6aa-ae08-41d1-81ab-9abcaf5e31e0 · origin · openai gpt-5.4-mini · 3279 ms · max 2200 · 2677+689 tokens (0 cached)
+A  [inference] done 91ccf8e7-651d-4216-bbef-b61a85756afc · origin · openai gpt-5.4-mini · 2077 ms · max 2200 · 3917+595 tokens (2304 cached)
+A  [inference] done 6796ab25-4994-43cd-88b5-3e1b00475ca0 · chapter · openai gpt-5.4-mini · 4516 ms · max 2400 · 2100+906 tokens (0 cached)
+A  [inference] done faa48b65-4738-4c93-b967-7bcc29fc6378 · witness · openai gpt-5.4-mini · 7072 ms · max 3200 · 3310+1459 tokens (0 cached)
+A  [inference] done fb04b09a-586d-44d9-9ff7-225c80c03252 · work · openai gpt-5.4-mini · 6780 ms · max 16000 · 813+1919 tokens (0 cached)
+A  [inference] done 7816658c-3a84-4c0c-b22a-272447d10a5f · witness · openai gpt-5.4-mini · 5640 ms · max 3200 · 3452+1243 tokens (2304 cached)
+b  [inference] done 0a79c743-1bdc-4fe9-846e-9703b0219940 · witness · openai gpt-5.4-mini · 4970 ms · max 3200 · 3607+1218 tokens (2816 cached)
+b  [inference] done c633050c-abae-4605-92db-8400ce88b7e9 · witness · openai gpt-5.4-mini · 7898 ms · max 3200 · 3886+1309 tokens (2816 cached)
+b  [inference] done 959f58d3-c6d7-499d-b344-3d1c739fe0bc · witness · openai gpt-5.4-mini · 5154 ms · max 3200 · 6396+1210 tokens (3328 cached)
+c  [inference] done 37591c15-da65-4e1f-8456-6ed3ac83276f · witness · openai gpt-5.4-mini · 7661 ms · max 3200 · 3694+1285 tokens (2816 cached)

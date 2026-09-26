@@ -1,0 +1,87 @@
+{
+ "step": 31,
+ "app": "C",
+ "port": 9346,
+ "what": "C walks into A's chunk (1, 0) (drawn from the history, no call), then along the x=16 ford north to the otherworld's entrance at chunk (0, -1) (16.5, -15.5); E enters it; read the sandboxed frame",
+ "actions": [
+  {
+   "pad": {
+    "toward": "[16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[40.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['1,0']; return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, status: c?.status ?? null, name: c?.scene?.name ?? null }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/c-03-a-chunk-1-0.jpg"
+  },
+  {
+   "pad": {
+    "toward": "[16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[16.5, -14.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 40000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[16.5, -15.5]",
+    "within": 0.6,
+    "buttons": [],
+    "timeoutMs": 15000
+   }
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const p = (await import('/engine/playerProbe.ts')).samplePlayer(); return JSON.stringify({ at: [p.x, p.z], chunk: S.useEngineStore.getState().chunk, nearby: S.useEngineStore.getState().nearby ?? null }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/c-04-at-otherworld.jpg"
+  },
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 5000
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('iframe')].map(x => ({ src: x.src, sandbox: x.getAttribute('sandbox'), allow: x.getAttribute('allow'), w: Math.round(x.getBoundingClientRect().width), h: Math.round(x.getBoundingClientRect().height) })); const layers = [...document.querySelectorAll('[data-layer]')].map(x => x.getAttribute('data-layer') + ': ' + x.innerText.slice(0, 300)); return JSON.stringify({ frames: f, layers }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/c-05-otherworld-open.jpg"
+  }
+ ]
+}

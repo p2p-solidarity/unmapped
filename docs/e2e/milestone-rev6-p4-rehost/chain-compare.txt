@@ -1,0 +1,10 @@
+S1 (copy before kill)  entries 13 head 13 sha256:3319b6af7ed75923  chain(13) sha256:3319b6af7ed75923b153f15e8e5f36865c8af55e21ce00651bdde89101d1ffcc  sha256(1..13 n,rt,chain,id,rsig) 8f36ac8ec2168c5a  sha256(raw lines 1..13) 00b6d595602a70d4
+S2                     entries 19 head 19 sha256:7ed2f8c08583156b  chain(13) sha256:3319b6af7ed75923b153f15e8e5f36865c8af55e21ce00651bdde89101d1ffcc  sha256(1..13 n,rt,chain,id,rsig) 8f36ac8ec2168c5a  sha256(raw lines 1..13) 00b6d595602a70d4
+B                      entries 19 head 19 sha256:7ed2f8c08583156b  chain(13) sha256:3319b6af7ed75923b153f15e8e5f36865c8af55e21ce00651bdde89101d1ffcc  sha256(1..13 n,rt,chain,id,rsig) 8f36ac8ec2168c5a  sha256(raw lines 1..13) 00b6d595602a70d4
+C                      entries 19 head 19 sha256:7ed2f8c08583156b  chain(13) sha256:3319b6af7ed75923b153f15e8e5f36865c8af55e21ce00651bdde89101d1ffcc  sha256(1..13 n,rt,chain,id,rsig) 8f36ac8ec2168c5a  sha256(raw lines 1..13) 00b6d595602a70d4
+C2                     entries 19 head 19 sha256:7ed2f8c08583156b  chain(13) sha256:3319b6af7ed75923b153f15e8e5f36865c8af55e21ce00651bdde89101d1ffcc  sha256(1..13 n,rt,chain,id,rsig) 8f36ac8ec2168c5a  sha256(raw lines 1..13) 00b6d595602a70d4
+S2 (stopped)       entries 19 head sha256:7ed2f8c08583156b  sha256(raw 1..13) 00b6d595602a70d4  sha256(raw 1..19) fdd8daba7af36015
+S3                 entries 20 head sha256:84d7258ef4803927  sha256(raw 1..13) 00b6d595602a70d4  sha256(raw 1..19) fdd8daba7af36015
+B                  entries 20 head sha256:84d7258ef4803927  sha256(raw 1..13) 00b6d595602a70d4  sha256(raw 1..19) fdd8daba7af36015
+C                  entries 20 head sha256:84d7258ef4803927  sha256(raw 1..13) 00b6d595602a70d4  sha256(raw 1..19) fdd8daba7af36015
+C2 (still on S2)   entries 19 head sha256:7ed2f8c08583156b  sha256(raw 1..13) 00b6d595602a70d4  sha256(raw 1..19) fdd8daba7af36015

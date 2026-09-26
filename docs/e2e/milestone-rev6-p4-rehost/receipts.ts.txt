@@ -1,0 +1,27 @@
+// E2E evidence only (p4-rehost): which service key verifies each receipt of a stored log, the
+// verifyLog schedule, and the chain at a given n.
+// Usage: bun e2e-tools/receipts.ts <log.jsonl> <n> NAME=<service key> [NAME=<service key> …]
+import { readFileSync } from "node:fs";
+import { readLogLine, verifyLog } from "@shared/history/log";
+import { verifyReceipt } from "@shared/history/sign";
+
+const [file, upTo, ...named] = process.argv.slice(2) as [string, string, ...string[]];
+const keys = named.map((one) => one.split("=") as [string, string]);
+const entries = readFileSync(file, "utf8").trim().split("\n").map((line) => {
+  const read = readLogLine(line);
+  if (!read.ok) throw new Error(read.error.message);
+  return read.value;
+});
+const world = entries[0]?.event.id ?? "";
+const checked = verifyLog(world, entries);
+console.log(`entries ${entries.length}; verifyLog ${checked.ok ? "ok" : `${checked.error.code}: ${checked.error.message}`}`);
+if (checked.ok) console.log(`schedule ${JSON.stringify(checked.value.schedule)}`);
+for (const e of entries) {
+  const rsig = e.rsig;
+  const by = rsig === null ? "none" : (keys.find(([, key]) => verifyReceipt(key, e.chain, rsig))?.[0] ?? "NONE");
+  console.log(`${String(e.n).padStart(3)} ${e.event.kind.padEnd(12)} ${e.event.author.slice(0, 10)} rt ${e.rt} chain ${e.chain.slice(7, 23)} receipt ${by}`);
+}
+{
+  const at = entries.find((e) => e.n === Number(upTo));
+  console.log(`chain(${upTo}) = ${at?.chain ?? "absent"}`);
+}

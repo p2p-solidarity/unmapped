@@ -1,0 +1,35 @@
+{
+ "step": 9,
+ "app": "A",
+ "port": 9344,
+ "what": "Continue to the look: A's image provider is Qwen-Image-2512 with no server (images.json written before launch), so no picture is drawn; the story writes beside it; Continue without a picture",
+ "actions": [
+  {
+   "eval": "window.__t0 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Continue to the look"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 240; i++) { const t = document.body.innerText; if (/The story is ready/.test(t) && !/Drawing/.test(t)) return { ms: Math.round(performance.now() - window.__t0) }; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + document.body.innerText.slice(0, 2000) })()"
+  },
+  {
+   "eval": "document.body.innerText.slice(0, 3000)"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/a-02-create-look-no-picture.jpg"
+  },
+  {
+   "clickText": "Continue without a picture"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "document.body.innerText.slice(0, 5000)"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/a-03-create-story.jpg"
+  }
+ ]
+}

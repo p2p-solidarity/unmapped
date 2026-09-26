@@ -1,0 +1,58 @@
+{
+ "step": 32,
+ "app": "B",
+ "port": 9345,
+ "what": "B (now on S2) closes the door and walks the z=16 ford west into chunk (-1, 0), which B witnesses",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "pad": {
+    "toward": "[16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[-15.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "repeat": {
+    "times": 120,
+    "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['-1,0']; return c !== undefined && c.status !== 'writing' })()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = S.useLandStore.getState().chunks['-1,0']; const w = n.chunks['-1,0']; return JSON.stringify({ status: c?.status, name: c?.scene?.name ?? null, head: n.head, live: w ? { id: w.live.id, n: w.live.n, author: w.live.author } : null }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/b-11-witnessed-minus1-0.jpg"
+  }
+ ]
+}

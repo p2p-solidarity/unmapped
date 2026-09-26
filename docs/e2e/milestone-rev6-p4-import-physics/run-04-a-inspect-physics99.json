@@ -1,0 +1,38 @@
+{
+ "step": 4,
+ "app": "A",
+ "port": 9344,
+ "what": "Worlds → World files → Choose a .world file (AETHER_TEST_WORLD_PATH answers with $SCR/files/a2.world, at this point a copy of physics99.world); the report shows physics-newer and no Bring it in button",
+ "actions": [
+  {
+   "clickText": "Worlds"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "World files"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Choose a .world file"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 40; i++) { const t = document.body.innerText; if (/problem/.test(t) || /Every check passed/.test(t) || /Error/.test(t)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('Import a .world'); return t.slice(at, at + 1500) })()"
+  },
+  {
+   "eval": "JSON.stringify({ bringItIn: [...document.querySelectorAll('button')].some(b => b.innerText.trim() === 'Bring it in'), buttons: [...document.querySelectorAll('button')].map(b => b.innerText.trim()).filter(Boolean) })"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-import-physics/a-01-physics99-refused.jpg"
+  },
+  {
+   "eval": "(async () => { const r = await window.seed.bundle.inspect(); return JSON.stringify(r.ok ? { file: r.value?.fileName, physics: r.value?.report.physicsVersion, problems: r.value?.report.problems } : r.error) })()"
+  },
+  {
+   "eval": "(async () => { const r = await window.seed.bundle.inspect(); if (!r.ok || r.value === null) return 'no inspect'; const i = await window.seed.bundle.import(r.value.token, 'Ann'); return JSON.stringify(i.ok ? i.value : i.error) })()"
+  }
+ ]
+}

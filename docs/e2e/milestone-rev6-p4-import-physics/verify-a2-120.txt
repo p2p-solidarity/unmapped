@@ -1,0 +1,12 @@
+world      hl6m3ulxpsjtyj4fob4bfjwfpixpntarvppoxg4qfinuaytqefmpq "無界之地 run"
+cartridge  aether-land@1.2.0 sha256:d40a3f256ca8e29b8e914f9a7bc5ae7e237641ecc9afbbb3811156066a4dd79d
+head       #4 sha256:131528a3e24888018b519e6e518837dbd3d71f3b932f59fdf2224da085c9e4cb
+physics    1   protocol 2
+exported   2026-09-26T04:30:12.660Z by kcngqn4rfxqk3esmu4crabmsmtn6oegljy4yyhynrabi5aacae3ya (signature valid)
+entries    4 by 1 keys; owners 2
+services   none (never attached)
+beats      0 (0 do not recompute)
+ignored    0 (0 from a newer build)
+packs      1 (0 AI worlds), 10605 bytes in all
+checked in 322 ms
+OK — every check passed.

@@ -1,0 +1,13 @@
+world      h6y7nqgat72jjnh6mf5itn6loffugwvbgdhmo3sbpjt2k5gbwtv5a "Lantern Delta (physics 99)"
+cartridge  lantern-delta-9c19fd@1.0.0 sha256:d16ea4abadd7a1f713d8630c4d8bdcc7b7820f70831a564055067d603cc2be46
+head       #1 sha256:11db71f9d07d12178bacd2d73e02bcd7552f7e0d731dde0cabde5333432b7e00
+physics    99   protocol 2
+exported   2026-09-26T04:28:04.812Z by kzqr4ipq5k5hxs235txzk55qnps3spwdu72bafvtqpian72il5flq (signature valid)
+entries    1 by 1 keys; owners 1
+services   none (never attached)
+beats      0 (0 do not recompute)
+ignored    0 (0 from a newer build)
+packs      1 (0 AI worlds), 7864 bytes in all
+checked in 118 ms
+1 problem(s):
+  ✗ check 7 physics-newer: This world was made with physics 99; this build has 1.

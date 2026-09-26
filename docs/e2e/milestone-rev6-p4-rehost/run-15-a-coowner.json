@@ -1,0 +1,29 @@
+{
+ "step": 15,
+ "app": "A",
+ "port": 9344,
+ "what": "Door → People: Bea's row → Make co-owner → Make them a co-owner; read the rows and the head",
+ "actions": [
+  {
+   "clickText": "Make co-owner"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "Make them a co-owner"
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); const t = l.innerText; const at = t.indexOf('People'); return t.slice(at, at + 500) })()"
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return JSON.stringify({ head: n.head, owners: n.owners ?? null }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/a-10-door-coowner.jpg"
+  }
+ ]
+}

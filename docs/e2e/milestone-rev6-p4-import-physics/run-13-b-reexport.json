@@ -1,0 +1,42 @@
+{
+ "step": 13,
+ "app": "B",
+ "port": 9345,
+ "what": "Reproducibility of the exporter-made genesis pack: B leaves Play, Worlds → World files lists the adopted world (and the kept original), Export .world of the adopted one (answers $SCR/files/b2-import.world; the imported copy is kept as a2-120.world)",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Worlds"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "World files"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('Worlds on this device'); return t.slice(at, at + 800) })()"
+  },
+  {
+   "eval": "(async () => JSON.stringify(await window.seed.bundle.list()))()"
+  },
+  {
+   "eval": "(() => { const rows = [...document.querySelectorAll('h3')].map(h => h.parentElement).filter(r => r && /You own it/.test(r.innerText)); const b = rows[0] && [...rows[0].querySelectorAll('button')].find(x => x.innerText.trim() === 'Export .world'); if (!b) return 'no button'; b.click(); return 'clicked Export .world in the owned row' })()"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 80; i++) { const t = document.body.innerText; if (/Wrote .*KiB/.test(t) || /Error/.test(t)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('Worlds on this device'); return t.slice(at, at + 800) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-import-physics/b-03-world-files.jpg"
+  }
+ ]
+}

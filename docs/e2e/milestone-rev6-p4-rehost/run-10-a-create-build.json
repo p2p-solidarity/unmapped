@@ -1,0 +1,38 @@
+{
+ "step": 10,
+ "app": "A",
+ "port": 9344,
+ "what": "Continue to build (the quote), Build and play; wait for Play; read the world's history (genesis + pack event)",
+ "actions": [
+  {
+   "clickText": "Continue to build"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 80; i++) { const t = document.body.innerText; if (/Cost:/.test(t)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('What building asks'); return t.slice(Math.max(0, at), at + 1500) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/a-04-create-quote.jpg"
+  },
+  {
+   "eval": "window.__t0 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Build and play"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 240; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance) return { ms: Math.round(performance.now() - window.__t0), instance: s.activeInstance.instance?.instanceId ?? null }; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + document.body.innerText.slice(0, 1500) })()"
+  },
+  {
+   "wait": 8000
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); const P = (await import('/engine/playerProbe.ts')).samplePlayer(); return JSON.stringify({ world: n?.world ?? null, head: n?.head, pack: n?.pack ?? null, chunks: n && Object.keys(n.chunks), chapters: n && Object.keys(n.chapters), p: P && [P.x, P.z] }) })()"
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/a-05-play.jpg"
+  }
+ ]
+}

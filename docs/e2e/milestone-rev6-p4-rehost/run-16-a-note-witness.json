@@ -1,0 +1,90 @@
+{
+ "step": 16,
+ "app": "A",
+ "port": 9344,
+ "what": "Close the door; N at home: leave a note on (0,0); then walk the z=16 ford east into chunk (1, 0), which A witnesses",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "hold": "KeyN",
+   "ms": 100
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('[data-layer=notes] input')].find(x => (x.closest('label')?.innerText ?? '').includes('your note')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+  },
+  {
+   "type": "A: the ferry bell hangs by the first reed bend"
+  },
+  {
+   "clickText": "Leave the note"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 800) : 'no notes layer' })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/a-11-note.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 500
+  },
+  {
+   "pad": {
+    "toward": "[16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[40.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "repeat": {
+    "times": 120,
+    "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['1,0']; return c !== undefined && c.status !== 'writing' })()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = S.useLandStore.getState().chunks['1,0']; return JSON.stringify({ status: c?.status, name: c?.scene?.name ?? null, head: n.head, chunks: Object.keys(n.chunks), notes: (n.notes ?? []).length }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-rehost/a-12-witnessed-1-0.jpg"
+  }
+ ]
+}
