@@ -1,0 +1,13 @@
+# heads and whole-log hashes after step 12 (D's quit visit, n=21)
+21 lines  sha256(log.jsonl)=43a76d6c86dcd1aff46b388a39ec1e2669bf7a3017c4a977603decf7484c458f  head=21 sha256:020d75bb9a69da29cfe0c99c1013b00b63a99a43d99138585a3d7211ec9a2793  $SCR/svc/worlds/hpnal6es5oliwpwe435ocxoiwn7sqyuurgrxt27enrjjk2lishivq/log.jsonl
+21 lines  sha256(log.jsonl)=43a76d6c86dcd1aff46b388a39ec1e2669bf7a3017c4a977603decf7484c458f  head=21 sha256:020d75bb9a69da29cfe0c99c1013b00b63a99a43d99138585a3d7211ec9a2793  $SCR/udA/histories/hpnal6es5oliwpwe435ocxoiwn7sqyuurgrxt27enrjjk2lishivq/log.jsonl
+21 lines  sha256(log.jsonl)=43a76d6c86dcd1aff46b388a39ec1e2669bf7a3017c4a977603decf7484c458f  head=21 sha256:020d75bb9a69da29cfe0c99c1013b00b63a99a43d99138585a3d7211ec9a2793  $SCR/udB/histories/hpnal6es5oliwpwe435ocxoiwn7sqyuurgrxt27enrjjk2lishivq/log.jsonl
+21 lines  sha256(log.jsonl)=43a76d6c86dcd1aff46b388a39ec1e2669bf7a3017c4a977603decf7484c458f  head=21 sha256:020d75bb9a69da29cfe0c99c1013b00b63a99a43d99138585a3d7211ec9a2793  $SCR/udD/histories/hpnal6es5oliwpwe435ocxoiwn7sqyuurgrxt27enrjjk2lishivq/log.jsonl
+19 lines  sha256(log.jsonl)=eb2c905b1751b5684507667f4af7770a64f3bf86fb3cc604d6f978aedc625bb3  head=19 sha256:ece0887e40c6f401e03611143777bbe5cfb218d71ab06b0e859283ebf7a271d0  $SCR/udC/histories/hpnal6es5oliwpwe435ocxoiwn7sqyuurgrxt27enrjjk2lishivq/log.jsonl
+
+# lines 1-19 only (C closed at 19)
+sha256(lines 1-19)=eb2c905b1751b5684507667f4af7770a64f3bf86fb3cc604d6f978aedc625bb3  $SCR/svc/worlds/hpnal6es5oliwpwe435ocxoiwn7sqyuurgrxt27enrjjk2lishivq/log.jsonl
+sha256(lines 1-19)=eb2c905b1751b5684507667f4af7770a64f3bf86fb3cc604d6f978aedc625bb3  $SCR/udA/histories/hpnal6es5oliwpwe435ocxoiwn7sqyuurgrxt27enrjjk2lishivq/log.jsonl
+sha256(lines 1-19)=eb2c905b1751b5684507667f4af7770a64f3bf86fb3cc604d6f978aedc625bb3  $SCR/udB/histories/hpnal6es5oliwpwe435ocxoiwn7sqyuurgrxt27enrjjk2lishivq/log.jsonl
+sha256(lines 1-19)=eb2c905b1751b5684507667f4af7770a64f3bf86fb3cc604d6f978aedc625bb3  $SCR/udC/histories/hpnal6es5oliwpwe435ocxoiwn7sqyuurgrxt27enrjjk2lishivq/log.jsonl
+sha256(lines 1-19)=eb2c905b1751b5684507667f4af7770a64f3bf86fb3cc604d6f978aedc625bb3  $SCR/udD/histories/hpnal6es5oliwpwe435ocxoiwn7sqyuurgrxt27enrjjk2lishivq/log.jsonl

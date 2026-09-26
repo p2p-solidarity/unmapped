@@ -534,7 +534,8 @@ UNMAPPED はバージョン `0.1.0`、動作はする初期段階の研究版で
 | 商用モード：非商用のプロバイダーは選べない、ライセンス不明の新しい画像は公開を止める、商用モードのゲートウェイは非商用モデルがあると起動しない | ✅ 検証済み。公開は画面ではなくアプリの公開呼び出しで実行 | [p4-licence](docs/e2e/milestone-rev6-p4-licence/result.md) |
 | 軽いチェーン：実際のサービスの拍の指紋を、シミュレートした Sepolia に記録 | ✅ ドライランのみ：何も送信せず、未デプロイ。サービスを止めた状態でのチェーンなしの確認は途中まで | [p4-chain](docs/e2e/milestone-rev6-p4-chain/result.md) |
 | スマートフォンサイズのブラウザー実証：招待で参加、大地、タッチで歩く、オフラインと再読み込み後のメモ、デスクトップのプレイヤーを見る | ✅ 検証済み（ヘッドレスブラウザー 375 × 812、開発版のページ）。実機では未実行。組み込みのカートリッジから始めたワールドはまだ描けない（パックなし） | [p4-mobile-proof](docs/e2e/milestone-rev6-p4-mobile-proof/result.md) |
-| サーバーなし：アカウントを求める画面がない。歩く、メモ、ワールドサービスがないときの扉、`.world` の書き出し・オフライン検証・2 台目の端末での取り込み | ✅ 検証済み。ローカルモデルでの「つくる」と観測は未実行（テスト用のマシンに応答するローカルモデルがなかったため。人の設定が必要） | [p4-no-servers](docs/e2e/milestone-rev6-p4-no-servers/result.md) |
+| サーバーなし：アカウントを求める画面がない。歩く、メモ、ワールドサービスがないときの扉、`.world` の書き出し・オフライン検証・2 台目の端末での取り込み | ✅ 検証済み。その後、アプリ内の Apple オンデバイスモデルが「世界をつくる」の世界カードを書けた。ただし 4K のコンテキストでは観測が拒否される（`model-context-too-small`）。llama.cpp と Ollama は未インストール | [p4-no-servers](docs/e2e/milestone-rev6-p4-no-servers/result.md) · [integrated-journey](docs/e2e/milestone-rev6-integrated-journey/result.md) |
+| 1 つのワールドで全部を通す：世界をつくる → 遊ぶ → 共有 → 2 人で 1 つの場所が書かれるのを見る → 共同オーナー → スマホが参加して歩く → `.world` で別の端末へ → Apple オンデバイス → 終了して続きから | ✅ 1 回の実行で検証。6 つのクライアントでレンダラーのエラー 0、サービスと全端末で同じ 21 件の履歴、有料呼び出し 12 回 | [integrated-journey](docs/e2e/milestone-rev6-integrated-journey/result.md) |
 | Stripe の決済（テストモードと本番）、自分の GPU エンドポイントでの Qwen-Image、`WorldProvenance` のデプロイ | ⏳ 未実行。どれも人の作業が必要 | — |
 | 仲間キャラクター | 🚧 ルールにはあるが、大地ではまだ描画も追従もしない | — |
 | Windows / Linux | ❔ 未テスト。パッケージングは macOS のみ | — |

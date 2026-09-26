@@ -1,0 +1,31 @@
+{
+ "step": "7c",
+ "app": "A",
+ "port": 9340,
+ "what": "A, never reloaded: when B's note arrived; N shows it",
+ "actions": [
+  {
+   "eval": "JSON.stringify(window.__notes)"
+  },
+  {
+   "hold": "KeyN",
+   "ms": 100
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 900) : 'no notes layer' })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/07-a-00-sees-b-note-live.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 400
+  }
+ ]
+}

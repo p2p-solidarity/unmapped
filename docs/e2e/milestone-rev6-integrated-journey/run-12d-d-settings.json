@@ -1,0 +1,61 @@
+{
+ "step": "12d",
+ "app": "D",
+ "port": 9342,
+ "what": "Settings: English; Shared worlds: ws://127.0.0.1:8797, Save, Test",
+ "actions": [
+  {
+   "repeat": {
+    "times": 40,
+    "until": "document.body.innerText.includes('設定')",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "clickText": "設定"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "English"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(() => { const ta = [...document.querySelectorAll('textarea')].find(t => (t.closest('label')?.innerText ?? '').includes('World services') || (t.labels?.[0]?.innerText ?? '').includes('World services')); if (!ta) return 'no field'; ta.scrollIntoView({block: 'center'}); ta.focus(); return ta === document.activeElement })()"
+  },
+  {
+   "type": "ws://127.0.0.1:8797"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "clickText": "Save"
+  },
+  {
+   "wait": 400
+  },
+  {
+   "eval": "(() => { const field = [...document.querySelectorAll('textarea')].find(t => t.value.includes('ws://127.0.0.1:8797')); let box = field; while (box && ![...box.querySelectorAll('button')].some(b => b.innerText.trim() === 'Test')) box = box.parentElement; if (!box) return 'no Test'; const btn = [...box.querySelectorAll('button')].find(b => b.innerText.trim() === 'Test'); btn.scrollIntoView({block: 'center'}); btn.click(); return 'clicked Test' })()"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('ws://127.0.0.1:8797\\n'); return at < 0 ? 'no probe line' : t.slice(at, at + 300) })()"
+  },
+  {
+   "eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); return s ? (s.innerText.match(/Next call:[^\\n]*/)?.[0] ?? null) : null })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/12-d-00-settings.jpg"
+  }
+ ]
+}

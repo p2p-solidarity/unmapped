@@ -470,7 +470,9 @@ export function TitleDiorama({ seedText }): JSX.Element;   // App's MenuBackdrop
   input tokens estimated from the real origin prompt, output cap, the draft's usage, money only from
   the dated `@shared/pricing` table or "price unknown", local models free, chapter 1's background
   call on its own line), then `buildWorld` (origin scene, `openLandCartridge` with play style as
-  capability requirements, publish, new save) and lets the player in at once. Only building
+  capability requirements, publish, new save) and lets the player in at once — when a lineage
+  market is set up, through one "published" screen (`BuiltPanel`) that offers an optional ENS name
+  and never waits for it. Only building
   publishes. Autosaved drafts live in `<userData>/workspaces/create.<draftId>/draft.json`, not in
   published cartridges. Changing the idea marks dependent world/story content stale.
 - Style is the world's (rev 6): prompts read the bible's `Look:` and `Props:` lines
@@ -880,12 +882,16 @@ window.seed.bundle.{ list(), export(worldId), inspect(), import(token, name), mo
 `src/service/config.ts`, `src/service/chain/config.ts` and `src/gateway/config.ts`.
 
 ### Status (what has an E2E run)
-Only two runs exist for these phases: `docs/e2e/milestone-rev6-p4-chain` (the provenance dry run
-against a real service's beats; one step not run) and `docs/e2e/milestone-rev6-p4-mobile-proof`
-(the browser proof's first pass; the phone's land view not run). No `milestone-rev6-p3-*` run is
-committed, and the other planned p3/p4 flows (migrate, offline-visit, together, fog, door, rehost,
-account, quota, billing, licence, …) are unverified until their folder lands. Never call one of
-them working before then (Rule 2).
+Every planned flow of phases 3 and 4 has a run in `docs/e2e/`, and each result.md says what it
+did not reach: `milestone-rev6-p3-{migrate,older-build,backup,local-beat,physics,offline-visit,
+migrated-share,together,variant,presence,fog,rumors,door,gift-race,continent}` and
+`milestone-rev6-p4-{account,quota,billing-off,images-hosted,licence,rehost,import-physics,chain,
+mobile-proof,no-servers}`; progress rows 30–39 summarise them. `milestone-rev6-integrated-journey`
+walks one world through all of it (Create → play → share → together → co-owner → phone → `.world`
+→ Apple on-device → quit and continue). Not run, because each needs a person: Stripe checkout (test
+and live), Qwen-Image on a GPU endpoint, deploying `WorldProvenance`, a real phone, and witnessing
+on a local model (Apple's 4K context refuses a witness with `model-context-too-small`; no llama.cpp
+or Ollama here). A flow you change is unverified again until its folder is re-run (Rule 2).
 
 ## Verify before claiming done
 1. `bun run check` must pass (typecheck, lint, line limit, and the few isolated tests in `tests/`).

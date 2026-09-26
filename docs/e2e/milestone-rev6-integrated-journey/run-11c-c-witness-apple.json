@@ -1,0 +1,94 @@
+{
+ "step": "11c",
+ "app": "C",
+ "port": 9342,
+ "what": "On Apple on-device: Create → Back → Back to the title ×2 → Continue (the joined world, C a member); walk the x=16 ford south into unwritten (0,1); wait up to 240 s for the witness; read the chunk, its error, the HUD and the head",
+ "actions": [
+  {
+   "clickText": "Back"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "Back to the title"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Back to the title"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); return S.useSessionStore.getState().screen })()"
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && w.value.status.link === 'online') return { ms: Date.now() - t0, role: w.value.status.role, writable: w.value.status.writable }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "pad": {
+    "toward": "[16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "eval": "window.__w0 = Date.now(); 'mark'"
+  },
+  {
+   "pad": {
+    "toward": "[16.5, 40.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, c01: S.useLandStore.getState().chunks['0,1'] ?? 'absent', hud: document.body.innerText.split('\\n').filter(Boolean).slice(0, 8) }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/11-c-03-witness-apple-writing.jpg"
+  },
+  {
+   "repeat": {
+    "times": 480,
+    "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['0,1']; return c !== undefined && c.status !== 'writing' })()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const c = S.useLandStore.getState().chunks['0,1']; const n = H.worldNow(); return JSON.stringify({ ms: Date.now() - window.__w0, c01: c === undefined ? 'absent' : { status: c.status, name: c.scene?.name ?? null, error: c.status === 'failed' ? c.error : null }, head: n.head.n, chunks: Object.keys(n.chunks) }) })()"
+  },
+  {
+   "eval": "(() => { const lines = document.body.innerText.split('\\n').filter(Boolean); const i = lines.indexOf('LAND'); return { land: i < 0 ? null : lines.slice(i + 1, i + 4), errs: lines.filter(l => /Error|too small|context|UNWRITTEN|WRITTEN/.test(l)).slice(0, 8) } })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/11-c-04-witness-apple-result.jpg"
+  }
+ ],
+ "note": "Two first attempts misfired on the way out of Create (a 'Back to the title' click the world step does not have, then Escape presses that the world step ignores while a field has focus); neither walked or called a model. The world step's 'Back' goes to the idea step, whose 'Back to the title' goes to the draft list, whose 'Back to the title' leaves Create."
+}

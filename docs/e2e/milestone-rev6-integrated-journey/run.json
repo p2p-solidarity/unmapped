@@ -1,0 +1,2544 @@
+{
+ "flow": "rev6-integrated-journey",
+ "env": {
+  "build": "origin/main e0710c6 as a git archive snapshot ($SCR/snap) + the uncommitted src/renderer/app/title/ModelPanel.tsx (llama.cpp with no llama-server saves a config with no sidecar); node_modules and .env symlinked; native/afm-bridge built from the snapshot's own sources; the renderer's Vite cache private per app (.vite-cache-<app>) and its dev port fixed per app (IJ_VITE_PORT, strictPort) so a relaunch keeps its origin and localStorage — both only in the snapshot's electron.vite.config.ts during the run (snapshot-tools.txt), restored before bun run check",
+  "ports": {
+   "A": "CDP 9340, renderer 5291",
+   "B": "CDP 9341, renderer 5292",
+   "C then D": "CDP 9342, renderer 5293",
+   "phone": "chrome-headless-shell CDP 9343, page 5190",
+   "service": "8797"
+  },
+  "service": "UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8797 --data $SCR/svc --browser-origin http://localhost:5190 (fresh dir)",
+  "driver": "CDP_PORT=<port> bun $SCR/snap/scripts/cdp-drive.ts \"$(cat <step file>)\" from the repo root (shot paths are repo-relative)",
+  "invite": "links are substituted with a literal replace (python), never sed: they contain '&k=' / '&o='",
+  "phone": "375 × 812, device scale 2, touch emulation (each phone run starts with {viewport}); /__REPO__ in probes = $SCR/snap",
+  "ui": "each desktop app starts in zh-TW (system) and is switched to English in its first step",
+  "platform": "macOS 27.0, Bun 1.3.6, Electron 44.3.0, Vite 8.3.0, chrome-headless-shell 1243",
+  "window": "1440 × 841 CSS px at scale 2 (screenshots 2880 × 1682)"
+ },
+ "model": {
+  "chat": "openai gpt-5.4-mini (Settings → Model default on a fresh userData, key from the repo .env, read by main only) on A, B and D; C: apple-fm system (in-app afm-bridge) for steps 11b–11c, then llamacpp local (nothing on :8080) for 11d–11e",
+  "pictures": "openai gpt-image-1-mini (ImageProvider default), quality low, 3 concept pictures in Create"
+ },
+ "steps": [
+  {
+   "step": "0a",
+   "app": "shell",
+   "what": "snapshot (no git state touched)",
+   "command": "git -C $R fetch -q && git -C $R archive origin/main | tar -x -C $SCR/snap   # e0710c6; then cp $R/src/renderer/app/title/ModelPanel.tsx $SCR/snap/src/renderer/app/title/; ln -s $R/node_modules $R/.env $SCR/snap/; the electron.vite.config.ts renderer edit and vite.ij.page.mts in snapshot-tools.txt; (cd $SCR/snap && node scripts/build-afm-bridge.mjs debug)   # the snapshot's own afm-bridge, 9.8 s"
+  },
+  {
+   "step": "0b",
+   "app": "shell",
+   "what": "world service (test mode, fresh data dir)",
+   "command": "cd $SCR/snap && UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8797 --data $SCR/svc --browser-origin http://localhost:5190 &"
+  },
+  {
+   "step": "0c",
+   "app": "shell",
+   "what": "app A (fresh userData)",
+   "command": "cd $SCR/snap && AETHER_TEST_USER_DATA=$SCR/udA IJ_APP=A IJ_VITE_PORT=5291 bunx electron-vite dev --remoteDebuggingPort 9340 &"
+  },
+  {
+   "step": 1,
+   "app": "A",
+   "port": 9340,
+   "what": "Title: exactly four entries; Settings → English; Model: the route line; Shared worlds: add ws://127.0.0.1:8797, Save, Test",
+   "file": "run-01-a-title-settings.json",
+   "actions": [
+    {
+     "eval": "(() => ({ buttons: [...document.querySelectorAll('button')].filter(b => b.getClientRects().length > 0).map(b => b.innerText.trim()).filter(Boolean), lang: document.documentElement.lang }))()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/01-a-00-title.jpg"
+    },
+    {
+     "clickText": "設定"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "English"
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "eval": "(() => { const d = document.querySelector('[role=dialog]'); return d ? [...d.querySelectorAll('section')].map(s => s.innerText.split('\\n')[0].trim()) : 'no dialog' })()"
+    },
+    {
+     "eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); if (!s) return 'no Model section'; s.scrollIntoView({ block: 'start' }); return s.innerText.slice(0, 900) })()"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/01-a-01-model-route.jpg"
+    },
+    {
+     "eval": "(() => { const ta = [...document.querySelectorAll('textarea')].find(t => (t.closest('label')?.innerText ?? '').includes('World services') || (t.labels?.[0]?.innerText ?? '').includes('World services')); if (!ta) return 'no field'; ta.scrollIntoView({block: 'center'}); ta.focus(); return ta === document.activeElement })()"
+    },
+    {
+     "type": "ws://127.0.0.1:8797"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Save"
+    },
+    {
+     "wait": 400
+    },
+    {
+     "eval": "(() => { const field = [...document.querySelectorAll('textarea')].find(t => t.value.includes('ws://127.0.0.1:8797')); let box = field; while (box && ![...box.querySelectorAll('button')].some(b => b.innerText.trim() === 'Test')) box = box.parentElement; if (!box) return 'no Test'; const btn = [...box.querySelectorAll('button')].find(b => b.innerText.trim() === 'Test'); btn.scrollIntoView({block: 'center'}); btn.click(); return 'clicked Test' })()"
+    },
+    {
+     "wait": 2500
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('ws://127.0.0.1:8797\\n'); return at < 0 ? 'no probe line' : t.slice(at, at + 400) })()"
+    },
+    {
+     "eval": "localStorage.getItem('unwritten.worldServices')"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/01-a-02-settings-service.jpg"
+    }
+   ]
+  },
+  {
+   "step": 2,
+   "app": "A",
+   "port": 9340,
+   "what": "Create World, all five steps (the p2-create run in English): words only, no name → Write the world; lock the look card, rewrite the 6 unlocked cards; Continue to the look: 3 pictures, choose sketch 2 (sha256 in the page); Continue to the story; Continue to build: the quote; Build and play; the published assets/look.png vs the chosen picture",
+   "file": "run-02-a-create.json",
+   "note": "Recorded run: after Build and play the app showed the BuiltPanel ('Your world is published' + an optional ENS name, shown because .env sets the lineage market) and waited for 'Enter the world'. The recorded run's poll had no step for it; the click was sent from a separate call 132.3 s after Build (publish itself took 2.5 s: cartridge createdAt 05:52:49.670Z vs Build click 05:52:47.137Z), and Play opened 282 ms after the click. The two panel actions above are that click, added for replay.",
+   "start": "Create → Start a new game already open (the idea step), UI English, content language en-US (the default after the UI switch), play style Explore (default)",
+   "actions": [
+    {
+     "eval": "window.__e2e = {}; document.querySelectorAll('input')[0].focus(); ({ nameEmpty: document.querySelectorAll('input')[1].value === '', lang: [...document.querySelectorAll('[aria-pressed=true], [aria-checked=true]')].map(b => b.innerText.trim()) })"
+    },
+    {
+     "type": "Fog-bound drifting islands where islanders send cargo by kite, and lamps are lit each dusk to guide lost kites home."
+    },
+    {
+     "wait": 400
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-00-idea-words-only.jpg"
+    },
+    {
+     "eval": "window.__e2e.t0 = Date.now(); true"
+    },
+    {
+     "clickText": "Write the world"
+    },
+    {
+     "eval": "(async()=>{for(let i=0;i<200;i++){const p=document.querySelector('[data-stream-preview=world]'); if(p&&p.innerText.length>40)return {atMs:Date.now()-window.__e2e.t0,text:p.innerText.slice(0,200)}; await new Promise(r=>setTimeout(r,100));} return 'no world stream preview';})()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-01-world-streaming.jpg"
+    },
+    {
+     "eval": "(async()=>{for(let i=0;i<480;i++){if(document.querySelectorAll('[data-card]').length===7){window.__e2e.worldAt=Date.now();return {worldMs:window.__e2e.worldAt-window.__e2e.t0};} await new Promise(r=>setTimeout(r,250));} return document.body.innerText.slice(0,600);})()"
+    },
+    {
+     "wait": 600
+    },
+    {
+     "eval": "({derivedName: document.querySelectorAll('input')[0].value, cards: [...document.querySelectorAll('[data-card]')].map(c => c.dataset.card), usage: document.querySelector('[data-usage-line]')?.innerText})"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-02-world-cards.jpg"
+    },
+    {
+     "eval": "window.__e2e.before=[...document.querySelectorAll('[data-card]')].map(c=>[c.dataset.card,c.querySelector('textarea').value]); document.querySelector('[data-card=look] button').click(); true"
+    },
+    {
+     "wait": 600
+    },
+    {
+     "eval": "({lookButton: document.querySelector('[data-card=look] button').innerText, lockedNote: document.querySelector('[data-card=look]').innerText.slice(0, 200), rewrite: [...document.querySelectorAll('button')].map(b=>b.innerText.trim()).find(s=>s.includes('unlocked'))})"
+    },
+    {
+     "eval": "window.__e2e.rw0 = Date.now(); true"
+    },
+    {
+     "clickText": "Rewrite the 6 unlocked cards"
+    },
+    {
+     "eval": "(async()=>{for(let i=0;i<200;i++){const p=document.querySelector('[data-stream-preview=world]'); if(p&&p.innerText.length>40){p.scrollIntoView({block:'center'});return {atMs:Date.now()-window.__e2e.rw0,text:p.innerText.slice(0,200)};} await new Promise(r=>setTimeout(r,100));} return 'no stream preview';})()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-03-rewrite-unlocked-streaming.jpg"
+    },
+    {
+     "eval": "(async()=>{for(let i=0;i<480;i++){if(!document.querySelector('[data-stream-preview]') && ![...document.querySelectorAll('button')].some(b=>b.innerText.trim()==='Cancel')) return {rewriteMs:Date.now()-window.__e2e.rw0}; await new Promise(r=>setTimeout(r,250));} return 'still running';})()"
+    },
+    {
+     "wait": 600
+    },
+    {
+     "eval": "(()=>{const after=Object.fromEntries([...document.querySelectorAll('[data-card]')].map(c=>[c.dataset.card,c.querySelector('textarea').value])); return window.__e2e.before.map(([k,v])=>({card:k, identical: after[k]===v, beforeLen:v.length, afterLen:after[k].length}));})()"
+    },
+    {
+     "eval": "document.querySelector('[data-card=look]').scrollIntoView({block:'center'}); document.querySelector('[data-usage-line]')?.innerText"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-04-rewritten-look-locked.jpg"
+    },
+    {
+     "eval": "window.__e2e.look0 = Date.now(); true"
+    },
+    {
+     "clickText": "Continue to the look"
+    },
+    {
+     "wait": 2500
+    },
+    {
+     "eval": "({drawing: document.body.innerText.match(/Drawing \\d sketch[^\\n]*/)?.[0] ?? null, storyHeader: document.body.innerText.match(/Writing the story[^\\n]*/)?.[0] ?? null, story: document.querySelector('[data-stream-preview=story]')?.innerText.slice(0,200) ?? null})"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-05-look-drawing-story-streaming.jpg"
+    },
+    {
+     "eval": "(async()=>{const seen={}; let storyReady=null; for(let i=0;i<720;i++){const n=document.querySelectorAll('[data-look-pictures] img').length; if(!(n in seen)) seen[n]=Date.now()-window.__e2e.look0; if(storyReady===null){const m=document.body.innerText.match(/The story is ready: \\d+ chapters?\\./); if(m) storyReady={atMs:Date.now()-window.__e2e.look0, line:m[0]};} if(n>=3) return {picturesAtMs:seen, storyReady}; await new Promise(r=>setTimeout(r,250));} return {seen, body: document.body.innerText.slice(0,400)};})()"
+    },
+    {
+     "eval": "({usage: document.querySelector('[data-usage-line]')?.innerText, storyReady: document.body.innerText.match(/The story is ready[^\\n]*/)?.[0] ?? null})"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-06-look-three-pictures.jpg"
+    },
+    {
+     "clickText": "Choose sketch 2"
+    },
+    {
+     "wait": 600
+    },
+    {
+     "eval": "(async()=>{const b=[...document.querySelectorAll('[data-look-pictures] button')].find(x=>x.innerText.includes('Chosen look')); const src=b.querySelector('img').src; const bin=atob(src.slice(src.indexOf(',')+1)); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i); const h=await crypto.subtle.digest('SHA-256',u); window.__e2e.chosenSha=[...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join(''); return {labels:[...document.querySelectorAll('[data-look-pictures] button')].map(x=>x.innerText.trim()), bytes:u.byteLength, sha256:window.__e2e.chosenSha};})()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-07-look-picked.jpg"
+    },
+    {
+     "eval": "window.__e2e.story0 = Date.now(); true"
+    },
+    {
+     "clickText": "Continue to the story"
+    },
+    {
+     "eval": "(async()=>{for(let i=0;i<480;i++){const b=[...document.querySelectorAll('button')].find(x=>x.innerText.trim()==='Continue to build'); if(b&&!b.disabled) return {storyWaitMs:Date.now()-window.__e2e.story0, chapters:[...document.body.innerText.matchAll(/Chapter (\\d)/g)].map(m=>m[1])}; await new Promise(r=>setTimeout(r,250));} return document.body.innerText.slice(0,400);})()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-08-story.jpg"
+    },
+    {
+     "clickText": "Continue to build"
+    },
+    {
+     "eval": "(async()=>{for(let i=0;i<80;i++){const q=document.querySelector('[data-quote]'); if(q&&q.innerText.includes('This draft')) return q.innerText; await new Promise(r=>setTimeout(r,250));} return document.querySelector('[data-quote]')?.innerText ?? 'no quote';})()"
+    },
+    {
+     "eval": "document.querySelector('[data-quote]')?.scrollIntoView({block:'center'}); true"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-09-build-quote.jpg"
+    },
+    {
+     "eval": "window.__e2e.build0 = Date.now(); true"
+    },
+    {
+     "clickText": "Build and play"
+    },
+    {
+     "eval": "(async()=>{for(let i=0;i<480;i++){if(/Your world is published/.test(document.body.innerText)){window.__e2e.publishedAt=Date.now(); return {buildToPublishedMs: window.__e2e.publishedAt-window.__e2e.build0, panel: document.body.innerText.slice(0,500)};} const S=await import('/state/index.ts'); if(S.useSessionStore.getState().screen==='play') return 'went straight to play'; await new Promise(r=>setTimeout(r,250));} return document.body.innerText.slice(0,600);})()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-09b-published-name-offer.jpg"
+    },
+    {
+     "eval": "window.__e2e.enter0 = Date.now(); true"
+    },
+    {
+     "clickText": "Enter the world"
+    },
+    {
+     "eval": "(async()=>{const S=await import('/state/index.ts'); for(let i=0;i<960;i++){const s=S.useSessionStore.getState(); if(s.screen==='play'&&s.activeInstance){window.__e2e.playAt=Date.now(); return {buildMs:window.__e2e.playAt-window.__e2e.build0, enterToPlayMs:window.__e2e.playAt-window.__e2e.enter0, wordsToLandMs:window.__e2e.playAt-window.__e2e.t0, cartridge: s.activeInstance.cartridge.manifest.cartridgeId + '@' + s.activeInstance.cartridge.manifest.version};} await new Promise(r=>setTimeout(r,250));} return document.body.innerText.slice(0,600);})()"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "({writingAhead: document.body.innerText.match(/Writing the next chapter[^\\n]*/)?.[0] ?? null, usage: document.body.innerText.match(/This world:[^\\n]*/)?.[0] ?? null})"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-10-in-play-chapter-writing.jpg"
+    },
+    {
+     "eval": "import('/engine/playerProbe.ts').then(m=>{window.__e2e.pose0=m.samplePlayer(); return window.__e2e.pose0;})"
+    },
+    {
+     "hold": "KeyD",
+     "ms": 1500
+    },
+    {
+     "wait": 300
+    },
+    {
+     "eval": "import('/engine/playerProbe.ts').then(m=>{const p=m.samplePlayer(); window.__e2e.walkedAt=Date.now(); return {before: window.__e2e.pose0, after: p, wordsToWalkedMs: window.__e2e.walkedAt-window.__e2e.t0};})"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-11-walked.jpg"
+    },
+    {
+     "eval": "window.seed.cartridges.list().then(r=>r.value.filter(m=>!m.cartridgeId.startsWith('aether-land')).map(m=>({id:m.cartridgeId+'@'+m.version, look:m.files?.find(f=>f.path==='assets/look.png'), chosenSha256: window.__e2e.chosenSha, identical: m.files?.find(f=>f.path==='assets/look.png')?.contentHash==='sha256:'+window.__e2e.chosenSha})))"
+    },
+    {
+     "eval": "(async()=>{for(let i=0;i<240;i++){if(!/Writing the next chapter/.test(document.body.innerText)) return {chapterStatusGoneAfterPlayMs: Date.now()-window.__e2e.playAt}; await new Promise(r=>setTimeout(r,250));} return 'chapter still writing';})()"
+    },
+    {
+     "eval": "JSON.stringify(window.__e2e, (k,v)=>k==='before'?undefined:v)"
+    }
+   ]
+  },
+  {
+   "step": "3a",
+   "app": "A",
+   "port": 9340,
+   "what": "install the p3-rumors page helper (chapter, spot, state); walk the z=16 ford east: into (1,0) (witnessed), into (2,0) (witnessed), to chapter 1's gate at (80.5, 16.5)",
+   "file": "run-03a-a-walk-to-gate.json",
+   "helperFrom": "docs/e2e/milestone-rev6-p3-rumors/run.json step 7, first eval (verbatim)",
+   "actions": [
+    {
+     "eval": "(() => {\n  const e2e = (window.__e2e = window.__e2e || {});\n  // Shared modules are served under /@fs/<absolute path>; read that URL from a renderer module\n  // that imports them, so the helper runs on any checkout.\n  e2e.shared = async (name) => {\n    e2e.urls = e2e.urls || {};\n    if (!e2e.urls[name]) {\n      const code = await (await fetch('/engine2d/LandView2D.tsx')).text();\n      const found = code.match(new RegExp('\"(/@fs/[^\"]*/src/shared/' + name + '\\\\.ts[^\"]*)\"'));\n      e2e.urls[name] = found ? found[1] : null;\n    }\n    return import(e2e.urls[name]);\n  };\n  e2e.pos = async () => {\n    const p = (await import('/engine/playerProbe.ts')).samplePlayer();\n    return p === null ? null : [Math.round(p.x * 10) / 10, Math.round(p.z * 10) / 10];\n  };\n  // What a player sees of the current chapter: its gate, its people and treasures (world tiles).\n  e2e.chapter = async () => {\n    const S = await import('/state/index.ts');\n    const L = await import('/engine2d/chapterLayer.ts');\n    const M = await import('/engine2d/landModel.ts');\n    const story = await e2e.shared('story');\n    const land = await e2e.shared('land');\n    const session = S.useSessionStore.getState();\n    const world = S.useWorldStore.getState();\n    const landState = S.useLandStore.getState();\n    const active = session.activeInstance;\n    if (!active || world.scene.status !== 'ready' || !active.cartridge.story) return null;\n    const progress = landState.progress;\n    const episodes = story.storyEpisodes(active.cartridge.story, progress?.storyMore);\n    const next = story.nextEpisode(episodes, progress?.episodes ?? {});\n    if (!next) return { cleared: true, episodes: progress?.episodes ?? {} };\n    const gate = story.episodeGate(next);\n    const stage = progress?.episodes?.[next.id]?.stage ?? null;\n    const base = { id: next.id, title: next.title, gate: [gate.x, gate.z], written: stage !== null };\n    if (!stage || stage.kind !== 'land') return { ...base, kind: stage?.kind ?? null };\n    const draft = L.readChapter(stage.source);\n    if (!draft) return { ...base, unreadable: true };\n    const seed = land.landSeedOf(active.instance.save);\n    const graph = world.scene.value;\n    const residents = L.residentTiles ? L.residentTiles(landState.chunks) : new Set();\n    const free = (x, z) => !residents.has(x + ',' + z) && M.canStandAt(graph, seed, landState.chunks, x + 0.5, z + 0.5, null);\n    const scene = L.chapterScene(next, stage, draft, free);\n    return {\n      ...base,\n      npcs: scene.npcs.map((n) => ({ id: n.id, name: n.name, at: [n.x + 0.5, n.z + 0.5],\n        met: stage.met.includes(n.id.split(':')[2]) })),\n      treasures: scene.treasures.map((t) => ({ id: t.id, at: [t.x + 0.5, t.z + 0.5],\n        found: stage.found.includes(t.id.split(':')[2]) })),\n      monsters: scene.monsters.length,\n      met: stage.met, found: stage.found,\n    };\n  };\n  // The next thing of the chapter still to do: the nearest unmet person or unopened treasure.\n  e2e.nextTodo = async () => {\n    const c = await e2e.chapter();\n    const at = await e2e.pos();\n    if (!c || !c.npcs || !at) return null;\n    const todo = [...c.npcs.filter((n) => !n.met), ...c.treasures.filter((t) => !t.found)];\n    todo.sort((a, b) => Math.hypot(a.at[0] - at[0], a.at[1] - at[1]) - Math.hypot(b.at[0] - at[0], b.at[1] - at[1]));\n    return todo[0] ?? null;\n  };\n  // Where a player would stand to face it: a free spot next to it from which it, and nothing else\n  // (the gate, a neighbour, a resident of the land), is the nearest thing when A is pressed.\n  e2e.others = async () => {\n    const S = await import('/state/index.ts');\n    const c = await e2e.chapter();\n    // [x, z, reach]: a gate reaches 0.8 tiles further than a person (engine2d/storyLayer).\n    const points = c && c.gate ? [[c.gate[0], c.gate[1], 0.8]] : [];\n    if (c && c.npcs) points.push(...c.npcs.map((n) => [...n.at, 0]), ...c.treasures.filter((t) => !t.found).map((t) => [...t.at, 0]));\n    for (const [key, chunk] of Object.entries(S.useLandStore.getState().chunks)) {\n      if (chunk.status !== 'written') continue;\n      const [cx, cz] = key.split(',').map(Number);\n      for (const n of chunk.scene.npcs) points.push([cx * 32 + n.x + 0.5, cz * 32 + n.z + 0.5, 0]);\n    }\n    return points;\n  };\n  e2e.spot = async () => {\n    const t = await e2e.nextTodo();\n    const at = await e2e.pos();\n    if (!t || !at) return null;\n    const S = await import('/state/index.ts');\n    const M = await import('/engine2d/landModel.ts');\n    const land = await e2e.shared('land');\n    const active = S.useSessionStore.getState().activeInstance;\n    const graph = S.useWorldStore.getState().scene.value;\n    const seed = land.landSeedOf(active.instance.save);\n    const chunks = S.useLandStore.getState().chunks;\n    const others = (await e2e.others()).filter((p) => Math.hypot(p[0] - t.at[0], p[1] - t.at[1]) > 0.01);\n    const spots = [];\n    for (const r of [0.8, 1.2]) {\n      for (let i = 0; i < 16; i += 1) {\n        const a = (i / 16) * Math.PI * 2;\n        const p = [t.at[0] + Math.cos(a) * r, t.at[1] + Math.sin(a) * r];\n        if (!M.canStandAt(graph, seed, chunks, p[0], p[1], null)) continue;\n        const nearestOther = Math.min(...others.map((o) => Math.hypot(o[0] - p[0], o[1] - p[1]) - o[2]));\n        if (nearestOther <= r + 0.3) continue;\n        spots.push(p);\n      }\n    }\n    spots.sort((a, b) => Math.hypot(a[0] - at[0], a[1] - at[1]) - Math.hypot(b[0] - at[0], b[1] - at[1]));\n    return spots[0] ?? t.at;\n  };\n  e2e.state = async () => {\n    const S = await import('/state/index.ts');\n    const s = S.useSessionStore.getState();\n    const en = S.useEngineStore.getState();\n    const layer = [...document.querySelectorAll('[data-layer], [role=dialog]')].filter((l) => l.getClientRects().length > 0).map((l) => l.getAttribute('data-layer') ?? l.getAttribute('role'));\n    return {\n      screen: s.screen, input: document.documentElement.dataset.input ?? null,\n      pos: await e2e.pos(), chunk: en.chunk, nearby: en.nearby && { kind: en.nearby.kind, id: en.nearby.id, label: en.nearby.label },\n      locked: en.inputLocked, dialogue: s.dialogue?.status ?? null, speaker: s.dialogueSpeaker,\n      episodeOpen: s.episodeOpen, layers: layer,\n      focus: document.activeElement && document.activeElement !== document.body ? (document.activeElement.innerText || document.activeElement.getAttribute('aria-label') || document.activeElement.tagName).slice(0, 60) : null,\n    };\n  };\n  return Object.keys(e2e);\n})()\n"
+    },
+    {
+     "eval": "(async()=>JSON.stringify(await window.__e2e.chapter()))()"
+    },
+    {
+     "pad": {
+      "toward": "[16.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[40.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "repeat": {
+      "times": 120,
+      "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['1,0']; return c !== undefined && c.status !== 'writing' })()",
+      "actions": [
+       {
+        "wait": 500
+       }
+      ]
+     }
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = S.useLandStore.getState().chunks['1,0']; const w = n.chunks['1,0']; return JSON.stringify({ status: c?.status, name: c?.scene?.name ?? null, head: n.head.n, live: w ? { id: w.live.id, n: w.live.n, author: w.live.author, npcs: w.live.body.index.npcs.map(p => p.id + ':' + p.name) } : null, pending: S.useHistoryStore.getState().world.value?.status?.pending }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/03-a-00-witnessed-1-0.jpg"
+    },
+    {
+     "pad": {
+      "toward": "[72.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "repeat": {
+      "times": 120,
+      "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['2,0']; return c !== undefined && c.status !== 'writing' })()",
+      "actions": [
+       {
+        "wait": 500
+       }
+      ]
+     }
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = S.useLandStore.getState().chunks['2,0']; const w = n.chunks['2,0']; return JSON.stringify({ status: c?.status, name: c?.scene?.name ?? null, head: n.head.n, live: w ? { id: w.live.id, n: w.live.n, author: w.live.author, npcs: w.live.body.index.npcs.map(p => p.id + ':' + p.name) } : null, pending: S.useHistoryStore.getState().world.value?.status?.pending }) })()"
+    },
+    {
+     "pad": {
+      "toward": "[79.5, 16.5]",
+      "within": 1.2,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(async()=>JSON.stringify({chapter: await window.__e2e.chapter(), state: await window.__e2e.state()}))()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/03-a-01-at-chapter-gate.jpg"
+    }
+   ]
+  },
+  {
+   "step": "3b",
+   "app": "A",
+   "port": 9340,
+   "what": "talk to Bram, chapter 1's first person (the chapter's own words, no model): stand beside him, A to talk, A through the lines until the dialogue closes; count [inference] lines before/after in A's stdout",
+   "file": "run-03b-a-talk.json",
+   "actions": [
+    {
+     "eval": "window.__e2e.nextTodo = async () => { const c = await window.__e2e.chapter(); return c && c.npcs ? (c.npcs.find(n => !n.met) ?? null) : null; }; window.__e2e.nextTodo().then(t => JSON.stringify(t))"
+    },
+    {
+     "pad": {
+      "toward": "window.__e2e.spot()",
+      "within": 0.3,
+      "timeoutMs": 15000
+     }
+    },
+    {
+     "eval": "window.__e2e.state().then(s=>JSON.stringify(s.nearby))"
+    },
+    {
+     "repeat": {
+      "times": 1,
+      "until": "(async()=>{const s=await window.__e2e.state(); const t=await window.__e2e.nextTodo(); return !t || !s.nearby || s.nearby.id!==t.id})()",
+      "actions": [
+       {
+        "pad": {
+         "buttons": [
+          0
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(async()=>{const s=await window.__e2e.state(); const S=await import('/state/index.ts'); const d=S.useSessionStore.getState().dialogue; return JSON.stringify({dialogue:s.dialogue, speaker:s.speaker, text: document.body.innerText.split('\\n').filter(Boolean).slice(-14)})})()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/03-a-02-talking-to-bram.jpg"
+    },
+    {
+     "repeat": {
+      "times": 6,
+      "until": "(async()=>{const S=await import('/state/index.ts'); return S.useSessionStore.getState().dialogue===null})()",
+      "actions": [
+       {
+        "pad": {
+         "buttons": [
+          0
+         ],
+         "ms": 200
+        }
+       },
+       {
+        "wait": 700
+       }
+      ]
+     }
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(async()=>{const S=await import('/state/index.ts'); const p=S.useLandStore.getState().progress; return JSON.stringify({dialogue: S.useSessionStore.getState().dialogue, e1: p?.episodes?.e1?.stage && {met: p.episodes.e1.stage.met, found: p.episodes.e1.stage.found}, cleared: p?.episodes?.e1?.cleared ?? false})})()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/03-a-03-after-talk.jpg"
+    }
+   ]
+  },
+  {
+   "step": "3c",
+   "app": "A",
+   "port": 9340,
+   "what": "N at chapter 1's gate: leave a note; read it back from the fold; then open the HUD's Usage panel and read its totals, by-purpose rows and recent calls",
+   "file": "run-03c-a-note-usage.json",
+   "actions": [
+    {
+     "hold": "KeyN",
+     "ms": 100
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('[data-layer=notes] input')].find(x => (x.closest('label')?.innerText ?? '').includes('your note')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+    },
+    {
+     "type": "A: Bram keeps the pier posts in sight; three freight kites are late."
+    },
+    {
+     "clickText": "Leave the note"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 800) : 'no notes layer' })()"
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return JSON.stringify({ head: n.head, notes: (n.notes ?? []).map(x => ({ n: x.n, author: x.author.slice(0, 10), text: x.body.text, coord: x.body.coord })) }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/03-a-04-note.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 600
+    },
+    {
+     "eval": "document.body.innerText.match(/This world:[^\\n]*/)?.[0] ?? 'no usage line'"
+    },
+    {
+     "clickText": "Usage"
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "eval": "(() => { const rows = [...document.querySelectorAll('[data-usage-purpose]')].map(r => r.dataset.usagePurpose + ' | ' + r.innerText.replace(/\\s+/g, ' ')); const t = document.body.innerText; const at = t.indexOf('AI usage'); return { rows, panel: at < 0 ? 'no panel' : t.slice(at, at + 2500) } })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/03-a-05-usage-panel.jpg"
+    },
+    {
+     "clickText": "Close"
+    },
+    {
+     "wait": 500
+    }
+   ]
+  },
+  {
+   "step": 4,
+   "app": "A",
+   "port": 9340,
+   "what": "home along the z=16 ford; E opens the door; Share on 127.0.0.1:8797 → Online; read the fold's pack; Create an invite and read the link (window.__invite)",
+   "file": "run-04-a-share-invite.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[72.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[16.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[8.5, 8.5]",
+      "within": 0.8,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "hold": "KeyE",
+     "ms": 120
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); return l ? l.innerText.slice(0, 2500) : 'no door layer' })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/04-a-00-door-local.jpg"
+    },
+    {
+     "eval": "window.__t0 = performance.now(); 'mark'"
+    },
+    {
+     "clickText": "Share on 127.0.0.1:8797"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 120; i++) { const l = document.querySelector('[data-layer=door]'); const t = l ? l.innerText : ''; if (/Online/.test(t) && /Invites/.test(t)) return { ms: Math.round(performance.now() - window.__t0) }; await new Promise(r => setTimeout(r, 250)); } const l = document.querySelector('[data-layer=door]'); return 'timeout: ' + (l ? l.innerText.slice(0, 1500) : 'no door') })()"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); return l ? l.innerText.slice(0, 4000) : 'no door layer' })()"
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; const n = H.worldNow(); const log = await window.seed.world.read(w.worldId); const entries = log.ok ? (log.value.entries ?? []) : []; return JSON.stringify({ worldId: w.worldId, head: n.head, link: w.status.link, url: w.status.url, role: w.status.role, pending: w.status.pending, pack: n.pack ?? null, kinds: entries.map(e => (e.entry ?? e).n + ':' + (e.entry ?? e).event.kind).join(' ') }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/04-a-01-door-shared.jpg"
+    },
+    {
+     "clickText": "Create an invite"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 40; i++) { const l = document.querySelector('[data-layer=door]'); const m = l && /unmapped:\\/\\/join\\?i=[A-Za-z0-9_\\-]+&k=[A-Za-z0-9_\\-]+(&o=[A-Za-z0-9_\\-]+)?/.exec([...l.querySelectorAll('input, textarea')].map(x => x.value).join('\\n') + '\\n' + l.innerText); if (m) { window.__invite = m[0]; return m[0].length; } await new Promise(r => setTimeout(r, 250)); } return 'no link' })()"
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); const t = l.innerText; const at = t.indexOf('Invites'); return t.slice(at, at + 600) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/04-a-02-invite.jpg"
+    },
+    {
+     "eval": "window.__invite"
+    }
+   ]
+  },
+  {
+   "step": "4b",
+   "app": "shell",
+   "what": "keep A's invite",
+   "command": "the last line of step 4's output is JSON of the link → $SCR/invite-b.txt"
+  },
+  {
+   "step": "5",
+   "app": "shell",
+   "what": "app B (fresh userData; its export path)",
+   "command": "cd $SCR/snap && AETHER_TEST_USER_DATA=$SCR/udB AETHER_TEST_WORLD_PATH=$SCR/files/b.world IJ_APP=B IJ_VITE_PORT=5292 bunx electron-vite dev --remoteDebuggingPort 9341 &"
+  },
+  {
+   "step": "5a",
+   "app": "B",
+   "port": 9341,
+   "what": "Settings: English; Shared worlds: ws://127.0.0.1:8797, Save, Test",
+   "file": "run-05a-b-settings.json",
+   "actions": [
+    {
+     "clickText": "設定"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "English"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(() => { const ta = [...document.querySelectorAll('textarea')].find(t => (t.closest('label')?.innerText ?? '').includes('World services') || (t.labels?.[0]?.innerText ?? '').includes('World services')); if (!ta) return 'no field'; ta.scrollIntoView({block: 'center'}); ta.focus(); return ta === document.activeElement })()"
+    },
+    {
+     "type": "ws://127.0.0.1:8797"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Save"
+    },
+    {
+     "wait": 400
+    },
+    {
+     "eval": "(() => { const field = [...document.querySelectorAll('textarea')].find(t => t.value.includes('ws://127.0.0.1:8797')); let box = field; while (box && ![...box.querySelectorAll('button')].some(b => b.innerText.trim() === 'Test')) box = box.parentElement; if (!box) return 'no Test'; const btn = [...box.querySelectorAll('button')].find(b => b.innerText.trim() === 'Test'); btn.scrollIntoView({block: 'center'}); btn.click(); return 'clicked Test' })()"
+    },
+    {
+     "wait": 2500
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('ws://127.0.0.1:8797\\n'); return at < 0 ? 'no probe line' : t.slice(at, at + 300) })()"
+    },
+    {
+     "eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); return s ? (s.innerText.match(/Next call:[^\\n]*/)?.[0] ?? null) : null })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/05-b-00-settings-service.jpg"
+    }
+   ]
+  },
+  {
+   "step": "5b",
+   "app": "B",
+   "port": 9341,
+   "what": "Worlds → Join a world, paste __INVITE__ (A's link from step 4), Look at the world, name Bea, Join and play; read head, pack, kinds",
+   "file": "run-05b-b-join.json",
+   "substitute": {
+    "__INVITE__": "$SCR/invite-b.txt (literal replace, not sed)"
+   },
+   "actions": [
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 600
+    },
+    {
+     "clickText": "Worlds"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "Join a world"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input, textarea')].find(x => (x.closest('label')?.innerText ?? '').includes('Invite link')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+    },
+    {
+     "type": "__INVITE__"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Look at the world"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 40; i++) { if (/Your name in this world/.test(document.body.innerText) || /Error/.test(document.body.innerText)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.search(/join a world/i); return t.slice(at, at + 1200) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/05-b-01-join-preview.jpg"
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input')].find(x => (x.closest('label')?.innerText ?? '').includes('Your name in this world')); if (!f) return 'no name field'; f.focus(); f.select(); return f.value })()"
+    },
+    {
+     "type": "Bea"
+    },
+    {
+     "eval": "window.__t0 = performance.now(); 'mark'"
+    },
+    {
+     "clickText": "Join and play"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance) return { ms: Math.round(performance.now() - window.__t0), screen: s.screen, cartridge: s.activeInstance.cartridge.manifest.cartridgeId + '@' + s.activeInstance.cartridge.manifest.version }; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; return 'timeout: ' + t.slice(0, 1500) })()"
+    },
+    {
+     "wait": 4000
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world; const n = H.worldNow(); const log = await window.seed.world.read(w.value.worldId); const entries = log.ok ? (log.value.entries ?? []) : []; return JSON.stringify({ worldId: w.value?.worldId, head: n.head, link: w.value?.status?.link, role: w.value?.status?.role, pending: w.value?.status?.pending, me: w.value?.status?.me, pack: n.pack ?? null, kinds: entries.map(e => (e.entry ?? e).n + ':' + (e.entry ?? e).event.kind).join(' '), chunks: Object.fromEntries(Object.entries(n.chunks).map(([k, c]) => [k, { id: c.live.id.slice(0, 12), name: c.live.body.index.name }])) }) })()"
+    },
+    {
+     "text": true
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/05-b-02-joined-play.jpg"
+    }
+   ]
+  },
+  {
+   "step": "5c",
+   "app": "B",
+   "port": 9341,
+   "what": "B walks the z=16 ford into A's witnessed (1,0) and (2,0) (0 witness calls expected), opens Notes at (2,0) and reads A's note",
+   "file": "run-05c-b-walk-read.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[16.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[40.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "wait": 2000
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['1,0']; return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, status: c?.status ?? null, name: c?.scene?.name ?? null }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/05-b-03-reads-a-chunk-1-0.jpg"
+    },
+    {
+     "pad": {
+      "toward": "[72.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[80.5, 13.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "wait": 2000
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['2,0']; return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, status: c?.status ?? null, name: c?.scene?.name ?? null, notes: S.useLandStore.getState().notes.map(n => ({ text: n.text, coord: n.coord ?? [n.cx, n.cz, n.x, n.z], pending: n.pending ?? null })) }) })()"
+    },
+    {
+     "hold": "KeyN",
+     "ms": 100
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 800) : 'no notes layer' })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/05-b-04-sees-a-note.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 500
+    }
+   ]
+  },
+  {
+   "step": "6a",
+   "app": "A",
+   "port": 9340,
+   "what": "close the door; (run at the same time as B's) walk to (1.5, 16.5), install the recorder for target chunk:-1,0",
+   "file": "run-06a-a-together-setup.json",
+   "from": "docs/e2e/milestone-rev6-p3-together (same actions; ports and shot names changed)",
+   "parallelWith": "6b",
+   "actions": [
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 600
+    },
+    {
+     "pad": {
+      "toward": "[16.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[1.5, 16.5]",
+      "within": 0.8,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const T = 'chunk:-1,0'; const K = '-1,0'; window.__rec = { dev: null, frames: [], flip: null, t0: Date.now() }; S.useLandStore.subscribe((s) => { const d = s.developing[T]; if (d) { const r = window.__rec.dev ?? { first: Date.now() - window.__rec.t0, updates: 0 }; r.text = d.text; r.sid = d.sid; r.by = d.by; r.mine = d.mine; r.last = Date.now() - window.__rec.t0; r.updates++; window.__rec.dev = r; } }); S.useHistoryStore.subscribe(() => { const n = H.worldNow(); const c = n?.chunks[K]; if (c && !window.__rec.flip) window.__rec.flip = { n: c.live.n, id: c.live.id, head: n.head.n, pending: S.useHistoryStore.getState().world.value?.status?.pending, ms: Date.now() - window.__rec.t0 }; }); window.seed.world.onStream((e) => { if (e.target === T || true) window.__rec.frames.push({ k: e.k, len: e.text?.length ?? 0, end: e.end ?? null, sid: e.sid, from: e.from, ms: Date.now() - window.__rec.t0 }); }); const p = (await import('/engine/playerProbe.ts')).samplePlayer(); return JSON.stringify({ installed: true, at: [p.x, p.z], chunk: S.useEngineStore.getState().chunk, head: H.worldNow().head.n }) })()"
+    }
+   ]
+  },
+  {
+   "step": "6b",
+   "app": "B",
+   "port": 9341,
+   "what": "walk back west along z=16; (run at the same time as A's) same on B",
+   "file": "run-06b-b-together-setup.json",
+   "from": "docs/e2e/milestone-rev6-p3-together (same actions; ports and shot names changed)",
+   "parallelWith": "6a",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[72.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[16.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[1.5, 16.5]",
+      "within": 0.8,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const T = 'chunk:-1,0'; const K = '-1,0'; window.__rec = { dev: null, frames: [], flip: null, t0: Date.now() }; S.useLandStore.subscribe((s) => { const d = s.developing[T]; if (d) { const r = window.__rec.dev ?? { first: Date.now() - window.__rec.t0, updates: 0 }; r.text = d.text; r.sid = d.sid; r.by = d.by; r.mine = d.mine; r.last = Date.now() - window.__rec.t0; r.updates++; window.__rec.dev = r; } }); S.useHistoryStore.subscribe(() => { const n = H.worldNow(); const c = n?.chunks[K]; if (c && !window.__rec.flip) window.__rec.flip = { n: c.live.n, id: c.live.id, head: n.head.n, pending: S.useHistoryStore.getState().world.value?.status?.pending, ms: Date.now() - window.__rec.t0 }; }); window.seed.world.onStream((e) => { if (e.target === T || true) window.__rec.frames.push({ k: e.k, len: e.text?.length ?? 0, end: e.end ?? null, sid: e.sid, from: e.from, ms: Date.now() - window.__rec.t0 }); }); const p = (await import('/engine/playerProbe.ts')).samplePlayer(); return JSON.stringify({ installed: true, at: [p.x, p.z], chunk: S.useEngineStore.getState().chunk, head: H.worldNow().head.n }) })()"
+    }
+   ]
+  },
+  {
+   "step": "6c",
+   "app": "A",
+   "port": 9340,
+   "what": "(run at the same time as B's) walk into unwritten (-1, 0); claim → granted; record; hash",
+   "file": "run-06c-a-together-a.json",
+   "from": "docs/e2e/milestone-rev6-p3-together (same actions; ports and shot names changed)",
+   "parallelWith": "6d (started in the same second; 6d waits 2 s itself)",
+   "actions": [
+    {
+     "eval": "window.__rec.walk = Date.now() - window.__rec.t0; 'A walks'"
+    },
+    {
+     "pad": {
+      "toward": "[-8.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "wait": 2500
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/06-a-00-streaming.jpg"
+    },
+    {
+     "eval": "JSON.stringify({ dev: window.__rec.dev && { ...window.__rec.dev, text: window.__rec.dev.text.length }, flip: window.__rec.flip })"
+    },
+    {
+     "repeat": {
+      "times": 120,
+      "until": "window.__rec.flip !== null",
+      "actions": [
+       {
+        "wait": 500
+       }
+      ]
+     }
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/06-a-01-flipped.jpg"
+    },
+    {
+     "eval": "(async () => { const r = window.__rec; const text = r.dev?.text ?? ''; const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)); const hex = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join(''); const S = await import('/state/index.ts'); return JSON.stringify({ role: 'A', walk: r.walk, dev: r.dev && { first: r.dev.first, last: r.dev.last, updates: r.dev.updates, sid: r.dev.sid, by: r.dev.by, mine: r.dev.mine, chars: text.length }, sha256: hex, frames: r.frames.length, flip: r.flip, land: S.useLandStore.getState().chunks['-1,0']?.status }) })()"
+    }
+   ]
+  },
+  {
+   "step": "6d",
+   "app": "B",
+   "port": 9341,
+   "what": "(run at the same time as A's) wait 2 s, walk into (-1, 0); claim → writing; record; hash",
+   "file": "run-06d-b-together-b.json",
+   "from": "docs/e2e/milestone-rev6-p3-together (same actions; ports and shot names changed)",
+   "parallelWith": "6c",
+   "actions": [
+    {
+     "wait": 2000
+    },
+    {
+     "eval": "window.__rec.walk = Date.now() - window.__rec.t0; 'B walks'"
+    },
+    {
+     "pad": {
+      "toward": "[-8.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/06-b-00-watching.jpg"
+    },
+    {
+     "eval": "JSON.stringify({ dev: window.__rec.dev && { ...window.__rec.dev, text: window.__rec.dev.text.length }, frames: window.__rec.frames.length, flip: window.__rec.flip })"
+    },
+    {
+     "repeat": {
+      "times": 120,
+      "until": "window.__rec.flip !== null",
+      "actions": [
+       {
+        "wait": 500
+       }
+      ]
+     }
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/06-b-01-flipped.jpg"
+    },
+    {
+     "eval": "(async () => { const r = window.__rec; const text = r.dev?.text ?? ''; const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)); const hex = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join(''); const S = await import('/state/index.ts'); return JSON.stringify({ role: 'B', walk: r.walk, dev: r.dev && { first: r.dev.first, last: r.dev.last, updates: r.dev.updates, sid: r.dev.sid, by: r.dev.by, mine: r.dev.mine, chars: text.length }, sha256: hex, frames: r.frames.length, framesSum: r.frames.reduce((a, f) => a + f.len, 0), lastFrame: r.frames[r.frames.length - 1] ?? null, flip: r.flip, land: S.useLandStore.getState().chunks['-1,0']?.status }) })()"
+    }
+   ]
+  },
+  {
+   "step": "7a",
+   "app": "A",
+   "port": 9340,
+   "what": "A (in chunk -1,0) installs a watcher on the land store's notes: the time B's note arrives",
+   "file": "run-07a-a-note-watch.json",
+   "actions": [
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); window.__notes = { t0: Date.now(), seen: null, n0: S.useLandStore.getState().notes.length }; S.useLandStore.subscribe((s) => { const hit = s.notes.find(n => (n.text ?? '').startsWith('B:')); if (hit && !window.__notes.seen) window.__notes.seen = { at: Date.now(), text: hit.text, pending: hit.pending ?? null }; }); return window.__notes.n0 })()"
+    }
+   ]
+  },
+  {
+   "step": "7b0",
+   "app": "B",
+   "port": 9341,
+   "what": "(recovery: the first try of 7b pressed Escape with no layer open, which left Play for the title — a harness mistake) Continue back into Play; read position and head",
+   "file": "run-07b0-b-continue.json",
+   "actions": [
+    {
+     "clickText": "Continue"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && w.value.status.link === 'online') return { ms: Date.now() - t0 }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const p = P.samplePlayer(); return JSON.stringify({ pos: p && [p.x, p.z], chunk: S.useEngineStore.getState().chunk, head: H.worldNow().head.n }) })()"
+    }
+   ]
+  },
+  {
+   "step": "7b",
+   "app": "B",
+   "port": 9341,
+   "what": "B leaves a note in chunk (-1,0) and reads it back (Escape only when a layer is open: with none, Escape leaves Play)",
+   "file": "run-07b-b-note.json",
+   "actions": [
+    {
+     "hold": {
+      "from": "(() => [...document.querySelectorAll('[data-layer], [role=dialog]')].some(l => l.getClientRects().length > 0) ? 'Escape' : null)()"
+     },
+     "ms": 80
+    },
+    {
+     "wait": 500
+    },
+    {
+     "eval": "(async()=>{const S=await import('/state/index.ts'); return JSON.stringify({locked:S.useEngineStore.getState().inputLocked, layers:[...document.querySelectorAll('[data-layer], [role=dialog]')].filter(l=>l.getClientRects().length>0).map(l=>l.getAttribute('data-layer') ?? l.getAttribute('role'))})})()"
+    },
+    {
+     "hold": "KeyN",
+     "ms": 100
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('[data-layer=notes] input')].find(x => (x.closest('label')?.innerText ?? '').includes('your note')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+    },
+    {
+     "type": "B: I watched this field arrive while A wrote it; the west ford is dry."
+    },
+    {
+     "eval": "window.__leftAt = Date.now(); window.__leftAt"
+    },
+    {
+     "clickText": "Leave the note"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 800) : 'no notes layer' })()"
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return JSON.stringify({ head: n.head, notes: (n.notes ?? []).map(x => ({ n: x.n, author: x.author.slice(0, 10), text: x.body.text, coord: x.body.coord })) }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/07-b-00-note.jpg"
+    },
+    {
+     "hold": {
+      "from": "(() => [...document.querySelectorAll('[data-layer], [role=dialog]')].some(l => l.getClientRects().length > 0) ? 'Escape' : null)()"
+     },
+     "ms": 80
+    },
+    {
+     "wait": 400
+    }
+   ]
+  },
+  {
+   "step": "7c",
+   "app": "A",
+   "port": 9340,
+   "what": "A, never reloaded: when B's note arrived; N shows it",
+   "file": "run-07c-a-sees-note.json",
+   "actions": [
+    {
+     "eval": "JSON.stringify(window.__notes)"
+    },
+    {
+     "hold": "KeyN",
+     "ms": 100
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 900) : 'no notes layer' })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/07-a-00-sees-b-note-live.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 400
+    }
+   ]
+  },
+  {
+   "step": 8,
+   "app": "A",
+   "port": 9340,
+   "what": "A walks home, E opens the door; People: Bea's row → Make co-owner → Make them a co-owner; read the rows, owners and head",
+   "file": "run-08-a-coowner.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[1.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[8.5, 8.5]",
+      "within": 0.8,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "hold": "KeyE",
+     "ms": 120
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; const at = t.indexOf('People'); return t.slice(at, at + 500) })()"
+    },
+    {
+     "clickText": "Make co-owner"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); const t = l.innerText; const at = t.indexOf('People'); return t.slice(at, at + 700) })()"
+    },
+    {
+     "clickText": "Make them a co-owner"
+    },
+    {
+     "wait": 2000
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); const t = l.innerText; const at = t.indexOf('People'); return t.slice(at, at + 500) })()"
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return JSON.stringify({ head: n.head, owners: n.owners ?? null }) })()"
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); const b = [...l.querySelectorAll('*')].find(e => e.innerText?.trim() === 'People'); b?.scrollIntoView({block: 'start'}); return !!b })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/08-a-00-door-coowner.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 400
+    }
+   ]
+  },
+  {
+   "step": "9a",
+   "app": "A",
+   "port": 9340,
+   "what": "A at home: E, Create an invite (the phone's), read the link; then install a watcher for the phone's note on A's land store",
+   "file": "run-09a-a-invite-phone.json",
+   "actions": [
+    {
+     "hold": "KeyE",
+     "ms": 120
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "clickText": "Create an invite"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 40; i++) { const l = document.querySelector('[data-layer=door]'); const m = l && /unmapped:\\/\\/join\\?i=[A-Za-z0-9_\\-]+&k=[A-Za-z0-9_\\-]+(&o=[A-Za-z0-9_\\-]+)?/.exec([...l.querySelectorAll('input, textarea')].map(x => x.value).join('\\n') + '\\n' + l.innerText); if (m && m[0] !== window.__invite) { window.__invite2 = m[0]; return m[0].length; } await new Promise(r => setTimeout(r, 250)); } return 'no new link' })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/09-a-00-second-invite.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 400
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); window.__phone = { t0: Date.now(), seen: null }; S.useLandStore.subscribe((s) => { const hit = s.notes.find(n => (n.text ?? '').startsWith('Phone:')); if (hit && !window.__phone.seen) window.__phone.seen = { at: Date.now(), text: hit.text, coord: hit.coord ?? null }; }); return 'watching' })()"
+    },
+    {
+     "eval": "window.__invite2"
+    }
+   ]
+  },
+  {
+   "step": "9",
+   "app": "shell",
+   "what": "the phone page and a phone-sized headless Chrome",
+   "command": "cd $SCR/snap && bunx vite --config vite.ij.page.mts &   # :5190, no watcher, no HMR, private cache\n~/Library/Caches/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-mac-arm64/chrome-headless-shell --remote-debugging-port=9343 --user-data-dir=$SCR/chrome-profile --no-first-run --window-size=375,812 http://localhost:5190/ &"
+  },
+  {
+   "step": "9b",
+   "app": "phone",
+   "port": 9343,
+   "what": "the p4-mobile-proof pass-2 phone run (run-p2-land.json), on this world: join with A's second invite (name Rin), the land is drawn from the world's genesis pack, the touch stick walks (probe before/after), a note on the player's tile",
+   "file": "run-09b-phone-join-land-note.json",
+   "from": "docs/e2e/milestone-rev6-p4-mobile-proof/run-p2-land.json; only the shot names, the note text and the note's wait condition (the entry number differs) changed",
+   "note": "In the recorded run this wait still read /Entry 9 · 0 waiting to send/ (a botched substitution), so it ran its full 6 s; the note itself was signed at 06:05:12.819Z and receipted at 06:05:12.836Z (service log). The condition above is the corrected one.",
+   "substitute": {
+    "__INVITE__": "A's second invite (step 9a)",
+    "/__REPO__": "/private/tmp/claude-501/-Users-kidney-Workspace-Hackathon-unmapped/f9f28666-cad2-48fd-9df0-065e8d1d73c3/scratchpad/ij/snap"
+   },
+   "actions": [
+    {
+     "viewport": {
+      "width": 375,
+      "height": 812,
+      "scale": 2,
+      "mobile": true
+     }
+    },
+    {
+     "eval": "location.reload()"
+    },
+    {
+     "wait": 3000
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/09-p-00-join.jpg"
+    },
+    {
+     "touch": {
+      "tapText": "Invite link"
+     }
+    },
+    {
+     "type": "__INVITE__"
+    },
+    {
+     "touch": {
+      "tapText": "Your name in this world"
+     }
+    },
+    {
+     "type": "Rin"
+    },
+    {
+     "eval": "window.__t0 = performance.now(); 'mark'"
+    },
+    {
+     "touch": {
+      "tapText": "Join"
+     }
+    },
+    {
+     "repeat": {
+      "times": 80,
+      "until": "!!document.querySelector('canvas') && /^Online/m.test(document.body.innerText)",
+      "actions": [
+       {
+        "wait": 250
+       }
+      ]
+     }
+    },
+    {
+     "eval": "Math.round(performance.now() - window.__t0)"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "document.body.innerText.split('\\n').slice(0, 3).join(' | ')"
+    },
+    {
+     "eval": "(async () => { const s = await import('/@fs/__REPO__/src/renderer/state/index.ts'); const inst = s.useSessionStore.getState().activeInstance; const l = s.useLandStore.getState(); const c = document.querySelector('canvas'); return JSON.stringify({screen: s.useSessionStore.getState().screen, look: s.useEngineStore.getState().landLook, canvas: c && {label: c.getAttribute('aria-label'), w: c.width, h: c.height}, seed: inst && inst.instance.save.seed, cartridge: inst && inst.cartridge.manifest.cartridgeId + '@' + inst.cartridge.manifest.version, scene: s.useWorldStore.getState().scene.status === 'ready' ? s.useWorldStore.getState().scene.value.contract?.sceneId : null, landMode: l.mode, chunks: Object.keys(l.chunks), notes: l.notes.length, chunk: s.useEngineStore.getState().chunk}); })()"
+    },
+    {
+     "eval": "new Promise((resolve) => { const open = indexedDB.open('unmapped-browser'); open.onsuccess = () => { const db = open.result; const tx = db.transaction(['blobs', 'places', 'entries', 'outbox'], 'readonly'); const out = {}; const b = tx.objectStore('blobs').getAll(); b.onsuccess = () => { out.blobs = b.result.map((r) => [r.hash, r.bytes.byteLength ?? r.bytes.length]); }; const p = tx.objectStore('places').getAll(); p.onsuccess = () => { out.places = p.result.map((r) => ({sceneId: r.position.sceneId, x: +r.position.x.toFixed(3), z: +r.position.z.toFixed(3)})); }; const e = tx.objectStore('entries').count(); e.onsuccess = () => { out.entries = e.result; }; const o = tx.objectStore('outbox').getAll(); o.onsuccess = () => { out.outbox = o.result.map((r) => r.events.length); }; tx.oncomplete = () => resolve(JSON.stringify(out)); }; open.onerror = () => resolve('no db'); })"
+    },
+    {
+     "eval": "(async () => { const m = await import('/@fs/__REPO__/src/renderer/engine/playerProbe.ts'); const p = m.samplePlayer(); return JSON.stringify(p && {sceneId: p.sceneId, x: +p.x.toFixed(3), z: +p.z.toFixed(3), yaw: +p.yaw.toFixed(3)}); })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/09-p-01-land.jpg"
+    },
+    {
+     "touch": {
+      "drag": [
+       [
+        78,
+        734
+       ],
+       [
+        128,
+        734
+       ]
+      ],
+      "ms": 120,
+      "hold": 1500
+     }
+    },
+    {
+     "wait": 300
+    },
+    {
+     "eval": "(async () => { const m = await import('/@fs/__REPO__/src/renderer/engine/playerProbe.ts'); const p = m.samplePlayer(); return JSON.stringify(p && {sceneId: p.sceneId, x: +p.x.toFixed(3), z: +p.z.toFixed(3), yaw: +p.yaw.toFixed(3)}); })()"
+    },
+    {
+     "eval": "(async () => { const s = await import('/@fs/__REPO__/src/renderer/state/index.ts'); const inst = s.useSessionStore.getState().activeInstance; const l = s.useLandStore.getState(); const c = document.querySelector('canvas'); return JSON.stringify({screen: s.useSessionStore.getState().screen, look: s.useEngineStore.getState().landLook, canvas: c && {label: c.getAttribute('aria-label'), w: c.width, h: c.height}, seed: inst && inst.instance.save.seed, cartridge: inst && inst.cartridge.manifest.cartridgeId + '@' + inst.cartridge.manifest.version, scene: s.useWorldStore.getState().scene.status === 'ready' ? s.useWorldStore.getState().scene.value.contract?.sceneId : null, landMode: l.mode, chunks: Object.keys(l.chunks), notes: l.notes.length, chunk: s.useEngineStore.getState().chunk}); })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/09-p-02-walked.jpg"
+    },
+    {
+     "wait": 3500
+    },
+    {
+     "eval": "new Promise((resolve) => { const open = indexedDB.open('unmapped-browser'); open.onsuccess = () => { const db = open.result; const tx = db.transaction(['blobs', 'places', 'entries', 'outbox'], 'readonly'); const out = {}; const b = tx.objectStore('blobs').getAll(); b.onsuccess = () => { out.blobs = b.result.map((r) => [r.hash, r.bytes.byteLength ?? r.bytes.length]); }; const p = tx.objectStore('places').getAll(); p.onsuccess = () => { out.places = p.result.map((r) => ({sceneId: r.position.sceneId, x: +r.position.x.toFixed(3), z: +r.position.z.toFixed(3)})); }; const e = tx.objectStore('entries').count(); e.onsuccess = () => { out.entries = e.result; }; const o = tx.objectStore('outbox').getAll(); o.onsuccess = () => { out.outbox = o.result.map((r) => r.events.length); }; tx.oncomplete = () => resolve(JSON.stringify(out)); }; open.onerror = () => resolve('no db'); })"
+    },
+    {
+     "touch": {
+      "tapText": "World"
+     }
+    },
+    {
+     "wait": 600
+    },
+    {
+     "eval": "(async () => { const s = await import('/@fs/__REPO__/src/renderer/state/index.ts'); return JSON.stringify({layer: document.querySelector('[data-layer]')?.getAttribute('aria-label') ?? null, inputLocked: s.useEngineStore.getState().inputLocked, screen: s.useSessionStore.getState().screen, here: document.body.innerText.split('\\n').find((l) => /^Left where you stand/.test(l)) ?? null}); })()"
+    },
+    {
+     "touch": {
+      "tapText": "Your note"
+     }
+    },
+    {
+     "type": "Phone: left on the land, right where I stood."
+    },
+    {
+     "eval": "window.__t0 = performance.now(); 'mark'"
+    },
+    {
+     "touch": {
+      "tapText": "Leave the note"
+     }
+    },
+    {
+     "repeat": {
+      "times": 60,
+      "until": "(/Phone: left on the land/.test(document.body.innerText) && /Entry \\d+ · 0 waiting to send/.test(document.body.innerText) && !/at 0, 0 · not yet shared/.test(document.body.innerText))",
+      "actions": [
+       {
+        "wait": 100
+       }
+      ]
+     }
+    },
+    {
+     "eval": "Math.round(performance.now() - window.__t0)"
+    },
+    {
+     "eval": "(async () => { const b = await window.seed.world.badges(); const id = b.value[0].worldId; const r = await window.seed.world.read(id); const now = r.value.snapshot.now; return JSON.stringify({head: now.head.n, pack: now.pack, me: r.value.status.me, link: r.value.status.link, pending: r.value.pending.map((p) => p.event.body.text ?? p.event.kind), notes: now.notes.map((n) => ({n: n.n, by: now.names[n.author] ?? n.author.slice(0, 9), author: n.author, text: n.body.text, coord: n.body.coord}))}); })()"
+    },
+    {
+     "eval": "document.body.innerText.split('\\n').filter((l) => /phone|shallow|^— |Left here/.test(l)).join(' | ')"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/09-p-03-note.jpg"
+    },
+    {
+     "touch": {
+      "tapText": "Back to the land"
+     }
+    },
+    {
+     "wait": 500
+    },
+    {
+     "eval": "JSON.stringify({layer: !!document.querySelector('[data-layer]'), bar: document.body.innerText.split('\\n')[1]})"
+    }
+   ]
+  },
+  {
+   "step": "9c",
+   "app": "A",
+   "port": 9340,
+   "what": "A, never reloaded: when the phone's note arrived (the watcher from 9a); N at home shows it; A's remote roster (the phone's player, Rin)",
+   "file": "run-09c-a-sees-phone-note.json",
+   "actions": [
+    {
+     "eval": "JSON.stringify(window.__phone)"
+    },
+    {
+     "eval": "(async () => { const m = await import('/engine2d/remotePlayers.ts').catch(() => null); const S = await import('/state/index.ts'); return JSON.stringify({ roster: m && m.sampleRemotePlayers ? m.sampleRemotePlayers() : 'n/a' }) })()"
+    },
+    {
+     "hold": "KeyN",
+     "ms": 100
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 900) : 'no notes layer' })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/09-a-01-sees-phone-note.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 400
+    }
+   ]
+  },
+  {
+   "step": "10a",
+   "app": "B",
+   "port": 9341,
+   "what": "B leaves Play (Escape with no layer open); Worlds → World files; the world's row; Export .world (AETHER_TEST_WORLD_PATH answers the save dialog with $SCR/files/b.world)",
+   "file": "run-10a-b-export.json",
+   "from": "docs/e2e/milestone-rev6-p4-rehost/run-19-b-export.json (shot renamed)",
+   "actions": [
+    {
+     "hold": {
+      "from": "(() => [...document.querySelectorAll('[data-layer], [role=dialog]')].some(l => l.getClientRects().length > 0) ? 'Escape' : null)()"
+     },
+     "ms": 80
+    },
+    {
+     "wait": 500
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "clickText": "Worlds"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "World files"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('Worlds on this device'); return t.slice(at, at + 800) })()"
+    },
+    {
+     "clickText": "Export .world"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 80; i++) { const t = document.body.innerText; if (/Wrote .*KiB/.test(t) || /Error/.test(t)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('Worlds on this device'); return t.slice(at, at + 1000) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/10-b-00-exported.jpg"
+    }
+   ]
+  },
+  {
+   "step": "10",
+   "app": "shell",
+   "what": "verify the export offline",
+   "command": "cd $SCR/snap && sandbox-exec -p '(version 1)(allow default)(deny network*)' bun run verify-world -- $SCR/files/b.world   # → verify-b-world.txt\ncp $SCR/files/b.world $SCR/files/c-import.world\ncd $SCR/snap && AETHER_TEST_USER_DATA=$SCR/udC AETHER_TEST_WORLD_PATH=$SCR/files/c-import.world IJ_APP=C IJ_VITE_PORT=5293 bunx electron-vite dev --remoteDebuggingPort 9342 &"
+  },
+  {
+   "step": "10b",
+   "app": "C",
+   "port": 9342,
+   "what": "C (fresh; AETHER_TEST_WORLD_PATH = $SCR/files/c-import.world, a byte copy of b.world): Settings → English; Worlds → World files → Choose a .world file; the report; name Cy; Bring it in; Play; the world, its status and the land",
+   "file": "run-10b-c-import.json",
+   "from": "docs/e2e/milestone-rev6-p4-no-servers/run-10-import.json (name Cy, shots renamed, one status read added)",
+   "note": "The first attempt started before C's title had rendered (every click missed; nothing changed on disk); a wait for the title was added and the run repeated.",
+   "actions": [
+    {
+     "repeat": {
+      "times": 40,
+      "until": "document.body.innerText.includes('設定') || document.body.innerText.includes('Settings')",
+      "actions": [
+       {
+        "wait": 500
+       }
+      ]
+     }
+    },
+    {
+     "clickText": "設定"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "English"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "Worlds"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "World files"
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "eval": "(() => { const m = document.querySelector('main') ?? document.body; return m.innerText.slice(0, 1200) })()"
+    },
+    {
+     "clickText": "Choose a .world file"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 40; i++) { const t = document.body.innerText; if (/problem/.test(t) || /Every check passed/.test(t) || /Error/.test(t)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('Import a .world'); return t.slice(at, at + 1500) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/10-c-00-import-report.jpg"
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input')].find(x => (x.closest('label')?.innerText ?? '').includes('Your name in this world')); if (!f) return 'no name field'; f.focus(); f.select(); return f.value })()"
+    },
+    {
+     "type": "Cy"
+    },
+    {
+     "eval": "window.__t0 = performance.now(); 'mark'"
+    },
+    {
+     "clickText": "Bring it in"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance && S.useLandStore.getState().progress !== null) return { ms: Math.round(performance.now() - window.__t0), screen: s.screen }; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('Import a .world'); return 'timeout: ' + t.slice(at, at + 1500) })()"
+    },
+    {
+     "wait": 3000
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return JSON.stringify({ world: n?.world, head: n?.head, cartridge: n?.genesis?.body?.cartridge ?? null, physics: n?.genesis?.body?.physicsVersion ?? null, genesisAuthor: n?.genesis?.author ?? null, owners: Object.keys(n?.owners ?? {}), notes: (n?.notes ?? []).map(x => x.body?.text ?? x.text ?? null), chunks: n && Object.keys(n.chunks), sequencer: n?.sequencer ?? null }) })()"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world; return JSON.stringify({ status: w.status, worldId: w.value?.worldId, st: w.value?.status && { link: w.value.status.link, url: w.value.status.url, role: w.value.status.role, writable: w.value.status.writable, error: w.value.status.error, me: w.value.status.me }, land: Object.fromEntries(Object.entries(S.useLandStore.getState().chunks).map(([k, c]) => [k, c.status])), toasts: document.body.innerText.split('\\n').filter(l => /shared|device|member|invite|read/i.test(l)).slice(0, 8) }) })()"
+    },
+    {
+     "eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const S = await import('/state/index.ts'); const p = P.samplePlayer(); const lines = document.body.innerText.split('\\n').filter(Boolean); const i = lines.indexOf('LAND'); const c = document.querySelector('canvas'); return { pos: p && [Number(p.x.toFixed(2)), Number(p.z.toFixed(2))], chunk: S.useEngineStore.getState().chunk, land: i < 0 ? null : lines[i + 1], fps: lines.find(l => /FPS$/.test(l)) ?? null, canvas: c ? [c.width, c.height] : null, hud: lines.slice(0, 12) } })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/10-c-01-imported-play.jpg"
+    },
+    {
+     "hold": "KeyW",
+     "ms": 1500
+    },
+    {
+     "wait": 300
+    },
+    {
+     "eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const p = P.samplePlayer(); const lines = document.body.innerText.split('\\n').filter(Boolean); return { pos: p && [Number(p.x.toFixed(2)), Number(p.z.toFixed(2))], fps: lines.find(l => /FPS$/.test(l)) ?? null } })()"
+    },
+    {
+     "hold": "KeyN",
+     "ms": 100
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 800) : 'no notes layer' })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/10-c-02-imported-note.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 500
+    }
+   ]
+  },
+  {
+   "step": "10c",
+   "app": "B",
+   "port": 9341,
+   "what": "(so C can write: an attached world imported from a file is read-only until an invite) B, a co-owner: ← Title → Continue; walk home; E; Create an invite; read the link",
+   "file": "run-10c-b-invite-c.json",
+   "actions": [
+    {
+     "clickText": "← Title"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "Continue"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && w.value.status.link === 'online') return { ms: Date.now() - t0 }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "pad": {
+      "toward": "[1.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[8.5, 8.5]",
+      "within": 0.8,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "hold": "KeyE",
+     "ms": 120
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "clickText": "Create an invite"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 40; i++) { const l = document.querySelector('[data-layer=door]'); const m = l && /unmapped:\\/\\/join\\?i=[A-Za-z0-9_\\-]+&k=[A-Za-z0-9_\\-]+(&o=[A-Za-z0-9_\\-]+)?/.exec([...l.querySelectorAll('input, textarea')].map(x => x.value).join('\\n') + '\\n' + l.innerText); if (m) { window.__invite = m[0]; return m[0].length; } await new Promise(r => setTimeout(r, 250)); } return 'no link' })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/10-b-01-invite-c.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 400
+    },
+    {
+     "eval": "window.__invite"
+    }
+   ]
+  },
+  {
+   "step": "10d",
+   "app": "C",
+   "port": 9342,
+   "what": "C, holding the imported (read-only) history: leaves Play; Worlds → Join a world with B's co-owner invite (&o=), Look at the world, name Cy, Join and play; read the world's status",
+   "file": "run-10d-c-join.json",
+   "substitute": {
+    "__INVITE__": "the link step 10c printed (&o= present)"
+   },
+   "actions": [
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 600
+    },
+    {
+     "clickText": "Worlds"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "Join a world"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input, textarea')].find(x => (x.closest('label')?.innerText ?? '').includes('Invite link')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+    },
+    {
+     "type": "__INVITE__"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Look at the world"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 40; i++) { if (/Your name in this world/.test(document.body.innerText) || /Error/.test(document.body.innerText)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.search(/join a world/i); return t.slice(at, at + 1200) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/10-c-03-join-preview.jpg"
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input')].find(x => (x.closest('label')?.innerText ?? '').includes('Your name in this world')); if (!f) return 'no name field'; f.focus(); f.select(); return f.value })()"
+    },
+    {
+     "type": "Cy"
+    },
+    {
+     "eval": "window.__t0 = performance.now(); 'mark'"
+    },
+    {
+     "clickText": "Join and play"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance) return { ms: Math.round(performance.now() - window.__t0), screen: s.screen, cartridge: s.activeInstance.cartridge.manifest.cartridgeId + '@' + s.activeInstance.cartridge.manifest.version }; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; return 'timeout: ' + t.slice(0, 1500) })()"
+    },
+    {
+     "wait": 4000
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world; const n = H.worldNow(); const log = await window.seed.world.read(w.value.worldId); const entries = log.ok ? (log.value.entries ?? []) : []; return JSON.stringify({ worldId: w.value?.worldId, head: n.head, link: w.value?.status?.link, role: w.value?.status?.role, pending: w.value?.status?.pending, me: w.value?.status?.me, pack: n.pack ?? null, kinds: entries.map(e => (e.entry ?? e).n + ':' + (e.entry ?? e).event.kind).join(' '), chunks: Object.fromEntries(Object.entries(n.chunks).map(([k, c]) => [k, { id: c.live.id.slice(0, 12), name: c.live.body.index.name }])) }) })()"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world; const all = await window.seed.world.badges?.(); return JSON.stringify({ st: w.value?.status && { link: w.value.status.link, role: w.value.status.role, writable: w.value.status.writable, error: w.value.status.error }, instance: S.useSessionStore.getState().activeInstance?.instance?.instanceId ?? null, badges: all?.ok ? all.value.map(b => b.worldId?.slice(0, 12)) : null }) })()"
+    },
+    {
+     "text": true
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/10-c-04-joined-play.jpg"
+    }
+   ]
+  },
+  {
+   "step": "11a",
+   "app": "C",
+   "port": 9342,
+   "what": "C leaves Play; Settings → Model → On this computer → Apple on-device; Use this model; Check connection; read the panel and the inference store",
+   "file": "run-11a-c-apple-model.json",
+   "actions": [
+    {
+     "hold": {
+      "from": "(() => [...document.querySelectorAll('[data-layer], [role=dialog]')].some(l => l.getClientRects().length > 0) ? 'Escape' : null)()"
+     },
+     "ms": 80
+    },
+    {
+     "wait": 400
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "clickText": "Settings"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); s?.scrollIntoView({ block: 'start' }); return !!s })()"
+    },
+    {
+     "clickText": "On this computer"
+    },
+    {
+     "wait": 600
+    },
+    {
+     "clickText": "Apple on-device"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); return { model: s?.innerText, buttons: [...(s?.querySelectorAll('button') ?? [])].map(b => ({ text: b.innerText.trim(), disabled: b.disabled })) } })()"
+    },
+    {
+     "clickText": "Use this model"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "window.__t0 = performance.now(); 'mark'"
+    },
+    {
+     "clickText": "Check connection"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 60; i++) { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); const t = s?.innerText ?? ''; if (!/Checking/.test(t) && i > 3) return { ms: Math.round(performance.now() - window.__t0), model: t }; await new Promise(r => setTimeout(r, 250)); } return 'still checking' })()"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const st = S.useInferenceStore.getState(); return JSON.stringify({ config: st.config && { kind: st.config.kind, baseUrl: st.config.baseUrl ?? st.config.baseURL, model: st.config.model, sidecar: st.config.sidecar ?? null }, probe: st.probe, sidecar: st.sidecar ?? null }) })()"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/11-c-00-model-apple.jpg"
+    }
+   ]
+  },
+  {
+   "step": "11b",
+   "app": "C",
+   "port": 9342,
+   "what": "On Apple on-device: Create World → Start a new game → idea words (no name) → Write the world; wait for the 7 cards (or an error); read the draft usage line",
+   "file": "run-11b-c-create-apple.json",
+   "actions": [
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "Create World"
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "clickText": "Start a new game"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "window.__e2e = {}; document.querySelectorAll('input')[0].focus(); (document.body.innerText.match(/Using [^\\n]*/) ?? [null])[0]"
+    },
+    {
+     "type": "A salt-marsh town where the tide clock is wound by whoever wakes first."
+    },
+    {
+     "wait": 400
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/11-c-01-create-idea-apple.jpg"
+    },
+    {
+     "eval": "window.__e2e.t0 = Date.now(); true"
+    },
+    {
+     "clickText": "Write the world"
+    },
+    {
+     "eval": "(async()=>{for(let i=0;i<480;i++){if(document.querySelectorAll('[data-card]').length===7){return {worldMs:Date.now()-window.__e2e.t0};} const e=document.body.innerText.match(/Error · [\\w.-]+/); if(e) return {error:e[0], ms:Date.now()-window.__e2e.t0}; await new Promise(r=>setTimeout(r,250));} return 'timeout';})()"
+    },
+    {
+     "wait": 600
+    },
+    {
+     "eval": "({derivedName: document.querySelectorAll('input')[0].value, cards: [...document.querySelectorAll('[data-card]')].map(c => c.dataset.card + ': ' + c.querySelector('textarea').value.slice(0, 80)), usage: document.querySelector('[data-usage-line]')?.innerText, errors: document.body.innerText.split('\\n').filter(l => /^Error · /.test(l))})"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/11-c-02-create-world-cards-apple.jpg"
+    }
+   ]
+  },
+  {
+   "step": "11c",
+   "app": "C",
+   "port": 9342,
+   "what": "On Apple on-device: Create → Back → Back to the title ×2 → Continue (the joined world, C a member); walk the x=16 ford south into unwritten (0,1); wait up to 240 s for the witness; read the chunk, its error, the HUD and the head",
+   "file": "run-11c-c-witness-apple.json",
+   "note": "Two first attempts misfired on the way out of Create (a 'Back to the title' click the world step does not have, then Escape presses that the world step ignores while a field has focus); neither walked or called a model. The world step's 'Back' goes to the idea step, whose 'Back to the title' goes to the draft list, whose 'Back to the title' leaves Create.",
+   "actions": [
+    {
+     "clickText": "Back"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "Back to the title"
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "clickText": "Back to the title"
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); return S.useSessionStore.getState().screen })()"
+    },
+    {
+     "clickText": "Continue"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && w.value.status.link === 'online') return { ms: Date.now() - t0, role: w.value.status.role, writable: w.value.status.writable }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "pad": {
+      "toward": "[16.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "eval": "window.__w0 = Date.now(); 'mark'"
+    },
+    {
+     "pad": {
+      "toward": "[16.5, 40.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, c01: S.useLandStore.getState().chunks['0,1'] ?? 'absent', hud: document.body.innerText.split('\\n').filter(Boolean).slice(0, 8) }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/11-c-03-witness-apple-writing.jpg"
+    },
+    {
+     "repeat": {
+      "times": 480,
+      "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['0,1']; return c !== undefined && c.status !== 'writing' })()",
+      "actions": [
+       {
+        "wait": 500
+       }
+      ]
+     }
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const c = S.useLandStore.getState().chunks['0,1']; const n = H.worldNow(); return JSON.stringify({ ms: Date.now() - window.__w0, c01: c === undefined ? 'absent' : { status: c.status, name: c.scene?.name ?? null, error: c.status === 'failed' ? c.error : null }, head: n.head.n, chunks: Object.keys(n.chunks) }) })()"
+    },
+    {
+     "eval": "(() => { const lines = document.body.innerText.split('\\n').filter(Boolean); const i = lines.indexOf('LAND'); return { land: i < 0 ? null : lines.slice(i + 1, i + 4), errs: lines.filter(l => /Error|too small|context|UNWRITTEN|WRITTEN/.test(l)).slice(0, 8) } })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/11-c-04-witness-apple-result.jpg"
+    }
+   ]
+  },
+  {
+   "step": "11d",
+   "app": "C",
+   "port": 9342,
+   "what": "llama.cpp with no llama-server installed and nothing on :8080: ← Home; Settings → Model → On this computer → llama.cpp · GGUF; read; Use this model; Check connection; read the panel and the saved config",
+   "file": "run-11d-c-llamacpp.json",
+   "actions": [
+    {
+     "clickText": "← Home"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "clickText": "Settings"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); s?.scrollIntoView({ block: 'start' }); return !!s })()"
+    },
+    {
+     "clickText": "On this computer"
+    },
+    {
+     "wait": 600
+    },
+    {
+     "clickText": "llama.cpp · GGUF"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); return { model: s?.innerText, buttons: [...(s?.querySelectorAll('button') ?? [])].map(b => ({ text: b.innerText.trim(), disabled: b.disabled })) } })()"
+    },
+    {
+     "clickText": "Use this model"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "window.__t0 = performance.now(); 'mark'"
+    },
+    {
+     "clickText": "Check connection"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 60; i++) { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); const t = s?.innerText ?? ''; if (!/Checking/.test(t) && i > 3) return { ms: Math.round(performance.now() - window.__t0), model: t }; await new Promise(r => setTimeout(r, 250)); } return 'still checking' })()"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const st = S.useInferenceStore.getState(); return JSON.stringify({ config: st.config && { kind: st.config.kind, baseUrl: st.config.baseUrl, model: st.config.model, sidecar: st.config.sidecar ?? null }, probe: st.probe, sidecar: st.sidecar ?? null }) })()"
+    },
+    {
+     "eval": "window.seed.inference.getConfig().then(c => JSON.stringify(c))"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/11-c-05-model-llamacpp.jpg"
+    }
+   ]
+  },
+  {
+   "step": "11e",
+   "app": "C",
+   "port": 9342,
+   "what": "with llama.cpp saved and nothing on :8080: Create World → Continue (the Apple draft, which resumes on the idea step) → Continue to the world → Rewrite the 7 unlocked cards; read the error block; then back to the title",
+   "file": "run-11e-c-llamacpp-call.json",
+   "note": "A first try went straight for 'Rewrite the 7 unlocked cards' on the idea step, where it is not shown; it made no call.",
+   "actions": [
+    {
+     "clickText": "Create World"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "clickText": "Continue"
+    },
+    {
+     "wait": 2000
+    },
+    {
+     "clickText": "Continue to the world"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(() => { window.__t0 = performance.now(); window.__errs = (document.body.innerText.match(/Error · /g) ?? []).length; return window.__errs })()"
+    },
+    {
+     "clickText": "Rewrite the 7 unlocked cards"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 240; i++) { const n = (document.body.innerText.match(/Error · /g) ?? []).length; if (n > window.__errs) return { ms: Math.round(performance.now() - window.__t0), errorBlocks: n }; await new Promise(r => setTimeout(r, 250)); } return 'no new error after 60 s' })()"
+    },
+    {
+     "eval": "(() => { const all = [...document.querySelectorAll('*')].filter(e => /^Error · /.test((e.innerText ?? '').trim())); const blocks = all.filter(e => !all.some(o => o !== e && e.contains(o))); blocks[0]?.scrollIntoView({block: 'center'}); return blocks.map(b => (b.parentElement?.innerText ?? b.innerText).slice(0, 400)); })()"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/11-c-06-llamacpp-connection-error.jpg"
+    },
+    {
+     "clickText": "Back"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "Back to the title"
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "clickText": "Back to the title"
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "eval": "document.body.innerText.slice(0, 120)"
+    }
+   ]
+  },
+  {
+   "step": "12a",
+   "app": "A",
+   "port": 9340,
+   "what": "A walks to a spot in (1,0), waits for the position keeper, reads where it stands and the head, then quits from Play (Browser.close)",
+   "file": "run-12a-a-quit.json",
+   "actions": [
+    {
+     "hold": {
+      "from": "(() => [...document.querySelectorAll('[data-layer], [role=dialog]')].some(l => l.getClientRects().length > 0) ? 'Escape' : null)()"
+     },
+     "ms": 80
+    },
+    {
+     "wait": 400
+    },
+    {
+     "pad": {
+      "toward": "[16.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[37.5, 19.5]",
+      "within": 0.6,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "wait": 5000
+    },
+    {
+     "eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const p = P.samplePlayer(); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ pos: p && { sceneId: p.sceneId, x: +p.x.toFixed(3), z: +p.z.toFixed(3), yaw: +p.yaw.toFixed(3) }, chunk: S.useEngineStore.getState().chunk, head: H.worldNow().head, link: w.status.link, pending: w.status.pending, player: localStorage.getItem('aether.playerName') ?? localStorage.getItem('unwritten.playerName') }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/12-a-00-before-quit.jpg"
+    },
+    {
+     "cdp": {
+      "method": "Browser.close"
+     }
+    }
+   ]
+  },
+  {
+   "step": "12",
+   "app": "shell",
+   "what": "relaunch A on the same userData and dev origin",
+   "command": "cd $SCR/snap && AETHER_TEST_USER_DATA=$SCR/udA IJ_APP=A IJ_VITE_PORT=5291 bunx electron-vite dev --remoteDebuggingPort 9340 &"
+  },
+  {
+   "step": "12b",
+   "app": "A",
+   "port": 9340,
+   "what": "A relaunched (same userData, same dev origin :5291): the title is English (localStorage kept); Continue; where A stands, the head, the link, and the player name (no new profile)",
+   "file": "run-12b-a-relaunch-continue.json",
+   "note": "In the recorded run the first Continue click came while Continue was still disabled (the title disables it until the saves are read after a cold start) and did nothing; a second click opened Play. The wait above is for the enabled button.",
+   "actions": [
+    {
+     "repeat": {
+      "times": 60,
+      "until": "[...document.querySelectorAll('button')].some(b => b.innerText.trim() === 'Continue' && !b.disabled)",
+      "actions": [
+       {
+        "wait": 500
+       }
+      ]
+     }
+    },
+    {
+     "eval": "({ lang: document.documentElement.lang, buttons: [...document.querySelectorAll('button')].filter(b => b.getClientRects().length > 0).map(b => b.innerText.trim()).filter(Boolean).slice(0, 4) })"
+    },
+    {
+     "eval": "window.__t0 = performance.now(); 'mark'"
+    },
+    {
+     "clickText": "Continue"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && w.value.status.link === 'online') return { ms: Math.round(performance.now() - window.__t0) }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+    },
+    {
+     "wait": 2000
+    },
+    {
+     "eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const p = P.samplePlayer(); const w = S.useHistoryStore.getState().world.value; const n = H.worldNow(); return JSON.stringify({ pos: p && { sceneId: p.sceneId, x: +p.x.toFixed(3), z: +p.z.toFixed(3), yaw: +p.yaw.toFixed(3) }, chunk: S.useEngineStore.getState().chunk, head: n.head, link: w.status.link, pending: w.status.pending, role: w.status.role, names: n.names ?? null }) })()"
+    },
+    {
+     "text": true
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/12-a-01-continued.jpg"
+    }
+   ]
+  },
+  {
+   "step": "12b2",
+   "app": "shell",
+   "what": "heads on A, B, C and the service; close C",
+   "command": "a read-only eval of worldNow().head on 9340/9341/9342, and shasum of each log.jsonl (chain-compare.txt). C: a page-target Browser.close closed its window but left the process (0 page targets) until bun $SCR/close-browser.ts 9342 (browser target)"
+  },
+  {
+   "step": "12c0",
+   "app": "shell",
+   "what": "app D (fresh userData) for the quit-visit check",
+   "command": "cd $SCR/snap && AETHER_TEST_USER_DATA=$SCR/udD IJ_APP=D IJ_VITE_PORT=5293 bunx electron-vite dev --remoteDebuggingPort 9342 &"
+  },
+  {
+   "step": "12c",
+   "app": "B",
+   "port": 9341,
+   "what": "(for the quit-visit check on a device with no visit yet today) B, at home in Play: E; Create an invite; read the link",
+   "file": "run-12c-b-invite-d.json",
+   "actions": [
+    {
+     "wait": 800
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "hold": "KeyE",
+     "ms": 120
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "clickText": "Create an invite"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 40; i++) { const l = document.querySelector('[data-layer=door]'); const m = l && /unmapped:\\/\\/join\\?i=[A-Za-z0-9_\\-]+&k=[A-Za-z0-9_\\-]+(&o=[A-Za-z0-9_\\-]+)?/.exec([...l.querySelectorAll('input, textarea')].map(x => x.value).join('\\n') + '\\n' + l.innerText); if (m) { window.__invite = m[0]; return m[0].length; } await new Promise(r => setTimeout(r, 250)); } return 'no link' })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/12-b-00-invite-d.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 400
+    },
+    {
+     "eval": "window.__invite"
+    }
+   ]
+  },
+  {
+   "step": "12d",
+   "app": "D",
+   "port": 9342,
+   "what": "Settings: English; Shared worlds: ws://127.0.0.1:8797, Save, Test",
+   "file": "run-12d-d-settings.json",
+   "actions": [
+    {
+     "repeat": {
+      "times": 40,
+      "until": "document.body.innerText.includes('設定')",
+      "actions": [
+       {
+        "wait": 500
+       }
+      ]
+     }
+    },
+    {
+     "clickText": "設定"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "English"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(() => { const ta = [...document.querySelectorAll('textarea')].find(t => (t.closest('label')?.innerText ?? '').includes('World services') || (t.labels?.[0]?.innerText ?? '').includes('World services')); if (!ta) return 'no field'; ta.scrollIntoView({block: 'center'}); ta.focus(); return ta === document.activeElement })()"
+    },
+    {
+     "type": "ws://127.0.0.1:8797"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Save"
+    },
+    {
+     "wait": 400
+    },
+    {
+     "eval": "(() => { const field = [...document.querySelectorAll('textarea')].find(t => t.value.includes('ws://127.0.0.1:8797')); let box = field; while (box && ![...box.querySelectorAll('button')].some(b => b.innerText.trim() === 'Test')) box = box.parentElement; if (!box) return 'no Test'; const btn = [...box.querySelectorAll('button')].find(b => b.innerText.trim() === 'Test'); btn.scrollIntoView({block: 'center'}); btn.click(); return 'clicked Test' })()"
+    },
+    {
+     "wait": 2500
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('ws://127.0.0.1:8797\\n'); return at < 0 ? 'no probe line' : t.slice(at, at + 300) })()"
+    },
+    {
+     "eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); return s ? (s.innerText.match(/Next call:[^\\n]*/)?.[0] ?? null) : null })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/12-d-00-settings.jpg"
+    }
+   ]
+  },
+  {
+   "step": "12e",
+   "app": "D",
+   "port": 9342,
+   "what": "D (fresh): Worlds → Join a world with B's invite, name Dee, Join and play; then walk (0,0) → the z=16 ford → (1,0) (both written: no model call), read the head; then quit from Play (Browser.close) — main should log 'visit of N chunks written on quit'",
+   "file": "run-12e-d-join-walk-quit.json",
+   "substitute": {
+    "__INVITE__": "the link step 12c printed"
+   },
+   "actions": [
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 600
+    },
+    {
+     "clickText": "Worlds"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "Join a world"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input, textarea')].find(x => (x.closest('label')?.innerText ?? '').includes('Invite link')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+    },
+    {
+     "type": "__INVITE__"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Look at the world"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 40; i++) { if (/Your name in this world/.test(document.body.innerText) || /Error/.test(document.body.innerText)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.search(/join a world/i); return t.slice(at, at + 1200) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/12-d-01-join-preview.jpg"
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input')].find(x => (x.closest('label')?.innerText ?? '').includes('Your name in this world')); if (!f) return 'no name field'; f.focus(); f.select(); return f.value })()"
+    },
+    {
+     "type": "Dee"
+    },
+    {
+     "eval": "window.__t0 = performance.now(); 'mark'"
+    },
+    {
+     "clickText": "Join and play"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance) return { ms: Math.round(performance.now() - window.__t0), screen: s.screen, cartridge: s.activeInstance.cartridge.manifest.cartridgeId + '@' + s.activeInstance.cartridge.manifest.version }; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; return 'timeout: ' + t.slice(0, 1500) })()"
+    },
+    {
+     "wait": 4000
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world; const n = H.worldNow(); const log = await window.seed.world.read(w.value.worldId); const entries = log.ok ? (log.value.entries ?? []) : []; return JSON.stringify({ worldId: w.value?.worldId, head: n.head, link: w.value?.status?.link, role: w.value?.status?.role, pending: w.value?.status?.pending, me: w.value?.status?.me, pack: n.pack ?? null, kinds: entries.map(e => (e.entry ?? e).n + ':' + (e.entry ?? e).event.kind).join(' '), chunks: Object.fromEntries(Object.entries(n.chunks).map(([k, c]) => [k, { id: c.live.id.slice(0, 12), name: c.live.body.index.name }])) }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/12-d-02-joined-play.jpg"
+    },
+    {
+     "pad": {
+      "toward": "[16.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[40.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "wait": 2500
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, c10: S.useLandStore.getState().chunks['1,0']?.status ?? null, head: n.head, visits: Object.values(n.events ?? {}).filter(e => e.kind === 'visit').length, lastVisit: n.lastVisit ?? null }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-integrated-journey/12-d-03-walked-before-quit.jpg"
+    },
+    {
+     "cdp": {
+      "method": "Browser.close"
+     }
+    }
+   ]
+  },
+  {
+   "step": "13",
+   "app": "shell",
+   "what": "health and teardown",
+   "command": "bun $SCR/console-dump.ts <9340|9341|9343>; grep -c '[renderer:ERR' / '[renderer:WARN' in each app's stdout; cdp-drive {cdp: Browser.close} on 9341 and 9340; bun $SCR/close-browser.ts 9343; kill the :5190 server; kill -INT the service; lsof on every port; then restore the snapshot's electron.vite.config.ts and (cd $SCR/snap && bun run check)"
+  }
+ ]
+}

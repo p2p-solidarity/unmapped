@@ -1,0 +1,103 @@
+{
+ "step": "12e",
+ "app": "D",
+ "port": 9342,
+ "what": "D (fresh): Worlds → Join a world with B's invite, name Dee, Join and play; then walk (0,0) → the z=16 ford → (1,0) (both written: no model call), read the head; then quit from Play (Browser.close) — main should log 'visit of N chunks written on quit'",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "clickText": "Worlds"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "Join a world"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('input, textarea')].find(x => (x.closest('label')?.innerText ?? '').includes('Invite link')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+  },
+  {
+   "type": "__INVITE__"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "clickText": "Look at the world"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 40; i++) { if (/Your name in this world/.test(document.body.innerText) || /Error/.test(document.body.innerText)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.search(/join a world/i); return t.slice(at, at + 1200) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/12-d-01-join-preview.jpg"
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('input')].find(x => (x.closest('label')?.innerText ?? '').includes('Your name in this world')); if (!f) return 'no name field'; f.focus(); f.select(); return f.value })()"
+  },
+  {
+   "type": "Dee"
+  },
+  {
+   "eval": "window.__t0 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Join and play"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance) return { ms: Math.round(performance.now() - window.__t0), screen: s.screen, cartridge: s.activeInstance.cartridge.manifest.cartridgeId + '@' + s.activeInstance.cartridge.manifest.version }; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; return 'timeout: ' + t.slice(0, 1500) })()"
+  },
+  {
+   "wait": 4000
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world; const n = H.worldNow(); const log = await window.seed.world.read(w.value.worldId); const entries = log.ok ? (log.value.entries ?? []) : []; return JSON.stringify({ worldId: w.value?.worldId, head: n.head, link: w.value?.status?.link, role: w.value?.status?.role, pending: w.value?.status?.pending, me: w.value?.status?.me, pack: n.pack ?? null, kinds: entries.map(e => (e.entry ?? e).n + ':' + (e.entry ?? e).event.kind).join(' '), chunks: Object.fromEntries(Object.entries(n.chunks).map(([k, c]) => [k, { id: c.live.id.slice(0, 12), name: c.live.body.index.name }])) }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/12-d-02-joined-play.jpg"
+  },
+  {
+   "pad": {
+    "toward": "[16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[40.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, c10: S.useLandStore.getState().chunks['1,0']?.status ?? null, head: n.head, visits: Object.values(n.events ?? {}).filter(e => e.kind === 'visit').length, lastVisit: n.lastVisit ?? null }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/12-d-03-walked-before-quit.jpg"
+  },
+  {
+   "cdp": {
+    "method": "Browser.close"
+   }
+  }
+ ]
+}

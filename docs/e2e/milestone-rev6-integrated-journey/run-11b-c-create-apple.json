@@ -1,0 +1,57 @@
+{
+ "step": "11b",
+ "app": "C",
+ "port": 9342,
+ "what": "On Apple on-device: Create World → Start a new game → idea words (no name) → Write the world; wait for the 7 cards (or an error); read the draft usage line",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "Create World"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Start a new game"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "window.__e2e = {}; document.querySelectorAll('input')[0].focus(); (document.body.innerText.match(/Using [^\\n]*/) ?? [null])[0]"
+  },
+  {
+   "type": "A salt-marsh town where the tide clock is wound by whoever wakes first."
+  },
+  {
+   "wait": 400
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/11-c-01-create-idea-apple.jpg"
+  },
+  {
+   "eval": "window.__e2e.t0 = Date.now(); true"
+  },
+  {
+   "clickText": "Write the world"
+  },
+  {
+   "eval": "(async()=>{for(let i=0;i<480;i++){if(document.querySelectorAll('[data-card]').length===7){return {worldMs:Date.now()-window.__e2e.t0};} const e=document.body.innerText.match(/Error · [\\w.-]+/); if(e) return {error:e[0], ms:Date.now()-window.__e2e.t0}; await new Promise(r=>setTimeout(r,250));} return 'timeout';})()"
+  },
+  {
+   "wait": 600
+  },
+  {
+   "eval": "({derivedName: document.querySelectorAll('input')[0].value, cards: [...document.querySelectorAll('[data-card]')].map(c => c.dataset.card + ': ' + c.querySelector('textarea').value.slice(0, 80)), usage: document.querySelector('[data-usage-line]')?.innerText, errors: document.body.innerText.split('\\n').filter(l => /^Error · /.test(l))})"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/11-c-02-create-world-cards-apple.jpg"
+  }
+ ]
+}

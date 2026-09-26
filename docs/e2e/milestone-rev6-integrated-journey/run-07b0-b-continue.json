@@ -1,0 +1,20 @@
+{
+ "step": "7b0",
+ "app": "B",
+ "port": 9341,
+ "what": "(recovery: the first try of 7b pressed Escape with no layer open, which left Play for the title — a harness mistake) Continue back into Play; read position and head",
+ "actions": [
+  {
+   "clickText": "Continue"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && w.value.status.link === 'online') return { ms: Date.now() - t0 }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const p = P.samplePlayer(); return JSON.stringify({ pos: p && [p.x, p.z], chunk: S.useEngineStore.getState().chunk, head: H.worldNow().head.n }) })()"
+  }
+ ]
+}

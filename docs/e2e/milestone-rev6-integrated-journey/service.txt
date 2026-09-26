@@ -1,0 +1,36 @@
+# service log
+$ bun --tsconfig-override tsconfig.node.json src/service/main.ts --port "8797" --data "$SCR/svc" --browser-origin "http://localhost:5190"
+world service kvt6qo3cwk42opiurvsg7afusmb4auhk7kwa5un4in2wshushekwq
+  ws://127.0.0.1:8797/v1/ws  data $SCR/svc  worlds 0 (0 not served)  new key TEST MODE (beat every 21600000 ms)
+2026-09-26T06:00:25.703Z attached world hpnal6es5oliwpwe435ocxoiwn7sqyuurgrxt27enrjjk2lishivq (9 entries)
+world service: stopped (SIGINT), snapshots written
+Internal error: directory mismatch for directory "$SCR/snap/tsconfig.node.json", fd 3. You don't need to do anything, but this indicates a bug.
+
+# service log.jsonl: n, kind, event at, receipt time (rt), author, chain
+1 genesis 2026-09-26T05:52:49.670Z 2026-09-26T05:52:49.670Z krcegpbdgib6… sha256:c5fe8cd04a64e0eb74f00ca9a4bef812560815e8501424dc8c3bb0fc55649a6e
+2 pack 2026-09-26T05:52:49.670Z 2026-09-26T05:52:49.670Z krcegpbdgib6… sha256:5bc27cf9409bc9f50a43caba901784e14cf3cce4dbb36495bf74ff85624becf0
+3 profile 2026-09-26T05:52:49.670Z 2026-09-26T05:52:49.670Z krcegpbdgib6… sha256:d56ce01194d4ab5f01e5de69662d296bb6fd536c95fef59e59319bc4c768191f
+4 chapter 2026-09-26T05:55:02.681Z 2026-09-26T05:55:02.684Z krcegpbdgib6… sha256:95bdd4d1fada6565fcbf43d86bdc20799831c7854a9a0f9ac4582c8b92034b9d
+5 witness 2026-09-26T05:55:04.722Z 2026-09-26T05:55:04.727Z krcegpbdgib6… sha256:ce8de387a2d9f4042a16ae688b8b6afb30cb8affc869098b1be1a1c647df9c6e
+6 witness 2026-09-26T05:58:30.867Z 2026-09-26T05:58:30.871Z krcegpbdgib6… sha256:56f78df32d270dfc5f6b8e3d1ea72e174e89542f26121f925d756cd505d17190
+7 witness 2026-09-26T05:58:41.549Z 2026-09-26T05:58:41.551Z krcegpbdgib6… sha256:01059bb52550744df5d04485ca6ed21aac3d40a354f695439290b772814927c8
+8 note 2026-09-26T05:59:42.903Z 2026-09-26T05:59:42.904Z krcegpbdgib6… sha256:34a5dcea008c2252cc9f5dc49ad89f1dfde9ce0b22ea3dd0d574ff9ce441f4d8
+9 sequencer 2026-09-26T06:00:25.618Z 2026-09-26T06:00:25.650Z krcegpbdgib6… sha256:aac6f17e9aa89be622267cf3cafd840603990dad2bf0d9aa69eae5106961f59f
+10 member.join 2026-09-26T06:01:26.768Z 2026-09-26T06:01:26.770Z kv3nyzlhyzed… sha256:1beaf04a5f92ed5df8ed458a87e894dab13e758aa087db5725eba18807100b80
+11 witness 2026-09-26T06:02:41.249Z 2026-09-26T06:02:41.256Z krcegpbdgib6… sha256:d8b66e136437c5f75857ddf1244a98c7b048dc89d1e75d6711919ce6b8a7b74b
+12 visit 2026-09-26T06:03:11.307Z 2026-09-26T06:03:11.316Z kv3nyzlhyzed… sha256:0b6c0d01df9f645e70e8306f9a1a44cd4e82846a84aa440d76faf4b403e11adf
+13 note 2026-09-26T06:03:45.393Z 2026-09-26T06:03:45.397Z kv3nyzlhyzed… sha256:70ae1e088a74dc90a6e8fb72c9f1336daab1b30c8d4f983160cb7863b0425582
+14 owner.add 2026-09-26T06:04:07.310Z 2026-09-26T06:04:07.314Z krcegpbdgib6… sha256:32d358448fd2e74b98344f531fd61956815caace85f1092fb07d6f3caa19d608
+15 member.join 2026-09-26T06:05:04.448Z 2026-09-26T06:05:04.449Z kqeyg65uskp5… sha256:025d8f8515ef6ec1739f4830d7bfbbf545ebd64a4d8fa56fd8a629caf9af055f
+16 note 2026-09-26T06:05:12.819Z 2026-09-26T06:05:12.836Z kqeyg65uskp5… sha256:ec97165da7d6f92158bcf63a955e82152f698be009454b238624f445e4739c5b
+17 member.join 2026-09-26T06:09:10.472Z 2026-09-26T06:09:10.474Z k6sfq3qqg6hb… sha256:5efe783e2e42313f10b704cf68fbf25a45f7ae70565fe1c21fea5b4a27f0f942
+18 visit 2026-09-26T06:09:32.600Z 2026-09-26T06:09:32.618Z k6sfq3qqg6hb… sha256:76697f18dd76ca660f69c5cd4a0d5288c2395710876a5c8dcf0300097a467e84
+19 visit 2026-09-26T06:09:59.567Z 2026-09-26T06:09:59.761Z krcegpbdgib6… sha256:ece0887e40c6f401e03611143777bbe5cfb218d71ab06b0e859283ebf7a271d0
+20 member.join 2026-09-26T06:33:50.726Z 2026-09-26T06:33:50.730Z kviljkdr5wdd… sha256:5392b1949124d501e709ec2b0269bf3d9455f01b82003b9fc8b8d67a46833da6
+21 visit 2026-09-26T06:34:05.486Z 2026-09-26T06:34:05.494Z kviljkdr5wdd… sha256:020d75bb9a69da29cfe0c99c1013b00b63a99a43d99138585a3d7211ec9a2793
+
+# blobs
+total 544
+drwxr-xr-x@ 3 kidney  wheel      96 Sep 26 15:00 .
+drwxr-xr-x@ 5 kidney  wheel     160 Sep 26 14:50 ..
+-rw-r--r--@ 1 kidney  wheel  277059 Sep 26 15:00 f7d581dd8a59f7c9dc89f4b53757f397e5c4a56247efdc19474dac99e83d747b

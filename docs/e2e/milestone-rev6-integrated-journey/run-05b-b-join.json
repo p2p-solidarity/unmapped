@@ -1,0 +1,72 @@
+{
+ "step": "5b",
+ "app": "B",
+ "port": 9341,
+ "what": "Worlds → Join a world, paste __INVITE__ (A's link from step 4), Look at the world, name Bea, Join and play; read head, pack, kinds",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "clickText": "Worlds"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "Join a world"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('input, textarea')].find(x => (x.closest('label')?.innerText ?? '').includes('Invite link')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+  },
+  {
+   "type": "__INVITE__"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "clickText": "Look at the world"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 40; i++) { if (/Your name in this world/.test(document.body.innerText) || /Error/.test(document.body.innerText)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.search(/join a world/i); return t.slice(at, at + 1200) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/05-b-01-join-preview.jpg"
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('input')].find(x => (x.closest('label')?.innerText ?? '').includes('Your name in this world')); if (!f) return 'no name field'; f.focus(); f.select(); return f.value })()"
+  },
+  {
+   "type": "Bea"
+  },
+  {
+   "eval": "window.__t0 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Join and play"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance) return { ms: Math.round(performance.now() - window.__t0), screen: s.screen, cartridge: s.activeInstance.cartridge.manifest.cartridgeId + '@' + s.activeInstance.cartridge.manifest.version }; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; return 'timeout: ' + t.slice(0, 1500) })()"
+  },
+  {
+   "wait": 4000
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world; const n = H.worldNow(); const log = await window.seed.world.read(w.value.worldId); const entries = log.ok ? (log.value.entries ?? []) : []; return JSON.stringify({ worldId: w.value?.worldId, head: n.head, link: w.value?.status?.link, role: w.value?.status?.role, pending: w.value?.status?.pending, me: w.value?.status?.me, pack: n.pack ?? null, kinds: entries.map(e => (e.entry ?? e).n + ':' + (e.entry ?? e).event.kind).join(' '), chunks: Object.fromEntries(Object.entries(n.chunks).map(([k, c]) => [k, { id: c.live.id.slice(0, 12), name: c.live.body.index.name }])) }) })()"
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/05-b-02-joined-play.jpg"
+  }
+ ]
+}

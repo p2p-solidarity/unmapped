@@ -1,0 +1,44 @@
+== app A-1 (main stdout/stderr)
+[inference] done 258f8af7-8cae-4fe6-b828-0f1a2fa908e5 · bible · openai gpt-5.4-mini · 2498 ms · max 1400 · 1126+251 tokens (0 cached)
+[inference] done aad4ea46-8c52-4428-bf0e-fb3ba57d6699 · bible · openai gpt-5.4-mini · 2122 ms · max 2400 · 528+336 tokens (0 cached)
+[inference] done 87ae8dd9-fbb3-48ff-b97d-dd1a7d374811 · story · openai gpt-5.4-mini · 3367 ms · max 4000 · 617+512 tokens (0 cached)
+[look] done 12387ff0-3bb2-4097-a048-9e49f6496a21 · openai · gpt-image-1-mini · 9762 ms · licence openai-terms
+[look] done ccaca6d7-4d46-4170-9a6b-82d634b41126 · openai · gpt-image-1-mini · 9847 ms · licence openai-terms
+[look] done 231c0203-e9d7-45bc-800f-547f66e6b5e2 · openai · gpt-image-1-mini · 9917 ms · licence openai-terms
+[inference] done ab7b7157-b95f-4ad4-8b0b-6c0412042dc4 · origin · openai gpt-5.4-mini · 2471 ms · max 2200 · 2777+581 tokens (0 cached)
+[licence] cartridge fog-bound-drifting-islands-66d73a@1.0.0 · look.png · openai-terms · commercial · added
+[inference] done 951b6a28-ad23-4194-beec-7bcd2af8f094 · chapter · openai gpt-5.4-mini · 2929 ms · max 2400 · 2184+608 tokens (0 cached)
+[inference] done 436fb158-e6f9-4841-9b09-96f2e13ff8c5 · witness · openai gpt-5.4-mini · 4967 ms · max 3200 · 3389+1187 tokens (0 cached)
+[inference] done 2752ba59-ba6a-4f4e-a76f-d33b3c358dc8 · witness · openai gpt-5.4-mini · 3698 ms · max 3200 · 3501+778 tokens (2304 cached)
+[inference] done bc94d49d-1d09-488f-bcc3-474e28b73e9f · witness · openai gpt-5.4-mini · 5516 ms · max 3200 · 3643+1458 tokens (2816 cached)
+[inference] done 9aa3be59-81e6-46d9-abc7-8c724009cddb · witness · openai gpt-5.4-mini · 4527 ms · max 3200 · 3709+996 tokens (2816 cached)
+== app A-2 (main stdout/stderr)
+== app B-1 (main stdout/stderr)
+== app C-1 (main stdout/stderr)
+[inference] done 73dfa04c-5ad7-4cff-a74e-065e9763b147 · bible · apple-fm system · 104090 ms · max 1400 · 1519+263 tokens (0 cached) · ctx 4096
+[inference] fail df1557d5-8395-4097-94b1-168f2826700e · witness · apple-fm system · 6588 ms · model-context-too-small
+[inference] fail b1c09562-7dfa-4aed-8882-070baba9b44d · bible · llamacpp local · 1488 ms · connection-refused
+== app D-1 (main stdout/stderr)
+[world] hpnal6es5oli… visit of 1 chunks written on quit
+== udA/usage.jsonl
+{"v":1,"at":"2026-09-26T05:52:30.801Z","purpose":"bible","scope":{"kind":"create","id":"a65eb1b424933dc7"},"provider":"openai","model":"gpt-5.4-mini","input":1126,"output":251,"cached":0,"ms":2498,"outcome":"done"}
+{"v":1,"at":"2026-09-26T05:52:34.507Z","purpose":"bible","scope":{"kind":"create","id":"a65eb1b424933dc7"},"provider":"openai","model":"gpt-5.4-mini","input":528,"output":336,"cached":0,"ms":2123,"outcome":"done"}
+{"v":1,"at":"2026-09-26T05:52:38.834Z","purpose":"story","scope":{"kind":"create","id":"a65eb1b424933dc7"},"provider":"openai","model":"gpt-5.4-mini","input":617,"output":512,"cached":0,"ms":3367,"outcome":"done"}
+{"v":1,"at":"2026-09-26T05:52:45.234Z","purpose":"image","scope":{"kind":"create","id":"a65eb1b424933dc7"},"provider":"openai","model":"gpt-image-1-mini","input":189,"output":272,"cached":null,"ms":9762,"outcome":"done"}
+{"v":1,"at":"2026-09-26T05:52:45.319Z","purpose":"image","scope":{"kind":"create","id":"a65eb1b424933dc7"},"provider":"openai","model":"gpt-image-1-mini","input":190,"output":272,"cached":null,"ms":9847,"outcome":"done"}
+{"v":1,"at":"2026-09-26T05:52:45.389Z","purpose":"image","scope":{"kind":"create","id":"a65eb1b424933dc7"},"provider":"openai","model":"gpt-image-1-mini","input":186,"output":272,"cached":null,"ms":9917,"outcome":"done"}
+{"v":1,"at":"2026-09-26T05:52:49.624Z","purpose":"origin","scope":{"kind":"create","id":"a65eb1b424933dc7"},"provider":"openai","model":"gpt-5.4-mini","input":2777,"output":581,"cached":0,"ms":2471,"outcome":"done"}
+{"v":1,"at":"2026-09-26T05:52:49.672Z","link":{"from":{"kind":"create","id":"a65eb1b424933dc7"},"to":{"kind":"instance","id":"fog-bound-drifting-islands-muhz3tae"}}}
+{"v":1,"at":"2026-09-26T05:55:02.675Z","purpose":"chapter","scope":{"kind":"instance","id":"fog-bound-drifting-islands-muhz3tae"},"provider":"openai","model":"gpt-5.4-mini","input":2184,"output":608,"cached":0,"ms":2929,"outcome":"done"}
+{"v":1,"at":"2026-09-26T05:55:04.714Z","purpose":"witness","scope":{"kind":"instance","id":"fog-bound-drifting-islands-muhz3tae"},"provider":"openai","model":"gpt-5.4-mini","input":3389,"output":1187,"cached":0,"ms":4968,"outcome":"done"}
+{"v":1,"at":"2026-09-26T05:58:30.861Z","purpose":"witness","scope":{"kind":"instance","id":"fog-bound-drifting-islands-muhz3tae"},"provider":"openai","model":"gpt-5.4-mini","input":3501,"output":778,"cached":2304,"ms":3698,"outcome":"done"}
+{"v":1,"at":"2026-09-26T05:58:41.544Z","purpose":"witness","scope":{"kind":"instance","id":"fog-bound-drifting-islands-muhz3tae"},"provider":"openai","model":"gpt-5.4-mini","input":3643,"output":1458,"cached":2816,"ms":5516,"outcome":"done"}
+{"v":1,"at":"2026-09-26T06:02:41.243Z","purpose":"witness","scope":{"kind":"instance","id":"fog-bound-drifting-islands-muhz3tae"},"provider":"openai","model":"gpt-5.4-mini","input":3709,"output":996,"cached":2816,"ms":4528,"outcome":"done"}
+== udB/usage.jsonl
+(none: no model call)
+== udC/usage.jsonl
+{"v":1,"at":"2026-09-26T06:11:46.582Z","purpose":"bible","scope":{"kind":"create","id":"d0cd281d4b4e2902"},"provider":"apple-fm","model":"system","input":1519,"output":263,"cached":0,"ms":104092,"outcome":"done"}
+{"v":1,"at":"2026-09-26T06:25:01.912Z","purpose":"witness","scope":{"kind":"instance","id":"fog-bound-drifting-islands-muhznmid"},"provider":"apple-fm","model":"system","input":null,"output":null,"cached":null,"ms":6589,"outcome":"failed"}
+{"v":1,"at":"2026-09-26T06:27:23.437Z","purpose":"bible","scope":{"kind":"create","id":"d0cd281d4b4e2902"},"provider":"llamacpp","model":"local","input":null,"output":null,"cached":null,"ms":1489,"outcome":"failed"}
+== udD/usage.jsonl
+(none: no model call)

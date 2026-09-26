@@ -1,0 +1,37 @@
+{
+ "step": "9a",
+ "app": "A",
+ "port": 9340,
+ "what": "A at home: E, Create an invite (the phone's), read the link; then install a watcher for the phone's note on A's land store",
+ "actions": [
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Create an invite"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 40; i++) { const l = document.querySelector('[data-layer=door]'); const m = l && /unmapped:\\/\\/join\\?i=[A-Za-z0-9_\\-]+&k=[A-Za-z0-9_\\-]+(&o=[A-Za-z0-9_\\-]+)?/.exec([...l.querySelectorAll('input, textarea')].map(x => x.value).join('\\n') + '\\n' + l.innerText); if (m && m[0] !== window.__invite) { window.__invite2 = m[0]; return m[0].length; } await new Promise(r => setTimeout(r, 250)); } return 'no new link' })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/09-a-00-second-invite.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 400
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); window.__phone = { t0: Date.now(), seen: null }; S.useLandStore.subscribe((s) => { const hit = s.notes.find(n => (n.text ?? '').startsWith('Phone:')); if (hit && !window.__phone.seen) window.__phone.seen = { at: Date.now(), text: hit.text, coord: hit.coord ?? null }; }); return 'watching' })()"
+  },
+  {
+   "eval": "window.__invite2"
+  }
+ ]
+}

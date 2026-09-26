@@ -1,0 +1,182 @@
+{
+ "step": "9b",
+ "app": "phone",
+ "port": 9343,
+ "what": "the p4-mobile-proof pass-2 phone run (run-p2-land.json), on this world: join with A's second invite (name Rin), the land is drawn from the world's genesis pack, the touch stick walks (probe before/after), a note on the player's tile",
+ "from": "docs/e2e/milestone-rev6-p4-mobile-proof/run-p2-land.json; only the shot names, the note text and the note's wait condition (the entry number differs) changed",
+ "substitute": {
+  "__INVITE__": "A's second invite (step 9a)",
+  "/__REPO__": "/private/tmp/claude-501/-Users-kidney-Workspace-Hackathon-unmapped/f9f28666-cad2-48fd-9df0-065e8d1d73c3/scratchpad/ij/snap"
+ },
+ "actions": [
+  {
+   "viewport": {
+    "width": 375,
+    "height": 812,
+    "scale": 2,
+    "mobile": true
+   }
+  },
+  {
+   "eval": "location.reload()"
+  },
+  {
+   "wait": 3000
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/09-p-00-join.jpg"
+  },
+  {
+   "touch": {
+    "tapText": "Invite link"
+   }
+  },
+  {
+   "type": "__INVITE__"
+  },
+  {
+   "touch": {
+    "tapText": "Your name in this world"
+   }
+  },
+  {
+   "type": "Rin"
+  },
+  {
+   "eval": "window.__t0 = performance.now(); 'mark'"
+  },
+  {
+   "touch": {
+    "tapText": "Join"
+   }
+  },
+  {
+   "repeat": {
+    "times": 80,
+    "until": "!!document.querySelector('canvas') && /^Online/m.test(document.body.innerText)",
+    "actions": [
+     {
+      "wait": 250
+     }
+    ]
+   }
+  },
+  {
+   "eval": "Math.round(performance.now() - window.__t0)"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "document.body.innerText.split('\\n').slice(0, 3).join(' | ')"
+  },
+  {
+   "eval": "(async () => { const s = await import('/@fs/__REPO__/src/renderer/state/index.ts'); const inst = s.useSessionStore.getState().activeInstance; const l = s.useLandStore.getState(); const c = document.querySelector('canvas'); return JSON.stringify({screen: s.useSessionStore.getState().screen, look: s.useEngineStore.getState().landLook, canvas: c && {label: c.getAttribute('aria-label'), w: c.width, h: c.height}, seed: inst && inst.instance.save.seed, cartridge: inst && inst.cartridge.manifest.cartridgeId + '@' + inst.cartridge.manifest.version, scene: s.useWorldStore.getState().scene.status === 'ready' ? s.useWorldStore.getState().scene.value.contract?.sceneId : null, landMode: l.mode, chunks: Object.keys(l.chunks), notes: l.notes.length, chunk: s.useEngineStore.getState().chunk}); })()"
+  },
+  {
+   "eval": "new Promise((resolve) => { const open = indexedDB.open('unmapped-browser'); open.onsuccess = () => { const db = open.result; const tx = db.transaction(['blobs', 'places', 'entries', 'outbox'], 'readonly'); const out = {}; const b = tx.objectStore('blobs').getAll(); b.onsuccess = () => { out.blobs = b.result.map((r) => [r.hash, r.bytes.byteLength ?? r.bytes.length]); }; const p = tx.objectStore('places').getAll(); p.onsuccess = () => { out.places = p.result.map((r) => ({sceneId: r.position.sceneId, x: +r.position.x.toFixed(3), z: +r.position.z.toFixed(3)})); }; const e = tx.objectStore('entries').count(); e.onsuccess = () => { out.entries = e.result; }; const o = tx.objectStore('outbox').getAll(); o.onsuccess = () => { out.outbox = o.result.map((r) => r.events.length); }; tx.oncomplete = () => resolve(JSON.stringify(out)); }; open.onerror = () => resolve('no db'); })"
+  },
+  {
+   "eval": "(async () => { const m = await import('/@fs/__REPO__/src/renderer/engine/playerProbe.ts'); const p = m.samplePlayer(); return JSON.stringify(p && {sceneId: p.sceneId, x: +p.x.toFixed(3), z: +p.z.toFixed(3), yaw: +p.yaw.toFixed(3)}); })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/09-p-01-land.jpg"
+  },
+  {
+   "touch": {
+    "drag": [
+     [
+      78,
+      734
+     ],
+     [
+      128,
+      734
+     ]
+    ],
+    "ms": 120,
+    "hold": 1500
+   }
+  },
+  {
+   "wait": 300
+  },
+  {
+   "eval": "(async () => { const m = await import('/@fs/__REPO__/src/renderer/engine/playerProbe.ts'); const p = m.samplePlayer(); return JSON.stringify(p && {sceneId: p.sceneId, x: +p.x.toFixed(3), z: +p.z.toFixed(3), yaw: +p.yaw.toFixed(3)}); })()"
+  },
+  {
+   "eval": "(async () => { const s = await import('/@fs/__REPO__/src/renderer/state/index.ts'); const inst = s.useSessionStore.getState().activeInstance; const l = s.useLandStore.getState(); const c = document.querySelector('canvas'); return JSON.stringify({screen: s.useSessionStore.getState().screen, look: s.useEngineStore.getState().landLook, canvas: c && {label: c.getAttribute('aria-label'), w: c.width, h: c.height}, seed: inst && inst.instance.save.seed, cartridge: inst && inst.cartridge.manifest.cartridgeId + '@' + inst.cartridge.manifest.version, scene: s.useWorldStore.getState().scene.status === 'ready' ? s.useWorldStore.getState().scene.value.contract?.sceneId : null, landMode: l.mode, chunks: Object.keys(l.chunks), notes: l.notes.length, chunk: s.useEngineStore.getState().chunk}); })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/09-p-02-walked.jpg"
+  },
+  {
+   "wait": 3500
+  },
+  {
+   "eval": "new Promise((resolve) => { const open = indexedDB.open('unmapped-browser'); open.onsuccess = () => { const db = open.result; const tx = db.transaction(['blobs', 'places', 'entries', 'outbox'], 'readonly'); const out = {}; const b = tx.objectStore('blobs').getAll(); b.onsuccess = () => { out.blobs = b.result.map((r) => [r.hash, r.bytes.byteLength ?? r.bytes.length]); }; const p = tx.objectStore('places').getAll(); p.onsuccess = () => { out.places = p.result.map((r) => ({sceneId: r.position.sceneId, x: +r.position.x.toFixed(3), z: +r.position.z.toFixed(3)})); }; const e = tx.objectStore('entries').count(); e.onsuccess = () => { out.entries = e.result; }; const o = tx.objectStore('outbox').getAll(); o.onsuccess = () => { out.outbox = o.result.map((r) => r.events.length); }; tx.oncomplete = () => resolve(JSON.stringify(out)); }; open.onerror = () => resolve('no db'); })"
+  },
+  {
+   "touch": {
+    "tapText": "World"
+   }
+  },
+  {
+   "wait": 600
+  },
+  {
+   "eval": "(async () => { const s = await import('/@fs/__REPO__/src/renderer/state/index.ts'); return JSON.stringify({layer: document.querySelector('[data-layer]')?.getAttribute('aria-label') ?? null, inputLocked: s.useEngineStore.getState().inputLocked, screen: s.useSessionStore.getState().screen, here: document.body.innerText.split('\\n').find((l) => /^Left where you stand/.test(l)) ?? null}); })()"
+  },
+  {
+   "touch": {
+    "tapText": "Your note"
+   }
+  },
+  {
+   "type": "Phone: left on the land, right where I stood."
+  },
+  {
+   "eval": "window.__t0 = performance.now(); 'mark'"
+  },
+  {
+   "touch": {
+    "tapText": "Leave the note"
+   }
+  },
+  {
+   "repeat": {
+    "times": 60,
+    "until": "(/Phone: left on the land/.test(document.body.innerText) && /Entry \\d+ · 0 waiting to send/.test(document.body.innerText) && !/at 0, 0 · not yet shared/.test(document.body.innerText))",
+    "actions": [
+     {
+      "wait": 100
+     }
+    ]
+   }
+  },
+  {
+   "eval": "Math.round(performance.now() - window.__t0)"
+  },
+  {
+   "eval": "(async () => { const b = await window.seed.world.badges(); const id = b.value[0].worldId; const r = await window.seed.world.read(id); const now = r.value.snapshot.now; return JSON.stringify({head: now.head.n, pack: now.pack, me: r.value.status.me, link: r.value.status.link, pending: r.value.pending.map((p) => p.event.body.text ?? p.event.kind), notes: now.notes.map((n) => ({n: n.n, by: now.names[n.author] ?? n.author.slice(0, 9), author: n.author, text: n.body.text, coord: n.body.coord}))}); })()"
+  },
+  {
+   "eval": "document.body.innerText.split('\\n').filter((l) => /phone|shallow|^— |Left here/.test(l)).join(' | ')"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/09-p-03-note.jpg"
+  },
+  {
+   "touch": {
+    "tapText": "Back to the land"
+   }
+  },
+  {
+   "wait": 500
+  },
+  {
+   "eval": "JSON.stringify({layer: !!document.querySelector('[data-layer]'), bar: document.body.innerText.split('\\n')[1]})"
+  }
+ ],
+ "note": "In the recorded run this wait still read /Entry 9 · 0 waiting to send/ (a botched substitution), so it ran its full 6 s; the note itself was signed at 06:05:12.819Z and receipted at 06:05:12.836Z (service log). The condition above is the corrected one."
+}

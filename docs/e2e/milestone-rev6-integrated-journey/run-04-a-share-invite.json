@@ -1,0 +1,87 @@
+{
+ "step": 4,
+ "app": "A",
+ "port": 9340,
+ "what": "home along the z=16 ford; E opens the door; Share on 127.0.0.1:8797 → Online; read the fold's pack; Create an invite and read the link (window.__invite)",
+ "actions": [
+  {
+   "pad": {
+    "toward": "[72.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[8.5, 8.5]",
+    "within": 0.8,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); return l ? l.innerText.slice(0, 2500) : 'no door layer' })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/04-a-00-door-local.jpg"
+  },
+  {
+   "eval": "window.__t0 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Share on 127.0.0.1:8797"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 120; i++) { const l = document.querySelector('[data-layer=door]'); const t = l ? l.innerText : ''; if (/Online/.test(t) && /Invites/.test(t)) return { ms: Math.round(performance.now() - window.__t0) }; await new Promise(r => setTimeout(r, 250)); } const l = document.querySelector('[data-layer=door]'); return 'timeout: ' + (l ? l.innerText.slice(0, 1500) : 'no door') })()"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); return l ? l.innerText.slice(0, 4000) : 'no door layer' })()"
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; const n = H.worldNow(); const log = await window.seed.world.read(w.worldId); const entries = log.ok ? (log.value.entries ?? []) : []; return JSON.stringify({ worldId: w.worldId, head: n.head, link: w.status.link, url: w.status.url, role: w.status.role, pending: w.status.pending, pack: n.pack ?? null, kinds: entries.map(e => (e.entry ?? e).n + ':' + (e.entry ?? e).event.kind).join(' ') }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/04-a-01-door-shared.jpg"
+  },
+  {
+   "clickText": "Create an invite"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 40; i++) { const l = document.querySelector('[data-layer=door]'); const m = l && /unmapped:\\/\\/join\\?i=[A-Za-z0-9_\\-]+&k=[A-Za-z0-9_\\-]+(&o=[A-Za-z0-9_\\-]+)?/.exec([...l.querySelectorAll('input, textarea')].map(x => x.value).join('\\n') + '\\n' + l.innerText); if (m) { window.__invite = m[0]; return m[0].length; } await new Promise(r => setTimeout(r, 250)); } return 'no link' })()"
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); const t = l.innerText; const at = t.indexOf('Invites'); return t.slice(at, at + 600) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/04-a-02-invite.jpg"
+  },
+  {
+   "eval": "window.__invite"
+  }
+ ]
+}

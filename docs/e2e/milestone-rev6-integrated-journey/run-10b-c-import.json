@@ -1,0 +1,124 @@
+{
+ "step": "10b",
+ "app": "C",
+ "port": 9342,
+ "what": "C (fresh; AETHER_TEST_WORLD_PATH = $SCR/files/c-import.world, a byte copy of b.world): Settings → English; Worlds → World files → Choose a .world file; the report; name Cy; Bring it in; Play; the world, its status and the land",
+ "from": "docs/e2e/milestone-rev6-p4-no-servers/run-10-import.json (name Cy, shots renamed, one status read added)",
+ "actions": [
+  {
+   "repeat": {
+    "times": 40,
+    "until": "document.body.innerText.includes('設定') || document.body.innerText.includes('Settings')",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "clickText": "設定"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "English"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "Worlds"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "World files"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "(() => { const m = document.querySelector('main') ?? document.body; return m.innerText.slice(0, 1200) })()"
+  },
+  {
+   "clickText": "Choose a .world file"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 40; i++) { const t = document.body.innerText; if (/problem/.test(t) || /Every check passed/.test(t) || /Error/.test(t)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('Import a .world'); return t.slice(at, at + 1500) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/10-c-00-import-report.jpg"
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('input')].find(x => (x.closest('label')?.innerText ?? '').includes('Your name in this world')); if (!f) return 'no name field'; f.focus(); f.select(); return f.value })()"
+  },
+  {
+   "type": "Cy"
+  },
+  {
+   "eval": "window.__t0 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Bring it in"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance && S.useLandStore.getState().progress !== null) return { ms: Math.round(performance.now() - window.__t0), screen: s.screen }; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('Import a .world'); return 'timeout: ' + t.slice(at, at + 1500) })()"
+  },
+  {
+   "wait": 3000
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return JSON.stringify({ world: n?.world, head: n?.head, cartridge: n?.genesis?.body?.cartridge ?? null, physics: n?.genesis?.body?.physicsVersion ?? null, genesisAuthor: n?.genesis?.author ?? null, owners: Object.keys(n?.owners ?? {}), notes: (n?.notes ?? []).map(x => x.body?.text ?? x.text ?? null), chunks: n && Object.keys(n.chunks), sequencer: n?.sequencer ?? null }) })()"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world; return JSON.stringify({ status: w.status, worldId: w.value?.worldId, st: w.value?.status && { link: w.value.status.link, url: w.value.status.url, role: w.value.status.role, writable: w.value.status.writable, error: w.value.status.error, me: w.value.status.me }, land: Object.fromEntries(Object.entries(S.useLandStore.getState().chunks).map(([k, c]) => [k, c.status])), toasts: document.body.innerText.split('\\n').filter(l => /shared|device|member|invite|read/i.test(l)).slice(0, 8) }) })()"
+  },
+  {
+   "eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const S = await import('/state/index.ts'); const p = P.samplePlayer(); const lines = document.body.innerText.split('\\n').filter(Boolean); const i = lines.indexOf('LAND'); const c = document.querySelector('canvas'); return { pos: p && [Number(p.x.toFixed(2)), Number(p.z.toFixed(2))], chunk: S.useEngineStore.getState().chunk, land: i < 0 ? null : lines[i + 1], fps: lines.find(l => /FPS$/.test(l)) ?? null, canvas: c ? [c.width, c.height] : null, hud: lines.slice(0, 12) } })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/10-c-01-imported-play.jpg"
+  },
+  {
+   "hold": "KeyW",
+   "ms": 1500
+  },
+  {
+   "wait": 300
+  },
+  {
+   "eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const p = P.samplePlayer(); const lines = document.body.innerText.split('\\n').filter(Boolean); return { pos: p && [Number(p.x.toFixed(2)), Number(p.z.toFixed(2))], fps: lines.find(l => /FPS$/.test(l)) ?? null } })()"
+  },
+  {
+   "hold": "KeyN",
+   "ms": 100
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 800) : 'no notes layer' })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/10-c-02-imported-note.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 500
+  }
+ ],
+ "note": "The first attempt started before C's title had rendered (every click missed; nothing changed on disk); a wait for the title was added and the run repeated."
+}

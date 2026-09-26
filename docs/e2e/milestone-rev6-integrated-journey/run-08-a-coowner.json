@@ -1,0 +1,72 @@
+{
+ "step": 8,
+ "app": "A",
+ "port": 9340,
+ "what": "A walks home, E opens the door; People: Bea's row → Make co-owner → Make them a co-owner; read the rows, owners and head",
+ "actions": [
+  {
+   "pad": {
+    "toward": "[1.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[8.5, 8.5]",
+    "within": 0.8,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; const at = t.indexOf('People'); return t.slice(at, at + 500) })()"
+  },
+  {
+   "clickText": "Make co-owner"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); const t = l.innerText; const at = t.indexOf('People'); return t.slice(at, at + 700) })()"
+  },
+  {
+   "clickText": "Make them a co-owner"
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); const t = l.innerText; const at = t.indexOf('People'); return t.slice(at, at + 500) })()"
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return JSON.stringify({ head: n.head, owners: n.owners ?? null }) })()"
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); const b = [...l.querySelectorAll('*')].find(e => e.innerText?.trim() === 'People'); b?.scrollIntoView({block: 'start'}); return !!b })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/08-a-00-door-coowner.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 400
+  }
+ ]
+}

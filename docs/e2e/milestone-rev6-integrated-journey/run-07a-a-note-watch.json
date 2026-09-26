@@ -1,0 +1,11 @@
+{
+ "step": "7a",
+ "app": "A",
+ "port": 9340,
+ "what": "A (in chunk -1,0) installs a watcher on the land store's notes: the time B's note arrives",
+ "actions": [
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); window.__notes = { t0: Date.now(), seen: null, n0: S.useLandStore.getState().notes.length }; S.useLandStore.subscribe((s) => { const hit = s.notes.find(n => (n.text ?? '').startsWith('B:')); if (hit && !window.__notes.seen) window.__notes.seen = { at: Date.now(), text: hit.text, pending: hit.pending ?? null }; }); return window.__notes.n0 })()"
+  }
+ ]
+}

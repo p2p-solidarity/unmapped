@@ -1,0 +1,83 @@
+{
+ "step": "5c",
+ "app": "B",
+ "port": 9341,
+ "what": "B walks the z=16 ford into A's witnessed (1,0) and (2,0) (0 witness calls expected), opens Notes at (2,0) and reads A's note",
+ "actions": [
+  {
+   "pad": {
+    "toward": "[16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[40.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['1,0']; return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, status: c?.status ?? null, name: c?.scene?.name ?? null }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/05-b-03-reads-a-chunk-1-0.jpg"
+  },
+  {
+   "pad": {
+    "toward": "[72.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[80.5, 13.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['2,0']; return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, status: c?.status ?? null, name: c?.scene?.name ?? null, notes: S.useLandStore.getState().notes.map(n => ({ text: n.text, coord: n.coord ?? [n.cx, n.cz, n.x, n.z], pending: n.pending ?? null })) }) })()"
+  },
+  {
+   "hold": "KeyN",
+   "ms": 100
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 800) : 'no notes layer' })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/05-b-04-sees-a-note.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 500
+  }
+ ]
+}

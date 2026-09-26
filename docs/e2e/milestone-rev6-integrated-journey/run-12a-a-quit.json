@@ -1,0 +1,51 @@
+{
+ "step": "12a",
+ "app": "A",
+ "port": 9340,
+ "what": "A walks to a spot in (1,0), waits for the position keeper, reads where it stands and the head, then quits from Play (Browser.close)",
+ "actions": [
+  {
+   "hold": {
+    "from": "(() => [...document.querySelectorAll('[data-layer], [role=dialog]')].some(l => l.getClientRects().length > 0) ? 'Escape' : null)()"
+   },
+   "ms": 80
+  },
+  {
+   "wait": 400
+  },
+  {
+   "pad": {
+    "toward": "[16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[37.5, 19.5]",
+    "within": 0.6,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "wait": 5000
+  },
+  {
+   "eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const p = P.samplePlayer(); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ pos: p && { sceneId: p.sceneId, x: +p.x.toFixed(3), z: +p.z.toFixed(3), yaw: +p.yaw.toFixed(3) }, chunk: S.useEngineStore.getState().chunk, head: H.worldNow().head, link: w.status.link, pending: w.status.pending, player: localStorage.getItem('aether.playerName') ?? localStorage.getItem('unwritten.playerName') }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/12-a-00-before-quit.jpg"
+  },
+  {
+   "cdp": {
+    "method": "Browser.close"
+   }
+  }
+ ]
+}

@@ -1,0 +1,44 @@
+{
+ "step": "12b",
+ "app": "A",
+ "port": 9340,
+ "what": "A relaunched (same userData, same dev origin :5291): the title is English (localStorage kept); Continue; where A stands, the head, the link, and the player name (no new profile)",
+ "actions": [
+  {
+   "repeat": {
+    "times": 60,
+    "until": "[...document.querySelectorAll('button')].some(b => b.innerText.trim() === 'Continue' && !b.disabled)",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "eval": "({ lang: document.documentElement.lang, buttons: [...document.querySelectorAll('button')].filter(b => b.getClientRects().length > 0).map(b => b.innerText.trim()).filter(Boolean).slice(0, 4) })"
+  },
+  {
+   "eval": "window.__t0 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && w.value.status.link === 'online') return { ms: Math.round(performance.now() - window.__t0) }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(async () => { const P = await import('/engine/playerProbe.ts'); const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const p = P.samplePlayer(); const w = S.useHistoryStore.getState().world.value; const n = H.worldNow(); return JSON.stringify({ pos: p && { sceneId: p.sceneId, x: +p.x.toFixed(3), z: +p.z.toFixed(3), yaw: +p.yaw.toFixed(3) }, chunk: S.useEngineStore.getState().chunk, head: n.head, link: w.status.link, pending: w.status.pending, role: w.status.role, names: n.names ?? null }) })()"
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/12-a-01-continued.jpg"
+  }
+ ],
+ "note": "In the recorded run the first Continue click came while Continue was still disabled (the title disables it until the saves are read after a cold start) and did nothing; a second click opened Play. The wait above is for the enabled button."
+}

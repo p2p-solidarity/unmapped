@@ -1,0 +1,49 @@
+{
+ "step": "10a",
+ "app": "B",
+ "port": 9341,
+ "what": "B leaves Play (Escape with no layer open); Worlds → World files; the world's row; Export .world (AETHER_TEST_WORLD_PATH answers the save dialog with $SCR/files/b.world)",
+ "from": "docs/e2e/milestone-rev6-p4-rehost/run-19-b-export.json (shot renamed)",
+ "actions": [
+  {
+   "hold": {
+    "from": "(() => [...document.querySelectorAll('[data-layer], [role=dialog]')].some(l => l.getClientRects().length > 0) ? 'Escape' : null)()"
+   },
+   "ms": 80
+  },
+  {
+   "wait": 500
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Worlds"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "World files"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('Worlds on this device'); return t.slice(at, at + 800) })()"
+  },
+  {
+   "clickText": "Export .world"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 80; i++) { const t = document.body.innerText; if (/Wrote .*KiB/.test(t) || /Error/.test(t)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('Worlds on this device'); return t.slice(at, at + 1000) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/10-b-00-exported.jpg"
+  }
+ ]
+}

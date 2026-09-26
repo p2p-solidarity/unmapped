@@ -1,0 +1,60 @@
+{
+ "step": "7b",
+ "app": "B",
+ "port": 9341,
+ "what": "B leaves a note in chunk (-1,0) and reads it back (Escape only when a layer is open: with none, Escape leaves Play)",
+ "actions": [
+  {
+   "hold": {
+    "from": "(() => [...document.querySelectorAll('[data-layer], [role=dialog]')].some(l => l.getClientRects().length > 0) ? 'Escape' : null)()"
+   },
+   "ms": 80
+  },
+  {
+   "wait": 500
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); return JSON.stringify({locked:S.useEngineStore.getState().inputLocked, layers:[...document.querySelectorAll('[data-layer], [role=dialog]')].filter(l=>l.getClientRects().length>0).map(l=>l.getAttribute('data-layer') ?? l.getAttribute('role'))})})()"
+  },
+  {
+   "hold": "KeyN",
+   "ms": 100
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('[data-layer=notes] input')].find(x => (x.closest('label')?.innerText ?? '').includes('your note')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+  },
+  {
+   "type": "B: I watched this field arrive while A wrote it; the west ford is dry."
+  },
+  {
+   "eval": "window.__leftAt = Date.now(); window.__leftAt"
+  },
+  {
+   "clickText": "Leave the note"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 800) : 'no notes layer' })()"
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return JSON.stringify({ head: n.head, notes: (n.notes ?? []).map(x => ({ n: x.n, author: x.author.slice(0, 10), text: x.body.text, coord: x.body.coord })) }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/07-b-00-note.jpg"
+  },
+  {
+   "hold": {
+    "from": "(() => [...document.querySelectorAll('[data-layer], [role=dialog]')].some(l => l.getClientRects().length > 0) ? 'Escape' : null)()"
+   },
+   "ms": 80
+  },
+  {
+   "wait": 400
+  }
+ ]
+}

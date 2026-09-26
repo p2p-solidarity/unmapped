@@ -1,0 +1,28 @@
+{
+ "step": 1,
+ "app": "A",
+ "port": 9340,
+ "what": "Title: exactly four entries; Settings → English; Model: the route line; Shared worlds: add ws://127.0.0.1:8797, Save, Test",
+ "actions": [
+  {"eval": "(() => ({ buttons: [...document.querySelectorAll('button')].filter(b => b.getClientRects().length > 0).map(b => b.innerText.trim()).filter(Boolean), lang: document.documentElement.lang }))()"},
+  {"shot": "docs/e2e/milestone-rev6-integrated-journey/01-a-00-title.jpg"},
+  {"clickText": "設定"},
+  {"wait": 800},
+  {"clickText": "English"},
+  {"wait": 1200},
+  {"eval": "(() => { const d = document.querySelector('[role=dialog]'); return d ? [...d.querySelectorAll('section')].map(s => s.innerText.split('\\n')[0].trim()) : 'no dialog' })()"},
+  {"eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); if (!s) return 'no Model section'; s.scrollIntoView({ block: 'start' }); return s.innerText.slice(0, 900) })()"},
+  {"wait": 300},
+  {"shot": "docs/e2e/milestone-rev6-integrated-journey/01-a-01-model-route.jpg"},
+  {"eval": "(() => { const ta = [...document.querySelectorAll('textarea')].find(t => (t.closest('label')?.innerText ?? '').includes('World services') || (t.labels?.[0]?.innerText ?? '').includes('World services')); if (!ta) return 'no field'; ta.scrollIntoView({block: 'center'}); ta.focus(); return ta === document.activeElement })()"},
+  {"type": "ws://127.0.0.1:8797"},
+  {"wait": 300},
+  {"clickText": "Save"},
+  {"wait": 400},
+  {"eval": "(() => { const field = [...document.querySelectorAll('textarea')].find(t => t.value.includes('ws://127.0.0.1:8797')); let box = field; while (box && ![...box.querySelectorAll('button')].some(b => b.innerText.trim() === 'Test')) box = box.parentElement; if (!box) return 'no Test'; const btn = [...box.querySelectorAll('button')].find(b => b.innerText.trim() === 'Test'); btn.scrollIntoView({block: 'center'}); btn.click(); return 'clicked Test' })()"},
+  {"wait": 2500},
+  {"eval": "(() => { const t = document.body.innerText; const at = t.indexOf('ws://127.0.0.1:8797\\n'); return at < 0 ? 'no probe line' : t.slice(at, at + 400) })()"},
+  {"eval": "localStorage.getItem('unwritten.worldServices')"},
+  {"shot": "docs/e2e/milestone-rev6-integrated-journey/01-a-02-settings-service.jpg"}
+ ]
+}

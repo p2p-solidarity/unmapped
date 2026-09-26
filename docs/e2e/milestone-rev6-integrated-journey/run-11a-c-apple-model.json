@@ -1,0 +1,72 @@
+{
+ "step": "11a",
+ "app": "C",
+ "port": 9342,
+ "what": "C leaves Play; Settings → Model → On this computer → Apple on-device; Use this model; Check connection; read the panel and the inference store",
+ "actions": [
+  {
+   "hold": {
+    "from": "(() => [...document.querySelectorAll('[data-layer], [role=dialog]')].some(l => l.getClientRects().length > 0) ? 'Escape' : null)()"
+   },
+   "ms": 80
+  },
+  {
+   "wait": 400
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Settings"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); s?.scrollIntoView({ block: 'start' }); return !!s })()"
+  },
+  {
+   "clickText": "On this computer"
+  },
+  {
+   "wait": 600
+  },
+  {
+   "clickText": "Apple on-device"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); return { model: s?.innerText, buttons: [...(s?.querySelectorAll('button') ?? [])].map(b => ({ text: b.innerText.trim(), disabled: b.disabled })) } })()"
+  },
+  {
+   "clickText": "Use this model"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "window.__t0 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Check connection"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 60; i++) { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); const t = s?.innerText ?? ''; if (!/Checking/.test(t) && i > 3) return { ms: Math.round(performance.now() - window.__t0), model: t }; await new Promise(r => setTimeout(r, 250)); } return 'still checking' })()"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const st = S.useInferenceStore.getState(); return JSON.stringify({ config: st.config && { kind: st.config.kind, baseUrl: st.config.baseUrl ?? st.config.baseURL, model: st.config.model, sidecar: st.config.sidecar ?? null }, probe: st.probe, sidecar: st.sidecar ?? null }) })()"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/11-c-00-model-apple.jpg"
+  }
+ ]
+}

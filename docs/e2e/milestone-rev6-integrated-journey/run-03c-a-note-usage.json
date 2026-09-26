@@ -1,0 +1,64 @@
+{
+ "step": "3c",
+ "app": "A",
+ "port": 9340,
+ "what": "N at chapter 1's gate: leave a note; read it back from the fold; then open the HUD's Usage panel and read its totals, by-purpose rows and recent calls",
+ "actions": [
+  {
+   "hold": "KeyN",
+   "ms": 100
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('[data-layer=notes] input')].find(x => (x.closest('label')?.innerText ?? '').includes('your note')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+  },
+  {
+   "type": "A: Bram keeps the pier posts in sight; three freight kites are late."
+  },
+  {
+   "clickText": "Leave the note"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 800) : 'no notes layer' })()"
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return JSON.stringify({ head: n.head, notes: (n.notes ?? []).map(x => ({ n: x.n, author: x.author.slice(0, 10), text: x.body.text, coord: x.body.coord })) }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/03-a-04-note.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "eval": "document.body.innerText.match(/This world:[^\\n]*/)?.[0] ?? 'no usage line'"
+  },
+  {
+   "clickText": "Usage"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "(() => { const rows = [...document.querySelectorAll('[data-usage-purpose]')].map(r => r.dataset.usagePurpose + ' | ' + r.innerText.replace(/\\s+/g, ' ')); const t = document.body.innerText; const at = t.indexOf('AI usage'); return { rows, panel: at < 0 ? 'no panel' : t.slice(at, at + 2500) } })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/03-a-05-usage-panel.jpg"
+  },
+  {
+   "clickText": "Close"
+  },
+  {
+   "wait": 500
+  }
+ ]
+}

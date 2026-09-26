@@ -1,0 +1,34 @@
+{
+ "step": "9c",
+ "app": "A",
+ "port": 9340,
+ "what": "A, never reloaded: when the phone's note arrived (the watcher from 9a); N at home shows it; A's remote roster (the phone's player, Rin)",
+ "actions": [
+  {
+   "eval": "JSON.stringify(window.__phone)"
+  },
+  {
+   "eval": "(async () => { const m = await import('/engine2d/remotePlayers.ts').catch(() => null); const S = await import('/state/index.ts'); return JSON.stringify({ roster: m && m.sampleRemotePlayers ? m.sampleRemotePlayers() : 'n/a' }) })()"
+  },
+  {
+   "hold": "KeyN",
+   "ms": 100
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 900) : 'no notes layer' })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/09-a-01-sees-phone-note.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 400
+  }
+ ]
+}

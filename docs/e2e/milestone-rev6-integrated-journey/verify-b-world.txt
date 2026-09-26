@@ -1,0 +1,15 @@
+$ bun --tsconfig-override tsconfig.node.json scripts/verify-world.ts "$SCR/files/b.world"
+world      hpnal6es5oliwpwe435ocxoiwn7sqyuurgrxt27enrjjk2lishivq "Fog-bound drifting islands"
+cartridge  fog-bound-drifting-islands-66d73a@1.0.0 sha256:aef83b4121c8fb10800020e198f9bc41f4c4d5047351bb60a8c8a291cec504a9
+head       #16 sha256:ec97165da7d6f92158bcf63a955e82152f698be009454b238624f445e4739c5b
+physics    1   protocol 2
+exported   2026-09-26T06:06:26.620Z by kv3nyzlhyzedpyjka43hv5jsm4b6pwhwwqtwys2tfjc7fkyo2sdoq (signature valid)
+entries    16 by 3 keys; owners 2
+services   ws://127.0.0.1:8797 (kvt6qo3cwk… from #9)
+beats      0 (0 do not recompute)
+ignored    0 (0 from a newer build)
+packs      1 (0 AI worlds), 303055 bytes in all
+checked in 153 ms
+OK — every check passed.
+Internal error: directory mismatch for directory "$SCR/snap/tsconfig.node.json", fd 3. You don't need to do anything, but this indicates a bug.
+exit 0

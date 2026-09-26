@@ -1,0 +1,50 @@
+# electron.vite.config.ts in the snapshot during the run (restored to origin/main before bun run check)
+50a51,53
+>     // E2E snapshot only: a private Vite cache per app and a fixed dev port (same origin across relaunches).
+>     cacheDir: resolve(__dirname, `.vite-cache-${process.env.IJ_APP ?? "x"}`),
+>     server: { port: Number(process.env.IJ_VITE_PORT ?? 5173), strictPort: process.env.IJ_VITE_PORT !== undefined },
+
+# vite.ij.page.mts (snapshot root; the phone page's server)
+// E2E snapshot only: the phone page's dev server = the p4-mobile-proof e2e config (no watcher, no
+// HMR) plus a private Vite cache, so the shared node_modules/.vite is never rewritten.
+import { fileURLToPath } from "node:url";
+import base from "./vite.browser.config.ts";
+
+export default {
+  ...base,
+  cacheDir: fileURLToPath(new URL("./.vite-cache-page", import.meta.url)),
+  server: { ...base.server, hmr: false, watch: null },
+};
+
+# close-browser.ts (browser-target Browser.close)
+// Closes an Electron app through its browser-level DevTools target (GET /json/version).
+const port = Number(process.argv[2]);
+const v = (await (await fetch(`http://127.0.0.1:${port}/json/version`)).json()) as { webSocketDebuggerUrl: string };
+const ws = new WebSocket(v.webSocketDebuggerUrl);
+await new Promise((r) => ws.addEventListener("open", r, { once: true }));
+ws.addEventListener("message", (e) => console.log(String(e.data)));
+ws.send(JSON.stringify({ id: 1, method: "Browser.close" }));
+await new Promise((r) => setTimeout(r, 1500));
+process.exit(0);
+
+# console-dump.ts (console messages a page kept)
+// Reads the console messages a page kept (Runtime.enable replays them) and the browser log entries.
+const port = Number(process.argv[2]);
+const targets = (await (await fetch(`http://127.0.0.1:${port}/json`)).json()) as Array<{ type: string; url: string; webSocketDebuggerUrl: string }>;
+const page = targets.find((t) => t.type === "page" && /^http:\/\/localhost:\d+\//.test(t.url));
+if (!page) throw new Error("no page");
+const ws = new WebSocket(page.webSocketDebuggerUrl);
+await new Promise((r) => ws.addEventListener("open", r, { once: true }));
+const out: string[] = [];
+ws.addEventListener("message", (e) => {
+  const m = JSON.parse(String(e.data));
+  if (m.method === "Runtime.consoleAPICalled") out.push(`console.${m.params.type}: ${m.params.args.map((a: { value?: unknown; description?: string }) => a.value ?? a.description).join(" ").slice(0, 300)}`);
+  if (m.method === "Runtime.exceptionThrown") out.push(`exception: ${m.params.exceptionDetails.exception?.description ?? m.params.exceptionDetails.text}`.slice(0, 300));
+  if (m.method === "Log.entryAdded") out.push(`log.${m.params.entry.level} (${m.params.entry.source}): ${m.params.entry.text}`.slice(0, 300));
+});
+ws.send(JSON.stringify({ id: 1, method: "Runtime.enable" }));
+ws.send(JSON.stringify({ id: 2, method: "Log.enable" }));
+await new Promise((r) => setTimeout(r, 1500));
+const bad = out.filter((l) => /^(console\.(error|warning|warn|assert)|exception|log\.(error|warning))/.test(l));
+console.log(JSON.stringify({ total: out.length, errorsOrWarnings: bad.length, bad, sample: out.slice(0, 5) }, null, 1));
+process.exit(0);

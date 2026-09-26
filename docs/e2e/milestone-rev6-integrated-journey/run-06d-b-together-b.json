@@ -1,0 +1,54 @@
+{
+ "app": "B",
+ "port": 9341,
+ "what": "(run at the same time as A's) wait 2 s, walk into (-1, 0); claim → writing; record; hash",
+ "actions": [
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "window.__rec.walk = Date.now() - window.__rec.t0; 'B walks'"
+  },
+  {
+   "pad": {
+    "toward": "[-8.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/06-b-00-watching.jpg"
+  },
+  {
+   "eval": "JSON.stringify({ dev: window.__rec.dev && { ...window.__rec.dev, text: window.__rec.dev.text.length }, frames: window.__rec.frames.length, flip: window.__rec.flip })"
+  },
+  {
+   "repeat": {
+    "times": 120,
+    "until": "window.__rec.flip !== null",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/06-b-01-flipped.jpg"
+  },
+  {
+   "eval": "(async () => { const r = window.__rec; const text = r.dev?.text ?? ''; const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)); const hex = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join(''); const S = await import('/state/index.ts'); return JSON.stringify({ role: 'B', walk: r.walk, dev: r.dev && { first: r.dev.first, last: r.dev.last, updates: r.dev.updates, sid: r.dev.sid, by: r.dev.by, mine: r.dev.mine, chars: text.length }, sha256: hex, frames: r.frames.length, framesSum: r.frames.reduce((a, f) => a + f.len, 0), lastFrame: r.frames[r.frames.length - 1] ?? null, flip: r.flip, land: S.useLandStore.getState().chunks['-1,0']?.status }) })()"
+  }
+ ],
+ "step": "6d",
+ "from": "docs/e2e/milestone-rev6-p3-together (same actions; ports and shot names changed)"
+}

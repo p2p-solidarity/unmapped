@@ -478,7 +478,8 @@ skills: [skills]
 | 商業模式：不能選非商用的提供者、授權未知的新圖片會擋下發布、商業模式的閘道遇到非商用模型時拒絕啟動 | ✅ 已驗證；發布是透過 app 的發布呼叫驅動，不是畫面 | [p4-licence](docs/e2e/milestone-rev6-p4-licence/result.md) |
 | 輕量鏈：把真實服務的節拍指紋記錄在模擬的 Sepolia 上 | ✅ 只跑過 dry run：沒有送出、尚未部署；服務停掉時的無鏈檢查沒跑完 | [p4-chain](docs/e2e/milestone-rev6-p4-chain/result.md) |
 | 手機大小的瀏覽器證明：用邀請加入、畫出大地、觸控走動、離線與重開後留言、看到桌面版的玩家 | ✅ 已驗證（無頭瀏覽器 375 × 812，開發版網頁）；沒有在真的手機上跑；從內建卡帶開始的世界還畫不出來（沒有卡帶包） | [p4-mobile-proof](docs/e2e/milestone-rev6-p4-mobile-proof/result.md) |
-| 完全沒有伺服器：沒有任何畫面要求帳號；走動、留言、沒有世界服務時的門，以及 `.world` 匯出、離線驗證與在第二台裝置匯入 | ✅ 已驗證；用本機模型創作與見證未跑，因為測試機上沒有能回應的本機模型（需要有人設定） | [p4-no-servers](docs/e2e/milestone-rev6-p4-no-servers/result.md) |
+| 完全沒有伺服器：沒有任何畫面要求帳號；走動、留言、沒有世界服務時的門，以及 `.world` 匯出、離線驗證與在第二台裝置匯入 | ✅ 已驗證；之後 Apple 裝置端模型（在應用程式內）寫出了「創造世界」的世界卡片，但它 4K 的上下文會拒絕見證（`model-context-too-small`）；這台沒有安裝 llama.cpp 與 Ollama | [p4-no-servers](docs/e2e/milestone-rev6-p4-no-servers/result.md) · [integrated-journey](docs/e2e/milestone-rev6-integrated-journey/result.md) |
+| 一個世界走完全程：創造世界 → 遊玩 → 分享 → 兩人一起看一個地方被寫出來 → 共同擁有者 → 手機加入並走動 → `.world` 帶到另一台裝置 → Apple 裝置端模型 → 關閉後繼續 | ✅ 一次跑完並驗證；六個用戶端的前端 0 個錯誤；服務與每台裝置上是同一份 21 筆的歷史；付費呼叫 12 次 | [integrated-journey](docs/e2e/milestone-rev6-integrated-journey/result.md) |
 | Stripe 結帳（測試模式與正式）、在你自己的 GPU 端點上跑 Qwen-Image、部署 `WorldProvenance` | ⏳ 未跑；每一項都需要人來做 | — |
 | 同伴 | 🚧 規則裡有，但大地上還不會畫出來、也不會跟隨 | — |
 | Windows / Linux | ❔ 未測試；打包目前只支援 macOS | — |

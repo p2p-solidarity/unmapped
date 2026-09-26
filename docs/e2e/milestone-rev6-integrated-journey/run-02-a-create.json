@@ -1,0 +1,197 @@
+{
+ "step": 2,
+ "app": "A",
+ "port": 9340,
+ "what": "Create World, all five steps (the p2-create run in English): words only, no name → Write the world; lock the look card, rewrite the 6 unlocked cards; Continue to the look: 3 pictures, choose sketch 2 (sha256 in the page); Continue to the story; Continue to build: the quote; Build and play; the published assets/look.png vs the chosen picture",
+ "start": "Create → Start a new game already open (the idea step), UI English, content language en-US (the default after the UI switch), play style Explore (default)",
+ "actions": [
+  {
+   "eval": "window.__e2e = {}; document.querySelectorAll('input')[0].focus(); ({ nameEmpty: document.querySelectorAll('input')[1].value === '', lang: [...document.querySelectorAll('[aria-pressed=true], [aria-checked=true]')].map(b => b.innerText.trim()) })"
+  },
+  {
+   "type": "Fog-bound drifting islands where islanders send cargo by kite, and lamps are lit each dusk to guide lost kites home."
+  },
+  {
+   "wait": 400
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-00-idea-words-only.jpg"
+  },
+  {
+   "eval": "window.__e2e.t0 = Date.now(); true"
+  },
+  {
+   "clickText": "Write the world"
+  },
+  {
+   "eval": "(async()=>{for(let i=0;i<200;i++){const p=document.querySelector('[data-stream-preview=world]'); if(p&&p.innerText.length>40)return {atMs:Date.now()-window.__e2e.t0,text:p.innerText.slice(0,200)}; await new Promise(r=>setTimeout(r,100));} return 'no world stream preview';})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-01-world-streaming.jpg"
+  },
+  {
+   "eval": "(async()=>{for(let i=0;i<480;i++){if(document.querySelectorAll('[data-card]').length===7){window.__e2e.worldAt=Date.now();return {worldMs:window.__e2e.worldAt-window.__e2e.t0};} await new Promise(r=>setTimeout(r,250));} return document.body.innerText.slice(0,600);})()"
+  },
+  {
+   "wait": 600
+  },
+  {
+   "eval": "({derivedName: document.querySelectorAll('input')[0].value, cards: [...document.querySelectorAll('[data-card]')].map(c => c.dataset.card), usage: document.querySelector('[data-usage-line]')?.innerText})"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-02-world-cards.jpg"
+  },
+  {
+   "eval": "window.__e2e.before=[...document.querySelectorAll('[data-card]')].map(c=>[c.dataset.card,c.querySelector('textarea').value]); document.querySelector('[data-card=look] button').click(); true"
+  },
+  {
+   "wait": 600
+  },
+  {
+   "eval": "({lookButton: document.querySelector('[data-card=look] button').innerText, lockedNote: document.querySelector('[data-card=look]').innerText.slice(0, 200), rewrite: [...document.querySelectorAll('button')].map(b=>b.innerText.trim()).find(s=>s.includes('unlocked'))})"
+  },
+  {
+   "eval": "window.__e2e.rw0 = Date.now(); true"
+  },
+  {
+   "clickText": "Rewrite the 6 unlocked cards"
+  },
+  {
+   "eval": "(async()=>{for(let i=0;i<200;i++){const p=document.querySelector('[data-stream-preview=world]'); if(p&&p.innerText.length>40){p.scrollIntoView({block:'center'});return {atMs:Date.now()-window.__e2e.rw0,text:p.innerText.slice(0,200)};} await new Promise(r=>setTimeout(r,100));} return 'no stream preview';})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-03-rewrite-unlocked-streaming.jpg"
+  },
+  {
+   "eval": "(async()=>{for(let i=0;i<480;i++){if(!document.querySelector('[data-stream-preview]') && ![...document.querySelectorAll('button')].some(b=>b.innerText.trim()==='Cancel')) return {rewriteMs:Date.now()-window.__e2e.rw0}; await new Promise(r=>setTimeout(r,250));} return 'still running';})()"
+  },
+  {
+   "wait": 600
+  },
+  {
+   "eval": "(()=>{const after=Object.fromEntries([...document.querySelectorAll('[data-card]')].map(c=>[c.dataset.card,c.querySelector('textarea').value])); return window.__e2e.before.map(([k,v])=>({card:k, identical: after[k]===v, beforeLen:v.length, afterLen:after[k].length}));})()"
+  },
+  {
+   "eval": "document.querySelector('[data-card=look]').scrollIntoView({block:'center'}); document.querySelector('[data-usage-line]')?.innerText"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-04-rewritten-look-locked.jpg"
+  },
+  {
+   "eval": "window.__e2e.look0 = Date.now(); true"
+  },
+  {
+   "clickText": "Continue to the look"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "({drawing: document.body.innerText.match(/Drawing \\d sketch[^\\n]*/)?.[0] ?? null, storyHeader: document.body.innerText.match(/Writing the story[^\\n]*/)?.[0] ?? null, story: document.querySelector('[data-stream-preview=story]')?.innerText.slice(0,200) ?? null})"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-05-look-drawing-story-streaming.jpg"
+  },
+  {
+   "eval": "(async()=>{const seen={}; let storyReady=null; for(let i=0;i<720;i++){const n=document.querySelectorAll('[data-look-pictures] img').length; if(!(n in seen)) seen[n]=Date.now()-window.__e2e.look0; if(storyReady===null){const m=document.body.innerText.match(/The story is ready: \\d+ chapters?\\./); if(m) storyReady={atMs:Date.now()-window.__e2e.look0, line:m[0]};} if(n>=3) return {picturesAtMs:seen, storyReady}; await new Promise(r=>setTimeout(r,250));} return {seen, body: document.body.innerText.slice(0,400)};})()"
+  },
+  {
+   "eval": "({usage: document.querySelector('[data-usage-line]')?.innerText, storyReady: document.body.innerText.match(/The story is ready[^\\n]*/)?.[0] ?? null})"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-06-look-three-pictures.jpg"
+  },
+  {
+   "clickText": "Choose sketch 2"
+  },
+  {
+   "wait": 600
+  },
+  {
+   "eval": "(async()=>{const b=[...document.querySelectorAll('[data-look-pictures] button')].find(x=>x.innerText.includes('Chosen look')); const src=b.querySelector('img').src; const bin=atob(src.slice(src.indexOf(',')+1)); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i); const h=await crypto.subtle.digest('SHA-256',u); window.__e2e.chosenSha=[...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join(''); return {labels:[...document.querySelectorAll('[data-look-pictures] button')].map(x=>x.innerText.trim()), bytes:u.byteLength, sha256:window.__e2e.chosenSha};})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-07-look-picked.jpg"
+  },
+  {
+   "eval": "window.__e2e.story0 = Date.now(); true"
+  },
+  {
+   "clickText": "Continue to the story"
+  },
+  {
+   "eval": "(async()=>{for(let i=0;i<480;i++){const b=[...document.querySelectorAll('button')].find(x=>x.innerText.trim()==='Continue to build'); if(b&&!b.disabled) return {storyWaitMs:Date.now()-window.__e2e.story0, chapters:[...document.body.innerText.matchAll(/Chapter (\\d)/g)].map(m=>m[1])}; await new Promise(r=>setTimeout(r,250));} return document.body.innerText.slice(0,400);})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-08-story.jpg"
+  },
+  {
+   "clickText": "Continue to build"
+  },
+  {
+   "eval": "(async()=>{for(let i=0;i<80;i++){const q=document.querySelector('[data-quote]'); if(q&&q.innerText.includes('This draft')) return q.innerText; await new Promise(r=>setTimeout(r,250));} return document.querySelector('[data-quote]')?.innerText ?? 'no quote';})()"
+  },
+  {
+   "eval": "document.querySelector('[data-quote]')?.scrollIntoView({block:'center'}); true"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-09-build-quote.jpg"
+  },
+  {
+   "eval": "window.__e2e.build0 = Date.now(); true"
+  },
+  {
+   "clickText": "Build and play"
+  },
+  {
+   "eval": "(async()=>{for(let i=0;i<480;i++){if(/Your world is published/.test(document.body.innerText)){window.__e2e.publishedAt=Date.now(); return {buildToPublishedMs: window.__e2e.publishedAt-window.__e2e.build0, panel: document.body.innerText.slice(0,500)};} const S=await import('/state/index.ts'); if(S.useSessionStore.getState().screen==='play') return 'went straight to play'; await new Promise(r=>setTimeout(r,250));} return document.body.innerText.slice(0,600);})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-09b-published-name-offer.jpg"
+  },
+  {
+   "eval": "window.__e2e.enter0 = Date.now(); true"
+  },
+  {
+   "clickText": "Enter the world"
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); for(let i=0;i<960;i++){const s=S.useSessionStore.getState(); if(s.screen==='play'&&s.activeInstance){window.__e2e.playAt=Date.now(); return {buildMs:window.__e2e.playAt-window.__e2e.build0, enterToPlayMs:window.__e2e.playAt-window.__e2e.enter0, wordsToLandMs:window.__e2e.playAt-window.__e2e.t0, cartridge: s.activeInstance.cartridge.manifest.cartridgeId + '@' + s.activeInstance.cartridge.manifest.version};} await new Promise(r=>setTimeout(r,250));} return document.body.innerText.slice(0,600);})()"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "({writingAhead: document.body.innerText.match(/Writing the next chapter[^\\n]*/)?.[0] ?? null, usage: document.body.innerText.match(/This world:[^\\n]*/)?.[0] ?? null})"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-10-in-play-chapter-writing.jpg"
+  },
+  {
+   "eval": "import('/engine/playerProbe.ts').then(m=>{window.__e2e.pose0=m.samplePlayer(); return window.__e2e.pose0;})"
+  },
+  {
+   "hold": "KeyD",
+   "ms": 1500
+  },
+  {
+   "wait": 300
+  },
+  {
+   "eval": "import('/engine/playerProbe.ts').then(m=>{const p=m.samplePlayer(); window.__e2e.walkedAt=Date.now(); return {before: window.__e2e.pose0, after: p, wordsToWalkedMs: window.__e2e.walkedAt-window.__e2e.t0};})"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-integrated-journey/02-a-11-walked.jpg"
+  },
+  {
+   "eval": "window.seed.cartridges.list().then(r=>r.value.filter(m=>!m.cartridgeId.startsWith('aether-land')).map(m=>({id:m.cartridgeId+'@'+m.version, look:m.files?.find(f=>f.path==='assets/look.png'), chosenSha256: window.__e2e.chosenSha, identical: m.files?.find(f=>f.path==='assets/look.png')?.contentHash==='sha256:'+window.__e2e.chosenSha})))"
+  },
+  {
+   "eval": "(async()=>{for(let i=0;i<240;i++){if(!/Writing the next chapter/.test(document.body.innerText)) return {chapterStatusGoneAfterPlayMs: Date.now()-window.__e2e.playAt}; await new Promise(r=>setTimeout(r,250));} return 'chapter still writing';})()"
+  },
+  {
+   "eval": "JSON.stringify(window.__e2e, (k,v)=>k==='before'?undefined:v)"
+  }
+ ],
+ "note": "Recorded run: after Build and play the app showed the BuiltPanel ('Your world is published' + an optional ENS name, shown because .env sets the lineage market) and waited for 'Enter the world'. The recorded run's poll had no step for it; the click was sent from a separate call 132.3 s after Build (publish itself took 2.5 s: cartridge createdAt 05:52:49.670Z vs Build click 05:52:47.137Z), and Play opened 282 ms after the click. The two panel actions above are that click, added for replay."
+}

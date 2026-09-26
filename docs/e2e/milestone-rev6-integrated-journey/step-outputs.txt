@@ -1,0 +1,467 @@
+===== step 02
+{"nameEmpty":true,"lang":[]}
+shot docs/e2e/milestone-rev6-integrated-journey/02-a-00-idea-words-only.jpg
+true
+clicked "Write the world" at 273,747
+{"atMs":1759,"text":"Premise\nFog hangs over drifting islands, and islanders move cargo by kite while dusk lamps guide lost lines home.\nTone\nQuiet, practical, salt-cool, and gently watchful.\nEveryday rules\n– Cargo moves by"}
+shot docs/e2e/milestone-rev6-integrated-journey/02-a-01-world-streaming.jpg
+{"worldMs":2709}
+{"derivedName":"Fog-bound drifting islands","cards":["premise","tone","rules","taboos","naming","voice","look"],"usage":"This draft: 1 call · 1,126 in / 251 out · 0 cached"}
+shot docs/e2e/milestone-rev6-integrated-journey/02-a-02-world-cards.jpg
+true
+{"lookButton":"Unlock","lockedNote":"How it looks\nUnlock\nLocked: the model keeps this card exactly as it is.","rewrite":"Rewrite the 6 unlocked cards"}
+true
+clicked "Rewrite the 6 unlocked cards" at 1131,335
+{"atMs":835,"text":"Premise\nFog-bound islands drift apart and together on slow currents, so people send goods by\nWriting…"}
+shot docs/e2e/milestone-rev6-integrated-journey/02-a-03-rewrite-unlocked-streaming.jpg
+{"rewriteMs":2278}
+[{"card":"premise","identical":false,"beforeLen":105,"afterLen":299},{"card":"tone","identical":false,"beforeLen":49,"afterLen":58},{"card":"rules","identical":false,"beforeLen":300,"afterLen":373},{"card":"taboos","identical":false,"beforeLen":39,"afterLen":52},{"card":"naming","identical":false,"beforeLen":133,"afterLen":229},{"card":"voice","identical":false,"beforeLen":82,"afterLen":237},{"card":"look","identical":true,"beforeLen":162,"afterLen":162}]
+"This draft: 2 calls · 1,654 in / 587 out · 0 cached"
+shot docs/e2e/milestone-rev6-integrated-journey/02-a-04-rewritten-look-locked.jpg
+true
+clicked "Continue to the look" at 293,698
+{"drawing":"Drawing 3 sketches… · 2 s","storyHeader":"Writing the story and its chapters… · 2 s","story":"Story in one line: When a late-season fog scatters a line of kite cargo, the player follows its trail from dock to roof to flooded underpass, helping the islanders keep their lamps, charts, and wind n"}
+shot docs/e2e/milestone-rev6-integrated-journey/02-a-05-look-drawing-story-streaming.jpg
+{"picturesAtMs":{"0":2692,"3":9986},"storyReady":{"atMs":3449,"line":"The story is ready: 5 chapters."}}
+{"usage":"This draft: 6 calls · 2,836 in / 1,915 out · 0 cached","storyReady":"The story is ready: 5 chapters."}
+shot docs/e2e/milestone-rev6-integrated-journey/02-a-06-look-three-pictures.jpg
+clicked "Choose sketch 2" at 587,522
+{"labels":["Choose sketch 1","Chosen look","Choose sketch 3"],"bytes":270594,"sha256":"dbba8d9167964033ac90b9643745c384024279ecbaefd183a1a1f08ee9de4060"}
+shot docs/e2e/milestone-rev6-integrated-journey/02-a-07-look-picked.jpg
+true
+clicked "Continue to the story" at 296,747
+{"storyWaitMs":18,"chapters":["1","2","3","4","5"]}
+shot docs/e2e/milestone-rev6-integrated-journey/02-a-08-story.jpg
+clicked "Continue to build" at 281,747
+"What building asks the model for (estimate)\n1 call to write the place you wake in, plus up to 2 repairs if it has to be fixed · openai · gpt-5.4-mini\nFirst call: about 2,962 input tokens (measured from its prompt), at most 2,200 output tokens\nIf both repairs are needed: 3 calls, up to about 17,686 input and 6,600 output tokens\nCost: about US$ 0.02 for the first call, at most about US$ 0.05 with both repairs (gpt-5.4-mini list price as of 2026-09-26, https://developers.openai.com/api/docs/pricing).\nThen, once you are in, chapter 1 is written in the background: 1 call plus up to 2 repairs, at most 2,400 output tokens each. It is counted in the world's usage, not in this estimate.\nThis draft: 6 calls · 2,836 in / 1,915 out · 0 cached\nAn estimate: tokens are counted roughly (about one per CJK character, one per 3.4 other characters); the real numbers are recorded after each call."
+true
+shot docs/e2e/milestone-rev6-integrated-journey/02-a-09-build-quote.jpg
+true
+clicked "Build and play" at 268,698
+{"buildMs":132593,"wordsToLandMs":151456,"cartridge":"fog-bound-drifting-islands-66d73a@1.0.0"}
+{"writingAhead":"Writing the next chapter… · Lamp Count","usage":"This world: 7 calls · 5,613 in / 2,496 out · 0 cached"}
+shot docs/e2e/milestone-rev6-integrated-journey/02-a-10-in-play-chapter-writing.jpg
+{"sceneId":"origin","x":8.5,"y":0.1,"z":8.5,"yaw":0}
+{"before":{"sceneId":"origin","x":8.5,"y":0.1,"z":8.5,"yaw":0},"after":{"sceneId":"origin","x":14.495599999999852,"y":0.1,"z":8.5,"yaw":1.5707963267948966},"wordsToWalkedMs":154486}
+shot docs/e2e/milestone-rev6-integrated-journey/02-a-11-walked.jpg
+[{"id":"fog-bound-drifting-islands-66d73a@1.0.0","look":{"path":"assets/look.png","bytes":270594,"contentHash":"sha256:dbba8d9167964033ac90b9643745c384024279ecbaefd183a1a1f08ee9de4060"},"chosenSha256":"dbba8d9167964033ac90b9643745c384024279ecbaefd183a1a1f08ee9de4060","identical":true}]
+{"chapterStatusGoneAfterPlayMs":3226}
+"{\"t0\":1790401948274,\"worldAt\":1790401950983,\"rw0\":1790401952369,\"look0\":1790401955458,\"chosenSha\":\"dbba8d9167964033ac90b9643745c384024279ecbaefd183a1a1f08ee9de4060\",\"story0\":1790401966472,\"build0\":1790401967137,\"enter0\":1790402099448,\"playAt\":1790402099730,\"pose0\":{\"sceneId\":\"origin\",\"x\":8.5,\"y\":0.1,\"z\":8.5,\"yaw\":0},\"walkedAt\":1790402102760}"
+===== step 03a
+["t0","worldAt","before","rw0","look0","chosenSha","story0","build0","enter0","playAt","pose0","walkedAt","shared","pos","chapter","nextTodo","others","spot","state","urls"]
+"{\"id\":\"e1\",\"title\":\"Lamp Count\",\"gate\":[80.5,16.5],\"written\":true,\"npcs\":[{\"id\":\"chapter:e1:bram\",\"name\":\"Bram\",\"at\":[81.5,15.5],\"met\":false},{\"id\":\"chapter:e1:tilly\",\"name\":\"Tilly\",\"at\":[81.5,17.5],\"met\":false},{\"id\":\"chapter:e1:noll\",\"name\":\"Noll\",\"at\":[82.5,15.5],\"met\":false}],\"treasures\":[{\"id\":\"chapter:e1:treasure_marks\",\"at\":[84.5,16.5],\"found\":false},{\"id\":\"chapter:e1:treasure_lamps\",\"at\":[84.5,17.5],\"found\":false}],\"monsters\":0,\"met\":[],\"found\":[]}"
+pad toward: arrived 16.3,16.3 (1315 ms)
+pad toward: arrived 39.6,16.3 (3423 ms)
+"{\"status\":\"written\",\"name\":\"Lamp Edge\",\"head\":6,\"live\":{\"id\":\"hiwbfs3ps5tgkfj2etdv6g72csgneumhjcnp4xr5icyvnfm4cw4tq\",\"n\":6,\"author\":\"krcegpbdgib6qs3gapld6boj7wvypp4mgidhn3m23iu4cn7cyjafa\",\"npcs\":[\"henn:Henn\"]},\"pending\":0}"
+shot docs/e2e/milestone-rev6-integrated-journey/03-a-00-witnessed-1-0.jpg
+pad toward: arrived 71.7,16.3 (4669 ms)
+"{\"status\":\"written\",\"name\":\"Chunk 2,0\",\"head\":7,\"live\":{\"id\":\"hhst3ka6qq2llqj2mbfadcvqe6t37w6xonjdyqhqy6wnw5e6pddoq\",\"n\":7,\"author\":\"krcegpbdgib6qs3gapld6boj7wvypp4mgidhn3m23iu4cn7cyjafa\",\"npcs\":[\"bram:Bram\",\"henn:Henn\",\"tilly:Tilly\"]},\"pending\":0}"
+pad toward: arrived 78.7,16.3 (1073 ms)
+"{\"chapter\":{\"id\":\"e1\",\"title\":\"Lamp Count\",\"gate\":[80.5,16.5],\"written\":true,\"npcs\":[{\"id\":\"chapter:e1:bram\",\"name\":\"Bram\",\"at\":[81.5,15.5],\"met\":false},{\"id\":\"chapter:e1:tilly\",\"name\":\"Tilly\",\"at\":[81.5,17.5],\"met\":false},{\"id\":\"chapter:e1:noll\",\"name\":\"Noll\",\"at\":[82.5,15.5],\"met\":false}],\"treasures\":[{\"id\":\"chapter:e1:treasure_marks\",\"at\":[84.5,16.5],\"found\":false},{\"id\":\"chapter:e1:treasure_lamps\",\"at\":[84.5,17.5],\"found\":false}],\"monsters\":0,\"met\":[],\"found\":[]},\"state\":{\"screen\":\"play\",\"input\":\"pad\",\"pos\":[78.7,16.3],\"chunk\":{\"cx\":2,\"cz\":0},\"nearby\":{\"kind\":\"episode\",\"id\":\"episode:e1\",\"label\":\"Lamp Count\"},\"locked\":false,\"dialogue\":null,\"speaker\":null,\"episodeOpen\":null,\"layers\":[],\"focus\":null}}"
+shot docs/e2e/milestone-rev6-integrated-journey/03-a-01-at-chapter-gate.jpg
+===== step 03b
+"{\"id\":\"chapter:e1:bram\",\"name\":\"Bram\",\"at\":[81.5,15.5],\"met\":false}"
+pad toward: arrived 81.4,14.6 (958 ms)
+"{\"kind\":\"npc\",\"id\":\"chapter:e1:bram\",\"label\":\"Bram\"}"
+pad {"buttons":[0]}
+"{\"dialogue\":\"ready\",\"speaker\":\"Bram\",\"text\":[\"A\",\"Talk to Bram\",\"LS / ✚ Move · RB Sprint · A Interact · Y Notes · Start Menu\",\"← Home\",\"Tweak rules\",\"Console\",\"Notes\",\"Y\",\"Look: HD-2D\",\"Bram\",\"I kept the pier posts in sight. Three freight kites are late. The wind line says two may drift back by dusk.\",\"Ask for the freight marks\",\"Leave\",\"Walk away\"]}"
+shot docs/e2e/milestone-rev6-integrated-journey/03-a-02-talking-to-bram.jpg
+pad {"buttons":[0],"ms":200}
+"{\"dialogue\":null,\"e1\":{\"met\":[\"bram\"],\"found\":[]},\"cleared\":false}"
+shot docs/e2e/milestone-rev6-integrated-journey/03-a-03-after-talk.jpg
+===== step 03c
+true
+clicked "Leave the note" at 491,523
+"Notes · Chunk 2,0 (2 · 0)\nPut up a signpost\nLeave a gift\nplayer-YSAA · tile 17,14 · 9/26/2026, 2:59:42 PM\nA: Bram keeps the pier posts in sight; three freight kites are late.\nWrite a different version\nyour note\nLeave the note\nClose"
+"{\"head\":{\"n\":8,\"chain\":\"sha256:34a5dcea008c2252cc9f5dc49ad89f1dfde9ce0b22ea3dd0d574ff9ce441f4d8\"},\"notes\":[{\"n\":8,\"author\":\"krcegpbdgi\",\"text\":\"A: Bram keeps the pier posts in sight; three freight kites are late.\",\"coord\":{\"cx\":2,\"cz\":0,\"x\":17,\"z\":14}}]}"
+shot docs/e2e/milestone-rev6-integrated-journey/03-a-04-note.jpg
+"This world: 11 calls · 18,330 in / 6,527 out · 5,120 cached"
+clicked "Usage" at 1380,124
+{"rows":["bible | World cards 2 1,654 587 0 4.6 s","story | Story plan 1 617 512 0 3.4 s","image | Picture 3 565 816 0 29.5 s","origin | Starting place 1 2,777 581 0 2.5 s","chapter | Chapter 1 2,184 608 0 2.9 s","witness | Witnessing 3 10,533 3,423 5,120 14.2 s"],"panel":"AI usage\nThis world: 11 calls · 18,330 in / 6,527 out · 5,120 cached\nBy purpose\nPurpose\tCalls\tIn\tOut\tCached\tTime\nWorld cards\t2\t1,654\t587\t0\t4.6 s\nStory plan\t1\t617\t512\t0\t3.4 s\nPicture\t3\t565\t816\t0\t29.5 s\nStarting place\t1\t2,777\t581\t0\t2.5 s\nChapter\t1\t2,184\t608\t0\t2.9 s\nWitnessing\t3\t10,533\t3,423\t5,120\t14.2 s\nRecent calls\n2:58:41 PM · Witnessing · gpt-5.4-mini · 3,643 in / 1,458 out · 5.5 s · done\n2:58:30 PM · Witnessing · gpt-5.4-mini · 3,501 in / 778 out · 3.7 s · done\n2:55:04 PM · Witnessing · gpt-5.4-mini · 3,389 in / 1,187 out · 5 s · done\n2:55:02 PM · Chapter · gpt-5.4-mini · 2,184 in / 608 out · 2.9 s · done\n2:52:49 PM · Starting place · gpt-5.4-mini · 2,777 in / 581 out · 2.5 s · done\n2:52:45 PM · Picture · gpt-image-1-mini · 186 in / 272 out · 9.9 s · done\n2:52:45 PM · Picture · gpt-image-1-mini · 190 in / 272 out · 9.8 s · done\n2:52:45 PM · Picture · gpt-image-1-mini · 189 in / 272 out · 9.8 s · done\n2:52:38 PM · Story plan · gpt-5.4-mini · 617 in / 512 out · 3.4 s · done\n2:52:34 PM · World cards · gpt-5.4-mini · 528 in / 336 out · 2.1 s · done\n2:52:30 PM · World cards · gpt-5.4-mini · 1,126 in / 251 out · 2.5 s · done\nClose\nE\nTalk to Bram\nWASD / Click Move · Shift Sprint · E Interact · N Notes · V Look\n← Home\nTweak rules\nConsole\nF12\nNotes\nN\nLook: HD-2D\nV"}
+shot docs/e2e/milestone-rev6-integrated-journey/03-a-05-usage-panel.jpg
+clicked "Close" at 1163,454
+===== step 04
+pad toward: arrived 73.2,17.0 (3461 ms)
+pad toward: arrived 17.0,17.0 (8113 ms)
+pad toward: arrived 8.9,8.7 (3953 ms)
+"Door\nDial 1\n— empty —\nDial 2\n— empty —\nDial 3\n— empty —\nDial 4\n— empty —\nPin a witnessed place to dial 1\nLamp Edge (1 · 0)\nChunk 2,0 (2 · 0)\nSharing\nLocal: only this device keeps this world\nYou own this world.\nShare this world\nChoose a world service. This world's history goes there, so the friends you invite can visit, even while you are offline.\nOnce it is shared, make another device of yours a co-owner: a world only one device owns can no longer change its door or move to another service if that device is lost.\nShare on 127.0.0.1:8797\nContinent\nThis world's door number: QJ8C36\nOpen your door and every friend who walks through brings their world onto one continent with yours.\nOpen my door to friends\nFriend's door number or ENS name\nPin to dial 1\nWalk through\nKeepsakes you carry\nNothing to set on the shelf. Residents hand keepsakes over when an errand is done.\nClose"
+shot docs/e2e/milestone-rev6-integrated-journey/04-a-00-door-local.jpg
+"mark"
+clicked "Share on 127.0.0.1:8797" at 515,597
+{"ms":276}
+"Door\nDial 1\n— empty —\nDial 2\n— empty —\nDial 3\n— empty —\nDial 4\n— empty —\nPin a witnessed place to dial 1\nLamp Edge (1 · 0)\nChunk 2,0 (2 · 0)\nSharing\nShared on 127.0.0.1:8797\nOnline\nYou own this world.\nWho may come in\nPrivate\nFriends\nPublic\nYou and the members you invited read and write.\nInvites\nUses (1–20)\nDays valid (1–30)\nCreate an invite\nNo invites made on this device yet.\nPeople\nplayer-YSAA\nowner (you)\nNobody has joined yet.\nOnly one device owns this world. If it is lost, nobody can change the door or move the world to another service. Make a member's device, or another device of yours, a co-owner.\nRecorded on a public chain\nDon't record\nRecord beats\nWhen on, this world's service writes a fingerprint of each beat to a public blockchain: the world's id, the entry number and hashes, never what anyone wrote. It is public metadata: anyone can read it, and it cannot be taken back. The service writes it and pays for it; nobody here signs anything or needs a wallet. Off unless an owner turns it on.\nNo chain is set up on this device, so nothing is compared. Everything else works as usual.\nContinent\nError · continent-world-attached\nThis world is shared through a world service, so it cannot also join a continent.\nFriends join it with an invite from its door instead; continents are for worlds kept on this device only.\nFriend's door number or ENS name\nPin to dial 1\nWalk through\nKeepsakes you carry\nNothing to set on the shelf. Residents hand keepsakes over when an errand is done.\nClose"
+"{\"worldId\":\"hpnal6es5oliwpwe435ocxoiwn7sqyuurgrxt27enrjjk2lishivq\",\"head\":{\"n\":9,\"chain\":\"sha256:aac6f17e9aa89be622267cf3cafd840603990dad2bf0d9aa69eae5106961f59f\"},\"link\":\"online\",\"url\":\"ws://127.0.0.1:8797\",\"role\":\"owner\",\"pending\":0,\"pack\":{\"cartridge\":\"sha256:aef83b4121c8fb10800020e198f9bc41f4c4d5047351bb60a8c8a291cec504a9\",\"pack\":\"sha256:f7d581dd8a59f7c9dc89f4b53757f397e5c4a56247efdc19474dac99e83d747b\",\"bytes\":277059},\"kinds\":\"1:genesis 2:pack 3:profile 4:chapter 5:witness 6:witness 7:witness 8:note 9:sequencer\"}"
+shot docs/e2e/milestone-rev6-integrated-journey/04-a-01-door-shared.jpg
+clicked "Create an invite" at 744,658
+600
+"Invites\nUses (1–20)\nDays valid (1–30)\nCreate an invite\nSend this link to the friend you invite. It is shown only now: this device keeps no copy.\nInvite link\nCopy the link\nndm4nvih… · used 0 of 1 · until 10/3/2026, 3:00:26 PM · open\nRevoke\nPeople\nplayer-YSAA\nowner (you)\nNobody has joined yet.\nOnly one device owns this world. If it is lost, nobody can change the door or move the world to another service. Make a member's device, or another device of yours, a co-owner.\nRecorded on a public chain\nDon't record\nRecord beats\nWhen on, this world's service writes a fingerprint of each beat to a public b"
+shot docs/e2e/milestone-rev6-integrated-journey/04-a-02-invite.jpg
+"unmapped://join?i=eyJieSI6ImtyY2VncGJkZ2liNnFzM2dhcGxkNmJvajd3dnlwcDRtZ2lkaG4zbTIzaXU0Y243Y3lqYWZhIiwiZXhwIjoiMjAyNi0xMC0wM1QwNjowMDoyNi44MjZaIiwia2V5Ijoia25ndHliZHplYm1sdGJyd3kyc2J0bW1haWFid3l1M3U1cXdhaW42NXFjeDJheHJjYm9nZnEiLCJub25jZSI6Im5kbTRudmloam16YmRuN2F5eTU1d2doM3d2NmVobnZzIiwic2lnIjoiSXlXdWZTUm1mMHZPY2xkcFVpWlFoTGhVenplWUREb3Riemp5ZUFrRENRYVFHUkdKbWUxaUF3WmRwZ0hxRnN5TjFrVFRGX0tweWdYMmR3a3l1bkpCQVEiLCJzdmMiOiJ3czovLzEyNy4wLjAuMTo4Nzk3IiwidXNlcyI6MSwidiI6MSwid29ybGQiOiJocG5hbDZlczVvbGl3cHdlNDM1b2N4b2l3bjdzcXl1dXJncnh0MjdlbnJqamsybGlzaGl2cSJ9&k=KKI_0dc7MNCJFSfkvCj8zcj5Z3TEqNljEXw0_UszeSg"
+===== step 05a
+clicked "設定" at 254,744
+clicked "English" at 710,161
+true
+clicked "Save" at 777,485
+"clicked Test"
+"ws://127.0.0.1:8797\nReachable: unmapped-service/1, physics 1, 1 world kept. Health 8 ms, greeting 8 ms.\nService key kvt6qo3cwk42opiurvsg7afusmb4auhk7kwa5un4in2wshushekwq\nThis service runs in test mode (its clock can be moved forward).\nSaved. The door offers these services the next time you share a w"
+"Next call: OpenAI · key from .env · gpt-5.4-mini"
+shot docs/e2e/milestone-rev6-integrated-journey/05-b-00-settings-service.jpg
+===== step 05b
+clicked "Worlds" at 254,654
+clicked "Join a world" at 145,304
+true
+clicked "Look at the world" at 763,722
+"Join a world\nWorld files\nCartridges4\nContinent\nMarket\nJOIN A WORLD\nPaste an invite link a friend sent you. You see the world before you join it.\nInvite link\nLook at the world\nPaste another link\nFog-bound drifting islands\nMade by player-YSAA\nKept on 127.0.0.1:8797\nDoor: Friends\n0 members · 9 entries in its history\nThis invite: 1 of 1 use left, until 10/3/2026, 3:00:26 PM\nYour name in this world\nJoin and play\n↑\n↓\nSelect\nEsc\nBack"
+shot docs/e2e/milestone-rev6-integrated-journey/05-b-01-join-preview.jpg
+"player-QAAE"
+"mark"
+clicked "Join and play" at 745,722
+{"ms":602,"screen":"play","cartridge":"fog-bound-drifting-islands-66d73a@1.0.0"}
+"{\"worldId\":\"hpnal6es5oliwpwe435ocxoiwn7sqyuurgrxt27enrjjk2lishivq\",\"head\":{\"n\":10,\"chain\":\"sha256:1beaf04a5f92ed5df8ed458a87e894dab13e758aa087db5725eba18807100b80\"},\"link\":\"online\",\"role\":\"member\",\"pending\":0,\"me\":\"kv3nyzlhyzedpyjka43hv5jsm4b6pwhwwqtwys2tfjc7fkyo2sdoq\",\"pack\":{\"cartridge\":\"sha256:aef83b4121c8fb10800020e198f9bc41f4c4d5047351bb60a8c8a291cec504a9\",\"pack\":\"sha256:f7d581dd8a59f7c9dc89f4b53757f397e5c4a56247efdc19474dac99e83d747b\",\"bytes\":277059},\"kinds\":\"1:genesis 2:pack 3:profile 4:chapter 5:witness 6:witness 7:witness 8:note 9:sequencer 10:member.join\",\"chunks\":{\"0,0\":{\"id\":\"h3xdbrwvl7cu\",\"name\":\"Grass Bend\"},\"1,0\":{\"id\":\"hiwbfs3ps5tg\",\"name\":\"Lamp Edge\"},\"2,0\":{\"id\":\"hhst3ka6qq2l\",\"name\":\"Chunk 2,0\"}}}"
+Fog-bound drifting islands
+not on ENS yet
+LAND
+0 · 0
+WRITTEN · Grass Bend
+KARMA
+0 entries
+CARRIED
+0 items · 0 mats
+Story 0/5 · next: Lamp Count (Lamp Dock)
+Speak with Bram, Tilly, and the dock keeper, then take the list of missing kite marks and the lamp notes for the evening shift. · talk 3 · find 2
+No active quests on this floor.
+ONLINE
+openai · gpt-5.4-mini
+openai
+39 FPS
+No model calls counted for this world yet.
+Usage
+E
+Open the door
+WASD / Click Move · Shift Sprint · E Interact · N Notes · V Look
+← Home
+Tweak rules
+Console
+F12
+Notes
+N
+Look: HD-2D
+V
+Emote
+T
+shot docs/e2e/milestone-rev6-integrated-journey/05-b-02-joined-play.jpg
+===== step 05c
+pad toward: arrived 16.2,16.2 (2767 ms)
+pad toward: arrived 39.6,16.2 (3417 ms)
+"{\"chunk\":{\"cx\":1,\"cz\":0},\"status\":\"written\",\"name\":\"Lamp Edge\"}"
+shot docs/e2e/milestone-rev6-integrated-journey/05-b-03-reads-a-chunk-1-0.jpg
+pad toward: arrived 71.6,16.2 (4710 ms)
+pad toward: arrived 80.6,13.7 (1685 ms)
+"{\"chunk\":{\"cx\":2,\"cz\":0},\"status\":\"written\",\"name\":\"Chunk 2,0\",\"notes\":[{\"text\":\"A: Bram keeps the pier posts in sight; three freight kites are late.\",\"coord\":{\"cx\":2,\"cz\":0,\"x\":17,\"z\":14},\"pending\":null}]}"
+"Notes · Chunk 2,0 (2 · 0)\nPut up a signpost\nLeave a gift\nplayer-YSAA · tile 17,14 · 9/26/2026, 2:59:42 PM\nA: Bram keeps the pier posts in sight; three freight kites are late.\nWrite a different version\nyour note\nLeave the note\nClose"
+shot docs/e2e/milestone-rev6-integrated-journey/05-b-04-sees-a-note.jpg
+===== step 06a
+pad toward: arrived 16.1,16.3 (1689 ms)
+pad toward: arrived 1.4,16.3 (2196 ms)
+"{\"installed\":true,\"at\":[1.4107039443941272,16.268773954618016],\"chunk\":{\"cx\":0,\"cz\":0},\"head\":10}"
+===== step 06b
+pad toward: arrived 73.0,16.9 (3725 ms)
+pad toward: arrived 16.7,16.9 (8128 ms)
+pad toward: arrived 2.0,16.9 (2186 ms)
+"{\"installed\":true,\"at\":[2.0356298621275837,16.901391832640144],\"chunk\":{\"cx\":0,\"cz\":0},\"head\":10}"
+===== step 06c
+"A walks"
+pad toward: arrived -7.9,16.3 (1439 ms)
+shot docs/e2e/milestone-rev6-integrated-journey/06-a-00-streaming.jpg
+"{\"dev\":{\"first\":17652,\"updates\":26,\"text\":2794,\"sid\":\"p-X8tYNpimO-cN_O2L0Htg\",\"by\":\"\",\"mine\":true,\"last\":21578},\"flip\":null}"
+shot docs/e2e/milestone-rev6-integrated-journey/06-a-01-flipped.jpg
+"{\"role\":\"A\",\"walk\":17417,\"dev\":{\"first\":17652,\"last\":22198,\"updates\":32,\"sid\":\"p-X8tYNpimO-cN_O2L0Htg\",\"by\":\"\",\"mine\":true,\"chars\":3391},\"sha256\":\"5c0b57dba82a030ed80745075a0e23885d4598e961fcdfe39e156e698b53603c\",\"frames\":0,\"flip\":{\"n\":11,\"id\":\"hjwieobzvu44ethqe22mesrl33s3j57h4tlcri5gmyh7opanuj2rq\",\"head\":10,\"pending\":0,\"ms\":22197},\"land\":\"written\"}"
+===== step 06d
+"B walks"
+pad toward: arrived -8.0,16.5 (6291 ms)
+shot docs/e2e/milestone-rev6-integrated-journey/06-b-00-watching.jpg
+"{\"dev\":{\"first\":10256,\"updates\":24,\"text\":3391,\"sid\":\"p-X8tYNpimO-cN_O2L0Htg\",\"by\":\"krcegpbdgib6qs3gapld6boj7wvypp4mgidhn3m23iu4cn7cyjafa\",\"mine\":false,\"last\":12662},\"frames\":30,\"flip\":{\"n\":11,\"id\":\"hjwieobzvu44ethqe22mesrl33s3j57h4tlcri5gmyh7opanuj2rq\",\"head\":11,\"pending\":0,\"ms\":12758}}"
+shot docs/e2e/milestone-rev6-integrated-journey/06-b-01-flipped.jpg
+"{\"role\":\"B\",\"walk\":9960,\"dev\":{\"first\":10256,\"last\":12662,\"updates\":24,\"sid\":\"p-X8tYNpimO-cN_O2L0Htg\",\"by\":\"krcegpbdgib6qs3gapld6boj7wvypp4mgidhn3m23iu4cn7cyjafa\",\"mine\":false,\"chars\":3391},\"sha256\":\"5c0b57dba82a030ed80745075a0e23885d4598e961fcdfe39e156e698b53603c\",\"frames\":30,\"framesSum\":3391,\"lastFrame\":{\"k\":29,\"len\":134,\"end\":null,\"sid\":\"p-X8tYNpimO-cN_O2L0Htg\",\"from\":\"krcegpbdgib6qs3gapld6boj7wvypp4mgidhn3m23iu4cn7cyjafa\",\"ms\":12662},\"flip\":{\"n\":11,\"id\":\"hjwieobzvu44ethqe22mesrl33s3j57h4tlcri5gmyh7opanuj2rq\",\"head\":11,\"pending\":0,\"ms\":12758},\"land\":\"written\"}"
+===== step 07b
+hold: nothing to hold
+"{\"locked\":false,\"layers\":[]}"
+true
+1790402625365
+clicked "Leave the note" at 491,523
+"Notes · Fog Tide (-1 · 0)\nPut up a signpost\nLeave a gift\nBea · tile 24,16 · 9/26/2026, 3:03:45 PM\nB: I watched this field arrive while A wrote it; the west ford is dry.\nWrite a different version\nyour note\nLeave the note\nClose"
+"{\"head\":{\"n\":13,\"chain\":\"sha256:70ae1e088a74dc90a6e8fb72c9f1336daab1b30c8d4f983160cb7863b0425582\"},\"notes\":[{\"n\":8,\"author\":\"krcegpbdgi\",\"text\":\"A: Bram keeps the pier posts in sight; three freight kites are late.\",\"coord\":{\"cx\":2,\"cz\":0,\"x\":17,\"z\":14}},{\"n\":13,\"author\":\"kv3nyzlhyz\",\"text\":\"B: I watched this field arrive while A wrote it; the west ford is dry.\",\"coord\":{\"cx\":-1,\"cz\":0,\"x\":24,\"z\":16}}]}"
+shot docs/e2e/milestone-rev6-integrated-journey/07-b-00-note.jpg
+===== step 07c
+"{\"t0\":1790402591210,\"seen\":{\"at\":1790402625405,\"text\":\"B: I watched this field arrive while A wrote it; the west ford is dry.\",\"pending\":null},\"n0\":1}"
+"Notes · Fog Tide (-1 · 0)\nPut up a signpost\nLeave a gift\nBea · tile 24,16 · 9/26/2026, 3:03:45 PM\nB: I watched this field arrive while A wrote it; the west ford is dry.\nWrite a different version\nyour note\nLeave the note\nClose"
+shot docs/e2e/milestone-rev6-integrated-journey/07-a-00-sees-b-note-live.jpg
+===== step 08
+pad toward: arrived 1.3,16.3 (1439 ms)
+pad toward: arrived 8.6,8.9 (1565 ms)
+"People\nplayer-YSAA\nowner (you)\nBea\nmember since entry 10\nMake co-owner\nRemove\nOnly one device owns this world. If it is lost, nobody can change the door or move the world to another service. Make a member's device, or another device of yours, a co-owner.\nRecorded on a public chain\nDon't record\nRecord beats\nWhen on, this world's service writes a fingerprint of each beat to a public blockchain: the world's id, the entry number and hashes, never what anyone wrote. It is public metadata: anyone can "
+clicked "Make co-owner" at 863,759
+"People\nplayer-YSAA\nowner (you)\nBea\nmember since entry 10\nMake Bea a co-owner? Their device can then do everything yours can here: change the door, invite and remove people, add and remove owners, and move the world to another service. Any owner can undo it.\nMake them a co-owner\nCancel\nOnly one device owns this world. If it is lost, nobody can change the door or move the world to another service. Make a member's device, or another device of yours, a co-owner.\nRecorded on a public chain\nDon't record\nRecord beats\nWhen on, this world's service writes a fingerprint of each beat to a public blockchain: the world's id, the entry number and hashes, never what anyone wrote. It is public metadata: any"
+clicked "Make them a co-owner" at 535,759
+"People\nplayer-YSAA\nowner (you)\nBea\nco-owner since entry 14\nRemove as owner\nNobody has joined yet.\nBea is now a co-owner.\nRecorded on a public chain\nDon't record\nRecord beats\nWhen on, this world's service writes a fingerprint of each beat to a public blockchain: the world's id, the entry number and hashes, never what anyone wrote. It is public metadata: anyone can read it, and it cannot be taken back. The service writes it and pays for it; nobody here signs anything or needs a wallet. Off unless "
+"{\"head\":{\"n\":14,\"chain\":\"sha256:32d358448fd2e74b98344f531fd61956815caace85f1092fb07d6f3caa19d608\"},\"owners\":{\"krcegpbdgib6qs3gapld6boj7wvypp4mgidhn3m23iu4cn7cyjafa\":{\"key\":\"krcegpbdgib6qs3gapld6boj7wvypp4mgidhn3m23iu4cn7cyjafa\",\"n\":1,\"removed\":null,\"added\":null,\"pending\":false},\"kv3nyzlhyzedpyjka43hv5jsm4b6pwhwwqtwys2tfjc7fkyo2sdoq\":{\"key\":\"kv3nyzlhyzedpyjka43hv5jsm4b6pwhwwqtwys2tfjc7fkyo2sdoq\",\"n\":14,\"removed\":null,\"added\":{\"v\":1,\"world\":\"hpnal6es5oliwpwe435ocxoiwn7sqyuurgrxt27enrjjk2lishivq\",\"kind\":\"owner.add\",\"author\":\"krcegpbdgib6qs3gapld6boj7wvypp4mgidhn3m23iu4cn7cyjafa\",\"at\":\"2026-09-26T06:04:07.310Z\",\"seen\":13,\"body\":{\"key\":\"kv3nyzlhyzedpyjka43hv5jsm4b6pwhwwqtwys2tfjc7fkyo2sdoq\"},\"id\":\"huui2pv4mqbpf6dbduamoksm2no7ee2zctu65qdehthmpr3cy2w3q\",\"sig\":\"je3mTAhCFTQtp_t067MLOUGEiAS3_sWD2Ynwh1YiGsZ7V7IRwjCVW1ZmYCsmjkRhawetiILFTL6cZolZnRl3Bw\"},\"pending\":false}}}"
+true
+shot docs/e2e/milestone-rev6-integrated-journey/08-a-00-door-coowner.jpg
+===== step 09a
+clicked "Create an invite" at 744,658
+600
+shot docs/e2e/milestone-rev6-integrated-journey/09-a-00-second-invite.jpg
+"watching"
+"unmapped://join?i=eyJieSI6ImtyY2VncGJkZ2liNnFzM2dhcGxkNmJvajd3dnlwcDRtZ2lkaG4zbTIzaXU0Y243Y3lqYWZhIiwiZXhwIjoiMjAyNi0xMC0wM1QwNjowNDozMC4yODRaIiwia2V5Ijoia2JrYzRvMzR3d2o1c3p2bWcyZGduZHRjNmZxb2piaHN3dGs3YXFoc2xjM2k0Y2M3dDMycXEiLCJub25jZSI6ImZ3ZWZuYm9yaXVtZ3BjbmZ3YXVwdTJseHhheXhqbmMzIiwic2lnIjoiekJ6Y3BiUWJ1dnRuV3FTdmdoZGpLUlN6b1JwSXpQLTk3QVBLb2VPdnIwZDhLUWhEMG9LTDV6aU12NGl4VW9PTlRLZHJNTUxUZGtYcTZEWmtIMFFvQ3ciLCJzdmMiOiJ3czovLzEyNy4wLjAuMTo4Nzk3IiwidXNlcyI6MSwidiI6MSwid29ybGQiOiJocG5hbDZlczVvbGl3cHdlNDM1b2N4b2l3bjdzcXl1dXJncnh0MjdlbnJqamsybGlzaGl2cSJ9&k=56SZpiTjk9rc4tmmIRZnG8Utd4KKDqJ3jiWVAxarMLA"
+===== step 09b
+viewport 375x812 (touch)
+{"result":{"type":"undefined"}}
+shot docs/e2e/milestone-rev6-integrated-journey/09-p-00-join.jpg
+touch [187.5,136.3984375]
+touch [187.5,254.6953125]
+"mark"
+touch [187.5,345.09375]
+360
+"Fog-bound drifting islands | Online · Entry 15 · 0 waiting to send · 0 refused | Stick: walk · Y: this world and its notes"
+"{\"screen\":\"play\",\"look\":\"pixel\",\"canvas\":{\"label\":\"UNMAPPED, 16-bit view\",\"w\":750,\"h\":1624},\"seed\":\"fog-bound-drifting-islands-66d73a\",\"cartridge\":\"fog-bound-drifting-islands-66d73a@1.0.0\",\"scene\":\"origin\",\"landMode\":\"history\",\"chunks\":[\"-1,0\",\"0,0\",\"1,0\",\"2,0\"],\"notes\":2,\"chunk\":{\"cx\":0,\"cz\":0}}"
+"{\"blobs\":[[\"sha256:f7d581dd8a59f7c9dc89f4b53757f397e5c4a56247efdc19474dac99e83d747b\",277059]],\"places\":[],\"entries\":15,\"outbox\":[]}"
+"{\"sceneId\":\"origin\",\"x\":8.5,\"z\":8.5,\"yaw\":0}"
+shot docs/e2e/milestone-rev6-integrated-journey/09-p-01-land.jpg
+touch [[78,734],[128,734]]
+"{\"sceneId\":\"origin\",\"x\":15.366,\"z\":8.5,\"yaw\":1.571}"
+"{\"screen\":\"play\",\"look\":\"pixel\",\"canvas\":{\"label\":\"UNMAPPED, 16-bit view\",\"w\":750,\"h\":1624},\"seed\":\"fog-bound-drifting-islands-66d73a\",\"cartridge\":\"fog-bound-drifting-islands-66d73a@1.0.0\",\"scene\":\"origin\",\"landMode\":\"history\",\"chunks\":[\"-1,0\",\"0,0\",\"1,0\",\"2,0\"],\"notes\":2,\"chunk\":{\"cx\":0,\"cz\":0}}"
+shot docs/e2e/milestone-rev6-integrated-journey/09-p-02-walked.jpg
+"{\"blobs\":[[\"sha256:f7d581dd8a59f7c9dc89f4b53757f397e5c4a56247efdc19474dac99e83d747b\",277059]],\"places\":[{\"sceneId\":\"origin\",\"x\":15.366,\"z\":8.5}],\"entries\":15,\"outbox\":[]}"
+touch [287.40625,634.8125]
+"{\"layer\":\"World\",\"inputLocked\":true,\"screen\":\"play\",\"here\":\"Left where you stand: 0, 0 · tile 15, 8\"}"
+touch [187.5,224.5546875]
+"mark"
+touch [187.5,414.046875]
+6382
+"{\"head\":16,\"pack\":{\"cartridge\":\"sha256:aef83b4121c8fb10800020e198f9bc41f4c4d5047351bb60a8c8a291cec504a9\",\"pack\":\"sha256:f7d581dd8a59f7c9dc89f4b53757f397e5c4a56247efdc19474dac99e83d747b\",\"bytes\":277059},\"me\":\"kqeyg65uskp5slhyuxwa2emfw34p7v5zs4bpa7chj5wx2om5xdpqq\",\"link\":\"online\",\"pending\":[],\"notes\":[{\"n\":8,\"by\":\"player-YSAA\",\"author\":\"krcegpbdgib6qs3gapld6boj7wvypp4mgidhn3m23iu4cn7cyjafa\",\"text\":\"A: Bram keeps the pier posts in sight; three freight kites are late.\",\"coord\":{\"cx\":2,\"cz\":0,\"x\":17,\"z\":14}},{\"n\":13,\"by\":\"Bea\",\"author\":\"kv3nyzlhyzedpyjka43hv5jsm4b6pwhwwqtwys2tfjc7fkyo2sdoq\",\"text\":\"B: I watched this field arrive while A wrote it; the west ford is dry.\",\"coord\":{\"cx\":-1,\"cz\":0,\"x\":24,\"z\":16}},{\"n\":16,\"by\":\"Rin\",\"author\":\"kqeyg65uskp5slhyuxwa2emfw34p7v5zs4bpa7chj5wx2om5xdpqq\",\"text\":\"Phone: left on the land, right where I stood.\",\"coord\":{\"cx\":0,\"cz\":0,\"x\":15,\"z\":8}}]}"
+"Left here. Friends see it once the service takes it. | — player-YSAA · at 2, 0 | — Bea · at -1, 0 | — Rin · at 0, 0"
+shot docs/e2e/milestone-rev6-integrated-journey/09-p-03-note.jpg
+touch [244.90625,634.8125]
+"{\"layer\":false,\"bar\":\"Online · Entry 16 · 0 waiting to send · 0 refused\"}"
+===== step 09c
+"{\"t0\":1790402671286,\"seen\":{\"at\":1790402712852,\"text\":\"Phone: left on the land, right where I stood.\",\"coord\":{\"cx\":0,\"cz\":0,\"x\":15,\"z\":8}}}"
+"{\"roster\":\"n/a\"}"
+"Notes · Grass Bend (0 · 0)\nPut up a signpost\nLeave a gift\nRin · tile 15,8 · 9/26/2026, 3:05:12 PM\nPhone: left on the land, right where I stood.\nWrite a different version\nyour note\nLeave the note\nClose"
+shot docs/e2e/milestone-rev6-integrated-journey/09-a-01-sees-phone-note.jpg
+===== step 10a
+hold: nothing to hold
+clicked "Worlds" at 254,654
+clicked "World files" at 138,350
+"Worlds on this device\nFog-bound drifting islands\n16 entries · on 127.0.0.1:8797\nYou own it\nExport .world\nMove to another service\n↑\n↓\nSelect\nEsc\nBack"
+clicked "Export .world" at 753,709
+"Worlds on this device\nFog-bound drifting islands\n16 entries · on 127.0.0.1:8797\nYou own it\nExport .world\nMove to another service\nWrote b.world (282 KiB).\n↑\n↓\nSelect\nEsc\nBack"
+shot docs/e2e/milestone-rev6-integrated-journey/10-b-00-exported.jpg
+===== step 10b
+clicked "設定" at 254,747
+clicked "English" at 710,161
+clicked "Worlds" at 254,657
+clicked "World files" at 138,350
+"← Title\nWorlds\nNew game\nSaves0\nJoin a world\nWorld files\nCartridges4\nContinent\nMarket\nWORLD FILES\nA .world file holds a world's whole history and the packs it needs, and none of your own progress. Anyone can check it offline and bring the world back up — in this app, or on any world service.\nImport a .world\nChoose a .world file. It is checked offline first; nothing is written until you bring it in.\nChoose a .world file\nWorlds on this device\nNo world on this device has a history yet. Open a save's land once and it gets one."
+clicked "Choose a .world file" at 772,654
+"Import a .world\nChoose a .world file. It is checked offline first; nothing is written until you bring it in.\nChoose a .world file\nc-import.world\nFog-bound drifting islands\n16 entries, up to #16 · physics 1\n2 owners · 3 writers · 0 beats · 0 AI worlds\nSequenced by: 127.0.0.1:8797\nExported 9/26/2026, 3:06:26 PM, signed by kv3nyzlhy….\nEvery check passed: hashes, chain, receipts, verdicts, beats and packs.\nYour name in this world\nBring it in\nWorlds on this device\nNo world on this device has a history yet. Open a save's land once and it gets one.\n↑\n↓\nSelect\nEsc\nBack"
+shot docs/e2e/milestone-rev6-integrated-journey/10-c-00-import-report.jpg
+"player-79NU"
+"mark"
+clicked "Bring it in" at 734,654
+{"ms":596,"screen":"play"}
+"{\"world\":\"hpnal6es5oliwpwe435ocxoiwn7sqyuurgrxt27enrjjk2lishivq\",\"head\":{\"n\":16,\"chain\":\"sha256:ec97165da7d6f92158bcf63a955e82152f698be009454b238624f445e4739c5b\"},\"cartridge\":{\"cartridgeId\":\"fog-bound-drifting-islands-66d73a\",\"version\":\"1.0.0\",\"contentHash\":\"sha256:aef83b4121c8fb10800020e198f9bc41f4c4d5047351bb60a8c8a291cec504a9\"},\"physics\":1,\"genesisAuthor\":\"krcegpbdgib6qs3gapld6boj7wvypp4mgidhn3m23iu4cn7cyjafa\",\"owners\":[\"krcegpbdgib6qs3gapld6boj7wvypp4mgidhn3m23iu4cn7cyjafa\",\"kv3nyzlhyzedpyjka43hv5jsm4b6pwhwwqtwys2tfjc7fkyo2sdoq\"],\"notes\":[\"A: Bram keeps the pier posts in sight; three freight kites are late.\",\"B: I watched this field arrive while A wrote it; the west ford is dry.\",\"Phone: left on the land, right where I stood.\"],\"chunks\":[\"0,0\",\"1,0\",\"2,0\",\"-1,0\"],\"sequencer\":{\"url\":\"ws://127.0.0.1:8797\",\"key\":\"kvt6qo3cwk42opiurvsg7afusmb4auhk7kwa5un4in2wshushekwq\"}}"
+"{\"status\":\"ready\",\"worldId\":\"hpnal6es5oliwpwe435ocxoiwn7sqyuurgrxt27enrjjk2lishivq\",\"st\":{\"link\":\"refused\",\"url\":\"ws://127.0.0.1:8797\",\"role\":\"visitor\",\"writable\":false,\"error\":{\"code\":\"access-members-only\",\"message\":\"Only members read this world.\",\"hint\":\"Ask the owner for an invite.\"},\"me\":\"k6sfq3qqg6hbti3rcv3v7ol62i6nhqfiehgg6hnluvsvxegv6trqq\"},\"land\":{\"-1,0\":\"written\",\"0,0\":\"written\",\"1,0\":\"written\",\"2,0\":\"written\"},\"toasts\":[\"Fog-bound drifting islands is on this device.\"]}"
+{"pos":[8.5,8.5],"chunk":{"cx":0,"cz":0},"land":"0 · 0","fps":"29 FPS","canvas":[2880,1688],"hud":["Fog-bound drifting islands","not on ENS yet","LAND","0 · 0","WRITTEN · Grass Bend","KARMA","0 entries","CARRIED","0 items · 0 mats","Story 0/5 · next: Lamp Count (Lamp Dock)","Speak with Bram, Tilly, and the dock keeper, then take the list of missing kite marks and the lamp notes for the evening shift. · talk 3 · find 2","No active quests on this floor."]}
+shot docs/e2e/milestone-rev6-integrated-journey/10-c-01-imported-play.jpg
+{"pos":[8.5,8.02],"fps":"30 FPS"}
+"Notes · Grass Bend (0 · 0)\nPut up a signpost\nLeave a gift\nOnly members read this world. — Ask the owner for an invite.\nRin · tile 15,8 · 9/26/2026, 3:05:12 PM\nPhone: left on the land, right where I stood.\nWrite a different version\nyour note\nLeave the note\nClose"
+shot docs/e2e/milestone-rev6-integrated-journey/10-c-02-imported-note.jpg
+===== step 10c
+clicked "← Title" at 114,78
+clicked "Continue" at 254,607
+{"ms":0}
+pad toward: arrived 1.3,16.5 (1479 ms)
+pad toward: arrived 8.4,8.5 (1682 ms)
+clicked "Create an invite" at 744,658
+1171
+shot docs/e2e/milestone-rev6-integrated-journey/10-b-01-invite-c.jpg
+"unmapped://join?i=eyJieSI6Imt2M255emxoeXplZHB5amthNDNodjVqc200YjZwd2h3d3F0d3lzMnRmamM3Zmt5bzJzZG9xIiwiZXhwIjoiMjAyNi0xMC0wM1QwNjowODo1NC40NDZaIiwia2V5Ijoia3d5YWxtaHB1d2c3YjV4anBhMzV2dWtmcHl1bmxyd2draGc1ZHdxc251bmljeGt5ZHVocXEiLCJub25jZSI6InhldjVtdGYzdWR6Z2Njanhua2lxdGNuaXlia2t1dXVlIiwic2lnIjoiUlZaaEFVNVlZUTZSMDkybHRUT1g2ekcwRllxbDFPekx3UHRaQmhjZ29EZTdUQ3VzVTJmVUVEVG4xSUhCdVpwVE44d2NkSzdQSUNLSGpvaTNWaTRqREEiLCJzdmMiOiJ3czovLzEyNy4wLjAuMTo4Nzk3IiwidXNlcyI6MSwidiI6MSwid29ybGQiOiJocG5hbDZlczVvbGl3cHdlNDM1b2N4b2l3bjdzcXl1dXJncnh0MjdlbnJqamsybGlzaGl2cSJ9&k=YgNWEbj1wvFJMyUiSyaswNljg5pg6vg6Ji8229r6qVg&o=W3siYXQiOiIyMDI2LTA5LTI2VDA2OjA0OjA3LjMxMFoiLCJhdXRob3IiOiJrcmNlZ3BiZGdpYjZxczNnYXBsZDZib2o3d3Z5cHA0bWdpZGhuM20yM2l1NGNuN2N5amFmYSIsImJvZHkiOnsia2V5Ijoia3Yzbnl6bGh5emVkcHlqa2E0M2h2NWpzbTRiNnB3aHd3cXR3eXMydGZqYzdma3lvMnNkb3EifSwiaWQiOiJodXVpMnB2NG1xYnBmNmRiZHVhbW9rc20ybm83ZWUyemN0dTY1cWRlaHRobXByM2N5MnczcSIsImtpbmQiOiJvd25lci5hZGQiLCJzZWVuIjoxMywic2lnIjoiamUzbVRBaENGVFF0cF90MDY3TUxPVUdFaUFTM19zV0QyWW53aDFZaUdzWjdWN0lSd2pDVlcxWm1ZQ3NtamtSaGF3ZXRpSUxGVEw2Y1pvbFpuUmwzQnciLCJ2IjoxLCJ3b3JsZCI6ImhwbmFsNmVzNW9saXdwd2U0MzVvY3hvaXduN3NxeXV1cmdyeHQyN2VucmpqazJsaXNoaXZxIn1d"
+===== step 10d
+clicked "Worlds" at 254,657
+clicked "Join a world" at 145,304
+true
+clicked "Look at the world" at 763,725
+"Join a world\nWorld files\nCartridges5\nContinent\nMarket\nJOIN A WORLD\nPaste an invite link a friend sent you. You see the world before you join it.\nInvite link\nLook at the world\nPaste another link\nFog-bound drifting islands\nMade by player-YSAA\nKept on 127.0.0.1:8797\nDoor: Friends\n2 members · 16 entries in its history\nThis invite: 1 of 1 use left, until 10/3/2026, 3:08:54 PM\nThis device has a save of this world: Fog-bound drifting islands. Joining makes this device a member of that save.\nYour name in this world\nJoin and play\n↑\n↓\nSelect\nEsc\nBack"
+shot docs/e2e/milestone-rev6-integrated-journey/10-c-03-join-preview.jpg
+"Cy"
+"mark"
+clicked "Join and play" at 745,725
+{"ms":1192,"screen":"play","cartridge":"fog-bound-drifting-islands-66d73a@1.0.0"}
+"{\"worldId\":\"hpnal6es5oliwpwe435ocxoiwn7sqyuurgrxt27enrjjk2lishivq\",\"head\":{\"n\":17,\"chain\":\"sha256:5efe783e2e42313f10b704cf68fbf25a45f7ae70565fe1c21fea5b4a27f0f942\"},\"link\":\"online\",\"role\":\"member\",\"pending\":0,\"me\":\"k6sfq3qqg6hbti3rcv3v7ol62i6nhqfiehgg6hnluvsvxegv6trqq\",\"pack\":{\"cartridge\":\"sha256:aef83b4121c8fb10800020e198f9bc41f4c4d5047351bb60a8c8a291cec504a9\",\"pack\":\"sha256:f7d581dd8a59f7c9dc89f4b53757f397e5c4a56247efdc19474dac99e83d747b\",\"bytes\":277059},\"kinds\":\"\",\"chunks\":{\"0,0\":{\"id\":\"h3xdbrwvl7cu\",\"name\":\"Grass Bend\"},\"1,0\":{\"id\":\"hiwbfs3ps5tg\",\"name\":\"Lamp Edge\"},\"2,0\":{\"id\":\"hhst3ka6qq2l\",\"name\":\"Chunk 2,0\"},\"-1,0\":{\"id\":\"hjwieobzvu44\",\"name\":\"Fog Tide\"}}}"
+"{\"st\":{\"link\":\"online\",\"role\":\"member\",\"writable\":true,\"error\":null},\"instance\":null,\"badges\":[\"hpnal6es5oli\"]}"
+Fog-bound drifting islands
+not on ENS yet
+LAND
+0 · 0
+WRITTEN · Grass Bend
+KARMA
+0 entries
+CARRIED
+0 items · 0 mats
+Story 0/5 · next: Lamp Count (Lamp Dock)
+Speak with Bram, Tilly, and the dock keeper, then take the list of missing kite marks and the lamp notes for the evening shift. · talk 3 · find 2
+No active quests on this floor.
+ONLINE
+openai · gpt-5.4-mini
+openai
+28 FPS
+No model calls counted for this world yet.
+Usage
+E
+Open the door
+WASD / Click Move · Shift Sprint · E Interact · N Notes · V Look
+← Home
+Tweak rules
+Console
+F12
+Notes
+N
+Look: HD-2D
+V
+Emote
+T
+shot docs/e2e/milestone-rev6-integrated-journey/10-c-04-joined-play.jpg
+===== step 11a
+hold: nothing to hold
+clicked "Settings" at 254,750
+true
+clicked "On this computer" at 823,129
+clicked "Apple on-device" at 733,181
+{"model":"Model\nCloud API\nOn this computer\nApple on-device\nOllama\nllama.cpp · GGUF\nDetected on this computer\nSmall local models may run out of room on long stories. The app checks each task's budget before sending it.\nUse this model\nCheck connection\nNext call: OpenAI · key from .env · gpt-5.4-mini","buttons":[{"text":"Cloud API","disabled":false},{"text":"On this computer","disabled":false},{"text":"Apple on-device","disabled":false},{"text":"Ollama","disabled":false},{"text":"llama.cpp · GGUF","disabled":false},{"text":"Use this model","disabled":false},{"text":"Check connection","disabled":false}]}
+clicked "Use this model" at 752,283
+"mark"
+clicked "Check connection" at 905,283
+{"ms":1125,"model":"Model\nCloud API\nOn this computer\nApple on-device\nOllama\nllama.cpp · GGUF\nDetected on this computer\nSmall local models may run out of room on long stories. The app checks each task's budget before sending it.\nCurrent model\nCheck connection\nNext call: Apple on-device · this computer · system\nConnected · 134 ms\n4096 token context (model)\nModel setting saved"}
+"{\"config\":{\"kind\":\"apple-fm\",\"baseUrl\":\"http://apple-fm.invalid/v1\",\"model\":\"system\",\"sidecar\":null},\"probe\":{\"status\":\"ready\",\"value\":{\"reachable\":true,\"models\":[\"system\"],\"latencyMs\":134,\"serverName\":\"apple-foundation-models\",\"context\":{\"tokens\":4096,\"source\":\"model\"}}},\"sidecar\":{\"state\":\"stopped\",\"pid\":null,\"port\":null,\"message\":null}}"
+shot docs/e2e/milestone-rev6-integrated-journey/11-c-00-model-apple.jpg
+===== step 11b
+clicked "Create World" at 254,703
+clicked "Start a new game" at 720,230
+{"result":{"type":"object","subtype":"null","value":null}}
+shot docs/e2e/milestone-rev6-integrated-journey/11-c-01-create-idea-apple.jpg
+true
+clicked "Write the world" at 273,750
+{"worldMs":104374}
+{"derivedName":"A salt-marsh town where the","cards":["premise: A salt-marsh town where the tide clock is wound by whoever wakes first. Past wha","tone: The air is thick with salt and quiet, like a land that remembers the sea before ","rules: The first person to greet the tide marks the start of the day.\nNo names are carv","taboos: Names\nConflict\nTools of force","naming: People are called by short first names, places by what stands there: Salt Pylon,","voice: Short sentences. Plain words. People mention the weather before anything else.","look: Grey stone houses with blue shutters, rope and driftwood everywhere, salt-staine"],"usage":"This draft: 1 call · 1,519 in / 263 out · 0 cached","errors":[]}
+shot docs/e2e/milestone-rev6-integrated-journey/11-c-02-create-world-cards-apple.jpg
+===== step 11c
+"worlds"
+clicked "Continue" at 254,610
+{"ms":0,"role":"member","writable":true}
+pad toward: arrived 16.2,16.7 (2655 ms)
+"mark"
+pad toward: arrived 16.2,39.9 (3397 ms)
+"{\"chunk\":{\"cx\":0,\"cz\":1},\"c01\":{\"status\":\"writing\"},\"hud\":[\"Fog-bound drifting islands\",\"not on ENS yet\",\"LAND\",\"0 · 1\",\"WITNESSING…\",\"Cancel witnessing\",\"KARMA\",\"0 entries\"]}"
+shot docs/e2e/milestone-rev6-integrated-journey/11-c-03-witness-apple-writing.jpg
+"{\"ms\":9021,\"c01\":{\"status\":\"failed\",\"name\":null,\"error\":{\"code\":\"model-context-too-small\",\"message\":\"This task needs 4110 tokens of prompt and at least 1280 of answer, but Apple on-device holds 4096 in all.\",\"hint\":\"Switch to Cloud API in Settings → Model, or shorten what the task sends.\"}},\"head\":19,\"chunks\":[\"0,0\",\"1,0\",\"2,0\",\"-1,0\"]}"
+{"land":["0 · 1","FAILED · This task needs 4110 tokens of prompt and at least 1280 of answer, but Apple on-device holds 4096 in all. — Switch to Cloud API in Settings → Model, or shorten what the task sends.","Retry witnessing"],"errs":[]}
+shot docs/e2e/milestone-rev6-integrated-journey/11-c-04-witness-apple-result.jpg
+===== step 11d
+clicked "← Home" at 537,803
+clicked "Settings" at 254,750
+true
+clicked "On this computer" at 823,129
+clicked "llama.cpp · GGUF" at 922,181
+{"model":"Model\nCloud API\nOn this computer\nApple on-device\nOllama\nllama.cpp · GGUF\nNot installed or running\nSmall local models may run out of room on long stories. The app checks each task's budget before sending it.\nUse this model\nCheck connection\nNext call: Apple on-device · this computer · system","buttons":[{"text":"Cloud API","disabled":false},{"text":"On this computer","disabled":false},{"text":"Apple on-device","disabled":false},{"text":"Ollama","disabled":false},{"text":"llama.cpp · GGUF","disabled":false},{"text":"Use this model","disabled":false},{"text":"Check connection","disabled":false}]}
+clicked "Use this model" at 752,283
+"mark"
+clicked "Check connection" at 905,283
+{"ms":1061,"model":"Model\nCloud API\nOn this computer\nApple on-device\nOllama\nllama.cpp · GGUF\nNot installed or running\nSmall local models may run out of room on long stories. The app checks each task's budget before sending it.\nCurrent model\nCheck connection\nNext call: llama.cpp · GGUF · this computer · local\nModel did not answer\nModel setting saved"}
+"{\"config\":{\"kind\":\"llamacpp\",\"baseUrl\":\"http://127.0.0.1:8080/v1\",\"model\":\"local\",\"sidecar\":null},\"probe\":{\"status\":\"ready\",\"value\":{\"reachable\":false,\"models\":[],\"latencyMs\":4,\"serverName\":null,\"context\":null}},\"sidecar\":{\"state\":\"stopped\",\"pid\":null,\"port\":null,\"message\":null}}"
+"{\"kind\":\"llamacpp\",\"baseUrl\":\"http://127.0.0.1:8080/v1\",\"model\":\"local\",\"apiKeyEnv\":null,\"sidecar\":null}"
+shot docs/e2e/milestone-rev6-integrated-journey/11-c-05-model-llamacpp.jpg
+===== step 11e
+clicked "Create World" at 254,703
+clicked "Continue" at 720,350
+clicked "Continue to the world" at 298,750
+1
+clicked "Rewrite the 7 unlocked cards" at 1131,78
+{"ms":1664,"errorBlocks":2}
+["Error · new-world-no-model\nA new world is written by the model, and the model did not answer the last check.\nStart a model or choose one in Settings → Model. You can still try: a real failure says what went wrong.","Error · connection-refused\nCould not reach http://127.0.0.1:8080/v1.\nstart llama-server (llama-server -m <model>.gguf --port 8080 --jinja) or fix baseUrl"]
+shot docs/e2e/milestone-rev6-integrated-journey/11-c-06-llamacpp-connection-error.jpg
+clicked "Back" at 1388,806
+clicked "Back to the title" at 479,750
+clicked "Back to the title" at 720,590
+"UNMAPPED\n\n無界之地\n\nAn Autonomous Open World\n\nContinue\nWorlds\nCreate World\nSettings\n↑\n↓\nSelect\nEnter\nConfirm"
+===== step 12a
+hold: nothing to hold
+pad toward: arrived 16.0,16.0 (1667 ms)
+pad toward: timeout (30150 ms)
+"{\"pos\":{\"sceneId\":\"origin\",\"x\":38.229,\"z\":17.659,\"yaw\":-0.785},\"chunk\":{\"cx\":1,\"cz\":0},\"head\":{\"n\":19,\"chain\":\"sha256:ece0887e40c6f401e03611143777bbe5cfb218d71ab06b0e859283ebf7a271d0\"},\"link\":\"online\",\"pending\":0,\"player\":\"player-YSAA\"}"
+shot docs/e2e/milestone-rev6-integrated-journey/12-a-00-before-quit.jpg
+{"message":"the page closed"}
+===== step 12b
+"{\"pos\":{\"sceneId\":\"origin\",\"x\":38.234,\"z\":17.659,\"yaw\":0},\"chunk\":{\"cx\":1,\"cz\":0},\"head\":{\"n\":19,\"chain\":\"sha256:ece0887e40c6f401e03611143777bbe5cfb218d71ab06b0e859283ebf7a271d0\"},\"link\":\"online\",\"pending\":0,\"role\":\"owner\",\"names\":{\"krcegpbdgib6qs3gapld6boj7wvypp4mgidhn3m23iu4cn7cyjafa\":\"player-YSAA\",\"kv3nyzlhyzedpyjka43hv5jsm4b6pwhwwqtwys2tfjc7fkyo2sdoq\":\"Bea\",\"kqeyg65uskp5slhyuxwa2emfw34p7v5zs4bpa7chj5wx2om5xdpqq\":\"Rin\",\"k6sfq3qqg6hbti3rcv3v7ol62i6nhqfiehgg6hnluvsvxegv6trqq\":\"Cy\"}}"
+Fog-bound drifting islands
+not on ENS yet
+LAND
+1 · 0
+WRITTEN · Lamp Edge
+KARMA
+6 entries
+CARRIED
+0 items · 1 mat
+Last choice: Ask for the freight marks
+Story 0/5 · next: Lamp Count (Lamp Dock)
+Speak with Bram, Tilly, and the dock keeper, then take the list of missing kite marks and the lamp notes for the evening shift. · talk 2 · find 2
+No active quests on this floor.
+ONLINE
+openai · gpt-5.4-mini
+openai
+25 FPS
+This world: 12 calls · 22,039 in / 7,523 out · 7,936 cached
+Usage
+WASD / Click Move · Shift Sprint · E Interact · N Notes · V Look
+← Home
+Tweak rules
+Console
+F12
+Notes
+N
+Look: HD-2D
+V
+Emote
+T
+shot docs/e2e/milestone-rev6-integrated-journey/12-a-01-continued.jpg
+===== step 12c
+clicked "Create an invite" at 744,658
+1171
+shot docs/e2e/milestone-rev6-integrated-journey/12-b-00-invite-d.jpg
+"unmapped://join?i=eyJieSI6Imt2M255emxoeXplZHB5amthNDNodjVqc200YjZwd2h3d3F0d3lzMnRmamM3Zmt5bzJzZG9xIiwiZXhwIjoiMjAyNi0xMC0wM1QwNjozMzowNy4wOTlaIiwia2V5IjoiazdzNTV5YnQza3luZjM1ZW53eG1nb2p5aW1meGFjc2tka3hhczM1N2M3ajRxMnhrYzV2ZHEiLCJub25jZSI6ImNvNW5vYzZnenJla3lmaHVheDNqYWVweXo1anV6dXN5Iiwic2lnIjoiSDdhR25NM0lrOE1FT280bm91ZExQaEplanhlX21MNi16WUlyMFNZRGVzdHRzaHluQUZwV2tMZ1FGUjdWU1Z1U19HZjZFckZ6elM0LTZhNDB4aTR2REEiLCJzdmMiOiJ3czovLzEyNy4wLjAuMTo4Nzk3IiwidXNlcyI6MSwidiI6MSwid29ybGQiOiJocG5hbDZlczVvbGl3cHdlNDM1b2N4b2l3bjdzcXl1dXJncnh0MjdlbnJqamsybGlzaGl2cSJ9&k=_0WsIIUKvVlhtHlf9cw1SWlIGQQQ4ocdJ5NdBLKd1eI&o=W3siYXQiOiIyMDI2LTA5LTI2VDA2OjA0OjA3LjMxMFoiLCJhdXRob3IiOiJrcmNlZ3BiZGdpYjZxczNnYXBsZDZib2o3d3Z5cHA0bWdpZGhuM20yM2l1NGNuN2N5amFmYSIsImJvZHkiOnsia2V5Ijoia3Yzbnl6bGh5emVkcHlqa2E0M2h2NWpzbTRiNnB3aHd3cXR3eXMydGZqYzdma3lvMnNkb3EifSwiaWQiOiJodXVpMnB2NG1xYnBmNmRiZHVhbW9rc20ybm83ZWUyemN0dTY1cWRlaHRobXByM2N5MnczcSIsImtpbmQiOiJvd25lci5hZGQiLCJzZWVuIjoxMywic2lnIjoiamUzbVRBaENGVFF0cF90MDY3TUxPVUdFaUFTM19zV0QyWW53aDFZaUdzWjdWN0lSd2pDVlcxWm1ZQ3NtamtSaGF3ZXRpSUxGVEw2Y1pvbFpuUmwzQnciLCJ2IjoxLCJ3b3JsZCI6ImhwbmFsNmVzNW9saXdwd2U0MzVvY3hvaXduN3NxeXV1cmdyeHQyN2VucmpqazJsaXNoaXZxIn1d"
+===== step 12d
+clicked "設定" at 254,749
+clicked "English" at 710,161
+true
+clicked "Save" at 777,488
+"clicked Test"
+"ws://127.0.0.1:8797\nReachable: unmapped-service/1, physics 1, 1 world kept. Health 67 ms, greeting 79 ms.\nService key kvt6qo3cwk42opiurvsg7afusmb4auhk7kwa5un4in2wshushekwq\nThis service runs in test mode (its clock can be moved forward).\nSaved. The door offers these services the next time you share a"
+"Next call: OpenAI · key from .env · gpt-5.4-mini"
+shot docs/e2e/milestone-rev6-integrated-journey/12-d-00-settings.jpg
+===== step 12e
+clicked "Worlds" at 254,659
+clicked "Join a world" at 145,304
+true
+clicked "Look at the world" at 763,727
+"Join a world\nWorld files\nCartridges4\nContinent\nMarket\nJOIN A WORLD\nPaste an invite link a friend sent you. You see the world before you join it.\nInvite link\nLook at the world\nPaste another link\nFog-bound drifting islands\nMade by player-YSAA\nKept on 127.0.0.1:8797\nDoor: Friends\n3 members · 19 entries in its history\nThis invite: 1 of 1 use left, until 10/3/2026, 3:33:07 PM\nYour name in this world\nJoin and play\n↑\n↓\nSelect\nEsc\nBack"
+shot docs/e2e/milestone-rev6-integrated-journey/12-d-01-join-preview.jpg
+"player-LDK5"
+"mark"
+clicked "Join and play" at 745,727
+{"ms":1233,"screen":"play","cartridge":"fog-bound-drifting-islands-66d73a@1.0.0"}
+"{\"worldId\":\"hpnal6es5oliwpwe435ocxoiwn7sqyuurgrxt27enrjjk2lishivq\",\"head\":{\"n\":20,\"chain\":\"sha256:5392b1949124d501e709ec2b0269bf3d9455f01b82003b9fc8b8d67a46833da6\"},\"link\":\"online\",\"role\":\"member\",\"pending\":0,\"me\":\"kviljkdr5wddvulamodijoji7bigvmbmigzzizboodda7xosl3tna\",\"pack\":{\"cartridge\":\"sha256:aef83b4121c8fb10800020e198f9bc41f4c4d5047351bb60a8c8a291cec504a9\",\"pack\":\"sha256:f7d581dd8a59f7c9dc89f4b53757f397e5c4a56247efdc19474dac99e83d747b\",\"bytes\":277059},\"kinds\":\"1:genesis 2:pack 3:profile 4:chapter 5:witness 6:witness 7:witness 8:note 9:sequencer 10:member.join 11:witness 12:visit 13:note 14:owner.add 15:member.join 16:note 17:member.join 18:visit 19:visit 20:member.join\",\"chunks\":{\"0,0\":{\"id\":\"h3xdbrwvl7cu\",\"name\":\"Grass Bend\"},\"1,0\":{\"id\":\"hiwbfs3ps5tg\",\"name\":\"Lamp Edge\"},\"2,0\":{\"id\":\"hhst3ka6qq2l\",\"name\":\"Chunk 2,0\"},\"-1,0\":{\"id\":\"hjwieobzvu44\",\"name\":\"Fog Tide\"}}}"
+shot docs/e2e/milestone-rev6-integrated-journey/12-d-02-joined-play.jpg
+pad toward: arrived 15.8,16.5 (2798 ms)
+pad toward: arrived 39.6,16.5 (3518 ms)
+"{\"chunk\":{\"cx\":1,\"cz\":0},\"c10\":\"written\",\"head\":{\"n\":20,\"chain\":\"sha256:5392b1949124d501e709ec2b0269bf3d9455f01b82003b9fc8b8d67a46833da6\"},\"visits\":3,\"lastVisit\":{\"kv3nyzlhyzedpyjka43hv5jsm4b6pwhwwqtwys2tfjc7fkyo2sdoq\":20722,\"k6sfq3qqg6hbti3rcv3v7ol62i6nhqfiehgg6hnluvsvxegv6trqq\":20722,\"krcegpbdgib6qs3gapld6boj7wvypp4mgidhn3m23iu4cn7cyjafa\":20722}}"
+shot docs/e2e/milestone-rev6-integrated-journey/12-d-03-walked-before-quit.jpg
+{"message":"the page closed"}
