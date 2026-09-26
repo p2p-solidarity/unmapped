@@ -4,7 +4,7 @@
 
 <h3>An endless open world that a language model writes as you explore it, saved to files you own.</h3>
 
-<p><b>English</b> · <a href="README.zh-TW.md">繁體中文</a></p>
+<p><b>English</b> · <a href="README.zh-TW.md">繁體中文</a> · <a href="README.ja.md">日本語</a></p>
 
 <p>
 <a href="LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
@@ -67,9 +67,9 @@ path has been verified end to end so far; the [status table](#status) lists what
 - **Chapters and places on the map.** Story gates stand on the land. The host, not the model, clears
   a chapter once every person is met, every treasure opened and every foe felled. Side-scrollers and
   grid dungeons open from entrances out on the land.
-- **Combat is optional.** Choose *none*, *gun* or *blade* when you create a world. Foes chase and
-  strike in real time. The combat formulas are versioned physics, so a world keeps the rules it was
-  made with.
+- **Combat is optional.** Choose *Explore* (no fighting), *Adventure · gun* or *Adventure · blade*
+  when you create a world. Foes chase and strike in real time. The combat formulas are versioned
+  physics, so a world keeps the rules it was made with.
 - **Multiplayer continents.** Every world has a door number (門牌). Share it and your worlds merge
   into one continent over y-webrtc, with no game server holding anyone's world. Visitors appear with
   their name, facing and walk. A note left on a friend's land goes into *their* notes. Every entry

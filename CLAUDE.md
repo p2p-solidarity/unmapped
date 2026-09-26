@@ -575,5 +575,12 @@ export function useContinentSync(continent): void;   // publish own world, read 
    ```
    Then write the artifact from Rule 0 (`run.json`, `result.md`, screenshots) under `docs/e2e/`.
 3. Update the progress page (Rule 0) with what that run verified.
+4. Update the READMEs in the same change: `README.md`, `README.zh-TW.md` and `README.ja.md` say the
+   same things, so edit all three together. Check them whenever a change touches something they
+   state: a feature, the Create steps, controls, menu paths, model providers, commands, the data
+   layout, the project layout or the Status table. A Status row turns ✅ only with a link to the
+   `docs/e2e/` run that verified it (Rule 2). Menu names and key hints are copied from
+   `src/renderer/i18n/strings/`. New screenshots come from an E2E run, resized into `docs/readme/`.
+   Say "READMEs unchanged" in your report when nothing they say changed.
 
 Report failures verbatim — a red check or a failed E2E step is information, not something to hide.
