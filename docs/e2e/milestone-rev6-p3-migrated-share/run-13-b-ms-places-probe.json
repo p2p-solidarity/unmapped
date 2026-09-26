@@ -1,0 +1,10 @@
+{
+ "app": "B",
+ "port": 9354,
+ "what": "read places and episodes",
+ "actions": [
+  {
+   "eval": "(async () => { const S = await import(\"/state/index.ts\"); const L = S.useLandStore.getState(); return JSON.stringify({ places: (L.progress?.places ?? []).map(p => ({ id: p.id, title: p.title, kind: p.kind, cx: p.cx, cz: p.cz, cleared: p.cleared, work: p.work ?? null, playId: p.playId ?? null })), storyMore: (L.progress?.storyMore ?? []).map(m => m.id), episodes: Object.fromEntries(Object.entries(L.progress?.episodes ?? {}).map(([k, v]) => [k, JSON.stringify(v).slice(0, 160)])) }) })()"
+  }
+ ]
+}

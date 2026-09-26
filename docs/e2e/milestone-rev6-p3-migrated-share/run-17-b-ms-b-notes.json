@@ -1,0 +1,64 @@
+{
+ "app": "B",
+ "port": 9354,
+ "what": "Leave the otherworld; walk to (9.8, 22.8) — still chunk (0, 0), so its notes are empty (its shot was overwritten by the next step)",
+ "actions": [
+  {
+   "clickText": "Leave the otherworld"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(async () => { const p = (await import('/engine/playerProbe.ts')).samplePlayer(); return JSON.stringify({ at: [p.x, p.z], frames: document.querySelectorAll('iframe').length }) })()"
+  },
+  {
+   "pad": {
+    "toward": "[-16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[9.5, 23.5]",
+    "within": 1.0,
+    "buttons": [],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "wait": 800
+  },
+  {
+   "hold": "KeyN",
+   "ms": 100
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(() => [...document.querySelectorAll('[data-layer]')].map(x => x.getAttribute('data-layer') + ': ' + x.innerText.slice(0, 1500)).join('\\n---\\n'))()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-migrated-share/b-06-old-notes-0-1.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  }
+ ]
+}

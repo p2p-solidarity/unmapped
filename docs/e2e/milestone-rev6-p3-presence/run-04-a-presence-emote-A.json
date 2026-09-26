@@ -1,0 +1,63 @@
+{
+ "app": "A",
+ "port": 9353,
+ "what": "(same time as B's) T + 1 (wave) in HD-2D, shot; V; T + 3 (cheer) in 16-bit, shot",
+ "actions": [
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); return S.useEngineStore.getState().landLook })()"
+  },
+  {
+   "hold": "KeyT",
+   "ms": 80
+  },
+  {
+   "wait": 250
+  },
+  {
+   "hold": "Digit1",
+   "ms": 80
+  },
+  {
+   "wait": 900
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-presence/p-a-00-emote-hd2d.jpg"
+  },
+  {
+   "eval": "(async () => { const R = await import('/engine/remoteRoster.ts'); const now = performance.now(); return JSON.stringify({ own: R.ownEmote(now)?.kind ?? null, others: R.sampleRemotePlayers(now).map(p => ({ name: p.name, x: +p.x.toFixed(2), z: +p.z.toFixed(2), emote: p.emote?.kind ?? null })) }) })()"
+  },
+  {
+   "wait": 3500
+  },
+  {
+   "hold": "KeyV",
+   "ms": 80
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); return S.useEngineStore.getState().landLook })()"
+  },
+  {
+   "hold": "KeyT",
+   "ms": 80
+  },
+  {
+   "wait": 250
+  },
+  {
+   "hold": "Digit3",
+   "ms": 80
+  },
+  {
+   "wait": 900
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-presence/p-a-01-emote-pixel.jpg"
+  },
+  {
+   "eval": "(async () => { const R = await import('/engine/remoteRoster.ts'); const now = performance.now(); return JSON.stringify({ own: R.ownEmote(now)?.kind ?? null, others: R.sampleRemotePlayers(now).map(p => ({ name: p.name, x: +p.x.toFixed(2), z: +p.z.toFixed(2), emote: p.emote?.kind ?? null })) }) })()"
+  }
+ ]
+}

@@ -1,0 +1,10 @@
+{
+ "app": "B",
+ "port": 9354,
+ "what": "read head, kinds, chunks, notes",
+ "actions": [
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; const log = await window.seed.world.read(w.worldId); const entries = log.ok ? log.value.entries : []; const kinds = {}; for (const e of entries) { const k = (e.entry ?? e).event.kind; kinds[k] = (kinds[k] ?? 0) + 1; } const L = S.useLandStore.getState(); return JSON.stringify({ worldId: w.worldId, head: n.head, link: w.status.link, role: w.status.role, entries: entries.length, kinds, chunks: Object.keys(n.chunks), notes: (L.notes ?? []).map(x => ({ id: x.id ?? x.key, text: (x.text ?? x.body?.text ?? '').slice(0, 40), by: x.author ?? x.name ?? x.body?.name })), places: (L.places ?? []).map(p => ({ id: p.id, title: p.title, kind: p.kind, at: [p.cx, p.cz], cleared: p.cleared })), land: Object.fromEntries(Object.entries(L.chunks).map(([k, c]) => [k, c.status])), progress: L.progress && { episodes: Object.fromEntries(Object.entries(L.progress.episodes ?? {}).map(([k, v]) => [k, v.cleared ?? v.stage?.kind ?? true])) } }) })()"
+  }
+ ]
+}

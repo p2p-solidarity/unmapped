@@ -1,0 +1,17 @@
+{
+ "app": "B",
+ "port": 9354,
+ "what": "B leaves Play (Esc) to the title",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "text": true
+  }
+ ]
+}

@@ -1,0 +1,32 @@
+{
+ "app": "F",
+ "port": 9353,
+ "what": "Worlds → Saves",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "clickText": "Worlds"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "Saves"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('SAVES'); return t.slice(Math.max(0, at), at + 900) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-migrated-share/f-01-saves.jpg"
+  }
+ ]
+}

@@ -1,0 +1,30 @@
+{
+ "app": "B",
+ "port": 9354,
+ "what": "(run at the same time as A's) same on B",
+ "actions": [
+  {
+   "pad": {
+    "toward": "[16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[1.5, 16.5]",
+    "within": 0.8,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const T = 'chunk:-1,0'; const K = '-1,0'; window.__rec = { dev: null, frames: [], flip: null, t0: Date.now() }; S.useLandStore.subscribe((s) => { const d = s.developing[T]; if (d) { const r = window.__rec.dev ?? { first: Date.now() - window.__rec.t0, updates: 0 }; r.text = d.text; r.sid = d.sid; r.by = d.by; r.mine = d.mine; r.last = Date.now() - window.__rec.t0; r.updates++; window.__rec.dev = r; } }); S.useHistoryStore.subscribe(() => { const n = H.worldNow(); const c = n?.chunks[K]; if (c && !window.__rec.flip) window.__rec.flip = { n: c.live.n, id: c.live.id, head: n.head.n, pending: S.useHistoryStore.getState().world.value?.status?.pending, ms: Date.now() - window.__rec.t0 }; }); window.seed.world.onStream((e) => { if (e.target === T || true) window.__rec.frames.push({ k: e.k, len: e.text?.length ?? 0, end: e.end ?? null, sid: e.sid, from: e.from, ms: Date.now() - window.__rec.t0 }); }); const p = (await import('/engine/playerProbe.ts')).samplePlayer(); return JSON.stringify({ installed: true, at: [p.x, p.z], chunk: S.useEngineStore.getState().chunk, head: H.worldNow().head.n }) })()"
+  }
+ ]
+}

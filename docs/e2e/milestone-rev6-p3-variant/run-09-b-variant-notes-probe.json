@@ -1,0 +1,17 @@
+{
+ "app": "B",
+ "port": 9354,
+ "what": "N opens the notes of (0, -1)",
+ "actions": [
+  {
+   "hold": "KeyN",
+   "ms": 100
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(() => { const l = [...document.querySelectorAll(\"[data-layer]\")].map(x => x.getAttribute(\"data-layer\") + \": \" + x.innerText.slice(0, 800)); return l.join(\"\\n---\\n\") })()"
+  }
+ ]
+}

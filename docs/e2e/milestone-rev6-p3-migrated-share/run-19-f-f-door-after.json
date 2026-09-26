@@ -1,0 +1,16 @@
+{
+ "app": "F",
+ "port": 9353,
+ "what": "F's door lists Bea as a member",
+ "actions": [
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); return JSON.stringify({ head: H.worldNow().head, names: H.worldNow().names }) })()"
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; const at = t.indexOf('People'); return t.slice(at, at + 300) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-migrated-share/f-06-door-people.jpg"
+  }
+ ]
+}

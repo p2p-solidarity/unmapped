@@ -1,0 +1,10 @@
+{
+ "app": "B",
+ "port": 9354,
+ "what": "record every presence frame B receives, and B's frame times",
+ "actions": [
+  {
+   "eval": "(() => { window.__pres = { arrivals: [], frames: [] }; window.__presOff = window.seed.world.onPresence((e) => { window.__pres.arrivals.push({ t: performance.now(), from: e.from, p: e.p }); }); let last = performance.now(); const loop = (ts) => { window.__pres.frames.push(ts - last); last = ts; if (window.__pres.frames.length < 3000) requestAnimationFrame(loop); }; requestAnimationFrame(loop); return 'recording' })()"
+  }
+ ]
+}

@@ -1,0 +1,58 @@
+{
+ "app": "F",
+ "port": 9353,
+ "what": "wait for (-1, -1) (where the save stands, unwritten in the fixture) to be witnessed; walk home to (0, 0) so a joiner's spawn chunk is written",
+ "actions": [
+  {
+   "repeat": {
+    "times": 120,
+    "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['-1,-1']; return c !== undefined && c.status !== 'writing' })()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['-1,-1']; const p = (await import('/engine/playerProbe.ts')).samplePlayer(); return JSON.stringify({ status: c?.status, name: c?.scene?.name ?? null, at: [p.x, p.z] }) })()"
+  },
+  {
+   "pad": {
+    "toward": "[-16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[8.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "repeat": {
+    "times": 120,
+    "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['0,0']; return c !== undefined && c.status !== 'writing' })()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const c = S.useLandStore.getState().chunks['0,0']; return JSON.stringify({ status: c?.status, name: c?.scene?.name ?? null, head: H.worldNow().head.n, chunks: Object.keys(H.worldNow().chunks) }) })()"
+  }
+ ]
+}

@@ -1,0 +1,38 @@
+{
+ "app": "A",
+ "port": 9353,
+ "what": "Worlds → New game → Start (seed rolled: PSTJ-L7R4); the origin chunk is witnessed",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "clickText": "Worlds"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "text": true
+  },
+  {
+   "clickText": "Start"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance) return { ms: Date.now() - t0, instance: s.activeInstance.instance?.instanceId ?? null }; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + S.useSessionStore.getState().screen })()"
+  },
+  {
+   "wait": 3000
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-offline-visit/a-01-play.jpg"
+  }
+ ]
+}

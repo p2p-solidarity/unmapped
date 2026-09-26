@@ -1,0 +1,398 @@
+{
+ "flow": "variant",
+ "env": {
+  "build": "main 51817a3, exported with `git archive 51817a3 | tar -x -C $SCR/tree` (no git state touched); node_modules and .env symlinked to the repo's, native/afm-bridge/.build copied. One snapshot-only line: electron.vite.config.ts renderer `cacheDir: resolve(__dirname, '.vite-cache')`, so this copy's Vite never rewrites the shared node_modules/.vite. The snapshot kept these runs away from other sessions' live edits (their HMR reloads put the app back on the title mid-run).",
+  "service": "cd $SCR/tree && UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8801 --data $SCR/svc   (fresh empty dir; background)",
+  "apps": "cd $SCR/tree && AETHER_TEST_USER_DATA=$SCR/<ud> bun run dev --remoteDebuggingPort <port>   (fresh empty userData per device; background)",
+  "driver": "CDP_PORT=<port> bun scripts/cdp-drive.ts \"$(cat <step file>)\"  (from the repo root)",
+  "quit": "An app is quit with CDP Browser.close on the browser target (GET /json/version → webSocketDebuggerUrl → {\"id\":1,\"method\":\"Browser.close\"}); a page-target Browser.close hangs.",
+  "invite": "__INVITE__ is the link the owner's invite step returned. Substitute it with a literal string replace (python/perl), not sed: the link contains '&k=' and sed's '&' is the match.",
+  "window": "1440 x 846 CSS px at scale 2 (screenshots 2880 x 1692), in the background",
+  "ui": "each app switched to English in Settings in its first step; the dev origin port changes per launch, so localStorage (language, service list, player name) starts empty after a relaunch",
+  "platform": "macOS 27.0, Bun 1.3.6, Electron 44.3.0"
+ },
+ "model": {
+  "provider": "openai",
+  "model": "gpt-5.4-mini",
+  "source": "Settings → Model default on a fresh userData (OPENAI_API_KEY in the repo .env, read by main only)"
+ },
+ "note": "Starts where presence ended: A and B in world hryt3f2x…, online, head 9.",
+ "steps": [
+  {
+   "step": 1,
+   "app": "A",
+   "port": 9353,
+   "what": "(same time as B's) walk to (16.5, 1.5), next to unwritten (0, -1)",
+   "file": "run-01-a-variant-setup.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[-12.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[16.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[16.5, 1.5]",
+      "within": 0.8,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, head: H.worldNow().head.n, link: w.status.link, pending: w.status.pending, has01m: H.worldNow().chunks['0,-1'] !== undefined }) })()"
+    }
+   ]
+  },
+  {
+   "step": 2,
+   "app": "B",
+   "port": 9354,
+   "what": "(same time as A's) same on B",
+   "file": "run-02-b-variant-setup.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[-12.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[16.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[16.5, 1.5]",
+      "within": 0.8,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, head: H.worldNow().head.n, link: w.status.link, pending: w.status.pending, has01m: H.worldNow().chunks['0,-1'] !== undefined }) })()"
+    }
+   ]
+  },
+  {
+   "step": 3,
+   "app": "-",
+   "port": null,
+   "what": "stop the service: kill the pid listening on 8801",
+   "actions": null
+  },
+  {
+   "step": 4,
+   "app": "A",
+   "port": 9353,
+   "what": "wait for offline; walk into (0, -1); A witnesses it locally",
+   "file": "run-04-a-variant-witness-A.json",
+   "actions": [
+    {
+     "repeat": {
+      "times": 60,
+      "until": "(async () => { const S = await import('/state/index.ts'); return S.useHistoryStore.getState().world.value?.status?.link !== 'online' })()",
+      "actions": [
+       {
+        "wait": 500
+       }
+      ]
+     }
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ link: w.status.link, pending: w.status.pending }) })()"
+    },
+    {
+     "pad": {
+      "toward": "[16.5, -8.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "repeat": {
+      "times": 120,
+      "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['0,-1']; return c !== undefined && c.status !== 'writing' })()",
+      "actions": [
+       {
+        "wait": 500
+       }
+      ]
+     }
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; const c = n.chunks['0,-1']; return JSON.stringify({ land: S.useLandStore.getState().chunks['0,-1']?.status, name: c?.live.body.index.name, liveN: c?.live.n ?? null, liveId: c?.live.id, head: n.head.n, link: w.status.link, pending: w.status.pending }) })()"
+    },
+    {
+     "text": true
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-variant/v-a-00-offline-witness.jpg"
+    }
+   ]
+  },
+  {
+   "step": 5,
+   "app": "B",
+   "port": 9354,
+   "what": "wait for offline; walk into (0, -1); B witnesses it locally",
+   "file": "run-05-b-variant-witness-B.json",
+   "actions": [
+    {
+     "repeat": {
+      "times": 60,
+      "until": "(async () => { const S = await import('/state/index.ts'); return S.useHistoryStore.getState().world.value?.status?.link !== 'online' })()",
+      "actions": [
+       {
+        "wait": 500
+       }
+      ]
+     }
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ link: w.status.link, pending: w.status.pending }) })()"
+    },
+    {
+     "pad": {
+      "toward": "[16.5, -8.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "repeat": {
+      "times": 120,
+      "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['0,-1']; return c !== undefined && c.status !== 'writing' })()",
+      "actions": [
+       {
+        "wait": 500
+       }
+      ]
+     }
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; const c = n.chunks['0,-1']; return JSON.stringify({ land: S.useLandStore.getState().chunks['0,-1']?.status, name: c?.live.body.index.name, liveN: c?.live.n ?? null, liveId: c?.live.id, head: n.head.n, link: w.status.link, pending: w.status.pending }) })()"
+    },
+    {
+     "text": true
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-variant/v-b-00-offline-witness.jpg"
+    }
+   ]
+  },
+  {
+   "step": 6,
+   "app": "-",
+   "port": null,
+   "what": "restart the service with the same --data dir and port",
+   "actions": null
+  },
+  {
+   "step": 7,
+   "app": "A",
+   "port": 9353,
+   "what": "wait for online, pending 0, head >= 11; read the chunk's live and variants",
+   "file": "run-07-a-variant-after-A.json",
+   "actions": [
+    {
+     "repeat": {
+      "times": 90,
+      "until": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; return w?.status?.link === 'online' && w.status.pending === 0 && w.status.head.n >= 11 })()",
+      "actions": [
+       {
+        "wait": 500
+       }
+      ]
+     }
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; const c = n.chunks['0,-1']; return JSON.stringify({ head: n.head, link: w.status.link, pending: w.status.pending, refused: w.status.refused, live: c && { n: c.live.n, id: c.live.id, author: c.live.author, name: c.live.body.index.name }, variants: (c?.variants ?? []).map(v => ({ n: v.n, id: v.id, author: v.author, name: v.body?.index?.name })), land: S.useLandStore.getState().chunks['0,-1']?.scene?.name ?? null }) })()"
+    },
+    {
+     "text": true
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-variant/v-a-01-after-restart.jpg"
+    }
+   ]
+  },
+  {
+   "step": 8,
+   "app": "B",
+   "port": 9354,
+   "what": "same on B",
+   "file": "run-08-b-variant-after-B.json",
+   "actions": [
+    {
+     "repeat": {
+      "times": 90,
+      "until": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; return w?.status?.link === 'online' && w.status.pending === 0 && w.status.head.n >= 11 })()",
+      "actions": [
+       {
+        "wait": 500
+       }
+      ]
+     }
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; const c = n.chunks['0,-1']; return JSON.stringify({ head: n.head, link: w.status.link, pending: w.status.pending, refused: w.status.refused, live: c && { n: c.live.n, id: c.live.id, author: c.live.author, name: c.live.body.index.name }, variants: (c?.variants ?? []).map(v => ({ n: v.n, id: v.id, author: v.author, name: v.body?.index?.name })), land: S.useLandStore.getState().chunks['0,-1']?.scene?.name ?? null }) })()"
+    },
+    {
+     "text": true
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-variant/v-b-01-after-restart.jpg"
+    }
+   ]
+  },
+  {
+   "step": 9,
+   "app": "B",
+   "port": 9354,
+   "what": "N opens the notes of (0, -1)",
+   "file": "run-09-b-variant-notes-probe.json",
+   "actions": [
+    {
+     "hold": "KeyN",
+     "ms": 100
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(() => { const l = [...document.querySelectorAll(\"[data-layer]\")].map(x => x.getAttribute(\"data-layer\") + \": \" + x.innerText.slice(0, 800)); return l.join(\"\\n---\\n\") })()"
+    }
+   ]
+  },
+  {
+   "step": 10,
+   "app": "B",
+   "port": 9354,
+   "what": "Variants ×1 → the tellings panel",
+   "file": "run-10-b-variant-panel-B.json",
+   "actions": [
+    {
+     "eval": "(() => document.querySelector('[data-layer=notes]') ? 'open' : 'closed')()"
+    },
+    {
+     "clickText": "Variants ×1"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => [...document.querySelectorAll('[data-layer]')].map(x => x.getAttribute('data-layer') + ': ' + x.innerText.slice(0, 1200)).join('\\n---\\n'))()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-variant/v-b-02-variants-panel.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 300
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    }
+   ]
+  },
+  {
+   "step": 11,
+   "app": "A",
+   "port": 9353,
+   "what": "N, Variants ×1 → the tellings panel",
+   "file": "run-11-a-variant-panel-A.json",
+   "actions": [
+    {
+     "hold": "KeyN",
+     "ms": 100
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(() => document.querySelector('[data-layer=notes]') ? 'open' : 'closed')()"
+    },
+    {
+     "clickText": "Variants ×1"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => [...document.querySelectorAll('[data-layer]')].map(x => x.getAttribute('data-layer') + ': ' + x.innerText.slice(0, 1200)).join('\\n---\\n'))()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-variant/v-a-02-variants-panel.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 300
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    }
+   ]
+  }
+ ]
+}

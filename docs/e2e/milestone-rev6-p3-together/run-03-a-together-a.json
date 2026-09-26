@@ -1,0 +1,49 @@
+{
+ "app": "A",
+ "port": 9353,
+ "what": "(run at the same time as B's) walk into unwritten (-1, 0); claim → granted; record; hash",
+ "actions": [
+  {
+   "eval": "window.__rec.walk = Date.now() - window.__rec.t0; 'A walks'"
+  },
+  {
+   "pad": {
+    "toward": "[-8.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-together/t-a-00-streaming.jpg"
+  },
+  {
+   "eval": "JSON.stringify({ dev: window.__rec.dev && { ...window.__rec.dev, text: window.__rec.dev.text.length }, flip: window.__rec.flip })"
+  },
+  {
+   "repeat": {
+    "times": 120,
+    "until": "window.__rec.flip !== null",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-together/t-a-01-flipped.jpg"
+  },
+  {
+   "eval": "(async () => { const r = window.__rec; const text = r.dev?.text ?? ''; const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)); const hex = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join(''); const S = await import('/state/index.ts'); return JSON.stringify({ role: 'A', walk: r.walk, dev: r.dev && { first: r.dev.first, last: r.dev.last, updates: r.dev.updates, sid: r.dev.sid, by: r.dev.by, mine: r.dev.mine, chars: text.length }, sha256: hex, frames: r.frames.length, flip: r.flip, land: S.useLandStore.getState().chunks['-1,0']?.status }) })()"
+  }
+ ]
+}

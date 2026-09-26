@@ -1,0 +1,17 @@
+{
+ "app": "A",
+ "port": 9353,
+ "what": "close the door, read head and chunks",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 400
+  },
+  {
+   "eval": "(async () => { const H = await import(\"/history/index.ts\"); const S = await import(\"/state/index.ts\"); const w = S.useHistoryStore.getState().world; const n = H.worldNow(); return JSON.stringify({ worldId: w.value?.worldId, head: n.head, status: w.value?.status, chunks: Object.fromEntries(Object.entries(n.chunks).map(([k, c]) => [k, { id: c.live.id, n: c.live.n ?? null, name: c.live.body.index.name }])) }) })()"
+  }
+ ]
+}

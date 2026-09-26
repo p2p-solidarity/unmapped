@@ -1,0 +1,30 @@
+{
+ "app": "A",
+ "port": 9353,
+ "what": "wait for online, pending 0, head >= 11; read the chunk's live and variants",
+ "actions": [
+  {
+   "repeat": {
+    "times": 90,
+    "until": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; return w?.status?.link === 'online' && w.status.pending === 0 && w.status.head.n >= 11 })()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; const c = n.chunks['0,-1']; return JSON.stringify({ head: n.head, link: w.status.link, pending: w.status.pending, refused: w.status.refused, live: c && { n: c.live.n, id: c.live.id, author: c.live.author, name: c.live.body.index.name }, variants: (c?.variants ?? []).map(v => ({ n: v.n, id: v.id, author: v.author, name: v.body?.index?.name })), land: S.useLandStore.getState().chunks['0,-1']?.scene?.name ?? null }) })()"
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-variant/v-a-01-after-restart.jpg"
+  }
+ ]
+}

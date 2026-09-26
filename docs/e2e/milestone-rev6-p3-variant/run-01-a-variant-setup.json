@@ -1,0 +1,40 @@
+{
+ "app": "A",
+ "port": 9353,
+ "what": "(same time as B's) walk to (16.5, 1.5), next to unwritten (0, -1)",
+ "actions": [
+  {
+   "pad": {
+    "toward": "[-12.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[16.5, 1.5]",
+    "within": 0.8,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, head: H.worldNow().head.n, link: w.status.link, pending: w.status.pending, has01m: H.worldNow().chunks['0,-1'] !== undefined }) })()"
+  }
+ ]
+}

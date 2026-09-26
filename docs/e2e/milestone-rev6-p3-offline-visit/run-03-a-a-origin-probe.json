@@ -1,0 +1,16 @@
+{
+ "app": "A",
+ "port": 9353,
+ "what": "wait for the origin witness; read the fold",
+ "actions": [
+  {
+   "wait": 15000
+  },
+  {
+   "eval": "(async () => { const H = await import(\"/history/index.ts\"); const n = H.worldNow(); const P = (await import(\"/engine/playerProbe.ts\")).samplePlayer(); return JSON.stringify({ head: n?.head, chunks: n && Object.keys(n.chunks), chapters: n && Object.keys(n.chapters), p: P && [P.x, P.z] }) })()"
+  },
+  {
+   "text": true
+  }
+ ]
+}

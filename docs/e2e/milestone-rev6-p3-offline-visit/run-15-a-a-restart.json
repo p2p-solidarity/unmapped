@@ -1,0 +1,70 @@
+{
+ "app": "A",
+ "port": 9353,
+ "what": "Settings: English, Continue, walk into B's chunk (0, 1)",
+ "actions": [
+  {
+   "clickText": "設定"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "English"
+  },
+  {
+   "wait": 600
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && w.value.status.link === 'online') return { ms: Date.now() - t0 }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: n.head, link: w.status.link, chunks: Object.fromEntries(Object.entries(n.chunks).map(([k, c]) => [k, { id: c.live.id.slice(0, 12), name: c.live.body.index.name }])), land: Object.fromEntries(Object.entries(S.useLandStore.getState().chunks).map(([k, c]) => [k, c.status])) }) })()"
+  },
+  {
+   "pad": {
+    "toward": "[16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[16.5, 40.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['0,1']; return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, status: c?.status ?? null, name: c?.scene?.name ?? null }) })()"
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-offline-visit/a-06-restart-sees-b-chunk.jpg"
+  }
+ ]
+}

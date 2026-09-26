@@ -1,0 +1,33 @@
+{
+ "app": "B",
+ "port": 9354,
+ "what": "Variants ×1 → the tellings panel",
+ "actions": [
+  {
+   "eval": "(() => document.querySelector('[data-layer=notes]') ? 'open' : 'closed')()"
+  },
+  {
+   "clickText": "Variants ×1"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(() => [...document.querySelectorAll('[data-layer]')].map(x => x.getAttribute('data-layer') + ': ' + x.innerText.slice(0, 1200)).join('\\n---\\n'))()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-variant/v-b-02-variants-panel.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 300
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  }
+ ]
+}

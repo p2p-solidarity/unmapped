@@ -1,0 +1,10 @@
+{
+ "app": "B",
+ "port": 9354,
+ "what": "replay the recorded arrivals through remoteMotion at 60 Hz",
+ "actions": [
+  {
+   "eval": "(async () => { window.__presOff?.(); const M = await import('/engine2d/remoteMotion.ts'); const A = 'k7a2usubb4vj74lfamkzzg5x7hrxbxz6kunatzmeamu3ukdfktykq'; const arr = window.__pres.arrivals.filter(a => a.from === A && a.p !== null); if (arr.length < 2) return 'too few arrivals: ' + arr.length; let track = null; const F = 1000 / 60; const t0 = arr[0].t; const tEnd = arr[arr.length - 1].t + 600; let i = 0; let prev = null; const steps = []; for (let f = t0; f <= tEnd; f += F) { while (i < arr.length && arr[i].t <= f) { track = M.receiveSample(track, { x: arr[i].p.x, z: arr[i].p.z, moving: arr[i].p.moving }, arr[i].t); i++; } const r = M.advanceMotion(track, f); if (r === null) break; track = r.track; if (prev !== null) steps.push({ f: f - t0, d: Math.hypot(r.at.x - prev.x, r.at.z - prev.z) }); prev = r.at; } let best = null; const win = 120; for (let s = 0; s + win <= steps.length; s += 1) { let sum = 0; let max = 0; for (let k = s; k < s + win; k++) { sum += steps[k].d; max = Math.max(max, steps[k].d); } if (best === null || sum > best.sum) best = { start: Math.round(steps[s].f), sum: +sum.toFixed(3), max: +max.toFixed(4) }; } const gaps = arr.slice(1).map((a, k) => a.t - arr[k].t); const frames = window.__pres.frames.slice(1); const fps = frames.length / (frames.reduce((a, b) => a + b, 0) / 1000); return JSON.stringify({ arrivals: arr.length, spanMs: Math.round(arr[arr.length - 1].t - t0), meanGapMs: Math.round(gaps.reduce((a, b) => a + b, 0) / gaps.length), maxGapMs: Math.round(Math.max(...gaps)), framesSimulated: steps.length, maxStepAll: +Math.max(...steps.map(s => s.d)).toFixed(4), busiest2s: best, over03: steps.filter(s => s.d >= 0.3).length, liveFps: Math.round(fps), path: [arr[0].p.x, arr[arr.length - 1].p.x] }) })()"
+  }
+ ]
+}

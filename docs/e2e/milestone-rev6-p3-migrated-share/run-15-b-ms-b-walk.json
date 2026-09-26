@@ -1,0 +1,69 @@
+{
+ "app": "B",
+ "port": 9354,
+ "what": "walk (0, 0) → (-1, 0) → (-1, -1) along the fords, to the otherworld's rift",
+ "actions": [
+  {
+   "eval": "(async () => { const p = (await import('/engine/playerProbe.ts')).samplePlayer(); return [p.x, p.z] })()"
+  },
+  {
+   "pad": {
+    "toward": "[8.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[-16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, status: S.useLandStore.getState().chunks['-1,0']?.status }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-migrated-share/b-03-old-chunk-minus1-0.jpg"
+  },
+  {
+   "pad": {
+    "toward": "[-16.5, -12.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[-15.5, -14.1]",
+    "within": 0.6,
+    "buttons": [],
+    "timeoutMs": 15000
+   }
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, status: S.useLandStore.getState().chunks['-1,-1']?.status, name: S.useLandStore.getState().chunks['-1,-1']?.scene?.name }) })()"
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-migrated-share/b-04-at-otherworld.jpg"
+  }
+ ]
+}

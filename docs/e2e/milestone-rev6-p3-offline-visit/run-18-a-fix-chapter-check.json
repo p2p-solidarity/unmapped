@@ -1,0 +1,64 @@
+{
+ "app": "A",
+ "port": 9355,
+ "what": "FIX CHECK, run last (after the variant flow): A relaunched on 9355 with the EpisodePrefetch fix; Continue; the next chapter is written after the history is read",
+ "actions": [
+  {
+   "clickText": "設定"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "English"
+  },
+  {
+   "wait": 600
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const seen = []; const off = S.useHistoryStore.subscribe((s) => seen.push(s.world.status)); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready') { off(); return JSON.stringify({ ms: Date.now() - t0, seen: [...new Set(seen)] }); } await new Promise(r => setTimeout(r, 100)); } off(); return 'timeout' })()"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('chapter'); return at < 0 ? 'no chapter line' : t.slice(Math.max(0, at - 200), at + 300) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-offline-visit/fix-a-00-chapter-after-open.jpg"
+  },
+  {
+   "repeat": {
+    "times": 90,
+    "until": "(async () => { const H = await import('/history/index.ts'); return H.worldNow()?.chapters?.e1?.live != null })()",
+    "actions": [
+     {
+      "wait": 1000
+     }
+    ]
+   }
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); const c = n.chapters.e1; return JSON.stringify({ head: n.head.n, e1: c?.live ? { n: c.live.n, kind: c.live.body.kind, title: c.live.body.title } : null }) })()"
+  },
+  {
+   "eval": "(() => { const t = document.body.innerText; return /world-loading/.test(t) ? 'world-loading still shown' : 'no world-loading error' })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-offline-visit/fix-a-01-chapter-written.jpg"
+  }
+ ]
+}

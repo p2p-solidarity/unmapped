@@ -1,0 +1,49 @@
+{
+ "app": "B",
+ "port": 9354,
+ "what": "Settings: English, add the service, Test",
+ "actions": [
+  {
+   "clickText": "設定"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "English"
+  },
+  {
+   "wait": 600
+  },
+  {
+   "eval": "(() => { const ta = [...document.querySelectorAll('textarea')].find(t => (t.closest('label')?.innerText ?? '').includes('World services') || (t.labels?.[0]?.innerText ?? '').includes('World services')); if (!ta) return 'no field'; ta.scrollIntoView({block: 'center'}); ta.focus(); return ta === document.activeElement })()"
+  },
+  {
+   "type": "ws://127.0.0.1:8801"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "clickText": "Save"
+  },
+  {
+   "wait": 400
+  },
+  {
+   "eval": "(() => { const field = [...document.querySelectorAll('textarea')].find(t => t.value.includes('ws://127.0.0.1:8801')); let box = field; while (box && ![...box.querySelectorAll('button')].some(b => b.innerText.trim() === 'Test')) box = box.parentElement; const btn = [...box.querySelectorAll('button')].find(b => b.innerText.trim() === 'Test'); btn.scrollIntoView({block: 'center'}); btn.click(); return 'clicked Test' })()"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('ws://127.0.0.1:8801\\n'); return at < 0 ? 'no probe line' : t.slice(at, at + 400) })()"
+  },
+  {
+   "eval": "localStorage.getItem('unwritten.worldServices')"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-offline-visit/b-00-settings-service.jpg"
+  }
+ ]
+}

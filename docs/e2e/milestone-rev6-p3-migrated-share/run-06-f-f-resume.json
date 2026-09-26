@@ -1,0 +1,28 @@
+{
+ "app": "F",
+ "port": 9353,
+ "what": "Resume the fixture save: the first open migrates it",
+ "actions": [
+  {
+   "eval": "window.__t0 = performance.now(); 'mark'"
+  },
+  {
+   "clickText": "Resume"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 240; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && (w.status === 'ready' || w.status === 'error')) return JSON.stringify({ ms: Math.round(performance.now() - window.__t0), world: w.status, err: w.status === 'error' ? w.error : null }); await new Promise(r => setTimeout(r, 250)); } return 'timeout ' + S.useHistoryStore.getState().world.status })()"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-migrated-share/f-02-migrated-play.jpg"
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; const log = await window.seed.world.read(w.worldId); const entries = log.ok ? log.value.entries : []; const kinds = {}; for (const e of entries) { const k = (e.entry ?? e).event.kind; kinds[k] = (kinds[k] ?? 0) + 1; } return JSON.stringify({ worldId: w.worldId, head: n.head, status: w.status, kinds, chunks: Object.keys(n.chunks), places: Object.keys(n.places ?? {}), land: Object.fromEntries(Object.entries(S.useLandStore.getState().chunks).map(([k, c]) => [k, c.status + (c.legacyOnly ? ' legacyOnly' : '')])) }) })()"
+  }
+ ]
+}

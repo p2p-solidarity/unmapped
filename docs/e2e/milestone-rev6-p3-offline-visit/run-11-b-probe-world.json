@@ -1,0 +1,10 @@
+{
+ "app": "B",
+ "port": 9354,
+ "what": "read head, chain(5), kinds",
+ "actions": [
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world; const n = H.worldNow(); const log = await window.seed.world.read(w.value.worldId); const entries = log.ok ? (log.value.entries ?? []) : []; const chainAt = (k) => entries.find(e => (e.entry ?? e).n === k); const at5 = chainAt(5); return JSON.stringify({ worldId: w.value?.worldId, head: n.head, link: w.value?.status?.link, role: w.value?.status?.role, pending: w.value?.status?.pending, refused: w.value?.status?.refused, me: w.value?.status?.me, entries: entries.length, chain5: at5 ? (at5.entry ?? at5).chain : null, kinds: entries.map(e => (e.entry ?? e).n + ':' + (e.entry ?? e).event.kind).join(' '), chunks: Object.fromEntries(Object.entries(n.chunks).map(([k, c]) => [k, { id: c.live.id.slice(0, 12), name: c.live.body.index.name, variants: (c.variants ?? []).length }])) }) })()"
+  }
+ ]
+}

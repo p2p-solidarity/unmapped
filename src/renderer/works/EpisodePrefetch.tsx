@@ -18,7 +18,7 @@ import {
 import { CHAPTER_CANCELLED } from "@renderer/app/land/chapters";
 import { writeNextEpisode } from "@renderer/app/land/storyMore";
 import { contentLanguage, translate, useT } from "@renderer/i18n";
-import { useLandStore, useSessionStore, useWorldStore } from "@renderer/state";
+import { useHistoryStore, useLandStore, useSessionStore, useWorldStore } from "@renderer/state";
 import { useInferenceStore } from "@renderer/state/inferenceStore";
 import { Button, ErrorBlock, Surface, space, Text, zIndex } from "@renderer/ui";
 import { bibleLanguage, type WorldBible } from "@shared/cartridge";
@@ -95,6 +95,9 @@ export function EpisodePrefetch(): JSX.Element | null {
   const peer = useSessionStore((state) => state.networkRole === "peer");
   const progress = useLandStore((state) => state.progress);
   const landInstance = useLandStore((state) => state.instanceId);
+  // Opening a save reads (or migrates) its world's history first; a chapter started meanwhile
+  // would fail as `world-loading` and wait for Retry, so the writer waits for the read instead.
+  const readingWorld = useHistoryStore((state) => state.world.status === "loading");
   const config = useInferenceStore((state) => state.config);
   const probe = useInferenceStore((state) => state.probe);
   const refreshProbe = useRefreshProbe();
@@ -133,6 +136,7 @@ export function EpisodePrefetch(): JSX.Element | null {
     !peer &&
     episodeOpen === null &&
     landReady &&
+    !readingWorld &&
     bible !== null &&
     model === null &&
     error === null &&

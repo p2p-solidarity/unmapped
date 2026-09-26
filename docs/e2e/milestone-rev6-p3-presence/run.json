@@ -1,0 +1,209 @@
+{
+ "flow": "presence",
+ "env": {
+  "build": "main 51817a3, exported with `git archive 51817a3 | tar -x -C $SCR/tree` (no git state touched); node_modules and .env symlinked to the repo's, native/afm-bridge/.build copied. One snapshot-only line: electron.vite.config.ts renderer `cacheDir: resolve(__dirname, '.vite-cache')`, so this copy's Vite never rewrites the shared node_modules/.vite. The snapshot kept these runs away from other sessions' live edits (their HMR reloads put the app back on the title mid-run).",
+  "service": "cd $SCR/tree && UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8801 --data $SCR/svc   (fresh empty dir; background)",
+  "apps": "cd $SCR/tree && AETHER_TEST_USER_DATA=$SCR/<ud> bun run dev --remoteDebuggingPort <port>   (fresh empty userData per device; background)",
+  "driver": "CDP_PORT=<port> bun scripts/cdp-drive.ts \"$(cat <step file>)\"  (from the repo root)",
+  "quit": "An app is quit with CDP Browser.close on the browser target (GET /json/version → webSocketDebuggerUrl → {\"id\":1,\"method\":\"Browser.close\"}); a page-target Browser.close hangs.",
+  "invite": "__INVITE__ is the link the owner's invite step returned. Substitute it with a literal string replace (python/perl), not sed: the link contains '&k=' and sed's '&' is the match.",
+  "window": "1440 x 846 CSS px at scale 2 (screenshots 2880 x 1692), in the background",
+  "ui": "each app switched to English in Settings in its first step; the dev origin port changes per launch, so localStorage (language, service list, player name) starts empty after a relaunch",
+  "platform": "macOS 27.0, Bun 1.3.6, Electron 44.3.0"
+ },
+ "model": {
+  "provider": "openai",
+  "model": "gpt-5.4-mini",
+  "source": "Settings → Model default on a fresh userData (OPENAI_API_KEY in the repo .env, read by main only)"
+ },
+ "note": "Starts where together ended: A and B in chunk (-1, 0) of world hryt3f2x…, online. p-a-01-zoom-remote-label.png is a crop of p-a-01 (PIL), not a separate capture.",
+ "steps": [
+  {
+   "step": 1,
+   "app": "B",
+   "port": 9354,
+   "what": "record every presence frame B receives, and B's frame times",
+   "file": "run-01-b-presence-b-record.json",
+   "actions": [
+    {
+     "eval": "(() => { window.__pres = { arrivals: [], frames: [] }; window.__presOff = window.seed.world.onPresence((e) => { window.__pres.arrivals.push({ t: performance.now(), from: e.from, p: e.p }); }); let last = performance.now(); const loop = (ts) => { window.__pres.frames.push(ts - last); last = ts; if (window.__pres.frames.length < 3000) requestAnimationFrame(loop); }; requestAnimationFrame(loop); return 'recording' })()"
+    }
+   ]
+  },
+  {
+   "step": 2,
+   "app": "A",
+   "port": 9353,
+   "what": "A sprints west 20 tiles, then walks back east 15",
+   "file": "run-02-a-presence-a-walk.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[-28.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "wait": 600
+    },
+    {
+     "pad": {
+      "toward": "[-12.5, 16.5]",
+      "within": 1.0,
+      "buttons": [],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "wait": 1500
+    }
+   ]
+  },
+  {
+   "step": 3,
+   "app": "B",
+   "port": 9354,
+   "what": "replay the recorded arrivals through remoteMotion at 60 Hz",
+   "file": "run-03-b-presence-b-replay.json",
+   "actions": [
+    {
+     "eval": "(async () => { window.__presOff?.(); const M = await import('/engine2d/remoteMotion.ts'); const A = 'k7a2usubb4vj74lfamkzzg5x7hrxbxz6kunatzmeamu3ukdfktykq'; const arr = window.__pres.arrivals.filter(a => a.from === A && a.p !== null); if (arr.length < 2) return 'too few arrivals: ' + arr.length; let track = null; const F = 1000 / 60; const t0 = arr[0].t; const tEnd = arr[arr.length - 1].t + 600; let i = 0; let prev = null; const steps = []; for (let f = t0; f <= tEnd; f += F) { while (i < arr.length && arr[i].t <= f) { track = M.receiveSample(track, { x: arr[i].p.x, z: arr[i].p.z, moving: arr[i].p.moving }, arr[i].t); i++; } const r = M.advanceMotion(track, f); if (r === null) break; track = r.track; if (prev !== null) steps.push({ f: f - t0, d: Math.hypot(r.at.x - prev.x, r.at.z - prev.z) }); prev = r.at; } let best = null; const win = 120; for (let s = 0; s + win <= steps.length; s += 1) { let sum = 0; let max = 0; for (let k = s; k < s + win; k++) { sum += steps[k].d; max = Math.max(max, steps[k].d); } if (best === null || sum > best.sum) best = { start: Math.round(steps[s].f), sum: +sum.toFixed(3), max: +max.toFixed(4) }; } const gaps = arr.slice(1).map((a, k) => a.t - arr[k].t); const frames = window.__pres.frames.slice(1); const fps = frames.length / (frames.reduce((a, b) => a + b, 0) / 1000); return JSON.stringify({ arrivals: arr.length, spanMs: Math.round(arr[arr.length - 1].t - t0), meanGapMs: Math.round(gaps.reduce((a, b) => a + b, 0) / gaps.length), maxGapMs: Math.round(Math.max(...gaps)), framesSimulated: steps.length, maxStepAll: +Math.max(...steps.map(s => s.d)).toFixed(4), busiest2s: best, over03: steps.filter(s => s.d >= 0.3).length, liveFps: Math.round(fps), path: [arr[0].p.x, arr[arr.length - 1].p.x] }) })()"
+    }
+   ]
+  },
+  {
+   "step": 4,
+   "app": "A",
+   "port": 9353,
+   "what": "(same time as B's) T + 1 (wave) in HD-2D, shot; V; T + 3 (cheer) in 16-bit, shot",
+   "file": "run-04-a-presence-emote-A.json",
+   "actions": [
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); return S.useEngineStore.getState().landLook })()"
+    },
+    {
+     "hold": "KeyT",
+     "ms": 80
+    },
+    {
+     "wait": 250
+    },
+    {
+     "hold": "Digit1",
+     "ms": 80
+    },
+    {
+     "wait": 900
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-presence/p-a-00-emote-hd2d.jpg"
+    },
+    {
+     "eval": "(async () => { const R = await import('/engine/remoteRoster.ts'); const now = performance.now(); return JSON.stringify({ own: R.ownEmote(now)?.kind ?? null, others: R.sampleRemotePlayers(now).map(p => ({ name: p.name, x: +p.x.toFixed(2), z: +p.z.toFixed(2), emote: p.emote?.kind ?? null })) }) })()"
+    },
+    {
+     "wait": 3500
+    },
+    {
+     "hold": "KeyV",
+     "ms": 80
+    },
+    {
+     "wait": 2500
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); return S.useEngineStore.getState().landLook })()"
+    },
+    {
+     "hold": "KeyT",
+     "ms": 80
+    },
+    {
+     "wait": 250
+    },
+    {
+     "hold": "Digit3",
+     "ms": 80
+    },
+    {
+     "wait": 900
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-presence/p-a-01-emote-pixel.jpg"
+    },
+    {
+     "eval": "(async () => { const R = await import('/engine/remoteRoster.ts'); const now = performance.now(); return JSON.stringify({ own: R.ownEmote(now)?.kind ?? null, others: R.sampleRemotePlayers(now).map(p => ({ name: p.name, x: +p.x.toFixed(2), z: +p.z.toFixed(2), emote: p.emote?.kind ?? null })) }) })()"
+    }
+   ]
+  },
+  {
+   "step": 5,
+   "app": "B",
+   "port": 9354,
+   "what": "(same time as A's) T + 5 (heart) in HD-2D, shot; V; T + 4 (laugh) in 16-bit, shot",
+   "file": "run-05-b-presence-emote-B.json",
+   "actions": [
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); return S.useEngineStore.getState().landLook })()"
+    },
+    {
+     "hold": "KeyT",
+     "ms": 80
+    },
+    {
+     "wait": 250
+    },
+    {
+     "hold": "Digit5",
+     "ms": 80
+    },
+    {
+     "wait": 900
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-presence/p-b-00-emote-hd2d.jpg"
+    },
+    {
+     "eval": "(async () => { const R = await import('/engine/remoteRoster.ts'); const now = performance.now(); return JSON.stringify({ own: R.ownEmote(now)?.kind ?? null, others: R.sampleRemotePlayers(now).map(p => ({ name: p.name, x: +p.x.toFixed(2), z: +p.z.toFixed(2), emote: p.emote?.kind ?? null })) }) })()"
+    },
+    {
+     "wait": 3500
+    },
+    {
+     "hold": "KeyV",
+     "ms": 80
+    },
+    {
+     "wait": 2500
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); return S.useEngineStore.getState().landLook })()"
+    },
+    {
+     "hold": "KeyT",
+     "ms": 80
+    },
+    {
+     "wait": 250
+    },
+    {
+     "hold": "Digit4",
+     "ms": 80
+    },
+    {
+     "wait": 900
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-presence/p-b-01-emote-pixel.jpg"
+    },
+    {
+     "eval": "(async () => { const R = await import('/engine/remoteRoster.ts'); const now = performance.now(); return JSON.stringify({ own: R.ownEmote(now)?.kind ?? null, others: R.sampleRemotePlayers(now).map(p => ({ name: p.name, x: +p.x.toFixed(2), z: +p.z.toFixed(2), emote: p.emote?.kind ?? null })) }) })()"
+    }
+   ]
+  }
+ ]
+}

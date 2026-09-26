@@ -1,0 +1,50 @@
+{
+ "app": "A",
+ "port": 9353,
+ "what": "walk the z=16 ford into chunk (1, 0); it is witnessed",
+ "actions": [
+  {
+   "pad": {
+    "toward": "[16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[40.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, status: S.useLandStore.getState().chunks['1,0']?.status ?? null }) })()"
+  },
+  {
+   "repeat": {
+    "times": 120,
+    "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['1,0']; return c !== undefined && c.status !== 'writing' })()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = S.useLandStore.getState().chunks['1,0']; return JSON.stringify({ status: c?.status, name: c?.scene?.name ?? null, head: n?.head?.n, chunks: n && Object.keys(n.chunks) }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-offline-visit/a-02-witnessed-1-0.jpg"
+  }
+ ]
+}

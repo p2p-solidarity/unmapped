@@ -1,0 +1,10 @@
+{
+ "app": "B",
+ "port": 9354,
+ "what": "read e1 (a chapter played as an AI work)",
+ "actions": [
+  {
+   "eval": "(async () => { const S = await import(\"/state/index.ts\"); const L = S.useLandStore.getState(); return JSON.stringify(L.progress?.episodes?.e1) })()"
+  }
+ ]
+}

@@ -1,0 +1,57 @@
+{
+ "app": "B",
+ "port": 9354,
+ "what": "wait for offline; walk into (0, -1); B witnesses it locally",
+ "actions": [
+  {
+   "repeat": {
+    "times": 60,
+    "until": "(async () => { const S = await import('/state/index.ts'); return S.useHistoryStore.getState().world.value?.status?.link !== 'online' })()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ link: w.status.link, pending: w.status.pending }) })()"
+  },
+  {
+   "pad": {
+    "toward": "[16.5, -8.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "repeat": {
+    "times": 120,
+    "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['0,-1']; return c !== undefined && c.status !== 'writing' })()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; const c = n.chunks['0,-1']; return JSON.stringify({ land: S.useLandStore.getState().chunks['0,-1']?.status, name: c?.live.body.index.name, liveN: c?.live.n ?? null, liveId: c?.live.id, head: n.head.n, link: w.status.link, pending: w.status.pending }) })()"
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-variant/v-b-00-offline-witness.jpg"
+  }
+ ]
+}

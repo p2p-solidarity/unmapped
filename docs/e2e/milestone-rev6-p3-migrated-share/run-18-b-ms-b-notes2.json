@@ -1,0 +1,58 @@
+{
+ "app": "B",
+ "port": 9354,
+ "what": "walk into (0, 1); N shows the old notes there",
+ "actions": [
+  {
+   "pad": {
+    "toward": "[16.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[16.5, 48.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[9.5, 55.5]",
+    "within": 1.0,
+    "buttons": [],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, status: S.useLandStore.getState().chunks['0,1']?.status }) })()"
+  },
+  {
+   "hold": "KeyN",
+   "ms": 100
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(() => [...document.querySelectorAll('[data-layer]')].map(x => x.getAttribute('data-layer') + ': ' + x.innerText.slice(0, 1500)).join('\\n---\\n'))()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-migrated-share/b-06-old-notes-0-1.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  }
+ ]
+}

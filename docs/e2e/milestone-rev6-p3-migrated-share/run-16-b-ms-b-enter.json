@@ -1,0 +1,20 @@
+{
+ "app": "B",
+ "port": 9354,
+ "what": "E: enter Firefly Jar; read the frame's attributes",
+ "actions": [
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 4000
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('iframe')].map(x => ({ src: x.src, sandbox: x.getAttribute('sandbox'), allow: x.getAttribute('allow'), w: x.getBoundingClientRect().width, h: x.getBoundingClientRect().height })); const layers = [...document.querySelectorAll('[data-layer]')].map(x => x.getAttribute('data-layer') + ': ' + x.innerText.slice(0, 300)); return JSON.stringify({ frames: f, layers }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-migrated-share/b-05-otherworld-open.jpg"
+  }
+ ]
+}

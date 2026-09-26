@@ -1,0 +1,31 @@
+{
+ "app": "A",
+ "port": 9353,
+ "what": "A sprints west 20 tiles, then walks back east 15",
+ "actions": [
+  {
+   "pad": {
+    "toward": "[-28.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "wait": 600
+  },
+  {
+   "pad": {
+    "toward": "[-12.5, 16.5]",
+    "within": 1.0,
+    "buttons": [],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "wait": 1500
+  }
+ ]
+}
