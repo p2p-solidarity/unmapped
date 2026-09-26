@@ -11,6 +11,7 @@ import { ACCOUNT_ERRORS } from "./errors-account";
 import { BROWSER_ERRORS } from "./errors-browser";
 import { BUNDLE_ERRORS } from "./errors-bundle";
 import { CARTRIDGE_ERRORS } from "./errors-cartridge";
+import { CHAT_ERRORS } from "./errors-chat";
 import { FILE_ERRORS } from "./errors-files";
 import { IDENTITY_ERRORS } from "./errors-identity";
 import { IMAGES_ERRORS } from "./errors-images";
@@ -39,6 +40,7 @@ export const ERRORS: Record<string, ErrorText> = {
   ...FILE_ERRORS,
   ...IDENTITY_ERRORS,
   ...NET_ERRORS,
+  ...CHAT_ERRORS,
   ...WORKS_ERRORS,
   ...WORLD_ERRORS,
   ...LAND_HISTORY_ERRORS,

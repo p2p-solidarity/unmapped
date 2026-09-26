@@ -1,4 +1,4 @@
-// Errors about playing with friends (inviting, joining, chat, signaling, the older rooms and their
+// Errors about playing with friends (inviting, joining, signaling, the older rooms and their
 // runtime handshake with the host) and the optional on-chain ledger.
 
 import type { ErrorText } from "./errors";
@@ -241,42 +241,6 @@ export const NET_ERRORS: Record<string, ErrorText> = {
       en: "Invite friends with an invite link instead: open the door at home, then Advanced.",
       "zh-TW": "請改用邀請連結邀請朋友：打開家門，再打開「進階」。",
       ja: "代わりに招待リンクで友だちを招待してください。家の扉を開き、「詳細」を開きます。",
-    },
-  },
-  "chat-unreadable": {
-    message: {
-      en: "That line is empty or too long to send.",
-      "zh-TW": "這句話是空的或太長，無法送出。",
-      ja: "その言葉は空か長すぎて送れません。",
-    },
-    hint: {
-      en: "Write up to 200 characters.",
-      "zh-TW": "最多 200 個字。",
-      ja: "200 文字までにしてください。",
-    },
-  },
-  "chat-too-fast": {
-    message: {
-      en: "That is a lot of lines at once.",
-      "zh-TW": "一下子說太多句了。",
-      ja: "一度にたくさん話しすぎです。",
-    },
-    hint: {
-      en: "Wait a few seconds, then say it again.",
-      "zh-TW": "等幾秒鐘再說一次。",
-      ja: "数秒待ってから、もう一度言ってください。",
-    },
-  },
-  "chat-no-friends": {
-    message: {
-      en: "Chat works only while you play with friends.",
-      "zh-TW": "只有和朋友一起玩時才能聊天。",
-      ja: "チャットは友だちと遊んでいるときだけ使えます。",
-    },
-    hint: {
-      en: "Invite friends or join a friend's world first.",
-      "zh-TW": "請先邀請朋友，或加入朋友的世界。",
-      ja: "まず友だちを招待するか、友だちのワールドに参加してください。",
     },
   },
   "continent-name-not-found": {

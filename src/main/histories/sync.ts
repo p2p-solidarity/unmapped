@@ -18,6 +18,7 @@ import {
   type FromService,
   frameText,
   readFromService,
+  serviceSpeaksChat,
   type ToService,
 } from "@shared/worldProtocol";
 import type { DeviceKey } from "../identity/deviceKey";
@@ -58,6 +59,8 @@ interface Waiter {
 class ServiceSocket {
   state: SocketState = "idle";
   serviceKey: string | null = null;
+  /** The service's own `version` from its challenge (`unmapped-service/<n>`). */
+  serviceVersion: string | null = null;
   private ws: WebSocket | null = null;
   private attempts = 0;
   private retry: ReturnType<typeof setTimeout> | null = null;
@@ -172,6 +175,7 @@ class ServiceSocket {
     }
     if (this.ws !== ws) return;
     this.serviceKey = challenge.key;
+    this.serviceVersion = challenge.version;
     const sent = frameText({
       t: "auth",
       key: key.value.author,
@@ -248,6 +252,12 @@ export class SyncHub {
 
   serviceKey(url: string): string | null {
     return this.sockets.get(url)?.serviceKey ?? null;
+  }
+
+  /** Whether the service at `url` relays chat (its challenge said so); an older one never gets a frame. */
+  speaksChat(url: string): boolean {
+    const version = this.sockets.get(url)?.serviceVersion;
+    return version != null && serviceSpeaksChat(version);
   }
 
   send(url: string, message: ToService): Result<void> {

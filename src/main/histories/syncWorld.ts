@@ -12,6 +12,7 @@
 // online, the packs this device announced and the service has not confirmed go up (./workPacks),
 // and a shared built-in world with no `pack` gets one from its first owner (./builtInPack).
 
+import { readChatText } from "@shared/continentHello";
 import { verifyLog } from "@shared/history/log";
 import { ownershipOf } from "@shared/history/owners";
 import type { StoredEvent } from "@shared/history/types";
@@ -20,6 +21,7 @@ import { type AppError, err, ok, type Result } from "@shared/result";
 import {
   type LinkState,
   WORLD_IPC,
+  type WorldChatEvent,
   type WorldPresenceEvent,
   type WorldStreamEvent,
 } from "@shared/worldApi";
@@ -136,6 +138,8 @@ async function onOpened(
   core.removals.delete(world.id);
   core.setSync(world.id, { url, link: "online", error: null });
   await core.emitStatus(world);
+  // A service that relays chat sends this device its friends' lines from now on.
+  if (url !== "" && core.hub.speaksChat(url)) core.hub.send(url, { t: "hear", world: world.id });
   submit(core, world);
   // Packs this device announced while offline (an otherworld placed, a cartridge pack that failed
   // at attach) go up now; in the background, so the world's lock is not held for the upload.
@@ -275,6 +279,14 @@ export async function onFrame(core: HostCore, url: string, frame: FromService): 
   if (frame.t === "presence") {
     const { t: _t, ...event } = frame;
     core.deps.broadcast(WORLD_IPC.presence, event satisfies WorldPresenceEvent);
+    return;
+  }
+  if (frame.t === "chat") {
+    // The service is untrusted too: the line is cleaned again, and a name is never taken from it.
+    const text = readChatText(frame.text);
+    if (text === null) return;
+    const event: WorldChatEvent = { world: frame.world, from: frame.from, text };
+    core.deps.broadcast(WORLD_IPC.chat, event);
     return;
   }
   await core.withWorld(frame.world, async (world) => {

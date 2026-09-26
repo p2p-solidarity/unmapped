@@ -31,6 +31,8 @@ export const WORLD_IPC = {
   release: "world:release",
   sendStream: "world:send-stream",
   sendPresence: "world:send-presence",
+  /** A chat line to the world's friends (simplify-together); relayed, never saved. */
+  sendChat: "world:send-chat",
   attach: "world:attach",
   invite: "world:invite",
   setAccess: "world:set-access",
@@ -57,6 +59,7 @@ export const WORLD_IPC = {
   status: "world:status",
   presence: "world:presence",
   stream: "world:stream",
+  chat: "world:chat",
 } as const;
 
 /** Kinds the renderer drafts; main writes genesis, sequencer, pack, beat and joins itself. */
@@ -200,6 +203,13 @@ export interface WorldPresenceEvent {
   world: string;
   from: string;
   p: Presence | null;
+}
+
+/** A line a friend said in a shared world, already cleaned by main; the name comes from the fold. */
+export interface WorldChatEvent {
+  world: string;
+  from: string;
+  text: string;
 }
 
 export interface WorldInvite {
@@ -353,6 +363,7 @@ export interface WorldApi {
   release(worldId: string, target: ClaimTarget): Promise<Result<void>>;
   sendStream(worldId: string, frame: StreamFrame): Promise<Result<void>>;
   sendPresence(worldId: string, presence: Presence | null): Promise<Result<void>>;
+  sendChat(worldId: string, text: string): Promise<Result<void>>;
   attach(worldId: string, url: string): Promise<Result<WorldStatus>>;
   invite(worldId: string, options: { uses: number; days: number }): Promise<Result<WorldInvite>>;
   setAccess(worldId: string, policy: AccessPolicy): Promise<Result<WorldAppended>>;
@@ -399,5 +410,6 @@ export interface WorldApi {
   onEntries(listener: (event: WorldEntriesEvent) => void): () => void;
   onStatus(listener: (status: WorldStatus) => void): () => void;
   onPresence(listener: (event: WorldPresenceEvent) => void): () => void;
+  onChat(listener: (event: WorldChatEvent) => void): () => void;
   onStream(listener: (event: WorldStreamEvent) => void): () => void;
 }

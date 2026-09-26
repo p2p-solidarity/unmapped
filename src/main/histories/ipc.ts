@@ -62,6 +62,7 @@ export function registerWorldIpc(ctx: MainContext, options: WorldIpcOptions = {}
   handle(WORLD_IPC.release, s.release, ([worldId, target]) => host.release(worldId, target));
   handle(WORLD_IPC.sendStream, s.sendStream, ([worldId, frame]) => host.sendStream(worldId, frame));
   handle(WORLD_IPC.sendPresence, s.sendPresence, ([worldId, p]) => host.sendPresence(worldId, p));
+  handle(WORLD_IPC.sendChat, s.sendChat, ([worldId, text]) => host.sendChat(worldId, text));
   handle(WORLD_IPC.attach, s.attach, ([worldId, url]) => host.attach(worldId, url));
   // Through the door (WP8): the invite is also remembered on this device, so it can be revoked.
   handle(WORLD_IPC.invite, s.invite, ([worldId, options]) => issueInvite(host, worldId, options));

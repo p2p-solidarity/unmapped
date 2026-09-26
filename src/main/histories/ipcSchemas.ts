@@ -4,6 +4,7 @@
 // checked too (`handle`, main/handle.ts).
 
 import type { ContentHash } from "@shared/cartridge";
+import { CHAT_MAX_CHARS } from "@shared/continentHello";
 import {
   BODY_SCHEMAS,
   chunkCoordSchema,
@@ -77,6 +78,13 @@ export const worldIpcSchemas = {
   release: z.tuple([worldId, claimTarget]),
   sendStream: z.tuple([worldId, streamFrameSchema]),
   sendPresence: z.tuple([worldId, presenceSchema.nullable()]),
+  sendChat: z.tuple([
+    worldId,
+    z
+      .string()
+      .min(1)
+      .max(CHAT_MAX_CHARS * 4),
+  ]),
   attach: z.tuple([worldId, serviceUrl]),
   invite: z.tuple([
     worldId,

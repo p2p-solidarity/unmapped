@@ -116,6 +116,7 @@ import type {
   StreamFrame,
   WorldAppended,
   WorldBadge,
+  WorldChatEvent,
   WorldDoor,
   WorldDraft,
   WorldEnsured,
@@ -402,6 +403,8 @@ const api: SeedApi = {
       invoke<Result<void>>(IPC.world.sendStream, worldId, frame),
     sendPresence: (worldId: string, presence: Presence | null) =>
       invoke<Result<void>>(IPC.world.sendPresence, worldId, presence),
+    sendChat: (worldId: string, text: string) =>
+      invoke<Result<void>>(IPC.world.sendChat, worldId, text),
     attach: (worldId: string, url: string) =>
       invoke<Result<WorldStatus>>(IPC.world.attach, worldId, url),
     invite: (worldId: string, options: { uses: number; days: number }) =>
@@ -442,6 +445,8 @@ const api: SeedApi = {
       subscribe<WorldStatus>(IPC.world.status, listener),
     onPresence: (listener: (event: WorldPresenceEvent) => void) =>
       subscribe<WorldPresenceEvent>(IPC.world.presence, listener),
+    onChat: (listener: (event: WorldChatEvent) => void) =>
+      subscribe<WorldChatEvent>(IPC.world.chat, listener),
     onStream: (listener: (event: WorldStreamEvent) => void) =>
       subscribe<WorldStreamEvent>(IPC.world.stream, listener),
   },

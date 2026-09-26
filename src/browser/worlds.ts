@@ -282,6 +282,9 @@ export function browserClient(store: BrowserStore): { world: WorldApi; device: P
     onStatus: statuses.add,
     onPresence: presences.add,
     onStream: streams.add,
+    // No chat on the phone proof yet: it never says `hear`, so no line arrives; sendChat answers
+    // `not-on-this-client`. A listener still gets a working unsubscribe.
+    onChat: () => () => undefined,
   });
   return {
     world,

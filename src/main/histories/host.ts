@@ -6,6 +6,7 @@
 
 import { randomBytes } from "node:crypto";
 import type { ChunkCoord } from "@shared/chunks";
+import { readChatText } from "@shared/continentHello";
 import { inviteLink } from "@shared/history/access";
 import { base32, DAY_MS } from "@shared/history/ids";
 import { isOwner, OWNER_PATH_MAX, ownerPath } from "@shared/history/owners";
@@ -193,6 +194,27 @@ export class WorldHost {
 
   sendPresence(worldId: string, p: Presence | null): Promise<Result<void>> {
     return this.sendTo(worldId, (world) => ({ t: "presence", world, p }));
+  }
+
+  /** One chat line to the world's friends, through a service that relays chat (never saved). */
+  async sendChat(worldId: string, raw: string): Promise<Result<void>> {
+    const text = readChatText(raw);
+    if (text === null) {
+      return err("chat-invalid", "That line is empty or longer than a chat line may be.");
+    }
+    const world = await this.world(worldId);
+    if (!world.ok) return world;
+    const url = world.value.link?.url;
+    if (url !== undefined && this.core.sync.get(worldId)?.link === "online") {
+      if (!this.core.hub.speaksChat(url)) {
+        return err(
+          "chat-service-old",
+          "This world's service is older and does not relay chat yet.",
+          "Its operator updates the world service; everything else keeps working.",
+        );
+      }
+    }
+    return this.sendTo(worldId, (id) => ({ t: "chat", world: id, text }));
   }
 
   attach(worldId: string, url: string): Promise<Result<WorldStatus>> {

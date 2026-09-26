@@ -1,5 +1,5 @@
 // The chat box over the land (simplify-together → Chat), bottom-left, shown only while this world
-// plays with friends (a continent). The newest lines fade after a while; "Press Enter to talk" shows
+// plays with friends: on a continent (peer to peer), or in a shared world online through its service. The newest lines fade after a while; "Press Enter to talk" shows
 // once a friend is here. Enter opens the line, Enter sends it (and shows it here), Esc closes it.
 //
 // While the line is open it owns the keyboard: a capture listener takes every key before the land,
@@ -10,7 +10,8 @@
 
 import { errorLine, useT } from "@renderer/i18n";
 import { topLayer } from "@renderer/input/focus";
-import { sendChat } from "@renderer/net/continentChat";
+import { sayLine, useWorldChat, useWorldFriendsHere } from "@renderer/net/worldChat";
+import { usePresenceLive } from "@renderer/net/worldPresence";
 import { type ChatLine, useChatStore, useContinentStore, useEngineStore } from "@renderer/state";
 import { colors, radius, space, Text, TextField, zIndex } from "@renderer/ui";
 import { CHAT_MAX_CHARS } from "@shared/continentHello";
@@ -66,9 +67,15 @@ function mayOpen(event: KeyboardEvent): boolean {
 export function ChatBox(): JSX.Element | null {
   const t = useT();
   const onContinent = useContinentStore((state) => state.status.kind !== "off");
-  const friendsHere = useContinentStore((state) =>
+  const continentFriends = useContinentStore((state) =>
     state.status.kind === "live" ? state.status.peers : 0,
   );
+  // A shared world (a world service) that is online in Play talks through its service.
+  const worldLive = usePresenceLive() && !onContinent;
+  const worldFriends = useWorldFriendsHere(worldLive);
+  useWorldChat();
+  const withFriends = onContinent || worldLive;
+  const friendsHere = onContinent ? continentFriends : worldFriends;
   const lines = useChatStore((state) => state.lines);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState("");
@@ -77,7 +84,7 @@ export function ChatBox(): JSX.Element | null {
   const [error, setError] = useState<AppError | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const inputId = useId();
-  const canTalk = onContinent && friendsHere > 0;
+  const canTalk = withFriends && friendsHere > 0;
   // Something else took the keys (the console, a talk, a door): the line gives way.
   const locked = useEngineStore((state) => state.inputLocked);
 
@@ -111,16 +118,22 @@ export function ChatBox(): JSX.Element | null {
       if (event.code !== "Enter" && event.code !== "NumpadEnter") return;
       event.preventDefault();
       const text = typed.current;
-      if (text.trim() !== "") {
-        const sent = sendChat(text);
+      if (text.trim() === "") {
+        setDraft("");
+        setError(null);
+        setOpen(false);
+        return;
+      }
+      // A shared world's line goes through main and its service: the line stays open until it went.
+      void sayLine(text).then((sent) => {
         if (!sent.ok) {
           setError(sent.error);
           return;
         }
-      }
-      setDraft("");
-      setError(null);
-      setOpen(false);
+        setDraft("");
+        setError(null);
+        setOpen(false);
+      });
     };
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
@@ -144,7 +157,7 @@ export function ChatBox(): JSX.Element | null {
     return () => clearInterval(timer);
   }, [newest]);
 
-  if (!onContinent) return null;
+  if (!withFriends) return null;
   const shown = open
     ? lines.slice(-SHOWN_OPEN)
     : lines.slice(-SHOWN_CLOSED).filter((line) => now - line.at < SHOW_MS);
