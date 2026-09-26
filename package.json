@@ -10,9 +10,9 @@
     "dev": "node -e \"require('electron')\" && node scripts/build-afm-bridge.mjs debug && electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json && tsc --noEmit -p tsconfig.test.json",
-    "lint": "biome check src tests scripts electron.vite.config.ts vitest.config.ts biome.json package.json tsconfig*.json",
-    "lint:fix": "biome check --write src tests scripts electron.vite.config.ts vitest.config.ts biome.json package.json tsconfig*.json",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json && tsc --noEmit -p tsconfig.test.json && tsc --noEmit -p tsconfig.browser.json",
+    "lint": "biome check src tests scripts electron.vite.config.ts vite.browser.config.ts vitest.config.ts biome.json package.json tsconfig*.json",
+    "lint:fix": "biome check --write src tests scripts electron.vite.config.ts vite.browser.config.ts vitest.config.ts biome.json package.json tsconfig*.json",
     "lines": "node scripts/check-lines.mjs",
     "test": "vitest run",
     "check": "bun run typecheck && bun run lint && bun run lines && bun run test",
@@ -31,7 +31,13 @@
     "web:deploy": "cd web/lineage-auction && bunx wrangler@4 deploy",
     "relay:key": "bun scripts/relay-key.ts",
     "relay:dev": "cd web/lineage-relay && bunx wrangler@4 dev --port 8790 --env-file ../../.cache/relay/dev.env",
-    "relay:deploy": "cd web/lineage-relay && bunx wrangler@4 deploy"
+    "relay:deploy": "cd web/lineage-relay && bunx wrangler@4 deploy",
+    "gateway": "bun --tsconfig-override tsconfig.node.json src/gateway/main.ts",
+    "browser:dev": "vite --config vite.browser.config.ts",
+    "browser:build": "vite build --config vite.browser.config.ts",
+    "world:probe": "bun --tsconfig-override tsconfig.node.json scripts/world-probe.ts",
+    "verify-world": "bun --tsconfig-override tsconfig.node.json scripts/verify-world.ts",
+    "fixture:legacy-land": "bun --tsconfig-override tsconfig.node.json scripts/fixtures/legacy-land.ts"
   },
   "dependencies": {
     "@deepseek-ai/cordis": "^4.0.2",

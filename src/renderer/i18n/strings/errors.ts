@@ -8,6 +8,7 @@
 // `provider-generation-failed`), and bug-only builder checks (`forge-*`, `base-game-invalid`).
 
 import { ACCOUNT_ERRORS } from "./errors-account";
+import { BROWSER_ERRORS } from "./errors-browser";
 import { BUNDLE_ERRORS } from "./errors-bundle";
 import { CARTRIDGE_ERRORS } from "./errors-cartridge";
 import { FILE_ERRORS } from "./errors-files";
@@ -43,6 +44,7 @@ export const ERRORS: Record<string, ErrorText> = {
   ...ACCOUNT_ERRORS,
   ...RUMOR_ERRORS,
   ...IMAGES_ERRORS,
+  ...BROWSER_ERRORS,
   ...TRACE_ERRORS,
   ...BUNDLE_ERRORS,
 };

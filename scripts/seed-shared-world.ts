@@ -1,0 +1,306 @@
+// E2E setup for the browser proof (rev 6 phase 4, D7, p4-mobile) without the desktop app: a small
+// world made with a throwaway owner key and attached to a world service exactly as the desktop's
+// `world.attach` does (local entries with null receipts, then the owner's `sequencer` in the last
+// `attach` frame), plus owner invites and owner notes. Like the provenance dry run's worlds, its
+// cartridge ref names no installable revision (`e2e-browser-proof`): the browser proof never
+// installs a cartridge, and the desktop cannot join such a world. The witnessed chunk is the DSL's
+// own worked example (`CHUNK_EXAMPLE`), the one the prompts teach with.
+//
+//   bun --tsconfig-override tsconfig.node.json scripts/seed-shared-world.ts make \
+//     --service ws://127.0.0.1:8797 --out <dir> [--name "Glass Harbor"]
+//   … invite --out <dir> [--uses 1] [--days 7]      → prints another invite link
+//   … note --out <dir> --text "…"                   → the owner leaves a note (a live-sync check)
+//
+// <dir>/owner.json holds the owner's secret: keep <dir> in a scratch directory.
+
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import {
+  CHUNK_EXAMPLE,
+  parseChunk,
+  serializeDialogue,
+  serializeErrands,
+  serializeScene,
+  witnessIndexOf,
+} from "@dsl/index";
+import { inviteLink } from "@shared/history/access";
+import { base32, base64Url, fromBase64Url } from "@shared/history/ids";
+import { type LogCursor, logStart, sequenceEvent } from "@shared/history/log";
+import {
+  authorKeyFor,
+  newSecretKey,
+  signEvent,
+  signInvite,
+  signWsAuth,
+} from "@shared/history/sign";
+import type {
+  EventBodies,
+  EventKind,
+  GenesisEvent,
+  LogEntry,
+  StoredEvent,
+  UnsignedEventOf,
+  WitnessBody,
+} from "@shared/history/types";
+import { sha256 } from "@shared/integrity";
+import { PHYSICS_SUPPORTED, PHYSICS_VERSION } from "@shared/physics";
+import {
+  type FromService,
+  readFromService,
+  type ToService,
+  WORLD_PROTOCOL,
+} from "@shared/worldProtocol";
+
+const argv = process.argv.slice(2);
+const command = argv[0] ?? "";
+function flag(name: string, fallback?: string): string {
+  const at = argv.indexOf(`--${name}`);
+  const value = at >= 0 ? argv[at + 1] : undefined;
+  if (value !== undefined) return value;
+  if (fallback !== undefined) return fallback;
+  throw new Error(`--${name} is required`);
+}
+
+interface Owner {
+  secret: string;
+  world: string;
+  url: string;
+}
+
+const iso = (ms: number) => new Date(ms).toISOString();
+const ownerFile = () => join(flag("out"), "owner.json");
+
+function readOwner(): { secret: Uint8Array; world: string; url: string } {
+  const owner = JSON.parse(readFileSync(ownerFile(), "utf8")) as Owner;
+  const secret = fromBase64Url(owner.secret);
+  if (secret === null) throw new Error("owner.json does not hold a key");
+  return { secret, world: owner.world, url: owner.url };
+}
+
+/** One authenticated socket to the service, with every frame it sends kept for `until`. */
+async function connect(url: string, secret: Uint8Array) {
+  const ws = new WebSocket(`${url.replace(/\/+$/, "")}/v1/ws`);
+  const frames: FromService[] = [];
+  const waiting: Array<() => void> = [];
+  ws.addEventListener("message", (message) => {
+    const read = readFromService(String(message.data));
+    if (!read.ok) throw new Error(`service frame: ${read.error.message}`);
+    frames.push(read.value);
+    for (const wake of waiting.splice(0)) wake();
+  });
+  const until = async <T extends FromService>(match: (frame: FromService) => frame is T) => {
+    const deadline = Date.now() + 15_000;
+    for (;;) {
+      const hit = frames.find(match);
+      if (hit !== undefined) return hit;
+      const refused = frames.find((frame) => frame.t === "refused" || frame.t === "rejected");
+      if (refused !== undefined) throw new Error(`service: ${JSON.stringify(refused)}`);
+      if (Date.now() > deadline) throw new Error("service did not answer in time");
+      await new Promise<void>((resolve) => {
+        waiting.push(resolve);
+        setTimeout(resolve, 250);
+      });
+    }
+  };
+  const challenge = await until((frame): frame is Extract<FromService, { t: "challenge" }> => {
+    return frame.t === "challenge";
+  });
+  const send = (message: ToService) => ws.send(JSON.stringify(message));
+  send({
+    t: "auth",
+    key: authorKeyFor(secret),
+    sig: signWsAuth(secret, challenge.nonce, challenge.key),
+  });
+  return { ws, frames, until, send, serviceKey: challenge.key };
+}
+
+function witnessBody(cx: number, cz: number): WitnessBody {
+  const draft = parseChunk(CHUNK_EXAMPLE, {
+    coord: { cx, cz },
+    biome: "countryside",
+    ground: "grass",
+    hole: null,
+    lore: [],
+    language: "en",
+  });
+  if (!draft.ok) throw new Error(`CHUNK_EXAMPLE: ${draft.error.message}`);
+  const { scene, dialogues, errands, keepsakes, lore } = draft.value;
+  const programs = {
+    cx,
+    cz,
+    scene: serializeScene(scene),
+    dialogues: Object.fromEntries(dialogues.map((d) => [d.npcId, serializeDialogue(d)])),
+    ...(errands.length === 0 ? {} : { errands: serializeErrands({ errands, keepsakes }) }),
+  };
+  const index = witnessIndexOf(programs);
+  if (!index.ok) throw new Error(`witness index: ${index.error.message}`);
+  return { ...programs, lore, index: index.value };
+}
+
+async function make(): Promise<void> {
+  const url = flag("service");
+  const name = flag("name", "Glass Harbor");
+  const owner = newSecretKey();
+  const author = authorKeyFor(owner);
+  const start = Date.now() - 60_000;
+  const genesis: GenesisEvent = signEvent(
+    {
+      v: 1,
+      world: "",
+      kind: "genesis",
+      author,
+      at: iso(start),
+      seen: 0,
+      body: {
+        name,
+        cartridge: {
+          cartridgeId: "e2e-browser-proof",
+          version: "1.0.0",
+          contentHash: sha256("e2e-browser-proof"),
+        },
+        seed: "e2e-browser-proof",
+        language: "en",
+        physicsVersion: PHYSICS_VERSION,
+        createdAt: iso(start),
+        access: "friends",
+        gates: [],
+        from: { instanceId: `e2e-browser-proof-${start}` },
+      },
+    },
+    owner,
+  );
+  const entries: LogEntry[] = [];
+  let cursor: LogCursor = logStart(genesis.id);
+  const add = (event: StoredEvent, ms: number) => {
+    const entry = sequenceEvent(cursor, event, iso(ms), null);
+    cursor = { n: entry.n, chain: entry.chain, rt: entry.rt };
+    entries.push(entry);
+  };
+  const write = <K extends EventKind>(kind: K, body: EventBodies[K], ms: number) => {
+    const unsigned = { v: 1, world: genesis.id, kind, author, at: iso(ms), seen: cursor.n, body };
+    add(signEvent(unsigned as UnsignedEventOf<K>, owner), ms);
+  };
+  add(genesis, start);
+  write("profile", { name: flag("owner-name", "Mira") }, start + 1_000);
+  const witness = witnessBody(1, 0);
+  write("witness", witness, start + 2_000);
+  const anchor = entries[entries.length - 1]?.event.id ?? "";
+  write(
+    "note",
+    {
+      coord: { cx: 1, cz: 0, x: 16, z: 16 },
+      anchors: [anchor],
+      text: flag("note", "The ford is shallow at dawn."),
+      contests: null,
+      name: flag("owner-name", "Mira"),
+    },
+    start + 3_000,
+  );
+  write(
+    "signpost",
+    {
+      coord: { cx: 0, cz: 0, x: 16, z: 20 },
+      text: "East to the crossing",
+      toward: { cx: 1, cz: 0 },
+    },
+    start + 4_000,
+  );
+
+  const socket = await connect(url, owner);
+  const sequencer = signEvent(
+    {
+      v: 1,
+      world: genesis.id,
+      kind: "sequencer",
+      author,
+      at: iso(Date.now()),
+      seen: cursor.n,
+      body: { url, key: socket.serviceKey },
+    },
+    owner,
+  );
+  socket.send({ t: "attach", world: genesis.id, entries, last: true, sequencer });
+  const opened = await socket.until(
+    (frame): frame is Extract<FromService, { t: "opened" }> =>
+      frame.t === "opened" && frame.world === genesis.id,
+  );
+  socket.ws.close();
+  const dir = flag("out");
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+  const record: Owner = { secret: base64Url(owner), world: genesis.id, url };
+  writeFileSync(ownerFile(), `${JSON.stringify(record, null, 2)}\n`, { mode: 0o600 });
+  console.log(`world ${genesis.id} "${name}" attached at ${url}, head ${opened.head.n}`);
+  console.log(`witnessed "${witness.index.name}" at 1,0`);
+  printInvite(owner, genesis.id, url);
+}
+
+function printInvite(secret: Uint8Array, world: string, url: string): void {
+  const inviteSecret = newSecretKey();
+  const nonce = base32(crypto.getRandomValues(new Uint8Array(20)));
+  const days = Number(flag("days", "7"));
+  const invite = signInvite(
+    {
+      v: 1,
+      world,
+      svc: url,
+      by: authorKeyFor(secret),
+      key: authorKeyFor(inviteSecret),
+      nonce,
+      exp: iso(Date.now() + days * 86_400_000),
+      uses: Number(flag("uses", "1")),
+    },
+    secret,
+  );
+  console.log(inviteLink(invite, inviteSecret));
+}
+
+async function note(): Promise<void> {
+  const { secret, world, url } = readOwner();
+  const socket = await connect(url, secret);
+  socket.send({
+    t: "open",
+    world,
+    have: 0,
+    chain: null,
+    protocol: WORLD_PROTOCOL,
+    physics: [...PHYSICS_SUPPORTED],
+  });
+  const opened = await socket.until(
+    (frame): frame is Extract<FromService, { t: "opened" }> => frame.t === "opened",
+  );
+  const event = signEvent(
+    {
+      v: 1,
+      world,
+      kind: "note",
+      author: authorKeyFor(secret),
+      at: iso(Date.now()),
+      seen: opened.head.n,
+      body: {
+        coord: { cx: 0, cz: 0, x: 16, z: 16 },
+        anchors: [],
+        text: flag("text"),
+        contests: null,
+        name: flag("owner-name", "Mira"),
+      },
+    },
+    secret,
+  );
+  socket.send({ t: "submit", world, events: [event] });
+  const entries = await socket.until(
+    (frame): frame is Extract<FromService, { t: "entries" }> =>
+      frame.t === "entries" && frame.entries.some((entry) => entry.event.id === event.id),
+  );
+  socket.ws.close();
+  console.log(`note ${event.id} sequenced, head ${entries.head.n}`);
+}
+
+if (command === "make") await make();
+else if (command === "invite") {
+  const { secret, world, url } = readOwner();
+  printInvite(secret, world, url);
+} else if (command === "note") await note();
+else {
+  console.error("usage: seed-shared-world.ts make|invite|note --out <dir> [...]");
+  process.exit(1);
+}

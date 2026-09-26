@@ -10,6 +10,14 @@
 //          | {type: "words"} — inserts text into the focused field
 //          | {pad: {buttons: [0], axes: [lx, ly, rx, ry], ms: 150}} — a virtual gamepad (see below)
 //          | {cdp: {method: "WebAuthn.enable", params: {}}} — any DevTools command (virtual passkeys)
+//          | {viewport: {width: 375, height: 812, scale: 3, mobile: true}} — a phone-sized page
+//          | {touch: {tap: [x, y]}} | {touch: {tapText: "Join"}} | {touch: {drag: [[x0, y0], [x1, y1]],
+//            ms: 400, hold: 800}} — a finger (Input.dispatchTouchEvent; a drag moves over `ms`, then
+//            stays down `hold` ms before lifting)
+//          | {offline: true} / {offline: false} — Network.emulateNetworkConditions for the page
+//            (navigator.onLine turns false and new requests fail; a loopback WebSocket may still
+//            connect, so stop the service to cut a world off). viewport and offline last only as
+//            long as this run's DevTools session: keep them in the same run as the steps they serve.
 //
 // pad: installs one connected "standard"-mapping gamepad in the page (navigator.getGamepads() is
 // overridden through Runtime.evaluate, and re-installed after a reload), holds the given buttons
@@ -57,6 +65,59 @@ function send(method: string, params: object = {}): Promise<CdpReply> {
   return new Promise((resolve) => pending.set(id, resolve));
 }
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** The centre of the smallest visible element whose text is exactly `label` (as clickText finds it). */
+async function textPoint(label: string): Promise<[number, number] | null> {
+  const r = await send("Runtime.evaluate", {
+    expression: `(() => {
+      const want = ${JSON.stringify(label)};
+      const hits = [...document.querySelectorAll("button, a, [role=button], div, span, strong, em, kbd, p, h1, h2, h3, label")]
+        .filter((el) => el.innerText !== undefined && el.innerText.trim() === want)
+        .map((el) => { el.scrollIntoView({ block: "nearest" }); return { el, rect: el.getBoundingClientRect() }; })
+        .filter(({ rect }) => rect.width > 0 && rect.height > 0)
+        .sort((a, b) => a.rect.width * a.rect.height - b.rect.width * b.rect.height);
+      const hit = hits[0];
+      return hit ? [hit.rect.x + hit.rect.width / 2, hit.rect.y + hit.rect.height / 2] : null;
+    })()`,
+    returnByValue: true,
+  });
+  return (r.result?.result?.value as [number, number] | null | undefined) ?? null;
+}
+
+interface Touch {
+  tap?: [number, number];
+  tapText?: string;
+  drag?: [[number, number], [number, number]];
+  ms?: number;
+  hold?: number;
+}
+
+/** One finger: a tap (down, up) or a drag (down, moves over `ms`, stay `hold` ms, up). */
+async function touch(input: Touch): Promise<void> {
+  const finger = (x: number, y: number) => [{ x, y, id: 0, radiusX: 4, radiusY: 4, force: 1 }];
+  const start =
+    input.tapText !== undefined ? await textPoint(input.tapText) : (input.tap ?? input.drag?.[0]);
+  if (start === null || start === undefined) {
+    console.log(`touch: "${input.tapText}" not found`);
+    return;
+  }
+  await send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: finger(...start) });
+  const end = input.drag?.[1];
+  if (end !== undefined) {
+    const steps = Math.max(2, Math.round((input.ms ?? 300) / 16));
+    for (let i = 1; i <= steps; i += 1) {
+      const x = start[0] + ((end[0] - start[0]) * i) / steps;
+      const y = start[1] + ((end[1] - start[1]) * i) / steps;
+      await send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: finger(x, y) });
+      await sleep(16);
+    }
+    await sleep(input.hold ?? 0);
+  } else {
+    await sleep(input.hold ?? 60);
+  }
+  await send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  console.log(`touch ${JSON.stringify(input.drag ?? start)}`);
+}
 const VK: Record<string, number> = {
   KeyW: 87,
   KeyA: 65,
@@ -291,6 +352,29 @@ async function run(list: any[]): Promise<void> {
       await setPad([], []);
       await sleep(80);
       console.log(`pad ${JSON.stringify(pad)}`);
+    } else if (action.viewport !== undefined) {
+      const { width = 375, height = 812, scale = 3, mobile = true } = action.viewport;
+      await send("Emulation.setDeviceMetricsOverride", {
+        width,
+        height,
+        deviceScaleFactor: scale,
+        mobile,
+      });
+      await send("Emulation.setTouchEmulationEnabled", { enabled: mobile, maxTouchPoints: 5 });
+      console.log(`viewport ${width}x${height}${mobile ? " (touch)" : ""}`);
+    } else if (action.touch !== undefined) {
+      await touch(action.touch as Touch);
+    } else if (action.offline !== undefined) {
+      await send("Network.enable");
+      const r = await send("Network.emulateNetworkConditions", {
+        offline: action.offline === true,
+        latency: 0,
+        downloadThroughput: -1,
+        uploadThroughput: -1,
+      });
+      console.log(
+        `offline ${action.offline === true}${r.error ? ` ${JSON.stringify(r.error)}` : ""}`,
+      );
     } else if (action.type !== undefined) {
       await send("Input.insertText", { text: action.type });
     } else if (action.wait !== undefined) {

@@ -40,6 +40,7 @@ import {
   topLayer,
 } from "./focus";
 import type { Direction } from "./spatial";
+import { mergePads, touchHeld, touchSnapshot } from "./touch";
 
 type Mode = "play" | "menu";
 
@@ -51,17 +52,23 @@ const DIRECTIONS: Readonly<Partial<Record<PadControl, Direction>>> = {
   right: "right",
 };
 
-/** The first connected pad, preferring one in the standard mapping; null when there is none. */
+/**
+ * The first connected pad, preferring one in the standard mapping, merged with the on-screen touch
+ * pad when one is shown (./touch); null when there is neither.
+ */
 function readPad(): PadSnapshot | null {
   const pads = [...(navigator.getGamepads?.() ?? [])].filter(
     (pad): pad is Gamepad => pad?.connected === true,
   );
   const pad = pads.find((one) => one.mapping === "standard") ?? pads[0];
-  if (pad === undefined) return null;
-  return {
-    buttons: pad.buttons.map((button) => Math.max(button.value, button.pressed ? 1 : 0)),
-    axes: pad.axes,
-  };
+  const real =
+    pad === undefined
+      ? null
+      : {
+          buttons: pad.buttons.map((button) => Math.max(button.value, button.pressed ? 1 : 0)),
+          axes: pad.axes,
+        };
+  return mergePads(real, touchSnapshot());
 }
 
 function currentMode(): Mode {
@@ -139,7 +146,7 @@ export function startGamepadPoller(): () => void {
       mode = null;
       return;
     }
-    if (padActive(snapshot)) setInputDevice("pad");
+    if (padActive(snapshot)) setInputDevice(touchHeld() ? "touch" : "pad");
     const next = currentMode();
     const held = padControls(snapshot, next === "play" ? PAD_DEAD_ZONE : PAD_MENU_DEAD_ZONE);
     if (next !== mode) {

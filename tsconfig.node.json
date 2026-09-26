@@ -34,6 +34,7 @@
     "src/relay/**/*",
     "src/gateway/**/*",
     "electron.vite.config.ts",
+    "vite.browser.config.ts",
     "vitest.config.ts",
     "scripts/**/*"
   ]

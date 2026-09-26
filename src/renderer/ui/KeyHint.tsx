@@ -8,7 +8,8 @@ import type { JSX } from "react";
 
 /** The labels to draw for these keys on the device in use (empty: nothing to show). */
 export function useHintKeys(keys: readonly string[]): { labels: readonly string[]; pad: boolean } {
-  const pad = useInputDevice() === "pad";
+  // The on-screen touch controls are labelled like a pad (A, Y), so touch reads pad glyphs too.
+  const pad = useInputDevice() !== "keys";
   return { labels: pad ? padGlyphs(keys) : keys, pad };
 }
 

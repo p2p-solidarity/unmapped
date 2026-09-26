@@ -522,30 +522,40 @@
    not count as :focus-visible). A menu row shows its gold marker instead of a ring. */
 .ui-btn:focus-visible,
 html[data-input="pad"] .ui-btn:focus,
+html[data-input="touch"] .ui-btn:focus,
 html[data-input="pad"] input:focus,
+html[data-input="touch"] input:focus,
 html[data-input="pad"] textarea:focus,
+html[data-input="touch"] textarea:focus,
 html[data-input="pad"] select:focus,
+html[data-input="touch"] select:focus,
 html[data-input="pad"] a:focus,
+html[data-input="touch"] a:focus,
 html[data-input="pad"] summary:focus,
-html[data-input="pad"] [tabindex]:focus {
+html[data-input="touch"] summary:focus,
+html[data-input="pad"] [tabindex]:focus,
+html[data-input="touch"] [tabindex]:focus {
   outline: 2px solid var(--g-accent);
   outline-offset: 2px;
   box-shadow: 0 0 0 5px var(--g-accent-soft);
 }
 
-html[data-input="pad"] .ui-btn[data-variant="menu"]:focus {
+html[data-input="pad"] .ui-btn[data-variant="menu"]:focus,
+html[data-input="touch"] .ui-btn[data-variant="menu"]:focus {
   outline: none;
   box-shadow: none;
 }
 
 .ui-btn[data-variant="menu"]:focus-visible::before,
-html[data-input="pad"] .ui-btn[data-variant="menu"]:focus::before {
+html[data-input="pad"] .ui-btn[data-variant="menu"]:focus::before,
+html[data-input="touch"] .ui-btn[data-variant="menu"]:focus::before {
   opacity: 1;
   transform: translate(0, -50%) rotate(45deg);
 }
 
 .ui-btn[data-variant="menu"]:focus-visible::after,
-html[data-input="pad"] .ui-btn[data-variant="menu"]:focus::after {
+html[data-input="pad"] .ui-btn[data-variant="menu"]:focus::after,
+html[data-input="touch"] .ui-btn[data-variant="menu"]:focus::after {
   opacity: 1;
 }
 

@@ -5,7 +5,8 @@
 
 import { useSyncExternalStore } from "react";
 
-export type InputDevice = "keys" | "pad";
+/** "touch": the on-screen touch pad (./touch), or a finger anywhere on the page. */
+export type InputDevice = "keys" | "pad" | "touch";
 
 let device: InputDevice = "keys";
 const listeners = new Set<() => void>();
@@ -37,7 +38,9 @@ export function useInputDevice(): InputDevice {
  */
 export function watchKeyboardAndMouse(): () => void {
   const back = (event: Event): void => {
-    if (event.isTrusted) setInputDevice("keys");
+    if (!event.isTrusted) return;
+    const finger = event instanceof PointerEvent && event.pointerType === "touch";
+    setInputDevice(finger ? "touch" : "keys");
   };
   window.addEventListener("keydown", back, true);
   window.addEventListener("pointerdown", back, true);

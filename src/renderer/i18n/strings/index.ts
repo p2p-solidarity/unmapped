@@ -16,6 +16,7 @@ import { LAND } from "./land";
 import { LAND_HISTORY } from "./landHistory";
 import { LIBRARY } from "./library";
 import { MARKET } from "./market";
+import { MOBILE } from "./mobile";
 import { MODEL } from "./model";
 import type { Phrase } from "./phrase";
 import { PLACE_VIEW } from "./placeView";
@@ -43,6 +44,7 @@ export const STRINGS = {
   landHistory: LAND_HISTORY,
   library: LIBRARY,
   market: MARKET,
+  mobile: MOBILE,
   model: MODEL,
   placeView: PLACE_VIEW,
   rumors: RUMORS,

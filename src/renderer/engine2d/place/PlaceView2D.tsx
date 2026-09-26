@@ -91,7 +91,8 @@ export function PlaceView2D({
   title: string;
 }): JSX.Element {
   const t = useT();
-  const pad = useInputDevice() === "pad";
+  // The on-screen touch controls are labelled like a pad (A, Y), so touch reads pad glyphs too.
+  const pad = useInputDevice() !== "keys";
   const kit = useMemo(() => kitOf(graph, rules), [graph, rules]);
   const mode: Mode = behaviorForKit(kit.id).movement === "side" ? "side" : "dungeon";
   const course = useMemo(() => sideCourse(graph), [graph]);

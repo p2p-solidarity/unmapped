@@ -1,0 +1,17 @@
+/* The mobile shell (rev 6 phase 4, D7). Colours come from tokens through the --g-* variables
+   (Rule 3). The touch pad moves focus by script, which the browser does not count as
+   :focus-visible, so a focused control shows the pad's ring while the last input was touch. */
+
+.mobile-shell {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+html[data-input="touch"] .ui-btn:focus,
+html[data-input="touch"] input:focus,
+html[data-input="touch"] textarea:focus {
+  outline: 2px solid var(--g-accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px var(--g-accent-soft);
+}

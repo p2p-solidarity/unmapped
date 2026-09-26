@@ -1,0 +1,81 @@
+{
+ "env": {
+  "service": "UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8797 --data $SCR/service-data (a fresh empty dir)",
+  "page": "bun run browser:dev  (Vite, http://localhost:5190, the dev CSP that allows loopback)",
+  "world": "bun --tsconfig-override tsconfig.node.json scripts/seed-shared-world.ts make --service ws://127.0.0.1:8797 --out $SCR/seed → prints the invite link that replaces __INVITE__",
+  "browser": "Playwright's chrome-headless-shell 1243 (Chromium), --remote-debugging-port=9341 --user-data-dir=$SCR/chrome-profile (fresh) --window-size=375,812 http://localhost:5190/",
+  "driver": "CDP_PORT=9341 bun scripts/cdp-drive.ts \"$(sed \"s|__INVITE__|$LINK|; s|__SHOTS__|$SHOTS|g\" <run file>)\"",
+  "viewport": "375 × 812, deviceScaleFactor 2, mobile with touch emulation (each run starts with {viewport}; emulation lasts one DevTools session)",
+  "input": "After the first shot: touch only (tap, tapText, drag on the on-screen stick, tap on A) and typed text into the focused field; evals are read-only probes (they read the page and IndexedDB) except the ones that scroll to the top and blur, which a player does by scrolling and tapping empty space."
+ },
+ "model": null,
+ "part": "C — the service is stopped and the page offline: a note waits in the outbox",
+ "actions": [
+  {
+   "viewport": {
+    "width": 375,
+    "height": 812,
+    "scale": 2,
+    "mobile": true
+   }
+  },
+  {
+   "offline": true
+  },
+  {
+   "repeat": {
+    "times": 40,
+    "until": "/Offline/.test(document.body.innerText)",
+    "actions": [
+     {
+      "wait": 250
+     }
+    ]
+   }
+  },
+  {
+   "eval": "JSON.stringify({link: [...document.querySelectorAll('span')].map(s => s.innerText).find(t => /^(Online|Offline|Connecting|Stopped|The service refused)/.test(t)) ?? null, sync: document.body.innerText.split('\\n').find(l => /^Entry /.test(l)) ?? null, notes: document.body.innerText.split('\\n').filter(l => /^— /.test(l) || /shallow|phone|heron|network/.test(l)), onLine: navigator.onLine})"
+  },
+  {
+   "eval": "document.querySelector('.mobile-shell').scrollTop = 0; document.activeElement.blur(); 'top'"
+  },
+  {
+   "touch": {
+    "tapText": "Your note"
+   }
+  },
+  {
+   "type": "Written with no network."
+  },
+  {
+   "touch": {
+    "tapText": "Home (0, 0)"
+   }
+  },
+  {
+   "touch": {
+    "tapText": "Leave the note"
+   }
+  },
+  {
+   "repeat": {
+    "times": 20,
+    "until": "/1 waiting to send/.test(document.body.innerText)",
+    "actions": [
+     {
+      "wait": 100
+     }
+    ]
+   }
+  },
+  {
+   "eval": "JSON.stringify({link: [...document.querySelectorAll('span')].map(s => s.innerText).find(t => /^(Online|Offline|Connecting|Stopped|The service refused)/.test(t)) ?? null, sync: document.body.innerText.split('\\n').find(l => /^Entry /.test(l)) ?? null, notes: document.body.innerText.split('\\n').filter(l => /^— /.test(l) || /shallow|phone|heron|network/.test(l)), onLine: navigator.onLine})"
+  },
+  {
+   "eval": "new Promise((resolve) => { const open = indexedDB.open('unmapped-browser'); open.onsuccess = () => { const db = open.result; const tx = db.transaction(['meta', 'worlds', 'entries', 'outbox'], 'readonly'); const out = {}; const key = tx.objectStore('meta').get('device-keys'); key.onsuccess = () => { out.key = key.result && { algorithm: key.result.privateKey.algorithm.name, extractable: key.result.privateKey.extractable, usages: key.result.privateKey.usages }; }; const worlds = tx.objectStore('worlds').getAll(); worlds.onsuccess = () => { out.worlds = worlds.result.map((w) => ({ id: w.id.slice(0, 12), url: w.url, name: w.name, diverged: w.diverged, refused: w.refused.length })); }; const entries = tx.objectStore('entries').count(); entries.onsuccess = () => { out.entries = entries.result; }; const outbox = tx.objectStore('outbox').getAll(); outbox.onsuccess = () => { out.outbox = outbox.result.map((row) => row.events.length); }; tx.oncomplete = () => resolve(JSON.stringify(out)); }; open.onerror = () => resolve('no db'); })"
+  },
+  {
+   "shot": "__SHOTS__/c-00-offline-note.jpg"
+  }
+ ]
+}
