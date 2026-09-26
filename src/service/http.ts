@@ -3,14 +3,15 @@
 //   GET  /v1/health                          { key, version, protocol, physics, worlds, broken, test }
 //   PUT  /v1/worlds/<id>/blobs/<sha256 hex>  store a pack (owner or member; body hashes to the name)
 //   GET  /v1/worlds/<id>/blobs/<sha256 hex>  fetch it (whoever may read the world, or an invitee)
+//   GET  /v1/worlds/<id>/export              its `.world`, signed by the service (readers; ./bundle)
 //   POST /v1/test/advance {days}             UNMAPPED_SERVICE_TEST=1 only: move the receipt clock
 //                                            forward and run a beat pass at once
 //
 // Blob requests carry `X-Unmapped-Auth: <key>.<ts>.<sig>` over the method, the exact path, the time
 // (±300 s of the service's real clock) and the body's sha256 (`readBlobAuth`). Blobs are opaque:
 // the service checks only that the bytes hash to their name and fit the limits (each ≤ 32 MiB, a
-// world's ≤ 256 MiB); clients verify and unpack them. No CORS headers are sent: the app talks to
-// the service from main, never from a page.
+// world's ≤ 256 MiB); clients verify and unpack them. The app talks to the service from main, so no
+// CORS header is sent unless the operator names an exact page origin (`--browser-origin`, ./cors).
 
 import { mayWrite } from "@shared/history/access";
 import { EVENT_ID } from "@shared/history/ids";
@@ -20,7 +21,10 @@ import type { AppError } from "@shared/result";
 import { WORLD_PROTOCOL } from "@shared/worldProtocol";
 import { z } from "zod";
 import { beatPass } from "./beats";
+import { exportResponse } from "./bundle";
 import { isoAt } from "./clock";
+import { allowedOrigin, preflight, withBlobHeaders } from "./cors";
+import { mayReadBlob, readAccess } from "./door";
 import { type Hub, SERVICE_VERSION } from "./hub";
 import { BLOB_HASH, sha256File } from "./store";
 
@@ -29,9 +33,12 @@ export interface HttpContext {
   test: boolean;
   /** Test mode: moves the receipt clock; returns the total offset in days. */
   advance: (days: number) => number;
+  /** Page origins allowed to read blobs (`--browser-origin`); none by default. */
+  browserOrigins?: readonly string[];
 }
 
 const BLOB_PATH = /^\/v1\/worlds\/([^/]+)\/blobs\/([^/]+)$/;
+const EXPORT_PATH = /^\/v1\/worlds\/([^/]+)\/export$/;
 const advanceSchema = z.strictObject({ days: z.number().positive().max(3650) });
 
 function json(status: number, body: unknown): Response {
@@ -86,8 +93,8 @@ async function blob(
   if (!auth.ok) return fail(401, auth.error);
   const key = auth.value;
   if (!put) {
-    if (!hub.mayReadBlob(world, key)) {
-      const access = hub.readAccess(world, key, null);
+    if (!mayReadBlob(hub, world, key)) {
+      const access = readAccess(hub, world, key, null);
       return fail(
         403,
         access.ok ? { code: "access-denied", message: "Not yours to read." } : access.error,
@@ -178,9 +185,19 @@ export async function handleHttp(context: HttpContext, request: Request): Promis
     if (path === "/v1/test/advance" && request.method === "POST") {
       return await advance(context, request);
     }
+    const exporting = EXPORT_PATH.exec(path);
+    if (exporting !== null && request.method === "GET") {
+      return exportResponse(hub, request, path, exporting[1] ?? "", context.test);
+    }
     const match = BLOB_PATH.exec(path);
+    if (match !== null && request.method === "OPTIONS") {
+      const origin = allowedOrigin(context.browserOrigins, request);
+      return origin === null ? notFound() : preflight(origin);
+    }
     if (match !== null && (request.method === "GET" || request.method === "PUT")) {
-      return await blob(context, request, path, match[1] ?? "", match[2] ?? "");
+      const response = await blob(context, request, path, match[1] ?? "", match[2] ?? "");
+      if (request.method === "PUT") return response;
+      return withBlobHeaders(response, allowedOrigin(context.browserOrigins, request));
     }
     return notFound();
   } catch (error) {

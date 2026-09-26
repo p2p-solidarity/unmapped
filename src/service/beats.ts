@@ -13,8 +13,10 @@ import { canonicalJson } from "@shared/canonical";
 import { computeBeat, lastBeatAt } from "@shared/history/beat";
 import { timeMs } from "@shared/history/ids";
 import { signEvent } from "@shared/history/sign";
+import { queueProvenance } from "./chain/recorder";
 import { isoAt } from "./clock";
 import type { Hub } from "./hub";
+import { isMirror } from "./mirror";
 
 export interface BeatReport {
   world: string;
@@ -31,6 +33,8 @@ export function beatPass(hub: Hub): BeatReport[] {
   const reports: BeatReport[] = [];
   for (const world of hub.worlds.values()) {
     const { now } = world;
+    // A mirror (phase 4, D5) writes nothing, beats included, until an owner rehosts it here.
+    if (isMirror(now, hub.key.key)) continue;
     const last = lastBeatAt(now);
     if (last === null) continue;
     const since = Math.max(timeMs(last), hub.beatChecked.get(world.id) ?? Number.NEGATIVE_INFINITY);
@@ -73,6 +77,7 @@ export function beatPass(hub: Hub): BeatReport[] {
     }
     hub.beatChecked.delete(world.id);
     hub.afterCommit(world, draft);
+    queueProvenance(hub, world);
     reports.push({ world: world.id, n: entry.n });
   }
   return reports;

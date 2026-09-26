@@ -5,13 +5,16 @@
 // chain of 1..k byte for byte, signs receipts for 1..s1 with its key, writes the log, and answers
 // as an `open` would: `opened` (owner) and the whole log with its receipts.
 //
-// Refused: an upload that does not start with this world's genesis, from anyone but its author;
-// physics this build cannot reproduce; a chain, order or rt the upload breaks; an uploaded entry
-// with a receipt or an admitted sequencer (a rehost is phase 4); `attach-rt-future` when rt(k) is
-// more than 300 s ahead of the service clock; a sequencer naming any other key; over the world size
-// or the owner's world count. Attaching again a world the service holds is answered like the first
-// attach when the upload and sequencer are exactly what it stored (a retry after a lost answer),
-// and refused (`attach-world-exists`) otherwise.
+// Refused: an upload that does not start with this world's genesis, or that its uploader does not
+// own once its `owner.add` / `owner.remove` entries are applied (phase 4, D5: a co-owner attaches
+// too); physics this build cannot reproduce; a chain, order or rt the upload breaks; an uploaded
+// entry with a receipt or an admitted sequencer (a rehost is a submit, ./mirror); `attach-rt-future`
+// when rt(k) is more than 300 s ahead of the service clock; a sequencer naming any other key; over
+// the world size, the owner's world count, or the connection's open worlds. Attaching again a world
+// the service holds is answered like the first attach when the upload and sequencer are exactly
+// what it stored (a retry after a lost answer), and refused (`attach-world-exists`) otherwise —
+// except a mirror of a never-attached world (imported from a `.world`, no receipts at all): an
+// upload of exactly that log is attached, and the stored copy re-receipted in place.
 
 import { admit } from "@shared/history/admit";
 import { readEvent } from "@shared/history/event";
@@ -26,13 +29,16 @@ import {
   verifyLog,
   withReceipt,
 } from "@shared/history/log";
+import { isOwner, type Ownership, ownershipOfGenesis, ownershipStep } from "@shared/history/owners";
 import { verifyEvent } from "@shared/history/sign";
 import type { GenesisEvent, LogEntry } from "@shared/history/types";
 import { checkPhysics } from "@shared/physics";
 import type { AppError } from "@shared/result";
 import { ATTACH_RT_AHEAD_S, FRAME_MAX_BYTES, type ToService } from "@shared/worldProtocol";
 import { isoAt } from "./clock";
+import { openQuota } from "./door";
 import type { Hub, Session } from "./hub";
+import { isImported, replaceMirrorLog } from "./mirror";
 import { newWorld, type ServiceWorld } from "./world";
 
 type AttachFrame = Extract<ToService, { t: "attach" }>;
@@ -45,6 +51,8 @@ interface NewUpload {
   entries: LogEntry[];
   bytes: number;
   cursor: LogCursor;
+  /** Who owns the world after the entries so far (the ownership pass of `verifyLog`). */
+  ownership: Ownership;
 }
 
 /** The owner attaching again a world this service already holds: only compared, never stored. */
@@ -64,6 +72,28 @@ function fail(hub: Hub, session: Session, world: string, error: AppError): void 
   hub.refuse(session, world, error);
 }
 
+function attachExists(): AppError {
+  return {
+    code: "attach-world-exists",
+    message: "This service already holds that world, with another history.",
+    hint: "Open it with have 0 to compare, or attach it to another service.",
+  };
+}
+
+/** A mirror of a never-attached world (phase 4, D5): imported here, no receipt anywhere in it. */
+function unreceiptedMirror(hub: Hub, world: ServiceWorld): boolean {
+  return world.now.sequencer === null && isImported(hub.store, world.id);
+}
+
+/** The upload is exactly the mirror's log: the same length, and chain(k) binds all of 1..k. */
+function sameMirror(hub: Hub, world: ServiceWorld, upload: NewUpload): boolean {
+  return (
+    unreceiptedMirror(hub, world) &&
+    world.head.n === upload.cursor.n &&
+    world.head.chain === upload.cursor.chain
+  );
+}
+
 function startUpload(hub: Hub, session: Session, frame: AttachFrame): NewUpload | AppError {
   const first = frame.entries[0];
   if (first === undefined || first.n !== 1 || first.event.id !== frame.world) {
@@ -75,16 +105,13 @@ function startUpload(hub: Hub, session: Session, frame: AttachFrame): NewUpload 
   }
   const genesis = openGenesis(first.event);
   if (!genesis.ok) return genesis.error;
-  if (genesis.value.author !== session.key) {
-    return {
-      code: "attach-not-owner",
-      message: "Only the world's owner attaches it.",
-      hint: "Attach it from the device that made the world.",
-    };
-  }
+  // Whether the uploader owns the world is known once its owner changes are in (checked at the end).
   const physics = checkPhysics(genesis.value.body.physicsVersion);
   if (!physics.ok) return physics.error;
-  if (hub.ownedWorlds(genesis.value.author) >= hub.limits.worldsPerOwner) {
+  const quota = openQuota(hub, session, frame.world);
+  if (quota !== null) return quota;
+  const held = hub.worlds.has(frame.world);
+  if (!held && hub.ownedWorlds(genesis.value.author) >= hub.limits.worldsPerOwner) {
     return {
       code: "quota-owner-worlds",
       message: `One owner attaches at most ${hub.limits.worldsPerOwner} worlds here.`,
@@ -98,6 +125,7 @@ function startUpload(hub: Hub, session: Session, frame: AttachFrame): NewUpload 
     entries: [],
     bytes: 0,
     cursor: logStart(frame.world),
+    ownership: ownershipOfGenesis(genesis.value.author),
   };
 }
 
@@ -113,13 +141,14 @@ function addEntries(hub: Hub, upload: NewUpload, entries: readonly LogEntry[]): 
         hint: "This device's copy of the world was changed; it cannot be attached as it is.",
       };
     }
-    if (sequencerKeyOf(entry, upload.world, upload.genesis.author) !== null) {
+    if (sequencerKeyOf(entry, upload.world, upload.ownership.owners) !== null) {
       return {
         code: "attach-has-sequencer",
         message: "This world was already attached to a service.",
-        hint: "Moving a world between services comes later (phase 4).",
+        hint: "Move it by sending a sequencer for this service from an owner's device.",
       };
     }
+    upload.ownership = ownershipStep(upload.ownership, entry, upload.world);
     const bytes = utf8Length(JSON.stringify(entry));
     if (bytes > ENTRY_LINE_MAX) {
       return { code: "attach-entry-too-large", message: `Entry ${entry.n} is too large to serve.` };
@@ -156,7 +185,15 @@ function finish(
     return;
   }
   const event = read.value;
-  if (event.kind !== "sequencer" || event.author !== upload.genesis.author) {
+  if (!upload.ownership.owners.includes(session.key ?? "")) {
+    fail(hub, session, id, {
+      code: "attach-not-owner",
+      message: "Only the world's owners attach it.",
+      hint: "Attach it from the device that made the world, or a co-owner's.",
+    });
+    return;
+  }
+  if (event.kind !== "sequencer" || event.author !== session.key) {
     fail(hub, session, id, {
       code: "attach-sequencer-invalid",
       message: "The last attach frame must carry the owner's sequencer event.",
@@ -209,10 +246,15 @@ function finish(
     return;
   }
   const world = newWorld(upload.genesis, entries, [...verdicts, verdict], hub.key);
-  const written = hub.store.createLog(
-    id,
-    entries.map((entry) => JSON.stringify(entry)),
-  );
+  const lines = entries.map((entry) => JSON.stringify(entry));
+  const mirror = hub.worlds.get(id);
+  if (mirror !== undefined && !sameMirror(hub, mirror, upload)) {
+    fail(hub, session, id, attachExists());
+    return;
+  }
+  // A never-attached mirror of exactly this log is receipted in place (see the header).
+  const written =
+    mirror === undefined ? hub.store.createLog(id, lines) : replaceMirrorLog(hub.store, id, lines);
   if (!written.ok) {
     fail(hub, session, id, written.error);
     return;
@@ -229,16 +271,17 @@ function finish(
  * stored entry k + 1. Then it is answered like the first attach; anything else is refused.
  */
 function replay(hub: Hub, session: Session, world: ServiceWorld, frame: AttachFrame): void {
-  const exists: AppError = {
-    code: "attach-world-exists",
-    message: "This service already holds that world, with another history.",
-    hint: "Open it with have 0 to compare, or attach it to another service.",
-  };
-  if (session.key !== world.owner) {
+  const exists = attachExists();
+  if (!isOwner(world.now, session.key ?? "")) {
     fail(hub, session, world.id, exists);
     return;
   }
   const upload = session.upload?.kind === "replay" ? session.upload : null;
+  const quota = upload === null ? openQuota(hub, session, world.id) : null;
+  if (quota !== null) {
+    fail(hub, session, world.id, quota);
+    return;
+  }
   let n = upload?.n ?? 0;
   for (const entry of frame.entries) {
     if (entry.n !== n + 1 || world.chainAt(entry.n) !== entry.chain) {
@@ -268,7 +311,7 @@ export function handleAttach(hub: Hub, session: Session, frame: AttachFrame): vo
     return;
   }
   const known = hub.worlds.get(id);
-  if (known !== undefined) {
+  if (known !== undefined && !unreceiptedMirror(hub, known)) {
     replay(hub, session, known, frame);
     return;
   }

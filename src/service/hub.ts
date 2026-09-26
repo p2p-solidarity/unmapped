@@ -8,22 +8,24 @@
 // large, not JSON, not a known message, binary, a forged or missing auth); everything else is
 // answered with `rejected` (one event) or `refused` (one frame), with a code and a hint.
 //
-// Reads follow the world's door (D8): the owner; members unless private; an invitee holding a valid
+// Reads follow the world's door (D8): the owners; members unless private; an invitee holding a valid
 // invite and proof (to fetch the pack and submit its `member.join`); anyone in a public world. The
 // door is re-checked for every reader whenever the log grows, so a removal or a door change
-// unsubscribes at once.
+// unsubscribes at once. So is the protocol (phase 4, D5): a protocol-1 client never reads a world
+// with co-owners or a chain opt-in (`protocolRefusal`).
 
-import { mayRead, roleOf } from "@shared/history/access";
+import { roleOf } from "@shared/history/access";
 import { verifyInvite } from "@shared/history/admit";
 import { base32 } from "@shared/history/ids";
 import { verifyWsAuth } from "@shared/history/sign";
 import type { Invite } from "@shared/history/types";
-import { type AppError, err, ok, type Result } from "@shared/result";
+import { type AppError, fail } from "@shared/result";
 import {
   type FromService,
   frameText,
   type OpenedRole,
   type Presence,
+  protocolRefusal,
   readToService,
   type ToService,
   WORLD_PROTOCOL,
@@ -41,7 +43,9 @@ import {
 } from "./claims";
 import { type Clock, isoAt, RateWindow } from "./clock";
 import type { ServiceLimits } from "./config";
+import { openQuota, readAccess } from "./door";
 import type { ServiceKey } from "./keyFile";
+import { isImported, refuseMirrorClaim } from "./mirror";
 import type { FileStore } from "./store";
 import { handleSubmit } from "./submit";
 import { serviceVerdict, type VerdictFn } from "./verdict";
@@ -65,6 +69,8 @@ export interface Join {
 export interface Subscription {
   role: OpenedRole;
   join: Join | null;
+  /** The world protocol the client opened with (an attach: this service's own). */
+  protocol: number;
 }
 
 export interface Session {
@@ -144,7 +150,9 @@ export class Hub {
     const { ids, strays } = this.store.worldIds();
     report.strays = strays;
     for (const id of ids) {
-      const outcome = loadWorld(this.store, id, this.key, this.verdict);
+      // A world imported from a `.world` may be a mirror: receipts under another service's key.
+      const mirror = isImported(this.store, id);
+      const outcome = loadWorld(this.store, id, this.key, this.verdict, { mirror });
       if (!outcome.ok) {
         this.broken.set(id, outcome.error);
         report.broken.push({ world: id, error: outcome.error });
@@ -303,7 +311,8 @@ export class Hub {
         handleSubmit(this, session, frame);
         return;
       case "claim":
-        handleClaim(this, session, frame);
+        // A mirror writes nothing (phase 4, D5): no lease, so no model call is spent on it.
+        if (!refuseMirrorClaim(this, session, frame)) handleClaim(this, session, frame);
         return;
       case "release":
         handleRelease(this, session, frame);
@@ -381,41 +390,7 @@ export class Hub {
 
   // ── The door ──────────────────────────────────────────────────────────────────────────────
 
-  /**
-   * Whether `key` may read `world` now, and as what. An invitee needs a valid invite and proof;
-   * in a public world anyone reads as a visitor.
-   */
-  readAccess(world: ServiceWorld, key: string, join: Join | null): Result<OpenedRole> {
-    const { now } = world;
-    const role = roleOf(now, key);
-    if (role === "owner") return ok("owner");
-    if (role === "removed") {
-      return err("access-removed", "The owner removed this key from the world.");
-    }
-    if (now.access === "private") {
-      return err("access-private", "This world is private.", "Ask its owner to open the door.");
-    }
-    if (role === "member") return ok("member");
-    if (join !== null) {
-      const at = isoAt(this.clock.now());
-      if (verifyInvite(now, join.invite, join.proof, key, at).ok) return ok("invitee");
-    }
-    if (now.access === "public") return ok("visitor");
-    return err(
-      "access-members-only",
-      "Only members read this world.",
-      "Ask the owner for an invite.",
-    );
-  }
-
-  /** Blob reads: whoever may read the world, or holds a live invitee subscription to it. */
-  mayReadBlob(world: ServiceWorld, key: string): boolean {
-    if (mayRead(world.now, key)) return true;
-    return this.readers(world.id).some((session) => {
-      const sub = session.worlds.get(world.id);
-      return session.key === key && sub?.join != null && this.readAccess(world, key, sub.join).ok;
-    });
-  }
+  // The door itself (`readAccess`, `mayReadBlob`) and the open-worlds limit live in ./door.
 
   private open(session: Session, frame: Frame<"open">): void {
     const key = session.key ?? "";
@@ -432,12 +407,9 @@ export class Hub {
       );
       return;
     }
-    if (frame.protocol !== WORLD_PROTOCOL) {
-      this.refuse(session, world.id, {
-        code: "protocol-unsupported",
-        message: `This service speaks world protocol ${WORLD_PROTOCOL}, not ${frame.protocol}.`,
-        hint: "Use a build of UNMAPPED that matches the service.",
-      });
+    const protocol = protocolRefusal(world.now, frame.protocol);
+    if (protocol !== null) {
+      this.refuse(session, world.id, protocol);
       return;
     }
     const physics = world.genesis.body.physicsVersion;
@@ -449,12 +421,9 @@ export class Hub {
       });
       return;
     }
-    if (!session.worlds.has(world.id) && session.worlds.size >= this.limits.openWorlds) {
-      this.refuse(session, world.id, {
-        code: "quota-open-worlds",
-        message: `At most ${this.limits.openWorlds} worlds open per connection.`,
-        hint: "Close a world first.",
-      });
+    const quota = openQuota(this, session, world.id);
+    if (quota !== null) {
+      this.refuse(session, world.id, quota);
       return;
     }
     const join = frame.join ?? null;
@@ -465,7 +434,7 @@ export class Hub {
         return;
       }
     }
-    const access = this.readAccess(world, key, join);
+    const access = readAccess(this, world, key, join);
     if (!access.ok) {
       this.refuse(session, world.id, access.error);
       return;
@@ -483,12 +452,18 @@ export class Hub {
       });
       return;
     }
-    this.subscribe(session, world, { role: access.value, join }, frame.have);
+    const sub: Subscription = { role: access.value, join, protocol: frame.protocol };
+    this.subscribe(session, world, sub, frame.have);
   }
 
   /** After an attach: the owner's connection reads the world from entry 1, receipts and all. */
   admitOwner(session: Session, world: ServiceWorld): void {
-    this.subscribe(session, world, { role: "owner", join: null }, 0);
+    const quota = openQuota(this, session, world.id);
+    if (quota !== null) {
+      this.refuse(session, world.id, quota);
+      return;
+    }
+    this.subscribe(session, world, { role: "owner", join: null, protocol: WORLD_PROTOCOL }, 0);
   }
 
   /** Subscribes, then sends `opened`, every entry after `have`, and who else is here. */
@@ -547,7 +522,9 @@ export class Hub {
     for (const session of this.readers(world.id)) {
       const sub = session.worlds.get(world.id);
       if (sub === undefined) continue;
-      const access = this.readAccess(world, session.key ?? "", sub.join);
+      const newer = protocolRefusal(world.now, sub.protocol);
+      const access =
+        newer === null ? readAccess(this, world, session.key ?? "", sub.join) : fail(newer);
       if (!access.ok) {
         this.refuse(session, world.id, access.error);
         this.closeWorld(session, world.id);

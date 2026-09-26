@@ -4,13 +4,15 @@
 //
 //   readEvent → author is this connection's key → not already in the log (a repeat is silent: the
 //   entry reaches its author in the stream) → verdict (id, signature, DSL body) → a `sequencer` names
-//   this service → quotas (world, member, the visitors' shared budget, new visitor keys per address)
-//   → admit (door, conflicts, parents, spots, links, rumors) → at most one variant per target.
+//   this service → a mirror takes only a rehost (./mirror) → the door → quotas (world, member, the
+//   visitors' shared budget, new visitor keys per address) → admit (door, conflicts, parents,
+//   spots, links, rumors) → at most one variant per target.
 //
 // What passes is sequenced with this service's receipt; the batch is appended and fsynced once,
 // then pushed to every reader. Each refusal is its own `rejected` frame with the event id.
 
 import { chunkKey } from "@shared/chunks";
+import { mayWrite } from "@shared/history/access";
 import { admit } from "@shared/history/admit";
 import { dayOf } from "@shared/history/decay";
 import { readEvent } from "@shared/history/event";
@@ -21,6 +23,7 @@ import type { AppError } from "@shared/result";
 import type { ToService } from "@shared/worldProtocol";
 import { isoAt } from "./clock";
 import type { Hub, Session } from "./hub";
+import { mirrorRefusal } from "./mirror";
 import { checkUsage, ENTRY_OVERHEAD, payerOf } from "./usage";
 import { wireError } from "./wire";
 import type { Draft, ServiceWorld } from "./world";
@@ -80,9 +83,15 @@ function sequenceOne(
     return {
       code: "sequencer-key-foreign",
       message: "This service sequences only under its own key.",
-      hint: "Moving a world to another service comes later (phase 4).",
+      hint: "Send a world's sequencer to the service it names.",
     };
   }
+  // A mirror (phase 4, D5) sequences only a rehost: an owner's sequencer naming this service.
+  const mirror = mirrorRefusal(now, event, hub.key.key);
+  if (mirror !== null) return mirror;
+  // The door before the quotas: a visitor at a daily cap still hears why it may not write this.
+  const door = mayWrite(now, event.kind, event.author);
+  if (!door.ok) return door.error;
   const payer = payerOf(now, now.head.n + 1, event.author, event.kind, hub.key.key);
   const bytes = utf8Length(JSON.stringify(raw)) + ENTRY_OVERHEAD;
   const input = { payer, author: event.author, kind: event.kind, bytes, ms: batch.ms };

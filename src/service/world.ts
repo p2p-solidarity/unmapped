@@ -270,6 +270,7 @@ export function loadWorld(
   world: string,
   key: ServiceKey,
   verdict: VerdictFn,
+  options: { mirror?: boolean } = {},
 ): Result<LoadOutcome> {
   const read = store.readLog(world);
   if (!read.ok) return read;
@@ -287,7 +288,8 @@ export function loadWorld(
   const changed = entries.find((entry) => !verifyEvent(entry.event).ok);
   if (changed !== undefined) return logInvalid(world, `entry ${changed.n} was changed on disk.`);
   const receiptKey = receiptKeyAt(checked.value.schedule, checked.value.cursor.n);
-  if (receiptKey !== key.key) {
+  // A mirror (phase 4, D5: imported from a `.world`) keeps the old service's receipts.
+  if (receiptKey !== key.key && options.mirror !== true) {
     return logInvalid(world, "its receipts are not this service's key.", "world-key-foreign");
   }
   const genesis = openGenesis(entries[0]?.event);

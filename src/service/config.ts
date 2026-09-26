@@ -11,6 +11,7 @@
 import { BEAT_EVERY_MS } from "@shared/history/beat";
 import { err, ok, type Result } from "@shared/result";
 import { FRAME_LIMITS } from "@shared/worldProtocol";
+import { parseBrowserOrigin } from "./cors";
 
 export interface ServiceLimits {
   /** Connection / IP. */
@@ -102,6 +103,8 @@ export interface ServiceConfig {
   test: boolean;
   beatEveryMs: number;
   limits: ServiceLimits;
+  /** `--browser-origin` (repeatable): exact page origins that may read blobs (phase 4, D7). */
+  browserOrigins: string[];
 }
 
 const UNITS: Record<string, number> = { ms: 1, s: 1_000, m: 60_000, h: 3_600_000, d: 86_400_000 };
@@ -150,6 +153,10 @@ export function usage(): string {
     "  --host <address>                            default 127.0.0.1 (put TLS in front for the internet)",
     "  --trust-proxy                               read the client address from X-Forwarded-For",
     "  --beat-every <duration>                     UNMAPPED_SERVICE_TEST=1 only; default 6h",
+    "  --browser-origin <origin>                   a page origin that may read blobs (repeatable)",
+    "",
+    "  bun run service -- import <file.world> --data <dir>    a .world, served as a mirror",
+    "  bun run service -- export <worldId> --data <dir> [--out <file>]",
     "",
     "Anti-flood limits (D9):",
     ...limits,
@@ -171,6 +178,7 @@ export function parseArgs(
     test,
     beatEveryMs: BEAT_EVERY_MS,
     limits,
+    browserOrigins: [],
   };
   const args = argv[0] === "--" ? argv.slice(1) : [...argv];
   for (let index = 0; index < args.length; index += 1) {
@@ -194,6 +202,16 @@ export function parseArgs(
       config.host = value;
     } else if (flag === "data") {
       config.data = value;
+    } else if (flag === "browser-origin") {
+      const origin = parseBrowserOrigin(value);
+      if (origin === null) {
+        return err(
+          "service-arg",
+          `--browser-origin ${value} is not an origin.`,
+          "Name it exactly, as http(s)://host[:port] with no path.",
+        );
+      }
+      if (!config.browserOrigins.includes(origin)) config.browserOrigins.push(origin);
     } else if (flag === "beat-every") {
       if (!test) {
         return err(

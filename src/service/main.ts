@@ -8,6 +8,7 @@
 
 import { FRAME_MAX_BYTES } from "@shared/worldProtocol";
 import { beatPass } from "./beats";
+import { bundleCommand, runBundleCommand } from "./bundle";
 import { ServiceClock } from "./clock";
 import { parseArgs, usage } from "./config";
 import { handleHttp } from "./http";
@@ -56,6 +57,12 @@ function exit(message: string, hint?: string): never {
 }
 
 function main(): void {
+  // `.world` files (phase 4, D5): `import <file> --data <dir>` / `export <worldId> --data <dir>`.
+  const bundle = bundleCommand(process.argv.slice(2));
+  if (bundle !== null) {
+    if (!bundle.ok) exit(bundle.error.message, bundle.error.hint);
+    process.exit(runBundleCommand(bundle.value));
+  }
   const bun = (globalThis as { Bun?: BunRuntime }).Bun;
   if (bun === undefined) exit("run this with Bun: bun run service -- --data <dir>");
   const parsed = parseArgs(process.argv.slice(2), process.env);
@@ -86,7 +93,12 @@ function main(): void {
     console.error(`world service: NOT serving ${world}: ${error.code} — ${error.message}`);
   }
   for (const stray of report.strays) console.error(`world service: ignoring worlds/${stray}`);
-  const context = { hub, test: config.test, advance: (days: number) => clock.advance(days) };
+  const context = {
+    hub,
+    test: config.test,
+    advance: (days: number) => clock.advance(days),
+    browserOrigins: config.browserOrigins,
+  };
 
   const clientIp = (request: Request, server: BunServer): string => {
     if (config.trustProxy) {
@@ -118,7 +130,9 @@ function main(): void {
       );
     },
     websocket: {
-      maxPayloadLength: FRAME_MAX_BYTES,
+      // Above the frame limit, so the hub's own reader refuses an oversized frame and closes with
+      // 1009 (`frame-too-large`); at the limit Bun would drop the socket first (1006).
+      maxPayloadLength: FRAME_MAX_BYTES + 64 * 1024,
       idleTimeout: 120,
       open(ws) {
         const session = hub.connect({

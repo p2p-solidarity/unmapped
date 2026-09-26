@@ -80,12 +80,13 @@ export function emptyUsage(): WorldUsage {
 }
 
 /**
- * Who pays for entry `n` by `author`: the service for its own beats, a member for the owner, a
- * joined member (joined before n) or a `member.join`, else a visitor. `now` may be the fold before
- * n or any later fold: a join's n never changes and a removed key writes nothing after.
+ * Who pays for entry `n` by `author`: the service for its own beats, a member for the owner or a
+ * co-owner (one first made an owner before n: phase 4 D5), a joined member (joined before n) or a
+ * `member.join`, else a visitor. `now` may be the fold before n or any later fold: a join's n and a
+ * first `owner.add`'s n never change, and a removed key writes nothing after.
  */
 export function payerOf(
-  now: Pick<WorldNow, "owner" | "members">,
+  now: Pick<WorldNow, "owner" | "owners" | "members">,
   n: number,
   author: string,
   kind: string,
@@ -93,6 +94,7 @@ export function payerOf(
 ): Payer {
   if (author === serviceKey) return "service";
   if (kind === "member.join" || author === now.owner) return "member";
+  if ((now.owners[author]?.n ?? n) < n) return "member";
   const member = now.members[author];
   return member !== undefined && member.n < n ? "member" : "visitor";
 }
