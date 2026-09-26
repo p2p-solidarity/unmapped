@@ -106,6 +106,7 @@ describe("packFiles / unpackFiles", () => {
       app: {} as SeedApi["app"],
       createDrafts: {} as SeedApi["createDrafts"],
       usage: {} as SeedApi["usage"],
+      images: {} as SeedApi["images"],
       gateway: {} as SeedApi["gateway"],
     } as SeedApi;
     const previous = globalThis.window;
@@ -171,6 +172,7 @@ describe("packFiles / unpackFiles", () => {
       app: {} as SeedApi["app"],
       createDrafts: {} as SeedApi["createDrafts"],
       usage: {} as SeedApi["usage"],
+      images: {} as SeedApi["images"],
       gateway: {} as SeedApi["gateway"],
     } as SeedApi;
     const previous = globalThis.window;

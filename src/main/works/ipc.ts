@@ -5,6 +5,7 @@
 import { readFile } from "node:fs/promises";
 import { basename, extname, join } from "node:path";
 import { IPC } from "@shared/ipc";
+import { PLAYER_SUPPLIED } from "@shared/licence";
 import { err, ok, type Result } from "@shared/result";
 import {
   ASSET_ID,
@@ -27,6 +28,8 @@ import { readLookPicture } from "../cartridges/look";
 import { isCartridgeId, isCartridgeVersion } from "../cartridges/paths";
 import type { MainContext } from "../context";
 import { handle } from "../handle";
+import { selectImageProvider } from "../images/registry";
+import { recordWorkPicture, workLicensing } from "../images/workLicences";
 import { recordUsage } from "../usage/ipc";
 import {
   createDraft,
@@ -39,7 +42,7 @@ import {
   writeCandidate,
 } from "./drafts";
 import { FrameSessions } from "./frame";
-import { assetPrompt, imageProvider } from "./images";
+import { assetPrompt } from "./images";
 import { readLibrary } from "./library";
 import { openSession } from "./session";
 import { changePlay, createPlay, listPlays, listRevisions, readPlay, type WorkDirs } from "./store";
@@ -265,8 +268,10 @@ export function registerWorksIpc(ctx: MainContext): void {
     z.tuple([z.string().regex(DRAFT_ID), z.string().regex(CANDIDATE_ID)]),
     ([draftId, candidateId]) => revertDraft(dirs, draftId, candidateId),
   );
+  // Every picture's licence is named at publish, and commercial mode refuses new pictures whose
+  // licence is not commercial (rev 6 phase 4, D4: main/images/workLicences.ts).
   handle(IPC.works.publishDraft, z.tuple([z.string().regex(DRAFT_ID)]), ([draftId]) =>
-    publishDraft(dirs, draftId),
+    publishDraft(dirs, draftId, new Date(), workLicensing(dirs, draftId)),
   );
   handle(
     IPC.works.replaceAsset,
@@ -295,6 +300,9 @@ export function registerWorksIpc(ctx: MainContext): void {
         return err("asset-too-large", `The image is ${bytes.length} bytes (limit 2 MB).`);
       }
       const path = `assets/${assetId}${extension === ".jpeg" ? ".jpg" : extension}`;
+      const origin = { licence: PLAYER_SUPPLIED, provider: null, model: null };
+      const recorded = await recordWorkPicture(dirs, draftId, bytes, origin);
+      if (!recorded.ok) return recorded;
       const nextAssets = { ...assets, [assetId]: { ...entry, src: path } };
       return writeCandidate(dirs, {
         draftId,
@@ -340,9 +348,15 @@ export function registerWorksIpc(ctx: MainContext): void {
         usesLibrary: Object.values(assets).some((one) => one.src?.startsWith("library/") === true),
         reference: look.reference !== undefined,
       });
+      // The device's choice, refused here when commercial mode is on and its licence is not.
+      const selected = await selectImageProvider();
+      if (!selected.ok) {
+        process.stdout.write(`[image] refused ${requestId} · ${selected.error.code}\n`);
+        return selected;
+      }
+      const provider = selected.value;
       const controller = new AbortController();
       imageInflight.set(requestId, controller);
-      const provider = imageProvider();
       const started = Date.now();
       const image = await provider
         .generate(
@@ -363,9 +377,14 @@ export function registerWorksIpc(ctx: MainContext): void {
         ms: Date.now() - started,
         outcome: image.ok ? "done" : image.error.code === "cancelled" ? "aborted" : "failed",
       });
-      // Which request drew it and over which look (rev 6 D2), so the log shows the reference.
+      // Which request drew it and over which look (rev 6 D2), so the log shows the reference. A
+      // provider that could not use the reference says so, and so does the summary (D4).
+      const note =
+        image.ok && look.reference !== undefined && !image.value.usedReference
+          ? ` without the look of ${from?.cartridgeId}@${from?.version} (${provider.id} has no edits route)`
+          : look.note;
       const how = image.ok
-        ? ` · ${image.value.model}${image.value.call === undefined ? "" : ` · ${image.value.call}`}${look.note}`
+        ? ` · ${image.value.model}${image.value.call === undefined ? "" : ` · ${image.value.call}`} · licence ${image.value.licence}${note}`
         : "";
       process.stdout.write(
         `[image] ${image.ok ? "done" : "fail"} ${requestId} · ${provider.id}${how} · ${Date.now() - started} ms${image.ok ? "" : ` · ${image.error.code}`}\n`,
@@ -376,13 +395,19 @@ export function registerWorksIpc(ctx: MainContext): void {
         return err("cancelled", "The picture was cancelled; nothing was changed.");
       }
       const path = `assets/${assetId}.png`;
+      const recorded = await recordWorkPicture(dirs, draftId, image.value.png, {
+        licence: image.value.licence,
+        provider: image.value.provider,
+        model: image.value.model,
+      });
+      if (!recorded.ok) return recorded;
       const nextAssets = { ...assets, [assetId]: { ...entry, src: path } };
       return writeCandidate(dirs, {
         draftId,
         parent: head,
         kind: "asset",
         request: `Generate image "${assetId}": ${prompt}`,
-        summary: `Image "${assetId}" was generated by ${image.value.model}${look.note}.`,
+        summary: `Image "${assetId}" was generated by ${image.value.model}${note}.`,
         text: { ...content.value.text, assets: `${JSON.stringify(nextAssets, null, 2)}\n` },
         changed: ["assets.json"],
         metrics: {

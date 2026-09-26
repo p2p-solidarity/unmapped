@@ -4,11 +4,14 @@
 // chosen one is published inside the cartridge by Build (`LOOK_PICTURE_ASSET`); the rest die with
 // the draft. Every write goes through the draft's write queue, so a picture that lands after the
 // draft was deleted cannot bring its folder back. A file here is untrusted on the way back in:
-// only `<16 hex>.png` names holding a real PNG within the size limit are ever read out.
+// only `<16 hex>.png` names holding a real PNG within the size limit are ever read out. Beside each
+// picture main keeps its licence record (`<id>.json`, rev 6 phase 4 D4: which provider drew it, under
+// which licence), so publishing can name the look's licence by its hash (`readLookLicences`).
 
 import { randomBytes } from "node:crypto";
 import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import type { ContentHash } from "@shared/cartridge";
 import {
   type CreateDraft,
   DRAFT_ID,
@@ -18,7 +21,13 @@ import {
   type LookPicture,
 } from "@shared/createDraft";
 import { err, fail, ok, type Result, toError } from "@shared/result";
-import { DRAFT_FILE, draftDir, serialized } from "./createDrafts";
+import {
+  drawnRecord,
+  type PictureOrigin,
+  readDrawnRecords,
+  writeDrawnRecord,
+} from "../images/drawn";
+import { DRAFT_FILE, draftDir, isCreateDraftDir, serialized } from "./createDrafts";
 
 const LOOKS = "looks";
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a] as const;
@@ -96,11 +105,15 @@ async function pictureIds(dir: string): Promise<string[]> {
 const idProblem = (draftId: string): Result<never> | null =>
   DRAFT_ID.test(draftId) ? null : err("create-draft-id-invalid", "That is not a draft id.");
 
-/** Keeps one drawn picture with its draft; refused when the draft is gone or already full. */
+/**
+ * Keeps one drawn picture with its draft, and beside it who drew it under which licence (`origin`;
+ * absent = no record, so the picture reads as `unknown`). Refused when the draft is gone or full.
+ */
 export async function storeLook(
   workspacesDir: string,
   draftId: string,
   png: Uint8Array,
+  origin?: PictureOrigin,
 ): Promise<Result<LookPicture>> {
   const bad = idProblem(draftId);
   if (bad !== null) return bad;
@@ -127,6 +140,7 @@ export async function storeLook(
       const temp = `${path}.tmp-${process.pid}`;
       await writeFile(temp, png);
       await rename(temp, path);
+      if (origin !== undefined) await writeDrawnRecord(target, id, drawnRecord(png, origin));
       return ok({ id, dataUrl: dataUrl(png) });
     } catch (error) {
       return fail(toError(error, "create-look-write-failed"));
@@ -169,11 +183,31 @@ export async function discardLooks(
     try {
       const target = join(dir, LOOKS);
       for (const id of await pictureIds(target)) {
-        if (!keep.includes(id)) await rm(join(target, `${id}.png`), { force: true });
+        if (keep.includes(id)) continue;
+        await rm(join(target, `${id}.png`), { force: true });
+        await rm(join(target, `${id}.json`), { force: true });
       }
       return ok(undefined);
     } catch (error) {
       return fail(toError(error, "create-look-remove-failed"));
     }
   });
+}
+
+/**
+ * The licence of every look picture this device's Create drafts keep, by hash: how a published
+ * `assets/look.png` finds the licence it was drawn under (the renderer only sends the bytes).
+ */
+export async function readLookLicences(workspacesDir: string): Promise<Map<ContentHash, string>> {
+  const known = new Map<ContentHash, string>();
+  let names: string[];
+  try {
+    names = await readdir(workspacesDir);
+  } catch {
+    return known;
+  }
+  for (const name of names) {
+    if (isCreateDraftDir(name)) await readDrawnRecords(join(workspacesDir, name, LOOKS), known);
+  }
+  return known;
 }

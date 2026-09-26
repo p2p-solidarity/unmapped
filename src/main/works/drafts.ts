@@ -6,6 +6,7 @@
 import { randomBytes } from "node:crypto";
 import { readdir, readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
+import type { LicenceFile } from "@shared/images";
 import { err, ok, type Result } from "@shared/result";
 import { checkWorkText } from "@shared/workEdits";
 import {
@@ -20,6 +21,7 @@ import {
   type WorkCodeFile,
   type WorkDraft,
   type WorkManifest,
+  type WorkRef,
   type WorkText,
 } from "@shared/works";
 import { z } from "zod";
@@ -282,11 +284,22 @@ export function revertDraft(
   });
 }
 
+/**
+ * Names the licence of every picture of the revision about to be published, or refuses it
+ * (rev 6 phase 4, D4: main/images/workLicences.ts). Runs inside the draft's lock, on exactly the
+ * content that is published.
+ */
+export type WorkLicensing = (
+  content: WorkContent,
+  parent: WorkRef | null,
+) => Promise<Result<LicenceFile | null>>;
+
 /** Publishes `head` as the next immutable revision of the draft's world. */
 export function publishDraft(
   dirs: WorkDirs,
   draftId: string,
   now = new Date(),
+  licensing?: WorkLicensing,
 ): Promise<Result<{ draft: WorkDraft; manifest: WorkManifest }>> {
   return locked(`draft:${draftId}`, async () => {
     const current = await readDraft(dirs, draftId);
@@ -296,14 +309,18 @@ export function publishDraft(
     const head = draft.candidates.find((candidate) => candidate.id === draft.head);
     const content = await readCandidate(dirs, draftId, draft.head);
     if (!content.ok) return content;
+    const parent = draft.published.at(-1) ?? null;
+    const licences = licensing === undefined ? ok(null) : await licensing(content.value, parent);
+    if (!licences.ok) return licences;
     const published = await publishRevision(dirs, {
       workId: draft.workId,
       title: draft.title,
       description: head?.summary ?? "",
       content: content.value,
-      parent: draft.published.at(-1) ?? null,
+      parent,
       draftId,
       now,
+      licences: licences.value,
     });
     if (!published.ok) return published;
     const ref = {

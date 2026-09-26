@@ -6,10 +6,11 @@ import { app, dialog } from "electron";
 import { z } from "zod";
 import type { MainContext } from "../context";
 import { handle } from "../handle";
+import { publishLicensedCartridge } from "../images/cartridgeLicences";
 import { installCartridgePack } from "./install";
 import { packCartridge } from "./pack";
 import { publishCartridgeInputSchema } from "./schemas";
-import { listCartridgeRevisions, publishCartridgeRevision, readCartridgeRevision } from "./store";
+import { listCartridgeRevisions, readCartridgeRevision } from "./store";
 
 const cartridgeIdSchema = z.string().regex(/^[a-z0-9][a-z0-9-]{0,79}$/);
 const versionSchema = z.string().min(1).max(128);
@@ -87,8 +88,10 @@ export function registerCartridgesIpc(ctx: MainContext): void {
     z.tuple([cartridgeIdSchema, versionSchema]),
     ([cartridgeId, version]) => readCartridgeRevision(ctx.cartridgesDir, cartridgeId, version),
   );
+  // Main names every picture's licence in a hashed assets/licences.json, and refuses new pictures
+  // whose licence is not commercial while commercial mode is on (rev 6 phase 4, D4).
   handle(IPC.cartridges.publish, z.tuple([publishCartridgeInputSchema]), ([input]) =>
-    publishCartridgeRevision(ctx.cartridgesDir, input),
+    publishLicensedCartridge(ctx, input),
   );
   handle(
     IPC.cartridges.exportPack,

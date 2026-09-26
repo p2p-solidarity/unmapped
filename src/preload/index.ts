@@ -30,6 +30,13 @@ import type { AccountStatus, PairingLookup, QuotaView } from "@shared/gatewayApi
 import type { AccessPolicy } from "@shared/history/types";
 import type { DataKeyWrappingRecord } from "@shared/identity";
 import type {
+  ImageProbe,
+  ImageProviderId,
+  ImageSettings,
+  LicenceAudit,
+  LicenceAuditTarget,
+} from "@shared/images";
+import type {
   AppInfo,
   CheckpointInstanceInput,
   CreateInstanceInput,
@@ -417,6 +424,12 @@ const api: SeedApi = {
       subscribe<WorldPresenceEvent>(IPC.world.presence, listener),
     onStream: (listener: (event: WorldStreamEvent) => void) =>
       subscribe<WorldStreamEvent>(IPC.world.stream, listener),
+  },
+  images: {
+    settings: () => invoke<Result<ImageSettings>>(IPC.images.settings),
+    choose: (id: ImageProviderId) => invoke<Result<ImageSettings>>(IPC.images.choose, id),
+    probe: (id: ImageProviderId) => invoke<Result<ImageProbe>>(IPC.images.probe, id),
+    audit: (target: LicenceAuditTarget) => invoke<Result<LicenceAudit>>(IPC.images.audit, target),
   },
   gateway: {
     route: () => invoke<Result<RouteView>>(IPC.gateway.route),

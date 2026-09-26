@@ -9,6 +9,7 @@ import { CREATE } from "./create";
 import { DEPTHS } from "./depths";
 import { HUD } from "./hud";
 import { IDENTITY } from "./identity";
+import { IMAGES } from "./images";
 import { INPUT } from "./input";
 import { LAND } from "./land";
 import { LIBRARY } from "./library";
@@ -29,6 +30,7 @@ export const STRINGS = {
   depths: DEPTHS,
   hud: HUD,
   identity: IDENTITY,
+  images: IMAGES,
   input: INPUT,
   land: LAND,
   library: LIBRARY,

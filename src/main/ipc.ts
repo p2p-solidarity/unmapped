@@ -16,6 +16,7 @@ import { registerMarketIpc } from "./chain/marketIpc";
 import type { MainContext } from "./context";
 import { registerGameIpc } from "./game/base";
 import { registerWorldIpc } from "./histories/ipc";
+import { registerImagesIpc } from "./images/ipc";
 import { registerInferenceIpc } from "./inference/ipc";
 import { registerInstancesIpc } from "./instances/ipc";
 import { registerModsIpc } from "./mods/ipc";
@@ -48,4 +49,5 @@ export function registerIpc(ctx: MainContext): void {
   registerWorldIpc(ctx);
   registerAccountIpc(ctx);
   registerBillingIpc(ctx);
+  registerImagesIpc(ctx);
 }

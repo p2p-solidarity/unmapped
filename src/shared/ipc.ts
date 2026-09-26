@@ -27,6 +27,7 @@ import type { CreateDraft, CreateDraftEntry, DraftIdea, LookPicture } from "./cr
 import type { ClaimNameResult, EnsNamesConfig } from "./ensNames";
 import { GATEWAY_IPC, type GatewayApi } from "./gatewayApi";
 import type { DataKeyWrappingRecord } from "./identity";
+import { IMAGES_IPC, type ImagesApi } from "./imagesApi";
 import type {
   AppendNoteInput,
   LandNote,
@@ -240,6 +241,8 @@ export const IPC = {
   /** A world's shared history (rev 6 phase 3, D11): `main/histories/ipc.ts`. */
   world: WORLD_IPC,
   gateway: GATEWAY_IPC,
+  /** Image providers, their licences and the device's choice (rev 6 phase 4, D4). */
+  images: IMAGES_IPC,
 } as const;
 
 export interface CreateWorldInput {
@@ -590,4 +593,6 @@ export interface SeedApi {
   /** A world's shared history: migrate, read, append, claim, share (rev 6 phase 3, D11). */
   world: WorldApi;
   gateway: GatewayApi;
+  /** Image providers with their licences, the device's choice, tests and audits (D4). */
+  images: ImagesApi;
 }

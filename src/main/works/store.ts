@@ -5,13 +5,13 @@
 import { randomBytes } from "node:crypto";
 import { mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { CartridgeFileIntegrity, ContentHash } from "@shared/cartridge";
+import type { CartridgeFileIntegrity } from "@shared/cartridge";
 import { compareCartridgeVersions } from "@shared/cartridge";
-import { hashOrder } from "@shared/hashOrder";
+import { LICENCES_FILE, type LicenceFile } from "@shared/images";
 import { err, ok, type Result } from "@shared/result";
 import { mergeCarry } from "@shared/story";
+import { checkContent, contentFiles, type WorkContent, workContentHash } from "@shared/workPack";
 import {
-  assetMapSchema,
   type Json,
   jsonBytes,
   jsonSchema,
@@ -27,7 +27,6 @@ import {
   type WorkManifestCore,
   type WorkPlay,
   type WorkRef,
-  type WorkText,
 } from "@shared/works";
 import { z } from "zod";
 import { canonicalJson, sha256 } from "../cartridges/integrity";
@@ -42,11 +41,9 @@ export interface WorkDirs {
   draftsDir: string;
 }
 
-/** A world's files as stored: the three text files plus its own images. */
-export interface WorkContent {
-  text: WorkText;
-  images: Record<string, Uint8Array>;
-}
+// The pure pack maths (`contentFiles`, `workContentHash`, `checkContent`) moved to @shared/workPack
+// (rev 6 phase 4, D5) so the world service and `verifyWorldBundle` check work packs with it too.
+export { checkContent, contentFiles, type WorkContent, workContentHash };
 
 export interface WorkRevision {
   manifest: WorkManifest;
@@ -80,54 +77,6 @@ export async function writeJsonAtomic(path: string, value: unknown): Promise<voi
 function fileEntry(path: string, bytes: Uint8Array | string): CartridgeFileIntegrity {
   const data = typeof bytes === "string" ? new TextEncoder().encode(bytes) : bytes;
   return { path, bytes: data.length, contentHash: sha256(data) };
-}
-
-export function contentFiles(content: WorkContent): Array<[string, Uint8Array | string]> {
-  return [
-    ["main.js", content.text.main],
-    ["style.css", content.text.style],
-    ["assets.json", content.text.assets],
-    ...Object.entries(content.images),
-  ];
-}
-
-export function workContentHash(
-  core: WorkManifestCore,
-  files: CartridgeFileIntegrity[],
-): ContentHash {
-  const sorted = [...files].sort((a, b) => hashOrder(a.path, b.path));
-  return sha256(canonicalJson({ manifest: core, files: sorted }));
-}
-
-/** Every rule a stored world must satisfy, applied again on every read (files can be edited). */
-export function checkContent(content: WorkContent): Result<void> {
-  for (const [path, bytes] of contentFiles(content)) {
-    const size = typeof bytes === "string" ? new TextEncoder().encode(bytes).length : bytes.length;
-    const limit = typeof bytes === "string" ? WORK_LIMITS.codeBytes : WORK_LIMITS.assetBytes;
-    if (size > limit) return err("work-too-large", `${path} is ${size} bytes (limit ${limit}).`);
-  }
-  const images = Object.entries(content.images);
-  if (images.length > WORK_LIMITS.assetCount) return err("work-too-large", "Too many images.");
-  const total = images.reduce((sum, [, bytes]) => sum + bytes.length, 0);
-  if (total > WORK_LIMITS.totalAssetBytes) return err("work-too-large", "Images exceed 6 MB.");
-  for (const [path] of images) {
-    if (!WORK_ASSET_FILE.test(path))
-      return err("work-invalid", `${path} is not an allowed image path.`);
-  }
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(content.text.assets);
-  } catch {
-    return err("work-invalid", "assets.json is not valid JSON.");
-  }
-  const assets = assetMapSchema.safeParse(parsed);
-  if (!assets.success) return err("work-invalid", "assets.json does not match the asset map.");
-  for (const entry of Object.values(assets.data)) {
-    if (entry.src?.startsWith("assets/") && content.images[entry.src] === undefined) {
-      return err("work-invalid", `assets.json points at ${entry.src}, which is not in this world.`);
-    }
-  }
-  return ok(undefined);
 }
 
 export async function readContent(dir: string): Promise<Result<WorkContent>> {
@@ -244,6 +193,11 @@ export interface PublishWorkInput {
   parent: WorkRef | null;
   draftId: string | null;
   now?: Date;
+  /**
+   * The pictures' licences (rev 6 phase 4, D4), written as a main-owned `licences.json` beside
+   * `work.json`: outside `contentFiles`, so the content hash does not cover it.
+   */
+  licences?: LicenceFile | null;
 }
 
 /** Next free patch version of `workId`; 1.0.0 for a new world. */
@@ -287,6 +241,9 @@ export async function publishRevision(
   try {
     await writeContent(staging, input.content);
     await writeFile(join(staging, MANIFEST), `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+    if (input.licences != null) {
+      await writeFile(join(staging, LICENCES_FILE), `${canonicalJson(input.licences)}\n`, "utf8");
+    }
     await rename(staging, destination);
   } catch (error) {
     await rm(staging, { recursive: true, force: true });

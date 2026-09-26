@@ -11,6 +11,7 @@ import { ACCOUNT_ERRORS } from "./errors-account";
 import { CARTRIDGE_ERRORS } from "./errors-cartridge";
 import { FILE_ERRORS } from "./errors-files";
 import { IDENTITY_ERRORS } from "./errors-identity";
+import { IMAGES_ERRORS } from "./errors-images";
 import { LAND_ERRORS } from "./errors-land";
 import { MODEL_ERRORS } from "./errors-model";
 import { NET_ERRORS } from "./errors-net";
@@ -33,4 +34,5 @@ export const ERRORS: Record<string, ErrorText> = {
   ...NET_ERRORS,
   ...WORKS_ERRORS,
   ...ACCOUNT_ERRORS,
+  ...IMAGES_ERRORS,
 };

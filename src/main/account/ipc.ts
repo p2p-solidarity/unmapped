@@ -7,6 +7,8 @@ import { AUTHOR_KEY } from "@shared/history/ids";
 import { z } from "zod";
 import type { MainContext } from "../context";
 import { handle } from "../handle";
+import { setGatewayCommercialSource } from "../images/commercial";
+import { setHostedImageHooks } from "../images/hosted";
 import { gatewaySetting } from "../inference/config";
 import { gatewayCommercial } from "./gatewayHttp";
 import { accountService } from "./service";
@@ -29,5 +31,15 @@ export function registerAccountIpc(ctx: MainContext): void {
   );
   handle(GATEWAY_IPC.removeDevice, z.tuple([deviceKey]), ([key]) => account.removeDevice(key));
   handle(GATEWAY_IPC.quota, noArgs, () => account.quota());
+  // D4: the configured gateway's `/v1/status` is the second commercial-mode switch.
+  setGatewayCommercialSource(async () => {
+    const base = gatewaySetting();
+    return base.ok && base.value !== null ? gatewayCommercial(base.value) : null;
+  });
+  // Pictures drawn through the gateway: the same 401 rule and quota refresh as chat.
+  setHostedImageHooks({
+    settled: () => void account.refreshQuota(),
+    refused: (token) => account.forgetDeadToken(token),
+  });
   ctx.onBeforeQuit(() => account.dispose());
 }

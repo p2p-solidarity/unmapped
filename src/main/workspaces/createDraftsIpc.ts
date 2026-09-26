@@ -2,6 +2,7 @@
 // here, and a whole draft is checked again against its schema by the store before it is written.
 // The look step's pictures are drawn here, in main, where the image key lives: from the draft as
 // main last saved it, recorded in the usage ledger under the draft, and cancellable by request id.
+// Each is drawn by the device's chosen image provider and kept with its licence record (D4).
 
 import {
   createDraftSchema,
@@ -16,8 +17,8 @@ import { err, ok, type Result } from "@shared/result";
 import { z } from "zod";
 import type { MainContext } from "../context";
 import { handle } from "../handle";
+import { selectImageProvider } from "../images/registry";
 import { recordUsage } from "../usage/ipc";
-import { imageProvider } from "../works/images";
 import {
   createCreateDraft,
   listCreateDrafts,
@@ -76,9 +77,15 @@ export function registerCreateDraftsIpc(ctx: MainContext): void {
       if (!draft.ok) return draft;
       const prompt = lookPrompt(draft.value, view);
       if (!prompt.ok) return prompt;
+      // The device's choice, refused here when commercial mode is on and its licence is not.
+      const selected = await selectImageProvider();
+      if (!selected.ok) {
+        process.stdout.write(`[look] refused ${requestId} · ${selected.error.code}\n`);
+        return selected;
+      }
+      const provider = selected.value;
       const controller = new AbortController();
       inflight.set(requestId, controller);
-      const provider = imageProvider();
       const started = Date.now();
       const image = await provider
         .generate(prompt.value, controller.signal, { quality: "low", kind: "concept" })
@@ -95,12 +102,16 @@ export function registerCreateDraftsIpc(ctx: MainContext): void {
         outcome: image.ok ? "done" : image.error.code === "cancelled" ? "aborted" : "failed",
       });
       process.stdout.write(
-        `[look] ${image.ok ? "done" : "fail"} ${requestId} · ${provider.id} · ${provider.model} · ${ms} ms${image.ok ? "" : ` · ${image.error.code}`}\n`,
+        `[look] ${image.ok ? "done" : "fail"} ${requestId} · ${provider.id} · ${provider.model} · ${ms} ms${image.ok ? ` · licence ${image.value.licence}` : ` · ${image.error.code}`}\n`,
       );
       if (!image.ok) return image;
       // A cancel that raced the last byte: the picture arrived, but the player said no.
       if (controller.signal.aborted) return cancelled();
-      return storeLook(ctx.workspacesDir, draftId, image.value.png);
+      return storeLook(ctx.workspacesDir, draftId, image.value.png, {
+        licence: image.value.licence,
+        provider: image.value.provider,
+        model: image.value.model,
+      });
     },
   );
   handle(IPC.createDrafts.cancelLook, z.tuple([z.string().regex(REQUEST_ID)]), ([requestId]) => {

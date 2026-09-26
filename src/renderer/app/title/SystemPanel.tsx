@@ -10,6 +10,7 @@ import { errored, idle, type Loadable, loading, ready, toError } from "@shared/r
 import { useEffect, useState } from "react";
 import { useKeys } from "../shell/useKeys";
 import { AccountPanel } from "./AccountPanel";
+import { ImagePanel } from "./ImagePanel";
 import { ModelPanel } from "./ModelPanel";
 import { PlanPanel } from "./PlanPanel";
 import { SignalingPanel } from "./SignalingPanel";
@@ -72,6 +73,8 @@ export function SystemPanel({ onClose }: { onClose(): void }) {
       <AccountPanel />
 
       <PlanPanel />
+
+      <ImagePanel />
 
       <SignalingPanel />
 
