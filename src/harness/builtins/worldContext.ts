@@ -3,9 +3,16 @@
 // Every section reads `ctx.world.get()` at assembly time and renders "" when no world is loaded,
 // so an empty harness assembles a persona and nothing else — never a plausible placeholder world
 // (Rule 2).
+//
+// A world on its history (rev 6 phase 3) adds three things: the season of its last beat for every
+// prompt (`world:season`, D13); old tales beside the hot lore — the lore of legends, variants and
+// fogged places, whose ids start with `#` and which nothing links to (D4); and no gifted items in
+// the inventory, since their names and perks are another player's words (D5). A rumor batch sees
+// only the season: its facts are the whole world it may name (D14).
 
 import type { Context } from "@deepseek-ai/cordis";
-import { activate, regionalTone } from "@shared/lore";
+import { SEASON_NAMES } from "@dsl/prompts/rumor";
+import { activate, type LoreNode, regionalTone } from "@shared/lore";
 import { type HarnessPlugin, unwind } from "../events";
 import { ORDER } from "../order";
 import type { AssembleContext, WorldSnapshot } from "../types";
@@ -15,6 +22,17 @@ import type { AssembleContext, WorldSnapshot } from "../types";
  * continuity is the lore graph, activated around the chunk the turn is about (plan.md §5).
  */
 const KARMA_WINDOW = 12;
+
+/** Old tales shown beside the hot lore, at most (they never crowd out what stands now). */
+const OLD_TALES = 4;
+
+/** D5: a taken gift enters the inventory as `gift-<8 of its event id>`. */
+export const GIFT_ITEM_PREFIX = "gift-";
+
+/** Whether an inventory item is another player's gift (named and made by them, never shown). */
+export function isGiftItem(item: { id: string }): boolean {
+  return item.id.startsWith(GIFT_ITEM_PREFIX);
+}
 
 function block(tag: string, lines: readonly string[]): string {
   if (lines.length === 0) return "";
@@ -70,6 +88,11 @@ function flagText(world: WorldSnapshot): string {
   );
 }
 
+/** A node of a place that is no longer what stands there (D4): shown, never linked to. */
+function oldTaleLine(node: LoreNode): string {
+  return `- ${node.id} [old tale · ${node.kind}] ${node.label} — ${node.text} (chunk ${node.coord.cx},${node.coord.cz}; told of a place that has faded or was written otherwise; never link to it)`;
+}
+
 function loreText(
   world: WorldSnapshot,
   lore: NonNullable<WorldSnapshot["lore"]>,
@@ -78,14 +101,19 @@ function loreText(
   const coord = a.coord ?? world.coord;
   if (coord === null || coord === undefined) return "";
   const hot = activate(lore, { coord, karma: world.karma });
+  // The air is what stands now: old tales are told, but they do not set the regional tone.
   const tone = regionalTone(hot);
   const lines = hot.map(
     ({ node }) =>
       `- ${node.id} [${node.kind}] ${node.label} — ${node.text} (chunk ${node.coord.cx},${node.coord.cz}; tone ${node.tone.toFixed(1)})`,
   );
+  const old = activate(world.legends ?? [], { coord, karma: [], limit: OLD_TALES });
   return block("lore", [
     `hot lore around chunk ${coord.cx},${coord.cz}, hottest first; regional tone ${tone.toFixed(2)}`,
     ...(lines.length === 0 ? ["- nothing witnessed nearby yet"] : lines),
+    ...(old.length === 0
+      ? []
+      : ["old tales nearby (ids start with #):", ...old.map(({ node }) => oldTaleLine(node))]),
   ]);
 }
 
@@ -105,19 +133,36 @@ function inventoryText(world: WorldSnapshot): string {
   const { items, materials } = world.inventory;
   const lines: string[] = [];
   for (const item of items) {
+    if (isGiftItem(item)) continue;
     lines.push(`- ${item.name} (${item.kind}, power ${item.power}) — ${item.perk}`);
   }
   if (materials.length > 0) lines.push(`- materials: ${materials.join(", ")}`);
   return block("inventory", lines);
 }
 
+/** D13: the season of the last beat, for every prompt of a world on its history. */
+function seasonText(world: WorldSnapshot): string {
+  if (world.season === undefined) return "";
+  return block("season", [
+    `It is ${SEASON_NAMES[world.season]} in this world; the seasons turn once a week of the world's own time. Let the air, the light and what people do fit it.`,
+  ]);
+}
+
 type Render = (world: WorldSnapshot, assemble: AssembleContext) => string;
 
-/** The authored scene's cast is not the cast of a chunk being witnessed somewhere else. */
+/**
+ * The authored scene's cast is not the cast of a chunk being witnessed somewhere else, and a
+ * rumor batch may name only its facts' names (D14): no other cast, lore or inventory reaches it.
+ */
 const sceneBound =
   (render: (world: WorldSnapshot) => string): Render =>
   (world, a) =>
-    a.purpose === "chunk" ? "" : render(world);
+    a.purpose === "chunk" || a.purpose === "rumor" ? "" : render(world);
+
+const notForRumors =
+  (render: Render): Render =>
+  (world, a) =>
+    a.purpose === "rumor" ? "" : render(world, a);
 
 /** Each section renders from the snapshot, or contributes nothing at all. */
 const SECTIONS: readonly { name: string; offset: number; render: Render }[] = [
@@ -125,9 +170,10 @@ const SECTIONS: readonly { name: string; offset: number; render: Render }[] = [
   { name: "world:npcs", offset: 1, render: sceneBound(npcText) },
   { name: "world:monsters", offset: 2, render: sceneBound(monsterText) },
   { name: "world:quests", offset: 3, render: sceneBound(questText) },
-  { name: "world:flags", offset: 4, render: flagText },
-  { name: "world:karma", offset: 5, render: karmaText },
-  { name: "world:inventory", offset: 6, render: inventoryText },
+  { name: "world:flags", offset: 4, render: notForRumors(flagText) },
+  { name: "world:karma", offset: 5, render: notForRumors(karmaText) },
+  { name: "world:inventory", offset: 6, render: notForRumors(inventoryText) },
+  { name: "world:season", offset: 7, render: seasonText },
 ];
 
 export const worldContext: HarnessPlugin = {

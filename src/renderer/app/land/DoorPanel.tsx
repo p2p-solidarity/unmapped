@@ -13,6 +13,7 @@ import { type JSX, useState } from "react";
 import { ContinentSection, continentOk } from "./ContinentSection";
 import { currentDoorArrival } from "./doorArrival";
 import { WorldDoorSection } from "./WorldDoorSection";
+import { WorldRecordsSection } from "./WorldRecordsSection";
 
 function travel(slot: DoorSlot): void {
   if (slot.kind === "room") {
@@ -133,6 +134,8 @@ export function DoorPanel(): JSX.Element | null {
         )}
 
         <WorldDoorSection />
+        <WorldRecordsSection />
+
         <ContinentSection />
         <div style={{ display: "flex", flexWrap: "wrap", gap: space.sm, alignItems: "flex-end" }}>
           <TextField

@@ -19,8 +19,11 @@ export type JsonValue =
   | JsonValue[]
   | { [key: string]: JsonValue };
 
-/** Why the prompt is being assembled; sections and tools may render differently per purpose. */
-export type PromptPurpose = "scene" | "dialogue" | "resolve" | "item" | "chunk" | "free";
+/**
+ * Why the prompt is being assembled; sections and tools may render differently per purpose.
+ * "rumor" is a beat's rumor batch (rev 6 phase 3, D14): its facts are the whole world it may name.
+ */
+export type PromptPurpose = "scene" | "dialogue" | "resolve" | "item" | "chunk" | "rumor" | "free";
 
 /** Everything one assembly (and the turn it belongs to) knows about itself. */
 export interface AssembleContext {
@@ -125,6 +128,13 @@ export interface WorldSnapshot {
   lore?: LoreNode[];
   /** Chunk the player stands on, when the scene is open land. */
   coord?: ChunkCoord | null;
+  /**
+   * Open land on a world's history (rev 6 phase 3, D4, D13): the lore of legends, variants and
+   * fogged places — old tales, ids `#<witness event id>:<lore id>`, never linked to.
+   */
+  legends?: LoreNode[];
+  /** The season of the world's last beat (0 spring … 3 winter); absent without a history. */
+  season?: 0 | 1 | 2 | 3;
 }
 
 // ── Turn ─────────────────────────────────────────────────────────────────────────────────────

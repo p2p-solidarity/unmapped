@@ -16,6 +16,7 @@ import { NOTE_MAX_CHARS } from "@shared/land";
 import type { AppError } from "@shared/result";
 import { type JSX, useEffect, useState } from "react";
 import { writeNote } from "./notes";
+import { NoteMarkLine, TracePanel } from "./TracePanel";
 
 export function NotePanel(): JSX.Element | null {
   const t = useT();
@@ -84,6 +85,7 @@ export function NotePanel(): JSX.Element | null {
             cz: chunk.cz,
           })}
         </Text>
+        {foreign ? null : <TracePanel chunk={chunk} />}
         {here.length === 0 ? (
           <Text variant="body" tone="dim">
             {t("land.noNotes")}
@@ -97,6 +99,7 @@ export function NotePanel(): JSX.Element | null {
                 <Text variant="caption" tone="muted">
                   {`${note.author} · ${t("land.noteTile", { x: note.coord.x, z: note.coord.z })} · ${formatDateTime(note.at)}`}
                 </Text>
+                {foreign ? null : <NoteMarkLine id={note.id} />}
                 {disputed ? (
                   <Text variant="caption" tone="dim">
                     {t("land.noteVersionOf", { author: disputed.author })}

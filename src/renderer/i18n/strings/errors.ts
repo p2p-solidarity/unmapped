@@ -20,6 +20,7 @@ import { SAVE_ERRORS } from "./errors-save";
 import { WORKS_ERRORS } from "./errors-works";
 import { WORLD_ERRORS } from "./errors-world";
 import type { Phrase } from "./phrase";
+import { TRACE_ERRORS } from "./traces";
 
 export interface ErrorText {
   message: Phrase;
@@ -39,4 +40,5 @@ export const ERRORS: Record<string, ErrorText> = {
   ...LAND_HISTORY_ERRORS,
   ...ACCOUNT_ERRORS,
   ...IMAGES_ERRORS,
+  ...TRACE_ERRORS,
 };
