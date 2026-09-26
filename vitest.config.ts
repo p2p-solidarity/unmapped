@@ -14,5 +14,8 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/**/*.test.ts", "src/**/*.test.ts"],
+    // Several sessions share this machine and run Electron beside the suite; the property and
+    // crypto tests take seconds there, so the default 5 s times them out while they pass alone.
+    testTimeout: 20_000,
   },
 });
