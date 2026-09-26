@@ -1,0 +1,39 @@
+{
+  "env": {
+    "scratch": "SCR = the migrate run's scratch dir; D = docs/e2e/milestone-rev6-p3-local-beat",
+    "userData": "$SCR/localbeat/ud = the data folders of the older-build run's final userData (after its part C: local-only world hivribsq…fwtoa, log 27, chunk 2,1 witnessed today and 2 rings from home) + inference.json {kind: llamacpp, baseUrl: http://127.0.0.1:8859/v1, model: none, apiKeyEnv: null, sidecar: null} (nothing listens on 8859, so the land can never call a model)",
+    "appToday": "OPENAI_API_KEY= THESYS_API_KEY= AETHER_TEST_USER_DATA=$SCR/localbeat/ud bun run dev --remoteDebuggingPort 9352",
+    "app92": "UNMAPPED_TEST_CLOCK_DAYS=92 OPENAI_API_KEY= THESYS_API_KEY= AETHER_TEST_USER_DATA=$SCR/localbeat/ud bun run dev --remoteDebuggingPort 9352",
+    "driver": "CDP_PORT=9352 bun scripts/cdp-drive.ts \"$(cat $D/run.json)\" (today), then run-b-92-days.json after relaunching with the clock",
+    "window": "1440 x ~850 CSS px, device scale 2, in the background",
+    "build": "main 51817a3 plus the uncommitted working tree of every session, with this session's planner fix"
+  },
+  "model": "none (0 [inference] lines in both launches of the recorded run; the first attempt, r1, logged 2 local refusals, see result.md)",
+  "sequence": [
+    "shell: copy the older-build userData's data folders to $SCR/localbeat/ud; write inference.json",
+    "shell: launch today (no test clock) on 9352",
+    "run.json (part A): English, Continue (a pinned open; no beat is due yet), walk toward home so the player does not stand in 2,1, leave Play",
+    "shell: close; relaunch with UNMAPPED_TEST_CLOCK_DAYS=92",
+    "run-b-92-days.json (part B): English, Continue: the pinned open writes the catch-up beat; read the fold; walk into 2,1; both looks",
+    "shell: close; grep -c '[inference]' both dev logs"
+  ],
+  "actions": [
+    { "wait": 1500 },
+    { "clickText": "設定" },
+    { "wait": 800 },
+    { "clickText": "English" },
+    { "wait": 600 },
+    { "hold": "Escape", "ms": 80 },
+    { "wait": 600 },
+    { "clickText": "Continue" },
+    { "wait": 3000 },
+    { "text": true },
+    { "note": "the stick timed out after 60 s in chunk 1,0 (town ring), which is enough: the player is off 2,1" },
+    { "pad": { "toward": "[16, 16]", "within": 2, "buttons": [5], "timeoutMs": 60000 } },
+    { "wait": 800 },
+    { "text": true },
+    { "shot": "docs/e2e/milestone-rev6-p3-local-beat/a-00-today-walked-to-town.jpg" },
+    { "clickText": "← Home" },
+    { "wait": 1500 }
+  ]
+}

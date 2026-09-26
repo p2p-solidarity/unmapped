@@ -96,11 +96,19 @@ export interface Skipped {
   code: string;
   message: string;
 }
-/** Something that entered the history changed, and why: a moved place, a dangling note link. */
+/**
+ * Something that entered the history changed, and why: a moved place, a dangling note link, a lore
+ * link into a chunk that stayed out (the frozen `chunks/` folder keeps it as it was).
+ */
 export interface Adjusted {
-  what: "note" | "place" | "genesis" | "profile";
+  what: "note" | "place" | "genesis" | "profile" | "chunk";
   key: string;
-  code: "note-anchor-missing" | "note-contests-missing" | "place-moved" | "name-shortened";
+  code:
+    | "note-anchor-missing"
+    | "note-contests-missing"
+    | "place-moved"
+    | "name-shortened"
+    | "lore-link-missing";
   detail: string;
 }
 

@@ -1,0 +1,23 @@
+{
+  "env": { "userData": "$SCR/older/ud restored from $SCR/older/ud-after-p2-snapshot (the state right after the phase-2 app closed)", "app": "OPENAI_API_KEY= THESYS_API_KEY= AETHER_TEST_USER_DATA=$SCR/older/ud bun run dev --remoteDebuggingPort 9351 (this build, with the planner fix)", "driver": "CDP_PORT=9351", "note": "the renderer first failed to load (another session's half-done edit of src/shared/llm.ts: 'does not provide an export named APPLE_FM_SIDECAR'); these actions ran after Vite reloaded it, nothing had touched the userData meanwhile" },
+  "model": "none",
+  "actions": [
+    { "clickText": "設定" },
+    { "wait": 800 },
+    { "clickText": "English" },
+    { "wait": 600 },
+    { "hold": "Escape", "ms": 80 },
+    { "wait": 600 },
+    { "clickText": "Continue" },
+    { "wait": 2500 },
+    { "shot": "docs/e2e/milestone-rev6-p3-older-build/c-00-catchup-after-fix-2-added.jpg" },
+    {
+      "eval": "(async () => { const s = await import(\"/state/index.ts\"); const w = s.useHistoryStore.getState().world; return w.status === \"ready\" ? { head: w.value.sequenced.head.n, migrated: w.value.ensured?.migrated, added: w.value.ensured?.added, adoptedFrom: w.value.ensured?.adoptedFrom, skipped: w.value.ensured?.skipped?.map(s => s.what + \" \" + s.key), adjusted: w.value.ensured?.adjusted } : w })()"
+    },
+    { "text": true },
+    { "note": "the rerun" },
+    { "eval": "(async () => { const r = await window.seed.world.ensure(\"23qc-6pqs-mucdvy80\", \"player-LDE3\"); return r.ok ? { migrated: r.value.migrated, added: r.value.added, head: r.value.status.head.n } : r.error })()" },
+    { "clickText": "← Home" },
+    { "wait": 2000 }
+  ]
+}

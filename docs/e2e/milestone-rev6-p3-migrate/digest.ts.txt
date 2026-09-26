@@ -1,0 +1,12 @@
+// Recomputes a save's SourceDigest with main's own readers and compares it with world.json's pin.
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { currentDigest } from "/Users/kidney/Workspace/Hackathon/unmapped/src/main/histories/sources";
+import { sameDigest } from "/Users/kidney/Workspace/Hackathon/unmapped/src/main/histories/digest";
+const [ud, instanceId] = process.argv.slice(2);
+const dirs = { cartridgesDir: join(ud, "cartridges"), instancesDir: join(ud, "instances"), blobsDir: join(ud, "blobs"), works: { works: join(ud, "works"), plays: join(ud, "work-plays"), drafts: join(ud, "work-drafts") } } as never;
+const digest = await currentDigest(dirs, instanceId);
+if (!digest.ok) { console.log(JSON.stringify(digest.error)); process.exit(1); }
+const meta = JSON.parse(await readFile(join(ud, "instances", instanceId, "instance.json"), "utf8"));
+const pin = JSON.parse(await readFile(join(ud, "instances", instanceId, "saves", meta.meta?.activeSaveId ?? meta.activeSaveId ?? "default", "world.json"), "utf8"));
+console.log(JSON.stringify({ now: digest.value, pinned: pin.migrated?.source, same: sameDigest(digest.value, pin.migrated.source) }, null, 1));

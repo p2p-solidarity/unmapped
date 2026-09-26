@@ -1,0 +1,149 @@
+{
+  "fixture": "legacy-land",
+  "format": "phase 2 (7cebb2f)",
+  "seed": "legacy-land",
+  "userData": "/private/tmp/claude-501/-Users-kidney-Workspace-Hackathon-unmapped/f9f28666-cad2-48fd-9df0-065e8d1d73c3/scratchpad/p3/migrate/ud",
+  "instanceId": "23qc-6pqs-mucdvy80",
+  "saveId": "default",
+  "name": "無界之地 · 23QC-6PQS",
+  "seedCode": "23QC6PQS",
+  "player": "Aki",
+  "cartridge": {
+    "cartridgeId": "aether-land",
+    "version": "1.3.0",
+    "contentHash": "sha256:57f17e0d3e1504466da111ee6eae2e55720b812a2b07afdad932e7f72467e81b"
+  },
+  "counts": {
+    "chunks": 4,
+    "lore": 12,
+    "notes": 4,
+    "places": 2,
+    "storyMore": 1,
+    "episodes": 4,
+    "errands": 4,
+    "karma": 29
+  },
+  "oversizedChunk": {
+    "key": "1,1",
+    "errands": 13,
+    "keepsakes": 13,
+    "caps": {
+      "witnessErrands": 12,
+      "witnessKeepsakes": 12
+    }
+  },
+  "items": [
+    {
+      "where": "inventory",
+      "from": "1,1",
+      "item": {
+        "id": "k_umbrella",
+        "name": "Umbrella tag",
+        "kind": "charm",
+        "power": 1,
+        "perk": "brings a lost thing to mind",
+        "curse": null,
+        "meshDna": [
+          "charm_feather"
+        ],
+        "archetype": [
+          "memory"
+        ],
+        "flavor": "A paper tag with the shelter's stamp and a name in pencil."
+      }
+    },
+    {
+      "where": "home",
+      "from": "1,0",
+      "item": {
+        "id": "pole_tag",
+        "name": "Tin pole tag",
+        "kind": "charm",
+        "power": 1,
+        "perk": "hums faintly before rain",
+        "curse": null,
+        "meshDna": [
+          "charm_bell"
+        ],
+        "archetype": [
+          "memory",
+          "weather"
+        ],
+        "flavor": "A tin number plate from an old utility pole, worn smooth at the corners."
+      }
+    }
+  ],
+  "notes": {
+    "n1": "dca1820b-0c90-4047-b146-dbe71702005c",
+    "n2": "cc6b018a-c69b-4312-98d6-a58acb6e3cf3",
+    "n3": "b532b859-d737-4b88-ae2f-d45bf5d1820d",
+    "n4": "ed9ab977-2aab-4444-83a9-9413904e17b5"
+  },
+  "works": {
+    "last-bus": {
+      "ref": {
+        "workId": "w-d665a63e",
+        "version": "1.0.0",
+        "contentHash": "sha256:e7f8b344b3ff7a3b07ba8460e0c1d9f8f882263352769f825e5acdf9cfea955b"
+      },
+      "draftId": "d-87c99a9cfa080434",
+      "playId": "p-d923a7d1d51267eb"
+    },
+    "firefly-jar": {
+      "ref": {
+        "workId": "w-9c4f870b",
+        "version": "1.0.0",
+        "contentHash": "sha256:e0e0fbc68ca14c4b617a986fa6823ec9219e5c0abbe5f93243e36e5342261229"
+      },
+      "draftId": "d-6d12e2ffd07fffa0",
+      "playId": "p-16873c63c2c53ae5"
+    }
+  },
+  "files": {
+    "cartridges/aether-land/1.3.0/bible/core.md": "328955373047ba045a46e7dc8c68c8967acbfbe7fce5ad666c3582c02f1e6370",
+    "cartridges/aether-land/1.3.0/bible/story.json": "4d179cb00cc2e002053ec37676afe6bfa5f37cf50d83513f99493206b47372d6",
+    "cartridges/aether-land/1.3.0/bible/style.md": "e120ff4c7b5723cb7c56988bdae7fec1b4d18d308379d4c00557b8f8ed2a9980",
+    "cartridges/aether-land/1.3.0/manifest.json": "4d8b70dae79459e33ac6c1a47f8981e34fa30836619b4373dc1bf70164f3218a",
+    "cartridges/aether-land/1.3.0/rules.oui": "5f517391870252e0983c970bf37b56ced6469e31197bf9d2fa7fa8ee55978e61",
+    "cartridges/aether-land/1.3.0/scenes/origin.oui": "b34e9fab78e79b822ecd13a9e37b1b3a7ffa79d850a240f6401878ecd3f651fd",
+    "instances/23qc-6pqs-mucdvy80/instance.json": "0326e945e12e0e23fa36de9cd43c961b3fad71eac3e09027ed0d1ecfba275cd7",
+    "instances/23qc-6pqs-mucdvy80/saves/default/chunks/-1_0/dialogue/mori.oui": "4d7a68ff8e9679997afca0c87d429cd4b6cb0017f67fc852f2fbee4f4bf69dbd",
+    "instances/23qc-6pqs-mucdvy80/saves/default/chunks/-1_0/dialogue/yuki.oui": "cccaec42537d7494ab11d4c71b3e1cc4bddb00c14578c2f738add2b8e3f203d6",
+    "instances/23qc-6pqs-mucdvy80/saves/default/chunks/-1_0/errands.oui": "52cdd13339bd06a78c2b38f15d8ca13ad2cd07f3a67da732f2dec7155d21924b",
+    "instances/23qc-6pqs-mucdvy80/saves/default/chunks/-1_0/scene.oui": "1423c312aa7a29796868fd6474eeb069fa5c22b457aafa1440affa6017d2e9cc",
+    "instances/23qc-6pqs-mucdvy80/saves/default/chunks/0_1/dialogue/kei.oui": "0d0ee2e0d111efdd45089c554fcaf4eee83a021744d4843116af539d990f6710",
+    "instances/23qc-6pqs-mucdvy80/saves/default/chunks/0_1/dialogue/sato.oui": "9c7393a5dc6c401b91aa85f527559484f983450e9e7391d0a6d5ef0d9939e973",
+    "instances/23qc-6pqs-mucdvy80/saves/default/chunks/0_1/errands.oui": "7809d26fc52d072cee6130e22f0227a4bfd9adc540e336711a426ec800922019",
+    "instances/23qc-6pqs-mucdvy80/saves/default/chunks/0_1/scene.oui": "c5d257a8118f6319875d3cbcdbcfa4f8736571b09d2126caf50597a39db3dda5",
+    "instances/23qc-6pqs-mucdvy80/saves/default/chunks/1_0/dialogue/hana.oui": "5ab536c0ddba36a9a1b049efa57229f964feb1f9d5116d787270394abfdc2e42",
+    "instances/23qc-6pqs-mucdvy80/saves/default/chunks/1_0/dialogue/ren.oui": "f38e7ead5a6a0306bce3b4ae383b0b7fb006f45688e980bbc993a0bc4f140235",
+    "instances/23qc-6pqs-mucdvy80/saves/default/chunks/1_0/errands.oui": "708ccfa991974de4d14ef1a2f823ee90287658d6813139b356924e20cf46277a",
+    "instances/23qc-6pqs-mucdvy80/saves/default/chunks/1_0/scene.oui": "4531af2c8c947c6736597f96bfa556055a3728205baa638e09ad733c66c815eb",
+    "instances/23qc-6pqs-mucdvy80/saves/default/chunks/1_1/dialogue/chie.oui": "9a02ab99be150b0aa82d99f40b59b2aeaaea68c44445988c2dce87712a603b4c",
+    "instances/23qc-6pqs-mucdvy80/saves/default/chunks/1_1/dialogue/nobu.oui": "b64cb0436f9935a12ed91ac8ab1f6bd566b7f2fcf2553df3214c39132155dc28",
+    "instances/23qc-6pqs-mucdvy80/saves/default/chunks/1_1/errands.oui": "65476880fc349debe754e9145d47254dcac38f44059b17eabcb4f83a4c3a61c6",
+    "instances/23qc-6pqs-mucdvy80/saves/default/chunks/1_1/scene.oui": "6298eabfa681c26dfb3475ab5b249db67e05d8fd1b7e44fb583344fc2d405b0b",
+    "instances/23qc-6pqs-mucdvy80/saves/default/karma.jsonl": "4a53b05fa1ff3652b15bf4e7c02081109998bf90739214537dcf0aacc9061eda",
+    "instances/23qc-6pqs-mucdvy80/saves/default/lore.jsonl": "d326ba907e138b9da0019e31a1ba2b60706f3c8232d4542333a1f07b8ab8e14c",
+    "instances/23qc-6pqs-mucdvy80/saves/default/notes.jsonl": "3d211a977be6e0225ad3cfa33fb8965eefd97531be400bc5d62b55d962fe0e16",
+    "instances/23qc-6pqs-mucdvy80/saves/default/save.json": "49e01fdb92f189b5e34f7c5f4206bdd946ba8b6b6e10c67b6349c0eb1db22bd2",
+    "work-drafts/d-6d12e2ffd07fffa0/candidates/c001/assets.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+    "work-drafts/d-6d12e2ffd07fffa0/candidates/c001/main.js": "0e425969f819a77d45b69a23f2c06e31cfd07cde841f8db5251fa4187571af42",
+    "work-drafts/d-6d12e2ffd07fffa0/candidates/c001/style.css": "da083ca29c9c8751bd4371a86c89986c0913dab2ada507567b312d3a701df2ce",
+    "work-drafts/d-6d12e2ffd07fffa0/draft.json": "b18f18f9ecdf622721235bf316cf866e5e4ec124293a0f78d33d83c954734411",
+    "work-drafts/d-87c99a9cfa080434/candidates/c001/assets.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+    "work-drafts/d-87c99a9cfa080434/candidates/c001/main.js": "f7c32a688e41e68d98c612c7b26589e8b7e4e810ebec4c55e63c4e64c2f45333",
+    "work-drafts/d-87c99a9cfa080434/candidates/c001/style.css": "92ba86510054b8be523a31524e91a926c38c6e7bb044bc813b6326f859774081",
+    "work-drafts/d-87c99a9cfa080434/draft.json": "0f123e00018a2ef258a00b77667e39f2cb8d6e5d5f498b45eb4ef79f8f93aaa7",
+    "work-plays/p-16873c63c2c53ae5/play.json": "2024559bf95350995fe6018ffd6447be9dd200e2dafa762e40d80899826b70ab",
+    "work-plays/p-d923a7d1d51267eb/play.json": "e2c2323b68980b7f49ada8708da101d04558fd7adbc7275a65eaa41f26c4cf43",
+    "works/w-9c4f870b/1.0.0/assets.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+    "works/w-9c4f870b/1.0.0/main.js": "0e425969f819a77d45b69a23f2c06e31cfd07cde841f8db5251fa4187571af42",
+    "works/w-9c4f870b/1.0.0/style.css": "da083ca29c9c8751bd4371a86c89986c0913dab2ada507567b312d3a701df2ce",
+    "works/w-9c4f870b/1.0.0/work.json": "0b85e465ae5def9731b1defa85f467786a0aa1c63640fe5521572d99a3cc07bd",
+    "works/w-d665a63e/1.0.0/assets.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+    "works/w-d665a63e/1.0.0/main.js": "f7c32a688e41e68d98c612c7b26589e8b7e4e810ebec4c55e63c4e64c2f45333",
+    "works/w-d665a63e/1.0.0/style.css": "92ba86510054b8be523a31524e91a926c38c6e7bb044bc813b6326f859774081",
+    "works/w-d665a63e/1.0.0/work.json": "2d419993b1e654d587be1d8fbb87850e52878d7576b8e45239b61442076f4df0"
+  }
+}

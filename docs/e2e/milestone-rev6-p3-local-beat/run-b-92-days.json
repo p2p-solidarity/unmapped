@@ -1,0 +1,34 @@
+{
+  "env": { "app": "UNMAPPED_TEST_CLOCK_DAYS=92 OPENAI_API_KEY= THESYS_API_KEY= AETHER_TEST_USER_DATA=$SCR/localbeat/ud bun run dev --remoteDebuggingPort 9352", "driver": "CDP_PORT=9352" },
+  "model": "none",
+  "actions": [
+    { "wait": 1500 },
+    { "clickText": "設定" },
+    { "wait": 800 },
+    { "clickText": "English" },
+    { "wait": 600 },
+    { "hold": "Escape", "ms": 80 },
+    { "wait": 600 },
+    { "clickText": "Continue" },
+    { "wait": 3000 },
+    { "shot": "docs/e2e/milestone-rev6-p3-local-beat/b-00-open-92-days-later.jpg" },
+    {
+      "eval": "(async () => { const s = await import(\"/state/index.ts\"); const w = s.useHistoryStore.getState().world; if (w.status !== \"ready\") return w; const n = w.value.sequenced; return { head: n.head.n, rt: n.rt, season: n.season, beats: n.beats, marks: Object.fromEntries(Object.entries(s.useLandStore.getState().marks).map(([k, m]) => [k, { live: m.live?.name ?? null, fogged: m.fogged, fading: m.fading, legends: m.legends?.length }])) } })()"
+    },
+    { "text": true },
+    { "pad": { "toward": "[76, 46]", "within": 2, "buttons": [5], "timeoutMs": 45000 } },
+    { "wait": 1500 },
+    { "text": true },
+    { "shot": "docs/e2e/milestone-rev6-p3-local-beat/b-01-fogged-chunk-hd2d.jpg" },
+    { "hold": "KeyV", "ms": 80 },
+    { "wait": 1500 },
+    { "shot": "docs/e2e/milestone-rev6-p3-local-beat/b-02-fogged-chunk-16bit.jpg" },
+    { "hold": "KeyV", "ms": 80 },
+    { "wait": 500 },
+    {
+      "eval": "(async () => { const s = await import(\"/state/index.ts\"); const n = s.useHistoryStore.getState().world.value.sequenced; const c = n.chunks[\"2,1\"]; return { ignored: n.ignored, care21: n.care[\"2,1\"], care10: n.care[\"1,0\"], genesisRt: n.genesisRt, fogged: c.fogged, liveId: c.live.id, legends: c.legends.length } })()"
+    },
+    { "clickText": "← Home" },
+    { "wait": 1500 }
+  ]
+}

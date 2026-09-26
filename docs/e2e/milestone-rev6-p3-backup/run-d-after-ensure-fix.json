@@ -1,0 +1,28 @@
+{
+  "env": { "app": "AETHER_TEST_BACKUP_PATH=$SCR/backup/files/io.spire-backup (holding B1) OPENAI_API_KEY= THESYS_API_KEY= AETHER_TEST_USER_DATA=$SCR/backup/udC bun run dev --remoteDebuggingPort 9352; then app A relaunched on udA without AETHER_TEST_BACKUP_PATH for the last eval", "driver": "CDP_PORT=9352" },
+  "model": "none",
+  "actions": [
+    { "wait": 1500 },
+    { "clickText": "設定" },
+    { "wait": 800 },
+    { "clickText": "English" },
+    { "wait": 600 },
+    { "hold": "Escape", "ms": 80 },
+    { "wait": 600 },
+    { "clickText": "Worlds" },
+    { "wait": 1500 },
+    { "clickText": "Saves" },
+    { "wait": 1200 },
+    { "clickText": "Restore backup" },
+    { "wait": 3000 },
+    { "clickText": "Resume" },
+    { "wait": 3500 },
+    { "shot": "docs/e2e/milestone-rev6-p3-backup/d-00-third-device-adopted-after-ensure-fix.jpg" },
+    { "eval": "(async () => { const s = await import(\"/state/index.ts\"); const w = s.useHistoryStore.getState().world; return w.status === \"ready\" ? { worldId: w.value.worldId, head: w.value.sequenced.head.n, owner: w.value.sequenced.owner, migrated: w.value.ensured?.migrated, added: w.value.ensured?.added, adoptedFrom: w.value.ensured?.adoptedFrom, lost: w.value.ensured?.lost, chunks: Object.keys(w.value.sequenced.chunks), notes: w.value.sequenced.notes.length, places: w.value.sequenced.places.map(p => p.place), ignored: w.value.sequenced.ignored.length, genesisFrom: w.value.sequenced.genesis.body.from } : w })()" },
+    { "clickText": "← Home" },
+    { "wait": 1200 },
+    { "note": "shell: close; relaunch app A on udA; then, on A:" },
+    { "wait": 1500 },
+    { "eval": "(async () => { const r = await window.seed.world.ensure(\"23qc-6pqs-mucdvy80\", \"player-AY45\"); const s = await window.seed.world.ensure(\"23qc-6pqs-mucdvy80-rmuhupq82\", \"player-AY45\"); return [r, s].map(x => x.ok ? { worldId: x.value.worldId, adoptedFrom: x.value.adoptedFrom, added: x.value.added, head: x.value.status.head.n } : x.error) })()" }
+  ]
+}

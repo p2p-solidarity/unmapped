@@ -1,0 +1,42 @@
+{
+  "v": 1,
+  "worldId": "hivribsqepe5ifl3nxixjesz3mxdw3wnataqtttfeldkeagqfwtoa",
+  "migrated": {
+    "at": "2026-09-26T03:23:00.613Z",
+    "source": {
+      "counts": {
+        "chunks": 4,
+        "lore": 12,
+        "notes": 4,
+        "places": 2,
+        "storyMore": 1,
+        "episodes": 4,
+        "errands": 4
+      },
+      "chunks": "sha256:f1b5016d527297d6cfb980c4582d14aeb601189519907cf696272ab8d1fbbe68",
+      "lore": "sha256:d326ba907e138b9da0019e31a1ba2b60706f3c8232d4542333a1f07b8ab8e14c",
+      "notes": "sha256:3d211a977be6e0225ad3cfa33fb8965eefd97531be400bc5d62b55d962fe0e16",
+      "land": "sha256:51b61c5e535ba807bc8062289a3937c1fc13dc4323424138124c498659fc87e3"
+    },
+    "skipped": [
+      {
+        "what": "chunk",
+        "key": "1,1",
+        "code": "event-invalid",
+        "message": "body.index.errands: Too big: expected array to have <=12 items"
+      },
+      {
+        "what": "deed",
+        "key": "finished lost_umbrella",
+        "code": "deed-ref-missing",
+        "message": "What the deed names stayed out of the history."
+      },
+      {
+        "what": "errand",
+        "key": "1,1:lost_umbrella",
+        "code": "errand-chunk-legacy",
+        "message": "The chunk of errand 1,1:lost_umbrella stayed out of the history."
+      }
+    ]
+  }
+}

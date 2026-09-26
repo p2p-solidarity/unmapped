@@ -1,0 +1,20 @@
+{
+  "env": { "app": "OPENAI_API_KEY= THESYS_API_KEY= AETHER_TEST_USER_DATA=$SCR/older/ud bun run dev --remoteDebuggingPort 9351 (this build, before the planner fix)", "driver": "CDP_PORT=9351" },
+  "model": "none",
+  "actions": [
+    { "wait": 1500 },
+    { "clickText": "設定" },
+    { "wait": 800 },
+    { "clickText": "English" },
+    { "wait": 600 },
+    { "hold": "Escape", "ms": 80 },
+    { "wait": 600 },
+    { "clickText": "Continue" },
+    { "wait": 2500 },
+    { "shot": "docs/e2e/milestone-rev6-p3-older-build/b-00-catchup-before-fix-1-added.jpg" },
+    {
+      "eval": "(async () => { const s = await import(\"/state/index.ts\"); const w = s.useHistoryStore.getState().world; return w.status === \"ready\" ? { head: w.value.sequenced.head.n, migrated: w.value.ensured?.migrated, added: w.value.ensured?.added, adoptedFrom: w.value.ensured?.adoptedFrom, skipped: w.value.ensured?.skipped?.map(s => s.what + \" \" + s.key), adjusted: w.value.ensured?.adjusted } : w })()"
+    },
+    { "text": true }
+  ]
+}

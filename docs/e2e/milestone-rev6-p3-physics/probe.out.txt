@@ -1,0 +1,8 @@
+$ bun --tsconfig-override tsconfig.node.json scripts/world-probe.ts --service "ws://127.0.0.1:8800" physics
+{"scenario":"physics","step":"attach a fresh genesis pinned to physics 2","expect":"physics-newer","got":"physics-newer","ok":true,"detail":"the service reproduces physics 1"}
+{"scenario":"physics","step":"the refused world was not stored (open it)","expect":"world-unknown","got":"world-unknown","ok":true}
+{"scenario":"physics","step":"attach a genesis pinned to physics 1 (control)","expect":"opened:owner","got":"opened:owner","ok":true}
+{"scenario":"physics","step":"open with physics [2], which lacks the world's 1","expect":"physics-newer","got":"physics-newer","ok":true}
+{"scenario":"physics","step":"open with physics [1, 2] (control)","expect":"opened:owner","got":"opened:owner","ok":true}
+{"scenario":"physics","step":"every frame the service sent reads with readFromService","expect":"0 unreadable","got":"0 unreadable","ok":true}
+{"scenario":"physics","summary":true,"steps":6,"failed":0,"ok":true}

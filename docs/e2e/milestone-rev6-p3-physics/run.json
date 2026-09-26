@@ -1,0 +1,48 @@
+{
+  "env": {
+    "scratch": "SCR = the migrate run's scratch dir; D = docs/e2e/milestone-rev6-p3-physics",
+    "service": "UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8800 --data $SCR/physics/svc   (fresh data dir; health: physics [1], protocol 2, test true)",
+    "probe": "bun run world:probe -- --service ws://127.0.0.1:8800 physics   (output: probe.out.txt)",
+    "backups": "bun --tsconfig-override tsconfig.node.json $D/craft-physics2.ts.txt $SCR/backup/files/b1.spire-backup $SCR/physics/files   (makes pin2.spire-backup and genesis2.spire-backup from the backup run's B1; the genesis2 world is signed by a throwaway key made in memory)",
+    "app": "AETHER_TEST_BACKUP_PATH=$SCR/physics/files/io.spire-backup OPENAI_API_KEY= THESYS_API_KEY= AETHER_TEST_USER_DATA=$SCR/physics/udP bun run dev --remoteDebuggingPort 9352   (udP: empty + inference.json pointing at a dead llama.cpp endpoint, 127.0.0.1:8859)",
+    "driver": "CDP_PORT=9352 bun scripts/cdp-drive.ts \"$(cat $D/run.json)\"   (copy the backup to import onto io.spire-backup before each Restore, see the notes)",
+    "build": "main 51817a3 plus the uncommitted working tree of every session, with this session's planner fix"
+  },
+  "model": "none (0 [inference] lines)",
+  "sequence": [
+    "shell: start the service on 8800; run the probe's physics scenario",
+    "shell: craft the two physics-2 backups; cp genesis2.spire-backup io.spire-backup; launch the app",
+    "run.json: Restore backup (genesis2) → refused; cp pin2 → io, Restore → refused; cp B1 → io, Restore → restored (control)",
+    "shell: close the app; stop the service (SIGTERM)"
+  ],
+  "actions": [
+    { "wait": 1500 },
+    { "clickText": "設定" },
+    { "wait": 800 },
+    { "clickText": "English" },
+    { "wait": 600 },
+    { "hold": "Escape", "ms": 80 },
+    { "wait": 600 },
+    { "clickText": "Worlds" },
+    { "wait": 1500 },
+    { "clickText": "Saves" },
+    { "wait": 1200 },
+    { "note": "1: io.spire-backup = genesis2 (history genesis physicsVersion 2 + runtimePin.physicsVersion 2)" },
+    { "clickText": "Restore backup" },
+    { "wait": 2500 },
+    { "text": true },
+    { "shot": "docs/e2e/milestone-rev6-p3-physics/b-00-import-genesis2-refused.jpg" },
+    { "eval": "(async () => { const r = await window.seed.instances.importBackup(); return r.ok ? { ok: true } : r.error })()" },
+    { "note": "shell: cp pin2.spire-backup io.spire-backup. 2: runtimePin.physicsVersion 2, history genesis still 1" },
+    { "clickText": "Restore backup" },
+    { "wait": 2500 },
+    { "text": true },
+    { "shot": "docs/e2e/milestone-rev6-p3-physics/b-01-import-pin2-refused.jpg" },
+    { "eval": "(async () => { const r = await window.seed.instances.importBackup(); return r.ok ? { ok: true } : r.error })()" },
+    { "note": "shell: cp b1.spire-backup io.spire-backup. 3: control, physics 1" },
+    { "clickText": "Restore backup" },
+    { "wait": 2500 },
+    { "text": true },
+    { "shot": "docs/e2e/milestone-rev6-p3-physics/b-02-import-b1-control.jpg" }
+  ]
+}

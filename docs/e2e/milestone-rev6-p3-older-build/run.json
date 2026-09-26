@@ -1,0 +1,72 @@
+{
+  "env": {
+    "scratch": "SCR = the migrate run's scratch dir; D = docs/e2e/milestone-rev6-p3-older-build",
+    "userData": "$SCR/older/ud = the data folders of the migrate run's userData after its part B (blobs cartridges histories identity instances mods profiles work-drafts work-plays works workspaces worlds; log 24 entries, world.json pinned). No Chromium profile, no inference.json",
+    "phase2Build": "git worktree add --detach $SCR/p2 7cebb2f (the last phase-2 commit, parent of the first phase-3 commit 9092864); cd $SCR/p2 && bun install --frozen-lockfile && node node_modules/electron/install.js (the lockfile differs from main's by @noble/curves and @noble/hashes, so it was installed rather than symlinked). Removed afterwards with git worktree remove",
+    "phase2App": "cd $SCR/p2 && OPENAI_API_KEY=<the value of OPENAI_API_KEY in the repo .env> AETHER_TEST_USER_DATA=$SCR/older/ud bun run dev --remoteDebuggingPort 9351   (no .env in the worktree; only this one variable passed)",
+    "newApp": "OPENAI_API_KEY= THESYS_API_KEY= AETHER_TEST_USER_DATA=$SCR/older/ud bun run dev --remoteDebuggingPort 9351   (repo root, this build)",
+    "driver": "CDP_PORT=9351 bun scripts/cdp-drive.ts \"$(cat $D/run.json)\"   (then run-b-new-build-before-fix.json, run-c-new-build-after-fix.json)",
+    "window": "1440 x ~850 CSS px, device scale 2, in the background; UI switched to English in each part",
+    "build": "phase 2: 7cebb2f clean. New build: main 51817a3 plus the uncommitted working tree of every session; part B before, part C after this session's planner fix (src/dsl/history/migrateLand.ts)"
+  },
+  "model": "openai gpt-5.4-mini (phase-2 build's default with a key in env): exactly 1 call, purpose witness, 9375 ms, 3954 input + 1316 output tokens, 0 cached ([inference] done bae27a02-ee39-4dc4-be37-9ff3151fe7f6; usage.jsonl line). The new build: 0 [inference] lines in parts B and C",
+  "sequence": [
+    "shell: cp the migrated data folders to $SCR/older/ud; create the worktree; install",
+    "shell: launch the phase-2 app on 9351",
+    "run.json (part A, phase 2): English, Continue, walk east into the unwritten chunk 2,1 (it is witnessed: 1 model call), leave one note there",
+    "shell: close (SIGTERM left Electron listening; Browser.close on the browser target closed it); check that world.json, progress.json and the history log are byte-identical to before; copy $SCR/older/ud to $SCR/older/ud-after-p2-snapshot",
+    "shell: launch this build on 9351",
+    "run-b-new-build-before-fix.json (part B): Continue; the catch-up added 1, not 2 (a bug, see result.md)",
+    "shell: close; fix the planner; replace $SCR/older/ud with the snapshot; relaunch this build on 9351",
+    "run-c-new-build-after-fix.json (part C): Continue; the catch-up adds exactly the witness and the note; call world.ensure again (0 added)",
+    "shell: close; git worktree remove $SCR/p2"
+  ],
+  "actions": [
+    { "note": "A1: phase-2 build: Settings in English; the model section shows OpenAI with the key from the environment" },
+    { "wait": 1500 },
+    { "clickText": "設定" },
+    { "wait": 800 },
+    { "clickText": "English" },
+    { "wait": 600 },
+    { "text": true },
+    { "shot": "docs/e2e/milestone-rev6-p3-older-build/a-00-p2-settings-openai.jpg" },
+    { "eval": "[...document.querySelectorAll(\"input\")].map(i => i.value).filter(v => v).join(\" | \")" },
+    { "hold": "Escape", "ms": 80 },
+    { "wait": 600 },
+    { "note": "A2: Continue: the phase-2 build shows the land from the legacy files" },
+    { "clickText": "Continue" },
+    { "wait": 4000 },
+    { "text": true },
+    { "shot": "docs/e2e/milestone-rev6-p3-older-build/a-01-p2-land.jpg" },
+    { "eval": "(async () => (await import(\"/engine/playerProbe.ts\")).samplePlayer())()" },
+    { "note": "A3: walk east into the unwritten chunk 2,1; the phase-2 build witnesses it (the one model call)" },
+    { "pad": { "toward": "[70, 46]", "within": 1.5, "buttons": [5], "timeoutMs": 30000 } },
+    { "wait": 1500 },
+    { "shot": "docs/e2e/milestone-rev6-p3-older-build/a-02-p2-witnessing.jpg" },
+    {
+      "repeat": {
+        "times": 60,
+        "until": "document.body.innerText.includes(\"WRITTEN\") || document.body.innerText.includes(\"FAILED\")",
+        "actions": [{ "wait": 2000 }]
+      }
+    },
+    { "text": true },
+    { "shot": "docs/e2e/milestone-rev6-p3-older-build/a-03-p2-witnessed.jpg" },
+    { "note": "A4: one note on the new chunk (the first two focus attempts in the live run used selectors that matched nothing; this is the one that worked)" },
+    { "hold": "KeyN", "ms": 100 },
+    { "wait": 1000 },
+    { "text": true },
+    { "shot": "docs/e2e/milestone-rev6-p3-older-build/a-04-p2-notes.jpg" },
+    { "eval": "(() => { const f = document.querySelector(\"input\"); f.focus(); return document.activeElement === f })()" },
+    { "type": "Left by the older build: the chimneys smoke even at noon." },
+    { "wait": 300 },
+    { "clickText": "Leave the note" },
+    { "wait": 1500 },
+    { "text": true },
+    { "shot": "docs/e2e/milestone-rev6-p3-older-build/a-05-p2-note-left.jpg" },
+    { "clickText": "Close" },
+    { "wait": 400 },
+    { "clickText": "← Home" },
+    { "wait": 1500 }
+  ]
+}

@@ -3,6 +3,7 @@
 // old chunk unless that is taken.
 
 import { type ChunkCoord, chunkKey } from "@shared/chunks";
+import { isLiveLore } from "@shared/history/admit";
 import { HISTORY_LIMITS } from "@shared/history/bodies";
 import type { PlaceBody, WitnessBody } from "@shared/history/types";
 import { loreCoord, type WitnessedChunk } from "@shared/land";
@@ -49,6 +50,28 @@ function chunkOrder(run: Run): { chunk: WitnessedChunk; lore: LoreNode[] }[] {
   return [...ordered, ...rest.map((chunk) => ({ chunk, lore: [] }))];
 }
 
+/**
+ * A chunk's lore with every link kept that reaches its own lore or lore already live in the plan.
+ * A link into a chunk that stayed out (legacyOnly) could never be admitted, so the whole chunk
+ * would stay out with it — and every chunk witnessed beside it later. Such a link is dropped from
+ * the history's copy and reported, like a note's anchor; the frozen files keep it.
+ */
+function reachableLore(run: Run, key: string, lore: readonly LoreNode[]): LoreNode[] {
+  const own = new Set(lore.map((node) => node.id));
+  const now = run.planner.now();
+  return lore.map((node) => {
+    const links = node.links.filter((link) => {
+      const kept = own.has(link) || isLiveLore(now, link);
+      if (!kept) {
+        const detail = `${node.id} → ${link}`;
+        run.adjusted.push({ what: "chunk", key, code: "lore-link-missing", detail });
+      }
+      return kept;
+    });
+    return { ...node, coord: { ...node.coord }, links };
+  });
+}
+
 /** One witness per chunk, dated by its karma line; one that cannot enter stays legacyOnly. */
 export function migrateChunks(run: Run): void {
   for (const { chunk, lore } of chunkOrder(run)) {
@@ -58,13 +81,14 @@ export function migrateChunks(run: Run): void {
       skip(run, "chunk", key, index.error.code, index.error.message);
       continue;
     }
+    const adjustedBefore = run.adjusted.length;
     const body: WitnessBody = {
       cx: chunk.cx,
       cz: chunk.cz,
       scene: chunk.scene,
       dialogues: { ...chunk.dialogues },
       ...(chunk.errands === undefined ? {} : { errands: chunk.errands }),
-      lore: lore.map((node) => ({ ...node, coord: { ...node.coord }, links: [...node.links] })),
+      lore: reachableLore(run, key, lore),
       index: index.value,
     };
     const name = index.value.name;
@@ -74,7 +98,9 @@ export function migrateChunks(run: Run): void {
     );
     const event = unsigned(run, "witness", body, shown(line?.at, run.createdAt));
     const id = put(run, "chunk", key, event);
-    if (id !== null) run.witnesses.set(key, { id, lore: new Set(lore.map((node) => node.id)) });
+    // A chunk that stayed out anyway changed nothing that entered: only its skip is reported.
+    if (id === null) run.adjusted.length = adjustedBefore;
+    else run.witnesses.set(key, { id, lore: new Set(lore.map((node) => node.id)) });
   }
 }
 

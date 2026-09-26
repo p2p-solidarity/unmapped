@@ -1,0 +1,36 @@
+// Crafts two .spire-backup files pinned to physics 2 from a real phase-3 backup (rev 6 phase 3, E2E
+// `physics`): `pin2` sets runtimePin.physicsVersion = 2 in instance.json and save.json (history
+// unchanged); `genesis2` does the same and replaces the history with a one-entry log whose genesis
+// says physicsVersion 2, signed by a throwaway Ed25519 key (world.json re-pinned to it, no
+// progress.json). Nothing here touches an app's userData.
+import { readFileSync, writeFileSync } from "node:fs";
+import { strFromU8, strToU8, unzipSync, zipSync } from "/Users/kidney/Workspace/Hackathon/unmapped/node_modules/fflate/esm/index.mjs";
+import { logStart, sequenceEvent } from "/Users/kidney/Workspace/Hackathon/unmapped/src/shared/history/log";
+import { authorKeyFor, newSecretKey, signEvent } from "/Users/kidney/Workspace/Hackathon/unmapped/src/shared/history/sign";
+
+const [source, outDir] = process.argv.slice(2);
+const files = unzipSync(new Uint8Array(readFileSync(source)));
+const text = (path: string) => strFromU8(files[path] as Uint8Array);
+const pin2 = (json: string) => {
+  const value = JSON.parse(json);
+  value.runtimePin = { ...value.runtimePin, physicsVersion: 2 };
+  return `${JSON.stringify(value, null, 2)}\n`;
+};
+const base: Record<string, Uint8Array> = { ...files };
+base["instance.json"] = strToU8(pin2(text("instance.json")));
+base["saves/default/save.json"] = strToU8(pin2(text("saves/default/save.json")));
+writeFileSync(`${outDir}/pin2.spire-backup`, zipSync(base, { level: 6 }));
+
+const oldGenesis = JSON.parse(text("history/log.jsonl").split("\n")[0] ?? "").event;
+const secret = newSecretKey();
+const author = authorKeyFor(secret);
+const body = { ...oldGenesis.body, physicsVersion: 2 };
+const genesis = signEvent({ v: 1, world: "", kind: "genesis", author, at: oldGenesis.at, seen: 0, body }, secret);
+const entry = sequenceEvent(logStart(genesis.id), genesis, oldGenesis.at, null);
+const g2: Record<string, Uint8Array> = { ...base };
+g2["history/log.jsonl"] = strToU8(`${JSON.stringify(entry)}\n`);
+g2["saves/default/world.json"] = strToU8(`${JSON.stringify({ v: 1, worldId: genesis.id, migrated: null }, null, 2)}\n`);
+delete g2["saves/default/progress.json"];
+delete g2["history/outbox.jsonl"];
+writeFileSync(`${outDir}/genesis2.spire-backup`, zipSync(g2, { level: 6 }));
+console.log(JSON.stringify({ pin2: `${outDir}/pin2.spire-backup`, genesis2: `${outDir}/genesis2.spire-backup`, genesis2World: genesis.id, author, physicsVersion: body.physicsVersion }));

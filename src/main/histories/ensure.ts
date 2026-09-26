@@ -14,6 +14,7 @@
 
 import { roleOf } from "@shared/history/access";
 import { readEvent } from "@shared/history/event";
+import { isOwner } from "@shared/history/owners";
 import { err, ok, type Result } from "@shared/result";
 import type { Adjusted, Skipped, WorldEnsured } from "@shared/worldApi";
 import type { WorldProgress } from "@shared/worldProgress";
@@ -238,7 +239,8 @@ async function openPinned(
     return migrate(core, key.value, { ...input, expect: pin.worldId });
   }
   if (!key.ok) return ok({ worldId, outcome });
-  if (first.value.owner !== key.value.author && isLocalOnly(first.value)) {
+  // Not one of its owners (a co-owner's device restoring the backup keeps the world as it is).
+  if (!isOwner(first.value.now, key.value.author) && isLocalOnly(first.value)) {
     const adopted = await core.withWorld(worldId, (old) =>
       adopt(core, old, key.value, saveDir, pin),
     );

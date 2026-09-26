@@ -1,0 +1,9 @@
+// Closes the Electron app listening on CDP_PORT through the browser target's Browser.close.
+const port = Number(process.env.CDP_PORT);
+const version = (await (await fetch(`http://127.0.0.1:${port}/json/version`)).json()) as { webSocketDebuggerUrl: string };
+const ws = new WebSocket(version.webSocketDebuggerUrl);
+await new Promise((r) => ws.addEventListener("open", r, { once: true }));
+ws.send(JSON.stringify({ id: 1, method: "Browser.close" }));
+await new Promise((r) => setTimeout(r, 1500));
+console.log(`Browser.close sent to ${port}`);
+process.exit(0);

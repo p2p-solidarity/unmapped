@@ -1,0 +1,74 @@
+{
+  "env": {
+    "scratch": "SCR = a fresh empty dir (this run: the session scratchpad .../scratchpad/p3); D = docs/e2e/milestone-rev6-p3-migrate",
+    "fixture": "bun run fixture:legacy-land $SCR/migrate/ud > $SCR/migrate/fixture.json   (seed \"legacy-land\"; copy kept as fixture-manifest.json)",
+    "app": "OPENAI_API_KEY= THESYS_API_KEY= AETHER_TEST_USER_DATA=$SCR/migrate/ud bun run dev --remoteDebuggingPort 9350   (empty key values block the repo .env; the app's default provider was apple-fm, shown UNREACHABLE)",
+    "driver": "CDP_PORT=9350 bun scripts/cdp-drive.ts \"$(cat $D/run.json)\"   (parts B and C: run-b-restart.json on 9350, run-c-pristine-after-fix.json on 9351)",
+    "close": "CDP_PORT=<port> bun $D/close-app.ts.txt   (Browser.close on the browser target; `kill <Electron pid>` if it still listens)",
+    "window": "1440 x ~850 CSS px, device scale 2, in the background; UI switched to English in each part",
+    "build": "main 51817a3 plus the uncommitted working tree of every session (other sessions edited src/shared/llm.ts, src/main/inference/** and the i18n tables live; Vite hot-reloaded during the run). Parts A and B ran before this session's planner fix; part C ran after it."
+  },
+  "model": "none (no [inference] line in parts A, B or C)",
+  "sequence": [
+    "shell: bun run fixture:legacy-land $SCR/migrate/ud; hash every fixture file (before.sha256, 45 files)",
+    "shell: launch the app on 9350 (A)",
+    "run.json (part A): title, English, Worlds → Saves, Resume (migrates), walk to the oversized chunk 1,1, leave Play, Continue, call world.ensure again",
+    "shell: close the app; re-hash the 45 fixture files; bun --tsconfig-override tsconfig.node.json $D/digest.ts.txt $SCR/migrate/ud 23qc-6pqs-mucdvy80",
+    "shell: relaunch on 9350 (B)",
+    "run-b-restart.json (part B): English, Continue after the restart, read what ensure did, talk to the resident on the legacy-only chunk, leave Play",
+    "shell: close; bun run fixture:legacy-land $SCR/pristine; cp -Rp $SCR/pristine $SCR/migrate2/ud; cp -Rp $SCR/migrate/ud/identity $SCR/migrate2/ud/ (same device key); write inference.json (llamacpp at a dead 127.0.0.1:8859)",
+    "shell: launch on 9351 with AETHER_TEST_USER_DATA=$SCR/migrate2/ud (C)",
+    "run-c-pristine-after-fix.json (part C): same display name (player-CP8P), Continue; then cmp the first 21 log lines with part A's"
+  ],
+  "actions": [
+    { "note": "A1: the title" },
+    { "wait": 1500 },
+    { "text": true },
+    { "shot": "docs/e2e/milestone-rev6-p3-migrate/a-00-title.jpg" },
+    { "note": "A2: UI language English (the system default is zh-TW)" },
+    { "clickText": "設定" },
+    { "wait": 800 },
+    { "clickText": "English" },
+    { "wait": 600 },
+    { "hold": "Escape", "ms": 80 },
+    { "wait": 600 },
+    { "text": true },
+    { "note": "A3: Worlds → Saves: the fixture save, no history yet" },
+    { "clickText": "Worlds" },
+    { "wait": 1500 },
+    { "clickText": "Saves" },
+    { "wait": 1200 },
+    { "text": true },
+    { "shot": "docs/e2e/milestone-rev6-p3-migrate/a-01-worlds-saves.jpg" },
+    { "note": "A4: Resume runs world.ensure, which migrates" },
+    { "clickText": "Resume" },
+    { "wait": 400 },
+    { "shot": "docs/e2e/milestone-rev6-p3-migrate/a-02-migrated-toasts.jpg" },
+    { "wait": 4000 },
+    { "text": true },
+    { "shot": "docs/e2e/milestone-rev6-p3-migrate/a-03-play-migrated.jpg" },
+    {
+      "eval": "(async () => { const p = (await import(\"/engine/playerProbe.ts\")).samplePlayer(); const s = (await import(\"/state/index.ts\")); const l = s.useLandStore.getState(); return { p, marks: l.marks, keys: Object.keys(l.chunks ?? {}) }; })()"
+    },
+    { "note": "A5: walk to the oversized chunk 1,1 (legacyOnly)" },
+    { "pad": { "toward": "[46, 46]", "within": 2, "buttons": [5], "timeoutMs": 60000 } },
+    { "wait": 800 },
+    { "text": true },
+    { "shot": "docs/e2e/milestone-rev6-p3-migrate/a-04-oversized-chunk-legacy-only.jpg" },
+    { "note": "A6: leave Play and come back (same session)" },
+    { "clickText": "← Home" },
+    { "wait": 1500 },
+    { "text": true },
+    { "clickText": "Continue" },
+    { "wait": 800 },
+    { "shot": "docs/e2e/milestone-rev6-p3-migrate/a-05-reopen.jpg" },
+    { "wait": 2500 },
+    {
+      "eval": "(async () => { const s = await import(\"/state/index.ts\"); const h = s.useHistoryStore.getState(); const w = h.world; return w.status === \"ready\" ? { head: w.value.sequenced.head, ensured: { migrated: w.value.ensured?.migrated, added: w.value.ensured?.added, skipped: w.value.ensured?.skipped?.length } } : w.status })()"
+    },
+    { "note": "A7: the rerun: world.ensure again, directly" },
+    {
+      "eval": "(async () => { const r = await window.seed.world.ensure(\"23qc-6pqs-mucdvy80\", \"player-CP8P\"); return r.ok ? { worldId: r.value.worldId, migrated: r.value.migrated, added: r.value.added, adoptedFrom: r.value.adoptedFrom, skipped: r.value.skipped.map(s => s.what + \" \" + s.key + \" \" + s.code), adjusted: r.value.adjusted, head: r.value.status.head } : r.error })()"
+    }
+  ]
+}

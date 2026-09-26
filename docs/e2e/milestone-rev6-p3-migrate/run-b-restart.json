@@ -1,0 +1,30 @@
+{
+  "env": { "app": "the same userData as part A, relaunched: OPENAI_API_KEY= THESYS_API_KEY= AETHER_TEST_USER_DATA=$SCR/migrate/ud bun run dev --remoteDebuggingPort 9350", "driver": "CDP_PORT=9350" },
+  "model": "none",
+  "actions": [
+    { "note": "B1: the UI came back in zh-TW (localStorage was not flushed before the close), so English again" },
+    { "wait": 1500 },
+    { "clickText": "設定" },
+    { "wait": 800 },
+    { "clickText": "English" },
+    { "wait": 600 },
+    { "hold": "Escape", "ms": 80 },
+    { "wait": 600 },
+    { "clickText": "Continue" },
+    { "wait": 3000 },
+    { "shot": "docs/e2e/milestone-rev6-p3-migrate/b-00-restart-rerun.jpg" },
+    {
+      "eval": "(async () => { const s = await import(\"/state/index.ts\"); const w = s.useHistoryStore.getState().world; return w.status === \"ready\" ? { head: w.value.sequenced.head.n, migrated: w.value.ensured?.migrated, added: w.value.ensured?.added, adoptedFrom: w.value.ensured?.adoptedFrom, skipped: w.value.ensured?.skipped?.length } : w })()"
+    },
+    { "text": true },
+    { "note": "B2: talk to the resident of the legacy-only chunk: stored words, no model call" },
+    { "hold": "KeyE", "ms": 100 },
+    { "wait": 1500 },
+    { "text": true },
+    { "shot": "docs/e2e/milestone-rev6-p3-migrate/b-01-legacy-chunk-talk.jpg" },
+    { "clickText": "Walk away" },
+    { "wait": 500 },
+    { "clickText": "← Home" },
+    { "wait": 1500 }
+  ]
+}
