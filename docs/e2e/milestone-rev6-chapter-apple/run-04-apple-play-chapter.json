@@ -1,0 +1,85 @@
+{
+ "step": "04",
+ "app": "Apple run",
+ "port": 9340,
+ "what": "Play chapter 1 through at its gate, as a player would (loop from milestone-rev6-p3-rumors run-08, verbatim, with a stricter spot: the target must be nearer than anything else by half a tile): walk beside the nearest person not yet met or find not yet opened, A to talk or open, A through the lines until the dialogue closes; until the host clears e1. Then read met/found, the chapter.cleared deed, the carry",
+ "loopFrom": "docs/e2e/milestone-rev6-p3-rumors/run-08-b-clear-e1.json second action (verbatim)",
+ "actions": [
+  {
+   "eval": "(() => {\n  const e2e = window.__e2e;\n  // Where to stand to face the next thing: a free spot beside it from which it is nearer than\n  // anything else by at least half a tile (run-03a's helper allowed 0.3, and at 2 tiles between two\n  // people it stood where the wrong one was nearer). Most margin first, then the nearest walk.\n  e2e.spot = async () => {\n    const t = await e2e.nextTodo();\n    const at = await e2e.pos();\n    if (!t || !at) return null;\n    const S = await import('/state/index.ts');\n    const M = await import('/engine2d/landModel.ts');\n    const land = await e2e.shared('land');\n    const active = S.useSessionStore.getState().activeInstance;\n    const graph = S.useWorldStore.getState().scene.value;\n    const seed = land.landSeedOf(active.instance.save);\n    const chunks = S.useLandStore.getState().chunks;\n    const others = (await e2e.others()).filter((p) => Math.hypot(p[0] - t.at[0], p[1] - t.at[1]) > 0.01);\n    const spots = [];\n    for (const r of [0.7, 0.9, 1.1]) {\n      for (let i = 0; i < 24; i += 1) {\n        const a = (i / 24) * Math.PI * 2;\n        const p = [t.at[0] + Math.cos(a) * r, t.at[1] + Math.sin(a) * r];\n        if (!M.canStandAt(graph, seed, chunks, p[0], p[1], null)) continue;\n        const margin = Math.min(99, ...others.map((o) => Math.hypot(o[0] - p[0], o[1] - p[1]) - o[2])) - r;\n        if (margin < 0.5) continue;\n        spots.push({ p, score: Math.hypot(p[0] - at[0], p[1] - at[1]) - Math.min(margin, 2) });\n      }\n    }\n    spots.sort((a, b) => a.score - b.score);\n    return spots[0]?.p ?? t.at;\n  };\n  return 'spot';\n})()"
+  },
+  {
+   "eval": "(async()=>{window.__e2e.t0=Date.now(); return JSON.stringify(await window.__e2e.chapter())})()"
+  },
+  {
+   "repeat": {
+    "times": 12,
+    "until": "(async()=>{const S=await import('/state/index.ts'); return S.useLandStore.getState().progress?.episodes?.e1?.cleared===true})()",
+    "actions": [
+     {
+      "eval": "window.__e2e.nextTodo()"
+     },
+     {
+      "pad": {
+       "toward": "window.__e2e.spot()",
+       "within": 0.3,
+       "timeoutMs": 15000
+      }
+     },
+     {
+      "eval": "window.__e2e.state().then(s=>s.nearby)"
+     },
+     {
+      "repeat": {
+       "times": 1,
+       "until": "(async()=>{const s=await window.__e2e.state(); const t=await window.__e2e.nextTodo(); return !t || !s.nearby || s.nearby.id!==t.id})()",
+       "actions": [
+        {
+         "pad": {
+          "buttons": [
+           0
+          ]
+         }
+        }
+       ]
+      }
+     },
+     {
+      "wait": 600
+     },
+     {
+      "eval": "window.__e2e.state().then(s=>({dialogue:s.dialogue, speaker:s.speaker, focus:s.focus}))"
+     },
+     {
+      "repeat": {
+       "times": 4,
+       "until": "(async()=>{const S=await import('/state/index.ts'); return S.useSessionStore.getState().dialogue===null})()",
+       "actions": [
+        {
+         "pad": {
+          "buttons": [
+           0
+          ],
+          "ms": 200
+         }
+        },
+        {
+         "wait": 600
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); const H=await import('/history/index.ts'); const p=S.useLandStore.getState().progress; const e=p.episodes.e1; const n=H.worldNow(); const deeds=Object.values(n.events).filter(r=>r.kind==='deed'); return JSON.stringify({ms: Date.now()-window.__e2e.t0, cleared:e.cleared, summary:e.summary ?? null, met:e.stage?.met, found:e.stage?.found, carry:p.storyCarry, deeds: deeds.map(d=>({label:d.label, where:d.where, pending:d.pending}))})})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-chapter-apple/04-apple-chapter-cleared.jpg"
+  }
+ ]
+}

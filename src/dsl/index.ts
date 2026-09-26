@@ -5,6 +5,12 @@
 //                                    └─ on DslError → repairPrompt → model (at most twice)
 
 export {
+  CHAPTER_ANSWER_LIMITS,
+  type ChapterAnswerContext,
+  chapterAnswerSchema,
+  writeChapterProgram,
+} from "./chapterAnswer";
+export {
   CHUNK_ANSWER_LIMITS,
   type ChunkAnswerContext,
   chunkAnswerSchema,
@@ -92,7 +98,13 @@ export {
 export { parseScene, toSceneGraph } from "./parse/scene";
 export { BIBLE_SHAPE, programShape } from "./programShape";
 export { ARCHETYPE_GUIDE } from "./prompts/archetypes";
-export { CHAPTER_EXAMPLE, type ChapterPromptContext, chapterPrompt } from "./prompts/chapter";
+export {
+  CHAPTER_EXAMPLE,
+  type ChapterPromptContext,
+  chapterNamesSection,
+  chapterPrompt,
+} from "./prompts/chapter";
+export { compactChapterPrompt } from "./prompts/chapterCompact";
 export {
   authoredSection,
   bibleSections,

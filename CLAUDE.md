@@ -109,8 +109,9 @@ view or an account status, never a value. Every `UNMAPPED_*` / `QWEN_IMAGE_*` va
 - The model only ever writes OpenUI Lang programs against our libraries (`src/dsl`). No JSON
   blobs, no JS, no `eval`, no `new Function`.
   The one guided exception: on a small on-device model (Apple, a window under 8K) the model fills a
-  JSON Schema made from the dialect's own zod shapes (`programShape`, `chunkAnswer`), and the host
-  writes that answer back as an OpenUI Lang program the parser checks — the program stays the truth.
+  JSON Schema made from the dialect's own zod shapes (`programShape`, `chunkAnswer`,
+  `chapterAnswer`), and the host writes that answer back as an OpenUI Lang program the parser
+  checks — the program stays the truth.
 - Parse with `@openuidev/lang-core` (`createParser(library.toJSONSchema())`), convert with
   `toSceneGraph / toDialogue / toItem`, and **repair** by re-prompting with `OpenUIError[]` at
   most twice (`src/dsl/repair.ts`). Unparseable after that → `error` state, not a fallback scene.

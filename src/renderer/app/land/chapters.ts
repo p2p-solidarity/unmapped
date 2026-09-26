@@ -5,7 +5,7 @@
 // D15). On the land its people, finds and foes stand around the gate: talking, opening and
 // defeating are the player's own progress, and the host clears the chapter when nothing is left
 // (a `chapter.cleared` deed). A climb or a maze is played as a place and is cleared by reaching
-// its far end.
+// its far end. Its people get names nobody near the gate or in the story has (./names.ts).
 
 import { type ChapterDraft, serializeScene } from "@dsl";
 import { readChapter } from "@renderer/engine2d/chapterLayer";
@@ -46,6 +46,7 @@ import { makeKarmaEntry } from "../karmaFile";
 import { checkpointCurrentInstance } from "../usePersistWorld";
 import { abandonClaim, type Claimed, claimToWrite } from "./claims";
 import { recordDeed } from "./deeds";
+import { namesNearGate } from "./names";
 import { playablePlace, residentWords } from "./places";
 
 export const CHAPTER_CANCELLED = "chapter-cancelled";
@@ -222,6 +223,12 @@ export async function writeChapter(
     kept.stage = stage;
     return ok(undefined);
   };
+  // Names already in use near the gate and in the story; read again at every check, since the
+  // origin may be witnessed while this chapter is written (New game writes both at once).
+  const names = {
+    names: namesNearGate(episode),
+    namesNow: () => namesNearGate(episode),
+  };
   let written: Result<unknown>;
   try {
     if (place === null) {
@@ -236,6 +243,8 @@ export async function writeChapter(
         combat,
         language,
         bible,
+        coord: { cx: episode.cx, cz: episode.cz },
+        ...names,
         signal,
         accept: ({ source }) => keep(source, null),
       });
@@ -246,6 +255,7 @@ export async function writeChapter(
         combat,
         language,
         bible,
+        ...names,
         signal,
         accept: async ({ graph }) => {
           const words = residentWords(graph.dialogues);

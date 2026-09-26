@@ -1,0 +1,19 @@
+{
+ "step": "04b",
+ "app": "Apple run",
+ "port": 9340,
+ "what": "The helper loop of step 04 met 文珍 and 建國 and opened the find, then stood between 建國 (79.5, 18.5) and 茂珍 (81.5, 18.5), where 建國 was nearer, 9 times. Walk round to 茂珍's east side (82.4, 18.5) via (81.5, 17.2), A to talk, A through her lines; read whether the host cleared e1",
+ "actions": [
+  {"pad": {"toward": "[81.5, 17.2]", "within": 0.3, "timeoutMs": 10000}},
+  {"pad": {"toward": "[82.4, 18.5]", "within": 0.25, "timeoutMs": 10000}},
+  {"eval": "window.__e2e.state().then(s=>JSON.stringify({pos:s.pos, nearby:s.nearby}))"},
+  {"pad": {"buttons": [0]}},
+  {"wait": 800},
+  {"eval": "(async()=>{const s=await window.__e2e.state(); return JSON.stringify({dialogue:s.dialogue, speaker:s.speaker, text: document.body.innerText.split('\\n').filter(Boolean).slice(-10)})})()"},
+  {"shot": "docs/e2e/milestone-rev6-chapter-apple/a2-04b-apple-talking.jpg"},
+  {"repeat": {"times": 6, "until": "(async()=>{const S=await import('/state/index.ts'); return S.useSessionStore.getState().dialogue===null})()", "actions": [{"pad": {"buttons": [0], "ms": 200}}, {"wait": 700}]}},
+  {"wait": 1500},
+  {"eval": "(async()=>{const S=await import('/state/index.ts'); const H=await import('/history/index.ts'); const p=S.useLandStore.getState().progress; const e=p.episodes.e1; const n=H.worldNow(); const deeds=Object.values(n.events).filter(r=>r.kind==='deed'); return JSON.stringify({cleared:e.cleared, summary:e.summary ?? null, met:e.stage?.met, found:e.stage?.found, carry:p.storyCarry, deeds: deeds.map(d=>({label:d.label, where:d.where, pending:d.pending}))})})()"},
+  {"shot": "docs/e2e/milestone-rev6-chapter-apple/a2-04b-apple-chapter-cleared.jpg"}
+ ]
+}

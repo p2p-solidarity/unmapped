@@ -1,7 +1,8 @@
 // Chapter program → the people, finds and foes of one story chapter, plus each person's words.
 // Nothing here has a position yet (the host sets everything around the gate: x and z are 0), and
 // a person's look follows from their role. Structural problems a repair round can fix become
-// issues; the prose checks are the witnessing's own (../hygiene.ts).
+// issues; the prose checks are the witnessing's own (../hygiene.ts), and so is the one that sends
+// back a person who takes a name already in use nearby or in the story.
 
 import type { ElementNode, OpenUIError } from "@openuidev/lang-core";
 import { ok, type Result } from "@shared/result";
@@ -41,6 +42,8 @@ export interface ChapterContext {
   /** False when the cartridge declares no combat: then no Monster may appear. */
   combat: boolean;
   language: string;
+  /** Names already in use on the land and in the story; a person of this chapter may not take one. */
+  names?: readonly string[];
 }
 
 export interface ChapterDraft {

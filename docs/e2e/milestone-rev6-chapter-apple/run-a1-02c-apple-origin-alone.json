@@ -1,0 +1,12 @@
+{
+  "step": "02c",
+  "app": "Apple run",
+  "port": 9340,
+  "what": "Diagnosis: the two calls of 02 and 02b failed together each time. Retry the origin witness alone (HUD Retry = retryWitness(0,0)); chapter 1 stays failed meanwhile (its card waits for Retry). Wait for the witness (up to 4 min) and read what was written",
+  "actions": [
+    {"eval": "(async () => { const W = await import('/app/land/witness.ts'); window.__w0 = Date.now(); W.retryWitness({ cx: 0, cz: 0 }); return 'retry' })()"},
+    {"repeat": {"times": 480, "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['0,0']; return c !== undefined && c.status !== 'writing' })()", "actions": [{"wait": 500}]}},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['0,0']; return JSON.stringify({ ms: Date.now() - window.__w0, status: c?.status, error: c?.status === 'failed' ? c.error : null, name: c?.scene?.name ?? null, residents: c?.scene?.npcs?.map(n => n.name + ' (' + n.role + ')') ?? null }) })()"},
+    {"shot": "docs/e2e/milestone-rev6-chapter-apple/a1-02c-apple-origin-alone.jpg"}
+  ]
+}

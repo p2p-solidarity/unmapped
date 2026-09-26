@@ -14,9 +14,9 @@ import { languageName } from "@shared/language";
 import { ok, type Result } from "@shared/result";
 import { MOODS, NPC_ROLES, type NpcSpec, type PropKind } from "@shared/world";
 import { z } from "zod";
+import { clothes, readAnswer, quoted as str, uniqueId } from "./answer";
 import { CHUNK_LIMITS, WITNESS_ACTIONS } from "./parse/chunk";
 import { slugId } from "./parse/ids";
-import { dslError, failWith } from "./parse/program";
 import type { DslError } from "./types";
 
 /** What a guided answer may hold: smaller than the parser allows, so the answer always finishes. */
@@ -49,6 +49,12 @@ export interface ChunkAnswerContext {
   customs: readonly string[];
   /** Names of the places nearby, which this one may not take (said where the name is written). */
   places?: readonly string[];
+  /**
+   * Names already in use nearby and in the story, nearest first; the first few are said where a
+   * resident's name is written. Listed only in the prompt, Apple's model copied them: chapter 1's
+   * 建國 came back at (1,0) in two rounds, and a neighbour's 立國 in two at (2,0).
+   */
+  names?: readonly string[];
 }
 
 type TileRange = { min: number; max: number };
@@ -127,20 +133,6 @@ function partTile(part: PlacePart, n: number, range: { x: TileRange; z: TileRang
 const words = (what: string) => z.string().trim().describe(what);
 const plain = () => z.string().trim();
 
-/** A clothes colour from its hue: always a fabric colour the land can show, never near-black. */
-function clothes(hue: number): string {
-  const s = 0.45;
-  const l = 0.5;
-  const part = (n: number): string => {
-    const k = (n + hue / 30) % 12;
-    const value = l - s * Math.min(l, 1 - l) * Math.max(-1, Math.min(k - 3, 9 - k, 1));
-    return Math.round(value * 255)
-      .toString(16)
-      .padStart(2, "0");
-  };
-  return `#${part(0)}${part(8)}${part(4)}`;
-}
-
 /**
  * The answer's shape. Descriptions are kept only where they carry a rule: on a 4K context every
  * word of the schema is a word the answer cannot use.
@@ -167,6 +159,7 @@ function answerShape(ctx: ChunkAnswerContext) {
   const custom = { label: words("its short name, in plain words"), text: plain() };
   const nearby = (ctx.places ?? []).slice(0, 6);
   const taken = nearby.length === 0 ? "" : `a new name, not ${nearby.join(" or ")}; `;
+  const people = (ctx.names ?? []).slice(0, 8);
   return z.object({
     name: words(
       `what the locals call this place: a real name of a word or two, in ${lang}; ${taken}never a coordinate, "chunk" or an id`,
@@ -181,7 +174,9 @@ function answerShape(ctx: ChunkAnswerContext) {
     residents: z
       .array(
         z.object({
-          name: words("a first name or nickname nobody nearby has"),
+          name: words(
+            `a first name or nickname nobody nearby has${people.length === 0 ? "" : `, not ${people.join(", ")}`}`,
+          ),
           role: z.enum(NPC_ROLES),
           mood: z.enum(MOODS),
           hue: z.int().min(0).max(359),
@@ -225,38 +220,10 @@ export function chunkAnswerSchema(ctx: ChunkAnswerContext): Record<string, unkno
   return schema;
 }
 
-const str = (value: string): string => JSON.stringify(value.trim());
-
-function invalid(message: string, hint: string): Result<never, DslError> {
-  return failWith(dslError({ code: "dsl-invalid-answer", message, hint }));
-}
-
-/** Ids from names: ascii snake_case when the name has any, unique among `taken`. */
-function uniqueId(name: string, fallback: string, taken: Set<string>): string {
-  const base = slugId(name, fallback);
-  let id = base;
-  for (let n = 2; taken.has(id); n += 1) id = `${base}_${n}`;
-  taken.add(id);
-  return id;
-}
-
 /** The answer as a Chunk program, or why it cannot be one (a repair round, like a parse error). */
 export function writeChunkProgram(raw: string, ctx: ChunkAnswerContext): Result<string, DslError> {
-  let json: unknown;
-  try {
-    json = JSON.parse(raw);
-  } catch {
-    return invalid("The answer is not complete JSON.", "Answer again, shorter, and finish it.");
-  }
-  const parsed = answerShape(ctx).safeParse(json);
-  if (!parsed.success) {
-    const first = parsed.error.issues[0];
-    return invalid(
-      `The answer does not fit its schema: ${first?.path.join(".") || "(root)"}: ${first?.message ?? "invalid"}.`,
-      "Answer again with every field filled in.",
-    );
-  }
-  return ok(writeAnswer(parsed.data, ctx));
+  const parsed = readAnswer(raw, answerShape(ctx));
+  return parsed.ok ? ok(writeAnswer(parsed.value, ctx)) : parsed;
 }
 
 function writeAnswer(answer: ChunkAnswer, ctx: ChunkAnswerContext): string {

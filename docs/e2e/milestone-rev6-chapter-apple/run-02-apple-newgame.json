@@ -1,0 +1,21 @@
+{
+  "step": "02",
+  "app": "Apple run",
+  "port": 9340,
+  "what": "Close Settings; 世界 (Worlds) → 開始 (Start, New game on the built-in world); wait for Play. The origin (0,0) is witnessed on entry and chapter 1 (e1, gate at chunk (2,0)) is written in the background at the same time, both on Apple's model; wait for both (up to 6 min) and read the origin's residents and chapter 1's people, words and finds",
+  "actions": [
+    {"hold": "Escape", "ms": 80},
+    {"wait": 600},
+    {"clickText": "世界"},
+    {"wait": 1200},
+    {"clickText": "開始"},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); window.__w0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance && S.useLandStore.getState().progress !== null) return { ms: Date.now() - window.__w0, screen: s.screen, language: S.useWorldStore.getState().genesis?.language }; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + S.useSessionStore.getState().screen })()"},
+    {"wait": 2500},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); const J = await import('/app/land/chapterJobs.ts'); const j = J.getChapterJobs(); return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, c00: S.useLandStore.getState().chunks['0,0']?.status ?? 'absent', chapterJob: j.job && { episodeId: j.job.episodeId, title: j.job.title }, failure: j.failure }) })()"},
+    {"shot": "docs/e2e/milestone-rev6-chapter-apple/02-apple-writing.jpg"},
+    {"repeat": {"times": 720, "until": "(async () => { const S = await import('/state/index.ts'); const J = await import('/app/land/chapterJobs.ts'); const st = S.useLandStore.getState(); const c = st.chunks['0,0']; const originDone = c !== undefined && c.status !== 'writing'; const e1 = st.progress?.episodes?.e1?.stage ?? null; const j = J.getChapterJobs(); if (e1 !== null && window.__e1ms === undefined) window.__e1ms = Date.now() - window.__w0; if (originDone && window.__o0ms === undefined) window.__o0ms = Date.now() - window.__w0; return originDone && (e1 !== null || (j.job === null && j.failure !== null)) })()", "actions": [{"wait": 500}]}},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); const E = await import('/engine2d/chapterLayer.ts'); const J = await import('/app/land/chapterJobs.ts'); const st = S.useLandStore.getState(); const c = st.chunks['0,0']; const e1 = st.progress?.episodes?.e1?.stage ?? null; const ch = e1 ? E.readChapter(e1.source) : null; const origin = c?.status === 'written' ? c.scene.npcs.map(n => n.name) : []; const people = ch ? ch.npcs.map(n => n.name) : []; return JSON.stringify({ originDoneMs: window.__o0ms, chapterDoneMs: window.__e1ms ?? null, origin: { status: c?.status, error: c?.status === 'failed' ? c.error : null, name: c?.scene?.name ?? null, residents: c?.scene?.npcs?.map(n => n.name + ' (' + n.role + ')') ?? null }, chapter1: ch ? { kind: e1.kind, name: ch.name, goal: ch.goal, people: ch.npcs.map(n => n.id + ':' + n.name + ' (' + n.role + ', ' + n.mood + ')'), words: ch.dialogues.map(d => ({ npc: d.npcId, line: d.line, answers: d.choices.map(x => x.label + ' [' + x.action + '] → ' + x.effect + (x.gives.length ? ' +' + x.gives.join('/') : '')) })), finds: ch.treasures.map(t => t.id + ': ' + t.loot.join(', ')), monsters: ch.monsters.length } : null, chapterFailure: J.getChapterJobs().failure, clash: people.filter(n => origin.includes(n)), source: e1?.source ?? null }) })()"},
+    {"wait": 800},
+    {"shot": "docs/e2e/milestone-rev6-chapter-apple/02-apple-written.jpg"}
+  ]
+}

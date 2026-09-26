@@ -1,0 +1,61 @@
+# Every model call of this run: main's stdout ([inference] done/fail) and the renderer's [repair] lines, per app.
+# Bridge-direct calls (scratch scripts over the afm-bridge's stdio, no app, no [inference] line) are listed at the end.
+
+# Apple, final recorded run (fresh userData ud-apple3; steps 01-05)
+[inference] done 3e3b0d87-6e09-490d-b24a-672e38056bcb · chapter · apple-fm system · 16842 ms · max 1300 · 1515+597 tokens (0 cached) · ctx 4096
+[inference] done 5aecca5e-2c32-48ed-9d47-0fe1fdab6758 · witness · apple-fm system · 33160 ms · max 1500 · 2038+587 tokens (0 cached) · ctx 4096
+[inference] done c9fffde1-56ca-4eb0-9db9-d485476beb0a · witness · apple-fm system · 21969 ms · max 1500 · 2281+815 tokens (0 cached) · ctx 4096
+[inference] done 8f3eebab-d29d-49c3-891d-71b239941cef · witness · apple-fm system · 17853 ms · max 1500 · 2382+641 tokens (0 cached) · ctx 4096
+[renderer:WARN] [repair] 1/2 · dsl-invalid-chunk · 2 problem(s) with this Chunk program. · resident_1 is called "文文", like someone who already lives nearby or in the story.
+[inference] done fbe58c28-5c2f-4c3d-b7e1-04d369af403e · witness · apple-fm system · 19412 ms · max 1500 · 2467+695 tokens (0 cached) · ctx 4096
+[inference] done ce3e4cfe-db53-4541-819c-363d91c1e002 · chapter · apple-fm system · 18967 ms · max 1300 · 1838+653 tokens (0 cached) · ctx 4096
+[renderer:WARN] [repair] 1/2 · dsl-invalid-chapter · 2 problem(s) with this Chapter program. · person_2 is called "芳芳", like someone who already lives nearby or in the story.
+[inference] done 84801078-f263-4ef6-aa7b-e2a29aa603aa · chapter · apple-fm system · 18520 ms · max 1300 · 1923+631 tokens (0 cached) · ctx 4096
+
+# OpenAI (fresh userData ud-openai; step 11)
+[inference] done 5dc53495-35b9-4d66-a965-3f572a08b610 · chapter · openai gpt-5.4-mini · 6354 ms · max 2400 · 2167+880 tokens (0 cached)
+[renderer:WARN] [repair] 1/2 · dsl-invalid-name · Statement names must be ascii: 田吉, 美代, 小春, 田吉說話, 田吉選1, 田吉選2, 美代說話, 美代選1, 美代選2, 小春說話, 小春選1, 小春選2, 紀念物. · "田吉" is not an ascii name, so the statement was lost.
+[inference] done 0d8ba935-f960-4adc-8a6b-f1a65801f927 · witness · openai gpt-5.4-mini · 6953 ms · max 3200 · 3400+1129 tokens (0 cached)
+[renderer:WARN] [repair] 1/2 · dsl-invalid-chunk · 3 problem(s) with this Chunk program. · Lore id "" is empty, repeated or already taken here.
+[inference] done 5ad9c51f-b909-4907-b3f7-45996f068ff1 · witness · openai gpt-5.4-mini · 3368 ms · max 3200 · 5249+893 tokens (2816 cached)
+[inference] done e48084d2-ee2e-475e-8643-4dbf80819374 · chapter · openai gpt-5.4-mini · 4427 ms · max 2400 · 4232+751 tokens (1792 cached)
+
+# Apple attempt 1 (ud-apple; a1-* screenshots): the chapter schema's optional 'gives' array made Apple's guided generation fail (LanguageModelError -1)
+# 02: chapter + origin at once, both fail; 02b: both retried at once, both fail; 02c: origin alone, written (1 repair); 02d: chapter alone, fails in 909 ms.
+# The last two chapter lines came after the fixed files were copied into the running snapshot: Vite reloaded the page, the writer started e1 again
+# (443 ms fail on the old module), then again, and that call was aborted when the app was closed.
+[inference] fail bf2453c9-a4db-4ce4-a671-008bf220b676 · chapter · apple-fm system · 31312 ms · bridge.generation_failed
+[inference] fail 79fdbf3a-8733-47e8-9ad6-cb28f356c7ec · witness · apple-fm system · 31362 ms · bridge.generation_failed
+[inference] fail 7663f27d-ccb2-4414-98a8-abcb59bda7e3 · chapter · apple-fm system · 22705 ms · bridge.generation_failed
+[inference] fail 1c517b8e-5f3e-42bb-8715-d8931ea00dc1 · witness · apple-fm system · 22709 ms · bridge.generation_failed
+[inference] done 0d0e5244-af83-4e00-85be-10fa3bea73ad · witness · apple-fm system · 42919 ms · max 1500 · 2040+1500 tokens (0 cached) · ctx 4096
+[renderer:WARN] [repair] 1/2 · dsl-invalid-answer · The answer does not fit its schema: props: Too small: expected array to have >=3 items.
+[inference] done 21695f29-3aee-4571-8e48-7351cf9cc758 · witness · apple-fm system · 20299 ms · max 1500 · 2092+629 tokens (0 cached) · ctx 4096
+[inference] fail 164cfc1c-5e48-44a4-90bb-c8ca1619fb15 · chapter · apple-fm system · 909 ms · bridge.generation_failed
+[inference] fail 49c0f9ce-ddf1-4350-a408-7059d14e9301 · chapter · apple-fm system · 443 ms · bridge.generation_failed
+[inference] fail 362d6f33-13dc-4e48-95ef-52ea699ff1e7 · chapter · apple-fm system · 7915 ms · aborted
+
+# Apple attempt 2 (ud-apple2; a2-* screenshots): gives removed; the chunk answer's resident name did not yet list the names in use
+# 02: chapter 1 + origin, both written; 03: (1,0) written in round 3, (2,0) failed after 3 rounds; 04/04b: chapter 1 cleared; chapter 2 written in the background
+[inference] done 42793efd-200b-497d-ace5-83e259dd4aee · chapter · apple-fm system · 15484 ms · max 1300 · 1515+525 tokens (0 cached) · ctx 4096
+[inference] done c94b2d27-71aa-4779-a7e4-ee15a1961920 · witness · apple-fm system · 35056 ms · max 1500 · 2038+717 tokens (0 cached) · ctx 4096
+[inference] done e04121de-9457-4c13-9bbc-af13ec10a389 · witness · apple-fm system · 18882 ms · max 1500 · 2290+677 tokens (0 cached) · ctx 4096
+[renderer:WARN] [repair] 1/2 · dsl-invalid-chunk · 3 problem(s) with this Chunk program. · resident_1 is called "建國", like someone who already lives nearby or in the story.
+[inference] done f2073fc8-0b50-4c8e-b47a-c20eb72340df · witness · apple-fm system · 19431 ms · max 1500 · 2407+709 tokens (0 cached) · ctx 4096
+[renderer:WARN] [repair] 2/2 · dsl-invalid-chunk · 3 problem(s) with this Chunk program. · resident_1 is called "建國", like someone who already lives nearby or in the story.
+[inference] done 8de2fc83-5681-4f15-89fd-6504754c82fa · witness · apple-fm system · 20164 ms · max 1500 · 2407+649 tokens (0 cached) · ctx 4096
+[inference] done a872ca2f-0311-448c-8d6e-200488e69ec7 · witness · apple-fm system · 23016 ms · max 1500 · 2386+679 tokens (0 cached) · ctx 4096
+[renderer:WARN] [repair] 1/2 · dsl-invalid-chunk · 3 problem(s) with this Chunk program. · resident_1 is called "立國", like someone who already lives nearby or in the story.
+[inference] done a178d805-b373-4114-8d5e-bb94dafcceea · witness · apple-fm system · 19212 ms · max 1500 · 2503+661 tokens (0 cached) · ctx 4096
+[renderer:WARN] [repair] 2/2 · dsl-invalid-chunk · 3 problem(s) with this Chunk program. · resident_1 is called "立國", like someone who already lives nearby or in the story.
+[inference] done 21f67d25-9650-4701-8d7e-ce10d92b6a82 · witness · apple-fm system · 30483 ms · max 1500 · 2503+1500 tokens (0 cached) · ctx 4096
+[inference] done a8a6ea7c-b102-4243-b32e-74257ee4a26f · chapter · apple-fm system · 14581 ms · max 1300 · 1813+493 tokens (0 cached) · ctx 4096
+
+# Bridge-direct (snapshot's native/afm-bridge/.build/debug/afm-bridge, macOS 27, Apple Intelligence on), during attempt 1's diagnosis
+ping: one chat 'Say hello in five words.' → result 4105 ms, 61+13 tokens
+two small chats at once → both results, 1818 ms (69+23) and 2251 ms (69+21)
+two long free-text chats at once (≈1,870-token prompt) → both results, 12258 ms (1870+331) and 23399 ms (1870+349)
+two guided chats at once, small schema (object, enum, array of objects, min 2 / max 3) → both results, 4610 ms (2034+71) and 7818 ms (2034+73)
+chapter schema as first written (with gives: array of strings, maxItems 1), one at a time: asis → LanguageModelError -1 at 937 ms; without minLength → -1 at 1649 ms
+  without gives → result 10687 ms (686+461); gives with minItems 0 → -1; loot as a string (gives kept) → -1
+chapter schema as shipped (no gives): zh-TW, no combat → result 14315 ms (697+585); with combat (foes) → result 18247 ms (860+635)

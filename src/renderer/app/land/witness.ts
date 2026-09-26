@@ -15,14 +15,12 @@
 // rewrites it, as one of Rule 7's two repairs (D5); any other refusal shows at once, with Retry.
 
 import {
-  parseScene,
   serializeDialogue,
   serializeErrands,
   serializeScene,
   type WitnessedDraft,
   witnessIndexOf,
 } from "@dsl";
-import { readChapter } from "@renderer/engine2d/chapterLayer";
 import {
   appendToWorld,
   onHistory,
@@ -41,23 +39,16 @@ import {
   useSessionStore,
   useWorldStore,
 } from "@renderer/state";
-import type { ChapterStage } from "@shared/chapter";
-import {
-  type ChunkCoord,
-  chunkDistance,
-  chunkKey,
-  chunksAround,
-  chunkTerrain,
-} from "@shared/chunks";
+import { type ChunkCoord, chunkKey, chunksAround, chunkTerrain } from "@shared/chunks";
 import { chunkStands } from "@shared/history/decay";
 import type { WitnessBody } from "@shared/history/types";
 import { landSeedOf } from "@shared/land";
 import { type AppError, err, fail, ok, type Result, toError } from "@shared/result";
-import { storyEpisodes } from "@shared/story";
 import { claimTarget } from "@shared/worldProtocol";
 import { useEffect } from "react";
 import { makeKarmaEntry } from "../karmaFile";
 import { abandonClaim, claimToWrite } from "./claims";
+import { namesNearChunk } from "./names";
 
 /** Why nothing can be witnessed right now, or null when it can. Shown by the HUD verbatim. */
 export function witnessBlocker(): AppError | null {
@@ -126,39 +117,6 @@ function neighbours(coord: ChunkCoord) {
       .map((node) => `${node.id} "${node.label}": ${node.text}`);
     return [{ coord: near, name: chunk.scene.name, customs }];
   });
-}
-
-/** The people a written chapter brought, by name: its land cast, or a place's residents. */
-function chapterPeople(stage: ChapterStage): string[] {
-  if (stage.kind === "land") return (readChapter(stage.source)?.npcs ?? []).map((npc) => npc.name);
-  const scene = parseScene(stage.source);
-  return scene.ok ? scene.value.npcs.map((npc) => npc.name) : [];
-}
-
-/**
- * Names a new resident must not take: the residents of this chunk's neighbours, then the people of
- * every chapter written so far, nearest gate first (two "Bram"s once stood by chapter 1's gate).
- */
-function namesInUse(coord: ChunkCoord): string[] {
-  const { chunks, progress } = useLandStore.getState();
-  const names = chunksAround(coord, 1).flatMap((near) => {
-    const chunk = chunks[chunkKey(near)];
-    return chunk?.status === "written" ? chunk.scene.npcs.map((npc) => npc.name) : [];
-  });
-  const plan = useSessionStore.getState().activeInstance?.cartridge.story ?? null;
-  const episodes = plan === null ? [] : storyEpisodes(plan, progress?.storyMore);
-  const written = episodes
-    .flatMap((episode) => {
-      const stage = progress?.episodes?.[episode.id]?.stage;
-      return stage === undefined || stage === null ? [] : [{ episode, stage }];
-    })
-    .sort(
-      (a, b) =>
-        chunkDistance({ cx: a.episode.cx, cz: a.episode.cz }, coord) -
-        chunkDistance({ cx: b.episode.cx, cz: b.episode.cz }, coord),
-    );
-  for (const { stage } of written) names.push(...chapterPeople(stage));
-  return [...new Set(names.map((name) => name.trim()).filter((name) => name !== ""))];
 }
 
 /**
@@ -308,12 +266,14 @@ async function witness(coord: ChunkCoord): Promise<void> {
         language: world.genesis.language,
         terrain,
         neighbours: neighbours(coord),
-        names: namesInUse(coord),
+        names: namesNearChunk(coord),
         ...(isOrigin ? { authored: origin.npcs } : {}),
         legend: grows?.legend ?? null,
       },
       {
         signal: controller.signal,
+        // A chapter written meanwhile brings names this prompt never listed; they count too.
+        namesNow: () => namesNearChunk(coord),
         ...(relay === null ? {} : { onDelta: (text: string) => relay.delta(text) }),
         // The witness is appended inside the repair loop: a refusal about what the program says
         // (lore links, sizes, words) is one of its two repairs (D5); any other ends it here.

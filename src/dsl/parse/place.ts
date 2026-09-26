@@ -34,6 +34,8 @@ const TALK_HEAD = CHUNK_PROPS.Talk.pick({ npcId: true, line: true });
 export interface PlaceContext {
   /** The world's language: prose in any other script is sent back (../hygiene.ts). */
   language: string;
+  /** A chapter's place: names already in use nearby and in the story, which no resident takes. */
+  names?: readonly string[];
 }
 
 export interface PlaceDraft {
@@ -120,7 +122,7 @@ export function toPlace(root: ElementNode, ctx: PlaceContext): Result<PlaceDraft
   const dialogues = residentsWords(scene.value, childrenOf(root), issues);
   if (issues.length === 0) {
     const prose = { name: scene.value.name, npcs: scene.value.npcs, dialogues, lore: [] };
-    issues.push(...hygieneIssues(prose, { lore: [], language: ctx.language }));
+    issues.push(...hygieneIssues(prose, { lore: [], language: ctx.language, names: ctx.names }));
   }
   if (issues.length > 0) {
     return failWith(

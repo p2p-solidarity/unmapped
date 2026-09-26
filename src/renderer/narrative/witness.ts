@@ -8,10 +8,14 @@
 // new place that may answer it.
 //
 // On a route whose whole context is small and that decodes against a schema (Apple's on-device
-// model, 4096 tokens) the witness is guided: a compact prompt (the bible's short lines, fewer lore
-// lines, no Chunk spec) and an answer held to the chunk schema, written back as a Chunk program
-// that `parseChunk` checks like any other (@dsl chunkAnswer). Every other route keeps the full
-// prompt.
+// model, 4096 tokens; ./route.ts) the witness is guided: a compact prompt (the bible's short lines,
+// fewer lore lines, no Chunk spec) and an answer held to the chunk schema, written back as a Chunk
+// program that `parseChunk` checks like any other (@dsl chunkAnswer). Every other route keeps the
+// full prompt.
+//
+// The names a new resident may not take are read again at every check (`io.namesNow`): a chapter
+// written while this was (chapter 1 beside the origin at New game) brings people this prompt never
+// listed, and a resident who takes one of their names is sent back like any other clash.
 
 import {
   authoredSection,
@@ -33,19 +37,17 @@ import {
   writeChunkProgram,
 } from "@dsl";
 import { ORDER } from "@harness";
-import { useInferenceStore } from "@renderer/state/inferenceStore";
 import { bibleLook, clampLine, worldPropKinds } from "@shared/bible";
 import type { WorldBible } from "@shared/cartridge";
 import { type ChunkTerrain, chunkDistance } from "@shared/chunks";
 import type { Result } from "@shared/result";
 import type { NpcSpec } from "@shared/world";
 import { generateProgram, type Program } from "./pipeline";
+import { answerRoute, NAMES_SHOWN, namesChecked } from "./route";
 import type { TurnSection } from "./turn";
 
 export const WITNESS_MAX_TOKENS = 3200;
 export const WITNESS_TEMPERATURE = 0.9;
-/** A route holding less than this, prompt and answer together, cannot take the full prompt. */
-export const COMPACT_BELOW_TOKENS = 8192;
 /**
  * A guided answer (≤ 3 residents, ≤ 8 props) measured 513–813 tokens on Apple's model; this much
  * lets the longest one finish, the prompt (≈ 2,200 with its schema) leaves room for it, and an
@@ -53,8 +55,6 @@ export const COMPACT_BELOW_TOKENS = 8192;
  */
 export const GUIDED_MAX_TOKENS = 1500;
 export const GUIDED_MIN_TOKENS = 1100;
-/** Names already in use, as many as each prompt lists (nearest first). */
-const NAMES_SHOWN = { full: 24, guided: 12 } as const;
 
 /** What a fogged chunk was, before it faded: the new witness grows out of this legend (傳說). */
 export interface WitnessLegend {
@@ -72,16 +72,6 @@ export interface WitnessInput extends ChunkContext {
   neighbours: NeighbourSummary[];
   /** Set when the chunk is witnessed again after fading into fog. */
   legend?: WitnessLegend | null;
-}
-
-/** How a witness is asked on the current route: the full prompt, or a guided compact answer. */
-export type WitnessRoute = "full" | "guided";
-
-export function witnessRoute(): WitnessRoute {
-  const { config, probe } = useInferenceStore.getState();
-  const context = probe.status === "ready" ? probe.value.context : null;
-  const small = context !== null && context.tokens < COMPACT_BELOW_TOKENS;
-  return small && config?.kind === "apple-fm" ? "guided" : "full";
 }
 
 /** The old tale of a chunk witnessed anew (never the old program itself). */
@@ -190,10 +180,12 @@ export function generateChunk(
     onDelta?: (text: string) => void;
     /** Appends the witness a parsed program becomes; a content refusal is repaired (D5). */
     accept?: (program: { source: string; graph: WitnessedDraft }) => Promise<Result<unknown>>;
+    /** The names in use as they stand at each check, nearest first (see the header). */
+    namesNow?: () => readonly string[];
   } = {},
 ): Promise<Result<Program<WitnessedDraft>>> {
   const { coord } = input;
-  const route = witnessRoute();
+  const route = answerRoute();
   // The world's own style decides what its land is built from (rev 6), not one house style.
   const props = worldPropKinds(input.bible);
   // The neighbours' residents and the story's people, nearest first (ChunkContext.names).
@@ -204,7 +196,8 @@ export function generateChunk(
     purpose: "chunk",
     task: "witness",
     language: input.language,
-    parse: (source: string) => parseChunk(source, context),
+    parse: (source: string) =>
+      parseChunk(source, { ...context, names: namesChecked(names, io.namesNow, route) }),
     coord,
     temperature: WITNESS_TEMPERATURE,
     ...(io.signal === undefined ? {} : { signal: io.signal }),
@@ -221,6 +214,7 @@ export function generateChunk(
         .filter((node) => node.kind === "custom" && chunkDistance(node.coord, coord) === 1)
         .map((node) => node.id),
       places: placesNearby(input),
+      names,
     };
     const { onDelta } = io;
     return generateProgram<WitnessedDraft>({

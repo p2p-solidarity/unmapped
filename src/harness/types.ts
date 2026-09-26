@@ -34,7 +34,7 @@ export interface AssembleContext {
   coord?: ChunkCoord;
   /**
    * The route's whole context is small (Apple's 4K on-device model): world sections keep only what
-   * the turn needs — fewer lore lines, no flags or inventory for a witnessing.
+   * the turn needs — fewer lore lines; no authored scene, flags or inventory (a witness, a chapter).
    */
   compact?: boolean;
   signal?: AbortSignal;

@@ -30,6 +30,20 @@ export interface ChapterPromptContext {
   language: string;
 }
 
+/**
+ * The names already in use near a chapter's gate and in the story, nearest first, so its people
+ * get names of their own (at New game chapter 1 and the origin, written at once, both had a Sumi).
+ * A person who takes one anyway is sent back by the parser's hygiene check.
+ */
+export function chapterNamesSection(names: readonly string[]): string {
+  if (names.length === 0) return "";
+  return [
+    "## Names already in use",
+    `People nearby or in the story: ${names.map((name) => clampText(name, 40)).join(", ")}.`,
+    "Every person of this chapter gets a name of their own, never one of these.",
+  ].join("\n");
+}
+
 export function chapterPrompt(ctx: ChapterPromptContext): string {
   const { npcs, treasures, monsters } = CHAPTER_PARTS;
   return chapterLibrary.prompt({

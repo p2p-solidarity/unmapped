@@ -1,0 +1,11 @@
+{
+ "step": "05",
+ "app": "Apple run",
+ "port": 9340,
+ "what": "Clearing e1 starts chapter 2 (e2, gate (-2,2)) in the background on Apple; wait for it (up to 2 min). Then list every name the run wrote — the origin's and each witnessed chunk's residents, each chapter's people — and every name that appears in more than one of them",
+ "actions": [
+  {"repeat": {"times": 240, "until": "(async()=>{const J=await import('/app/land/chapterJobs.ts'); return J.getChapterJobs().job===null})()", "actions": [{"wait": 500}]}},
+  {"eval": "(async()=>{const S=await import('/state/index.ts'); const E=await import('/engine2d/chapterLayer.ts'); const J=await import('/app/land/chapterJobs.ts'); const st=S.useLandStore.getState(); const groups={}; for (const [k,c] of Object.entries(st.chunks)) if (c.status==='written') groups['chunk '+k+' '+c.scene.name]=c.scene.npcs.map(n=>n.name); for (const [id,e] of Object.entries(st.progress?.episodes ?? {})) { const ch=e.stage?E.readChapter(e.stage.source):null; if (ch) groups['chapter '+id+' '+ch.name]=ch.npcs.map(n=>n.name); } const seen={}; for (const [g,names] of Object.entries(groups)) for (const n of names) (seen[n]=seen[n]||[]).push(g); const shared=Object.fromEntries(Object.entries(seen).filter(([,g])=>g.length>1)); const e2=st.progress?.episodes?.e2?.stage; const ch2=e2?E.readChapter(e2.source):null; return JSON.stringify({groups, sharedNames: shared, chapter2: ch2 && { name: ch2.name, goal: ch2.goal, people: ch2.npcs.map(n=>n.name+' ('+n.role+')'), finds: ch2.treasures.map(t=>t.loot.join(' / ')) }, chapterFailure: J.getChapterJobs().failure})})()"},
+  {"shot": "docs/e2e/milestone-rev6-chapter-apple/05-apple-end.jpg"}
+ ]
+}

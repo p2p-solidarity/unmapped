@@ -177,21 +177,25 @@ const notForRumors =
   (world, a) =>
     a.purpose === "rumor" ? "" : render(world, a);
 
-/** A compact witnessing (a 4K route) has no room for what it never uses: flags, the inventory. */
-const notCompactChunk =
+/**
+ * A compact assembly (a 4K route: a guided witness or chapter) has no room for what those turns
+ * never use: the authored scene's details (a chapter lists who lives there among its names in
+ * use), flags, the inventory. What stands around the turn's chunk (the lore) and the season stay.
+ */
+const notCompact =
   (render: Render): Render =>
   (world, a) =>
-    a.compact === true && a.purpose === "chunk" ? "" : render(world, a);
+    a.compact === true ? "" : render(world, a);
 
 /** Each section renders from the snapshot, or contributes nothing at all. */
 const SECTIONS: readonly { name: string; offset: number; render: Render }[] = [
-  { name: "world:floor", offset: 0, render: sceneBound(floorText) },
-  { name: "world:npcs", offset: 1, render: sceneBound(npcText) },
-  { name: "world:monsters", offset: 2, render: sceneBound(monsterText) },
-  { name: "world:quests", offset: 3, render: sceneBound(questText) },
-  { name: "world:flags", offset: 4, render: notCompactChunk(notForRumors(flagText)) },
+  { name: "world:floor", offset: 0, render: notCompact(sceneBound(floorText)) },
+  { name: "world:npcs", offset: 1, render: notCompact(sceneBound(npcText)) },
+  { name: "world:monsters", offset: 2, render: notCompact(sceneBound(monsterText)) },
+  { name: "world:quests", offset: 3, render: notCompact(sceneBound(questText)) },
+  { name: "world:flags", offset: 4, render: notCompact(notForRumors(flagText)) },
   { name: "world:karma", offset: 5, render: notForRumors(karmaText) },
-  { name: "world:inventory", offset: 6, render: notCompactChunk(notForRumors(inventoryText)) },
+  { name: "world:inventory", offset: 6, render: notCompact(notForRumors(inventoryText)) },
   { name: "world:season", offset: 7, render: seasonText },
 ];
 
