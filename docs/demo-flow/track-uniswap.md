@@ -54,7 +54,7 @@
 
 **台上的圖**：公開的唯讀拍賣頁 https://unmapped-auction.gimmychang.workers.dev/#aether-land（要加 `#aether-land` 才會顯示 GRADUATED · POOL OPEN；不加會打開最新上架、0 筆出價就結束的 lantern-quay）畫出清算價逐塊上升、出價（標 PASSKEY）、池子與家族樹，比 Etherscan 好講。操作手冊：`docs/demo/lineage-market.md`。
 
-**現場要出價**：根世界的池子已經開了，要現場示範拍賣就先發行一個新的改編世界（app 內上架是 100 個區塊、約 20 分鐘；操作者的 `lineage:demo launch --blocks 50` 約 10 分鐘；指令與新合約參數以 `docs/demo/lineage-market.md` 為準）。gas station 的金鑰已設好（部署的 Worker 已送出第一筆真實交易）；上台前打開 https://unmapped-relay.gimmychang.workers.dev/status 確認 relayer 不是 null、還有 ETH（2026-09-26 是 0.0318 ETH；app 內上架一次約 5.15M gas，1 gwei 時約 0.0055 ETH）。
+**現場要出價**：根世界的池子已經開了，要現場示範拍賣就先發行一個新的改編世界（app 內上架是 100 個區塊、約 20 分鐘；操作者的 `lineage:demo launch --blocks 50` 約 10 分鐘；指令與新合約參數以 `docs/demo/lineage-market.md` 為準）。gas station 的金鑰已設好（部署的 Worker 已送出第一筆真實交易）；上台前打開 https://unmapped-relay.gimmychang.workers.dev/status 確認 relayer 不是 null、還有 ETH（2026-09-26 補款後是 0.4518 ETH；app 內上架一次約 5.15M gas，1 gwei 時約 0.0055 ETH）。
 
 **簽名**：Electron 開發版叫不出 Touch ID，所以 app 會在 Chrome／Safari 開一個本機頁面完成那一次簽名。E2E 用的是虛擬驗證器，**真的用手指按 Touch ID 還沒測過——上台前在 demo 用的 Mac 上排練一次**。
 

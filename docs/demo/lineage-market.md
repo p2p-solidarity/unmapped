@@ -26,8 +26,8 @@ creation, witnessing, continent) are in `docs/demo-flow/`.
    Check `curl https://unmapped-relay.gimmychang.workers.dev/status` shows `relayer: 0xB62C…` and a
    balance (keep it above 0.02 Sepolia ETH; 5 player actions cost about 0.0018, but an in-app launch
    alone is 5.13–5.15M gas, 0.0054–0.0056 ETH at ~1 gwei and up to ~0.026 at the station's 5-gwei
-   launch cap). At block 11,785,145 it held 0.0318 ETH: enough for about six launches at 1 gwei, not
-   for a rehearsal plus the live ENS and Uniswap scripts.
+   launch cap). At block 11,785,145 it held 0.0318 ETH; after a top-up it held 0.4518 ETH at block
+   11,785,984: enough for a rehearsal plus the live ENS and Uniswap scripts many times over.
 2. On the demo machine, `.env` needs the `UNWRITTEN_LINEAGE_*` lines (addresses above) and
    `UNWRITTEN_LINEAGE_RELAY=https://unmapped-relay.gimmychang.workers.dev`. It needs no private key for
    the app; `UNWRITTEN_PRIVATE_KEY` is only for the operator commands below.

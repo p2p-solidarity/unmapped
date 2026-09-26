@@ -38,7 +38,7 @@
 | ENS 的 live demo 連結 | 完成：https://unmapped-auction.gimmychang.workers.dev/#aether-land（不加 `#aether-land` 會打開最新上架、0 筆出價就結束的 lantern-quay） | — |
 | 市場畫面實機 E2E（出價、結算、買入、發放分潤） | 完成：[`milestone-lineage-demo`](../e2e/milestone-lineage-demo/result.md)（真的按 Touch ID 未測） | 上台前排練 |
 | 總體版排練紀錄 | 完成（1a10a9d，改寫前為 f98de40；第二段之前）：[`milestone-demo-flow`](../e2e/milestone-demo-flow/result.md)；第 2–4 幕照腳本通過 | 第二段已上線，要重跑 |
-| 鏈上全部重讀（出處、ENS、市場、代付站、拍賣頁、app 唯讀畫面） | 完成（區塊 11,785,145）：[`milestone-chain-audit`](../e2e/milestone-chain-audit/result.md)；代付站剩 0.0318 ETH，排練加上台不夠 | 要人補 Sepolia ETH |
+| 鏈上全部重讀（出處、ENS、市場、代付站、拍賣頁、app 唯讀畫面） | 完成（區塊 11,785,145）：[`milestone-chain-audit`](../e2e/milestone-chain-audit/result.md)；代付站當時剩 0.0318 ETH，之後已補到 0.4518 ETH（區塊 11,785,984） | 完成 |
 
 ## 第二段已上線
 

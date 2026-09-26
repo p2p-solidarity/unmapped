@@ -59,7 +59,7 @@
 
 **live 連結**：https://unmapped-auction.gimmychang.workers.dev/#aether-land ——唯讀的「Lineage Auction House」（不加 `#aether-land` 會打開最新上架、0 筆出價就結束的 lantern-quay），直接讀 Sepolia（清算價曲線、出價、池子、家族樹），不需要錢包。
 
-**簽名與 gas（上台前一定要知道）**：Electron 開發版叫不出 Touch ID，所以 app 會開 Chrome／Safari 的本機頁面完成那一次簽名；E2E 用的是虛擬驗證器，**真的按 Touch ID 還沒測過，上台前在 demo 用的 Mac 排練一次**。付 gas 的是 Cloudflare 上的 gas station（app 裡不放私鑰）；金鑰已設好（部署的 Worker 已送出第一筆真實交易），上台前打開 https://unmapped-relay.gimmychang.workers.dev/status 確認 relayer 不是 null、還有 ETH（2026-09-26 區塊 11,785,145：`0xB62C…Fd3D`、0.0318 ETH；台上登記加上架一個新世界約 0.0064 ETH，再加一個改編約 0.0065 ETH，1 gwei 時）。
+**簽名與 gas（上台前一定要知道）**：Electron 開發版叫不出 Touch ID，所以 app 會開 Chrome／Safari 的本機頁面完成那一次簽名；E2E 用的是虛擬驗證器，**真的按 Touch ID 還沒測過，上台前在 demo 用的 Mac 排練一次**。付 gas 的是 Cloudflare 上的 gas station（app 裡不放私鑰）；金鑰已設好（部署的 Worker 已送出第一筆真實交易），上台前打開 https://unmapped-relay.gimmychang.workers.dev/status 確認 relayer 不是 null、還有 ETH（2026-09-26 區塊 11,785,145：`0xB62C…Fd3D`、補款後 0.4518 ETH，區塊 11,785,984；台上登記加上架一個新世界約 0.0064 ETH，再加一個改編約 0.0065 ETH，1 gwei 時）。
 
 ## 要講清楚、不能講過頭的
 

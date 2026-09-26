@@ -57,7 +57,7 @@ AETHER_TEST_USER_DATA="$TMPDIR/demo-b" bun run dev --remoteDebuggingPort 9334
 | 兩個視窗並排、字體放大 | 台下看得到 HUD 的「已連線 · 1 位夥伴」 |
 | 開好 Sepolia 的 Etherscan 分頁（合約地址見 `contracts/README.md`） | 第 4 幕、鏈上版的備援 |
 | 市場：根世界 `aether-land.unmapped.eth` 已經拍賣完成、池子已開（2026-09-26 區塊 11,785,145 讀過） | ENSv2 那邊負責，見 `docs/demo/lineage-market.md` |
-| 打開 https://unmapped-relay.gimmychang.workers.dev/status：`relayer` 不是 null、`balanceWei` 夠用 | 2026-09-26 是 0.0318 ETH；台上建一個世界並上架約 0.0054 ETH（1 gwei 時），排練加正式上台不夠，見 [chain-audit](../e2e/milestone-chain-audit/result.md) |
+| 打開 https://unmapped-relay.gimmychang.workers.dev/status：`relayer` 不是 null、`balanceWei` 夠用 | 2026-09-26 補款後是 0.4518 ETH（區塊 11,785,984）；台上建一個世界並上架約 0.0054 ETH（1 gwei 時），排練加正式上台都夠，見 [chain-audit](../e2e/milestone-chain-audit/result.md) |
 
 ## 4. 出狀況時
 

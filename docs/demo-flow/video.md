@@ -20,7 +20,7 @@
 - 照 [setup.md](setup.md) 準備：`.env` 放 `OPENAI_API_KEY`；A、B 兩個視窗各用拋棄式資料夾；兩邊到「設定 → 信令伺服器」存本機 `ws://127.0.0.1:4444`。
 - **介面語言**：給國際評審建議用英文介面（「設定」→ 語言 English），世界內容就會用英文寫；想保留中文世界也可以，講稿不用改。下面每個按鈕都列出英文／繁中。
 - B 先用「世界 → 新遊戲 → 開始」（Worlds → New game → Start）開好內建世界，等原點顯影完成。
-- 市場：根世界 `aether-land.unmapped.eth` 已在 v2 合約上拍賣完、池子已開；gas station 已上線，錄之前打開 https://unmapped-relay.gimmychang.workers.dev/status 確認 relayer 不是 null、還有 ETH（2026-09-26 是 0.0318 ETH，見 [chain-audit](../e2e/milestone-chain-audit/result.md)）；passkey 帳戶先領好測試 USDC。
+- 市場：根世界 `aether-land.unmapped.eth` 已在 v2 合約上拍賣完、池子已開；gas station 已上線，錄之前打開 https://unmapped-relay.gimmychang.workers.dev/status 確認 relayer 不是 null、還有 ETH（2026-09-26 補款後是 0.4518 ETH，見 [chain-audit](../e2e/milestone-chain-audit/result.md)）；passkey 帳戶先領好測試 USDC。
 - 買入時 app 會打開系統瀏覽器完成簽名。這一步在錄影的 Mac 上**先排練一次**（E2E 用的是虛擬驗證器）。
 - 每一幕分開錄，最後剪在一起；每一段都錄長一點，剪的時候只拿掉等待。
 
