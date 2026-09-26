@@ -12,6 +12,7 @@ import type { InvitePreview, WorldJoined } from "@shared/worldApi";
 import { type JSX, useState } from "react";
 import { shortKey, useAction } from "../land/worldDoor";
 import { openInstance } from "../useInstanceLoader";
+import { plainSaveName } from "./rows";
 
 const column = { display: "flex", flexDirection: "column", gap: space.xs } as const;
 
@@ -26,7 +27,7 @@ function PreviewCard({ world }: { world: InvitePreview }): JSX.Element {
   return (
     <Surface variant="inset" padding="md" style={column}>
       <Text variant="title" as="h3">
-        {world.name}
+        {plainSaveName(world.name)}
       </Text>
       <Text variant="body">
         {t("world.joinOwner", { owner: world.ownerName ?? shortKey(world.owner) })}
