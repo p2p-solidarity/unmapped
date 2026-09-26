@@ -34,17 +34,19 @@
 | GitHub repo 公開 | 完成：github.com/p2p-solidarity/unmapped | — |
 | `FEEDBACK.md`（Uniswap 必要） | 完成：[`FEEDBACK.md`](../../FEEDBACK.md) | — |
 | Uniswap Developer Feedback Form | **要人親自填** | 團隊 |
-| README 指到合約與行號（Uniswap 必要） | 進行中 | ENSv2 session |
-| ENS 的 live demo 連結 | 完成：https://unmapped-auction.gimmychang.workers.dev | — |
+| README 指到合約與行號（Uniswap 必要） | 完成：`contracts/README.md` 的「Where to look」，27 個行號錨點 2026-09-26 對過（[chain-audit](../e2e/milestone-chain-audit/result.md)） | — |
+| ENS 的 live demo 連結 | 完成：https://unmapped-auction.gimmychang.workers.dev/#aether-land（不加 `#aether-land` 會打開最新上架、0 筆出價就結束的 lantern-quay） | — |
 | 市場畫面實機 E2E（出價、結算、買入、發放分潤） | 完成：[`milestone-lineage-demo`](../e2e/milestone-lineage-demo/result.md)（真的按 Touch ID 未測） | 上台前排練 |
-| 總體版排練紀錄 | 完成（1a10a9d，改寫前為 f98de40；第二段之前）：[`milestone-demo-flow`](../e2e/milestone-demo-flow/result.md)；第 2–4 幕照腳本通過，第 1 幕要先填名稱 | 第二段上線後重跑 |
+| 總體版排練紀錄 | 完成（1a10a9d，改寫前為 f98de40；第二段之前）：[`milestone-demo-flow`](../e2e/milestone-demo-flow/result.md)；第 2–4 幕照腳本通過 | 第二段已上線，要重跑 |
+| 鏈上全部重讀（出處、ENS、市場、代付站、拍賣頁、app 唯讀畫面） | 完成（區塊 11,785,145）：[`milestone-chain-audit`](../e2e/milestone-chain-audit/result.md)；代付站剩 0.0318 ETH，排練加上台不夠 | 要人補 Sepolia ETH |
 
-## 第二段上線後要改的地方
+## 第二段已上線
 
-第二段（`docs/plans/rev6-phase2.md`）正在實作，完成後標題會變成「繼續・世界・創造世界・設定」：
+第二段（`docs/plans/rev6-phase2.md`）已上線，標題是「繼續・世界・創造世界・設定」：
 
-- 「加入大陸」「卡帶」「用 ENS 名稱開啟」移到「世界」畫面裡；「新遊戲」也在「世界」裡。
-- 創造流程多一步「看樣子」（三張低畫質概念圖選一張）和建立前的「報價」。
+- 「大陸」「卡帶」「用 ENS 名稱開啟」「市場」都在「世界」畫面裡；「新遊戲」也在「世界」裡。
+- 創造流程多一步「看樣子」（三張低畫質概念圖選一張）和建立前的「報價」；世界名稱可以留白。
+- 設定在標題的「設定」（以前的「系統」），模型與信令伺服器都在裡面。
 - 手把可以從標題一路玩到第一章。
 
-第二段整合綠燈後會重跑排練，並更新三份腳本的按鈕名稱。
+2026-09-26 已照 `src/renderer/i18n/strings` 把各腳本的按鈕名稱與路徑改成現在的版本（[chain-audit](../e2e/milestone-chain-audit/result.md) 第 7 節）；總體版的排練（秒數）還沒重跑。

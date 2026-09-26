@@ -1,0 +1,32 @@
+{
+ "flow": "chain audit (read-only): the app's chain screens on live Sepolia — Market, Cartridges' ENS lines, Open by ENS name, Continent, the save's ENS block, the HUD's ENS chip and a shared world's door chain section. No passkey is linked, nothing is signed, no transaction is sent.",
+ "date": "2026-09-26",
+ "tree": "snapshot of origin/main 27e623d (git archive) in $SCR/snap, node_modules and .env symlinked; electron.vite.config.ts renderer section given cacheDir .vite-cache and server { port: 5196, strictPort: true }",
+ "env": {
+  "app": "cd $SCR/snap && env -u SERVICE_CHAIN_KEY -u SERVICE_CHAIN_ID -u SERVICE_CHAIN_RPC_URL -u SERVICE_PROVENANCE_ADDRESS OPENAI_API_KEY= THESYS_API_KEY= UNMAPPED_GATEWAY_URL= UNMAPPED_GATEWAY_KEY= UNWRITTEN_PRIVATE_KEY= UNWRITTEN_SIGN_BROWSER=none AETHER_TEST_USER_DATA=$SCR/ud bunx electron-vite dev --remoteDebuggingPort 9346   (UNWRITTEN_LINEAGE_* incl. the deployed relay URL and UNMAPPED_PROVENANCE_* come from .env)",
+  "service": "cd $SCR/snap && env -u SERVICE_CHAIN_KEY -u SERVICE_CHAIN_ID -u SERVICE_CHAIN_RPC_URL -u SERVICE_PROVENANCE_ADDRESS UNWRITTEN_PRIVATE_KEY= UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8797 --data $SCR/service   (no chain env: it cannot record anything)",
+  "reads": "cd $SCR/snap && export $(grep -E '^(UNWRITTEN_LINEAGE_(PARENT|REGISTRY|HOOK|ROUTER|ACCOUNTS|FROM_BLOCK)|UNMAPPED_PROVENANCE_(RPC_URL|ADDRESS|CHAIN_ID))=' .env | xargs) — only public values; the scripts are chain-audit*.ts.txt copied to scripts/*.ts"
+ },
+ "model": "none: OpenAI key blanked, provider switched to Ollama (nothing on 11434) in run-door-a-settings.json because another session's llama-server held 8080; the HUD read 'UNREACHABLE ollama · qwen3.5:4b', no usage.jsonl was written",
+ "sequence": [
+  "bun --tsconfig-override tsconfig.node.json scripts/chain-audit.ts audit.json > audit.out.txt",
+  "UNWRITTEN_LINEAGE_REGISTRY=0xda8051e3e2855C125AAd6050f97Ea64cf203dAf6 bun --tsconfig-override tsconfig.node.json scripts/chain-audit-launches.ts > launches.out.txt",
+  "UNWRITTEN_PRIVATE_KEY= SERVICE_CHAIN_KEY= bun run provenance --dry-run --out $SCR/out/prov-dry > provenance-dry-run.out.txt",
+  "UNWRITTEN_PRIVATE_KEY= bun run lineage:market --dry-run > lineage-market-dry-run.out.txt",
+  "UNWRITTEN_PRIVATE_KEY= bun run lineage:demo status --dry-run > lineage-demo-status.out.txt",
+  "curl -sS https://unmapped-relay.gimmychang.workers.dev/status > relay-status.json; curl -sS -H 'Origin: https://example.com' …/status > relay-origin.txt",
+  "(cd web/lineage-relay && bunx wrangler@4 deployments list); (cd web/lineage-auction && bunx wrangler@4 deployments list)   (read-only; author lines redacted)",
+  "curl the deployed index.html / app.js / style.css and cmp with origin/main web/lineage-auction/public: identical",
+  "'Google Chrome' --headless=new --remote-debugging-port=9347 --user-data-dir=$SCR/chrome about:blank; CHROME_PORT=9347 bun scripts/chain-audit-web.ts <out>; CHROME_PORT=9347 WEB_URL='https://unmapped-auction.gimmychang.workers.dev/#aether-land' WEB_NAME=web-02-aether-land bun scripts/chain-audit-web.ts <out>; CDP Browser.close",
+  "app + CDP_PORT=9346 bun scripts/cdp-drive.ts \"$(cat run-menus.json)\"",
+  "service; CDP_PORT=9346 bun scripts/cdp-drive.ts \"$(cat run-door-a-settings.json)\"; … run-door-b-share.json; … run-saves.json",
+  "CDP Browser.close on ws://127.0.0.1:9346; kill -TERM the service on 8797; lsof on 9346, 5196, 8797, 9347 finds nothing"
+ ],
+ "parts": [
+  "run-menus.json",
+  "run-door-a-settings.json",
+  "run-door-b-share.json",
+  "run-saves.json"
+ ],
+ "note": "run-menus.json focuses the Open-by-ENS field by its placeholder; the live run used its React id (_r_2_), which is not stable."
+}

@@ -16,22 +16,27 @@ creation, witnessing, continent) are in `docs/demo-flow/`.
 | LineageHook / LineageRouter | `0x59FA49D974B4564Eade17EDDC4a3CCf8D819a044` / `0x2201fBDB7f17BD687d8965B9Dc2Ae000689039BE` |
 | PasskeyAccountFactory | `0x7B8b8E17590cC85c315d459feD8fC9384C2c9bE5` |
 | First world | `aether-land.unmapped.eth`: cartridge `aether-land` 1.3.0, `sha256:57f17e0d…e81b`; token `0xA801C5067a0649c640AF21fa2334Cf822bb8dBb6`; auction `0xAB2Df6CA3f3972b22D4980897aD12cd401a56203` ended at block 11,781,522 and graduated; v4 pool open |
-| Other names | `moss-hollow.aether-land.unmapped.eth` (a remix cartridge, not launched); saves `kidney-run.…` and `first-light.aether-land.unmapped.eth`; from milestone-ens-in-game: `misty-harbor.unmapped.eth` (launched from the app; its 100-block auction ended with no bid), `lantern-quay.aether-land.unmapped.eth` (a remix launched from the app, priced in AETHERLAND) and the save `my-save.misty-harbor.unmapped.eth` (door GEC2AA) |
+| Other names | `moss-hollow.aether-land.unmapped.eth` (a remix cartridge, not launched); saves `kidney-run.…` and `first-light.aether-land.unmapped.eth`; from milestone-ens-in-game: `misty-harbor.unmapped.eth` (launched from the app; its 100-block auction ended with no bid), `lantern-quay.aether-land.unmapped.eth` (a remix launched from the app, priced in AETHERLAND; its 100-block auction also ended with no bid) and the save `my-save.misty-harbor.unmapped.eth` (door GEC2AA); from milestone-ens-players: `players.unmapped.eth`, the player name `kidney.players.unmapped.eth` and the save `kidney-mui0pchb.aether-land.unmapped.eth` (door TRLVDV). All ten re-read at block 11,785,145 (`docs/e2e/milestone-chain-audit/`). Every label here is taken: pick new ones on stage. Only the `aether-land` names lead back to bytes the repo ships; `moss-hollow`, `misty-harbor` and `lantern-quay` were published only inside E2E data |
 | Gas station | https://unmapped-relay.gimmychang.workers.dev (Cloudflare Worker); its key `0xB62C…Fd3D` pays |
-| Live web view | https://unmapped-auction.gimmychang.workers.dev (read-only; `bun run web:deploy`) |
+| Live web view | https://unmapped-auction.gimmychang.workers.dev/#aether-land (read-only; `bun run web:deploy`). Without `#aether-land` it opens the newest launch, lantern-quay, whose auction ended with no bid |
 
 ## Before the demo
 
 1. The station must hold its key once: `bunx wrangler@4 secret put RELAYER_KEY -c web/lineage-relay/wrangler.jsonc < .cache/relay/relayer.key`.
    Check `curl https://unmapped-relay.gimmychang.workers.dev/status` shows `relayer: 0xB62C…` and a
-   balance (keep it above 0.02 Sepolia ETH; 5 player actions cost about 0.0018).
+   balance (keep it above 0.02 Sepolia ETH; 5 player actions cost about 0.0018, but an in-app launch
+   alone is 5.13–5.15M gas, 0.0054–0.0056 ETH at ~1 gwei and up to ~0.026 at the station's 5-gwei
+   launch cap). At block 11,785,145 it held 0.0318 ETH: enough for about six launches at 1 gwei, not
+   for a rehearsal plus the live ENS and Uniswap scripts.
 2. On the demo machine, `.env` needs the `UNWRITTEN_LINEAGE_*` lines (addresses above) and
    `UNWRITTEN_LINEAGE_RELAY=https://unmapped-relay.gimmychang.workers.dev`. It needs no private key for
    the app; `UNWRITTEN_PRIVATE_KEY` is only for the operator commands below.
 3. Run the app (`bun run dev`). Passkeys need the `http://localhost` origin.
 4. Open the live web view on a second screen; it refreshes every block (~12 s).
 5. Decide what is live at demo time:
-   - **Bidding live.** Launch a remix just before you present (about 10 minutes of auction):
+   - **Bidding live.** Launch a remix just before you present (about 10 minutes of auction; an
+     in-app launch is 100 blocks, about 20 minutes). The operator key pays for these commands
+     (0.0074 ETH at block 11,785,145, about one ~5.9M-gas launch at 1 gwei, not its seed bids):
      `bun run lineage:demo launch <label> --parent 0xA801C5067a0649c640AF21fa2334Cf822bb8dBb6 --blocks 50`.
      Its bids are in AETHERLAND, so buy some in the `aether-land` pool first. To show competition,
      `bun run lineage:demo seed-bids <token> --usdc 10,8,6` adds software-passkey bidders.

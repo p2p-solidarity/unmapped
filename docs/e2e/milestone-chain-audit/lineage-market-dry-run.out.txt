@@ -1,0 +1,92 @@
+$ bun scripts/lineage-market.ts --dry-run
+Dry run of the lineage market on Sepolia as 0x752B486fc7C1c3fcdd9292a0F4Fe39265cc47E68
+  ✓ deploy LineageRegistry  (simulated, 4,939,665 gas)
+  hook salt 9185 → 0x174bA9bF2dFC3FA8126fbC3c9B0e388586d76044
+  ✓ deploy LineageHook  (simulated, 1,351,265 gas)
+  ✓ deploy LineageRouter  (simulated, 1,132,625 gas)
+  ✓ deploy PasskeyAccountFactory  (simulated, 1,958,279 gas)
+  ✓ set the hook  (simulated, 44,177 gas)
+  price 8.000021 MockUSDC for 365 days
+  ✓ mint MockUSDC  (simulated, 51,369 gas)
+  ✓ approve registrar  (simulated, 46,354 gas)
+  ✓ commit  (simulated, 45,438 gas)
+  waiting 62 s for the commitment to age…
+  ✓ register lineage-646332.eth  (simulated, 235,064 gas)
+
+Market day
+  ✓ mint 10,000 MockUSDC  (simulated, 51,381 gas)
+  ✓ launch zelda  (simulated, 5,867,067 gas)
+    zelda: token 0x2CE5856D46b04539B6cDe2630249e4fC6d60dBf8, auction 0x87c0E948A401f51ee76B40243BCdeCCa13F768C4
+  ✓ approve Permit2  (simulated, 46,642 gas)
+  ✓ let zelda's auction pull the bid  (simulated, 47,614 gas)
+  ✓ bid in zelda's auction  (simulated, 427,744 gas)
+  ✓ exit zelda bid 0  (simulated, 211,082 gas)
+  ✓ claim zelda bid 0  (simulated, 67,428 gas)
+  ✓ graduate zelda into its v4 pool  (simulated, 628,876 gas)
+    zelda: cleared at 0.009999 per token, bids filled 100000.000000005474812751; pool sqrtPriceX96 792281625142665063903159255930531716; hook maps pool → world ✓
+    holds 549999.999999975566109563 ZELDA (the fill, plus the LP reserve the pool did not need, which goes to the owner)
+  ✓ launch mushroom  (simulated, 5,949,752 gas)
+    mushroom: token 0x6799080aBEC6287815FbD32999B7ca6A16ab4461, auction 0x829f3946C751a7b577BA4e3a53505C2D137287c1
+  ✓ approve Permit2  (simulated, 46,618 gas)
+  ✓ let mushroom's auction pull the bid  (simulated, 47,662 gas)
+  ✓ bid in mushroom's auction  (simulated, 427,899 gas)
+  ✓ exit mushroom bid 0  (simulated, 211,690 gas)
+  ✓ claim mushroom bid 0  (simulated, 67,428 gas)
+  ✓ graduate mushroom into its v4 pool  (simulated, 614,039 gas)
+    mushroom: cleared at 0.099999999999999999 per token, bids filled 10000; pool sqrtPriceX96 250541448375047931186413802100; hook maps pool → world ✓
+    mushroom.zelda.lineage-646332.eth → unwritten.token 0x6799080abec6287815fbd32999b7ca6a16ab4461, unwritten.hash sha256:b7ddffa95815ee84a2869e04c15dc679ec551e6f1f202598b299ea013d2d277d
+  ✓ approve the router  (simulated, 46,702 gas)
+  ✓ buy mushroom with 10 MockUSDC (USDC → zelda → mushroom)  (simulated, 357,076 gas)
+    got 3260.384366093991952848 MUSHROOM
+    royalties: zelda 9.775084808910967077 ZELDA (hop 1)
+               zelda 9.879952624527248341 + mushroom 23.053222790563579465 MUSHROOM (hop 2, 30 / 70)
+  ✓ claim zelda's ZELDA royalty  (simulated, 67,203 gas)
+    zelda's ENS holder received 9.775084808910967077 ZELDA
+    registry for lineage-646332.eth (first generation) is emancipated ✓
+    registry for zelda's remixes and saves is emancipated ✓
+  ✓ hand mushroom.zelda.lineage-646332.eth to 0x000000000000000000000000000000000000bEEF  (simulated, 88,407 gas)
+  ✓ claim mushroom's MUSHROOM royalty  (simulated, 89,103 gas)
+    the new holder received 23.053222790563579465 MUSHROOM; the old one nothing
+  ✓ approve the router for MUSHROOM  (simulated, 46,678 gas)
+  ✓ sell 1,000 MUSHROOM (mushroom → zelda → MockUSDC)  (simulated, 350,674 gas)
+    got 5.4318 MockUSDC
+
+Passkey account
+  ✓ faucet: mint 100 MockUSDC to the passkey account  (simulated, 51,369 gas)
+  ✓ passkey signs: buy mushroom with 10 MockUSDC  (simulated, 427,968 gas)
+    account 0x2E75D09A7dCdaf3236E70ffAec1983165FCA59Db holds 1354.944718433923972855 MUSHROOM, nonce 1
+  ✓ refused: the same signed batch sent again
+  ✓ refused: a signed batch whose calls were changed after signing
+  ✓ refused: another passkey's signature on this account
+  ✓ launch night  (simulated, 5,954,287 gas)
+    night: token 0xacca23ae6328c766f1955679e219c7F73338AB97, auction 0xA2B366cA69C9d90EDdb3dE186166B28C6ca07Cf1
+  ✓ passkey signs: bid 1,000 MUSHROOM in night's auction  (simulated, 482,700 gas)
+  ✓ exit night bid 0  (simulated, 211,690 gas)
+  ✓ claim night bid 0  (simulated, 67,428 gas)
+  ✓ graduate night into its v4 pool  (simulated, 631,139 gas)
+    night: cleared at 0.099999999999999999 per token, bids filled 10000; pool sqrtPriceX96 250541448375047931186413802100; hook maps pool → world ✓
+  ✓ buy night with 10 MockUSDC (USDC → zelda → mushroom → night)  (simulated, 413,189 gas)
+    got 2293.117171958551492822 NIGHT
+    hop 3 royalty: zelda 4.632559943350609076 + mushroom 6.948839915025913614 + night 11.581399858376522692 NIGHT (20 / 30 / 50)
+
+Names and saves
+  ✓ name the cartridge atlas (no market)  (simulated, 846,222 gas)
+    atlas.lineage-646332.eth → cartridge atlas 1.0.0, no market
+  ✓ refused: a launch by someone who does not hold the name
+  ✓ name a remix of atlas (globe.atlas)  (simulated, 897,470 gas)
+  ✓ refused: a remix launched before its parent
+  ✓ passkey signs: record its save as kidney.zelda  (simulated, 857,572 gas)
+    kidney.zelda.lineage-646332.eth → held by the passkey account, Chapter 1 of 3
+  ✓ passkey signs: move the save to a later checkpoint  (simulated, 277,320 gas)
+  ✓ refused: a save moved by someone who does not hold it
+  ✓ refused: a name under a save
+
+Refusals
+  ✓ refused: a pool opened under the hook by anyone but LBPStrategy
+  ✓ refused: mushroom paired with MockUSDC is not a world pool
+  ✓ refused: a revision by someone who does not hold the name
+  ✓ refused: a second zelda under the same parent
+
+Dry run passed — nothing was sent.
+# a live deploy would print UNWRITTEN_LINEAGE_* for lineage-646332.eth
+lineage:market exit 0

@@ -1,0 +1,90 @@
+// Chain audit, part 3b (docs/e2e/milestone-chain-audit): what each world's launch asked for — its
+// supply, LP reserve, auction length, floor and the raise it needs to graduate — decoded from the
+// launch transaction itself (CCA v2.1.0 has no `requiredCurrencyRaised()` getter). Read-only.
+//
+//   bun --tsconfig-override tsconfig.node.json scripts/chain-audit-launches.ts
+
+import {
+  type Abi,
+  type Address,
+  createPublicClient,
+  decodeFunctionData,
+  fallback,
+  formatEther,
+  formatUnits,
+  type Hex,
+  http,
+} from "viem";
+import { sepolia } from "viem/chains";
+import { lineageRegistry, passkeyAccountFactory } from "../src/main/chain/lineageCalls";
+
+const client = createPublicClient({
+  chain: sepolia,
+  transport: fallback(
+    ["https://ethereum-sepolia-rpc.publicnode.com", "https://sepolia.drpc.org"].map((u) =>
+      http(u, { retryCount: 3, retryDelay: 600 }),
+    ),
+  ),
+});
+const out = (what: string, value: unknown) =>
+  process.stdout.write(
+    `${what}: ${JSON.stringify(value, (_, v) => (typeof v === "bigint" ? v.toString() : v))}\n`,
+  );
+
+const LAUNCHES: { name: string; tx: Hex; currencyDecimals: number }[] = [
+  { name: "aether-land.unmapped.eth", tx: "0xe8637a017ed6ade3f66a20cac57d644d1d0d0c51d0316452f13e874fe12010c2", currencyDecimals: 6 },
+  { name: "misty-harbor.unmapped.eth", tx: "0x56f32d4c1fdd455a63fb428d66cea56a9b83d9f7136fe77d13cffeeff1f989fa", currencyDecimals: 6 },
+  { name: "lantern-quay.aether-land.unmapped.eth", tx: "0x2157511eb61075d8a205b753910190153d3e083ea810e06728fd63607d129df3", currencyDecimals: 18 },
+];
+const REGISTRY = (process.env.UNWRITTEN_LINEAGE_REGISTRY ?? "").toLowerCase();
+
+type Launch = {
+  supply: bigint;
+  lpReserve: bigint;
+  auctionBlocks: bigint;
+  floorPriceQ96: bigint;
+  tickSpacingQ96: bigint;
+  requiredCurrencyRaised: bigint;
+};
+function launchOf(to: string, data: Hex): Launch | null {
+  if (to.toLowerCase() === REGISTRY) {
+    const d = decodeFunctionData({ abi: lineageRegistry.abi as Abi, data });
+    if (d.functionName === "launch") return (d.args as [Hex, Launch])[1];
+    if (d.functionName === "registerAndLaunch") return (d.args as [unknown, Launch])[1];
+    return null;
+  }
+  // A passkey batch the station paid for: PasskeyAccountFactory.execute(qx, qy, calls, …).
+  const d = decodeFunctionData({ abi: passkeyAccountFactory.abi as Abi, data });
+  const calls = (d.args as unknown[])[2] as { target: Address; data: Hex }[];
+  for (const call of calls) {
+    const found = launchOf(call.target, call.data);
+    if (found !== null) return found;
+  }
+  return null;
+}
+
+for (const launch of LAUNCHES) {
+  const tx = await client.getTransaction({ hash: launch.tx });
+  const receipt = await client.getTransactionReceipt({ hash: launch.tx });
+  const lp = launchOf(tx.to as string, tx.input);
+  const price = (q: bigint) => formatUnits((q * 10n ** 18n) >> 96n, launch.currencyDecimals);
+  out(launch.name, {
+    tx: launch.tx,
+    block: receipt.blockNumber,
+    from: tx.from,
+    to: tx.to,
+    status: receipt.status,
+    gasUsed: receipt.gasUsed,
+    feeEth: formatEther(receipt.gasUsed * receipt.effectiveGasPrice),
+    launch:
+      lp === null
+        ? null
+        : {
+            supply: formatEther(lp.supply),
+            lpReserve: formatEther(lp.lpReserve),
+            auctionBlocks: lp.auctionBlocks,
+            floor: price(lp.floorPriceQ96),
+            requiredCurrencyRaised: formatUnits(lp.requiredCurrencyRaised, launch.currencyDecimals),
+          },
+  });
+}

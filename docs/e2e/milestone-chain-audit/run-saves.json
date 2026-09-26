@@ -1,0 +1,19 @@
+{
+  "part": "HUD and Saves: close the door, read the HUD's ENS chip, go Home → Worlds → Saves and read the save's ENS block (no passkey linked; nothing is signed)",
+  "actions": [
+    {"hold": "Escape", "ms": 80},
+    {"wait": 1500},
+    {"eval": "[...document.querySelectorAll('[title]')].map(e => e.getAttribute('title')).filter(t => /ENS/.test(t))"},
+    {"shot": "docs/e2e/milestone-chain-audit/13-play-hud-ens.jpg"},
+    {"clickText": "← Home"},
+    {"wait": 3000},
+    {"clickText": "Worlds"},
+    {"wait": 1500},
+    {"clickText": "Saves"},
+    {"wait": 10000},
+    {"eval": "(() => { const t = document.body.innerText; const at = t.indexOf('ENS name for this save'); return at < 0 ? t.slice(0, 1500) : t.slice(at, at + 900) })()"},
+    {"eval": "(() => { const h = [...document.querySelectorAll('*')].find(e => e.children.length === 0 && e.textContent.trim() === 'ENS name for this save'); h?.scrollIntoView({ block: 'center' }); return !!h })()"},
+    {"wait": 300},
+    {"shot": "docs/e2e/milestone-chain-audit/14-saves-ens-block.jpg"}
+  ]
+}

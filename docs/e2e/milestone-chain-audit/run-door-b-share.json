@@ -1,0 +1,23 @@
+{
+  "part": "door B: close Settings; Worlds → New game → Start; E at home opens the door; Share on 127.0.0.1:8797 (a test-mode service with no SERVICE_CHAIN_* env, so nothing can reach the chain); read Sharing and the chain section, which main answers by reading WorldProvenance on Sepolia. Record beats is NOT clicked.",
+  "actions": [
+    {"hold": "Escape", "ms": 80},
+    {"wait": 600},
+    {"clickText": "Worlds"},
+    {"wait": 1200},
+    {"clickText": "Start"},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance && S.useLandStore.getState().progress !== null) return { ms: Date.now() - t0, screen: s.screen }; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + S.useSessionStore.getState().screen })()"},
+    {"wait": 2500},
+    {"hold": "KeyE", "ms": 120},
+    {"wait": 1200},
+    {"eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; return t.slice(t.indexOf('Sharing'), t.indexOf('Continent')) })()"},
+    {"clickText": "Share on 127.0.0.1:8797"},
+    {"eval": "(async () => { const t0 = Date.now(); for (let i = 0; i < 120; i++) { const l = document.querySelector('[data-layer=door]'); const t = l ? l.innerText : ''; if (/Recorded on a public chain/.test(t) && /Online/.test(t) && /(Not recorded on the chain|The chain matches|differs|not synced|Error)/.test(t)) return { ms: Date.now() - t0 }; await new Promise(r => setTimeout(r, 250)); } const l = document.querySelector('[data-layer=door]'); return 'timeout: ' + (l ? l.innerText.slice(0, 1500) : 'no door') })()"},
+    {"wait": 800},
+    {"eval": "(() => { const l = document.querySelector('[data-layer=door]'); const t = l.innerText; const at = t.indexOf('Recorded on a public chain'); return { sharing: t.slice(t.indexOf('Sharing'), t.indexOf('Who may come in')), chain: t.slice(at, t.indexOf('Continent', at)) } })()"},
+    {"eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); const t0 = performance.now(); const r = n ? await window.seed.world.provenance(n.world) : null; return { world: n?.world, head: n?.head.n, ms: Math.round(performance.now() - t0), provenance: r } })()"},
+    {"eval": "(() => { const h = [...document.querySelectorAll('[data-layer=door] *')].find(e => e.innerText?.trim() === 'Recorded on a public chain'); h?.scrollIntoView({ block: 'start' }); return !!h })()"},
+    {"wait": 300},
+    {"shot": "docs/e2e/milestone-chain-audit/12-door-chain-section.jpg"}
+  ]
+}

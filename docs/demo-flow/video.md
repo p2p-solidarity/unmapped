@@ -20,7 +20,7 @@
 - 照 [setup.md](setup.md) 準備：`.env` 放 `OPENAI_API_KEY`；A、B 兩個視窗各用拋棄式資料夾；兩邊到「設定 → 信令伺服器」存本機 `ws://127.0.0.1:4444`。
 - **介面語言**：給國際評審建議用英文介面（「設定」→ 語言 English），世界內容就會用英文寫；想保留中文世界也可以，講稿不用改。下面每個按鈕都列出英文／繁中。
 - B 先用「世界 → 新遊戲 → 開始」（Worlds → New game → Start）開好內建世界，等原點顯影完成。
-- 市場：根世界 `aether-land.unmapped.eth` 已在 v2 合約上拍賣完、池子已開；gas station 已上線，錄之前打開 https://unmapped-relay.gimmychang.workers.dev/status 確認 relayer 不是 null、還有 ETH；passkey 帳戶先領好測試 USDC。
+- 市場：根世界 `aether-land.unmapped.eth` 已在 v2 合約上拍賣完、池子已開；gas station 已上線，錄之前打開 https://unmapped-relay.gimmychang.workers.dev/status 確認 relayer 不是 null、還有 ETH（2026-09-26 是 0.0318 ETH，見 [chain-audit](../e2e/milestone-chain-audit/result.md)）；passkey 帳戶先領好測試 USDC。
 - 買入時 app 會打開系統瀏覽器完成簽名。這一步在錄影的 Mac 上**先排練一次**（E2E 用的是虛擬驗證器）。
 - 每一幕分開錄，最後剪在一起；每一段都錄長一點，剪的時候只拿掉等待。
 
@@ -52,7 +52,7 @@
 
 ### 1:25–2:10 朋友的世界連成大陸（CRDT）
 - **畫面（A）**：在家門口按 E → Open my door to friends（向夥伴敞開我的門）→ 門牌。
-- **畫面（B）**：Worlds → Continent（世界 → 大陸）→ 選自己的存檔 → 在 a friend's door code（夥伴的門牌代碼）輸入門牌 → Walk through（穿過這扇門）→ 兩邊 HUD「Live · 1 peer here」（已連線 · 有 1 位夥伴在）→ 在家門按 E → Go to their door（前往他們的門）→ B 站在 A 剛寫好的土地上。
+- **畫面（B）**：Worlds → Continent（世界 → 大陸）→ 選自己的存檔 → 在 Friend's door number or ENS name（夥伴的門牌或 ENS 名稱）輸入門牌 → Walk through（穿過這扇門）→ 兩邊 HUD「CONTINENT XXXXXX · LIVE · 1 PEER」（大陸 XXXXXX · 已連線 · 1 位夥伴）→ 在家門按 E → Go to their door（前往他們的門）→ B 站在 A 剛寫好的土地上。
 - **畫面（A）**：A 看到 B 在走（按 V 切換兩種畫法各拍 2 秒）。B 按 N 留言 → A 按 N，留言立刻出現。
 - **投影片 2（4 點）**：
   - Every machine keeps its own copy — a Yjs CRDT
@@ -64,7 +64,7 @@
 - 實測：加入大陸 578 毫秒；B 在 A 的土地上 0 次模型呼叫；留言即時出現在 A 的畫面（[milestone-demo-flow](../e2e/milestone-demo-flow/result.md)）。
 
 ### 2:10–2:45 ENSv2：名字就是世界的身分
-- **畫面**：Worlds → Cartridges（世界 → 卡帶）：內建世界那一行 `aether-land.unmapped.eth` · points at this version；Worlds → Saves（世界 → 存檔）→ ENS name for this save（這個存檔的 ENS 名稱）→ Record with passkey（用 passkey 記錄）→ 出現 `<save>.aether-land.unmapped.eth`。再切到公開拍賣頁 https://unmapped-auction.gimmychang.workers.dev 的家族樹。
+- **畫面**：Worlds → Cartridges（世界 → 卡帶）：內建世界那一行 `aether-land.unmapped.eth` · points at this version；Worlds → Saves（世界 → 存檔）→ ENS name for this save（這個存檔的 ENS 名稱）→ Record with passkey（用 passkey 記錄）→ 出現 `<save>.aether-land.unmapped.eth`。再切到公開拍賣頁 https://unmapped-auction.gimmychang.workers.dev/#aether-land 的家族樹（不加 `#aether-land` 會打開最新上架、0 筆出價就結束的 lantern-quay）。
 - **選拍**：Worlds → Cartridges → Open by ENS name（用 ENS 名稱開啟）輸入存檔名稱，畫面說出那個存檔的進度點（[milestone-lineage-names](../e2e/milestone-lineage-names/result.md) 已實機驗證）。
 - **投影片 3（4 點）**：
   - A world's name holds only its id, version and sha256

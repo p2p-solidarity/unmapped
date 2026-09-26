@@ -1,0 +1,554 @@
+// Chain audit (docs/e2e/milestone-chain-audit): read-only reads of every chain part UNMAPPED uses on
+// Ethereum Sepolia, through the app's own readers where they exist. Sends nothing, signs nothing,
+// reads no key. Every contract read is pinned to one block (printed first); log queries run from
+// the deployment block to that block.
+//
+//   bun --tsconfig-override tsconfig.node.json scripts/chain-audit.ts > audit.out.txt
+//
+// Env it reads (public values only): UNWRITTEN_LINEAGE_{PARENT,REGISTRY,HOOK,ROUTER,ACCOUNTS,
+// FROM_BLOCK}, UNMAPPED_PROVENANCE_{RPC_URL,ADDRESS,CHAIN_ID}.
+
+import { writeFileSync } from "node:fs";
+import {
+  hashFromBytes32,
+  idToBytes32,
+  keyFromBytes32,
+  keyToBytes32,
+  streamSignatures,
+} from "@shared/provenance";
+import {
+  type Abi,
+  type Address,
+  createPublicClient,
+  fallback,
+  formatEther,
+  formatUnits,
+  type Hex,
+  http,
+  namehash,
+  parseAbi,
+  parseAbiItem,
+  zeroAddress,
+} from "viem";
+import { sepolia } from "viem/chains";
+import provenanceArtifact from "../contracts/WorldProvenance.json";
+import { ENSV2_SEPOLIA, labelId, registryAbi as ensRegistryAbi } from "../src/main/chain/ensCalls";
+import {
+  ccaAbi,
+  erc20Abi,
+  lineageHook,
+  lineageRegistry,
+  lineageRouter,
+  type PoolKey,
+  passkeyAccountFactory,
+  poolId,
+  stateViewAbi,
+  UNISWAP_SEPOLIA,
+} from "../src/main/chain/lineageCalls";
+import { dnsName } from "../src/main/chain/market";
+import { provenanceReader, readStreams } from "../src/main/chain/provenance";
+import { lookupEnsName } from "../src/renderer/identity/ensNames";
+
+const RPCS = [
+  "https://ethereum-sepolia-rpc.publicnode.com",
+  "https://sepolia.gateway.tenderly.co",
+  "https://sepolia.drpc.org",
+];
+const client = createPublicClient({
+  chain: sepolia,
+  transport: fallback(RPCS.map((url) => http(url, { retryCount: 3, retryDelay: 600 }))),
+});
+
+const records: { part: string; what: string; block: string; value: unknown }[] = [];
+const json = (value: unknown) =>
+  JSON.stringify(value, (_, v) => (typeof v === "bigint" ? v.toString() : v));
+let B = 0n;
+function rec(part: string, what: string, value: unknown, block: bigint | string = B) {
+  records.push({ part, what, block: String(block), value });
+  process.stdout.write(`[${part}] @${block} ${what}: ${json(value)}\n`);
+}
+async function attempt<T>(run: () => Promise<T>): Promise<T | { error: string }> {
+  try {
+    return await run();
+  } catch (cause) {
+    return { error: String(cause instanceof Error ? cause.message : cause).split("\n")[0] ?? "" };
+  }
+}
+const read = (address: Address, abi: Abi, functionName: string, args: unknown[] = []) =>
+  attempt(() =>
+    client.readContract({ address, abi, functionName, args, blockNumber: B } as never),
+  ) as Promise<unknown>;
+const codeSize = async (address: Address) => {
+  const code = await client.getCode({ address, blockNumber: B });
+  return code === undefined || code === "0x" ? 0 : (code.length - 2) / 2;
+};
+
+const env = process.env;
+const REGISTRY = env.UNWRITTEN_LINEAGE_REGISTRY as Address;
+const HOOK = env.UNWRITTEN_LINEAGE_HOOK as Address;
+const ROUTER = env.UNWRITTEN_LINEAGE_ROUTER as Address;
+const ACCOUNTS = env.UNWRITTEN_LINEAGE_ACCOUNTS as Address;
+const PARENT = env.UNWRITTEN_LINEAGE_PARENT ?? "unmapped.eth";
+const FROM = BigInt(env.UNWRITTEN_LINEAGE_FROM_BLOCK ?? "11781460");
+const PROVENANCE = (env.UNMAPPED_PROVENANCE_ADDRESS ??
+  "0xF625ec3c228e3BCE34977C0b7e97BD591291Ef02") as Address;
+const STATION = "0xB62Ccd1A90896911b21546a60eC78E934f9fFd3D" as Address;
+const OPERATOR = "0x8eECf2cD24664EB2275BFd74E324D9E0541b51C3" as Address;
+const V1 = {
+  registry: "0x439F5982163D4D4AbA6FAB2bF494d866bD2B5237" as Address,
+  hook: "0x0f1167F421fD246c5C78cF88a26f225cb3336044" as Address,
+  router: "0x57C5Ea5F82a132c6F2f8FF42133c354027A1609C" as Address,
+  token: "0x5e8e39c25cEa96F3ED4d6B03c1fc17213453ae7f" as Address,
+  from: 11780564n,
+};
+
+B = await client.getBlockNumber();
+const head = await client.getBlock({ blockNumber: B });
+rec("meta", "pinned block (timestamp)", new Date(Number(head.timestamp) * 1000).toISOString());
+rec("meta", "chainId", await client.getChainId());
+
+// ── 1. WorldProvenance ──────────────────────────────────────────────────────────────────────
+const PABI = provenanceArtifact.abi as Abi;
+const WORLD = "houui35vqbxkwhgya6kia65ku62w4h5c7436b3vccgpgewmoln34a";
+const SERVICE_KEY = "kexmkqnxdpv7l2zqmi7bvv7e7m6xtunio55imh2zfruv5c5unx46q";
+const RECORDER = "0x8eecf2cd24664eb2275bfd74e324d9e0541b51c3" as Address;
+rec("1-provenance", `code size at ${PROVENANCE}`, await codeSize(PROVENANCE));
+const worldId = idToBytes32(WORLD) as Hex;
+const keyId = keyToBytes32(SERVICE_KEY) as Hex;
+rec("1-provenance", "idToBytes32(world)", worldId);
+rec("1-provenance", "keyToBytes32(service key)", keyId);
+rec(
+  "1-provenance",
+  "recorders(world, key, 0, 64)",
+  await read(PROVENANCE, PABI, "recorders", [worldId, keyId, 0n, 64n]),
+);
+const stream = (await read(PROVENANCE, PABI, "streamOf", [RECORDER, worldId])) as {
+  open: boolean;
+  upTo: bigint;
+  openedBlock: bigint;
+  lastBlock: bigint;
+};
+rec("1-provenance", "streamOf(recorder, world)", stream);
+const opened = await client.getContractEvents({
+  address: PROVENANCE,
+  abi: PABI,
+  eventName: "StreamOpened",
+  fromBlock: 11784651n,
+  toBlock: B,
+});
+rec(
+  "1-provenance",
+  "StreamOpened events since deploy (all worlds)",
+  opened.map((log) => ({
+    block: log.blockNumber,
+    tx: log.transactionHash,
+    ...(log as unknown as { args: Record<string, unknown> }).args,
+  })),
+  `11784651..${B}`,
+);
+const beats = await client.getContractEvents({
+  address: PROVENANCE,
+  abi: PABI,
+  eventName: "BeatRecorded",
+  fromBlock: 11784651n,
+  toBlock: B,
+});
+rec(
+  "1-provenance",
+  "BeatRecorded events since deploy (all worlds)",
+  beats.map((log) => ({
+    block: log.blockNumber,
+    tx: log.transactionHash,
+    ...(log as unknown as { args: Record<string, unknown> }).args,
+  })),
+  `11784651..${B}`,
+);
+// Main's own reader, exactly as the door runs it (latest block).
+const reader = provenanceReader();
+if (reader.ok) {
+  const t0 = performance.now();
+  const streams = await readStreams(reader.value, WORLD, [SERVICE_KEY]);
+  rec(
+    "1-provenance",
+    `main readStreams(world, [service key]) in ${Math.round(performance.now() - t0)} ms`,
+    streams,
+    "latest",
+  );
+  for (const s of streams) {
+    rec(
+      "1-provenance",
+      "streamSignatures(opened) offline (genesis sig by owner key, stream sig by service key)",
+      streamSignatures(s.opened, 11155111, PROVENANCE.toLowerCase()),
+      "offline",
+    );
+    rec("1-provenance", "cartridgeHash as sha256", s.opened.cartridgeHash, "offline");
+  }
+} else rec("1-provenance", "provenanceReader()", reader.error);
+rec("1-provenance", "bytes32 → key (0x25d8a836…)", keyFromBytes32(keyId), "offline");
+rec(
+  "1-provenance",
+  "bytes32 → hash (cartridgeHash in receipts.json)",
+  hashFromBytes32("0x57f17e0d3e1504466da111ee6eae2e55720b812a2b07afdad932e7f72467e81b"),
+  "offline",
+);
+
+// ── 2. ENS ──────────────────────────────────────────────────────────────────────────────────
+const TEXT_KEYS = [
+  "unwritten.cartridge",
+  "unwritten.version",
+  "unwritten.hash",
+  "unwritten.kind",
+  "unwritten.save",
+  "unwritten.progress",
+  "unwritten.token",
+  "unwritten.auction",
+  "description",
+];
+const [UR] = [sepolia.contracts.ensUniversalResolver.address];
+rec("2-ens", `Universal Resolver (viem ${"2.56.5"} sepolia) code size at ${UR}`, await codeSize(UR));
+rec(
+  "2-ens",
+  "ethRegistry.getState(labelId('unmapped'))",
+  await read(ENSV2_SEPOLIA.ethRegistry, ensRegistryAbi, "getState", [labelId("unmapped")]),
+);
+rec(
+  "2-ens",
+  "ethRegistry.getSubregistry('unmapped')",
+  await read(ENSV2_SEPOLIA.ethRegistry, ensRegistryAbi, "getSubregistry", ["unmapped"]),
+);
+rec(
+  "2-ens",
+  "ethRegistry.getResolver('unmapped')",
+  await read(ENSV2_SEPOLIA.ethRegistry, ensRegistryAbi, "getResolver", ["unmapped"]),
+);
+const RABI = lineageRegistry.abi;
+for (const fn of ["rootNode", "rootRegistry", "resolver", "rootDnsName", "hook", "lbpStrategy", "auctionFactory", "rootCurrency", "ensFactory", "userRegistryImpl"]) {
+  const value = await read(REGISTRY, RABI, fn);
+  rec("2-ens", `registry.${fn}()`, fn === "rootDnsName" ? dnsName(value as Hex) : value);
+}
+rec("2-ens", `namehash('${PARENT}')`, namehash(PARENT), "offline");
+const rootRegistry = (await read(REGISTRY, RABI, "rootRegistry")) as Address;
+for (const label of ["players", "aether-land", "misty-harbor"]) {
+  rec(
+    "2-ens",
+    `rootRegistry.getState(labelId('${label}'))`,
+    await read(rootRegistry, ensRegistryAbi, "getState", [labelId(label)]),
+  );
+}
+// Every name the registry ever registered (the app's nameIndex reads the same event).
+const registered = await client.getLogs({
+  address: REGISTRY,
+  event: parseAbiItem(
+    "event NameRegistered(bytes32 indexed node, bytes32 indexed parent, address indexed owner, uint8 kind, bytes dnsName)",
+  ),
+  fromBlock: FROM,
+  toBlock: B,
+});
+const treeNames = registered.map((log) => ({
+  name: dnsName(log.args.dnsName as Hex),
+  kind: Number(log.args.kind),
+  owner: log.args.owner,
+  node: log.args.node,
+  block: log.blockNumber,
+  tx: log.transactionHash,
+}));
+rec("2-ens", "NameRegistered events (every name in the tree)", treeNames, `${FROM}..${B}`);
+const revised = await client.getLogs({
+  address: REGISTRY,
+  event: parseAbiItem(
+    "event CartridgeRevised(bytes32 indexed node, string version, bytes32 contentHash)",
+  ),
+  fromBlock: FROM,
+  toBlock: B,
+});
+rec(
+  "2-ens",
+  "CartridgeRevised events",
+  revised.map((l) => ({ node: l.args.node, version: l.args.version, hash: l.args.contentHash, block: l.blockNumber })),
+  `${FROM}..${B}`,
+);
+const saves = await client.getLogs({
+  address: REGISTRY,
+  event: parseAbiItem(
+    "event SaveRecorded(bytes32 indexed node, bytes32 indexed cartridge, bytes32 saveHash, string version, string progress)",
+  ),
+  fromBlock: FROM,
+  toBlock: B,
+});
+rec(
+  "2-ens",
+  "SaveRecorded events",
+  saves.map((l) => ({ node: l.args.node, saveHash: l.args.saveHash, version: l.args.version, progress: l.args.progress, block: l.blockNumber, tx: l.transactionHash })),
+  `${FROM}..${B}`,
+);
+const DOC_NAMES = [
+  "unmapped.eth",
+  "players.unmapped.eth",
+  "kidney.players.unmapped.eth",
+  "aether-land.unmapped.eth",
+  "moss-hollow.aether-land.unmapped.eth",
+  "kidney-run.aether-land.unmapped.eth",
+  "first-light.aether-land.unmapped.eth",
+  "misty-harbor.unmapped.eth",
+  "my-save.misty-harbor.unmapped.eth",
+  "lantern-quay.aether-land.unmapped.eth",
+  "kidney-mui0pchb.aether-land.unmapped.eth",
+];
+const allNames = [...new Set([...DOC_NAMES, ...treeNames.map((n) => n.name)])];
+for (const name of allNames) {
+  const node = namehash(name);
+  const [onChain, holder, resolver] = await Promise.all([
+    read(REGISTRY, RABI, "nameOf", [node]),
+    read(REGISTRY, RABI, "holderOf", [node]),
+    attempt(() => client.getEnsResolver({ name, blockNumber: B })),
+  ]);
+  const texts: Record<string, string | null | { error: string }> = {};
+  for (const key of TEXT_KEYS) {
+    texts[key] = await attempt(() => client.getEnsText({ name, key, blockNumber: B }));
+  }
+  const n = onChain as { kind?: number; token?: string; label?: string; cartridgeId?: string; parent?: string };
+  rec("2-ens", `${name}`, {
+    inTree: treeNames.some((t) => t.name === name),
+    registry: { kind: n.kind, label: n.label, cartridgeId: n.cartridgeId, token: n.token, parent: n.parent },
+    holder,
+    resolverViaUR: resolver,
+    texts,
+  });
+  // The app's own renderer path (Universal Resolver, latest block).
+  const lookup = await lookupEnsName(name);
+  rec("2-ens", `lookupEnsName('${name}') (app path)`, lookup.ok ? lookup.value : lookup.error, "latest");
+}
+
+// ── 3. Lineage market ───────────────────────────────────────────────────────────────────────
+const codes: Record<string, Address> = {
+  LineageRegistry: REGISTRY,
+  LineageHook: HOOK,
+  LineageRouter: ROUTER,
+  PasskeyAccountFactory: ACCOUNTS,
+  "root registry (README)": "0x11E97A5ea6a127F2Fb6050A3FeDbB25f20B14491",
+  "resolver (README)": "0x36bEafe8E54eAA2B1c6Aa31750bA51A8B1e2876c",
+  "v1 LineageRegistry": V1.registry,
+  "v1 LineageHook": V1.hook,
+  "v1 LineageRouter": V1.router,
+  PoolManager: UNISWAP_SEPOLIA.poolManager,
+  PositionManager: UNISWAP_SEPOLIA.positionManager,
+  StateView: UNISWAP_SEPOLIA.stateView,
+  Permit2: UNISWAP_SEPOLIA.permit2,
+  "LBPStrategy v3.1.0": UNISWAP_SEPOLIA.lbpStrategy,
+  "CCA factory v2.1.0": UNISWAP_SEPOLIA.ccaFactory,
+  MockUSDC: ENSV2_SEPOLIA.mockUsdc,
+  "ENSv2 root registry": ENSV2_SEPOLIA.rootRegistry,
+  "ENSv2 .eth registry": ENSV2_SEPOLIA.ethRegistry,
+};
+for (const [what, address] of Object.entries(codes)) {
+  rec("3-market", `code size ${what} ${address}`, await codeSize(address));
+}
+const HABI = lineageHook.abi;
+for (const fn of ["authorized", "registry", "poolManager", "ROYALTY_PIPS"]) {
+  rec("3-market", `hook.${fn}()`, await read(HOOK, HABI, fn));
+}
+rec("3-market", "hook.getHookPermissions()", await read(HOOK, HABI, "getHookPermissions"));
+rec(
+  "3-market",
+  "hook address low 14 bits (v4 permission flags)",
+  `0x${(BigInt(HOOK) & 0x3fffn).toString(16)}`,
+  "offline",
+);
+for (const fn of ["poolManager", "registry"]) {
+  rec("3-market", `router.${fn}()`, await read(ROUTER, lineageRouter.abi, fn));
+}
+rec("3-market", "factory.implementation()", await read(ACCOUNTS, passkeyAccountFactory.abi, "implementation"));
+const launched = await client.getLogs({
+  address: REGISTRY,
+  event: parseAbiItem(
+    "event WorldLaunched(address indexed token, address indexed parent, address indexed owner, address auction, bytes dnsName)",
+  ),
+  fromBlock: FROM,
+  toBlock: B,
+});
+rec(
+  "3-market",
+  "WorldLaunched events",
+  launched.map((l) => ({ name: dnsName(l.args.dnsName as Hex), token: l.args.token, parent: l.args.parent, owner: l.args.owner, auction: l.args.auction, block: l.blockNumber, tx: l.transactionHash })),
+  `${FROM}..${B}`,
+);
+const extraCca = parseAbi([
+  "function requiredCurrencyRaised() view returns (uint256)",
+  "function totalSupply() view returns (uint128)",
+  "function token() view returns (address)",
+  "function currency() view returns (address)",
+  "function totalCleared() view returns (uint256)",
+]);
+const tokenAbi = parseAbi([
+  "function totalSupply() view returns (uint256)",
+  "function name() view returns (string)",
+  "function symbol() view returns (string)",
+  "function balanceOf(address) view returns (uint256)",
+]);
+const liqAbi = parseAbi(["function getLiquidity(bytes32 poolId) view returns (uint128)"]);
+const swapEvent = parseAbiItem(
+  "event Swap(bytes32 indexed id, address indexed sender, int128 amount0, int128 amount1, uint160 sqrtPriceX96, uint128 liquidity, int24 tick, uint24 fee)",
+);
+const royaltyEvent = parseAbiItem(
+  "event Royalty(address indexed world, address indexed currency, uint256 amount)",
+);
+const claimedEvent = parseAbiItem(
+  "event Claimed(address indexed world, address indexed currency, address indexed to, uint256 amount)",
+);
+const worldInfo: { token: Address; name: string; poolId: Hex; currency: Address; key: PoolKey }[] = [];
+for (const l of launched) {
+  const token = l.args.token as Address;
+  const name = dnsName(l.args.dnsName as Hex);
+  const w = (await read(REGISTRY, RABI, "worldOf", [token])) as {
+    node: Hex;
+    parent: Address;
+    currency: Address;
+    auction: Address;
+  };
+  const decimals = w.currency.toLowerCase() === ENSV2_SEPOLIA.mockUsdc ? 6 : 18;
+  const auction = w.auction;
+  const q = async (fn: string, abi: Abi = ccaAbi) => read(auction, abi, fn);
+  const [start, end, claim, floor, clearing, raised, graduated, bids, tick, required, supply] = await Promise.all([
+    q("startBlock"),
+    q("endBlock"),
+    q("claimBlock"),
+    q("floorPrice"),
+    q("clearingPrice"),
+    q("currencyRaised"),
+    q("isGraduated"),
+    q("nextBidId"),
+    q("tickSpacing"),
+    q("requiredCurrencyRaised", extraCca),
+    q("totalSupply", extraCca),
+  ]);
+  const human = (p: unknown) =>
+    typeof p === "bigint" ? formatUnits((p * 10n ** 18n) >> 96n, decimals) : p;
+  const key = (await read(REGISTRY, RABI, "poolKeyOf", [token])) as PoolKey;
+  const id = poolId(key);
+  const slot0 = (await read(UNISWAP_SEPOLIA.stateView, stateViewAbi, "getSlot0", [id])) as readonly [bigint, number, number, number];
+  const liquidity = await read(UNISWAP_SEPOLIA.stateView, liqAbi, "getLiquidity", [id]);
+  let poolPrice: string | null = null;
+  if (Array.isArray(slot0) && slot0[0] > 0n) {
+    const raw = (slot0[0] * slot0[0] * 10n ** 18n) >> 192n;
+    const tokenIsZero = key.currency0.toLowerCase() === token.toLowerCase();
+    poolPrice = formatUnits(tokenIsZero ? raw : raw === 0n ? 0n : 10n ** 36n / raw, decimals);
+  }
+  const [symbol, tokenName, totalSupply, owner, holder, path, hookWorld, owedToken, owedCurrency, currencySymbol, auctionTokens] = await Promise.all([
+    read(token, tokenAbi, "symbol"),
+    read(token, tokenAbi, "name"),
+    read(token, tokenAbi, "totalSupply"),
+    read(REGISTRY, RABI, "ownerOf", [token]),
+    read(REGISTRY, RABI, "holderOf", [w.node]),
+    read(REGISTRY, RABI, "pathTo", [token]),
+    read(HOOK, HABI, "worldOf", [id]),
+    read(HOOK, HABI, "owed", [token, token]),
+    read(HOOK, HABI, "owed", [token, w.currency]),
+    read(w.currency, erc20Abi, "symbol"),
+    read(token, tokenAbi, "balanceOf", [auction]),
+  ]);
+  const now = B;
+  const phase =
+    Array.isArray(slot0) && slot0[0] > 0n
+      ? "graduated, pool open"
+      : now < (start as bigint)
+        ? "not started"
+        : now <= (end as bigint)
+          ? "auction open"
+          : graduated
+            ? "ended, graduated (not settled)"
+            : "ended, not graduated";
+  rec("3-market", `world ${name}`, {
+    token,
+    symbol,
+    tokenName,
+    totalSupply: formatEther(totalSupply as bigint),
+    currency: w.currency,
+    currencySymbol,
+    parent: w.parent,
+    node: w.node,
+    ownerOf_token: owner,
+    holderOf_node: holder,
+    pathTo: path,
+    auction,
+    auctionState: {
+      phase,
+      startBlock: start,
+      endBlock: end,
+      claimBlock: claim,
+      floor: human(floor),
+      clearing: human(clearing),
+      raised: typeof raised === "bigint" ? formatUnits(raised, decimals) : raised,
+      required: typeof required === "bigint" ? formatUnits(required, decimals) : required,
+      isGraduated: graduated,
+      bids,
+      tickSpacing: tick,
+      auctionSupply: typeof supply === "bigint" ? formatEther(supply) : supply,
+      tokensStillInAuction: typeof auctionTokens === "bigint" ? formatEther(auctionTokens) : auctionTokens,
+    },
+    pool: { key, poolId: id, sqrtPriceX96: Array.isArray(slot0) ? slot0[0] : slot0, liquidity, price: poolPrice, hookInKey: key.hooks, hookWorldOf: hookWorld },
+    owed: {
+      inToken: typeof owedToken === "bigint" ? formatEther(owedToken) : owedToken,
+      inCurrency: typeof owedCurrency === "bigint" ? formatUnits(owedCurrency, decimals) : owedCurrency,
+    },
+  });
+  worldInfo.push({ token, name, poolId: id, currency: w.currency, key });
+}
+
+// Royalty accounting: every Royalty / Claimed the hook emitted, and each swap it came from.
+async function royalties(label: string, hook: Address, from: bigint, pools: { name: string; poolId: Hex; key: PoolKey }[]) {
+  const [roy, claimed] = await Promise.all([
+    client.getLogs({ address: hook, event: royaltyEvent, fromBlock: from, toBlock: B }),
+    client.getLogs({ address: hook, event: claimedEvent, fromBlock: from, toBlock: B }),
+  ]);
+  rec("3-market", `${label} Royalty events`, roy.map((l) => ({ world: l.args.world, currency: l.args.currency, amount: formatEther(l.args.amount ?? 0n), block: l.blockNumber, tx: l.transactionHash })), `${from}..${B}`);
+  rec("3-market", `${label} Claimed events`, claimed.map((l) => ({ world: l.args.world, currency: l.args.currency, to: l.args.to, amount: formatEther(l.args.amount ?? 0n), block: l.blockNumber, tx: l.transactionHash })), `${from}..${B}`);
+  for (const pool of pools) {
+    const swaps = await client.getLogs({
+      address: UNISWAP_SEPOLIA.poolManager,
+      event: swapEvent,
+      args: { id: pool.poolId },
+      fromBlock: from,
+      toBlock: B,
+    });
+    for (const s of swaps) {
+      const inTx = roy.filter((r) => r.transactionHash === s.transactionHash);
+      const amounts = [s.args.amount0 ?? 0n, s.args.amount1 ?? 0n];
+      // Exact input: the positive delta (to the swapper) is the output side the hook takes 1% of.
+      const out = amounts.find((a) => a > 0n) ?? 0n;
+      const royaltyTotal = inTx.reduce((sum, r) => sum + (r.args.amount ?? 0n), 0n);
+      rec("3-market", `${label} swap in ${pool.name}`, {
+        tx: s.transactionHash,
+        block: s.blockNumber,
+        amount0: s.args.amount0,
+        amount1: s.args.amount1,
+        poolOutput: formatEther(out),
+        royalties: inTx.map((r) => ({ world: r.args.world, amount: formatEther(r.args.amount ?? 0n) })),
+        royaltyTotal: formatEther(royaltyTotal),
+        royaltyPerMillionOfOutput: out === 0n ? null : Number((royaltyTotal * 1_000_000n) / out),
+        buyerGot: formatEther(out - royaltyTotal),
+      }, s.blockNumber);
+    }
+  }
+}
+await royalties("v2", HOOK, FROM, worldInfo);
+// v1 (milestone-lineage-demo), for the numbers that run recorded.
+const v1World = (await read(V1.registry, RABI, "worldOf", [V1.token])) as { auction: Address } | { error: string };
+const v1Key = (await read(V1.registry, RABI, "poolKeyOf", [V1.token])) as PoolKey;
+rec("3-market", "v1 aether-land worldOf / poolKeyOf", { world: v1World, key: v1Key });
+if (v1Key && "currency0" in v1Key) {
+  await royalties("v1", V1.hook, V1.from, [{ name: "aether-land (v1)", poolId: poolId(v1Key), key: v1Key }]);
+}
+
+// ── 4. Gas station and operator balances ────────────────────────────────────────────────────
+const gasPrice = await client.getGasPrice();
+rec("4-station", "eth_gasPrice (gwei)", formatUnits(gasPrice, 9), "latest");
+for (const [what, address] of [["station key", STATION], ["operator key", OPERATOR]] as const) {
+  const [balance, nonce] = await Promise.all([
+    client.getBalance({ address, blockNumber: B }),
+    client.getTransactionCount({ address, blockNumber: B }),
+  ]);
+  rec("4-station", `${what} ${address}`, { balanceEth: formatEther(balance), nonce });
+}
+
+writeFileSync(process.argv[2] ?? "audit.json", json({ block: B, records }));
+process.stdout.write(`\n(read-only; pinned block ${B}; nothing was sent)\n`);

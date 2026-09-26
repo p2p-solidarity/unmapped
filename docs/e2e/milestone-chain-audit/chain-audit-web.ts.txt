@@ -1,0 +1,92 @@
+// Chain audit, part 5 (docs/e2e/milestone-chain-audit): load the deployed Lineage Auction House in a
+// headless Chrome (CDP on CHROME_PORT), record every JSON-RPC call it makes (method, target
+// contract), and screenshot it. Read-only: the page has no wallet and cannot sign.
+//
+//   CHROME_PORT=9347 [WEB_URL=…#aether-land WEB_NAME=…] bun scripts/chain-audit-web.ts <out dir>
+
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
+
+const port = process.env.CHROME_PORT ?? "9347";
+const outDir = process.argv[2] ?? ".";
+const URL = process.env.WEB_URL ?? "https://unmapped-auction.gimmychang.workers.dev/";
+const NAME = process.env.WEB_NAME ?? "web-auction-house";
+
+const targets = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()) as {
+  type: string;
+  webSocketDebuggerUrl: string;
+}[];
+const page = targets.find((t) => t.type === "page");
+if (page === undefined) throw new Error("no page target");
+const ws = new WebSocket(page.webSocketDebuggerUrl);
+await new Promise((done) => ws.addEventListener("open", done, { once: true }));
+let id = 0;
+const pending = new Map<number, (value: unknown) => void>();
+const rpc: { host: string; method: string; to: string | null; data: string | null }[] = [];
+const hosts = new Map<string, number>();
+ws.addEventListener("message", (event) => {
+  const msg = JSON.parse(String(event.data));
+  if (msg.id !== undefined) pending.get(msg.id)?.(msg.result ?? msg.error);
+  if (msg.method === "Network.requestWillBeSent") {
+    const req = msg.params.request as { url: string; method: string; postData?: string };
+    const host = new globalThis.URL(req.url).host;
+    hosts.set(host, (hosts.get(host) ?? 0) + 1);
+    if (req.method === "POST" && req.postData) {
+      try {
+        const body = JSON.parse(req.postData);
+        for (const one of Array.isArray(body) ? body : [body]) {
+          const p = one.params?.[0] ?? {};
+          rpc.push({
+            host,
+            method: one.method,
+            to: typeof p.to === "string" ? p.to.toLowerCase() : typeof p.address === "string" ? p.address.toLowerCase() : Array.isArray(p.address) ? p.address.join(",").toLowerCase() : null,
+            data: typeof p.data === "string" ? p.data.slice(0, 10) : null,
+          });
+        }
+      } catch {
+        // not JSON-RPC
+      }
+    }
+  }
+});
+const send = (method: string, params: Record<string, unknown> = {}) =>
+  new Promise((done) => {
+    id += 1;
+    pending.set(id, done);
+    ws.send(JSON.stringify({ id, method, params }));
+  });
+
+await send("Network.enable");
+await send("Page.enable");
+await send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
+// A fresh document each time: a hash-only change would keep the previous selection.
+await send("Page.navigate", { url: "about:blank" });
+await new Promise((done) => setTimeout(done, 500));
+await send("Page.navigate", { url: URL });
+await new Promise((done) => setTimeout(done, 25_000));
+const text = (await send("Runtime.evaluate", {
+  expression: "document.body.innerText",
+  returnByValue: true,
+})) as { result: { value: string } };
+const full = (await send("Page.getLayoutMetrics")) as { cssContentSize: { height: number } };
+const shot = (await send("Page.captureScreenshot", {
+  format: "jpeg",
+  quality: 80,
+  captureBeyondViewport: true,
+  clip: { x: 0, y: 0, width: 1440, height: Math.min(full.cssContentSize.height, 4000), scale: 1 },
+})) as { data: string };
+writeFileSync(join(outDir, `${NAME}.jpg`), Buffer.from(shot.data, "base64"));
+const byTarget: Record<string, number> = {};
+for (const call of rpc) {
+  const key = `${call.method} ${call.to ?? "-"}`;
+  byTarget[key] = (byTarget[key] ?? 0) + 1;
+}
+writeFileSync(
+  join(outDir, `${NAME}-network.json`),
+  JSON.stringify({ hosts: Object.fromEntries(hosts), rpcCalls: rpc.length, byTarget }, null, 1),
+);
+writeFileSync(join(outDir, `${NAME}-text.txt`), text.result.value);
+process.stdout.write(
+  `${JSON.stringify({ hosts: Object.fromEntries(hosts), rpcCalls: rpc.length, byTarget }, null, 1)}\n`,
+);
+ws.close();

@@ -1,0 +1,44 @@
+{
+ "part": "door A: in Settings switch the UI to English, point the model at Ollama (nothing listens on 11434, so no model call can be made — another session's llama-server holds 8080), add ws://127.0.0.1:8797 under World services and Save",
+ "actions": [
+  {
+   "clickText": "English"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Ollama"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Use this model"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(() => { const ta = [...document.querySelectorAll('textarea')].find(t => (t.closest('label')?.innerText ?? '').includes('World services') || (t.labels?.[0]?.innerText ?? '').includes('World services')); if (!ta) return 'no field'; ta.scrollIntoView({block: 'center'}); ta.focus(); return ta === document.activeElement })()"
+  },
+  {
+   "type": "ws://127.0.0.1:8797"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "clickText": "Save"
+  },
+  {
+   "wait": 600
+  },
+  {
+   "eval": "localStorage.getItem('unwritten.worldServices')"
+  },
+  {
+   "eval": "(() => { const t = document.querySelector('[role=dialog]').innerText; const at = t.indexOf('Model'); return t.slice(at, at + 400) })()"
+  }
+ ]
+}

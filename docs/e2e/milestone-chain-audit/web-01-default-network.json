@@ -1,0 +1,20 @@
+{
+ "hosts": {
+  "unmapped-auction.gimmychang.workers.dev": 4,
+  "fonts.googleapis.com": 1,
+  "cdn.jsdelivr.net": 25,
+  "fonts.gstatic.com": 5,
+  "ethereum-sepolia-rpc.publicnode.com": 60
+ },
+ "rpcCalls": 59,
+ "byTarget": {
+  "eth_blockNumber -": 3,
+  "eth_getLogs 0xda8051e3e2855c125aad6050f97ea64cf203daf6": 6,
+  "eth_call 0x5532370ee47a34ce263e0c4382fff4c412b8a01f": 27,
+  "eth_call 0xda8051e3e2855c125aad6050f97ea64cf203daf6": 6,
+  "eth_call 0x42ebe333ab23158bdb2d8757e542da3d73cc031d": 1,
+  "eth_call 0xa801c5067a0649c640af21fa2334cf822bb8dbb6": 1,
+  "eth_getLogs 0x5532370ee47a34ce263e0c4382fff4c412b8a01f": 12,
+  "eth_call 0xe1dd9c3fa50edb962e442f60dfbc432e24537e4c": 3
+ }
+}

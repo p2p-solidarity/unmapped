@@ -1,0 +1,168 @@
+{
+ "part": "menus (fresh userData, system language zh-TW, no passkey linked; nothing signed or sent): title, Worlds, Market (three worlds, then aether-land and lantern-quay), Cartridges (1.3.0 then 1.2.0), Open by ENS name with a save name, a foreign cartridge name and the root world's name, Continent, Settings",
+ "actions": [
+  {
+   "wait": 3000
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-chain-audit/00-title.jpg"
+  },
+  {
+   "clickText": "世界"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-chain-audit/01-worlds.jpg"
+  },
+  {
+   "clickText": "市場"
+  },
+  {
+   "wait": 12000
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-chain-audit/02-market.jpg"
+  },
+  {
+   "clickText": "aether-land.unmapped.eth"
+  },
+  {
+   "wait": 6000
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-chain-audit/03-market-aether-land.jpg"
+  },
+  {
+   "clickText": "lantern-quay.aether-land.unmapped.eth"
+  },
+  {
+   "wait": 6000
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-chain-audit/04-market-lantern-quay.jpg"
+  },
+  {
+   "clickText": "卡帶"
+  },
+  {
+   "wait": 8000
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-chain-audit/05-cartridges.jpg"
+  },
+  {
+   "eval": "[...document.querySelectorAll('button')].find(b=>b.textContent.includes('1.2.0'))?.click(), 'ok'"
+  },
+  {
+   "wait": 7000
+  },
+  {
+   "eval": "[...document.querySelectorAll('p,div,span')].filter(e=>e.children.length===0&&/ENS|持有|指向/.test(e.textContent)).map(e=>e.textContent).join(' | ')"
+  },
+  {
+   "shot": "docs/e2e/milestone-chain-audit/06-cartridge-1.2.0-other-version.jpg"
+  },
+  {
+   "eval": "document.querySelector('input[placeholder=\"卡帶的 ENS 名稱\"]').focus(), 'ok'"
+  },
+  {
+   "type": "kidney-mui0pchb.aether-land.unmapped.eth"
+  },
+  {
+   "clickText": "查詢"
+  },
+  {
+   "wait": 6000
+  },
+  {
+   "eval": "document.body.innerText.split('用 ENS 名稱開啟').pop().slice(0,500)"
+  },
+  {
+   "shot": "docs/e2e/milestone-chain-audit/07-open-by-ens-save-name.jpg"
+  },
+  {
+   "eval": "document.querySelector('input[placeholder=\"卡帶的 ENS 名稱\"]').select(), 'ok'"
+  },
+  {
+   "type": "misty-harbor.unmapped.eth"
+  },
+  {
+   "clickText": "查詢"
+  },
+  {
+   "wait": 6000
+  },
+  {
+   "eval": "document.body.innerText.split('用 ENS 名稱開啟').pop().slice(0,500)"
+  },
+  {
+   "shot": "docs/e2e/milestone-chain-audit/08-open-by-ens-misty-harbor.jpg"
+  },
+  {
+   "eval": "document.querySelector('input[placeholder=\"卡帶的 ENS 名稱\"]').select(), 'ok'"
+  },
+  {
+   "type": "aether-land.unmapped.eth"
+  },
+  {
+   "clickText": "查詢"
+  },
+  {
+   "wait": 6000
+  },
+  {
+   "eval": "document.body.innerText.split('用 ENS 名稱開啟').pop().slice(0,500)"
+  },
+  {
+   "shot": "docs/e2e/milestone-chain-audit/09-open-by-ens-aether-land.jpg"
+  },
+  {
+   "clickText": "大陸"
+  },
+  {
+   "wait": 3000
+  },
+  {
+   "shot": "docs/e2e/milestone-chain-audit/10-continent.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "設定"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "document.querySelector('[role=dialog]').innerText.slice(0,3000)"
+  },
+  {
+   "shot": "docs/e2e/milestone-chain-audit/11-settings.jpg"
+  }
+ ]
+}
