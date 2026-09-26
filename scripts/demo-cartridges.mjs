@@ -97,6 +97,9 @@ async function build(dir) {
           contentHash,
           status: "ready",
           staleReason: null,
+          // A demo scene carries no written voices: residents speak only once a Story step writes
+          // them, and the cartridge ships none rather than stand-ins (Rule 2).
+          dialogues: {},
           receipt: {
             operation: "base",
             generationSeed: 0,
@@ -116,6 +119,8 @@ async function build(dir) {
     draft: {
       formatVersion: 2,
       name: design.name,
+      // The draft's own sentence; a demo's words are its narrative premise (empty stays empty).
+      brief: design.narrative?.premise ?? "",
       cartridgeId: id,
       author: design.author,
       selection,
