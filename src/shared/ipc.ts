@@ -1,3 +1,4 @@
+import { NET_IPC, type NetApi } from "./ice";
 import type { ModProposalPreview, SeedModProposal } from "./mods";
 import type { PlayerProfile, PlayerProfileInput } from "./player";
 // The single IPC contract. Preload exposes `window.seed` implementing SeedApi; main registers
@@ -194,6 +195,7 @@ export const IPC = {
     openSession: "works:open-session",
     closeSession: "works:close-session",
   },
+  net: NET_IPC,
   market: {
     config: "market:config",
     view: "market:view",
@@ -516,6 +518,7 @@ export interface SeedApi {
   };
   /** The lineage market and its ENS names (Sepolia): a player's action is a batch main builds, the
    * passkey signs (`prepare` → sign → `submit`) and the gas station pays; unset = `market-not-configured`. */
+  net: NetApi;
   market: {
     config(): Promise<MarketConfig>;
     view(key: MarketKey | null): Promise<Result<MarketView>>;

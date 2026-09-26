@@ -31,6 +31,8 @@
     "relay:key": "bun scripts/relay-key.ts",
     "relay:dev": "cd web/lineage-relay && bunx wrangler@4 dev --port 8790 --env-file ../../.cache/relay/dev.env",
     "relay:deploy": "cd web/lineage-relay && bunx wrangler@4 deploy",
+    "turn:dev": "cd web/turn && bunx wrangler@4 dev --port 8791 --env-file ../../.cache/turn/dev.env",
+    "turn:deploy": "cd web/turn && bunx wrangler@4 deploy",
     "gateway": "bun --tsconfig-override tsconfig.node.json src/gateway/main.ts",
     "browser:dev": "vite --config vite.browser.config.ts",
     "browser:build": "vite build --config vite.browser.config.ts",

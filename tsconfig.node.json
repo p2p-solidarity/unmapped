@@ -32,6 +32,7 @@
     "src/harness/**/*",
     "src/service/**/*",
     "src/relay/**/*",
+    "src/turn/**/*",
     "src/gateway/**/*",
     "electron.vite.config.ts",
     "vite.browser.config.ts",

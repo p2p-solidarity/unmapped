@@ -21,6 +21,7 @@ import { registerImagesIpc } from "./images/ipc";
 import { registerInferenceIpc } from "./inference/ipc";
 import { registerInstancesIpc } from "./instances/ipc";
 import { registerModsIpc } from "./mods/ipc";
+import { registerNetIpc } from "./net/ipc";
 import { registerSeedIpc } from "./seeds/ipc";
 import { registerUsageIpc } from "./usage/ipc";
 import { registerVaultIpc } from "./vault/ipc";
@@ -44,6 +45,7 @@ export function registerIpc(ctx: MainContext): void {
   registerModsIpc(ctx);
   registerWorksIpc(ctx);
   registerChainIpc(ctx);
+  registerNetIpc();
   registerMarketIpc(ctx);
   registerCreateDraftsIpc(ctx);
   registerUsageIpc(ctx);

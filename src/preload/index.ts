@@ -28,6 +28,7 @@ import type { ChunkCoord } from "@shared/chunks";
 import type { CreateDraft, CreateDraftEntry, DraftIdea, LookPicture } from "@shared/createDraft";
 import type { AccountStatus, PairingLookup, QuotaView } from "@shared/gatewayApi";
 import type { AccessPolicy } from "@shared/history/types";
+import type { IceView } from "@shared/ice";
 import type { DataKeyWrappingRecord } from "@shared/identity";
 import type {
   ImageProbe,
@@ -319,6 +320,9 @@ const api: SeedApi = {
       invoke<Result<WorkSession>>(IPC.works.openSession, source),
     closeSession: (token: string, kill: boolean) =>
       invoke<Result<void>>(IPC.works.closeSession, token, kill),
+  },
+  net: {
+    iceServers: () => invoke<Result<IceView>>(IPC.net.iceServers),
   },
   market: {
     config: () => invoke<MarketConfig>(IPC.market.config),

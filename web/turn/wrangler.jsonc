@@ -1,0 +1,18 @@
+// The relay service for friends' worlds on Cloudflare (src/turn/worker.ts). It mints short-lived
+// Cloudflare Realtime TURN credentials; the TURN key is its only secret, which you add yourself
+// (Cloudflare dashboard → Realtime → TURN Server → Create gives the Turn Token ID and API token):
+//   bunx wrangler@4 secret put TURN_KEY_ID -c web/turn/wrangler.jsonc
+//   bunx wrangler@4 secret put TURN_KEY_API_TOKEN -c web/turn/wrangler.jsonc
+//   bun run turn:deploy
+// Then point the app at it: UNMAPPED_TURN_URL=https://unmapped-turn.<subdomain>.workers.dev
+// Local: put both in .cache/turn/dev.env and run `bun run turn:dev` (http://127.0.0.1:8791).
+{
+  "name": "unmapped-turn",
+  "main": "../../src/turn/worker.ts",
+  "account_id": "b9e60d05860dfe2eaf2db7f9930875c0",
+  "compatibility_date": "2026-09-26",
+  "workers_dev": true,
+  "ratelimits": [
+    { "name": "LIMITER", "namespace_id": "4802", "simple": { "limit": 20, "period": 60 } }
+  ]
+}
