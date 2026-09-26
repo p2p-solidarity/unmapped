@@ -3,7 +3,9 @@
 // writing nothing), then join: main redeems the invite, fetches and checks the cartridge, makes the
 // save, and Play opens it. A save of that world already on this device (restored from its owner)
 // is joined in place; a device that already belongs to the world just opens its save. Every refusal
-// (a damaged or revoked link, an unreachable service, newer physics…) shows its own hint.
+// (a damaged or revoked link, an unreachable service, newer physics…) shows its own hint. A move
+// link (`unmapped://world?w=…&svc=…`, rev 6 phase 4 D5) pasted here follows a world this device
+// holds to the service an owner moved it to — only when that service's log extends this device's.
 
 import { formatDateTime, translate, useT } from "@renderer/i18n";
 import { playerName, setPlayerName } from "@renderer/net/room";
@@ -11,6 +13,7 @@ import { serviceLabel } from "@renderer/net/worldServices";
 import { useSessionStore } from "@renderer/state";
 import { Button, ErrorBlock, Surface, space, Text, TextField } from "@renderer/ui";
 import type { InvitePreview, WorldJoined } from "@shared/worldApi";
+import { isMoveLink, type WorldMoved } from "@shared/worldBundle";
 import { type JSX, useState } from "react";
 import { shortKey, useAction } from "../land/worldDoor";
 import { useKeys } from "../shell/useKeys";
@@ -72,18 +75,25 @@ export function JoinWorld({ refresh, onClose }: SectionProps): JSX.Element {
   const [name, setName] = useState(playerName);
   const look = useAction<InvitePreview>();
   const join = useAction<WorldJoined>();
+  // A move link (phase 4, D5): a world this device holds moved to another service.
+  const move = useAction<WorldMoved>();
+  const moving = isMoveLink(link);
 
   const reset = (): void => {
     setLink("");
     look.clear();
     join.clear();
+    move.clear();
   };
   // Esc first puts a looked-at link away, then leaves for the title.
   useKeys({ Escape: () => (look.state.status === "idle" ? onClose() : reset()) });
 
   const world = look.state.status === "ready" ? look.state.value : null;
   const trimmed = name.trim();
-  const busy = look.state.status === "loading" || join.state.status === "loading";
+  const busy =
+    look.state.status === "loading" ||
+    join.state.status === "loading" ||
+    move.state.status === "loading";
 
   const enter = (joined: WorldJoined, title: string): void => {
     useSessionStore.getState().toast("success", translate("world.joined", { name: title }));
@@ -108,9 +118,37 @@ export function JoinWorld({ refresh, onClose }: SectionProps): JSX.Element {
             setLink(event.target.value);
             look.clear();
             join.clear();
+            move.clear();
           }}
         />
+        {moving ? (
+          <Text variant="caption" tone="accent">
+            {t("bundle.moveDetected")}
+          </Text>
+        ) : null}
         <div style={row}>
+          {moving ? (
+            <Button
+              variant="primary"
+              disabled={busy}
+              onClick={() => {
+                void move
+                  .run(() => window.seed.bundle.move(link.trim()))
+                  .then((result) => {
+                    if (result === null || !result.ok) return;
+                    const { url, added } = result.value;
+                    const text = translate("bundle.moveFollowed", {
+                      service: serviceLabel(url),
+                      added,
+                    });
+                    useSessionStore.getState().toast("success", text);
+                    void refresh();
+                  });
+              }}
+            >
+              {t("bundle.moveFollow")}
+            </Button>
+          ) : (
             <Button
               variant={world === null ? "primary" : "secondary"}
               disabled={link.trim() === "" || busy}
@@ -121,6 +159,7 @@ export function JoinWorld({ refresh, onClose }: SectionProps): JSX.Element {
             >
               {t("world.joinLook")}
             </Button>
+          )}
           {look.state.status === "idle" ? null : (
             <Button variant="ghost" disabled={busy} onClick={reset}>
               {t("world.joinOther")}
@@ -128,6 +167,21 @@ export function JoinWorld({ refresh, onClose }: SectionProps): JSX.Element {
           )}
         </div>
       </div>
+
+      {move.state.status === "loading" ? (
+        <Text variant="caption" tone="muted">
+          {t("bundle.moveFollowing")}
+        </Text>
+      ) : move.state.status === "error" ? (
+        <ErrorBlock error={move.state.error} />
+      ) : move.state.status === "ready" ? (
+        <Text variant="caption" tone="success">
+          {t("bundle.moveFollowed", {
+            service: serviceLabel(move.state.value.url),
+            added: move.state.value.added,
+          })}
+        </Text>
+      ) : null}
 
       {look.state.status === "loading" ? (
         <Text variant="caption" tone="muted">

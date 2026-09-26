@@ -11,7 +11,8 @@
 //   5. uploads the packs the history announces (cartridge, AI works) for friends to fetch, noting
 //      each one the service confirmed (./workPacks), so the reconnect that follows sends none again.
 //
-// Anything unexpected leaves the local log exactly as it was.
+// Anything unexpected leaves the local log exactly as it was. Any owner attaches (phase 4, D5: a
+// co-owner too); a world already on a service is moved instead (`rehostWorld`, bundles/move.ts).
 
 import { canonicalJson } from "@shared/canonical";
 import { admit } from "@shared/history/admit";
@@ -24,6 +25,7 @@ import { PHYSICS_SUPPORTED } from "@shared/physics";
 import { err, ok, type Result } from "@shared/result";
 import type { WorldStatus } from "@shared/worldApi";
 import { FRAME_LIMITS, type FromService, WORLD_PROTOCOL } from "@shared/worldProtocol";
+import { rehostWorld } from "../bundles/move";
 import type { HostCore } from "./core";
 import { isLocalOnly } from "./loaded";
 import { readLog, writeLink, writeLog } from "./logStore";
@@ -117,6 +119,11 @@ export async function attachWorld(
   }
   const key = await core.deps.key();
   if (!key.ok) return key;
+  // Already on a service (phase 4, D5): the new one holds the log already (a mirror imported from a
+  // `.world`), so nothing is uploaded — an owner's sequencer moves it there (a rehost).
+  const attached = await core.withWorld(worldId, async (world) => ok(!isLocalOnly(world)));
+  if (!attached.ok) return attached;
+  if (attached.value) return rehostWorld(core, worldId, url);
   const token = `attach:${worldId}`;
   const result = await core.withWorld(worldId, async (world) => {
     if (!isOwner(world.now, key.value.author)) {

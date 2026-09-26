@@ -2,6 +2,7 @@
 // own table file and two screens can never collide on a name.
 
 import { ACCOUNT } from "./account";
+import { BUNDLE } from "./bundle";
 import { COMMON } from "./common";
 import { CONSOLE } from "./console";
 import { CONTINENT } from "./continent";
@@ -28,6 +29,7 @@ import { WORLD } from "./world";
 
 export const STRINGS = {
   account: ACCOUNT,
+  bundle: BUNDLE,
   common: COMMON,
   console: CONSOLE,
   continent: CONTINENT,

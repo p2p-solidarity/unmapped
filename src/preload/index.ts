@@ -125,6 +125,14 @@ import type {
   WorldStatus,
   WorldStreamEvent,
 } from "@shared/worldApi";
+import {
+  BUNDLE_IPC,
+  type BundleExported,
+  type BundleImported,
+  type BundleInspected,
+  type BundleWorld,
+  type WorldMoved,
+} from "@shared/worldBundle";
 import type { ClaimTarget, Presence } from "@shared/worldProtocol";
 import { contextBridge, type IpcRendererEvent, ipcRenderer } from "electron";
 
@@ -430,6 +438,14 @@ const api: SeedApi = {
     choose: (id: ImageProviderId) => invoke<Result<ImageSettings>>(IPC.images.choose, id),
     probe: (id: ImageProviderId) => invoke<Result<ImageProbe>>(IPC.images.probe, id),
     audit: (target: LicenceAuditTarget) => invoke<Result<LicenceAudit>>(IPC.images.audit, target),
+  },
+  bundle: {
+    list: () => invoke<Result<BundleWorld[]>>(BUNDLE_IPC.list),
+    export: (worldId: string) => invoke<Result<BundleExported | null>>(BUNDLE_IPC.export, worldId),
+    inspect: () => invoke<Result<BundleInspected | null>>(BUNDLE_IPC.inspect),
+    import: (token: string, name: string) =>
+      invoke<Result<BundleImported>>(BUNDLE_IPC.import, token, name),
+    move: (link: string) => invoke<Result<WorldMoved>>(BUNDLE_IPC.move, link),
   },
   gateway: {
     route: () => invoke<Result<RouteView>>(IPC.gateway.route),

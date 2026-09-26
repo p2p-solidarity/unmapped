@@ -595,4 +595,5 @@ export interface SeedApi {
   gateway: GatewayApi;
   /** Image providers with their licences, the device's choice, tests and audits (D4). */
   images: ImagesApi;
+  bundle: import("./worldBundle").BundleApi; // `.world` files, move links (D5): BUNDLE_IPC
 }

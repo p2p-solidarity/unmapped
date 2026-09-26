@@ -10,6 +10,7 @@ import { registerProfilesIpc } from "./profiles/ipc";
 import { registerAccountIpc } from "./account/ipc";
 import { registerAppIpc } from "./app/ipc";
 import { registerBillingIpc } from "./billing/ipc";
+import { registerBundleIpc } from "./bundles/ipc";
 import { registerCartridgesIpc } from "./cartridges/ipc";
 import { registerChainIpc } from "./chain/ipc";
 import { registerMarketIpc } from "./chain/marketIpc";
@@ -46,7 +47,8 @@ export function registerIpc(ctx: MainContext): void {
   registerMarketIpc(ctx);
   registerCreateDraftsIpc(ctx);
   registerUsageIpc(ctx);
-  registerWorldIpc(ctx);
+  // `.world` files and move links (phase 4, D5) run on the world host.
+  registerBundleIpc(ctx, registerWorldIpc(ctx));
   registerAccountIpc(ctx);
   registerBillingIpc(ctx);
   registerImagesIpc(ctx);

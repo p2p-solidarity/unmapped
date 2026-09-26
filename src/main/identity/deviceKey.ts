@@ -24,6 +24,7 @@ import {
   newSecretKey,
   signEvent,
   signInvite,
+  signText,
   signWsAuth,
 } from "@shared/history/sign";
 import type {
@@ -34,6 +35,7 @@ import type {
   UnsignedInvite,
 } from "@shared/history/types";
 import { err, fail, ok, type Result, toError } from "@shared/result";
+import { bundleSignText, type WorldBundleManifest } from "@shared/worldBundle";
 
 export const IDENTITY_DIR = "identity";
 export const DEVICE_KEY_FILE = "device.key";
@@ -57,6 +59,8 @@ export interface DeviceKey {
   signInvite(unsigned: UnsignedInvite): Invite;
   signWsAuth(nonce: string, serviceKey: string): string;
   blobAuth(request: { method: string; path: string; ts: number; body: Uint8Array }): string;
+  /** A `.world`'s signature.json (phase 4, D5): over its own purpose line and world.json only. */
+  signWorldFile(manifest: WorldBundleManifest): string;
   /**
    * The gateway's own texts (phase 4, D1; @shared/account), each under its own "unmapped-…:v1"
    * line, so none verifies as a world event and no event signature verifies at the gateway.
@@ -85,6 +89,7 @@ function wrap(secret: Uint8Array): DeviceKey {
     signInvite: (unsigned) => signInvite(unsigned, secret),
     signWsAuth: (nonce, serviceKey) => signWsAuth(secret, nonce, serviceKey),
     blobAuth: (request) => blobAuthHeader(secret, request),
+    signWorldFile: (manifest) => signText(secret, bundleSignText(manifest)),
     account: {
       signIn: (nonce, gatewayKey) => signSignIn(secret, nonce, gatewayKey),
       pairing: (nonce, gatewayKey) => signPairing(secret, nonce, gatewayKey),

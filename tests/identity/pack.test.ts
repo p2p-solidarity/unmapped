@@ -108,6 +108,7 @@ describe("packFiles / unpackFiles", () => {
       usage: {} as SeedApi["usage"],
       images: {} as SeedApi["images"],
       gateway: {} as SeedApi["gateway"],
+      bundle: {} as SeedApi["bundle"],
     } as SeedApi;
     const previous = globalThis.window;
     Object.defineProperty(globalThis, "window", { configurable: true, value: { seed: api } });
@@ -174,6 +175,7 @@ describe("packFiles / unpackFiles", () => {
       usage: {} as SeedApi["usage"],
       images: {} as SeedApi["images"],
       gateway: {} as SeedApi["gateway"],
+      bundle: {} as SeedApi["bundle"],
     } as SeedApi;
     const previous = globalThis.window;
     Object.defineProperty(globalThis, "window", { configurable: true, value: { seed: api } });

@@ -15,6 +15,7 @@ import type { LibraryData } from "../title/useLibrary";
 import { JoinWorld } from "./JoinWorld";
 import { NewGamePanel } from "./NewGamePanel";
 import { SavesPanel } from "./SavesPanel";
+import { WorldBundleActions } from "./WorldBundleActions";
 
 export interface SectionProps {
   /** Everything on disk (cartridges, saves, drafts, legacy worlds) as one Loadable. */
@@ -43,6 +44,7 @@ export const SECTIONS: readonly Section[] = [
     count: (library) => library.instances.length,
   },
   { id: "join", label: "world.sectionJoin", Panel: JoinWorld },
+  { id: "files", label: "bundle.section", Panel: WorldBundleActions },
   {
     id: "cartridges",
     label: "library.sectionCartridges",
