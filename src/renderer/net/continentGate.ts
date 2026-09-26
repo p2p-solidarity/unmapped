@@ -5,6 +5,10 @@
 // anything it sends besides a hello is dropped. Every entry is checked by `readContinentEntry` and
 // `mayWrite`: a peer writes only its own world and chunks, and never overwrites a chunk or a note.
 //
+// Chat lines cross the same way: sent only to verified peers, taken only from them, cleaned by
+// `readChatText`, at most CHAT_BURST per peer per CHAT_WINDOW_MS (the rest dropped). They never
+// touch the document; listeners get the sender's verified world and the cleaned text, nothing more.
+//
 // Pure over a Y.Doc and a transport, so the handshake is tested with two documents and no network.
 
 import {
@@ -13,10 +17,11 @@ import {
   type ContinentMessage,
   MAX_ENTRIES,
   mayWrite,
+  readChatText,
   readContinentEntry,
   validateContinentHello,
 } from "@shared/continentHello";
-import type { AppError } from "@shared/result";
+import { type AppError, err, ok, type Result } from "@shared/result";
 import type * as Y from "yjs";
 import { continentMaps } from "./continentDoc";
 
@@ -25,6 +30,10 @@ const REMOTE = Symbol("continent-remote");
 
 /** Payload bytes per entries message, well under the channel's frame limit. */
 const BATCH_BYTES = 192 * 1024;
+
+/** A peer may say at most CHAT_BURST lines in any CHAT_WINDOW_MS; more are dropped, not queued. */
+export const CHAT_BURST = 5;
+export const CHAT_WINDOW_MS = 5000;
 
 export interface ContinentTransport {
   send(peerId: string, message: ContinentMessage): boolean;
@@ -39,7 +48,21 @@ export interface ContinentGate {
   /** Peers turned away, with why — shown so a mismatch is never silent. */
   rejected(): AppError[];
   onChange(listener: () => void): () => void;
+  /**
+   * Sends one chat line to every verified peer, cleaned first; the line as sent and how many peers
+   * it went to. Refused when it is blank or too long, or this player already said CHAT_BURST lines
+   * in the window (the others would drop it anyway).
+   */
+  sendChat(text: string): Result<{ text: string; peers: number }>;
+  /** Chat lines from verified peers only: the sender's world (its hello's) and the cleaned text. */
+  onChat(listener: (worldId: string, text: string) => void): () => void;
   close(): void;
+}
+
+/** Keeps the times inside the window; whether one more fits. */
+function withinBurst(times: number[], now: number): boolean {
+  while (times.length > 0 && now - (times[0] ?? now) >= CHAT_WINDOW_MS) times.shift();
+  return times.length < CHAT_BURST;
 }
 
 function batches(entries: readonly ContinentEntry[]): ContinentEntry[][] {
@@ -80,6 +103,7 @@ export function gateContinent(
   doc: Y.Doc,
   local: ContinentHello,
   transport: ContinentTransport,
+  clock: () => number = Date.now,
 ): ContinentGate {
   const introduced = new Set<string>();
   const verified = new Map<string, ContinentHello>();
@@ -90,6 +114,11 @@ export function gateContinent(
   const notify = (): void => {
     for (const listener of listeners) listener();
   };
+  const chatListeners = new Set<(worldId: string, text: string) => void>();
+  /** When each peer's recent chat frames arrived (every frame counts, readable or not). */
+  const heard = new Map<string, number[]>();
+  /** When this player's own recent lines went out. */
+  const said: number[] = [];
 
   const sendAll = (peerId: string, entries: readonly ContinentEntry[]): void => {
     for (const batch of batches(entries))
@@ -127,6 +156,20 @@ export function gateContinent(
       refused.add(peerId);
       turnedAway.push(message.error);
       notify();
+      return;
+    }
+    if (message.type === "chat") {
+      // Words from a peer that never proved itself are dropped like its land.
+      const from = verified.get(peerId)?.worldId;
+      if (from === undefined) return;
+      const times = heard.get(peerId) ?? [];
+      heard.set(peerId, times);
+      const now = clock();
+      if (!withinBurst(times, now)) return;
+      times.push(now);
+      const text = readChatText(message.text);
+      if (text === null) return;
+      for (const listener of chatListeners) listener(from, text);
       return;
     }
     // Land from a peer that never proved itself is dropped, whatever it claims to be.
@@ -169,6 +212,7 @@ export function gateContinent(
     transport.onPeerLeft((peerId) => {
       introduced.delete(peerId);
       refused.delete(peerId);
+      heard.delete(peerId);
       if (verified.delete(peerId)) notify();
     }),
     transport.onMessage(receive),
@@ -181,10 +225,40 @@ export function gateContinent(
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
+    sendChat(raw) {
+      const text = readChatText(raw);
+      if (text === null) {
+        return err(
+          "chat-unreadable",
+          "That line is empty or too long to send.",
+          "Write up to 200 characters.",
+        );
+      }
+      const now = clock();
+      if (!withinBurst(said, now)) {
+        return err(
+          "chat-too-fast",
+          "That is a lot of lines at once.",
+          "Wait a few seconds, then say it again.",
+        );
+      }
+      said.push(now);
+      let peers = 0;
+      for (const peerId of verified.keys()) {
+        if (transport.send(peerId, { type: "chat", text })) peers += 1;
+      }
+      return ok({ text, peers });
+    },
+    onChat(listener) {
+      chatListeners.add(listener);
+      return () => chatListeners.delete(listener);
+    },
     close() {
       for (const off of [...offs, ...observers]) off();
       listeners.clear();
+      chatListeners.clear();
       verified.clear();
+      heard.clear();
     },
   };
 }

@@ -1,5 +1,5 @@
-// Errors about playing with friends (rooms, signaling, the runtime handshake with the host) and the
-// optional on-chain ledger.
+// Errors about playing with friends (inviting, joining, chat, signaling, the older rooms and their
+// runtime handshake with the host) and the optional on-chain ledger.
 
 import type { ErrorText } from "./errors";
 import { HINT } from "./errors-hints";
@@ -21,20 +21,20 @@ export const NET_ERRORS: Record<string, ErrorText> = {
   "room-bad-code": {
     message: {
       en: "That is not a join code.",
-      "zh-TW": "這不是加入代碼。",
+      "zh-TW": "這不是加入碼。",
       ja: "それは参加コードではありません。",
     },
     hint: {
-      en: "Join codes are 6 letters and digits.",
-      "zh-TW": "加入代碼由 6 個英文字母與數字組成。",
-      ja: "参加コードは英字と数字の 6 文字です。",
+      en: "A join code is 6 letters and digits; ask your friend for theirs.",
+      "zh-TW": "加入碼由 6 個英文字母與數字組成，請向朋友要他們的加入碼。",
+      ja: "参加コードは英字と数字の 6 文字です。友だちに聞いてください。",
     },
   },
   "room-failed": {
     message: {
-      en: "The connection to the room could not be opened.",
-      "zh-TW": "無法建立與房間的連線。",
-      ja: "ルームへの接続を開けませんでした。",
+      en: "The connection to your friends could not be opened.",
+      "zh-TW": "無法建立和朋友的連線。",
+      ja: "友だちとの接続を開けませんでした。",
     },
     hint: NETWORK,
   },
@@ -43,6 +43,11 @@ export const NET_ERRORS: Record<string, ErrorText> = {
       en: "No signaling server is set up.",
       "zh-TW": "沒有設定信令伺服器。",
       ja: "シグナリングサーバーが設定されていません。",
+    },
+    hint: {
+      en: "On the title screen open Settings → Advanced settings → Signaling servers and reset them.",
+      "zh-TW": "請在標題畫面開啟「設定 → 進階設定 → 信令伺服器」，把它們重設。",
+      ja: "タイトル画面で「設定 → 詳細設定 → シグナリングサーバー」を開き、リセットしてください。",
     },
   },
   "signaling-unreachable": {
@@ -55,15 +60,15 @@ export const NET_ERRORS: Record<string, ErrorText> = {
   },
   "continent-signaling-unreachable": {
     message: {
-      en: "No signaling server answered, so no other world can find this continent.",
-      "zh-TW": "沒有任何信令伺服器回應，其他世界找不到這片大陸。",
-      ja: "どのシグナリングサーバーも応答しないため、ほかの世界はこの大陸を見つけられません。",
+      en: "Friends cannot find this world: no connection server answered.",
+      "zh-TW": "朋友找不到這個世界：沒有任何連線伺服器回應。",
+      ja: "友だちがこのワールドを見つけられません。どの接続サーバーも応答しませんでした。",
     },
     hint: {
-      en: "On the title screen open Settings → Signaling servers, test them and save one that answers, then open the continent again. It turns live by itself if a server answers first.",
+      en: "Check the internet connection. If it keeps failing, open Settings → Advanced settings → Signaling servers on the title screen and test them. It connects by itself as soon as a server answers.",
       "zh-TW":
-        "請在標題畫面開啟「設定 → 信令伺服器」，測試後儲存一個有回應的伺服器，再重新開啟大陸。若伺服器先回應，會自動恢復連線。",
-      ja: "タイトル画面で「設定 → シグナリングサーバー」を開き、テストして応答するサーバーを保存してから、大陸を開き直してください。先にサーバーが応答すれば自動でつながります。",
+        "請檢查網路。若一直失敗，請在標題畫面開啟「設定 → 進階設定 → 信令伺服器」測試看看。伺服器一回應就會自動連上。",
+      ja: "インターネット接続を確認してください。失敗が続くときは、タイトル画面で「設定 → 詳細設定 → シグナリングサーバー」を開いてテストしてください。サーバーが応答すれば自動でつながります。",
     },
   },
 
@@ -168,9 +173,9 @@ export const NET_ERRORS: Record<string, ErrorText> = {
   },
   "continent-protocol-mismatch": {
     message: {
-      en: "That world speaks another continent protocol.",
-      "zh-TW": "那個世界使用不同版本的大陸協定。",
-      ja: "その世界は別の版の大陸プロトコルを使っています。",
+      en: "That friend's game is a different version.",
+      "zh-TW": "那位朋友的遊戲版本不同。",
+      ja: "その友だちのゲームは別の版です。",
     },
     hint: {
       en: "Both players need the same build of UNMAPPED.",
@@ -180,87 +185,123 @@ export const NET_ERRORS: Record<string, ErrorText> = {
   },
   "continent-same-world": {
     message: {
-      en: "This same world is already on the continent from another window or machine.",
-      "zh-TW": "同一個世界已經從另一個視窗或另一台電腦加入這片大陸了。",
-      ja: "同じ世界が、別のウィンドウか別の端末からすでに大陸にいます。",
+      en: "This same world is already playing with these friends from another window or computer.",
+      "zh-TW": "同一個世界已經從另一個視窗或另一台電腦和這些朋友一起玩了。",
+      ja: "同じワールドが、別のウィンドウか別の端末ですでにこの友だちと遊んでいます。",
     },
     hint: {
-      en: "Leave the continent there first.",
-      "zh-TW": "請先在那邊離開大陸。",
-      ja: "先にそちらで大陸を離れてください。",
+      en: "Leave there first.",
+      "zh-TW": "請先在那邊離開。",
+      ja: "先にそちらで離れてください。",
     },
   },
   "continent-no-land": {
     message: {
-      en: "Only a world with open land can join a continent.",
-      "zh-TW": "只有擁有開放大地的世界才能加入大陸。",
-      ja: "大陸に加われるのは、開かれた大地のある世界だけです。",
+      en: "Only a world with open land can play with friends.",
+      "zh-TW": "只有擁有開放大地的世界才能和朋友一起玩。",
+      ja: "友だちと遊べるのは、開かれた大地のあるワールドだけです。",
     },
     hint: {
-      en: "Open a saved world and step out onto its land first.",
-      "zh-TW": "請先開啟一個存檔，走到它的大地上。",
-      ja: "まずセーブを開いて、その大地に出てください。",
+      en: "Open one of your worlds and step out onto its land first.",
+      "zh-TW": "請先開啟你的一個世界，走到它的大地上。",
+      ja: "まずワールドを開いて、その大地に出てください。",
     },
   },
   "continent-in-room": {
     message: {
-      en: "This world is already in a shared room.",
-      "zh-TW": "這個世界已經在共享房間裡了。",
-      ja: "この世界はすでに共有ルームに入っています。",
+      en: "This world is already in an older kind of shared game.",
+      "zh-TW": "這個世界已經在舊式的共享遊戲裡。",
+      ja: "このワールドはすでに古い形式の共有ゲームに入っています。",
     },
     hint: {
-      en: "Leave the room in Console → Multiplayer first.",
-      "zh-TW": "請先到 主控台 → 多人連線 離開房間。",
-      ja: "先に コンソール → マルチプレイ でルームを抜けてください。",
+      en: "Go back to the title screen, open this world again, then try again.",
+      "zh-TW": "請回到標題畫面，重新開啟這個世界，再試一次。",
+      ja: "タイトル画面に戻り、このワールドを開き直してから、もう一度試してください。",
     },
   },
   "continent-world-attached": {
     message: {
-      en: "This world is shared through a world service, so it cannot also join a continent.",
-      "zh-TW": "這個世界已經透過世界服務分享，不能再加入大陸。",
-      ja: "この世界はワールドサービスで共有されているため、大陸には加われません。",
+      en: "This world is already shared with friends online, so it cannot use a join code too.",
+      "zh-TW": "這個世界已經在網路上和朋友共享，不能再用加入碼。",
+      ja: "このワールドはもうオンラインで友だちと共有しているため、参加コードは使えません。",
     },
     hint: {
-      en: "Friends join it with an invite from its door instead; continents are for worlds kept on this device only.",
-      "zh-TW": "請改用門上的邀請讓夥伴加入；大陸只給只存在這台裝置上的世界。",
-      ja: "代わりに扉の招待で仲間を迎えてください。大陸はこの端末だけにある世界のためのものです。",
+      en: "Invite friends with an invite link instead: open the door at home, then Advanced.",
+      "zh-TW": "請改用邀請連結邀請朋友：打開家門，再打開「進階」。",
+      ja: "代わりに招待リンクで友だちを招待してください。家の扉を開き、「詳細」を開きます。",
+    },
+  },
+  "chat-unreadable": {
+    message: {
+      en: "That line is empty or too long to send.",
+      "zh-TW": "這句話是空的或太長，無法送出。",
+      ja: "その言葉は空か長すぎて送れません。",
+    },
+    hint: {
+      en: "Write up to 200 characters.",
+      "zh-TW": "最多 200 個字。",
+      ja: "200 文字までにしてください。",
+    },
+  },
+  "chat-too-fast": {
+    message: {
+      en: "That is a lot of lines at once.",
+      "zh-TW": "一下子說太多句了。",
+      ja: "一度にたくさん話しすぎです。",
+    },
+    hint: {
+      en: "Wait a few seconds, then say it again.",
+      "zh-TW": "等幾秒鐘再說一次。",
+      ja: "数秒待ってから、もう一度言ってください。",
+    },
+  },
+  "chat-no-friends": {
+    message: {
+      en: "Chat works only while you play with friends.",
+      "zh-TW": "只有和朋友一起玩時才能聊天。",
+      ja: "チャットは友だちと遊んでいるときだけ使えます。",
+    },
+    hint: {
+      en: "Invite friends or join a friend's world first.",
+      "zh-TW": "請先邀請朋友，或加入朋友的世界。",
+      ja: "まず友だちを招待するか、友だちのワールドに参加してください。",
     },
   },
   "continent-name-not-found": {
     message: {
-      en: "That name belongs to no save or cartridge.",
-      "zh-TW": "這個名稱不屬於任何存檔或卡帶。",
-      ja: "その名前はどのセーブにもカートリッジにも結びついていません。",
+      en: "That is not the name of any world.",
+      "zh-TW": "這個名稱不屬於任何世界。",
+      ja: "その名前のワールドはありません。",
     },
     hint: {
-      en: "Check the spelling with your friend: a save's name is its own label followed by its cartridge's name.",
-      "zh-TW": "請和夥伴核對拼字：存檔的名稱是它自己的標籤，後面接著卡帶的名稱。",
-      ja: "仲間とつづりを確かめてください。セーブの名前は、そのセーブのラベルのあとにカートリッジの名前が続きます。",
+      en: "Check the spelling with your friend, or ask them for their join code.",
+      "zh-TW": "請和朋友核對拼字，或直接向朋友要加入碼。",
+      ja: "友だちとつづりを確かめるか、参加コードを聞いてください。",
     },
   },
   "continent-name-not-save": {
     message: {
-      en: "That name belongs to a cartridge, not a save, so it has no door.",
-      "zh-TW": "這個名稱屬於卡帶，不是存檔，所以沒有門牌。",
-      ja: "その名前はセーブではなくカートリッジのものなので、扉がありません。",
+      en: "That name is a world anyone can start, not your friend's own world, so it has no join code.",
+      "zh-TW": "這個名稱是任何人都能開始的世界，不是朋友自己的世界，所以沒有加入碼。",
+      ja: "その名前は誰でも始められるワールドのもので、友だち自身のワールドではないため、参加コードがありません。",
     },
     hint: {
-      en: "Ask your friend for their save's name (Worlds → Saves) or their door number.",
-      "zh-TW": "請向夥伴要他們存檔的名稱（世界 → 存檔）或門牌。",
-      ja: "仲間にセーブの名前（ワールド → セーブ）か扉番号を聞いてください。",
+      en: "Ask your friend for the name or the join code shown under Invite friends.",
+      "zh-TW": "請向朋友要「邀請朋友」下面顯示的名稱或加入碼。",
+      ja: "友だちに「友だちを招待」の下に表示される名前か参加コードを聞いてください。",
     },
   },
   "continent-name-no-door": {
     message: {
-      en: "That name carries no door number.",
-      "zh-TW": "這個名稱沒有記上門牌。",
-      ja: "その名前には扉番号が載っていません。",
+      en: "That name carries no join code yet.",
+      "zh-TW": "這個名稱還沒有記上加入碼。",
+      ja: "その名前にはまだ参加コードが載っていません。",
     },
     hint: {
-      en: "Its holder records the save again from Worlds → Saves, which adds the door; or ask them for the door number.",
+      en: "Its owner records it again from Worlds → My worlds, which adds the join code; or ask them for the join code.",
       "zh-TW":
-        "請名稱的持有者到「世界 → 存檔」再記錄一次存檔，就會加上門牌；也可以直接向對方要門牌。",
-      ja: "名前の持ち主が「ワールド → セーブ」でセーブを記録し直すと扉番号が加わります。扉番号を直接聞くこともできます。",
+        "請名稱的主人到「世界 → 我的世界」再記錄一次，就會加上加入碼；也可以直接向對方要加入碼。",
+      ja: "名前の持ち主が「ワールド → マイワールド」で記録し直すと参加コードが加わります。参加コードを直接聞くこともできます。",
     },
   },
   "world-not-migrated": {
@@ -284,26 +325,26 @@ export const NET_ERRORS: Record<string, ErrorText> = {
   },
   "room-open-land": {
     message: {
-      en: "Open land is shared as a continent, not through a room.",
-      "zh-TW": "開放大地是以大陸共享的，不經由房間。",
-      ja: "開けた大地は、ルームではなく大陸として共有します。",
+      en: "Open land is shared by inviting friends, not through a room.",
+      "zh-TW": "開放大地要用「邀請朋友」來共享，不經由房間。",
+      ja: "開けた大地は、ルームではなく「友だちを招待」で共有します。",
     },
     hint: {
-      en: "Play the world, open the Door at home and choose “Open my door to friends”.",
-      "zh-TW": "進入這個世界，打開家裡的門，選擇「向夥伴打開我的門」。",
-      ja: "世界で遊び、家の扉を開いて「仲間に扉を開く」を選んでください。",
+      en: "Play the world, open the Door at home and choose “Invite friends”.",
+      "zh-TW": "進入這個世界，打開家裡的門，選擇「邀請朋友」。",
+      ja: "ワールドで遊び、家の扉を開いて「友だちを招待」を選んでください。",
     },
   },
   "session-v2-required": {
     message: {
-      en: "Multiplayer needs a v2 cartridge.",
-      "zh-TW": "多人連線需要 v2 卡帶。",
-      ja: "マルチプレイには v2 のカートリッジが必要です。",
+      en: "Playing together needs a world in the v2 format.",
+      "zh-TW": "一起玩需要 v2 格式的世界。",
+      ja: "一緒に遊ぶには v2 形式のワールドが必要です。",
     },
     hint: {
-      en: "Open a v2 save, or migrate and publish this cartridge first.",
-      "zh-TW": "請開啟 v2 的存檔，或先轉換並發布這張卡帶。",
-      ja: "v2 のセーブを開くか、先にこのカートリッジを移行して公開してください。",
+      en: "Open a world in the v2 format, or move this world to it and publish it first.",
+      "zh-TW": "請開啟 v2 格式的世界，或先把這個世界轉換成 v2 並發布。",
+      ja: "v2 形式のワールドを開くか、先にこのワールドを移行して公開してください。",
     },
   },
 

@@ -5,8 +5,9 @@
 // entries, so worlds from different cartridges can merge — no cartridge bytes, rules or story ever
 // cross the room, only the land as it was witnessed.
 //
-// The code of a continent is the door number of whoever opened it (plateOf); anyone who knows it
-// can bring their own world in.
+// The code of a continent is the join code of whoever opened it (plateOf, the player's "加入碼");
+// anyone who knows it can bring their own world in. Players never see the word "continent": for
+// them this is inviting friends and joining a world (simplify-together).
 
 import { continentHello, isContinentMessage } from "@shared/continentHello";
 import type { AppError } from "@shared/result";
@@ -74,12 +75,18 @@ export function openContinent(
   if (!isValidRoomCode(code)) {
     return err(
       "room-bad-code",
-      `"${input.code}" is not a door number.`,
-      `Door numbers are ${ROOM_CODE_LENGTH} characters from ${ROOM_CODE_ALPHABET}.`,
+      `"${input.code}" is not a join code.`,
+      `A join code is ${ROOM_CODE_LENGTH} characters from ${ROOM_CODE_ALPHABET}.`,
     );
   }
   const signaling = options?.signaling ?? signalingServers();
-  if (signaling.length === 0) return err("room-no-signaling", "No signaling server configured.");
+  if (signaling.length === 0) {
+    return err(
+      "room-no-signaling",
+      "No signaling server is set up.",
+      "On the title screen open Settings → Advanced settings → Signaling servers and reset them.",
+    );
+  }
   const doc = new Y.Doc();
   // The room's document is never written: land goes through the gate, to verified peers only.
   const roomDoc = new Y.Doc();
@@ -93,7 +100,7 @@ export function openContinent(
     doc.destroy();
     roomDoc.destroy();
     const message = cause instanceof Error ? cause.message : String(cause);
-    return err("room-failed", `Could not open the peer connection: ${message}`);
+    return err("room-failed", `Could not open the connection to friends: ${message}`);
   }
   provider.awareness.setLocalState({ name: input.name, worldId: input.worldId });
   const stopRetrying = retryStuckSignaling(provider, SIGNALING_RETRY_MS);

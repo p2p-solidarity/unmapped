@@ -4,6 +4,7 @@ export {
   type ColorTheme,
   useCharacterStore,
 } from "./characterStore";
+export { CHAT_KEEP, type ChatLine, type ChatState, useChatStore } from "./chatStore";
 export {
   type ContinentState,
   type ContinentStatus,

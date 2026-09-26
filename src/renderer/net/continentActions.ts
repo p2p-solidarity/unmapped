@@ -1,6 +1,7 @@
-// What the door and the HUD can do with continents: open this world's door (start a continent under
-// its own door number), walk through a friend's door number (bring this world into theirs), and
-// leave. Each returns a Result so the panel can say what went wrong (Rule 5).
+// What the door, F12 and the HUD can do with continents (the player says "invite friends" and "join
+// a world"): open this world's door (start a continent under its own join code), join a friend's
+// join code (bring this world into theirs), and leave. Each returns a Result so the panel can say
+// what went wrong (Rule 5).
 //
 // Rev 6 phase 3 (D12): continents are for worlds kept on this device only. A world attached to a
 // world service refuses one (`continent-world-attached`). A note a visitor leaves on this world's
@@ -30,8 +31,8 @@ import { playerName } from "./room";
 
 export const WORLD_ATTACHED: AppError = {
   code: "continent-world-attached",
-  message: "This world is shared through a world service, so it cannot also join a continent.",
-  hint: "Friends join it with an invite from its door instead; continents are for worlds kept on this device only.",
+  message: "This world is already shared with friends online, so it cannot use a join code too.",
+  hint: "Invite friends with an invite link instead: open the door at home, then Advanced.",
 };
 
 /** Where each save's world lives, as main last said (`world.badges`), by instance id. */
@@ -59,7 +60,7 @@ useLandStore.subscribe((state, previous) => {
   }
 });
 
-/** This world's door number, or null when no open-land world is loaded. */
+/** This world's join code (its door number, `plateOf`), or null when no open-land world is loaded. */
 export function myPlate(): string | null {
   const instanceId = useLandStore.getState().instanceId;
   return instanceId === null ? null : plateOf(instanceId);
@@ -94,34 +95,28 @@ export function sendPlayerHome(): void {
   useEngineStore.getState().requestTeleport(...(point ?? [spawnX, spawnZ]));
 }
 
+const NO_LAND: AppError = {
+  code: "continent-no-land",
+  message: "Only a world with open land can play with friends.",
+  hint: "Open one of your worlds and step out onto its land first.",
+};
+
 function openHere(code: string): Result<string> {
   const session = useSessionStore.getState();
   const worldId = useLandStore.getState().instanceId;
-  if (worldId === null || useLandStore.getState().progress === null) {
-    return err(
-      "continent-no-land",
-      "Only a world with open land can join a continent.",
-      "Open a saved world and step out onto its land first.",
-    );
-  }
+  if (worldId === null || useLandStore.getState().progress === null) return fail(NO_LAND);
   if (session.networkRole !== "solo") {
     return err(
       "continent-in-room",
-      "This world is already in a shared room.",
-      "Leave the room in Console → Multiplayer first.",
+      "This world is already in an older kind of shared game.",
+      "Go back to the title screen, open this world again, then try again.",
     );
   }
   if (worldAttached(worldId)) return fail(WORLD_ATTACHED);
   const current = getActiveContinent();
   if (current?.code === normalizeRoomCode(code)) return ok(current.code);
   const pin = session.activeInstance?.instance.meta.runtimePin;
-  if (pin === undefined) {
-    return err(
-      "continent-no-land",
-      "Only a world with open land can join a continent.",
-      "Open a saved world and step out onto its land first.",
-    );
-  }
+  if (pin === undefined) return fail(NO_LAND);
   const opened = openContinent({
     code,
     worldId,
@@ -135,27 +130,21 @@ function openHere(code: string): Result<string> {
   return ok(opened.value.code);
 }
 
-/** Opens this world's door: a continent named by its own door number, which friends can dial. */
+/** Opens this world's door ("invite friends"): a continent named by its own join code. */
 export function openMyDoor(): Result<string> {
   const plate = myPlate();
-  if (plate === null) {
-    return err(
-      "continent-no-land",
-      "Only a world with open land can open its door.",
-      "Open a saved world and step out onto its land first.",
-    );
-  }
+  if (plate === null) return fail(NO_LAND);
   return openHere(plate);
 }
 
-/** Brings this world onto the continent behind a friend's door number. */
+/** Brings this world onto the continent behind a friend's join code ("join a world"). */
 export function joinContinentByCode(code: string): Result<string> {
   const normalized = normalizeRoomCode(code);
   if (!isValidRoomCode(normalized)) {
     return err(
       "room-bad-code",
-      `"${code}" is not a door number.`,
-      `Door numbers are ${ROOM_CODE_LENGTH} characters, as a friend's door shows them.`,
+      `"${code}" is not a join code.`,
+      `A join code is ${ROOM_CODE_LENGTH} letters and digits; ask your friend for theirs.`,
     );
   }
   return openHere(normalized);

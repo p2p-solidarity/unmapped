@@ -7,6 +7,9 @@
 // someone else left on this land waits for the owner to keep it (continentActions'
 // `offerVisitorNotes`); it is never kept by itself. A world that turns out to be attached to a
 // world service leaves the continent (`continent-world-attached`).
+//
+// Chat (simplify-together): lines verified friends say are filed into the memory-only chat store
+// (continentChat.ts) while this continent is open, and the store is emptied when it closes.
 
 import { serializeScene } from "@dsl";
 import { setNotePublisher } from "@renderer/app/land/notes";
@@ -14,7 +17,13 @@ import { subscribeOpenWorld } from "@renderer/app/land/together";
 import { type Facing4, isVisiting, samplePlayer, samplePose } from "@renderer/engine/playerProbe";
 import { type RemotePlayer, setRemotePlayers } from "@renderer/engine/remoteRoster";
 import { errorLine, translate } from "@renderer/i18n";
-import { useContinentStore, useLandStore, useSessionStore, useWorldStore } from "@renderer/state";
+import {
+  useChatStore,
+  useContinentStore,
+  useLandStore,
+  useSessionStore,
+  useWorldStore,
+} from "@renderer/state";
 import { dialogueKey } from "@shared/cartridge";
 import { CHUNK_SIZE, type ChunkCoord } from "@shared/chunks";
 import {
@@ -36,6 +45,7 @@ import {
   WORLD_ATTACHED,
   worldAttached,
 } from "./continentActions";
+import { listenToChat } from "./continentChat";
 import {
   continentMaps,
   publishChunks,
@@ -231,14 +241,14 @@ export function useContinentSync(continent: Continent | null): void {
         return;
       }
       if (previous.kind === "error") return;
-      const servers = continent.signaling.join(", ");
+      // No server address here: the player sees this in the door and F12 (simplify-together).
       store.setStatus({
         kind: "error",
         code: continent.code,
         error: {
           code: "continent-signaling-unreachable",
-          message: `No signaling server answered within ${SIGNALING_WAIT_MS / 1000} s (${servers}).`,
-          hint: "On the title screen open Settings → Signaling servers, test them and save one that answers, then open the continent again. It turns live by itself if a server answers first.",
+          message: `Friends cannot find this world: no connection server answered within ${SIGNALING_WAIT_MS / 1000} s.`,
+          hint: "Check the internet connection. If it keeps failing, open Settings → Advanced settings → Signaling servers on the title screen and test them. It connects by itself as soon as a server answers.",
         },
       });
     };
@@ -246,6 +256,7 @@ export function useContinentSync(continent: Continent | null): void {
     const statusTimer = setInterval(status, 2000);
 
     setNotePublisher((owner, note) => publishNotes(doc, owner, [note]));
+    const offChat = listenToChat(continent);
     const maps = continentMaps(doc);
     const onDoc = (): void => refresh();
     for (const map of [maps.worlds, maps.chunks, maps.notes]) map.observe(onDoc);
@@ -301,6 +312,9 @@ export function useContinentSync(continent: Continent | null): void {
 
     return () => {
       offOpen();
+      offChat();
+      // What friends said stays with the continent: leaving (or switching) forgets it.
+      useChatStore.getState().clear();
       clearVisitorNotes();
       clearInterval(timer);
       clearInterval(statusTimer);

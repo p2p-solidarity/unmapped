@@ -179,8 +179,8 @@ function open(
   if (input.instance.cartridge.manifest.formatVersion !== 2) {
     return err(
       "session-v2-required",
-      "Multiplayer requires a v2 cartridge with a verified runtime profile.",
-      "Open a v2 instance or migrate and publish this cartridge first.",
+      "Playing together needs a world in the v2 format with a verified runtime profile.",
+      "Open a world in the v2 format, or move this world to it and publish it first.",
     );
   }
   const signaling = options?.signaling ?? signalingServers();
