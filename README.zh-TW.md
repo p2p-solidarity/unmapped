@@ -454,7 +454,7 @@ skills: [skills]
 | 名稱樹裡的 ENS 名稱：改編卡帶、玩家存檔、更新、還原後用雜湊找到名稱 | ✅ 已在 Sepolia 驗證 | [lineage-names](docs/e2e/milestone-lineage-names/result.md) |
 | 代付站：app 裡沒有私鑰 | ✅ 已驗證（app 流程對本機執行的代付站；部署的 Worker 已實際送出一筆領 USDC 交易） | [lineage-relay](docs/e2e/milestone-lineage-relay/result.md) |
 | 遊戲裡的 ENS：建完世界當下登記名稱（中文名自選標籤）、在 app 裡上架、玩家卡片上的名稱、過章後記錄與更新這趟旅程的名稱（帶門牌）、從「改編」按鈕做出的改編掛在母名稱下並以母代幣上架、朋友用存檔名稱加入大陸 | ✅ 已在 Sepolia 驗證（Touch ID 由虛擬驗證器代替；代付站用這一版在本機執行）；過章卡片的「更新」按鈕沒按到（同一個更新從存檔頁送出） | [ens-in-game](docs/e2e/milestone-ens-in-game/result.md) |
-| 玩家名稱（`<you>.players.unmapped.eth`） | ⏳ 已完成；`players.unmapped.eth` 目錄尚未登記，所以還沒跑過 | [ens-in-game](docs/e2e/milestone-ens-in-game/result.md) |
+| 玩家名稱（`<you>.players.unmapped.eth`）：用 passkey 認領、取代 `0x…` 顯示、在大陸上被看到；過章卡片的記錄與更新 | ✅ 已在 Sepolia 透過部署的代付站驗證 | [ens-players](docs/e2e/milestone-ens-players/result.md) |
 | 血統市場：在 app 裡用 passkey 出價、結算、買入、發放分潤 | ✅ 已在 Sepolia 驗證（Touch ID 由虛擬驗證器代替）；三代只跑過 dry run | [lineage-demo](docs/e2e/milestone-lineage-demo/result.md) · [lineage-market](docs/e2e/milestone-lineage-market/result.md) |
 | 共享世界：朋友用邀請加入，走過你見證的地方 0 次模型呼叫；重開後你不必呼叫就看到對方的地方 | ✅ 已驗證（本機世界服務） | [p3-offline-visit](docs/e2e/milestone-rev6-p3-offline-visit/result.md) |
 | 舊存檔遷移成世界的歷史：各類數量相符、原本的檔案不變、重跑新增 0 筆、0 次模型呼叫；第二段的舊版本仍能打開同一個資料夾，這個版本再補上它寫的東西 | ✅ 已驗證；遷移花費的時間未量 | [p3-migrate](docs/e2e/milestone-rev6-p3-migrate/result.md) · [p3-older-build](docs/e2e/milestone-rev6-p3-older-build/result.md) |

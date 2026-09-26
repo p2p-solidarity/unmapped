@@ -510,7 +510,7 @@ UNMAPPED はバージョン `0.1.0`、動作はする初期段階の研究版で
 | 名前ツリーの ENS 名：リミックスのカートリッジ、プレイヤーのセーブ、更新、復元したバックアップのハッシュ照合 | ✅ Sepolia で検証済み | [lineage-names](docs/e2e/milestone-lineage-names/result.md) |
 | ガスステーション：アプリに鍵なし | ✅ 検証済み（アプリの流れはローカル実行で、デプロイした Worker も実際にテスト USDC の送信を 1 件実行） | [lineage-relay](docs/e2e/milestone-lineage-relay/result.md) |
 | ゲームの中の ENS: 作った直後の命名（中国語名は自分でラベルを選ぶ）、アプリからの出品、プレイヤーカードの名前、章のクリア後に旅の名前を記録・更新（扉番号つき）、リミックスボタンから作ったリミックスを親の名前の下で命名し親のトークン建てで出品、友だちがセーブの名前で大陸に参加 | ✅ Sepolia で検証済み（Touch ID は仮想認証器で代用、ガスステーションはこのビルドをローカルで実行）。章のカードの更新ボタンは押せていない（同じ更新はセーブ画面から） | [ens-in-game](docs/e2e/milestone-ens-in-game/result.md) |
-| プレイヤー名（`<you>.players.unmapped.eth`） | ⏳ 実装済み。`players.unmapped.eth` のディレクトリが未登録のため未実行 | [ens-in-game](docs/e2e/milestone-ens-in-game/result.md) |
+| プレイヤー名（`<you>.players.unmapped.eth`）: パスキーで取得、`0x…` の代わりに表示、大陸で見える。章カードの記録と更新 | ✅ デプロイ済みガスステーション経由で Sepolia で検証済み | [ens-players](docs/e2e/milestone-ens-players/result.md) |
 | 系譜マーケット: アプリからパスキーで入札・精算・購入・ロイヤリティ | ✅ Sepolia で検証済み（Touch ID は仮想認証器で代用）。3 世代はドライランのみ | [lineage-demo](docs/e2e/milestone-lineage-demo/result.md) · [lineage-market](docs/e2e/milestone-lineage-market/result.md) |
 | 共有ワールド：友だちが招待で参加し、あなたが観測した場所をモデル呼び出し 0 回で歩く。再起動後、相手の場所を呼び出しなしで見る | ✅ 検証済み（ローカルのワールドサービス） | [p3-offline-visit](docs/e2e/milestone-rev6-p3-offline-visit/result.md) |
 | 古いセーブのワールド歴史への移行：種類ごとの数が一致、元のファイルは不変、再実行で 0 件追加、モデル呼び出しなし。フェーズ 2 のビルドも同じフォルダーを開け、このビルドがその書いた分を取り込む | ✅ 検証済み。移行にかかる時間は未計測 | [p3-migrate](docs/e2e/milestone-rev6-p3-migrate/result.md) · [p3-older-build](docs/e2e/milestone-rev6-p3-older-build/result.md) |

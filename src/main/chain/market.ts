@@ -19,6 +19,7 @@ import { err, ok, type Result, toError } from "@shared/result";
 import {
   type Address,
   createPublicClient,
+  fallback,
   formatUnits,
   type Hex,
   http,
@@ -43,7 +44,16 @@ import { cartridgeNameView, type Dirs, saveNameView } from "./names";
 import { playerNamesOf, playerView } from "./players";
 import { relayUrl } from "./relayClient";
 
-const DEFAULT_RPC = "https://ethereum-sepolia-rpc.publicnode.com";
+/**
+ * Public Sepolia nodes, tried in order: each one rate-limits log queries on its own (publicnode
+ * answers -32005 after a burst), so a refresh falls through to the next instead of failing. A node
+ * set in UNWRITTEN_ENS_RPC_URL is tried first.
+ */
+const PUBLIC_RPCS = [
+  "https://ethereum-sepolia-rpc.publicnode.com",
+  "https://sepolia.gateway.tenderly.co",
+  "https://sepolia.drpc.org",
+];
 const SETUP_HINT =
   "Run `bun run lineage:market <label>` and put the UNWRITTEN_LINEAGE_* lines it prints in .env.";
 export const USDC = ENSV2_SEPOLIA.mockUsdc as Address;
@@ -101,7 +111,11 @@ export function marketClients(env: NodeJS.ProcessEnv = process.env): Result<Mark
   }
   const publicClient = createPublicClient({
     chain: sepolia,
-    transport: http(env.UNWRITTEN_ENS_RPC_URL || DEFAULT_RPC),
+    transport: fallback(
+      [env.UNWRITTEN_ENS_RPC_URL, ...PUBLIC_RPCS]
+        .filter((url): url is string => typeof url === "string" && url.length > 0)
+        .map((url) => http(url, { retryCount: 2, retryDelay: 400 })),
+    ),
     batch: { multicall: true },
   }) as PublicClient;
   return ok({ deployment: found, public: publicClient });
@@ -281,30 +295,40 @@ async function readAccount(
         }) as Promise<string>,
     ),
   );
-  const bids = (
-    await Promise.all(
-      worlds.map(async (w) => {
-        const range = { address: w.auction, fromBlock: w.block, toBlock: latest };
-        const [placed, exited, claimed] = await Promise.all([
+  // One query per event across every auction (not three per world): public nodes rate-limit bursts.
+  const range = {
+    address: worlds.map((w) => w.auction),
+    fromBlock: worlds.reduce((min, w) => (w.block < min ? w.block : min), latest),
+    toBlock: latest,
+  };
+  const [placed, exited, claimed] =
+    worlds.length === 0
+      ? [[], [], []]
+      : await Promise.all([
           c.public.getLogs({ ...range, event: bidEvent, args: { owner: address } }),
           c.public.getLogs({ ...range, event: exitedEvent, args: { owner: address } }),
           c.public.getLogs({ ...range, event: claimedEvent, args: { owner: address } }),
         ]);
-        const exits = new Set(exited.map((log) => log.args.bidId));
-        const claims = new Set(claimed.map((log) => log.args.bidId));
-        return placed.map((log) => ({
-          world: w.token as string,
-          id: String(log.args.id),
-          amount: formatUnits(log.args.amount ?? 0n, decimalsOf(currencyOf(w))),
-          state: claims.has(log.args.id)
-            ? ("claimed" as const)
-            : exits.has(log.args.id)
-              ? ("exited" as const)
-              : ("open" as const),
-        }));
-      }),
-    )
-  ).flat();
+  const bidKey = (auction: string, id: bigint | undefined) => `${auction.toLowerCase()}#${id}`;
+  const exits = new Set(exited.map((log) => bidKey(log.address, log.args.bidId)));
+  const claims = new Set(claimed.map((log) => bidKey(log.address, log.args.bidId)));
+  const bids = placed.flatMap((log) => {
+    const w = worlds.find((world) => world.auction.toLowerCase() === log.address.toLowerCase());
+    if (w === undefined) return [];
+    const id = bidKey(log.address, log.args.id);
+    return [
+      {
+        world: w.token as string,
+        id: String(log.args.id),
+        amount: formatUnits(log.args.amount ?? 0n, decimalsOf(currencyOf(w))),
+        state: claims.has(id)
+          ? ("claimed" as const)
+          : exits.has(id)
+            ? ("exited" as const)
+            : ("open" as const),
+      },
+    ];
+  });
   return {
     address,
     deployed: code !== undefined && code !== "0x",

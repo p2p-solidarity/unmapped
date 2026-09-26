@@ -38,9 +38,9 @@ creation, witnessing, continent) are in `docs/demo-flow/`.
    - **Trading and names only.** `aether-land` has graduated, so a buy, royalties, naming a cartridge
      and recording a save can be shown at any time.
 6. `bun run lineage:demo status` lists every world with its phase, price, bids and pool.
-7. Player names need the directory once: `bun run lineage:demo players` registers
-   `players.unmapped.eth` (operator key, ~1.04M gas). In-app launches need the station deployed from
-   this build (`bun run relay:deploy`); the older one refuses `launch`.
+7. Player names hang under `players.unmapped.eth`, registered once on 2026-09-26 (`bun run lineage:demo
+   players`, tx `0x8f88cbdd…87b7`). The deployed station runs this build's rules (redeployed the same
+   day), so in-app launches go through it; after changing `src/relay`, run `bun run relay:deploy` again.
 
 ## Click path in the app (no wallet, no key)
 

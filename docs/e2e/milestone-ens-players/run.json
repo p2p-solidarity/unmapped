@@ -1,0 +1,306 @@
+{
+  "flow": "player names under players.unmapped.eth, the deployed gas station with the launch rules, and the chapter card's record → update buttons — real Sepolia transactions, keyless app",
+  "env": {
+    "operator": "bun run relay:deploy (the deployed Worker, this build's launch rules); bun run lineage:demo players (registers players.unmapped.eth with UNWRITTEN_PRIVATE_KEY — the operator's only step)",
+    "app A": "AETHER_TEST_USER_DATA=<fresh dir> UNWRITTEN_PRIVATE_KEY= UNWRITTEN_LINEAGE_RELAY=https://unmapped-relay.gimmychang.workers.dev UNWRITTEN_SIGN_BROWSER=none bun run dev --remoteDebuggingPort 9336 (the deployed station, not a local one; restarted once on the same userData to load the RPC fix)",
+    "app B": "AETHER_TEST_USER_DATA=<another fresh dir> UNWRITTEN_PRIVATE_KEY= UNWRITTEN_LINEAGE_RELAY= UNWRITTEN_SIGN_BROWSER=none bun run dev --remoteDebuggingPort 9337 (no passkey, no station); localStorage aether.playerName = friend-b",
+    "signaling": "PORT=4464 node node_modules/y-webrtc/bin/server.js; both apps: localStorage unwritten.signaling = ws://127.0.0.1:4464",
+    "browser": "'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless=new --remote-debugging-port=9350 --user-data-dir=<fresh dir>",
+    "passkey": "CDP WebAuthn virtual authenticator with the credential of account 0xfBaB…8537 (milestone-lineage-relay), standing in for Touch ID",
+    "contracts": "v2 LineageRegistry 0xda8051e3e2855C125AAd6050f97Ea64cf203dAf6 under unmapped.eth (unchanged)"
+  },
+  "model": "openai gpt-5.4-mini (New Game's opening and the two chapters; naming asks no model)",
+  "runs": {
+    "A1 link the passkey (app A, CDP_PORT=9336)": [
+      {
+        "clickText": "世界"
+      },
+      {
+        "wait": 2500
+      },
+      {
+        "clickText": "市場"
+      },
+      {
+        "wait": 7000
+      },
+      {
+        "shot": "docs/e2e/milestone-ens-players/01-market-before-link.jpg"
+      },
+      {
+        "clickText": "用 Touch ID（在瀏覽器開啟）"
+      },
+      {
+        "wait": 3000
+      },
+      "… link page: 'Use my existing passkey' …",
+      {
+        "clickText": "存檔"
+      },
+      {
+        "wait": 1500
+      },
+      {
+        "clickText": "市場"
+      },
+      {
+        "wait": 25000
+      },
+      {
+        "text": true
+      },
+      {
+        "shot": "docs/e2e/milestone-ens-players/02-market-linked.jpg"
+      }
+    ],
+    "A2 claim kidney.players.unmapped.eth": [
+      {
+        "eval": "(()=>{const l=[...document.querySelectorAll('label')].find(x=>x.textContent.includes('你的玩家名稱')); const i=l.querySelector('input')||l.parentElement.querySelector('input'); i.focus(); i.select(); return i.value})()"
+      },
+      {
+        "type": "kidney"
+      },
+      {
+        "wait": 3000
+      },
+      {
+        "shot": "docs/e2e/milestone-ens-players/03-claim-free.jpg"
+      },
+      {
+        "clickText": "用 passkey 認領"
+      },
+      {
+        "wait": 5000
+      },
+      "… the newest '[market] sign page' URL from app A's log, opened in the headless Chrome (PUT /json/new?<url>), the saved credential re-added with WebAuthn.addCredential, then 'Approve with Touch ID'",
+      {
+        "clickText": "市場"
+      },
+      {
+        "wait": 20000
+      },
+      {
+        "text": true
+      },
+      {
+        "shot": "docs/e2e/milestone-ens-players/04-claimed.jpg"
+      },
+      {
+        "eval": "localStorage.getItem('aether.playerName')"
+      },
+      {
+        "clickText": "misty-harbor.unmapped.eth"
+      },
+      {
+        "wait": 6000
+      },
+      {
+        "shot": "docs/e2e/milestone-ens-players/05-holder-player-name.jpg"
+      }
+    ],
+    "A3 use as my player name": [
+      {
+        "eval": "localStorage.setItem('aether.playerName','player-cll9'); location.reload()"
+      },
+      {
+        "wait": 8000
+      },
+      {
+        "clickText": "世界"
+      },
+      {
+        "wait": 2500
+      },
+      {
+        "clickText": "市場"
+      },
+      {
+        "wait": 20000
+      },
+      {
+        "shot": "docs/e2e/milestone-ens-players/06-use-name-offer.jpg"
+      },
+      {
+        "clickText": "設為我的玩家名稱"
+      },
+      {
+        "wait": 3000
+      },
+      {
+        "shot": "docs/e2e/milestone-ens-players/07-name-used.jpg"
+      },
+      {
+        "eval": "localStorage.getItem('aether.playerName')"
+      }
+    ],
+    "A4 new game, open the door": [
+      {
+        "clickText": "世界"
+      },
+      {
+        "wait": 2000
+      },
+      {
+        "clickText": "新遊戲"
+      },
+      {
+        "wait": 2500
+      },
+      {
+        "clickText": "開始"
+      },
+      {
+        "wait": 20000
+      },
+      {
+        "shot": "docs/e2e/milestone-ens-players/08-A-in-play.jpg"
+      },
+      {
+        "clickText": "← 主頁"
+      },
+      {
+        "wait": 4000
+      },
+      {
+        "clickText": "世界"
+      },
+      {
+        "wait": 2000
+      },
+      {
+        "clickText": "大陸"
+      },
+      {
+        "wait": 3000
+      },
+      {
+        "eval": "[...document.querySelectorAll('button')].find(x=>/^無界之地 ·/.test(x.textContent.trim())).click()"
+      },
+      {
+        "wait": 4000
+      },
+      {
+        "clickText": "向夥伴敞開我的門"
+      },
+      {
+        "wait": 10000
+      },
+      {
+        "eval": "(document.body.innerText.match(/大陸 [A-Z0-9]{6}[^\\n]*/)||['none'])[0]"
+      },
+      {
+        "shot": "docs/e2e/milestone-ens-players/09-A-door-open.jpg"
+      }
+    ],
+    "B1 walk in (app B, CDP_PORT=9337)": [
+      {
+        "eval": "localStorage.setItem('aether.playerName','friend-b')"
+      },
+      {
+        "clickText": "世界"
+      },
+      {
+        "wait": 2000
+      },
+      {
+        "clickText": "新遊戲"
+      },
+      {
+        "wait": 2500
+      },
+      {
+        "clickText": "開始"
+      },
+      {
+        "wait": 20000
+      },
+      {
+        "clickText": "← 主頁"
+      },
+      {
+        "wait": 4000
+      },
+      {
+        "clickText": "世界"
+      },
+      {
+        "wait": 2000
+      },
+      {
+        "clickText": "大陸"
+      },
+      {
+        "wait": 3000
+      },
+      {
+        "eval": "[...document.querySelectorAll('button')].find(x=>/^無界之地 ·/.test(x.textContent.trim())).click()"
+      },
+      {
+        "wait": 3000
+      },
+      {
+        "eval": "(()=>{const all=[...document.querySelectorAll('input')];all[all.length-1].focus()})()"
+      },
+      {
+        "type": "<A's door number, TRLVDV in this run>"
+      },
+      {
+        "clickText": "穿過這扇門"
+      },
+      {
+        "eval": "(wait until the panel says 1 位夥伴, as in milestone-ens-in-game B1)"
+      },
+      {
+        "shot": "docs/e2e/milestone-ens-players/10-B-on-continent.jpg"
+      }
+    ],
+    "both: who each app sees": [
+      {
+        "eval": "(async()=>{const m=await import('/engine/remoteRoster.ts');const c=await import('/state/continentStore.ts');const s=c.useContinentStore.getState();return JSON.stringify({players:m.getRemotePlayers().map(x=>x.name),worlds:Object.values(s.worlds??{}).map(w=>w.owner??w.name)})})()"
+      }
+    ],
+    "A5 chapter 1 → record from the card": [
+      "… resume (← 標題畫面, 繼續), then milestone-ens-in-game's A3 helpers and steps up to the ens-offer read (window.__e2e.chapter / nextTodo, the pad walking to each person and treasure) …",
+      {
+        "eval": "document.querySelector('[data-layer=ens-offer]')?.innerText"
+      },
+      {
+        "shot": "docs/e2e/milestone-ens-players/12-chapter1-cleared.jpg"
+      },
+      {
+        "clickText": "用 passkey 記錄"
+      },
+      {
+        "wait": 5000
+      },
+      "… the newest '[market] sign page' URL from app A's log, opened in the headless Chrome (PUT /json/new?<url>), the saved credential re-added with WebAuthn.addCredential, then 'Approve with Touch ID'",
+      {
+        "eval": "[...document.querySelectorAll('[title]')].map(e=>e.getAttribute('title')).filter(t=>/eth|ENS/.test(t)).join(' | ')"
+      },
+      {
+        "shot": "docs/e2e/milestone-ens-players/13-save-recorded-hud.jpg"
+      }
+    ],
+    "A6 chapter 2 → update from the card": [
+      "… the same steps, repeat until two episodes are cleared (times 26) …",
+      {
+        "shot": "docs/e2e/milestone-ens-players/14-chapter2-update-offer.jpg"
+      },
+      {
+        "clickText": "用 passkey 更新"
+      },
+      {
+        "wait": 5000
+      },
+      "… the newest '[market] sign page' URL from app A's log, opened in the headless Chrome (PUT /json/new?<url>), the saved credential re-added with WebAuthn.addCredential, then 'Approve with Touch ID'",
+      {
+        "eval": "[...document.querySelectorAll('[title]')].map(e=>e.getAttribute('title')).filter(t=>/eth|ENS/.test(t)).join(' | ')"
+      },
+      {
+        "shot": "docs/e2e/milestone-ens-players/15-save-updated-hud.jpg"
+      }
+    ]
+  },
+  "station_probe": "POST https://unmapped-relay.gimmychang.workers.dev/relay with an execute whose one call is LineageRegistry.launch(namehash('misty-harbor.unmapped.eth'), …) from a random key and a forged WebAuthn signature → 200 {ok:false, code:'relay-reverted'} (policy passed, simulation refused, nothing sent); the previous Worker answered 'not part of the lineage market'",
+  "web_view": "11-web-players-tag.jpg: https://unmapped-auction.gimmychang.workers.dev (redeployed, unchanged code), 1440 × 2600, 16 s after load"
+}
