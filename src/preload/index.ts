@@ -24,6 +24,7 @@ import type {
   PublishOnChainInput,
   WitnessOnChainInput,
 } from "@shared/chain";
+import type { ChunkCoord } from "@shared/chunks";
 import type { CreateDraft, CreateDraftEntry, DraftIdea, LookPicture } from "@shared/createDraft";
 import type { AccountStatus, PairingLookup, QuotaView } from "@shared/gatewayApi";
 import type { AccessPolicy } from "@shared/history/types";
@@ -387,6 +388,8 @@ const api: SeedApi = {
     close: (worldId: string) => invoke<Result<void>>(IPC.world.close, worldId),
     append: (worldId: string, draft: WorldDraft) =>
       invoke<Result<WorldAppended>>(IPC.world.append, worldId, draft),
+    walked: (worldId: string, chunks: ChunkCoord[]) =>
+      invoke<Result<void>>(IPC.world.walked, worldId, chunks),
     claim: (worldId: string, target: ClaimTarget) =>
       invoke<Result<ClaimAnswer>>(IPC.world.claim, worldId, target),
     release: (worldId: string, target: ClaimTarget) =>

@@ -1,0 +1,12 @@
+{
+  "app": "F",
+  "port": 9348,
+  "what": "Same launch (clock +50 days): walk 1,0 → 0,0, leave Play (the land writes the day's visit), then quit: main must not write a second one",
+  "actions": [
+    { "pad": { "toward": "[16, 16]", "within": 2, "buttons": [5], "timeoutMs": 45000 } },
+    { "clickText": "← Home" },
+    { "wait": 1500 },
+    { "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ screen: S.useSessionStore.getState().screen, head: w.now.head.n, pending: w.status.pending, visits: Object.values(w.now.events).filter(e => e.kind === 'visit').map(e => ({ n: e.n, chunks: e.body.chunks })) }) })()" },
+    { "cdp": { "method": "Browser.close" } }
+  ]
+}

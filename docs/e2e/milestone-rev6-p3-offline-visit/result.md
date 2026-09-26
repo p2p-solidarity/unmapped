@@ -111,3 +111,37 @@ Its userData was deleted. Every run here uses the `git archive` snapshot instead
 - `run.json`: env, model and every step in order, each with its app, CDP port and exact actions.
   The `run-NN-<app>-<name>.json` files hold the same actions, one step each.
 - Screenshots: `a-00` … `a-06`, `b-00` … `b-04`, `fix-a-00`, `fix-a-01`.
+
+## Fixes after the run
+
+**Visits were lost when the app quit from Play (fixed).** The land wrote the day's `visit` only
+when Play unmounted, after 15 min, or at 64 chunks. A quit from Play never unmounts Play, so no
+visit was written, and walked places lost the care they should have kept (D13). The fix:
+- `src/renderer/history/visits.ts` reports each new walked chunk to main (`world.walked`, a new
+  IPC call checked with zod: ≤ 64 chunk coords). It also reports once the world becomes writable.
+- `src/main/histories/host.ts` keeps the latest unwritten walk per world. `flush()` (the quit path,
+  before the 2 s outbox flush) writes it as the visit. Any `visit` append for that world drops the
+  kept walk. A second visit on the same day would be refused by admit (`visit-today`), so a day
+  never gets two.
+
+**Re-check** (origin/main `6949a97` snapshot plus the change; `legacy-land` fixtures; no model):
+
+| Step | Observed |
+| --- | --- |
+| `quit-run-01`: migrate, walk 0,-1 → 1,0 → 0,0 → 0,1, quit from Play (Browser.close) | Main logged `[world] h3ap7jgd66w6… visit of 4 chunks written on quit`. The log gained **n=22 `visit`** (rt 2026-09-26T05:21:40Z, chunks 0,-1 · 0,0 · 1,0 · 0,1). 0 `[inference]` lines (`quit-f-00`) |
+| Next launch the same day, quit from Play | No quit line, and still one visit that day. The land saw today's visit and reported nothing |
+| `quit-run-03` (a second fresh fixture, world `hamlnasx…`): walk, ← Home, Continue, walk 0,1 and -1,0, quit from Play | Leaving Play wrote the visit (**n=22**, chunks 0,-1 · 0,0 · 1,0). After the second walk and the quit there was **no** quit line, and the log had 22 lines with **1** visit |
+| Attached world, service down (door re-check, `milestone-rev6-p3-door`) | `[world] hsuonc5p6fe6… visit of 2 chunks written on quit`. The visit waited in the outbox with B's 2 notes |
+
+Seen on the way (not changed here):
+- `quit-run-02` repeats "leave Play, then quit" with `UNMAPPED_TEST_CLOCK_DAYS=50`. Neither side
+  wrote a visit. The land judges "visited today" by the page's own clock, and the test clock moves
+  only main's, so the day's visit from the real day already counted. This is a test-clock effect.
+- The chunk the player stands in when the world opens is not counted until they walk into it
+  again. The land hears chunk *changes* only, and the history is still loading at spawn. This was
+  already so before this change.
+- Browser.close from Play quit the app in 3 runs. In 3 others the window closed but the process
+  stayed until a second quit (SIGTERM). Pristine origin/main does the same (SIGTERM from the
+  title): with a log line per cleanup, all 7 `before-quit` cleanups finished, including
+  `host.flush`, and the process still waited for a second quit. The visit is written either way
+  (the flush finishes). `src/main/index.ts` was not changed here.

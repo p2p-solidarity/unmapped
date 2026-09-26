@@ -1,0 +1,25 @@
+{
+  "app": "F",
+  "port": 9348,
+  "what": "Fixture world (local-only after migration), no model: English, Continue (migrates), walk home → 1,0 → home → 0,1 in Play, then quit from Play with Browser.close",
+  "actions": [
+    { "wait": 1000 },
+    { "clickText": "設定" },
+    { "wait": 800 },
+    { "clickText": "English" },
+    { "wait": 600 },
+    { "hold": "Escape", "ms": 80 },
+    { "wait": 600 },
+    { "clickText": "Continue" },
+    { "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 120; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready') break; await new Promise(r => setTimeout(r, 250)); } const w = S.useHistoryStore.getState().world; return JSON.stringify(w.status === 'ready' ? { world: w.value.worldId.slice(0, 12), head: w.value.now.head.n, link: w.value.status.link, role: w.value.status.role, writable: w.value.status.writable, me: w.value.status.me?.slice(0, 10), visits: Object.values(w.value.now.events).filter(e => e.kind === 'visit').length } : w) })()" },
+    { "wait": 1500 },
+    { "eval": "(async () => { const S = await import('/state/index.ts'); return JSON.stringify(S.useEngineStore.getState().chunk) })()" },
+    { "pad": { "toward": "[40, 16]", "within": 1.5, "buttons": [5], "timeoutMs": 45000 } },
+    { "eval": "(async () => { const S = await import('/state/index.ts'); return JSON.stringify(S.useEngineStore.getState().chunk) })()" },
+    { "pad": { "toward": "[16, 16]", "within": 1.5, "buttons": [5], "timeoutMs": 45000 } },
+    { "pad": { "toward": "[16, 40]", "within": 1.5, "buttons": [5], "timeoutMs": 45000 } },
+    { "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, screen: S.useSessionStore.getState().screen, head: w.now.head.n, visits: Object.values(w.now.events).filter(e => e.kind === 'visit').length }) })()" },
+    { "shot": "docs/e2e/milestone-rev6-p3-offline-visit/quit-f-00-walked-before-quit.jpg" },
+    { "cdp": { "method": "Browser.close" } }
+  ]
+}

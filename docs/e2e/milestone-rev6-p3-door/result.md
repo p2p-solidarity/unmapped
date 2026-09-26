@@ -80,3 +80,36 @@ Calls in this flow: A's rumor batch for the beat the +2-day advance made (n=37, 
    a bug (`UNMAPPED_TEST_CLOCK_DAYS` exists for this).
 3. The visitor's signpost shows its author as `krz3sidbd…`: a visitor device writes no `profile`,
    so the world knows no name for it (its note carries the name "player-RTXE" in its body).
+
+## Fixes after the run
+
+Finding 1's main side is fixed. Main now refuses the drafts of a key the service removed, and the
+events that key queued before are listed as refused. Changed files:
+- `src/main/histories/core.ts`: `removals` holds the service's `access-removed` until the service
+  opens the world again. `status()` reports `role: "removed"`, `writable: false` and that error.
+  The removal is kept outside the link state because every `read` re-opens a refused world and
+  resets the link to "connecting".
+- `src/main/histories/commit.ts`: `writeGate` refuses with `access-removed` before anything is
+  signed. This covers every draft kind and the owner actions.
+- `src/main/histories/syncWorld.ts`: the `access-removed` refusal moves the whole outbox to
+  `refused.jsonl` (the same path a `rejected` event takes). `opened` clears the removal.
+
+Isolated test: `tests/main/world-door.test.ts` failure 6 (the renderer is untrusted). It fails on
+origin/main and passes with the fix.
+
+**Re-check.** The build was an origin/main `6949a97` snapshot plus these changes. Service
+`k4iyplzw…` ran on `ws://127.0.0.1:8803` in test mode. A (9348) was a fresh `legacy-land`
+fixture that was migrated and then shared. B (9349) started from an empty userData. No model was
+used: `inference.json` pointed at a dead llama.cpp port, and every app log has 0 `[inference]`
+lines. The steps are `fix-run-01…07-*.json`, run in that order. Between steps 3 and 4 the service
+was stopped, and it was restarted on the same `--data` before step 5.
+
+| Step | Observed |
+| --- | --- |
+| A shares, invites; B joins | Shared in 503 ms (the service logged `attached world hsuonc5p6fe6… (22 entries)`). B joined as Bea: `member.join` n=24, role member, online |
+| Service stopped: B leaves 2 notes, walks, quits from Play | B's status was `offline`, member, writable, pending 2. On the quit, main wrote the day's visit (`[world] hsuonc5p6fe6… visit of 2 chunks written on quit`). B's `outbox.jsonl` then held note `hynxjrxc…`, note `h6auezqc…` and visit `hwkdxzx6…` (`fix-b-00`) |
+| Service back; A removes Bea | `member.remove` **n=26**. The door reads "Bea · removed at entry 26" (`fix-a-00`) |
+| B relaunched, Continue | Status: link `refused`, role **removed**, writable **false**, pending **0**, refused **3**, error `access-removed`. All 3 queued events moved to `refused.jsonl` at 05:38:05.725Z with code `access-removed`, and `outbox.jsonl` is 0 bytes. The HUD reads "3 of your entries were refused — see the door at home". The door lists "Refused (3)": both notes and "An entry (visit)", each with Dismiss (`fix-b-01`, `fix-b-02`) |
+| B leaves a note through the UI | "Error · access-removed · The owner removed this key from the world." (`fix-b-03`) |
+| Drafts sent straight to main, bypassing `writeBlocker` | note, visit and profile each got **`access-removed`**. After relaunching on the final build: a note right after `world.read`, a note sent together with a `world.read`, and a visit also got `access-removed`. `read` then reported role removed, writable false. At the end pending was 0 and refused 3 |
+| The service's log | B authored only n=24 (`member.join`). Entries 25 (A's visit) and 26 (the removal) are A's |

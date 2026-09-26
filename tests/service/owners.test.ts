@@ -8,6 +8,9 @@
 //      paid from the visitors' shared budget.
 //   3. An invite signed by a co-owner is refused while it owns the world, or still admits after
 //      its owner.remove.
+//   4. After its owner.remove, a co-owner that never joined keeps paying as a member while the
+//      fold calls it a visitor (the visitors' budget and per-key cap never see it); or a restart's
+//      replay of the log pays an entry differently from when it was sequenced.
 
 import { chainRecording } from "@shared/history/fold";
 import { base32, sha256Bytes } from "@shared/history/ids";
@@ -23,6 +26,7 @@ import {
   keyOf,
   LocalWorld,
   makeService,
+  noteBody,
   OWNER,
   secretOf,
   sign,
@@ -126,5 +130,30 @@ describe("co-owners on the service (2, 3)", () => {
     const vicProof = signJoinProof(late.secret, late.invite, keyOf(VIC));
     vic.open(s.world.id, 0, null, { join: { invite: late.invite, proof: vicProof } } as never);
     expect(vic.last("refused")?.error.code).toBe("invite-not-owner");
+  });
+});
+
+describe("paying after an owner.remove (4)", () => {
+  it("pays a removed co-owner as the fold calls it, and a restart pays alike", () => {
+    const s = setup();
+    s.write(s.owner, OWNER, "access", { policy: "public" } as never);
+    s.write(s.owner, OWNER, "owner.add", { key: keyOf(BEN) } as never);
+    const ben = new Client(s.hub, BEN, "10.0.0.3");
+    ben.open(s.world.id);
+    s.write(ben, BEN, "note", noteBody("as an owner") as never);
+    const owning = s.served().state.usage;
+    expect(owning.visitorBytes).toBe(0);
+
+    s.write(s.owner, OWNER, "owner.remove", { key: keyOf(BEN) } as never);
+    s.write(ben, BEN, "note", noteBody("as a visitor") as never);
+    expect(ben.codes()).toEqual([]);
+    const after = s.served().state.usage;
+    expect(after.visitorBytes).toBeGreaterThan(0);
+    expect(after.today.perVisitor[keyOf(BEN)]).toBe(1);
+    expect(after.today.perMember[keyOf(BEN)]?.events).toBe(1);
+
+    // Loading the log again (no snapshot this early) rebuilds the same ledger.
+    const again = makeService({ dir: s.dir, clock: s.clock });
+    expect(again.hub.worlds.get(s.world.id)?.state.usage).toEqual(after);
   });
 });

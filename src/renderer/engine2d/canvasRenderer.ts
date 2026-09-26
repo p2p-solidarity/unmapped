@@ -413,14 +413,39 @@ function pushActor(
       const top = cy + transform.tileSize * 0.4 - size;
       drawSprite(frame.ctx, frame.atlases, asset, cx - size / 2, top, size, size);
       if (label !== null) {
-        frame.ctx.fillStyle = label.color;
-        frame.ctx.font = `${Math.round(transform.tileSize * 0.3)}px sans-serif`;
-        frame.ctx.textAlign = "center";
-        frame.ctx.textBaseline = "middle";
-        frame.ctx.fillText(label.text, cx, top + size * 0.1);
+        drawNamePlate(frame.ctx, label, cx, top + size * 0.08, transform.tileSize);
       }
     },
   });
+}
+
+/**
+ * A name (or a foe's level) over a figure's head, on a dark plate edged in its colour — the emote
+ * bubble's look — so it reads over any ground and never across the sprite. `bottom` is the head.
+ */
+function drawNamePlate(
+  ctx: CanvasRenderingContext2D,
+  label: { text: string; color: string },
+  cx: number,
+  bottom: number,
+  tileSize: number,
+): void {
+  const font = Math.max(10, Math.round(tileSize * 0.3));
+  ctx.font = `600 ${font}px sans-serif`;
+  const width = ctx.measureText(label.text).width + font * 0.8;
+  const height = Math.round(font * 1.3);
+  const top = bottom - height;
+  ctx.fillStyle = LAND_2D_PALETTE.markerSurface;
+  ctx.strokeStyle = label.color;
+  ctx.lineWidth = Math.max(1, tileSize / 32);
+  ctx.beginPath();
+  ctx.roundRect(cx - width / 2, top, width, height, height * 0.3);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = label.color;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(label.text, cx, top + height / 2 + 1);
 }
 
 function pushMarker(

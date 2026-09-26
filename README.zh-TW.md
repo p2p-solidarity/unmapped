@@ -461,11 +461,11 @@ skills: [skills]
 | 遷移後的世界共享出去：加入的人看到舊的地方、留言與異界（作品包取回、驗證、在沙箱裡開啟），0 次呼叫 | ✅ 已驗證 | [p3-migrated-share](docs/e2e/milestone-rev6-p3-migrated-share/result.md) |
 | 兩人同時到一個還沒寫下的地方：一人撰寫、另一人看同一條串流；1 次模型呼叫，兩邊同一筆紀錄 | ✅ 已驗證；串流面板開著時觀看的人會停下腳步（設計如此） | [p3-together](docs/e2e/milestone-rev6-p3-together/result.md) |
 | 異聞：同一個地方的兩份離線寫法，一份成為現行、一份保留 | ✅ 已驗證 | [p3-variant](docs/e2e/milestone-rev6-p3-variant/result.md) |
-| 節拍：霧、傳說與季節，在世界服務上與只放在一台裝置上的世界都跑過；服務與兩個 app 的指紋相同；起霧的地方重新見證 | ✅ 已驗證（測試時鐘 92 天）；城鎮一圈仍會顯示「正漸漸隱入霧中」，但實際永遠不會起霧 | [p3-fog](docs/e2e/milestone-rev6-p3-fog/result.md) · [p3-local-beat](docs/e2e/milestone-rev6-p3-local-beat/result.md) |
+| 節拍：霧、傳說與季節，在世界服務上與只放在一台裝置上的世界都跑過；服務與兩個 app 的指紋相同；起霧的地方重新見證 | ✅ 已驗證（測試時鐘 92 天）；修正後城鎮一圈不再顯示「正漸漸隱入霧中」 | [p3-fog](docs/e2e/milestone-rev6-p3-fog/result.md) · [p3-local-beat](docs/e2e/milestone-rev6-p3-local-beat/result.md) |
 | 綁著真實事件的傳聞；沒有引用或說錯名字的會被服務與 app 拒絕 | ✅ 已驗證；「聽說……」只在主人的裝置上讀過 | [p3-rumors](docs/e2e/milestone-rev6-p3-rumors/result.md) |
-| 門：私人、夥伴與公開；一次性的邀請（用完、過期、撤回都被拒）；移除成員 | ✅ 已驗證；被移除成員的 app 會拒絕新的寫入，但它的主程序仍會簽名並排入待送 | [p3-door](docs/e2e/milestone-rev6-p3-door/result.md) |
+| 門：私人、夥伴與公開；一次性的邀請（用完、過期、撤回都被拒）；移除成員 | ✅ 已驗證；修正後主程序也會在簽名前拒絕被移除成員的寫入，已在待送的紀錄改列為被拒 | [p3-door](docs/e2e/milestone-rev6-p3-door/result.md) |
 | 禮物：兩人同時拿一份禮物，只有一人拿到，另一人的包包不變並顯示「有人先拿走了。」 | ✅ 已驗證（禮物面板開著時）；面板關著時的提示未看到 | [p3-gift-race](docs/e2e/milestone-rev6-p3-gift-race/result.md) |
-| 兩台機器上的同在與表情動作，兩種畫面都有 | ✅ 已驗證；60 Hz 下每幀最多移動 0.13 格；16-bit 畫面上其他玩家的名字不易辨識 | [p3-presence](docs/e2e/milestone-rev6-p3-presence/result.md) |
+| 兩台機器上的同在與表情動作，兩種畫面都有 | ✅ 已驗證；60 Hz 下每幀最多移動 0.13 格；16-bit 畫面上的名字改畫在名牌上（跑完後修正） | [p3-presence](docs/e2e/milestone-rev6-p3-presence/result.md) |
 | 在世界裡的存檔的備份：還原、已分歧的歷史另外保留、在另一台裝置上成為它自己的世界 | ✅ 已驗證；收養後的世界沒有接模型試見證 | [p3-backup](docs/e2e/milestone-rev6-p3-backup/result.md) |
 | 較新的物理版本會被世界服務、備份匯入與 `.world` 匯入拒絕 | ✅ 已驗證 | [p3-physics](docs/e2e/milestone-rev6-p3-physics/result.md) · [p4-import-physics](docs/e2e/milestone-rev6-p4-import-physics/result.md) |
 | 只放在一台裝置上的世界的大陸：訪客的留言由主人收下、已共享的世界被拒 | ✅ 已驗證（本機信令） | [p3-continent](docs/e2e/milestone-rev6-p3-continent/result.md) |

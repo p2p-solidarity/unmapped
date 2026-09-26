@@ -1,0 +1,115 @@
+{
+ "app": "B",
+ "port": 9349,
+ "what": "B relaunched after A removed it (service up): Continue; status, the door's refused list, a note through the UI, then drafts sent straight to main (window.seed.world.append) bypassing the renderer's block",
+ "actions": [
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "\u8a2d\u5b9a"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "English"
+  },
+  {
+   "wait": 600
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 120; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && (w.value.status.link === 'online' || w.value.status.error)) break; await new Promise(r => setTimeout(r, 250)); } await new Promise(r => setTimeout(r, 2500)); return 'ready' })()"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const W = await import('/history/write.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: w.now.head.n, link: w.status.link, role: w.status.role, writable: w.status.writable, pending: w.status.pending, refused: w.status.refused, error: w.status.error?.code ?? null, writeBlocker: W.writeBlocker()?.code ?? null, refusedList: w.refused.map(r => ({ kind: r.event.kind, id: r.event.id.slice(0, 12), code: r.error.code })) }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-door/fix-b-01-removed-play-hud.jpg"
+  },
+  {
+   "pad": {
+    "toward": "[8.6, 9.2]",
+    "within": 0.8,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); return l ? l.innerText.slice(0, 1600) : 'no door layer' })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-door/fix-b-02-removed-door-refused-list.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 500
+  },
+  {
+   "hold": "KeyN",
+   "ms": 100
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('[data-layer=notes] input, [data-layer=notes] textarea')].find(x => (x.closest('label')?.innerText ?? '').trim().startsWith('your note')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+  },
+  {
+   "type": "Bea tries after her removal."
+  },
+  {
+   "wait": 300
+  },
+  {
+   "clickText": "Leave the note"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(-400) : 'no notes layer' })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-door/fix-b-03-removed-note-refused.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 500
+  },
+  {
+   "note": "The untrusted-renderer check: bypass writeBlocker and call main directly, for a note, a visit and a profile"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; const seen = w.sequenced.head.n; const drafts = [ { kind: 'note', body: { coord: { cx: 0, cz: 0, x: 9, z: 9 }, anchors: [], text: 'Straight to main.', contests: null, name: 'Bea' }, seen }, { kind: 'visit', body: { chunks: [{ cx: 0, cz: 0 }] }, seen }, { kind: 'profile', body: { name: 'Bea again' }, seen } ]; const out = []; for (const d of drafts) { const r = await window.seed.world.append(w.worldId, d); out.push(d.kind + ': ' + (r.ok ? 'ok ' + JSON.stringify(r.value) : r.error.code)); } const read = await window.seed.world.read(w.worldId); out.push('after: pending ' + read.value.pending.length + ', refused ' + read.value.refused.length + ', status ' + JSON.stringify({ role: read.value.status.role, writable: read.value.status.writable, pending: read.value.status.pending })); return out.join(' | ') })()"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const W = await import('/history/write.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: w.now.head.n, link: w.status.link, role: w.status.role, writable: w.status.writable, pending: w.status.pending, refused: w.status.refused, error: w.status.error?.code ?? null, writeBlocker: W.writeBlocker()?.code ?? null, refusedList: w.refused.map(r => ({ kind: r.event.kind, id: r.event.id.slice(0, 12), code: r.error.code })) }) })()"
+  }
+ ]
+}

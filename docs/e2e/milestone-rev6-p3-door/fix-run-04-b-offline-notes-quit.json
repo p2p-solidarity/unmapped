@@ -1,0 +1,118 @@
+{
+ "app": "B",
+ "port": 9349,
+ "what": "Service stopped: B (still a member) leaves two notes that queue, walks into 1,0 and back, then quits from Play (Browser.close); main writes the day's visit into the outbox on quit",
+ "actions": [
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 60; i++) { const w = S.useHistoryStore.getState().world.value; if (w.status.link !== 'online') break; await new Promise(r => setTimeout(r, 250)); } return 'ok' })()"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: w.now.head.n, link: w.status.link, role: w.status.role, writable: w.status.writable, pending: w.status.pending, refused: w.status.refused, error: w.status.error?.code ?? null }) })()"
+  },
+  {
+   "hold": "KeyN",
+   "ms": 100
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('[data-layer=notes] input, [data-layer=notes] textarea')].find(x => (x.closest('label')?.innerText ?? '').trim().startsWith('your note')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+  },
+  {
+   "type": "Bea: first note while the service is down."
+  },
+  {
+   "wait": 300
+  },
+  {
+   "clickText": "Leave the note"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(-300) : 'no notes layer' })()"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 500
+  },
+  {
+   "pad": {
+    "toward": "[14.5, 14.5]",
+    "within": 1.0,
+    "timeoutMs": 15000
+   }
+  },
+  {
+   "hold": "KeyN",
+   "ms": 100
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('[data-layer=notes] input, [data-layer=notes] textarea')].find(x => (x.closest('label')?.innerText ?? '').trim().startsWith('your note')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+  },
+  {
+   "type": "Bea: second note, still offline."
+  },
+  {
+   "wait": 300
+  },
+  {
+   "clickText": "Leave the note"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(-300) : 'no notes layer' })()"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 500
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: w.now.head.n, link: w.status.link, role: w.status.role, writable: w.status.writable, pending: w.status.pending, refused: w.status.refused, error: w.status.error?.code ?? null }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-door/fix-b-00-two-notes-queued-offline.jpg"
+  },
+  {
+   "pad": {
+    "toward": "[36, 14.5]",
+    "within": 1.5,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[14.5, 14.5]",
+    "within": 1.5,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: w.now.head.n, link: w.status.link, role: w.status.role, writable: w.status.writable, pending: w.status.pending, refused: w.status.refused, error: w.status.error?.code ?? null }) })()"
+  },
+  {
+   "cdp": {
+    "method": "Browser.close"
+   }
+  }
+ ]
+}

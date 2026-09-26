@@ -4,7 +4,13 @@
 // checked too (`handle`, main/handle.ts).
 
 import type { ContentHash } from "@shared/cartridge";
-import { BODY_SCHEMAS, isOneLine, isServiceUrl } from "@shared/history/bodies";
+import {
+  BODY_SCHEMAS,
+  chunkCoordSchema,
+  HISTORY_LIMITS,
+  isOneLine,
+  isServiceUrl,
+} from "@shared/history/bodies";
 import { AUTHOR_KEY, CONTENT_HASH, EVENT_ID, NONCE } from "@shared/history/ids";
 import { ACCESS_POLICIES } from "@shared/history/types";
 import { WORK_ID, type WorkRef } from "@shared/works";
@@ -66,6 +72,7 @@ export const worldIpcSchemas = {
   read: z.tuple([worldId]),
   close: z.tuple([worldId]),
   append: z.tuple([worldId, worldDraftSchema]),
+  walked: z.tuple([worldId, z.array(chunkCoordSchema).max(HISTORY_LIMITS.visitChunks)]),
   claim: z.tuple([worldId, claimTarget]),
   release: z.tuple([worldId, claimTarget]),
   sendStream: z.tuple([worldId, streamFrameSchema]),

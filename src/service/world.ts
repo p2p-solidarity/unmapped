@@ -11,6 +11,12 @@
 import { applyEntry, emptyNow, FOLD_VERSION, foldEntries, openGenesis } from "@shared/history/fold";
 import { utf8Length } from "@shared/history/ids";
 import { readLogLine, receiptKeyAt, sequenceEvent, verifyLog } from "@shared/history/log";
+import {
+  type Ownership,
+  ownershipOf,
+  ownershipOfGenesis,
+  ownershipStep,
+} from "@shared/history/owners";
 import { verifyEvent } from "@shared/history/sign";
 import type {
   EntryVerdict,
@@ -57,25 +63,33 @@ function field(event: StoredEvent, name: "kind" | "author"): string {
   return typeof value === "string" ? value : "";
 }
 
-/** The ledger after `entries` (with their line sizes), paid as the fold `now` says. */
+/**
+ * The ledger after `entries` (with their line sizes), paid as when they were sequenced: joins as
+ * the fold `now` says, ownership as the ownership pass from `owners` (who owned the world before
+ * the first of them) has it at each entry — an owner removed later paid as an owner until then.
+ */
 function replayUsage(
   usage: WorldUsage,
+  owners: Ownership,
   now: WorldNow,
   entries: readonly LogEntry[],
   sizes: readonly number[],
   serviceKey: string,
 ): WorldUsage {
   let ledger = usage;
+  let ownership = owners;
   entries.forEach((entry, index) => {
     const author = field(entry.event, "author");
     const kind = field(entry.event, "kind");
+    const owns = ownership.owners.includes(author);
     ledger = recordUsage(ledger, {
-      payer: payerOf(now, entry.n, author, kind, serviceKey),
+      payer: payerOf(now, owns, entry.n, author, kind, serviceKey),
       author,
       kind,
       bytes: sizes[index] ?? 0,
       ms: Date.parse(entry.rt),
     });
+    ownership = ownershipStep(ownership, entry, now.world);
   });
   return ledger;
 }
@@ -302,7 +316,15 @@ export function loadWorld(
   const rest = entries.slice(start);
   const verdicts: VerdictEntry[] = rest.map((entry) => ({ entry, verdict: verdict(entry.event) }));
   const now = foldEntries(snap?.now ?? emptyNow(genesis.value), verdicts);
-  const usage = replayUsage(snap?.usage ?? emptyUsage(), now, rest, sizes.slice(start), key.key);
+  const owners = snap === null ? ownershipOfGenesis(genesis.value.author) : ownershipOf(snap.now);
+  const usage = replayUsage(
+    snap?.usage ?? emptyUsage(),
+    owners,
+    now,
+    rest,
+    sizes.slice(start),
+    key.key,
+  );
   const { blobs, bad } = store.readBlobList(world);
   const loaded = new ServiceWorld(genesis.value, { now, usage }, lines, sizes, blobs, start);
   return ok({ world: loaded, torn, fromSnapshot: start, badBlobLines: bad });
@@ -321,6 +343,7 @@ export function newWorld(
     emptyNow(genesis),
     entries.map((entry, index) => ({ entry, verdict: verdicts[index] ?? { ok: true } })),
   );
-  const usage = replayUsage(emptyUsage(), now, entries, sizes, key.key);
+  const owners = ownershipOfGenesis(genesis.author);
+  const usage = replayUsage(emptyUsage(), owners, now, entries, sizes, key.key);
   return new ServiceWorld(genesis, { now, usage }, lines, sizes, new Map(), 0);
 }

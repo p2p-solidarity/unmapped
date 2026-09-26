@@ -57,6 +57,7 @@ export function registerWorldIpc(ctx: MainContext, options: WorldIpcOptions = {}
   handle(WORLD_IPC.read, s.read, ([worldId]) => host.read(worldId));
   handle(WORLD_IPC.close, s.close, ([worldId]) => host.close(worldId));
   handle(WORLD_IPC.append, s.append, ([worldId, draft]) => host.append(worldId, draft));
+  handle(WORLD_IPC.walked, s.walked, ([worldId, chunks]) => host.walked(worldId, chunks));
   handle(WORLD_IPC.claim, s.claim, ([worldId, target]) => host.claim(worldId, target));
   handle(WORLD_IPC.release, s.release, ([worldId, target]) => host.release(worldId, target));
   handle(WORLD_IPC.sendStream, s.sendStream, ([worldId, frame]) => host.sendStream(worldId, frame));

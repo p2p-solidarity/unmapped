@@ -1,0 +1,33 @@
+{
+  "app": "F",
+  "port": 9348,
+  "what": "UNMAPPED_TEST_CLOCK_DAYS=50, no model: Continue (the pinned open writes the catch-up beat), read care and marks per chunk, the HUD in the town ring (1,0) and two rings out (2,0), both looks",
+  "actions": [
+    { "wait": 1000 },
+    { "clickText": "設定" },
+    { "wait": 800 },
+    { "clickText": "English" },
+    { "wait": 600 },
+    { "hold": "Escape", "ms": 80 },
+    { "wait": 600 },
+    { "clickText": "Continue" },
+    { "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 120; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready') break; await new Promise(r => setTimeout(r, 250)); } const w = S.useHistoryStore.getState().world.value; const beats = Object.values(w.now.events).filter(e => e.kind === 'beat').map(e => e.n); return JSON.stringify({ head: w.now.head.n, rt: w.now.rt, beats }) })()" },
+    { "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; const now = w.now; const D = await import('/@fs__SNAP__/src/shared/history/decay.ts'); const I = await import('/@fs__SNAP__/src/shared/history/ids.ts'); const care = D.careAt(now.touches, D.dayOf(I.timeMs(now.rt))); const marks = S.useLandStore.getState().marks; const out = {}; for (const key of Object.keys(now.chunks).sort()) { const [cx, cz] = key.split(',').map(Number); out[key] = { ring: Math.max(Math.abs(cx), Math.abs(cz)), careMicroPt: care[key] ?? 0, fogged: marks[key]?.fogged, fading: marks[key]?.fading }; } return JSON.stringify(out) })()" },
+    { "pad": { "toward": "[48, 16]", "within": 2, "buttons": [5], "timeoutMs": 45000 } },
+    { "wait": 800 },
+    { "text": true },
+    { "shot": "docs/e2e/milestone-rev6-p3-local-beat/fix-f-01-town-1-0-no-fading.jpg" },
+    { "pad": { "toward": "[80, 16]", "within": 2, "buttons": [5], "timeoutMs": 45000 } },
+    { "wait": 800 },
+    { "text": true },
+    { "shot": "docs/e2e/milestone-rev6-p3-local-beat/fix-f-02-ring-2-still-fading.jpg" },
+    { "hold": "KeyV", "ms": 80 },
+    { "wait": 1200 },
+    { "shot": "docs/e2e/milestone-rev6-p3-local-beat/fix-f-03-ring-2-fading-16bit.jpg" },
+    { "pad": { "toward": "[48, 16]", "within": 2, "buttons": [5], "timeoutMs": 45000 } },
+    { "wait": 800 },
+    { "shot": "docs/e2e/milestone-rev6-p3-local-beat/fix-f-04-town-1-0-16bit.jpg" },
+    { "hold": "KeyV", "ms": 80 },
+    { "wait": 600 }
+  ]
+}

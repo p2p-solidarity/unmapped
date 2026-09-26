@@ -517,11 +517,11 @@ UNMAPPED はバージョン `0.1.0`、動作はする初期段階の研究版で
 | 移行したワールドの共有：参加した人が古い場所、メモ、異界（作品パックを取得・検証してサンドボックスで開く）を呼び出し 0 回で見る | ✅ 検証済み | [p3-migrated-share](docs/e2e/milestone-rev6-p3-migrated-share/result.md) |
 | ふたりが同じ未記録の場所に着く：ひとりが書き、もうひとりが同じストリームを見る。モデル呼び出し 1 回、両方に同じ記録 | ✅ 検証済み。ストリームのパネルが開いているあいだ、見ている側は歩けない（仕様） | [p3-together](docs/e2e/milestone-rev6-p3-together/result.md) |
 | 異聞：同じ場所をオフラインで書いた 2 つのうち、ひとつが残り、もうひとつは保存される | ✅ 検証済み | [p3-variant](docs/e2e/milestone-rev6-p3-variant/result.md) |
-| 拍：霧、伝説、季節。ワールドサービス上と 1 台の端末だけにあるワールドの両方で。サービスと 2 つのアプリで指紋が一致。霧に還った場所の再観測 | ✅ 検証済み（テスト用の時計で 92 日）。町のまわりは霧に還らないのに「霧に消えかけています」と表示される | [p3-fog](docs/e2e/milestone-rev6-p3-fog/result.md) · [p3-local-beat](docs/e2e/milestone-rev6-p3-local-beat/result.md) |
+| 拍：霧、伝説、季節。ワールドサービス上と 1 台の端末だけにあるワールドの両方で。サービスと 2 つのアプリで指紋が一致。霧に還った場所の再観測 | ✅ 検証済み（テスト用の時計で 92 日）。修正後、町のまわりに「霧に消えかけています」は出なくなった | [p3-fog](docs/e2e/milestone-rev6-p3-fog/result.md) · [p3-local-beat](docs/e2e/milestone-rev6-p3-local-beat/result.md) |
 | 実際の出来事に結びついた噂。引用のない噂や名前の誤った噂はサービスとアプリが拒否 | ✅ 検証済み。「噂では…」は持ち主の端末でのみ確認 | [p3-rumors](docs/e2e/milestone-rev6-p3-rumors/result.md) |
-| 扉：非公開・仲間・公開、1 回限りの招待（使い切り・期限切れ・取り消しは拒否）、メンバーを外す | ✅ 検証済み。外されたメンバーのアプリは新しい書き込みを拒むが、そのメインプロセスはまだ署名して送信待ちに入れる | [p3-door](docs/e2e/milestone-rev6-p3-door/result.md) |
+| 扉：非公開・仲間・公開、1 回限りの招待（使い切り・期限切れ・取り消しは拒否）、メンバーを外す | ✅ 検証済み。修正後はメインプロセスも署名の前に外されたメンバーの書き込みを拒み、送信待ちだった記録は拒否として表示される | [p3-door](docs/e2e/milestone-rev6-p3-door/result.md) |
 | 贈り物：ふたりが同時に受け取ろうとすると、ひとりだけが受け取り、もうひとりの持ち物は変わらず「先に誰かが受け取りました。」と表示 | ✅ 検証済み（贈り物のパネルを開いた状態）。パネルを閉じているときの通知は未確認 | [p3-gift-race](docs/e2e/milestone-rev6-p3-gift-race/result.md) |
-| 2 台のマシンでのプレゼンスとエモート（両方の見た目で） | ✅ 検証済み。60 Hz で 1 フレームの移動は最大 0.13 マス。16-bit の見た目ではほかのプレイヤーの名前が読みにくい | [p3-presence](docs/e2e/milestone-rev6-p3-presence/result.md) |
+| 2 台のマシンでのプレゼンスとエモート（両方の見た目で） | ✅ 検証済み。60 Hz で 1 フレームの移動は最大 0.13 マス。16-bit の見た目では名前を名札に表示（実行後に修正） | [p3-presence](docs/e2e/milestone-rev6-p3-presence/result.md) |
 | ワールドにあるセーブのバックアップ：復元、食い違った歴史は横に残す、別の端末ではその端末のワールドになる | ✅ 検証済み。その新しいワールドでの観測はモデルありでは未実行 | [p3-backup](docs/e2e/milestone-rev6-p3-backup/result.md) |
 | 新しい物理バージョンはワールドサービス、バックアップの取り込み、`.world` の取り込みで拒否 | ✅ 検証済み | [p3-physics](docs/e2e/milestone-rev6-p3-physics/result.md) · [p4-import-physics](docs/e2e/milestone-rev6-p4-import-physics/result.md) |
 | 1 台の端末だけにあるワールドの大陸：訪問者のメモを持ち主が残す、共有したワールドは拒否 | ✅ 検証済み（ローカルのシグナリング） | [p3-continent](docs/e2e/milestone-rev6-p3-continent/result.md) |

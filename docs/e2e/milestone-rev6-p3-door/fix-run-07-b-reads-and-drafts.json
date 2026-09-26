@@ -1,0 +1,28 @@
+{
+ "app": "B",
+ "port": 9349,
+ "what": "B relaunched on main with the removal kept across re-opens: every read re-opens the refused world; drafts straight to main right after and together with a read",
+ "actions": [
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 120; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && (w.value.status.link === 'online' || w.value.status.error)) break; await new Promise(r => setTimeout(r, 250)); } await new Promise(r => setTimeout(r, 2500)); return 'ready' })()"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const W = await import('/history/write.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: w.now.head.n, link: w.status.link, role: w.status.role, writable: w.status.writable, pending: w.status.pending, refused: w.status.refused, error: w.status.error?.code ?? null, writeBlocker: W.writeBlocker()?.code ?? null }) })()"
+  },
+  {
+   "note": "A read re-opens the refused world; drafts sent right after it, and at the same time as it, straight to main"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; const seen = w.sequenced.head.n; const note = (text) => ({ kind: 'note', body: { coord: { cx: 0, cz: 0, x: 9, z: 9 }, anchors: [], text, contests: null, name: 'Bea' }, seen }); const out = []; const read = await window.seed.world.read(w.worldId); out.push('after read: ' + JSON.stringify({ link: read.value.status.link, role: read.value.status.role, writable: read.value.status.writable, error: read.value.status.error?.code ?? null })); const a = await window.seed.world.append(w.worldId, note('Right after a read.')); out.push('append after read: ' + (a.ok ? 'ok ' + JSON.stringify(a.value) : a.error.code)); const [r2, b] = await Promise.all([window.seed.world.read(w.worldId), window.seed.world.append(w.worldId, note('Together with a read.'))]); out.push('append with read: ' + (b.ok ? 'ok ' + JSON.stringify(b.value) : b.error.code)); const v = await window.seed.world.append(w.worldId, { kind: 'visit', body: { chunks: [{ cx: 0, cz: 0 }] }, seen }); out.push('visit: ' + (v.ok ? 'ok' : v.error.code)); await new Promise(r => setTimeout(r, 1500)); const last = await window.seed.world.read(w.worldId); out.push('end: pending ' + last.value.pending.length + ', refused ' + last.value.refused.length); return out.join(' | ') })()"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const W = await import('/history/write.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: w.now.head.n, link: w.status.link, role: w.status.role, writable: w.status.writable, pending: w.status.pending, refused: w.status.refused, error: w.status.error?.code ?? null, writeBlocker: W.writeBlocker()?.code ?? null }) })()"
+  }
+ ]
+}

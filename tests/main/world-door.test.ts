@@ -13,22 +13,36 @@
 //    longer be revoked; a repeated line counts one invite twice.
 // 5. A plain `ws://` address on another host (or one with credentials) is accepted as a world
 //    service, by the device's list or by the IPC schema that guards `attach` and `probe`.
+// 6. A key the owner removed keeps writing through IPC: its copy ends before its own
+//    `member.remove`, so only the service's `access-removed` says so, and main still signs and
+//    queues the renderer's drafts (the renderer is untrusted), its status still says it writes
+//    (or says so again once a re-open resets the link), and what it queued before waits in the
+//    outbox for good instead of being listed as refused.
 
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { HostCore } from "@main/histories/core";
+import { appendDraft } from "@main/histories/commit";
+import { HostCore } from "@main/histories/core";
 import { issueInvite, previewInvite } from "@main/histories/door";
+import { DSL_HISTORY } from "@main/histories/dslSeam";
 import { worldIpcSchemas } from "@main/histories/ipcSchemas";
 import { ISSUED_FILE, readIssued } from "@main/histories/issued";
 import { joinWorld } from "@main/histories/join";
+import type { LoadedWorld } from "@main/histories/loaded";
+import { readRefused } from "@main/histories/logStore";
+import { onFrame } from "@main/histories/syncWorld";
+import type { DeviceKey } from "@main/identity/deviceKey";
 import { normalizeServiceUrl, parseServiceList } from "@renderer/net/worldServices";
 import { inviteLink } from "@shared/history/access";
 import { base32, base64Url, sha256Bytes } from "@shared/history/ids";
-import { authorKeyFor, signInvite } from "@shared/history/sign";
-import type { UnsignedInvite } from "@shared/history/types";
+import { authorKeyFor, signEvent, signInvite } from "@shared/history/sign";
+import type { UnsignedEventOf, UnsignedInvite } from "@shared/history/types";
 import { ok } from "@shared/result";
+import type { WorldEntriesEvent, WorldStatus } from "@shared/worldApi";
+import type { FromService } from "@shared/worldProtocol";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { BEN, day, key, note, pending, World } from "../fixtures/history";
 
 const secret = (name: string) => sha256Bytes(`world-door-test:${name}`);
 const OWNER = secret("owner");
@@ -197,5 +211,114 @@ describe("world service addresses", () => {
       urls: accepted,
       invalid: ["ws://example.com"],
     });
+  });
+});
+
+describe("a key the service removed", () => {
+  const SERVICE_URL = "wss://worlds.example";
+
+  /** Ben's device: a member of Mira's shared world, with two events it queued offline. */
+  async function bensDevice() {
+    const world = new World();
+    world.join(BEN, "Ben", day(0, 1));
+    const signed: string[] = [];
+    const device = {
+      author: key(BEN),
+      signEvent: (unsigned: Parameters<DeviceKey["signEvent"]>[0]) => {
+        signed.push(unsigned.kind);
+        return signEvent(unsigned, BEN);
+      },
+    } as unknown as DeviceKey;
+    const sent: { channel: string; payload: unknown }[] = [];
+    const core = new HostCore({
+      userData: root,
+      cartridgesDir: join(root, "cartridges"),
+      instancesDir: join(root, "instances"),
+      works: { worksDir: "", playsDir: "", draftsDir: "" },
+      dsl: DSL_HISTORY,
+      key: async () => ok(device),
+      clock: () => new Date(day(1)),
+      broadcast: (channel, payload) => sent.push({ channel, payload }),
+      ensureBaseGame: async () => ok(undefined),
+    });
+    const dir = join(root, "histories", world.id);
+    await mkdir(dir, { recursive: true });
+    const queued = ["one", "two"].map((text) => {
+      const body = { ...note([]), text, name: "Ben" };
+      const unsigned = { v: 1, world: world.id, kind: "note", author: key(BEN), at: day(0, 5) };
+      return pending(signEvent({ ...unsigned, seen: 2, body } as UnsignedEventOf<"note">, BEN));
+    });
+    const loaded = {
+      id: world.id,
+      dir,
+      genesis: world.genesis,
+      owner: world.genesis.author,
+      ids: new Set(world.entries.map((entry) => entry.event.id)),
+      cursor: { n: world.now.head.n, chain: world.now.head.chain, rt: world.now.rt },
+      schedule: [],
+      base: null,
+      tail: world.verdictEntries(),
+      now: world.now,
+      outbox: queued,
+      link: { v: 1, url: SERVICE_URL, key: key(BEN), attachedAt: day(0), diverged: null },
+    } as unknown as LoadedWorld;
+    core.worlds.set(world.id, loaded);
+    // Connecting: nothing is sent (no socket here), so a queued draft stays in the outbox.
+    core.setSync(world.id, { url: SERVICE_URL, link: "connecting", error: null });
+    return { world, loaded, core, signed, sent };
+  }
+
+  it("signs nothing more, reads as removed, and lists what it queued as refused (6)", async () => {
+    const { world, loaded, core, signed, sent } = await bensDevice();
+    const noteDraft = { kind: "note", body: { ...note([]), name: "Ben" }, seen: world.now.head.n };
+    // The control: a member's draft is signed and queued (its third event).
+    expect(await appendDraft(core, world.id, noteDraft as never)).toMatchObject({ ok: true });
+    expect(signed).toEqual(["note"]);
+    expect((await core.status(loaded)).writable).toBe(true);
+    expect(loaded.outbox).toHaveLength(3);
+
+    const refusal = {
+      t: "refused",
+      world: world.id,
+      error: { code: "access-removed", message: "The owner removed this key from the world." },
+    } as FromService;
+    await onFrame(core, SERVICE_URL, refusal);
+
+    const status: WorldStatus = await core.status(loaded);
+    expect(status).toMatchObject({ role: "removed", writable: false, pending: 0, refused: 3 });
+    expect(loaded.outbox).toEqual([]);
+    const refused = await readRefused(loaded.dir);
+    expect(refused.ok && refused.value.active.map((one) => one.error.code)).toEqual([
+      "access-removed",
+      "access-removed",
+      "access-removed",
+    ]);
+    const entries = sent.filter((one) => one.channel === "world:entries");
+    const last = entries.at(-1)?.payload as WorldEntriesEvent | undefined;
+    expect(last?.pending).toEqual([]);
+
+    // A `read` re-opens a refused world (the link reads "connecting" again): the removal holds.
+    core.setSync(world.id, { url: SERVICE_URL, link: "connecting", error: null });
+    expect(await core.status(loaded)).toMatchObject({ role: "removed", writable: false });
+    // Every kind the renderer may draft, and an owner action, is refused before signing.
+    const drafts = [
+      noteDraft,
+      { kind: "visit", body: { chunks: [{ cx: 0, cz: 0 }] }, seen: world.now.head.n },
+      { kind: "profile", body: { name: "Ben" }, seen: world.now.head.n },
+    ];
+    for (const draft of drafts) {
+      expect(await appendDraft(core, world.id, draft as never), draft.kind).toMatchObject({
+        ok: false,
+        error: { code: "access-removed" },
+      });
+    }
+    const door = await appendDraft(core, world.id, (now) => ({
+      kind: "access",
+      body: { policy: "public" },
+      seen: now.now.head.n,
+    }));
+    expect(door).toMatchObject({ ok: false, error: { code: "access-removed" } });
+    expect(signed).toEqual(["note"]);
+    expect(loaded.outbox).toEqual([]);
   });
 });

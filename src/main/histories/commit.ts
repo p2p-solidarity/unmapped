@@ -53,6 +53,12 @@ export async function writeGate(
   key: DeviceKey,
 ): Promise<Result<void>> {
   const status = await core.status(world, { ok: true, value: key });
+  // D8: a removed key writes nothing (`mayWrite`). Its own copy ends before its removal, so the
+  // role comes from the service's `access-removed` (`core.removal`); without this main would sign
+  // and queue drafts nobody will ever sequence.
+  if (status.role === "removed") {
+    return err("access-removed", "The owner removed this key from the world.", status.error?.hint);
+  }
   if (status.link === "diverged") {
     return err(
       "history-diverged",

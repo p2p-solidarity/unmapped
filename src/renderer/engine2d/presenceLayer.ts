@@ -112,8 +112,8 @@ export function drawPresencePixel(frame: {
     if (sx < -tileSize || sy < -tileSize || sx > width + tileSize || sy > height + tileSize * 2) {
       continue;
     }
-    // Over the head (and the name) of a one-tile figure standing on (x, z).
-    paint(ctx, { x: sx, y: sy - tileSize * 0.8 }, tileSize * 0.72, bubble, now, colors);
+    // Over the head, and over the name plate above it, of a one-tile figure standing on (x, z).
+    paint(ctx, { x: sx, y: sy - tileSize }, tileSize * 0.72, bubble, now, colors);
   }
 }
 

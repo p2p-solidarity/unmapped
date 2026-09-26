@@ -13,7 +13,7 @@ import { parseErrands, parseScene } from "@dsl";
 import type { ChunkStatus } from "@renderer/state/landStore";
 import type { ChapterKind } from "@shared/chapter";
 import { clearFords } from "@shared/chunks";
-import { careAt, chunkStands, dayOf, FADING_BELOW } from "@shared/history/decay";
+import { careAt, chunkStands, dayOf, FADING_BELOW, inTown } from "@shared/history/decay";
 import { worldLore } from "@shared/history/fold";
 import { timeMs } from "@shared/history/ids";
 import { RUMOR_SHOW_BEATS } from "@shared/history/rumor";
@@ -204,7 +204,8 @@ function chunkMarks(
     provisional: chunk.live.pending,
     fogged: chunk.fogged,
     hidden,
-    fading: stands && now.beats.length > 0 && (care[key] ?? 0) < FADING_BELOW,
+    // Fading warns of fog, so only where fog can come: never home or the town ring (`inTown`).
+    fading: stands && !inTown(chunk) && now.beats.length > 0 && (care[key] ?? 0) < FADING_BELOW,
     legacyOnly: false,
     localCopy: false,
     variants: visible(now, chunk.variants),

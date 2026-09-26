@@ -1,9 +1,11 @@
 // The world host (rev 6 phase 3, D11): everything `window.seed.world.*` does, as one object main
 // keeps for its lifetime. It owns the loaded histories and the service sockets; the IPC layer
-// (./ipc) only validates payloads and calls it. On quit it flushes outboxes for up to 2 s, writes
-// snapshots and closes the sockets.
+// (./ipc) only validates payloads and calls it. On quit it writes the day's walk the land had not
+// written yet as a `visit` (D13: the land writes it when Play goes, and a quit from Play never gets
+// there), flushes outboxes for up to 2 s, writes snapshots and closes the sockets.
 
 import { randomBytes } from "node:crypto";
+import type { ChunkCoord } from "@shared/chunks";
 import { inviteLink } from "@shared/history/access";
 import { base32, DAY_MS } from "@shared/history/ids";
 import { isOwner, OWNER_PATH_MAX, ownerPath } from "@shared/history/owners";
@@ -29,6 +31,7 @@ import { ensureWorld } from "./ensure";
 import { joinWorld } from "./join";
 import { isLocalOnly, type LoadedWorld, snapshotWorld } from "./loaded";
 import { appendDismissed, readRefused } from "./logStore";
+import { isWorldId } from "./paths";
 import { SyncHub } from "./sync";
 import { claimOnline, onDown, onFrame, onReady, startSync, stopSync, submit } from "./syncWorld";
 
@@ -37,6 +40,8 @@ export const FLUSH_MS = 2_000;
 
 export class WorldHost {
   readonly core: HostCore;
+  /** Per world: the chunks walked today that no `visit` holds yet, as the land last reported. */
+  private readonly walks = new Map<string, ChunkCoord[]>();
 
   constructor(deps: HostDeps) {
     const core = new HostCore(deps);
@@ -94,7 +99,35 @@ export class WorldHost {
   }
 
   append(worldId: string, draft: WorldDraft): Promise<Result<WorldAppended>> {
+    // The land wrote its visit (or tried: a refused one would be refused again on quit).
+    if (draft.kind === "visit") this.walks.delete(worldId);
     return appendDraft(this.core, worldId, draft);
+  }
+
+  /** The land's walk not yet written as a visit; an empty list forgets it. */
+  walked(worldId: string, chunks: ChunkCoord[]): Promise<Result<void>> {
+    if (!isWorldId(worldId)) return Promise.resolve(err("world-id-invalid", "Not a world id."));
+    if (chunks.length === 0) this.walks.delete(worldId);
+    else this.walks.set(worldId, chunks);
+    return Promise.resolve(ok(undefined));
+  }
+
+  /** On quit: the walks the land did not write become each world's visit (the fold keeps one a day). */
+  private async writeWalks(): Promise<void> {
+    const walks = [...this.walks];
+    this.walks.clear();
+    for (const [worldId, chunks] of walks) {
+      const written = await appendDraft(this.core, worldId, (world) => ({
+        kind: "visit",
+        body: { chunks },
+        seen: world.now.head.n,
+      }));
+      const tag = `[world] ${worldId.slice(0, 12)}…`;
+      if (written.ok) console.log(`${tag} visit of ${chunks.length} chunks written on quit`);
+      else if (written.error.code !== "visit-today") {
+        console.warn(`${tag} visit not written on quit: ${written.error.code}`);
+      }
+    }
   }
 
   setAccess(worldId: string, policy: AccessPolicy): Promise<Result<WorldAppended>> {
@@ -225,8 +258,12 @@ export class WorldHost {
     return joinWorld(this.core, link, name, instanceId);
   }
 
-  /** On quit: submit what waits, give it up to `ms` to be sequenced, snapshot, close sockets. */
+  /**
+   * On quit: write the walks, submit what waits, give it up to `ms` to be sequenced, snapshot,
+   * close sockets.
+   */
   async flush(ms = FLUSH_MS): Promise<void> {
+    await this.writeWalks();
     const worlds = [...this.core.worlds.values()];
     for (const world of worlds) if (world.outbox.length > 0) submit(this.core, world);
     const deadline = Date.now() + ms;

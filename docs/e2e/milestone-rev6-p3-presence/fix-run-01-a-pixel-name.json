@@ -1,0 +1,20 @@
+{
+  "app": "A",
+  "port": 9348,
+  "what": "A and B in Play on A's shared world (B joined, ~3 tiles apart): A switches to the 16-bit look and looks at Bea's name plate",
+  "actions": [
+    {
+      "hold": "KeyV",
+      "ms": 80
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "eval": "(async () => { const S = await import('/state/index.ts'); const R = await import('/engine/remoteRoster.ts'); const P = await import('/engine/playerProbe.ts'); const me = P.samplePlayer(); return JSON.stringify({ look: S.useEngineStore.getState().landLook, me: { x: +me.x.toFixed(2), z: +me.z.toFixed(2) }, others: R.sampleRemotePlayers(performance.now()).map(p => ({ name: p.name, x: +p.x.toFixed(2), z: +p.z.toFixed(2) })) }) })()"
+    },
+    {
+      "shot": "docs/e2e/milestone-rev6-p3-presence/fix-a-00-pixel-name-plate.jpg"
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+ "app": "A",
+ "port": 9348,
+ "what": "Service back up, B still closed: A (on the title after a stray Escape) Continue \u2192 door \u2192 People \u2192 Bea \u2192 Remove \u2192 Remove them (a member.remove); run-19's door actions",
+ "actions": [
+  {
+   "clickText": "Continue"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 120; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && w.value.status.link === 'online') break; await new Promise(r => setTimeout(r, 250)); } const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: w.now.head.n, link: w.status.link }) })()"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "pad": {
+    "toward": "[8.6, 9.2]",
+    "within": 0.8,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door'; const t = l.innerText; const i = t.indexOf('People'); return t.slice(i, i + 500) })()"
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); const row = [...l.querySelectorAll('div')].filter(d => d.innerText.startsWith('Bea') && [...d.querySelectorAll('button')].some(b => b.innerText.trim() === 'Remove')).sort((a, b) => a.innerText.length - b.innerText.length)[0]; if (!row) return 'no row'; [...row.querySelectorAll('button')].find(b => b.innerText.trim() === 'Remove').click(); return 'clicked Remove on ' + row.innerText.slice(0, 60) })()"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); const b = [...l.querySelectorAll('button')].find(x => /^(Remove Bea|Yes, remove|Confirm|Remove them)/.test(x.innerText.trim())); if (b) { b.click(); return 'confirmed: ' + b.innerText.trim(); } return 'no confirm step' })()"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 40; i++) { const w = S.useHistoryStore.getState().world.value; if (w.status.pending === 0 && Object.values(w.now.events).some(e => e.kind === 'member.remove')) break; await new Promise(r => setTimeout(r, 250)); } const w = S.useHistoryStore.getState().world.value; const rm = Object.values(w.now.events).find(e => e.kind === 'member.remove'); return JSON.stringify({ head: w.now.head.n, remove: rm ? { n: rm.n, id: rm.id.slice(0, 12) } : null }) })()"
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door'; const t = l.innerText; const i = t.indexOf('People'); return t.slice(i, i + 500) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-door/fix-a-00-bea-removed.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 400
+  }
+ ]
+}

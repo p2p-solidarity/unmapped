@@ -1,0 +1,10 @@
+{
+  "app": "A",
+  "port": 9348,
+  "what": "A, right after B's emote: the bubble over the plate, in the 16-bit look",
+  "actions": [
+    { "wait": 700 },
+    { "eval": "(async () => { const R = await import('/engine/remoteRoster.ts'); return JSON.stringify(R.sampleRemotePlayers(performance.now()).map(p => ({ name: p.name, emote: p.emote?.kind ?? null }))) })()" },
+    { "shot": "docs/e2e/milestone-rev6-p3-presence/fix-a-01-pixel-name-plate-emote.jpg" }
+  ]
+}

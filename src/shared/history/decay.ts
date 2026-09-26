@@ -13,6 +13,7 @@
 // witness alone fogs on day 69; a visit a week keeps a place. These constants are physics: they are
 // in the physics fingerprint (tests/shared/physics.test.ts), and changing one bumps PHYSICS_VERSION.
 
+import { type ChunkCoord, chunkDistance } from "../chunks";
 import { DAY_MS } from "./ids";
 import type { ChunkNow, EventKind, WorldNow } from "./types";
 
@@ -59,6 +60,13 @@ export const FADING_BELOW = 1_000_000;
 /** A season lasts a week; four of them turn. */
 export const SEASON_DAYS = 7;
 export const SEASONS = 4;
+
+const ORIGIN: ChunkCoord = { cx: 0, cz: 0 };
+
+/** Whether a chunk is home or in the town around it (FOG_SAFE_RINGS): it never fogs, nor fades. */
+export function inTown(coord: ChunkCoord): boolean {
+  return chunkDistance(coord, ORIGIN) <= FOG_SAFE_RINGS;
+}
 
 /** Touch days further back than this weigh 0; a beat drops them. */
 export const TOUCH_KEEP_DAYS = DECAY_PPM.length - 1;

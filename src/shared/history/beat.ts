@@ -6,7 +6,7 @@
 // The fingerprint is what an optional chain would record later; nothing here writes a chain.
 
 import { canonicalJson } from "../canonical";
-import { type ChunkCoord, chunkDistance, chunkKey } from "../chunks";
+import { chunkKey } from "../chunks";
 import { err, ok, type Result } from "../result";
 import {
   careAt,
@@ -14,7 +14,7 @@ import {
   dayOf,
   FOG_CARE_BELOW,
   FOG_QUIET_DAYS,
-  FOG_SAFE_RINGS,
+  inTown,
   SEASON_DAYS,
   SEASONS,
 } from "./decay";
@@ -24,8 +24,6 @@ import type { BeatBody, WorldNow } from "./types";
 
 /** The service beats every 6 h; a local-only world's owner device beats on open once 6 h passed. */
 export const BEAT_EVERY_MS = 6 * 60 * 60 * 1000;
-
-const ORIGIN: ChunkCoord = { cx: 0, cz: 0 };
 
 export interface BeatComputation {
   /** The beat event's body. */
@@ -95,7 +93,7 @@ export function computeBeat(now: WorldNow, at: string): Result<BeatComputation> 
     care[key] = value;
     const touched = now.lastTouch[key];
     const quiet = touched === undefined || T - touched >= FOG_QUIET_DAYS * DAY_MS;
-    if (value < FOG_CARE_BELOW && quiet && chunkDistance(chunk, ORIGIN) > FOG_SAFE_RINGS) {
+    if (value < FOG_CARE_BELOW && quiet && !inTown(chunk)) {
       fog.push(key);
     }
   }

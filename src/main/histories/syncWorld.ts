@@ -7,7 +7,8 @@
 //
 // The outbox is (re)submitted whenever the world opens and whenever an event is queued; a duplicate
 // submit is harmless (ids are content addresses). A `rejected` own event moves from the outbox to
-// refused.jsonl, where it stays listed until the player dismisses it. Every time the world comes
+// refused.jsonl, where it stays listed until the player dismisses it; so does the whole outbox when
+// the service says this key was removed (`access-removed`, D8). Every time the world comes
 // online, the packs this device announced and the service has not confirmed go up (./workPacks).
 
 import { verifyLog } from "@shared/history/log";
@@ -129,6 +130,8 @@ async function onOpened(
     return;
   }
   const url = urlOf(world) ?? "";
+  // The service serves this device again: whatever removal it said before no longer holds.
+  core.removals.delete(world.id);
   core.setSync(world.id, { url, link: "online", error: null });
   await core.emitStatus(world);
   submit(core, world);
@@ -173,21 +176,38 @@ async function onEntries(
   void receiveWorks(core, world);
 }
 
-async function onRejected(
+/**
+ * Moves the outbox events `which` picks to refused.jsonl with `error`, where they stay listed until
+ * the player dismisses them (Rule 2), and tells the renderer. Under the world's lock.
+ */
+async function refuseQueued(
   core: HostCore,
   world: LoadedWorld,
-  frame: Extract<FromService, { t: "rejected" }>,
+  which: (id: string) => boolean,
+  error: AppError,
 ): Promise<void> {
-  const pending = world.outbox.find((one) => one.event.id === frame.id);
-  if (pending === undefined) return;
-  world.outbox = world.outbox.filter((one) => one !== pending);
-  await appendRefused(world.dir, [{ event: pending.event, error: frame.error, at: core.nowIso() }]);
+  const refused = world.outbox.filter((one) => which(one.event.id));
+  if (refused.length === 0) return;
+  const at = core.nowIso();
+  world.outbox = world.outbox.filter((one) => !which(one.event.id));
+  await appendRefused(
+    world.dir,
+    refused.map((one) => ({ event: one.event, error, at })),
+  );
   await writeOutbox(
     world.dir,
     world.outbox.map((one) => one.event),
   );
   core.emitEntries(world, []);
   await core.emitStatus(world);
+}
+
+function onRejected(
+  core: HostCore,
+  world: LoadedWorld,
+  frame: Extract<FromService, { t: "rejected" }>,
+): Promise<void> {
+  return refuseQueued(core, world, (id) => id === frame.id, frame.error);
 }
 
 /**
@@ -227,6 +247,15 @@ export async function onFrame(core: HostCore, url: string, frame: FromService): 
       }
       // An advisory refusal is surfaced in the status's error; the link stays as it is.
       core.setSync(id, { ...info, link: ends ? "refused" : info.link, error: frame.error });
+      // D8: a removed key's queued events can never be sequenced, so they are refused now rather
+      // than left waiting for good.
+      if (frame.error.code === "access-removed") {
+        core.removals.set(id, frame.error);
+        await core.withWorld(id, async (world) => {
+          await refuseQueued(core, world, () => true, frame.error);
+          return ok(undefined);
+        });
+      }
       const world = core.worlds.get(id);
       if (world !== undefined) await core.emitStatus(world);
     }

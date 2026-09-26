@@ -54,6 +54,12 @@ export class HostCore {
   readonly sources: SourceDirs;
   readonly worlds = new Map<string, LoadedWorld>();
   readonly sync = new Map<string, SyncInfo>();
+  /**
+   * D8: worlds whose service refused this device with `access-removed`, until it opens them again.
+   * Kept apart from `sync`, which every re-open resets to "connecting" (a `read` re-opens a refused
+   * world), so the removal holds between the refusals. Memory only: every start asks again.
+   */
+  readonly removals = new Map<string, AppError>();
   /** Set right after construction by `WorldHost` (its events call back into this core). */
   hub!: SyncHub;
   readonly verdictOf: VerdictOf;
@@ -109,10 +115,24 @@ export class HostCore {
     return this.sync.get(world.id) ?? { url, link: "offline", error: null };
   }
 
+  /**
+   * D8: the service's word that it removed this device's key. A removed key's copy ends before its
+   * own `member.remove` (the service stops serving it there), so its fold still says member; only
+   * this refusal says otherwise.
+   */
+  removal(world: LoadedWorld): AppError | null {
+    return this.removals.get(world.id) ?? null;
+  }
+
   async status(world: LoadedWorld, key: Result<DeviceKey> | null = null): Promise<WorldStatus> {
     const device = key ?? (await this.deps.key());
-    const role: WorldRole = device.ok ? roleOf(world.now, device.value.author) : "visitor";
     const sync = this.linkState(world);
+    const removal = this.removal(world);
+    const role: WorldRole = !device.ok
+      ? "visitor"
+      : removal !== null
+        ? "removed"
+        : roleOf(world.now, device.value.author);
     const refused = await readRefused(world.dir);
     const keyError = device.ok ? null : device.error;
     const local = sync.link === "local";
@@ -134,7 +154,7 @@ export class HostCore {
       refused: refused.ok ? refused.value.active.length : 0,
       ignored: world.now.ignored.length,
       newer: newerCount(world.now),
-      error: sync.error ?? keyError ?? (refused.ok ? null : refused.error),
+      error: sync.error ?? removal ?? keyError ?? (refused.ok ? null : refused.error),
       me: device.ok ? device.value.author : null,
     };
   }

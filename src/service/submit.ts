@@ -17,6 +17,7 @@ import { admit } from "@shared/history/admit";
 import { dayOf } from "@shared/history/decay";
 import { readEvent } from "@shared/history/event";
 import { utf8Length } from "@shared/history/ids";
+import { isOwner } from "@shared/history/owners";
 import { rumorKey } from "@shared/history/rumor";
 import type { HistoryEvent, StoredEvent, WorldNow } from "@shared/history/types";
 import type { AppError } from "@shared/result";
@@ -92,7 +93,8 @@ function sequenceOne(
   // The door before the quotas: a visitor at a daily cap still hears why it may not write this.
   const door = mayWrite(now, event.kind, event.author);
   if (!door.ok) return door.error;
-  const payer = payerOf(now, now.head.n + 1, event.author, event.kind, hub.key.key);
+  const owns = isOwner(now, event.author);
+  const payer = payerOf(now, owns, now.head.n + 1, event.author, event.kind, hub.key.key);
   const bytes = utf8Length(JSON.stringify(raw)) + ENTRY_OVERHEAD;
   const input = { payer, author: event.author, kind: event.kind, bytes, ms: batch.ms };
   const spent = checkUsage(usage, hub.limits, input);

@@ -1,0 +1,27 @@
+{
+  "app": "G",
+  "port": 9348,
+  "what": "A second fresh fixture, today, no model: Continue, walk, leave Play (the land writes the day's visit), Continue again, walk more, quit from Play: one visit for the day, none written on quit",
+  "actions": [
+    { "wait": 1000 },
+    { "clickText": "設定" },
+    { "wait": 800 },
+    { "clickText": "English" },
+    { "wait": 600 },
+    { "hold": "Escape", "ms": 80 },
+    { "wait": 600 },
+    { "clickText": "Continue" },
+    { "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 120; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready') break; await new Promise(r => setTimeout(r, 250)); } const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: w.now.head.n, visits: Object.values(w.now.events).filter(e => e.kind === 'visit').length }) })()" },
+    { "pad": { "toward": "[40, 16]", "within": 1.5, "buttons": [5], "timeoutMs": 45000 } },
+    { "pad": { "toward": "[16, 16]", "within": 1.5, "buttons": [5], "timeoutMs": 45000 } },
+    { "clickText": "← Home" },
+    { "wait": 2000 },
+    { "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world; if (w.status !== 'ready') return JSON.stringify(w.status); return JSON.stringify({ screen: S.useSessionStore.getState().screen, head: w.value.now.head.n, visits: Object.values(w.value.now.events).filter(e => e.kind === 'visit').map(e => ({ n: e.n, chunks: e.body.chunks })) }) })()" },
+    { "clickText": "Continue" },
+    { "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 120; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready') break; await new Promise(r => setTimeout(r, 250)); } return S.useSessionStore.getState().screen })()" },
+    { "pad": { "toward": "[16, 40]", "within": 1.5, "buttons": [5], "timeoutMs": 45000 } },
+    { "pad": { "toward": "[-16, 16]", "within": 1.5, "buttons": [5], "timeoutMs": 45000 } },
+    { "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, head: w.now.head.n, visits: Object.values(w.now.events).filter(e => e.kind === 'visit').length }) })()" },
+    { "cdp": { "method": "Browser.close" } }
+  ]
+}

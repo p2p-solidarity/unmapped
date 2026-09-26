@@ -1,0 +1,22 @@
+{
+  "app": "F",
+  "port": 9348,
+  "what": "Today, openai gpt-5.4-mini: English, Continue, walk east into chunk 2,0 (two rings out) so the land witnesses it (the one model call of these checks), back home, quit from Play",
+  "actions": [
+    { "wait": 1000 },
+    { "eval": "(async () => { try { localStorage.setItem('aether.lang', 'en') } catch {} return document.documentElement.lang })()" },
+    { "clickText": "設定" },
+    { "wait": 800 },
+    { "clickText": "English" },
+    { "wait": 600 },
+    { "hold": "Escape", "ms": 80 },
+    { "wait": 600 },
+    { "clickText": "Continue" },
+    { "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 120; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready') break; await new Promise(r => setTimeout(r, 250)); } const w = S.useHistoryStore.getState().world; return JSON.stringify(w.status === 'ready' ? { head: w.value.now.head.n, link: w.value.status.link, visits: Object.values(w.value.now.events).filter(e => e.kind === 'visit').map(e => e.n) } : w) })()" },
+    { "pad": { "toward": "[80, 16]", "within": 2, "buttons": [5], "timeoutMs": 60000 } },
+    { "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 160; i++) { const c = S.useLandStore.getState().chunks['2,0']; if (c && c.status !== 'writing' && c.status !== 'loading') break; await new Promise(r => setTimeout(r, 250)); } const w = S.useHistoryStore.getState().world.value; const c = S.useLandStore.getState().chunks['2,0']; return JSON.stringify({ chunk2_0: c?.status, head: w.now.head.n, witness2_0: w.now.chunks['2,0']?.live ? { n: w.now.chunks['2,0'].live.n, name: w.now.chunks['2,0'].live.body.index?.name } : null }) })()" },
+    { "shot": "docs/e2e/milestone-rev6-p3-local-beat/fix-f-00-witnessed-ring-2.jpg" },
+    { "pad": { "toward": "[16, 16]", "within": 2, "buttons": [5], "timeoutMs": 60000 } },
+    { "cdp": { "method": "Browser.close" } }
+  ]
+}

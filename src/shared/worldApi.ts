@@ -4,6 +4,7 @@
 // Every payload is zod-checked in main (`main/histories/ipcSchemas.ts`).
 
 import type { ContentHash } from "./cartridge";
+import type { ChunkCoord } from "./chunks";
 import type {
   AccessPolicy,
   EventDraft,
@@ -24,6 +25,8 @@ export const WORLD_IPC = {
   read: "world:read",
   close: "world:close",
   append: "world:append",
+  /** The day's walk not yet written as a `visit` (D13): main writes it if the app quits first. */
+  walked: "world:walked",
   claim: "world:claim",
   release: "world:release",
   sendStream: "world:send-stream",
@@ -339,6 +342,12 @@ export interface WorldApi {
   /** Play left the world: snapshot, stop syncing it. */
   close(worldId: string): Promise<Result<void>>;
   append(worldId: string, draft: WorldDraft): Promise<Result<WorldAppended>>;
+  /**
+   * The chunks walked in this world today that no `visit` holds yet (D13). Main keeps the latest
+   * list (it replaces the one before) and writes it as the day's visit when the app quits before the
+   * land has; any `visit` appended for the world drops it, so a day never gets two.
+   */
+  walked(worldId: string, chunks: ChunkCoord[]): Promise<Result<void>>;
   /** 1.5 s at most; `claim-offline` when there is no service to ask. */
   claim(worldId: string, target: ClaimTarget): Promise<Result<ClaimAnswer>>;
   release(worldId: string, target: ClaimTarget): Promise<Result<void>>;

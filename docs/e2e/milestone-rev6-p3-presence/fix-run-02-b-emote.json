@@ -1,0 +1,10 @@
+{
+  "app": "B",
+  "port": 9349,
+  "what": "B emotes laugh (T, 4) so A sees the bubble over Bea's name plate",
+  "actions": [
+    { "hold": "KeyT", "ms": 80 },
+    { "wait": 250 },
+    { "hold": "Digit4", "ms": 80 }
+  ]
+}

@@ -56,3 +56,23 @@ tracks a second time per frame.
 - `run.json` plus one `run-NN-*.json` per step (ports as listed).
 - `p-a-00-emote-hd2d.jpg`, `p-b-00-emote-hd2d.jpg`, `p-a-01-emote-pixel.jpg`,
   `p-b-01-emote-pixel.jpg`; `p-a-01-zoom-remote-label.png`, a crop of `p-a-01` made with PIL.
+
+## Fixes after the run
+
+**The 16-bit remote name is legible now (fixed).** `pushActor` in
+`src/renderer/engine2d/canvasRenderer.ts` draws a label (a remote player's name, a foe's level)
+on a plate above the head. The plate uses the emote bubble's look: `LAND_2D_PALETTE.markerSurface`
+fill, with edge and text in the label's colour (`remote` for players), in a 600-weight
+0.3-tile font. The label no longer sits across the sprite. The pixel emote bubble
+(`engine2d/presenceLayer.ts`) moved from 0.8 to 1 tile over the tile centre, so it clears the
+plate. No new colours.
+
+**Re-check** (origin/main `6949a97` snapshot plus the change). This used the door re-check's
+shared world: A (9348) owns it, and B (9349, "Bea") joined through the UI. Both were in Play and
+online, about 3 tiles apart. No model was used.
+- `fix-run-01`: A pressed V (16-bit). The roster read `[{"name":"Bea","x":12.22,"z":10.22}]`,
+  with A at 9.32, 11.43. "Bea" sits on a dark plate above the sprite and reads clearly on the
+  light grass (`fix-a-00`, crop `fix-a-00-zoom-name-plate.png`).
+- `fix-run-02` then `fix-run-03`: B emoted laugh (T, 4), and A's roster read
+  `[{"name":"Bea","emote":"laugh"}]`. The bubble stands above the plate, and nothing overlaps
+  (`fix-a-01`, crop `fix-a-01-zoom-name-plate-emote.png`).

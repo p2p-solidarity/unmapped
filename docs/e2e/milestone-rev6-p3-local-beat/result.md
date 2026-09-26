@@ -60,3 +60,33 @@ Screenshot `r1-00`. The recorded run above pins a dead endpoint and moves the pl
   never fogs. `src/renderer/history/landView.ts` `chunkMarks` sets `fading` from care alone
   (`care < FADING_BELOW`), without the `FOG_SAFE_RINGS` exemption. This file is outside this
   session's area and was not changed.
+
+## Fixes after the run
+
+**Town chunks read "fading into mist" (fixed, view only).** `src/renderer/history/landView.ts`
+now sets `fading` only where fog can come: never home or the town ring. The ring rule is now
+`inTown()` in `@shared/history/decay`. The beat's fog check (`@shared/history/beat.ts`) calls the
+same function, so the two cannot drift. Its output is unchanged, and `tests/shared/physics.test.ts`
+passes (beat fingerprints included).
+
+**Re-check.** The build was an origin/main `6949a97` snapshot plus the change, on a fresh
+`legacy-land` fixture, migrated. The fixture's chunks are all in the town ring, so
+`fix-run-01-f-witness-ring-2.json` witnessed chunk 2,0 (two rings out) today. That step made this
+section's only model calls: gpt-5.4-mini `45aba512` (3,795+965 tokens), then one repair round
+`cff5e25b` (5,790+935, 3,328 cached). A third call `15363374` was aborted when the app quit, and
+no tokens were recorded for it. `fix-run-02-f-50-days.json` then relaunched the app with
+`UNMAPPED_TEST_CLOCK_DAYS=50` and no model (its care probe imports `decay.ts` by path: replace
+`__SNAP__` with the tree's absolute root). The pinned open wrote beat **n=25** (rt
+2026-11-15T05:24:06Z).
+
+| Chunk | Ring | Care (µpt, as of the newest receipt) | fogged | fading |
+| --- | --- | --- | --- | --- |
+| -1,0 | 1 | 240,165 | false | **false** |
+| 0,1 | 1 | 644,503 | false | **false** |
+| 1,0 | 1 | 724,558 | false | **false** |
+| 2,0 | 2 | 652,629 | false | **true** |
+
+All four are under 1 point (`FADING_BELOW` = 1,000,000). Before the fix, all four read as fading.
+In 1,0 the HUD reads "WRITTEN · Pole Row Crossing" with no fading line (`fix-f-01`, 16-bit
+`fix-f-04`). In 2,0 it still reads "Few come here — it is fading into mist." (HD-2D `fix-f-02`,
+16-bit `fix-f-03`). 0 `[inference]` lines in this launch.
