@@ -1,0 +1,28 @@
+{
+ "app": "C2",
+ "port": 9358,
+ "what": "verification — after the host left: where C2 stands, then home to the title (a checkpoint)",
+ "actions": [
+  {
+   "wait": 3000
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const P = (await import('/engine/playerProbe.ts')).samplePlayer(); const C = S.useContinentStore.getState(); return JSON.stringify({ p: P && [Math.round(P.x*10)/10, Math.round(P.z*10)/10], sceneId: P?.sceneId, chunk: S.useEngineStore.getState().chunk, worlds: (C.worlds ?? []).map(w => w.worldId.slice(0, 10)), status: C.status }) })()"
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-continent/c2-01-host-left-sent-home.jpg"
+  },
+  {
+   "clickText": "← Home"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(async () => { const r = await window.seed.instances.list(); return JSON.stringify(r.ok ? r.value.map(m => m.instanceId) : r.error) })()"
+  }
+ ]
+}

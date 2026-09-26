@@ -1,0 +1,37 @@
+{
+ "app": "A",
+ "port": 9356,
+ "what": "A sees (2, 0) flip to the new witness at the same n with no call, then walks in",
+ "actions": [
+  {
+   "repeat": {
+    "times": 60,
+    "until": "(async () => { const H = await import('/history/index.ts'); const c = H.worldNow().chunks['2,0']; return c !== undefined && !c.fogged })()",
+    "actions": [
+     {
+      "wait": 500
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = n.chunks['2,0']; const L = S.useLandStore.getState(); const m = L.marks['2,0']; return JSON.stringify({ head: n.head.n, land: L.chunks['2,0']?.status ?? null, sceneName: L.chunks['2,0']?.scene?.name ?? null, live: c ? { id: c.live.id, n: c.live.n, author: n.names[c.live.author] ?? c.live.author, name: c.live.body.index.name, supersedes: c.live.body.supersedes ?? null, npcs: c.live.body.index.npcs.map(p => p.name) } : null, fogged: c?.fogged, legends: c?.legends.map(l => ({ id: l.id, n: l.n, name: l.body.index.name })), marks: m ? { fogged: m.fogged, live: m.live?.name ?? null, legends: m.legends.map(x => x.name) } : null, ignored: n.ignored }) })()"
+  },
+  {
+   "pad": {
+    "toward": "[70.5, 17.5]",
+    "within": 1.0,
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(() => { const t = document.body.innerText; return t.slice(0, 400) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-fog/a-05-sees-new-2-0.jpg"
+  }
+ ]
+}

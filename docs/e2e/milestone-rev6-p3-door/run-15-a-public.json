@@ -1,0 +1,43 @@
+{
+ "app": "A",
+ "port": 9356,
+ "what": "A: door → Public",
+ "actions": [
+  {
+   "pad": {
+    "toward": "[8.5, 8.5]",
+    "within": 0.5,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Public"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 40; i++) { const w = S.useHistoryStore.getState().world.value; if (w.now.access === 'public' && w.status.pending === 0) return JSON.stringify({ access: w.now.access, head: w.now.head.n }); await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; const i = t.indexOf('Sharing'); return t.slice(i, i + 1600) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-door/a-09-public.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 400
+  }
+ ]
+}

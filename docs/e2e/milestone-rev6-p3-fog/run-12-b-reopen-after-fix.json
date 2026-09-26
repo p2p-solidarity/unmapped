@@ -1,0 +1,55 @@
+{
+ "app": "B",
+ "port": 9357,
+ "what": "after this session's landView fix (a chunk witnessed after the last beat no longer reads as fading): the page is reloaded so the store runs the fixed view, then Continue; the HUD at (2, 0)",
+ "actions": [
+  {
+   "cdp": {
+    "method": "Page.reload",
+    "params": {
+     "ignoreCache": true
+    }
+   }
+  },
+  {
+   "wait": 6000
+  },
+  {
+   "clickText": "設定"
+  },
+  {
+   "wait": 600
+  },
+  {
+   "clickText": "English"
+  },
+  {
+   "wait": 400
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && w.value.status.link === 'online') return { ms: Date.now() - t0 }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); const H=await import('/history/index.ts'); const n=H.worldNow(); const L=S.useLandStore.getState(); return JSON.stringify({head:n.head.n, tail:Object.values(n.events).sort((a,b)=>a.n-b.n).slice(-2).map(e=>e.n+':'+e.kind+':'+JSON.stringify(e.kind==='visit'?e.body??null:null)), touches:n.touches, marks:Object.fromEntries(Object.entries(L.marks).map(([k,m])=>[k,{fading:m.fading,fogged:m.fogged,legends:m.legends.map(x=>x.name)}]))})})()"
+  },
+  {
+   "eval": "document.body.innerText.slice(0,260)"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-fog/b-07-reopened-no-fading-2-0.jpg"
+  }
+ ]
+}

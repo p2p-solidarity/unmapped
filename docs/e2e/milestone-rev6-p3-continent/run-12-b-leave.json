@@ -1,0 +1,39 @@
+{
+ "app": "B",
+ "port": 9357,
+ "what": "B after A's world left the continent under it. As executed: E opened nothing (B stood at (-180.5, 11.3), not at its own door), so 'Leave the continent' was not found; Escape took B to the title (a checkpoint); the instances.read eval returned {} (no such IPC). B's save.json position was then read from disk (shell): see result.md, finding 1.",
+ "actions": [
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "Leave the continent"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 500
+  },
+  {
+   "eval": "(async () => { const P = (await import('/engine/playerProbe.ts')).samplePlayer(); return JSON.stringify(P) })()"
+  },
+  {
+   "clickText": "← Home"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(async () => { const r = await window.seed.instances.list(); const m = r.ok ? r.value.find(x => x.name.includes('VCGE')) : null; if (!m) return 'no save'; const i = await window.seed.instances.read(m.instanceId); return JSON.stringify(i.ok ? { position: i.value.save.position ?? i.value.save.land?.position ?? null, landHome: i.value.save.land?.home ?? null } : i.error) })()"
+  }
+ ]
+}

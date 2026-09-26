@@ -1,0 +1,46 @@
+{
+ "app": "A",
+ "port": 9356,
+ "what": "after advance {days: 92}: the beat, season and fog in A's fold; the witness of (2, 0) still in the log; A steps to (61.5, 16.5) and looks at the mist over (2, 0) in both looks",
+ "actions": [
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; const L = S.useLandStore.getState(); const P = (await import('/engine/playerProbe.ts')).samplePlayer(); const c = n.chunks['2,0']; return JSON.stringify({ head: n.head, season: n.season, beats: n.beats.map(b => ({ n: b.n, at: b.body.at, season: b.body.season, fog: b.body.fog, slots: b.body.slots.length, fp: b.body.fingerprint })), care: n.care, lastTouch: n.lastTouch, c20: c ? { live: c.live.id, n: c.live.n, name: c.live.body.index.name, fogged: c.fogged, legends: c.legends.map(l => l.body.index.name), variants: c.variants.length } : null, land20: L.chunks['2,0']?.status ?? null, marks20: L.marks['2,0'] ? { fogged: L.marks['2,0'].fogged, fading: L.marks['2,0'].fading, live: L.marks['2,0'].live?.name ?? null, legends: L.marks['2,0'].legends.map(x => x.name) } : null, tail: Object.values(n.events).sort((a, b) => a.n - b.n).slice(-3).map(e => e.n + ':' + e.kind + ':' + (n.names[e.author] ?? e.author.slice(0, 8))), ignored: n.ignored, link: w.status.link, p: P && [Math.round(P.x * 10) / 10, Math.round(P.z * 10) / 10], engineChunk: S.useEngineStore.getState().chunk }) })()"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; const r = await window.seed.world.read(w.worldId); const es = r.value.entries; const hit = es.find(e => e.entry.event.id === 'hvd6y73qu3ixvgptgim5uo7tcyo6b6vil4dd5o6wvbso75jebptga'); return JSON.stringify({ snapshot: r.value.snapshot ? r.value.snapshot.head : null, entries: es.length, first: es[0]?.entry.n, witness8: hit ? { n: hit.entry.n, kind: hit.entry.event.kind, verdict: hit.verdict, name: hit.entry.event.body.index.name } : 'not in the read entries' }) })()"
+  },
+  {
+   "pad": {
+    "toward": "[61.5, 16.5]",
+    "within": 0.8,
+    "timeoutMs": 10000
+   }
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-fog/a-01-fogged-2-0-hd2d.jpg"
+  },
+  {
+   "hold": "KeyV",
+   "ms": 80
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-fog/a-02-fogged-2-0-16bit.jpg"
+  },
+  {
+   "hold": "KeyV",
+   "ms": 80
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(() => { const t = document.body.innerText; const i = t.indexOf('LAND'); return t.slice(0, 700) })()"
+  }
+ ]
+}

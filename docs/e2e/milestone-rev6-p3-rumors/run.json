@@ -1,0 +1,647 @@
+{
+ "flow": "rumors",
+ "env": {
+  "build": "The working tree as of 2026-09-26T04:04:51Z (HEAD 51817a3; its files equal origin/main 1feecbf plus other sessions' uncommitted changes; `git diff HEAD | shasum -a 256` = bb7c45172e4baa5a…, `git status --porcelain | shasum -a 256` = 919c119cb9dea3ec…), copied with `rsync -a --exclude node_modules --exclude .git --exclude docs --exclude native --exclude .cache --exclude out` to a scratch dir SNAP; node_modules and .env symlinked to the repo's; native/afm-bridge cloned (`cp -cR`). One snapshot-only line: electron.vite.config.ts renderer `cacheDir: resolve(__dirname, '.vite-cache')`. Why: other sessions edit the shared tree live and HMR reloads put apps back on the title mid-run. This session's fixes were copied into SNAP as they were made (see result.md, 'Code changed').",
+  "service": "cd $SNAP && UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8802 --data <fresh dir>   (background)",
+  "apps": "cd $SNAP && AETHER_TEST_USER_DATA=<fresh dir> bun run dev --remoteDebuggingPort <port>   (background; A 9356, B 9357, C 9358)",
+  "driver": "CDP_PORT=<port> bun scripts/cdp-drive.ts \"$(cat <step file>)\"   (from the repo root; a step file is {app, port, what, actions})",
+  "invite": "__INVITE__ in a step file is the link the owner's invite step printed last; substitute it with a literal string replace (python), not sed (the link holds '&k=')",
+  "quit": "Browser.close on the browser target (GET http://127.0.0.1:<port>/json/version → webSocketDebuggerUrl), then kill the electron-vite process if it still listens",
+  "window": "1440 x 846 CSS px at device scale 2 (screenshots 2880 x 1678), in the background; each app switched to English in its first step",
+  "platform": "macOS 27.0, Bun 1.3.6, Electron 44.3.0",
+  "service_data": "svc-n (world N, shared with the fog flow)",
+  "userData": "ud-an (A, 9356), ud-bn (B, 9357)"
+ },
+ "model": {
+  "provider": "openai",
+  "model": "gpt-5.4-mini",
+  "source": "Settings → Model default on a fresh userData; OPENAI_API_KEY from the repo .env, read by main only"
+ },
+ "note": "Steps 1–13 are the flow on world N; 14–15 add the two IPC refusals that need a beat with fewer than six slots (after the fog beat) and a visitor device (the door flow's C). The seed is rolled by New game, so names and ids differ on a replay.",
+ "steps": [
+  {
+   "step": 1,
+   "app": "A",
+   "port": 9356,
+   "what": "Settings: English, add ws://127.0.0.1:8802, Test",
+   "file": "run-01-a-settings.json",
+   "actions": [
+    {
+     "clickText": "設定"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "English"
+    },
+    {
+     "wait": 600
+    },
+    {
+     "eval": "(() => { const ta = [...document.querySelectorAll('textarea')].find(t => (t.closest('label')?.innerText ?? '').includes('World services') || (t.labels?.[0]?.innerText ?? '').includes('World services')); if (!ta) return 'no field'; ta.scrollIntoView({block: 'center'}); ta.focus(); return ta === document.activeElement })()"
+    },
+    {
+     "type": "ws://127.0.0.1:8802"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Save"
+    },
+    {
+     "wait": 400
+    },
+    {
+     "eval": "(() => { const field = [...document.querySelectorAll('textarea')].find(t => t.value.includes('ws://127.0.0.1:8802')); let box = field; while (box && ![...box.querySelectorAll('button')].some(b => b.innerText.trim() === 'Test')) box = box.parentElement; const btn = [...box.querySelectorAll('button')].find(b => b.innerText.trim() === 'Test'); btn.scrollIntoView({block: 'center'}); btn.click(); return 'clicked Test' })()"
+    },
+    {
+     "wait": 2500
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('ws://127.0.0.1:8802\\n'); return at < 0 ? 'no probe line' : t.slice(at, at + 400) })()"
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('rumors'); return at < 0 ? 'no rumor line' : t.slice(Math.max(0, at - 300), at + 300) })()"
+    },
+    {
+     "eval": "localStorage.getItem('unwritten.worldServices')"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-rumors/a-00-settings-service.jpg"
+    }
+   ]
+  },
+  {
+   "step": 2,
+   "app": "A",
+   "port": 9356,
+   "what": "Worlds → New game → Start; the origin chunk is witnessed and chapter e1 written ahead",
+   "file": "run-02-a-newgame.json",
+   "actions": [
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 600
+    },
+    {
+     "clickText": "Worlds"
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "text": true
+    },
+    {
+     "clickText": "Start"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance) return { ms: Date.now() - t0, instance: s.activeInstance.instance?.instanceId ?? null, seed: s.activeInstance.instance?.save?.seed ?? null }; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + S.useSessionStore.getState().screen })()"
+    },
+    {
+     "wait": 3000
+    },
+    {
+     "text": true
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-rumors/a-01-play.jpg"
+    },
+    {
+     "repeat": {
+      "times": 120,
+      "until": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return n !== null && n.chunks['0,0'] !== undefined && n.chapters.e1?.live != null })()",
+      "actions": [
+       {
+        "wait": 1000
+       }
+      ]
+     }
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world; const P = (await import('/engine/playerProbe.ts')).samplePlayer(); return JSON.stringify({ worldId: w.value?.worldId, head: n?.head, link: w.value?.status?.link, role: w.value?.status?.role, pending: w.value?.status?.pending, chunks: n && Object.fromEntries(Object.entries(n.chunks).map(([k, c]) => [k, { id: c.live.id.slice(0, 12), n: c.live.n, name: c.live.body.index.name, npcs: c.live.body.index.npcs.map(p => p.name) }])), chapters: n && Object.fromEntries(Object.entries(n.chapters).map(([k, c]) => [k, c.live ? { n: c.live.n, title: c.live.body.title, kind: c.live.body.kind } : null])), p: P && [P.x, P.z] }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-rumors/a-02-origin-and-e1.jpg"
+    }
+   ]
+  },
+  {
+   "step": 3,
+   "app": "A",
+   "port": 9356,
+   "what": "E at the door: Share on 127.0.0.1:8802, then Create an invite (1 use, 7 days) for B",
+   "file": "run-03-a-share-invite.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[8.5, 8.5]",
+      "within": 0.8,
+      "timeoutMs": 10000
+     }
+    },
+    {
+     "hold": "KeyE",
+     "ms": 120
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); return l ? l.innerText.slice(0, 3000) : 'no door layer' })()"
+    },
+    {
+     "clickText": "Share on 127.0.0.1:8802"
+    },
+    {
+     "eval": "(async () => { const t0 = Date.now(); for (let i = 0; i < 120; i++) { const l = document.querySelector('[data-layer=door]'); const t = l ? l.innerText : ''; if (/Online/.test(t) && /Invites/.test(t)) return { ms: Date.now() - t0 }; await new Promise(r => setTimeout(r, 250)); } const l = document.querySelector('[data-layer=door]'); return 'timeout: ' + (l ? l.innerText.slice(0, 1500) : 'no door') })()"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "Create an invite"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 40; i++) { const l = document.querySelector('[data-layer=door]'); const m = l && /unmapped:\\/\\/join\\?i=[A-Za-z0-9_\\-]+&k=[A-Za-z0-9_\\-]+/.exec([...l.querySelectorAll('input, textarea')].map(x => x.value).join('\\n') + '\\n' + l.innerText); if (m) { window.__invite = m[0]; return m[0].length; } await new Promise(r => setTimeout(r, 250)); } return 'no link' })()"
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); return l ? l.innerText.slice(0, 3000) : 'no door layer' })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-rumors/a-03-door-shared-invite.jpg"
+    },
+    {
+     "eval": "window.__invite"
+    }
+   ]
+  },
+  {
+   "step": 4,
+   "app": "shell",
+   "what": "start B: cd $SNAP && AETHER_TEST_USER_DATA=$SCR/ud-bn bun run dev --remoteDebuggingPort 9357; save A's printed link as invite-n-b.txt"
+  },
+  {
+   "step": 5,
+   "app": "B",
+   "port": 9357,
+   "what": "Settings: English, add ws://127.0.0.1:8802, Test",
+   "file": "run-05-b-settings.json",
+   "actions": [
+    {
+     "clickText": "設定"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "English"
+    },
+    {
+     "wait": 600
+    },
+    {
+     "eval": "(() => { const ta = [...document.querySelectorAll('textarea')].find(t => (t.closest('label')?.innerText ?? '').includes('World services') || (t.labels?.[0]?.innerText ?? '').includes('World services')); if (!ta) return 'no field'; ta.scrollIntoView({block: 'center'}); ta.focus(); return ta === document.activeElement })()"
+    },
+    {
+     "type": "ws://127.0.0.1:8802"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Save"
+    },
+    {
+     "wait": 400
+    },
+    {
+     "eval": "(() => { const field = [...document.querySelectorAll('textarea')].find(t => t.value.includes('ws://127.0.0.1:8802')); let box = field; while (box && ![...box.querySelectorAll('button')].some(b => b.innerText.trim() === 'Test')) box = box.parentElement; const btn = [...box.querySelectorAll('button')].find(b => b.innerText.trim() === 'Test'); btn.scrollIntoView({block: 'center'}); btn.click(); return 'clicked Test' })()"
+    },
+    {
+     "wait": 2500
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('ws://127.0.0.1:8802\\n'); return at < 0 ? 'no probe line' : t.slice(at, at + 400) })()"
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('rumors'); return at < 0 ? 'no rumor line' : t.slice(Math.max(0, at - 300), at + 300) })()"
+    },
+    {
+     "eval": "localStorage.getItem('unwritten.worldServices')"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-rumors/b-00-settings-service.jpg"
+    }
+   ]
+  },
+  {
+   "step": 6,
+   "app": "B",
+   "port": 9357,
+   "what": "Worlds → Join a world, paste __INVITE__ (A's link), Look at the world, name Bea, Join and play",
+   "file": "run-06-b-join.json",
+   "actions": [
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 600
+    },
+    {
+     "clickText": "Worlds"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "Join a world"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input, textarea')].find(x => (x.closest('label')?.innerText ?? '').includes('Invite link')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+    },
+    {
+     "type": "__INVITE__"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Look at the world"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 40; i++) { if (/Your name in this world/.test(document.body.innerText) || /Error/.test(document.body.innerText)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('Join a world'); return t.slice(at, at + 1200) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-rumors/b-01-join-preview.jpg"
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input')].find(x => (x.closest('label')?.innerText ?? '').includes('Your name in this world')); if (!f) return 'no name field'; f.focus(); f.select(); return f.value })()"
+    },
+    {
+     "type": "Bea"
+    },
+    {
+     "eval": "window.__t0 = performance.now(); 'mark'"
+    },
+    {
+     "clickText": "Join and play"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && s.activeInstance && w.status === 'ready') return { ms: Math.round(performance.now() - window.__t0), link: w.value.status.link, role: w.value.status.role, head: w.value.status.head }; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; return 'timeout: ' + t.slice(0, 1500) })()"
+    },
+    {
+     "wait": 3000
+    },
+    {
+     "text": true
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-rumors/b-02-joined-play.jpg"
+    }
+   ]
+  },
+  {
+   "step": 7,
+   "app": "B",
+   "port": 9357,
+   "what": "install the chapter helper (from milestone-rev6-p2-gamepad); walk the z=16 ford east into (1, 0) and (2, 0): B witnesses both",
+   "file": "run-07-b-walk-east.json",
+   "actions": [
+    {
+     "eval": "(() => {\n  const e2e = (window.__e2e = window.__e2e || {});\n  // Shared modules are served under /@fs/<absolute path>; read that URL from a renderer module\n  // that imports them, so the helper runs on any checkout.\n  e2e.shared = async (name) => {\n    e2e.urls = e2e.urls || {};\n    if (!e2e.urls[name]) {\n      const code = await (await fetch('/engine2d/LandView2D.tsx')).text();\n      const found = code.match(new RegExp('\"(/@fs/[^\"]*/src/shared/' + name + '\\\\.ts[^\"]*)\"'));\n      e2e.urls[name] = found ? found[1] : null;\n    }\n    return import(e2e.urls[name]);\n  };\n  e2e.pos = async () => {\n    const p = (await import('/engine/playerProbe.ts')).samplePlayer();\n    return p === null ? null : [Math.round(p.x * 10) / 10, Math.round(p.z * 10) / 10];\n  };\n  // What a player sees of the current chapter: its gate, its people and treasures (world tiles).\n  e2e.chapter = async () => {\n    const S = await import('/state/index.ts');\n    const L = await import('/engine2d/chapterLayer.ts');\n    const M = await import('/engine2d/landModel.ts');\n    const story = await e2e.shared('story');\n    const land = await e2e.shared('land');\n    const session = S.useSessionStore.getState();\n    const world = S.useWorldStore.getState();\n    const landState = S.useLandStore.getState();\n    const active = session.activeInstance;\n    if (!active || world.scene.status !== 'ready' || !active.cartridge.story) return null;\n    const progress = landState.progress;\n    const episodes = story.storyEpisodes(active.cartridge.story, progress?.storyMore);\n    const next = story.nextEpisode(episodes, progress?.episodes ?? {});\n    if (!next) return { cleared: true, episodes: progress?.episodes ?? {} };\n    const gate = story.episodeGate(next);\n    const stage = progress?.episodes?.[next.id]?.stage ?? null;\n    const base = { id: next.id, title: next.title, gate: [gate.x, gate.z], written: stage !== null };\n    if (!stage || stage.kind !== 'land') return { ...base, kind: stage?.kind ?? null };\n    const draft = L.readChapter(stage.source);\n    if (!draft) return { ...base, unreadable: true };\n    const seed = land.landSeedOf(active.instance.save);\n    const graph = world.scene.value;\n    const residents = L.residentTiles ? L.residentTiles(landState.chunks) : new Set();\n    const free = (x, z) => !residents.has(x + ',' + z) && M.canStandAt(graph, seed, landState.chunks, x + 0.5, z + 0.5, null);\n    const scene = L.chapterScene(next, stage, draft, free);\n    return {\n      ...base,\n      npcs: scene.npcs.map((n) => ({ id: n.id, name: n.name, at: [n.x + 0.5, n.z + 0.5],\n        met: stage.met.includes(n.id.split(':')[2]) })),\n      treasures: scene.treasures.map((t) => ({ id: t.id, at: [t.x + 0.5, t.z + 0.5],\n        found: stage.found.includes(t.id.split(':')[2]) })),\n      monsters: scene.monsters.length,\n      met: stage.met, found: stage.found,\n    };\n  };\n  // The next thing of the chapter still to do: the nearest unmet person or unopened treasure.\n  e2e.nextTodo = async () => {\n    const c = await e2e.chapter();\n    const at = await e2e.pos();\n    if (!c || !c.npcs || !at) return null;\n    const todo = [...c.npcs.filter((n) => !n.met), ...c.treasures.filter((t) => !t.found)];\n    todo.sort((a, b) => Math.hypot(a.at[0] - at[0], a.at[1] - at[1]) - Math.hypot(b.at[0] - at[0], b.at[1] - at[1]));\n    return todo[0] ?? null;\n  };\n  // Where a player would stand to face it: a free spot next to it from which it, and nothing else\n  // (the gate, a neighbour, a resident of the land), is the nearest thing when A is pressed.\n  e2e.others = async () => {\n    const S = await import('/state/index.ts');\n    const c = await e2e.chapter();\n    // [x, z, reach]: a gate reaches 0.8 tiles further than a person (engine2d/storyLayer).\n    const points = c && c.gate ? [[c.gate[0], c.gate[1], 0.8]] : [];\n    if (c && c.npcs) points.push(...c.npcs.map((n) => [...n.at, 0]), ...c.treasures.filter((t) => !t.found).map((t) => [...t.at, 0]));\n    for (const [key, chunk] of Object.entries(S.useLandStore.getState().chunks)) {\n      if (chunk.status !== 'written') continue;\n      const [cx, cz] = key.split(',').map(Number);\n      for (const n of chunk.scene.npcs) points.push([cx * 32 + n.x + 0.5, cz * 32 + n.z + 0.5, 0]);\n    }\n    return points;\n  };\n  e2e.spot = async () => {\n    const t = await e2e.nextTodo();\n    const at = await e2e.pos();\n    if (!t || !at) return null;\n    const S = await import('/state/index.ts');\n    const M = await import('/engine2d/landModel.ts');\n    const land = await e2e.shared('land');\n    const active = S.useSessionStore.getState().activeInstance;\n    const graph = S.useWorldStore.getState().scene.value;\n    const seed = land.landSeedOf(active.instance.save);\n    const chunks = S.useLandStore.getState().chunks;\n    const others = (await e2e.others()).filter((p) => Math.hypot(p[0] - t.at[0], p[1] - t.at[1]) > 0.01);\n    const spots = [];\n    for (const r of [0.8, 1.2]) {\n      for (let i = 0; i < 16; i += 1) {\n        const a = (i / 16) * Math.PI * 2;\n        const p = [t.at[0] + Math.cos(a) * r, t.at[1] + Math.sin(a) * r];\n        if (!M.canStandAt(graph, seed, chunks, p[0], p[1], null)) continue;\n        const nearestOther = Math.min(...others.map((o) => Math.hypot(o[0] - p[0], o[1] - p[1]) - o[2]));\n        if (nearestOther <= r + 0.3) continue;\n        spots.push(p);\n      }\n    }\n    spots.sort((a, b) => Math.hypot(a[0] - at[0], a[1] - at[1]) - Math.hypot(b[0] - at[0], b[1] - at[1]));\n    return spots[0] ?? t.at;\n  };\n  e2e.state = async () => {\n    const S = await import('/state/index.ts');\n    const s = S.useSessionStore.getState();\n    const en = S.useEngineStore.getState();\n    const layer = [...document.querySelectorAll('[data-layer], [role=dialog]')].filter((l) => l.getClientRects().length > 0).map((l) => l.getAttribute('data-layer') ?? l.getAttribute('role'));\n    return {\n      screen: s.screen, input: document.documentElement.dataset.input ?? null,\n      pos: await e2e.pos(), chunk: en.chunk, nearby: en.nearby && { kind: en.nearby.kind, id: en.nearby.id, label: en.nearby.label },\n      locked: en.inputLocked, dialogue: s.dialogue?.status ?? null, speaker: s.dialogueSpeaker,\n      episodeOpen: s.episodeOpen, layers: layer,\n      focus: document.activeElement && document.activeElement !== document.body ? (document.activeElement.innerText || document.activeElement.getAttribute('aria-label') || document.activeElement.tagName).slice(0, 60) : null,\n    };\n  };\n  return Object.keys(e2e);\n})()\n"
+    },
+    {
+     "pad": {
+      "toward": "[16.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[40.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "repeat": {
+      "times": 120,
+      "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['1,0']; return c !== undefined && c.status !== 'writing' })()",
+      "actions": [
+       {
+        "wait": 500
+       }
+      ]
+     }
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = S.useLandStore.getState().chunks['1,0']; const w = n.chunks['1,0']; return JSON.stringify({ status: c?.status, name: c?.scene?.name ?? null, head: n.head.n, live: w ? { id: w.live.id, n: w.live.n, author: w.live.author, npcs: w.live.body.index.npcs.map(p => p.id + ':' + p.name) } : null, pending: S.useHistoryStore.getState().world.value?.status?.pending }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-rumors/b-03-witnessed-1-0.jpg"
+    },
+    {
+     "pad": {
+      "toward": "[72.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "repeat": {
+      "times": 120,
+      "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['2,0']; return c !== undefined && c.status !== 'writing' })()",
+      "actions": [
+       {
+        "wait": 500
+       }
+      ]
+     }
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = S.useLandStore.getState().chunks['2,0']; const w = n.chunks['2,0']; return JSON.stringify({ status: c?.status, name: c?.scene?.name ?? null, head: n.head.n, live: w ? { id: w.live.id, n: w.live.n, author: w.live.author, npcs: w.live.body.index.npcs.map(p => p.id + ':' + p.name) } : null, pending: S.useHistoryStore.getState().world.value?.status?.pending }) })()"
+    },
+    {
+     "eval": "(async()=>JSON.stringify(await window.__e2e.chapter()))()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-rumors/b-04-witnessed-2-0.jpg"
+    }
+   ]
+  },
+  {
+   "step": 8,
+   "app": "B",
+   "port": 9357,
+   "what": "B meets Haru, Miwa and Ken and opens the locker at the e1 gate (2, 0): the chapter clears and B's chapter.cleared deed is written",
+   "file": "run-08-b-clear-e1.json",
+   "actions": [
+    {
+     "eval": "(async()=>{window.__e2e.t0=Date.now(); return JSON.stringify(await window.__e2e.chapter())})()"
+    },
+    {
+     "repeat": {
+      "times": 12,
+      "until": "(async()=>{const S=await import('/state/index.ts'); return S.useLandStore.getState().progress?.episodes?.e1?.cleared===true})()",
+      "actions": [
+       {
+        "eval": "window.__e2e.nextTodo()"
+       },
+       {
+        "pad": {
+         "toward": "window.__e2e.spot()",
+         "within": 0.3,
+         "timeoutMs": 15000
+        }
+       },
+       {
+        "eval": "window.__e2e.state().then(s=>s.nearby)"
+       },
+       {
+        "repeat": {
+         "times": 1,
+         "until": "(async()=>{const s=await window.__e2e.state(); const t=await window.__e2e.nextTodo(); return !t || !s.nearby || s.nearby.id!==t.id})()",
+         "actions": [
+          {
+           "pad": {
+            "buttons": [
+             0
+            ]
+           }
+          }
+         ]
+        }
+       },
+       {
+        "wait": 600
+       },
+       {
+        "eval": "window.__e2e.state().then(s=>({dialogue:s.dialogue, speaker:s.speaker, focus:s.focus}))"
+       },
+       {
+        "repeat": {
+         "times": 4,
+         "until": "(async()=>{const S=await import('/state/index.ts'); return S.useSessionStore.getState().dialogue===null})()",
+         "actions": [
+          {
+           "pad": {
+            "buttons": [
+             0
+            ],
+            "ms": 200
+           }
+          },
+          {
+           "wait": 600
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(async()=>{const S=await import('/state/index.ts'); const H=await import('/history/index.ts'); const p=S.useLandStore.getState().progress; const e=p.episodes.e1; const n=H.worldNow(); const deeds=Object.values(n.events).filter(r=>r.kind==='deed'); return JSON.stringify({ms: Date.now()-window.__e2e.t0, cleared:e.cleared, met:e.stage?.met, found:e.stage?.found, carry:p.storyCarry, head:n.head.n, deeds: deeds.map(d=>({id:d.id, n:d.n, author:d.author, label:d.label, where:d.where, pending:d.pending}))})})()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-rumors/b-05-chapter-cleared.jpg"
+    }
+   ]
+  },
+  {
+   "step": 9,
+   "app": "shell",
+   "what": "curl -s -X POST http://127.0.0.1:8802/v1/test/advance -H 'content-type: application/json' -d '{\"days\":1}'  → the service beats world N (n=11); A, in Play with the rumor switch on Auto, writes the batch by itself"
+  },
+  {
+   "step": 10,
+   "app": "A",
+   "port": 9356,
+   "what": "A walks to Aya (0, 0), the listener of slot 0, and talks: her stored words and a 'They say…' row, no model call",
+   "file": "run-10-a-listener.json",
+   "actions": [
+    {
+     "eval": "(() => {\n  const e2e = (window.__e2e = window.__e2e || {});\n  // Shared modules are served under /@fs/<absolute path>; read that URL from a renderer module\n  // that imports them, so the helper runs on any checkout.\n  e2e.shared = async (name) => {\n    e2e.urls = e2e.urls || {};\n    if (!e2e.urls[name]) {\n      const code = await (await fetch('/engine2d/LandView2D.tsx')).text();\n      const found = code.match(new RegExp('\"(/@fs/[^\"]*/src/shared/' + name + '\\\\.ts[^\"]*)\"'));\n      e2e.urls[name] = found ? found[1] : null;\n    }\n    return import(e2e.urls[name]);\n  };\n  e2e.pos = async () => {\n    const p = (await import('/engine/playerProbe.ts')).samplePlayer();\n    return p === null ? null : [Math.round(p.x * 10) / 10, Math.round(p.z * 10) / 10];\n  };\n  // What a player sees of the current chapter: its gate, its people and treasures (world tiles).\n  e2e.chapter = async () => {\n    const S = await import('/state/index.ts');\n    const L = await import('/engine2d/chapterLayer.ts');\n    const M = await import('/engine2d/landModel.ts');\n    const story = await e2e.shared('story');\n    const land = await e2e.shared('land');\n    const session = S.useSessionStore.getState();\n    const world = S.useWorldStore.getState();\n    const landState = S.useLandStore.getState();\n    const active = session.activeInstance;\n    if (!active || world.scene.status !== 'ready' || !active.cartridge.story) return null;\n    const progress = landState.progress;\n    const episodes = story.storyEpisodes(active.cartridge.story, progress?.storyMore);\n    const next = story.nextEpisode(episodes, progress?.episodes ?? {});\n    if (!next) return { cleared: true, episodes: progress?.episodes ?? {} };\n    const gate = story.episodeGate(next);\n    const stage = progress?.episodes?.[next.id]?.stage ?? null;\n    const base = { id: next.id, title: next.title, gate: [gate.x, gate.z], written: stage !== null };\n    if (!stage || stage.kind !== 'land') return { ...base, kind: stage?.kind ?? null };\n    const draft = L.readChapter(stage.source);\n    if (!draft) return { ...base, unreadable: true };\n    const seed = land.landSeedOf(active.instance.save);\n    const graph = world.scene.value;\n    const residents = L.residentTiles ? L.residentTiles(landState.chunks) : new Set();\n    const free = (x, z) => !residents.has(x + ',' + z) && M.canStandAt(graph, seed, landState.chunks, x + 0.5, z + 0.5, null);\n    const scene = L.chapterScene(next, stage, draft, free);\n    return {\n      ...base,\n      npcs: scene.npcs.map((n) => ({ id: n.id, name: n.name, at: [n.x + 0.5, n.z + 0.5],\n        met: stage.met.includes(n.id.split(':')[2]) })),\n      treasures: scene.treasures.map((t) => ({ id: t.id, at: [t.x + 0.5, t.z + 0.5],\n        found: stage.found.includes(t.id.split(':')[2]) })),\n      monsters: scene.monsters.length,\n      met: stage.met, found: stage.found,\n    };\n  };\n  // The next thing of the chapter still to do: the nearest unmet person or unopened treasure.\n  e2e.nextTodo = async () => {\n    const c = await e2e.chapter();\n    const at = await e2e.pos();\n    if (!c || !c.npcs || !at) return null;\n    const todo = [...c.npcs.filter((n) => !n.met), ...c.treasures.filter((t) => !t.found)];\n    todo.sort((a, b) => Math.hypot(a.at[0] - at[0], a.at[1] - at[1]) - Math.hypot(b.at[0] - at[0], b.at[1] - at[1]));\n    return todo[0] ?? null;\n  };\n  // Where a player would stand to face it: a free spot next to it from which it, and nothing else\n  // (the gate, a neighbour, a resident of the land), is the nearest thing when A is pressed.\n  e2e.others = async () => {\n    const S = await import('/state/index.ts');\n    const c = await e2e.chapter();\n    // [x, z, reach]: a gate reaches 0.8 tiles further than a person (engine2d/storyLayer).\n    const points = c && c.gate ? [[c.gate[0], c.gate[1], 0.8]] : [];\n    if (c && c.npcs) points.push(...c.npcs.map((n) => [...n.at, 0]), ...c.treasures.filter((t) => !t.found).map((t) => [...t.at, 0]));\n    for (const [key, chunk] of Object.entries(S.useLandStore.getState().chunks)) {\n      if (chunk.status !== 'written') continue;\n      const [cx, cz] = key.split(',').map(Number);\n      for (const n of chunk.scene.npcs) points.push([cx * 32 + n.x + 0.5, cz * 32 + n.z + 0.5, 0]);\n    }\n    return points;\n  };\n  e2e.spot = async () => {\n    const t = await e2e.nextTodo();\n    const at = await e2e.pos();\n    if (!t || !at) return null;\n    const S = await import('/state/index.ts');\n    const M = await import('/engine2d/landModel.ts');\n    const land = await e2e.shared('land');\n    const active = S.useSessionStore.getState().activeInstance;\n    const graph = S.useWorldStore.getState().scene.value;\n    const seed = land.landSeedOf(active.instance.save);\n    const chunks = S.useLandStore.getState().chunks;\n    const others = (await e2e.others()).filter((p) => Math.hypot(p[0] - t.at[0], p[1] - t.at[1]) > 0.01);\n    const spots = [];\n    for (const r of [0.8, 1.2]) {\n      for (let i = 0; i < 16; i += 1) {\n        const a = (i / 16) * Math.PI * 2;\n        const p = [t.at[0] + Math.cos(a) * r, t.at[1] + Math.sin(a) * r];\n        if (!M.canStandAt(graph, seed, chunks, p[0], p[1], null)) continue;\n        const nearestOther = Math.min(...others.map((o) => Math.hypot(o[0] - p[0], o[1] - p[1]) - o[2]));\n        if (nearestOther <= r + 0.3) continue;\n        spots.push(p);\n      }\n    }\n    spots.sort((a, b) => Math.hypot(a[0] - at[0], a[1] - at[1]) - Math.hypot(b[0] - at[0], b[1] - at[1]));\n    return spots[0] ?? t.at;\n  };\n  e2e.state = async () => {\n    const S = await import('/state/index.ts');\n    const s = S.useSessionStore.getState();\n    const en = S.useEngineStore.getState();\n    const layer = [...document.querySelectorAll('[data-layer], [role=dialog]')].filter((l) => l.getClientRects().length > 0).map((l) => l.getAttribute('data-layer') ?? l.getAttribute('role'));\n    return {\n      screen: s.screen, input: document.documentElement.dataset.input ?? null,\n      pos: await e2e.pos(), chunk: en.chunk, nearby: en.nearby && { kind: en.nearby.kind, id: en.nearby.id, label: en.nearby.label },\n      locked: en.inputLocked, dialogue: s.dialogue?.status ?? null, speaker: s.dialogueSpeaker,\n      episodeOpen: s.episodeOpen, layers: layer,\n      focus: document.activeElement && document.activeElement !== document.body ? (document.activeElement.innerText || document.activeElement.getAttribute('aria-label') || document.activeElement.tagName).slice(0, 60) : null,\n    };\n  };\n  return Object.keys(e2e);\n})()\n"
+    },
+    {
+     "pad": {
+      "toward": "(async()=>{const S=await import('/state/index.ts'); const M=await import('/engine2d/landModel.ts'); const land=await window.__e2e.shared('land'); const c=S.useLandStore.getState().chunks['0,0']; const npc=c.scene.npcs.find(p=>p.id==='aya'); const at=[0*32+npc.x+0.5, 0*32+npc.z+0.5]; const active=S.useSessionStore.getState().activeInstance; const graph=S.useWorldStore.getState().scene.value; const seed=land.landSeedOf(active.instance.save); const chunks=S.useLandStore.getState().chunks; const others=[]; for (const [key, ch] of Object.entries(chunks)) { if (ch.status!=='written') continue; const [cx,cz]=key.split(',').map(Number); for (const n of ch.scene.npcs) { const p=[cx*32+n.x+0.5, cz*32+n.z+0.5]; if (Math.hypot(p[0]-at[0],p[1]-at[1])>0.01) others.push(p); } } const spots=[]; for (const r of [0.8,1.2]) for (let i=0;i<16;i++){ const a=i/16*Math.PI*2; const p=[at[0]+Math.cos(a)*r, at[1]+Math.sin(a)*r]; if(!M.canStandAt(graph, seed, chunks, p[0], p[1], null)) continue; const near=Math.min(99,...others.map(o=>Math.hypot(o[0]-p[0],o[1]-p[1]))); if (near<=r+0.3) continue; spots.push(p);} return spots[0] ?? at; })()",
+      "within": 0.3,
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "eval": "window.__e2e.state().then(s=>JSON.stringify(s.nearby))"
+    },
+    {
+     "pad": {
+      "buttons": [
+       0
+      ]
+     }
+    },
+    {
+     "wait": 900
+    },
+    {
+     "eval": "(()=>{const l=document.querySelector('[data-layer=dialogue]'); return l ? l.innerText.slice(0, 1500) : 'no dialogue layer'})()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-rumors/a-04-aya-they-say.jpg"
+    },
+    {
+     "repeat": {
+      "times": 4,
+      "until": "(async()=>{const S=await import('/state/index.ts'); return S.useSessionStore.getState().dialogue===null})()",
+      "actions": [
+       {
+        "hold": "Escape",
+        "ms": 80
+       },
+       {
+        "wait": 500
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "step": 11,
+   "app": "A",
+   "port": 9356,
+   "what": "A at the door: Public (so the probe's visitor can open), Create an invite for the probe key",
+   "file": "run-11-a-public-probe-invite.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[8.5, 8.5]",
+      "within": 0.8,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "hold": "KeyE",
+     "ms": 120
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "clickText": "Public"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 40; i++) { const l = document.querySelector('[data-layer=door]'); if (l && /Anyone with the world/i.test(l.innerText) && !/Waiting/i.test(l.innerText)) break; await new Promise(r => setTimeout(r, 250)); } const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ access: w.now.access, head: w.now.head.n }) })()"
+    },
+    {
+     "clickText": "Create an invite"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 40; i++) { const l = document.querySelector('[data-layer=door]'); const m = l && /unmapped:\\/\\/join\\?i=[A-Za-z0-9_\\-]+&k=[A-Za-z0-9_\\-]+/.exec([...l.querySelectorAll('input, textarea')].map(x => x.value).join('\\n')); if (m) { window.__invite = m[0]; return m[0].length; } await new Promise(r => setTimeout(r, 250)); } return 'no link' })()"
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); return l ? l.innerText.slice(0, 3000) : 'no door layer' })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-rumors/a-05-public-probe-invite.jpg"
+    },
+    {
+     "eval": "window.__invite"
+    }
+   ]
+  },
+  {
+   "step": 12,
+   "app": "shell",
+   "what": "cd $SNAP && bun run world:probe -- --service ws://127.0.0.1:8802 join --link \"$(cat invite-n-probe.txt)\" --key-file $SCR/probe-n.key --name Probe; then bun run world:probe -- --service ws://127.0.0.1:8802 rumors --world hf52k37eeoany52pb64wqse2x7p5sfaykp5cveojtuqp3kvo2vw3a --key-file $SCR/probe-n.key (run twice; outputs probe-*.out.jsonl)"
+  },
+  {
+   "step": 13,
+   "app": "B",
+   "port": 9357,
+   "what": "The same refusals through main: B (a member) appends four bad rumor drafts with window.seed.world.append; main refuses each before signing",
+   "file": "run-13-b-ipc-refusals.json",
+   "actions": [
+    {
+     "eval": "(async () => {\n  const H = await import('/history/index.ts'); const S = await import('/state/index.ts');\n  const w = S.useHistoryStore.getState().world.value; const n = H.worldNow();\n  const beat = n.beats[n.beats.length - 1]; const slot = beat.body.slots[0];\n  const cited = n.events[slot.cite].label;\n  const before = { head: n.head.n, refused: w.status.refused, pending: w.status.pending };\n  const tries = [\n    ['uncited', { beat: beat.id, slot: 0, text: 'They say the wind turned at dusk.' }],\n    ['names another label', { beat: beat.id, slot: 0, text: 'They say ' + cited + ' was seen with ' + n.names[w.now.owner] + '.' }],\n    ['a slot the beat did not open (6)', { beat: beat.id, slot: 6, text: 'They say ' + cited + ' was here.' }],\n    ['a beat this world never had', { beat: w.worldId, slot: 0, text: 'They say ' + cited + ' was here.' }],\n  ];\n  const out = [];\n  for (const [what, body] of tries) {\n    const r = await window.seed.world.append(w.worldId, { kind: 'rumor', body, seen: n.head.n });\n    out.push({ what, text: body.text, slot: body.slot, result: r.ok ? 'written ' + r.value.id : r.error.code + ': ' + r.error.message });\n  }\n  await new Promise(r => setTimeout(r, 1500));\n  const w2 = S.useHistoryStore.getState().world.value;\n  return JSON.stringify({ before, after: { head: H.worldNow().head.n, refused: w2.status.refused, pending: w2.status.pending }, role: w2.status.role, out }, null, 1);\n})()"
+    }
+   ]
+  },
+  {
+   "step": 14,
+   "app": "shell",
+   "what": "(the fog flow's steps run here: its beat n=21 opens one slot)"
+  },
+  {
+   "step": 15,
+   "app": "B",
+   "port": 9357,
+   "what": "after the fog beat (n=21, one slot): B appends a rumor for a slot that beat did not open; main refuses it (run after the fog flow's beat)",
+   "file": "run-14-b-ipc-slot-unknown.json",
+   "actions": [
+    {
+     "eval": "(async () => {\n  const H = await import('/history/index.ts'); const S = await import('/state/index.ts');\n  const w = S.useHistoryStore.getState().world.value; const n = H.worldNow();\n  const beat = n.beats[n.beats.length - 1];\n  const opened = beat.body.slots.map(s => s.slot);\n  const free = [0, 1, 2, 3, 4, 5].find(s => !opened.includes(s));\n  const cited = n.events[beat.body.slots[0].cite].label;\n  const r = await window.seed.world.append(w.worldId, { kind: 'rumor', body: { beat: beat.id, slot: free, text: 'They say ' + cited + ' was here.' }, seen: n.head.n });\n  return JSON.stringify({ beat: beat.id.slice(0, 12), n: beat.n, opened, tried: free, cited, result: r.ok ? 'written ' + r.value.id : r.error.code + ': ' + r.error.message, head: H.worldNow().head.n });\n})()"
+    }
+   ]
+  },
+  {
+   "step": 16,
+   "app": "shell",
+   "what": "(the door flow's world F, public, with C a visitor: run after door run-18)"
+  },
+  {
+   "step": 17,
+   "app": "C",
+   "port": 9358,
+   "what": "a visitor author through main: C (a visitor in the door flow's public world F, which has beats with slots) appends a rumor for its last beat's slot 0; main refuses it before signing",
+   "file": "run-15-c-ipc-visitor.json",
+   "actions": [
+    {
+     "eval": "(async () => {\n  const H = await import('/history/index.ts'); const S = await import('/state/index.ts');\n  const w = S.useHistoryStore.getState().world.value; const n = H.worldNow();\n  const beat = n.beats[n.beats.length - 1]; const slot = beat.body.slots[0];\n  const cited = n.events[slot.cite].label;\n  const r = await window.seed.world.append(w.worldId, { kind: 'rumor', body: { beat: beat.id, slot: slot.slot, text: 'They say ' + cited + ' was here.' }, seen: n.head.n });\n  return JSON.stringify({ world: w.worldId.slice(0, 12), access: n.access, role: w.status.role, beat: beat.n, cited, result: r.ok ? 'written ' + r.value.id : r.error.code + ': ' + r.error.message, pending: S.useHistoryStore.getState().world.value.status.pending });\n})()"
+    }
+   ]
+  },
+  {
+   "step": 18,
+   "app": "shell",
+   "what": "a fresh service dir svc-probe on 8802: cd $SNAP && bun run world:probe -- --service ws://127.0.0.1:8802 rumors (self-contained; output probe-rumors-self.out.jsonl)"
+  }
+ ]
+}

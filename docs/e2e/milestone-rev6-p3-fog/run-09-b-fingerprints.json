@@ -1,0 +1,10 @@
+{
+ "app": "B",
+ "port": 9357,
+ "what": "the same on B",
+ "actions": [
+  {
+   "eval": "(async () => {\n  const code = await (await fetch('/history/landView.ts')).text();\n  const url = (name) => { const m = code.match(new RegExp('\"(/@fs/[^\"]*/src/shared/history/' + name + '\\\\.ts[^\"]*)\"')); return m ? m[1] : null; };\n  const base = url('fold').replace(/fold\\.ts.*$/, '');\n  const F = await import(base + 'fold.ts'); const B = await import(base + 'beat.ts');\n  const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value;\n  const r = await window.seed.world.read(w.worldId); const es = r.value.entries;\n  const genesis = F.openGenesis(r.value.genesis).value;\n  const out = [];\n  for (const be of es.filter((e) => e.entry.event.kind === 'beat')) {\n    const body = be.entry.event.body;\n    const upto = F.foldEntries(F.emptyNow(genesis), es.filter((e) => e.entry.n <= body.upTo));\n    const c = B.computeBeat(upto, body.at);\n    out.push({ n: be.entry.n, upTo: body.upTo, logged: body.fingerprint, recomputed: c.ok ? c.value.body.fingerprint : c.error.code, equal: c.ok && JSON.stringify(c.value.body) === JSON.stringify(body) });\n  }\n  return JSON.stringify({ me: w.status.me.slice(0, 12), head: w.now.head, beats: out, ignored: w.now.ignored });\n})()"
+  }
+ ]
+}

@@ -1,0 +1,55 @@
+{
+ "app": "A",
+ "port": 9356,
+ "what": "Worlds → New game → Start; the origin chunk is witnessed and chapter e1 written ahead",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "clickText": "Worlds"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "text": true
+  },
+  {
+   "clickText": "Start"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance) return { ms: Date.now() - t0, instance: s.activeInstance.instance?.instanceId ?? null, seed: s.activeInstance.instance?.save?.seed ?? null }; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + S.useSessionStore.getState().screen })()"
+  },
+  {
+   "wait": 3000
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-rumors/a-01-play.jpg"
+  },
+  {
+   "repeat": {
+    "times": 120,
+    "until": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return n !== null && n.chunks['0,0'] !== undefined && n.chapters.e1?.live != null })()",
+    "actions": [
+     {
+      "wait": 1000
+     }
+    ]
+   }
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world; const P = (await import('/engine/playerProbe.ts')).samplePlayer(); return JSON.stringify({ worldId: w.value?.worldId, head: n?.head, link: w.value?.status?.link, role: w.value?.status?.role, pending: w.value?.status?.pending, chunks: n && Object.fromEntries(Object.entries(n.chunks).map(([k, c]) => [k, { id: c.live.id.slice(0, 12), n: c.live.n, name: c.live.body.index.name, npcs: c.live.body.index.npcs.map(p => p.name) }])), chapters: n && Object.fromEntries(Object.entries(n.chapters).map(([k, c]) => [k, c.live ? { n: c.live.n, title: c.live.body.title, kind: c.live.body.kind } : null])), p: P && [P.x, P.z] }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-rumors/a-02-origin-and-e1.jpg"
+  }
+ ]
+}

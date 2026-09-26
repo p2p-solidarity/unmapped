@@ -1,0 +1,471 @@
+{
+ "flow": "fog",
+ "env": {
+  "build": "The working tree as of 2026-09-26T04:04:51Z (HEAD 51817a3; its files equal origin/main 1feecbf plus other sessions' uncommitted changes; `git diff HEAD | shasum -a 256` = bb7c45172e4baa5a…, `git status --porcelain | shasum -a 256` = 919c119cb9dea3ec…), copied with `rsync -a --exclude node_modules --exclude .git --exclude docs --exclude native --exclude .cache --exclude out` to a scratch dir SNAP; node_modules and .env symlinked to the repo's; native/afm-bridge cloned (`cp -cR`). One snapshot-only line: electron.vite.config.ts renderer `cacheDir: resolve(__dirname, '.vite-cache')`. Why: other sessions edit the shared tree live and HMR reloads put apps back on the title mid-run. This session's fixes were copied into SNAP as they were made (see result.md, 'Code changed').",
+  "service": "cd $SNAP && UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8802 --data <fresh dir>   (background)",
+  "apps": "cd $SNAP && AETHER_TEST_USER_DATA=<fresh dir> bun run dev --remoteDebuggingPort <port>   (background; A 9356, B 9357, C 9358)",
+  "driver": "CDP_PORT=<port> bun scripts/cdp-drive.ts \"$(cat <step file>)\"   (from the repo root; a step file is {app, port, what, actions})",
+  "invite": "__INVITE__ in a step file is the link the owner's invite step printed last; substitute it with a literal string replace (python), not sed (the link holds '&k=')",
+  "quit": "Browser.close on the browser target (GET http://127.0.0.1:<port>/json/version → webSocketDebuggerUrl), then kill the electron-vite process if it still listens",
+  "window": "1440 x 846 CSS px at device scale 2 (screenshots 2880 x 1678), in the background; each app switched to English in its first step",
+  "platform": "macOS 27.0, Bun 1.3.6, Electron 44.3.0",
+  "service_data": "svc-n (the rumors flow's world N)",
+  "userData": "ud-an (A, 9356), ud-bn (B, 9357)",
+  "setup": "the rumors flow's run-01 … run-13 (docs/e2e/milestone-rev6-p3-rumors/run.json steps 1–13): A's New game, attach, B joins, B witnesses (1, 0) and (2, 0), clears e1 there, one +1-day beat, rumors"
+ },
+ "model": {
+  "provider": "openai",
+  "model": "gpt-5.4-mini",
+  "source": "Settings → Model default on a fresh userData; OPENAI_API_KEY from the repo .env, read by main only"
+ },
+ "note": "run-06/07 set a 2600 x 900 page for that run only, so the legend's name over (2, 0)'s centre fits on screen.",
+ "steps": [
+  {
+   "step": 1,
+   "app": "A",
+   "port": 9356,
+   "what": "A walks to (58.5, 16.5), inside (1, 0) near its east edge, so (2, 0) is on screen; the fold before the beat (first closes the door panel left open)",
+   "file": "run-01-a-to-east-edge.json",
+   "actions": [
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 500
+    },
+    {
+     "pad": {
+      "toward": "[16.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[58.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; const L = S.useLandStore.getState(); const P = (await import('/engine/playerProbe.ts')).samplePlayer(); const c = n.chunks['2,0']; return JSON.stringify({ head: n.head, season: n.season, beats: n.beats.map(b => ({ n: b.n, at: b.body.at, season: b.body.season, fog: b.body.fog, slots: b.body.slots.length, fp: b.body.fingerprint })), care: n.care, lastTouch: n.lastTouch, c20: c ? { live: c.live.id, n: c.live.n, name: c.live.body.index.name, fogged: c.fogged, legends: c.legends.map(l => l.body.index.name), variants: c.variants.length } : null, land20: L.chunks['2,0']?.status ?? null, marks20: L.world?.marks?.['2,0'] ? { fogged: L.world.marks['2,0'].fogged, fading: L.world.marks['2,0'].fading, live: L.world.marks['2,0'].live?.name ?? null, legends: L.world.marks['2,0'].legends.map(x => x.name) } : null, ignored: n.ignored, link: w.status.link, p: P && [Math.round(P.x * 10) / 10, Math.round(P.z * 10) / 10], engineChunk: S.useEngineStore.getState().chunk }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-fog/a-00-before-east-edge-1-0.jpg"
+    }
+   ]
+  },
+  {
+   "step": 2,
+   "app": "B",
+   "port": 9357,
+   "what": "B walks back west to (56.5, 16.5), inside (1, 0); the fold before the beat (first answers the ENS chapter-cleared card 'Not now')",
+   "file": "run-02-b-to-east-edge.json",
+   "actions": [
+    {
+     "clickText": "Not now"
+    },
+    {
+     "wait": 500
+    },
+    {
+     "pad": {
+      "toward": "[56.5, 16.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; const L = S.useLandStore.getState(); const P = (await import('/engine/playerProbe.ts')).samplePlayer(); const c = n.chunks['2,0']; return JSON.stringify({ head: n.head, season: n.season, beats: n.beats.map(b => ({ n: b.n, at: b.body.at, season: b.body.season, fog: b.body.fog, slots: b.body.slots.length, fp: b.body.fingerprint })), care: n.care, lastTouch: n.lastTouch, c20: c ? { live: c.live.id, n: c.live.n, name: c.live.body.index.name, fogged: c.fogged, legends: c.legends.map(l => l.body.index.name), variants: c.variants.length } : null, land20: L.chunks['2,0']?.status ?? null, marks20: L.world?.marks?.['2,0'] ? { fogged: L.world.marks['2,0'].fogged, fading: L.world.marks['2,0'].fading, live: L.world.marks['2,0'].live?.name ?? null, legends: L.world.marks['2,0'].legends.map(x => x.name) } : null, ignored: n.ignored, link: w.status.link, p: P && [Math.round(P.x * 10) / 10, Math.round(P.z * 10) / 10], engineChunk: S.useEngineStore.getState().chunk }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-fog/b-00-before-east-edge-1-0.jpg"
+    }
+   ]
+  },
+  {
+   "step": 3,
+   "app": "shell",
+   "what": "curl -s -X POST http://127.0.0.1:8802/v1/test/advance -H 'content-type: application/json' -d '{\"days\":92}'  → {\"offsetDays\":93,…,\"beats\":[{\"world\":\"hf52k37e…\",\"n\":21}]}"
+  },
+  {
+   "step": 4,
+   "app": "A",
+   "port": 9356,
+   "what": "after advance {days: 92}: the beat, season and fog in A's fold; the witness of (2, 0) still in the log; A steps to (61.5, 16.5) and looks at the mist over (2, 0) in both looks",
+   "file": "run-04-a-after-beat.json",
+   "actions": [
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; const L = S.useLandStore.getState(); const P = (await import('/engine/playerProbe.ts')).samplePlayer(); const c = n.chunks['2,0']; return JSON.stringify({ head: n.head, season: n.season, beats: n.beats.map(b => ({ n: b.n, at: b.body.at, season: b.body.season, fog: b.body.fog, slots: b.body.slots.length, fp: b.body.fingerprint })), care: n.care, lastTouch: n.lastTouch, c20: c ? { live: c.live.id, n: c.live.n, name: c.live.body.index.name, fogged: c.fogged, legends: c.legends.map(l => l.body.index.name), variants: c.variants.length } : null, land20: L.chunks['2,0']?.status ?? null, marks20: L.marks['2,0'] ? { fogged: L.marks['2,0'].fogged, fading: L.marks['2,0'].fading, live: L.marks['2,0'].live?.name ?? null, legends: L.marks['2,0'].legends.map(x => x.name) } : null, tail: Object.values(n.events).sort((a, b) => a.n - b.n).slice(-3).map(e => e.n + ':' + e.kind + ':' + (n.names[e.author] ?? e.author.slice(0, 8))), ignored: n.ignored, link: w.status.link, p: P && [Math.round(P.x * 10) / 10, Math.round(P.z * 10) / 10], engineChunk: S.useEngineStore.getState().chunk }) })()"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; const r = await window.seed.world.read(w.worldId); const es = r.value.entries; const hit = es.find(e => e.entry.event.id === 'hvd6y73qu3ixvgptgim5uo7tcyo6b6vil4dd5o6wvbso75jebptga'); return JSON.stringify({ snapshot: r.value.snapshot ? r.value.snapshot.head : null, entries: es.length, first: es[0]?.entry.n, witness8: hit ? { n: hit.entry.n, kind: hit.entry.event.kind, verdict: hit.verdict, name: hit.entry.event.body.index.name } : 'not in the read entries' }) })()"
+    },
+    {
+     "pad": {
+      "toward": "[61.5, 16.5]",
+      "within": 0.8,
+      "timeoutMs": 10000
+     }
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-fog/a-01-fogged-2-0-hd2d.jpg"
+    },
+    {
+     "hold": "KeyV",
+     "ms": 80
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-fog/a-02-fogged-2-0-16bit.jpg"
+    },
+    {
+     "hold": "KeyV",
+     "ms": 80
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; const i = t.indexOf('LAND'); return t.slice(0, 700) })()"
+    }
+   ]
+  },
+  {
+   "step": 5,
+   "app": "B",
+   "port": 9357,
+   "what": "the same on B",
+   "file": "run-05-b-after-beat.json",
+   "actions": [
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; const L = S.useLandStore.getState(); const P = (await import('/engine/playerProbe.ts')).samplePlayer(); const c = n.chunks['2,0']; return JSON.stringify({ head: n.head, season: n.season, beats: n.beats.map(b => ({ n: b.n, at: b.body.at, season: b.body.season, fog: b.body.fog, slots: b.body.slots.length, fp: b.body.fingerprint })), care: n.care, lastTouch: n.lastTouch, c20: c ? { live: c.live.id, n: c.live.n, name: c.live.body.index.name, fogged: c.fogged, legends: c.legends.map(l => l.body.index.name), variants: c.variants.length } : null, land20: L.chunks['2,0']?.status ?? null, marks20: L.marks['2,0'] ? { fogged: L.marks['2,0'].fogged, fading: L.marks['2,0'].fading, live: L.marks['2,0'].live?.name ?? null, legends: L.marks['2,0'].legends.map(x => x.name) } : null, tail: Object.values(n.events).sort((a, b) => a.n - b.n).slice(-3).map(e => e.n + ':' + e.kind + ':' + (n.names[e.author] ?? e.author.slice(0, 8))), ignored: n.ignored, link: w.status.link, p: P && [Math.round(P.x * 10) / 10, Math.round(P.z * 10) / 10], engineChunk: S.useEngineStore.getState().chunk }) })()"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; const r = await window.seed.world.read(w.worldId); const es = r.value.entries; const hit = es.find(e => e.entry.event.id === 'hvd6y73qu3ixvgptgim5uo7tcyo6b6vil4dd5o6wvbso75jebptga'); return JSON.stringify({ snapshot: r.value.snapshot ? r.value.snapshot.head : null, entries: es.length, first: es[0]?.entry.n, witness8: hit ? { n: hit.entry.n, kind: hit.entry.event.kind, verdict: hit.verdict, name: hit.entry.event.body.index.name } : 'not in the read entries' }) })()"
+    },
+    {
+     "pad": {
+      "toward": "[61.5, 16.5]",
+      "within": 0.8,
+      "timeoutMs": 10000
+     }
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-fog/b-01-fogged-2-0-hd2d.jpg"
+    },
+    {
+     "hold": "KeyV",
+     "ms": 80
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-fog/b-02-fogged-2-0-16bit.jpg"
+    },
+    {
+     "hold": "KeyV",
+     "ms": 80
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; const i = t.indexOf('LAND'); return t.slice(0, 700) })()"
+    }
+   ]
+  },
+  {
+   "step": 6,
+   "app": "A",
+   "port": 9356,
+   "what": "a wider page (2600 x 900, this run only) so the legend's name over (2, 0)'s centre is on screen, in both looks",
+   "file": "run-06-a-wide-legend.json",
+   "actions": [
+    {
+     "viewport": {
+      "width": 2600,
+      "height": 900,
+      "scale": 1,
+      "mobile": false
+     }
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-fog/a-03-wide-legend-hd2d.jpg"
+    },
+    {
+     "hold": "KeyV",
+     "ms": 80
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-fog/a-04-wide-legend-16bit.jpg"
+    },
+    {
+     "hold": "KeyV",
+     "ms": 80
+    },
+    {
+     "wait": 500
+    },
+    {
+     "eval": "(async()=>{const S=await import('/state/index.ts'); return S.useEngineStore.getState().landLook})()"
+    }
+   ]
+  },
+  {
+   "step": 7,
+   "app": "B",
+   "port": 9357,
+   "what": "the same on B",
+   "file": "run-07-b-wide-legend.json",
+   "actions": [
+    {
+     "viewport": {
+      "width": 2600,
+      "height": 900,
+      "scale": 1,
+      "mobile": false
+     }
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-fog/b-03-wide-legend-hd2d.jpg"
+    },
+    {
+     "hold": "KeyV",
+     "ms": 80
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-fog/b-04-wide-legend-16bit.jpg"
+    },
+    {
+     "hold": "KeyV",
+     "ms": 80
+    },
+    {
+     "wait": 500
+    },
+    {
+     "eval": "(async()=>{const S=await import('/state/index.ts'); return S.useEngineStore.getState().landLook})()"
+    }
+   ]
+  },
+  {
+   "step": 8,
+   "app": "A",
+   "port": 9356,
+   "what": "recompute every beat in the page: fold the log read from main up to the beat's upTo, computeBeat at its time, compare with the logged body and fingerprint",
+   "file": "run-08-a-fingerprints.json",
+   "actions": [
+    {
+     "eval": "(async () => {\n  const code = await (await fetch('/history/landView.ts')).text();\n  const url = (name) => { const m = code.match(new RegExp('\"(/@fs/[^\"]*/src/shared/history/' + name + '\\\\.ts[^\"]*)\"')); return m ? m[1] : null; };\n  const base = url('fold').replace(/fold\\.ts.*$/, '');\n  const F = await import(base + 'fold.ts'); const B = await import(base + 'beat.ts');\n  const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value;\n  const r = await window.seed.world.read(w.worldId); const es = r.value.entries;\n  const genesis = F.openGenesis(r.value.genesis).value;\n  const out = [];\n  for (const be of es.filter((e) => e.entry.event.kind === 'beat')) {\n    const body = be.entry.event.body;\n    const upto = F.foldEntries(F.emptyNow(genesis), es.filter((e) => e.entry.n <= body.upTo));\n    const c = B.computeBeat(upto, body.at);\n    out.push({ n: be.entry.n, upTo: body.upTo, logged: body.fingerprint, recomputed: c.ok ? c.value.body.fingerprint : c.error.code, equal: c.ok && JSON.stringify(c.value.body) === JSON.stringify(body) });\n  }\n  return JSON.stringify({ me: w.status.me.slice(0, 12), head: w.now.head, beats: out, ignored: w.now.ignored });\n})()"
+    }
+   ]
+  },
+  {
+   "step": 9,
+   "app": "B",
+   "port": 9357,
+   "what": "the same on B",
+   "file": "run-09-b-fingerprints.json",
+   "actions": [
+    {
+     "eval": "(async () => {\n  const code = await (await fetch('/history/landView.ts')).text();\n  const url = (name) => { const m = code.match(new RegExp('\"(/@fs/[^\"]*/src/shared/history/' + name + '\\\\.ts[^\"]*)\"')); return m ? m[1] : null; };\n  const base = url('fold').replace(/fold\\.ts.*$/, '');\n  const F = await import(base + 'fold.ts'); const B = await import(base + 'beat.ts');\n  const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value;\n  const r = await window.seed.world.read(w.worldId); const es = r.value.entries;\n  const genesis = F.openGenesis(r.value.genesis).value;\n  const out = [];\n  for (const be of es.filter((e) => e.entry.event.kind === 'beat')) {\n    const body = be.entry.event.body;\n    const upto = F.foldEntries(F.emptyNow(genesis), es.filter((e) => e.entry.n <= body.upTo));\n    const c = B.computeBeat(upto, body.at);\n    out.push({ n: be.entry.n, upTo: body.upTo, logged: body.fingerprint, recomputed: c.ok ? c.value.body.fingerprint : c.error.code, equal: c.ok && JSON.stringify(c.value.body) === JSON.stringify(body) });\n  }\n  return JSON.stringify({ me: w.status.me.slice(0, 12), head: w.now.head, beats: out, ignored: w.now.ignored });\n})()"
+    }
+   ]
+  },
+  {
+   "step": 10,
+   "app": "shell",
+   "what": "recompute every beat from the service's own log.jsonl with entryVerdict + foldEntries + computeBeat (a throwaway bun script in SNAP/scripts, deleted after); output in result.md"
+  },
+  {
+   "step": 11,
+   "app": "B",
+   "port": 9357,
+   "what": "B walks into the fogged (2, 0): it is witnessed anew (claim granted, one witness call with the legend), and goes live",
+   "file": "run-10-b-rewitness.json",
+   "actions": [
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = n.chunks['2,0']; const L = S.useLandStore.getState(); const m = L.marks['2,0']; return JSON.stringify({ head: n.head.n, land: L.chunks['2,0']?.status ?? null, sceneName: L.chunks['2,0']?.scene?.name ?? null, live: c ? { id: c.live.id, n: c.live.n, author: n.names[c.live.author] ?? c.live.author, name: c.live.body.index.name, supersedes: c.live.body.supersedes ?? null, npcs: c.live.body.index.npcs.map(p => p.name) } : null, fogged: c?.fogged, legends: c?.legends.map(l => ({ id: l.id, n: l.n, name: l.body.index.name })), marks: m ? { fogged: m.fogged, live: m.live?.name ?? null, legends: m.legends.map(x => x.name) } : null, ignored: n.ignored }) })()"
+    },
+    {
+     "pad": {
+      "toward": "[70.5, 16.5]",
+      "within": 1.0,
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "wait": 600
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; return t.slice(0, 400) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-fog/b-05-rewitnessing-2-0.jpg"
+    },
+    {
+     "repeat": {
+      "times": 120,
+      "until": "(async () => { const S = await import('/state/index.ts'); const c = S.useLandStore.getState().chunks['2,0']; return c !== undefined && c.status === 'written' })()",
+      "actions": [
+       {
+        "wait": 500
+       }
+      ]
+     }
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = n.chunks['2,0']; const L = S.useLandStore.getState(); const m = L.marks['2,0']; return JSON.stringify({ head: n.head.n, land: L.chunks['2,0']?.status ?? null, sceneName: L.chunks['2,0']?.scene?.name ?? null, live: c ? { id: c.live.id, n: c.live.n, author: n.names[c.live.author] ?? c.live.author, name: c.live.body.index.name, supersedes: c.live.body.supersedes ?? null, npcs: c.live.body.index.npcs.map(p => p.name) } : null, fogged: c?.fogged, legends: c?.legends.map(l => ({ id: l.id, n: l.n, name: l.body.index.name })), marks: m ? { fogged: m.fogged, live: m.live?.name ?? null, legends: m.legends.map(x => x.name) } : null, ignored: n.ignored }) })()"
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; return t.slice(0, 400) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-fog/b-06-rewitnessed-2-0.jpg"
+    }
+   ]
+  },
+  {
+   "step": 12,
+   "app": "A",
+   "port": 9356,
+   "what": "A sees (2, 0) flip to the new witness at the same n with no call, then walks in",
+   "file": "run-11-a-after-rewitness.json",
+   "actions": [
+    {
+     "repeat": {
+      "times": 60,
+      "until": "(async () => { const H = await import('/history/index.ts'); const c = H.worldNow().chunks['2,0']; return c !== undefined && !c.fogged })()",
+      "actions": [
+       {
+        "wait": 500
+       }
+      ]
+     }
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const H = await import('/history/index.ts'); const n = H.worldNow(); const c = n.chunks['2,0']; const L = S.useLandStore.getState(); const m = L.marks['2,0']; return JSON.stringify({ head: n.head.n, land: L.chunks['2,0']?.status ?? null, sceneName: L.chunks['2,0']?.scene?.name ?? null, live: c ? { id: c.live.id, n: c.live.n, author: n.names[c.live.author] ?? c.live.author, name: c.live.body.index.name, supersedes: c.live.body.supersedes ?? null, npcs: c.live.body.index.npcs.map(p => p.name) } : null, fogged: c?.fogged, legends: c?.legends.map(l => ({ id: l.id, n: l.n, name: l.body.index.name })), marks: m ? { fogged: m.fogged, live: m.live?.name ?? null, legends: m.legends.map(x => x.name) } : null, ignored: n.ignored }) })()"
+    },
+    {
+     "pad": {
+      "toward": "[70.5, 17.5]",
+      "within": 1.0,
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "wait": 2000
+    },
+    {
+     "eval": "(() => { const t = document.body.innerText; return t.slice(0, 400) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-fog/a-05-sees-new-2-0.jpg"
+    }
+   ]
+  },
+  {
+   "step": 13,
+   "app": "shell",
+   "what": "this session's landView fix (a chunk witnessed after the last beat is not 'fading') copied into SNAP"
+  },
+  {
+   "step": 14,
+   "app": "B",
+   "port": 9357,
+   "what": "after this session's landView fix (a chunk witnessed after the last beat no longer reads as fading): the page is reloaded so the store runs the fixed view, then Continue; the HUD at (2, 0)",
+   "file": "run-12-b-reopen-after-fix.json",
+   "actions": [
+    {
+     "cdp": {
+      "method": "Page.reload",
+      "params": {
+       "ignoreCache": true
+      }
+     }
+    },
+    {
+     "wait": 6000
+    },
+    {
+     "clickText": "設定"
+    },
+    {
+     "wait": 600
+    },
+    {
+     "clickText": "English"
+    },
+    {
+     "wait": 400
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 600
+    },
+    {
+     "clickText": "Continue"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && w.value.status.link === 'online') return { ms: Date.now() - t0 }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+    },
+    {
+     "wait": 2500
+    },
+    {
+     "eval": "(async()=>{const S=await import('/state/index.ts'); const H=await import('/history/index.ts'); const n=H.worldNow(); const L=S.useLandStore.getState(); return JSON.stringify({head:n.head.n, tail:Object.values(n.events).sort((a,b)=>a.n-b.n).slice(-2).map(e=>e.n+':'+e.kind+':'+JSON.stringify(e.kind==='visit'?e.body??null:null)), touches:n.touches, marks:Object.fromEntries(Object.entries(L.marks).map(([k,m])=>[k,{fading:m.fading,fogged:m.fogged,legends:m.legends.map(x=>x.name)}]))})})()"
+    },
+    {
+     "eval": "document.body.innerText.slice(0,260)"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-fog/b-07-reopened-no-fading-2-0.jpg"
+    }
+   ]
+  }
+ ]
+}

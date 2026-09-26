@@ -34,6 +34,9 @@ export function writeBlocker(): AppError | null {
   }
   if (world.status === "error") return world.error;
   const { status } = world.value;
+  // A removed key's copy never learns of its removal (the service stops serving it before that
+  // entry): the refusal says so, and nothing written here would ever be taken (D8).
+  if (status.error?.code === "access-removed") return status.error;
   if (status.writable) return null;
   return (
     status.error ?? {

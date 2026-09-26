@@ -1,0 +1,10 @@
+{
+ "app": "B",
+ "port": 9357,
+ "what": "The same refusals through main: B (a member) appends four bad rumor drafts with window.seed.world.append; main refuses each before signing",
+ "actions": [
+  {
+   "eval": "(async () => {\n  const H = await import('/history/index.ts'); const S = await import('/state/index.ts');\n  const w = S.useHistoryStore.getState().world.value; const n = H.worldNow();\n  const beat = n.beats[n.beats.length - 1]; const slot = beat.body.slots[0];\n  const cited = n.events[slot.cite].label;\n  const before = { head: n.head.n, refused: w.status.refused, pending: w.status.pending };\n  const tries = [\n    ['uncited', { beat: beat.id, slot: 0, text: 'They say the wind turned at dusk.' }],\n    ['names another label', { beat: beat.id, slot: 0, text: 'They say ' + cited + ' was seen with ' + n.names[w.now.owner] + '.' }],\n    ['a slot the beat did not open (6)', { beat: beat.id, slot: 6, text: 'They say ' + cited + ' was here.' }],\n    ['a beat this world never had', { beat: w.worldId, slot: 0, text: 'They say ' + cited + ' was here.' }],\n  ];\n  const out = [];\n  for (const [what, body] of tries) {\n    const r = await window.seed.world.append(w.worldId, { kind: 'rumor', body, seen: n.head.n });\n    out.push({ what, text: body.text, slot: body.slot, result: r.ok ? 'written ' + r.value.id : r.error.code + ': ' + r.error.message });\n  }\n  await new Promise(r => setTimeout(r, 1500));\n  const w2 = S.useHistoryStore.getState().world.value;\n  return JSON.stringify({ before, after: { head: H.worldNow().head.n, refused: w2.status.refused, pending: w2.status.pending }, role: w2.status.role, out }, null, 1);\n})()"
+  }
+ ]
+}

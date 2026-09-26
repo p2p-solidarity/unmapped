@@ -230,6 +230,8 @@ async function rumorSteps(
   const door = await visitor.open(id);
   if (now.access === "public") {
     steps.require("a visitor opens the public world (control)", "opened:visitor", door);
+    // Judge the visitor's rumor on the history it was served, not on its genesis alone.
+    await visitor.reach(id, visitor.mirror(id).served);
     await rumor("a valid rumor written by a visitor", "access-visitor-kind", visitor, valid);
   } else {
     const shut = now.access === "private" ? "access-private" : "access-members-only";
@@ -314,6 +316,14 @@ export async function rumorsScenario(
     "the probe key opens the world as a member",
     ["opened:member", "opened:owner"],
     await writer.open(options.world),
+  );
+  // `opened` comes before the entries it announces: read the slots only once they are folded here.
+  steps.require(
+    "the served history is folded here",
+    "reached",
+    (await writer.reach(options.world, writer.mirror(options.world).served))
+      ? "reached"
+      : "timeout",
   );
   if (options.advanceDays !== null)
     await beatAfter(endpoint, steps, writer, options.world, options.advanceDays);

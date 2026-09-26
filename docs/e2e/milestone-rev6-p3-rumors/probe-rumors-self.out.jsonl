@@ -1,0 +1,21 @@
+{"scenario":"rumors","step":"the owner attaches a public world with a witness (control)","expect":"opened:owner","got":"opened:owner","ok":true}
+{"scenario":"rumors","step":"Bea opens with an invite (control)","expect":"opened:invitee","got":"opened:invitee","ok":true}
+{"scenario":"rumors","step":"Bea joins (control)","expect":"accepted","got":"accepted","ok":true}
+{"scenario":"rumors","step":"Bea witnesses Salt Orchard (control)","expect":"accepted","got":"accepted","ok":true}
+{"scenario":"rumors","step":"advance the test clock 1 day(s): the service beats this world","expect":"beat","got":"beat","ok":true}
+{"scenario":"rumors","step":"a rumor slot to write against (from the service's beats)","expect":"found","got":"found","ok":true,"detail":"slot 0 of beat hrxbhxgncebmhsts6ma4y7zybulbhxmzsk2nlvbwuhzyltvwkc6oa"}
+{"scenario":"rumors","step":"a rumor that does not name the event its slot cites","expect":"rumor-uncited","got":"rumor-uncited","ok":true,"detail":"cites member.join \"Bea\", told by tomas of Salt Orchard; text \"They say the wind turned at dusk.\""}
+{"scenario":"rumors","step":"a known label the slot does not allow","expect":"found","got":"found","ok":true}
+{"scenario":"rumors","step":"a rumor that names a label its slot does not cite","expect":"rumor-names-other","got":"rumor-names-other","ok":true,"detail":"cites member.join \"Bea\", told by tomas of Salt Orchard; text \"They say Bea was seen with Mira.\""}
+{"scenario":"rumors","step":"a rumor for slot 3, which the beat did not open","expect":"rumor-slot-unknown","got":"rumor-slot-unknown","ok":true,"detail":"cites member.join \"Bea\", told by tomas of Salt Orchard; text \"They say Bea was here.\""}
+{"scenario":"rumors","step":"a rumor for a beat this world never had","expect":"rumor-beat-unknown","got":"rumor-beat-unknown","ok":true,"detail":"cites member.join \"Bea\", told by tomas of Salt Orchard; text \"They say Bea was here.\""}
+{"scenario":"rumors","step":"a visitor opens the public world (control)","expect":"opened:visitor","got":"opened:visitor","ok":true}
+{"scenario":"rumors","step":"a valid rumor written by a visitor","expect":"access-visitor-kind","got":"access-visitor-kind","ok":true,"detail":"cites member.join \"Bea\", told by tomas of Salt Orchard; text \"They say Bea was here.\""}
+{"scenario":"rumors","step":"the valid rumor, from a member (control)","expect":"accepted","got":"accepted","ok":true,"detail":"cites member.join \"Bea\", told by tomas of Salt Orchard; text \"They say Bea was here.\""}
+{"scenario":"rumors","step":"the control rumor stands in the fold","expect":"live","got":"live","ok":true}
+{"scenario":"rumors","step":"a second rumor for the same slot by the same member (a variant)","expect":"accepted","got":"accepted","ok":true,"detail":"cites member.join \"Bea\", told by tomas of Salt Orchard; text \"People still talk of Bea.\""}
+{"scenario":"rumors","step":"a third rumor for that slot by the same member","expect":"quota-variant","got":"quota-variant","ok":true}
+{"scenario":"rumors","step":"the served log verifies (chain and receipt schedule)","expect":"ok","got":"ok","ok":true,"detail":"9 entries"}
+{"scenario":"rumors","step":"every beat the service wrote equals its recomputation here","expect":"equal","got":"equal","ok":true,"detail":"1 beats"}
+{"scenario":"rumors","step":"every frame the service sent reads with readFromService","expect":"0 unreadable","got":"0 unreadable","ok":true}
+{"scenario":"rumors","summary":true,"steps":20,"failed":0,"ok":true}

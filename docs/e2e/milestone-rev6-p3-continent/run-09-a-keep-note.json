@@ -1,0 +1,51 @@
+{
+ "app": "A",
+ "port": 9356,
+ "what": "A: the continent offers B's note (left by …, not kept yet) in the door; Keep it makes it an owner-signed note event",
+ "actions": [
+  {
+   "eval": "(() => { const t = document.body.innerText; return (t.match(/[^\\n]*left a note[^\\n]*/g) ?? []).concat(t.match(/CONTINENT[^\\n]*/g) ?? []) })()"
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return JSON.stringify({ head: n.head.n, notes: Object.values(n.notes ?? {}).map(x => ({ id: x.id.slice(0, 12), n: x.n, author: x.author.slice(0, 10), name: x.body.name, via: x.body.via ?? null, text: x.body.text.slice(0, 60), coord: x.body.coord, anchors: x.body.anchors.length })) }) })()"
+  },
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; const i = t.indexOf('Continent\\n'); return t.slice(i, i + 1200) })()"
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); const h = [...l.querySelectorAll('*')].find(e => e.children.length === 0 && /Notes visitors left/.test(e.innerText)); if (h) h.scrollIntoView({ block: 'start' }); return !!h })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-continent/a-03-visitor-note-waiting.jpg"
+  },
+  {
+   "clickText": "Keep it"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; const i = t.indexOf('Continent\\n'); return t.slice(i, i + 1200) })()"
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return JSON.stringify({ head: n.head.n, notes: Object.values(n.notes ?? {}).map(x => ({ id: x.id.slice(0, 12), n: x.n, author: x.author.slice(0, 10), name: x.body.name, via: x.body.via ?? null, text: x.body.text.slice(0, 60), coord: x.body.coord, anchors: x.body.anchors.length })) }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-continent/a-04-visitor-note-kept.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 500
+  }
+ ]
+}

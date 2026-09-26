@@ -1,0 +1,5 @@
+{"scenario":"join","step":"the invite link reads","expect":"ok","got":"ok","ok":true}
+{"scenario":"join","step":"open with the invite","expect":"opened:invitee|opened:member","got":"opened:invitee","ok":true,"detail":"world hf52k37eeoany52pb64wqse2x7p5sfaykp5cveojtuqp3kvo2vw3a, key kpkuh3wlylrmytual6mrqwfet4efqydsldjwjdsvocbjctbwgzara (new /private/tmp/claude-501/-Users-kidney-Workspace-Hackathon-unmapped/f9f28666-cad2-48fd-9df0-065e8d1d73c3/scratchpad/probe-n.key)"}
+{"scenario":"join","step":"submit the member.join","expect":"accepted","got":"accepted","ok":true,"detail":"world hf52k37eeoany52pb64wqse2x7p5sfaykp5cveojtuqp3kvo2vw3a, key kpkuh3wlylrmytual6mrqwfet4efqydsldjwjdsvocbjctbwgzara (new /private/tmp/claude-501/-Users-kidney-Workspace-Hackathon-unmapped/f9f28666-cad2-48fd-9df0-065e8d1d73c3/scratchpad/probe-n.key)"}
+{"scenario":"join","step":"every frame the service sent reads with readFromService","expect":"0 unreadable","got":"0 unreadable","ok":true}
+{"scenario":"join","summary":true,"steps":4,"failed":0,"ok":true}

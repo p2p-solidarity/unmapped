@@ -1,0 +1,52 @@
+{
+ "app": "A",
+ "port": 9356,
+ "what": "A: Create an invite (1 use, 1 day) — invite 2, to expire",
+ "actions": [
+  {
+   "pad": {
+    "toward": "[8.5, 8.5]",
+    "within": 0.5,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('[data-layer=door] input')].find(x => (x.closest('label')?.innerText ?? '').includes('Days valid')); f.focus(); f.select(); return f.value })()"
+  },
+  {
+   "type": "1"
+  },
+  {
+   "clickText": "Create an invite"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 40; i++) { const l = document.querySelector('[data-layer=door]'); const m = l && /unmapped:\\/\\/join\\?i=[A-Za-z0-9_\\-]+&k=[A-Za-z0-9_\\-]+/.exec([...l.querySelectorAll('input, textarea')].map(x => x.value).join('\\n')); if (m) { window.__invite = m[0]; return m[0].length; } await new Promise(r => setTimeout(r, 250)); } return 'no link' })()"
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; const i = t.indexOf('Invites'); return t.slice(i, i + 900) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-door/a-05-invite-2-one-day.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 400
+  },
+  {
+   "eval": "window.__invite"
+  }
+ ]
+}

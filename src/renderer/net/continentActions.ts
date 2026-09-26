@@ -74,6 +74,14 @@ export function myPlate(): string | null {
 function bringVisitorHome(): void {
   const where = samplePlayer();
   if (where === null || !isVisiting(where)) return;
+  sendPlayerHome();
+}
+
+/**
+ * Sends the player to their own door, on their own ground. Also for a visitor whose host world
+ * left the continent under them (continentSync): the spot became this world's own, never walked.
+ */
+export function sendPlayerHome(): void {
   const scene = useWorldStore.getState().scene;
   const save = useSessionStore.getState().activeInstance?.instance.save;
   const land = useLandStore.getState();

@@ -1,0 +1,664 @@
+{
+ "flow": "gift-race",
+ "env": {
+  "build": "The working tree as of 2026-09-26T04:04:51Z (HEAD 51817a3; its files equal origin/main 1feecbf plus other sessions' uncommitted changes; `git diff HEAD | shasum -a 256` = bb7c45172e4baa5a…, `git status --porcelain | shasum -a 256` = 919c119cb9dea3ec…), copied with `rsync -a --exclude node_modules --exclude .git --exclude docs --exclude native --exclude .cache --exclude out` to a scratch dir SNAP; node_modules and .env symlinked to the repo's; native/afm-bridge cloned (`cp -cR`). One snapshot-only line: electron.vite.config.ts renderer `cacheDir: resolve(__dirname, '.vite-cache')`. Why: other sessions edit the shared tree live and HMR reloads put apps back on the title mid-run. This session's fixes were copied into SNAP as they were made (see result.md, 'Code changed').",
+  "service": "cd $SNAP && UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8802 --data <fresh dir>   (background)",
+  "apps": "cd $SNAP && AETHER_TEST_USER_DATA=<fresh dir> bun run dev --remoteDebuggingPort <port>   (background; A 9356, B 9357, C 9358)",
+  "driver": "CDP_PORT=<port> bun scripts/cdp-drive.ts \"$(cat <step file>)\"   (from the repo root; a step file is {app, port, what, actions})",
+  "invite": "__INVITE__ in a step file is the link the owner's invite step printed last; substitute it with a literal string replace (python), not sed (the link holds '&k=')",
+  "quit": "Browser.close on the browser target (GET http://127.0.0.1:<port>/json/version → webSocketDebuggerUrl), then kill the electron-vite process if it still listens",
+  "window": "1440 x 846 CSS px at device scale 2 (screenshots 2880 x 1678), in the background; each app switched to English in its first step",
+  "platform": "macOS 27.0, Bun 1.3.6, Electron 44.3.0",
+  "service_data": "svc-f (world F, public at door run-15; stopped and restarted on the same dir for each race)",
+  "userData": "ud-af (A, 9356), ud-bf (B, 9357: a member), ud-cf (C, 9358: a visitor from A's restored backup)"
+ },
+ "model": {
+  "provider": "openai",
+  "model": "gpt-5.4-mini",
+  "source": "Settings → Model default on a fresh userData; OPENAI_API_KEY from the repo .env, read by main only"
+ },
+ "note": "Race 1 (steps 1–9) is the plan's: B and C take A's gift. Race 2 (steps 11–21) re-checks the fix with the items left: C (a visitor) leaves the Umbrella tag from its restored bag, and A and B race for it. Steps 5/6, 15/16 and 18/19 ran in parallel (the first in the background).",
+ "steps": [
+  {
+   "step": 1,
+   "app": "A",
+   "port": 9356,
+   "what": "A (owner) at tile (12, 10) of (0, 0): N → Leave a gift → Umbrella tag, a few words, for Anyone → Leave it here",
+   "file": "run-01-a-leave-gift.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[12.5, 10.5]",
+      "within": 0.5,
+      "timeoutMs": 8000
+     }
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: n.head.n, pending: w.status.pending, refused: w.status.refused, me: w.status.me.slice(0, 10), role: w.status.role, link: w.status.link, gifts: Object.values(n.gifts).map(g => ({ id: g.id.slice(0, 12), n: g.n, item: g.body.item.name, for: g.body.for, taken: g.taken ? { by: (n.names[g.taken.by] ?? g.taken.by.slice(0, 10)), n: g.taken.n ?? null, pending: g.taken.pending } : null })), bag: S.useWorldStore.getState().inventory.items.map(i => i.id + ':' + i.name), refusedList: (w.refused ?? []).map(r => r.event.kind + ':' + r.error.code) }) })()"
+    },
+    {
+     "hold": "KeyN",
+     "ms": 100
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "Leave a gift"
+    },
+    {
+     "wait": 600
+    },
+    {
+     "clickText": "Umbrella tag"
+    },
+    {
+     "wait": 200
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('[data-layer=notes] input, [data-layer=notes] textarea')].find(x => (x.closest('label')?.innerText ?? '').startsWith('A few words')); f.focus(); return document.activeElement === f })()"
+    },
+    {
+     "type": "For whoever gets here first."
+    },
+    {
+     "wait": 200
+    },
+    {
+     "clickText": "Anyone"
+    },
+    {
+     "wait": 200
+    },
+    {
+     "clickText": "Leave it here"
+    },
+    {
+     "wait": 2500
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 900) : 'no notes layer' })()"
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: n.head.n, pending: w.status.pending, refused: w.status.refused, me: w.status.me.slice(0, 10), role: w.status.role, link: w.status.link, gifts: Object.values(n.gifts).map(g => ({ id: g.id.slice(0, 12), n: g.n, item: g.body.item.name, for: g.body.for, taken: g.taken ? { by: (n.names[g.taken.by] ?? g.taken.by.slice(0, 10)), n: g.taken.n ?? null, pending: g.taken.pending } : null })), bag: S.useWorldStore.getState().inventory.items.map(i => i.id + ':' + i.name), refusedList: (w.refused ?? []).map(r => r.event.kind + ':' + r.error.code) }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-gift-race/a-00-gift-left.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 400
+    }
+   ]
+  },
+  {
+   "step": 2,
+   "app": "B",
+   "port": 9357,
+   "what": "B walks next to the gift and opens N: the gift is listed; the bag before the take",
+   "file": "run-02-b-see-gift.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[13.5, 11.5]",
+      "within": 0.6,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "hold": "KeyN",
+     "ms": 100
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 900) : 'no notes layer' })()"
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: n.head.n, pending: w.status.pending, refused: w.status.refused, me: w.status.me.slice(0, 10), role: w.status.role, link: w.status.link, gifts: Object.values(n.gifts).map(g => ({ id: g.id.slice(0, 12), n: g.n, item: g.body.item.name, for: g.body.for, taken: g.taken ? { by: (n.names[g.taken.by] ?? g.taken.by.slice(0, 10)), n: g.taken.n ?? null, pending: g.taken.pending } : null })), bag: S.useWorldStore.getState().inventory.items.map(i => i.id + ':' + i.name), refusedList: (w.refused ?? []).map(r => r.event.kind + ':' + r.error.code) }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-gift-race/b-00-sees-gift.jpg"
+    }
+   ]
+  },
+  {
+   "step": 3,
+   "app": "C",
+   "port": 9358,
+   "what": "C walks next to the gift and opens N: the gift is listed; the bag before the take",
+   "file": "run-03-c-see-gift.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[11.5, 9.5]",
+      "within": 0.6,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "hold": "KeyN",
+     "ms": 100
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 900) : 'no notes layer' })()"
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: n.head.n, pending: w.status.pending, refused: w.status.refused, me: w.status.me.slice(0, 10), role: w.status.role, link: w.status.link, gifts: Object.values(n.gifts).map(g => ({ id: g.id.slice(0, 12), n: g.n, item: g.body.item.name, for: g.body.for, taken: g.taken ? { by: (n.names[g.taken.by] ?? g.taken.by.slice(0, 10)), n: g.taken.n ?? null, pending: g.taken.pending } : null })), bag: S.useWorldStore.getState().inventory.items.map(i => i.id + ':' + i.name), refusedList: (w.refused ?? []).map(r => r.event.kind + ':' + r.error.code) }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-gift-race/c-00-sees-gift.jpg"
+    }
+   ]
+  },
+  {
+   "step": 4,
+   "app": "shell",
+   "what": "kill the service (8802 closed)"
+  },
+  {
+   "step": 5,
+   "app": "B",
+   "port": 9357,
+   "what": "B, with the service stopped: Take it (the take waits in the outbox)",
+   "file": "run-05-b-take.json",
+   "actions": [
+    {
+     "eval": "window.__tTake = Date.now(); 'mark'"
+    },
+    {
+     "clickText": "Take it"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 900) : 'no notes layer' })()"
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: n.head.n, pending: w.status.pending, refused: w.status.refused, me: w.status.me.slice(0, 10), role: w.status.role, link: w.status.link, gifts: Object.values(n.gifts).map(g => ({ id: g.id.slice(0, 12), n: g.n, item: g.body.item.name, for: g.body.for, taken: g.taken ? { by: (n.names[g.taken.by] ?? g.taken.by.slice(0, 10)), n: g.taken.n ?? null, pending: g.taken.pending } : null })), bag: S.useWorldStore.getState().inventory.items.map(i => i.id + ':' + i.name), refusedList: (w.refused ?? []).map(r => r.event.kind + ':' + r.error.code) }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-gift-race/b-01-take-offline.jpg"
+    }
+   ]
+  },
+  {
+   "step": 6,
+   "app": "C",
+   "port": 9358,
+   "what": "C, with the service stopped: Take it (the take waits in the outbox)",
+   "file": "run-06-c-take.json",
+   "actions": [
+    {
+     "eval": "window.__tTake = Date.now(); 'mark'"
+    },
+    {
+     "clickText": "Take it"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 900) : 'no notes layer' })()"
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: n.head.n, pending: w.status.pending, refused: w.status.refused, me: w.status.me.slice(0, 10), role: w.status.role, link: w.status.link, gifts: Object.values(n.gifts).map(g => ({ id: g.id.slice(0, 12), n: g.n, item: g.body.item.name, for: g.body.for, taken: g.taken ? { by: (n.names[g.taken.by] ?? g.taken.by.slice(0, 10)), n: g.taken.n ?? null, pending: g.taken.pending } : null })), bag: S.useWorldStore.getState().inventory.items.map(i => i.id + ':' + i.name), refusedList: (w.refused ?? []).map(r => r.event.kind + ':' + r.error.code) }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-gift-race/c-01-take-offline.jpg"
+    }
+   ]
+  },
+  {
+   "step": 7,
+   "app": "shell",
+   "what": "restart: cd $SNAP && UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8802 --data $SCR/svc-f  (same key file; the test-clock offset is gone, so new receipts are clamped to the last rt)"
+  },
+  {
+   "step": 8,
+   "app": "B",
+   "port": 9357,
+   "what": "B after the service is back: the race is decided",
+   "file": "run-08-b-after.json",
+   "actions": [
+    {
+     "repeat": {
+      "times": 90,
+      "until": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; return w.status.link === 'online' && w.status.pending === 0 })()",
+      "actions": [
+       {
+        "wait": 1000
+       }
+      ]
+     }
+    },
+    {
+     "wait": 2500
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 900) : 'no notes layer' })()"
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: n.head.n, pending: w.status.pending, refused: w.status.refused, me: w.status.me.slice(0, 10), role: w.status.role, link: w.status.link, gifts: Object.values(n.gifts).map(g => ({ id: g.id.slice(0, 12), n: g.n, item: g.body.item.name, for: g.body.for, taken: g.taken ? { by: (n.names[g.taken.by] ?? g.taken.by.slice(0, 10)), n: g.taken.n ?? null, pending: g.taken.pending } : null })), bag: S.useWorldStore.getState().inventory.items.map(i => i.id + ':' + i.name), refusedList: (w.refused ?? []).map(r => r.event.kind + ':' + r.error.code) }) })()"
+    },
+    {
+     "eval": "(() => (document.body.innerText.match(/[^\\n]*(in your bag|took it first|Taken by)[^\\n]*/g) ?? []))()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-gift-race/b-02-after-race.jpg"
+    }
+   ]
+  },
+  {
+   "step": 9,
+   "app": "C",
+   "port": 9358,
+   "what": "C after the service is back: the race is decided",
+   "file": "run-09-c-after.json",
+   "actions": [
+    {
+     "repeat": {
+      "times": 90,
+      "until": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; return w.status.link === 'online' && w.status.pending === 0 })()",
+      "actions": [
+       {
+        "wait": 1000
+       }
+      ]
+     }
+    },
+    {
+     "wait": 2500
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 900) : 'no notes layer' })()"
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: n.head.n, pending: w.status.pending, refused: w.status.refused, me: w.status.me.slice(0, 10), role: w.status.role, link: w.status.link, gifts: Object.values(n.gifts).map(g => ({ id: g.id.slice(0, 12), n: g.n, item: g.body.item.name, for: g.body.for, taken: g.taken ? { by: (n.names[g.taken.by] ?? g.taken.by.slice(0, 10)), n: g.taken.n ?? null, pending: g.taken.pending } : null })), bag: S.useWorldStore.getState().inventory.items.map(i => i.id + ':' + i.name), refusedList: (w.refused ?? []).map(r => r.event.kind + ':' + r.error.code) }) })()"
+    },
+    {
+     "eval": "(() => (document.body.innerText.match(/[^\\n]*(in your bag|took it first|Taken by)[^\\n]*/g) ?? []))()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-gift-race/c-02-after-race.jpg"
+    }
+   ]
+  },
+  {
+   "step": 10,
+   "app": "shell",
+   "what": "this session's fix in TracePanel.tsx / traces.ts copied into SNAP"
+  },
+  {
+   "step": 11,
+   "app": "A",
+   "port": 9356,
+   "what": "A: reload the page (this session's gift-take fix in TracePanel.tsx / traces.ts), Continue",
+   "file": "run-10-a-reload.json",
+   "actions": [
+    {
+     "cdp": {
+      "method": "Page.reload",
+      "params": {
+       "ignoreCache": true
+      }
+     }
+    },
+    {
+     "wait": 7000
+    },
+    {
+     "clickText": "Continue"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 120; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && (w.value.status.link === 'online' || w.value.status.error)) break; await new Promise(r => setTimeout(r, 250)); } await new Promise(r => setTimeout(r, 2500)); const w = S.useHistoryStore.getState().world; return JSON.stringify(w.status === 'ready' ? { head: w.value.now.head.n, link: w.value.status.link, role: w.value.status.role, writable: w.value.status.writable, error: w.value.status.error } : w) })()"
+    }
+   ]
+  },
+  {
+   "step": 12,
+   "app": "B",
+   "port": 9357,
+   "what": "B: reload the page (this session's gift-take fix in TracePanel.tsx / traces.ts), Continue",
+   "file": "run-10-b-reload.json",
+   "actions": [
+    {
+     "cdp": {
+      "method": "Page.reload",
+      "params": {
+       "ignoreCache": true
+      }
+     }
+    },
+    {
+     "wait": 7000
+    },
+    {
+     "clickText": "Continue"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 120; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && (w.value.status.link === 'online' || w.value.status.error)) break; await new Promise(r => setTimeout(r, 250)); } await new Promise(r => setTimeout(r, 2500)); const w = S.useHistoryStore.getState().world; return JSON.stringify(w.status === 'ready' ? { head: w.value.now.head.n, link: w.value.status.link, role: w.value.status.role, writable: w.value.status.writable, error: w.value.status.error } : w) })()"
+    }
+   ]
+  },
+  {
+   "step": 13,
+   "app": "C",
+   "port": 9358,
+   "what": "C: reload the page (this session's gift-take fix in TracePanel.tsx / traces.ts), Continue",
+   "file": "run-10-c-reload.json",
+   "actions": [
+    {
+     "cdp": {
+      "method": "Page.reload",
+      "params": {
+       "ignoreCache": true
+      }
+     }
+    },
+    {
+     "wait": 7000
+    },
+    {
+     "clickText": "Continue"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 120; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && (w.value.status.link === 'online' || w.value.status.error)) break; await new Promise(r => setTimeout(r, 250)); } await new Promise(r => setTimeout(r, 2500)); const w = S.useHistoryStore.getState().world; return JSON.stringify(w.status === 'ready' ? { head: w.value.now.head.n, link: w.value.status.link, role: w.value.status.role, writable: w.value.status.writable, error: w.value.status.error } : w) })()"
+    }
+   ]
+  },
+  {
+   "step": 14,
+   "app": "C",
+   "port": 9358,
+   "what": "C (visitor) at tile (12, 12): N → Leave a gift → Umbrella tag (the keepsake in C's restored bag), for Anyone — the second race's gift",
+   "file": "run-11-c-leave-gift.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[12.5, 12.5]",
+      "within": 0.5,
+      "timeoutMs": 8000
+     }
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: n.head.n, pending: w.status.pending, refused: w.status.refused, me: w.status.me.slice(0, 10), role: w.status.role, link: w.status.link, gifts: Object.values(n.gifts).map(g => ({ id: g.id.slice(0, 12), n: g.n, item: g.body.item.name, for: g.body.for, taken: g.taken ? { by: (n.names[g.taken.by] ?? g.taken.by.slice(0, 10)), n: g.taken.n ?? null, pending: g.taken.pending } : null })), bag: S.useWorldStore.getState().inventory.items.map(i => i.id + ':' + i.name), refusedList: (w.refused ?? []).map(r => r.event.kind + ':' + r.error.code) }) })()"
+    },
+    {
+     "hold": "KeyN",
+     "ms": 100
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "Leave a gift"
+    },
+    {
+     "wait": 600
+    },
+    {
+     "clickText": "Umbrella tag"
+    },
+    {
+     "wait": 200
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('[data-layer=notes] input, [data-layer=notes] textarea')].find(x => (x.closest('label')?.innerText ?? '').startsWith('A few words')); f.focus(); return document.activeElement === f })()"
+    },
+    {
+     "type": "Second race: whoever is first."
+    },
+    {
+     "wait": 200
+    },
+    {
+     "clickText": "Anyone"
+    },
+    {
+     "wait": 200
+    },
+    {
+     "clickText": "Leave it here"
+    },
+    {
+     "wait": 2500
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 900) : 'no notes layer' })()"
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: n.head.n, pending: w.status.pending, refused: w.status.refused, me: w.status.me.slice(0, 10), role: w.status.role, link: w.status.link, gifts: Object.values(n.gifts).map(g => ({ id: g.id.slice(0, 12), n: g.n, item: g.body.item.name, for: g.body.for, taken: g.taken ? { by: (n.names[g.taken.by] ?? g.taken.by.slice(0, 10)), n: g.taken.n ?? null, pending: g.taken.pending } : null })), bag: S.useWorldStore.getState().inventory.items.map(i => i.id + ':' + i.name), refusedList: (w.refused ?? []).map(r => r.event.kind + ':' + r.error.code) }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-gift-race/c-03-second-gift-left.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 400
+    }
+   ]
+  },
+  {
+   "step": 15,
+   "app": "A",
+   "port": 9356,
+   "what": "A next to the second gift, N",
+   "file": "run-12-a-see-second.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[13.5, 13.5]",
+      "within": 0.6,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "hold": "KeyN",
+     "ms": 100
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 900) : 'no notes layer' })()"
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: n.head.n, pending: w.status.pending, refused: w.status.refused, me: w.status.me.slice(0, 10), role: w.status.role, link: w.status.link, gifts: Object.values(n.gifts).map(g => ({ id: g.id.slice(0, 12), n: g.n, item: g.body.item.name, for: g.body.for, taken: g.taken ? { by: (n.names[g.taken.by] ?? g.taken.by.slice(0, 10)), n: g.taken.n ?? null, pending: g.taken.pending } : null })), bag: S.useWorldStore.getState().inventory.items.map(i => i.id + ':' + i.name), refusedList: (w.refused ?? []).map(r => r.event.kind + ':' + r.error.code) }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-gift-race/a-03-sees-second-gift.jpg"
+    }
+   ]
+  },
+  {
+   "step": 16,
+   "app": "B",
+   "port": 9357,
+   "what": "B next to the second gift, N",
+   "file": "run-12-b-see-second.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[11.5, 13.5]",
+      "within": 0.6,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 30000
+     }
+    },
+    {
+     "hold": "KeyN",
+     "ms": 100
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 900) : 'no notes layer' })()"
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: n.head.n, pending: w.status.pending, refused: w.status.refused, me: w.status.me.slice(0, 10), role: w.status.role, link: w.status.link, gifts: Object.values(n.gifts).map(g => ({ id: g.id.slice(0, 12), n: g.n, item: g.body.item.name, for: g.body.for, taken: g.taken ? { by: (n.names[g.taken.by] ?? g.taken.by.slice(0, 10)), n: g.taken.n ?? null, pending: g.taken.pending } : null })), bag: S.useWorldStore.getState().inventory.items.map(i => i.id + ':' + i.name), refusedList: (w.refused ?? []).map(r => r.event.kind + ':' + r.error.code) }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-gift-race/b-03-sees-second-gift.jpg"
+    }
+   ]
+  },
+  {
+   "step": 17,
+   "app": "shell",
+   "what": "kill the service"
+  },
+  {
+   "step": 18,
+   "app": "B",
+   "port": 9357,
+   "what": "B, with the service stopped: Take it",
+   "file": "run-14-b-take-second.json",
+   "actions": [
+    {
+     "eval": "window.__tTake = Date.now(); 'mark'"
+    },
+    {
+     "clickText": "Take it"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 900) : 'no notes layer' })()"
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: n.head.n, pending: w.status.pending, refused: w.status.refused, me: w.status.me.slice(0, 10), role: w.status.role, link: w.status.link, gifts: Object.values(n.gifts).map(g => ({ id: g.id.slice(0, 12), n: g.n, item: g.body.item.name, for: g.body.for, taken: g.taken ? { by: (n.names[g.taken.by] ?? g.taken.by.slice(0, 10)), n: g.taken.n ?? null, pending: g.taken.pending } : null })), bag: S.useWorldStore.getState().inventory.items.map(i => i.id + ':' + i.name), refusedList: (w.refused ?? []).map(r => r.event.kind + ':' + r.error.code) }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-gift-race/b-04-second-take-offline.jpg"
+    }
+   ]
+  },
+  {
+   "step": 19,
+   "app": "A",
+   "port": 9356,
+   "what": "A, with the service stopped: Take it",
+   "file": "run-14-a-take-second.json",
+   "actions": [
+    {
+     "eval": "window.__tTake = Date.now(); 'mark'"
+    },
+    {
+     "clickText": "Take it"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 900) : 'no notes layer' })()"
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: n.head.n, pending: w.status.pending, refused: w.status.refused, me: w.status.me.slice(0, 10), role: w.status.role, link: w.status.link, gifts: Object.values(n.gifts).map(g => ({ id: g.id.slice(0, 12), n: g.n, item: g.body.item.name, for: g.body.for, taken: g.taken ? { by: (n.names[g.taken.by] ?? g.taken.by.slice(0, 10)), n: g.taken.n ?? null, pending: g.taken.pending } : null })), bag: S.useWorldStore.getState().inventory.items.map(i => i.id + ':' + i.name), refusedList: (w.refused ?? []).map(r => r.event.kind + ':' + r.error.code) }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-gift-race/a-04-second-take-offline.jpg"
+    }
+   ]
+  },
+  {
+   "step": 20,
+   "app": "shell",
+   "what": "restart the service on svc-f"
+  },
+  {
+   "step": 21,
+   "app": "B",
+   "port": 9357,
+   "what": "B after the service is back: the second race is decided (with the fix)",
+   "file": "run-16-b-after-second.json",
+   "actions": [
+    {
+     "repeat": {
+      "times": 90,
+      "until": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; return w.status.link === 'online' && w.status.pending === 0 })()",
+      "actions": [
+       {
+        "wait": 1000
+       }
+      ]
+     }
+    },
+    {
+     "wait": 2500
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 900) : 'no notes layer' })()"
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: n.head.n, pending: w.status.pending, refused: w.status.refused, me: w.status.me.slice(0, 10), role: w.status.role, link: w.status.link, gifts: Object.values(n.gifts).map(g => ({ id: g.id.slice(0, 12), n: g.n, item: g.body.item.name, for: g.body.for, taken: g.taken ? { by: (n.names[g.taken.by] ?? g.taken.by.slice(0, 10)), n: g.taken.n ?? null, pending: g.taken.pending } : null })), bag: S.useWorldStore.getState().inventory.items.map(i => i.id + ':' + i.name), refusedList: (w.refused ?? []).map(r => r.event.kind + ':' + r.error.code) }) })()"
+    },
+    {
+     "eval": "(() => (document.body.innerText.match(/[^\\n]*(in your bag|took it first|Taken by)[^\\n]*/g) ?? []))()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-gift-race/b-05-after-second-race.jpg"
+    }
+   ]
+  },
+  {
+   "step": 22,
+   "app": "A",
+   "port": 9356,
+   "what": "A after the service is back: the second race is decided (with the fix)",
+   "file": "run-16-a-after-second.json",
+   "actions": [
+    {
+     "repeat": {
+      "times": 90,
+      "until": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; return w.status.link === 'online' && w.status.pending === 0 })()",
+      "actions": [
+       {
+        "wait": 1000
+       }
+      ]
+     }
+    },
+    {
+     "wait": 2500
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 900) : 'no notes layer' })()"
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: n.head.n, pending: w.status.pending, refused: w.status.refused, me: w.status.me.slice(0, 10), role: w.status.role, link: w.status.link, gifts: Object.values(n.gifts).map(g => ({ id: g.id.slice(0, 12), n: g.n, item: g.body.item.name, for: g.body.for, taken: g.taken ? { by: (n.names[g.taken.by] ?? g.taken.by.slice(0, 10)), n: g.taken.n ?? null, pending: g.taken.pending } : null })), bag: S.useWorldStore.getState().inventory.items.map(i => i.id + ':' + i.name), refusedList: (w.refused ?? []).map(r => r.event.kind + ':' + r.error.code) }) })()"
+    },
+    {
+     "eval": "(() => (document.body.innerText.match(/[^\\n]*(in your bag|took it first|Taken by)[^\\n]*/g) ?? []))()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-gift-race/a-05-after-second-race.jpg"
+    }
+   ]
+  }
+ ]
+}

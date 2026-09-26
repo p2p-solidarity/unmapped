@@ -1,0 +1,25 @@
+{
+ "app": "C",
+ "port": 9358,
+ "what": "C: Worlds → Saves → Resume the restored save: the public world opens for C's key as a visitor",
+ "actions": [
+  {
+   "clickText": "Saves"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Resume"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 120; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && (w.value.status.link === 'online' || w.value.status.error)) break; await new Promise(r => setTimeout(r, 250)); } await new Promise(r => setTimeout(r, 2500)); const w = S.useHistoryStore.getState().world; return JSON.stringify(w.status === 'ready' ? { head: w.value.now.head.n, link: w.value.status.link, role: w.value.status.role, writable: w.value.status.writable, error: w.value.status.error } : w) })()"
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-door/c-09-public-visitor.jpg"
+  }
+ ]
+}

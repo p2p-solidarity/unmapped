@@ -1,0 +1,76 @@
+{
+ "app": "B",
+ "port": 9357,
+ "what": "B after its removal: its status; a note from the notes panel and a direct world.append are refused; leaving Play and continuing, the service refuses to serve B",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: w.now.head.n, link: w.status.link, role: w.status.role, writable: w.status.writable, pending: w.status.pending, refused: w.status.refused, error: w.status.error }) })()"
+  },
+  {
+   "hold": "KeyN",
+   "ms": 100
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('[data-layer=notes] input, [data-layer=notes] textarea')].find(x => (x.closest('label')?.innerText ?? '').trim().startsWith('your note')); if (!f) return 'no field: ' + (document.querySelector('[data-layer=notes]')?.innerText.slice(0, 600) ?? 'no notes layer'); f.focus(); return document.activeElement === f })()"
+  },
+  {
+   "type": "Bea after being removed."
+  },
+  {
+   "wait": 300
+  },
+  {
+   "clickText": "Leave the note"
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 1200) : 'no notes layer' })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-door/b-02-removed-cannot-write.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 500
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; const r = await window.seed.world.append(w.worldId, { kind: 'note', body: { coord: { cx: 0, cz: 0, x: 13, z: 13 }, anchors: [], text: 'direct append after removal', contests: null, name: 'Bea' }, seen: w.now.head.n }); return JSON.stringify(r.ok ? r.value : r.error) })()"
+  },
+  {
+   "clickText": "← Home"
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 120; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && (w.value.status.link === 'online' || w.value.status.error)) break; await new Promise(r => setTimeout(r, 250)); } await new Promise(r => setTimeout(r, 2500)); const w = S.useHistoryStore.getState().world; return JSON.stringify(w.status === 'ready' ? { head: w.value.now.head.n, link: w.value.status.link, role: w.value.status.role, writable: w.value.status.writable, error: w.value.status.error } : w) })()"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: w.now.head.n, link: w.status.link, role: w.status.role, writable: w.status.writable, pending: w.status.pending, refused: w.status.refused, error: w.status.error }) })()"
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-door/b-03-removed-cannot-read.jpg"
+  }
+ ]
+}

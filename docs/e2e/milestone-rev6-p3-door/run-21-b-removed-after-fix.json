@@ -1,0 +1,65 @@
+{
+ "app": "B",
+ "port": 9357,
+ "what": "B after this session's writeBlocker fix (access-removed blocks writing): reload, Continue, try a note",
+ "actions": [
+  {
+   "cdp": {
+    "method": "Page.reload",
+    "params": {
+     "ignoreCache": true
+    }
+   }
+  },
+  {
+   "wait": 7000
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 120; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && (w.value.status.link === 'online' || w.value.status.error)) break; await new Promise(r => setTimeout(r, 250)); } await new Promise(r => setTimeout(r, 2500)); const w = S.useHistoryStore.getState().world; return JSON.stringify(w.status === 'ready' ? { head: w.value.now.head.n, link: w.value.status.link, role: w.value.status.role, writable: w.value.status.writable, error: w.value.status.error } : w) })()"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const W = await import('/history/write.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: w.now.head.n, link: w.status.link, role: w.status.role, writable: w.status.writable, pending: w.status.pending, error: w.status.error?.code ?? null, writeBlocker: W.writeBlocker()?.code ?? null }) })()"
+  },
+  {
+   "hold": "KeyN",
+   "ms": 100
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('[data-layer=notes] input, [data-layer=notes] textarea')].find(x => (x.closest('label')?.innerText ?? '').trim().startsWith('your note')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+  },
+  {
+   "type": "Bea tries again after the fix."
+  },
+  {
+   "wait": 300
+  },
+  {
+   "clickText": "Leave the note"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(-700) : 'no notes layer' })()"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const W = await import('/history/write.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: w.now.head.n, link: w.status.link, role: w.status.role, writable: w.status.writable, pending: w.status.pending, error: w.status.error?.code ?? null, writeBlocker: W.writeBlocker()?.code ?? null }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-door/b-04-removed-write-refused-after-fix.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 500
+  }
+ ]
+}

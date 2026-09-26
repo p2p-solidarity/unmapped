@@ -1,0 +1,42 @@
+{
+ "app": "C",
+ "port": 9358,
+ "what": "C (visitor) walks south into the unwritten (0, -1): the claim to witness it is refused, no model call",
+ "actions": [
+  {
+   "pad": {
+    "toward": "[16.5, 6.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[16.5, -6.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "wait": 3000
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, land: S.useLandStore.getState().chunks['0,-1'] ?? null }) })()"
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-door/c-11-visitor-claim-refused.jpg"
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; const mine = Object.values(n.events).filter(e => e.author === w.status.me).map(e => e.n + ':' + e.kind + (e.pending ? ' (pending)' : '')); return JSON.stringify({ head: n.head.n, pending: w.status.pending, refused: w.status.refused, role: w.status.role, mine }) })()"
+  }
+ ]
+}

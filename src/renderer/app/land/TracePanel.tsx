@@ -42,10 +42,15 @@ const row = { display: "flex", flexWrap: "wrap", gap: space.xs, alignItems: "cen
 const NO_NAMES: Readonly<Record<string, string>> = {};
 
 /** A message under the control that ran it: done (success), or the error. */
-type Said = { kind: "done"; text: string } | { kind: "error"; error: AppError } | null;
+type Said =
+  | { kind: "done"; text: string }
+  | { kind: "error"; error: AppError }
+  /** A take still waiting for the service: its line follows the fold until the race is decided. */
+  | { kind: "waiting" }
+  | null;
 
 function SaidLine({ said }: { said: Said }): JSX.Element | null {
-  if (said === null) return null;
+  if (said === null || said.kind === "waiting") return null;
   if (said.kind === "error") return <ErrorBlock error={said.error} />;
   return (
     <Text variant="caption" tone="success">
@@ -158,12 +163,15 @@ function GiftRow({ gift }: { gift: GiftNow }): JSX.Element {
                   setSaid({ kind: "error", error: taken.error });
                   return;
                 }
+                if (taken.value.kind === "waiting") {
+                  // The fold's line says it waits; once decided, `decided` below says how.
+                  setSaid({ kind: "waiting" });
+                  return;
+                }
                 const text =
                   taken.value.kind === "mine"
                     ? t("traces.tookIt", { item: item.name })
-                    : taken.value.kind === "lost"
-                      ? t("traces.tookFirst")
-                      : t("traces.takeWaiting");
+                    : t("traces.tookFirst");
                 setSaid({ kind: "done", text });
               });
             }}
@@ -172,9 +180,24 @@ function GiftRow({ gift }: { gift: GiftNow }): JSX.Element {
           </Button>
         </div>
       ) : null}
-      <SaidLine said={said} />
+      <SaidLine said={decided(said, gift, me, item.name, t)} />
     </Surface>
   );
+}
+
+/** A take that was waiting, once the fold has sequenced a take: ours, or someone else's first. */
+function decided(
+  said: Said,
+  gift: GiftNow,
+  me: string | null,
+  item: string,
+  t: ReturnType<typeof useT>,
+): Said {
+  if (said?.kind !== "waiting" || gift.taken === null || gift.taken.pending) return said;
+  return {
+    kind: "done",
+    text: gift.taken.by === me ? t("traces.tookIt", { item }) : t("traces.tookFirst"),
+  };
 }
 
 function SignpostForm({ chunk, onDone }: { chunk: ChunkCoord; onDone(text: string): void }) {

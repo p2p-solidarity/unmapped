@@ -1,0 +1,59 @@
+{
+ "app": "A",
+ "port": 9356,
+ "what": "A (after the gift race): door → People → Bea → Remove: a member.remove event",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 400
+  },
+  {
+   "pad": {
+    "toward": "[8.5, 8.5]",
+    "within": 0.5,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 20000
+   }
+  },
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door'; const t = l.innerText; const i = t.indexOf('People'); return t.slice(i, i + 500) })()"
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); const row = [...l.querySelectorAll('div')].filter(d => d.innerText.startsWith('Bea') && [...d.querySelectorAll('button')].some(b => b.innerText.trim() === 'Remove')).sort((a, b) => a.innerText.length - b.innerText.length)[0]; if (!row) return 'no row'; [...row.querySelectorAll('button')].find(b => b.innerText.trim() === 'Remove').click(); return 'clicked Remove on ' + row.innerText.slice(0, 60) })()"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); const b = [...l.querySelectorAll('button')].find(x => /^(Remove Bea|Yes, remove|Confirm|Remove them)/.test(x.innerText.trim())); if (b) { b.click(); return 'confirmed: ' + b.innerText.trim(); } return 'no confirm step' })()"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 40; i++) { const w = S.useHistoryStore.getState().world.value; if (w.status.pending === 0 && Object.values(w.now.events).some(e => e.kind === 'member.remove')) break; await new Promise(r => setTimeout(r, 250)); } const w = S.useHistoryStore.getState().world.value; const rm = Object.values(w.now.events).find(e => e.kind === 'member.remove'); return JSON.stringify({ head: w.now.head.n, remove: rm ? { n: rm.n, id: rm.id.slice(0, 12) } : null }) })()"
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door'; const t = l.innerText; const i = t.indexOf('People'); return t.slice(i, i + 500) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-door/a-10-member-removed.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 400
+  }
+ ]
+}

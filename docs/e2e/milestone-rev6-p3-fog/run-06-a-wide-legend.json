@@ -1,0 +1,41 @@
+{
+ "app": "A",
+ "port": 9356,
+ "what": "a wider page (2600 x 900, this run only) so the legend's name over (2, 0)'s centre is on screen, in both looks",
+ "actions": [
+  {
+   "viewport": {
+    "width": 2600,
+    "height": 900,
+    "scale": 1,
+    "mobile": false
+   }
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-fog/a-03-wide-legend-hd2d.jpg"
+  },
+  {
+   "hold": "KeyV",
+   "ms": 80
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-fog/a-04-wide-legend-16bit.jpg"
+  },
+  {
+   "hold": "KeyV",
+   "ms": 80
+  },
+  {
+   "wait": 500
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); return S.useEngineStore.getState().landLook})()"
+  }
+ ]
+}

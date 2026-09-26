@@ -1,0 +1,48 @@
+{
+ "app": "A",
+ "port": 9356,
+ "what": "A shares the world on 127.0.0.1:8802 while on the continent: the attached world leaves the continent; the door shows continent-world-attached and openMyDoor() is refused",
+ "actions": [
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Share on 127.0.0.1:8802"
+  },
+  {
+   "eval": "(async () => { const t0 = Date.now(); for (let i = 0; i < 120; i++) { const l = document.querySelector('[data-layer=door]'); const t = l ? l.innerText : ''; if (/Online/.test(t) && /Invites/.test(t)) return { ms: Date.now() - t0 }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); return l ? l.innerText.slice(0, 3500) : 'no door layer' })()"
+  },
+  {
+   "eval": "(async () => { const N = await import('/net/continent.ts'); const c = N.getActiveContinent(); return JSON.stringify({ active: c ? c.code : null, hud: (document.body.innerText.match(/CONTINENT[^\\n]*/g) ?? []) }) })()"
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); const h = [...l.querySelectorAll('*')].find(e => e.children.length === 0 && /continent-world-attached/.test(e.innerText)); if (h) h.scrollIntoView({ block: 'center' }); return h ? h.innerText : 'no error line' })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-continent/a-05-attached-continent-refused.jpg"
+  },
+  {
+   "eval": "(async () => { const A = await import('/net/continentActions.ts'); const r = A.openMyDoor(); return JSON.stringify(r) })()"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 500
+  },
+  {
+   "text": true
+  }
+ ]
+}

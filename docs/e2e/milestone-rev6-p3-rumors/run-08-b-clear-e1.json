@@ -1,0 +1,80 @@
+{
+ "app": "B",
+ "port": 9357,
+ "what": "B meets Haru, Miwa and Ken and opens the locker at the e1 gate (2, 0): the chapter clears and B's chapter.cleared deed is written",
+ "actions": [
+  {
+   "eval": "(async()=>{window.__e2e.t0=Date.now(); return JSON.stringify(await window.__e2e.chapter())})()"
+  },
+  {
+   "repeat": {
+    "times": 12,
+    "until": "(async()=>{const S=await import('/state/index.ts'); return S.useLandStore.getState().progress?.episodes?.e1?.cleared===true})()",
+    "actions": [
+     {
+      "eval": "window.__e2e.nextTodo()"
+     },
+     {
+      "pad": {
+       "toward": "window.__e2e.spot()",
+       "within": 0.3,
+       "timeoutMs": 15000
+      }
+     },
+     {
+      "eval": "window.__e2e.state().then(s=>s.nearby)"
+     },
+     {
+      "repeat": {
+       "times": 1,
+       "until": "(async()=>{const s=await window.__e2e.state(); const t=await window.__e2e.nextTodo(); return !t || !s.nearby || s.nearby.id!==t.id})()",
+       "actions": [
+        {
+         "pad": {
+          "buttons": [
+           0
+          ]
+         }
+        }
+       ]
+      }
+     },
+     {
+      "wait": 600
+     },
+     {
+      "eval": "window.__e2e.state().then(s=>({dialogue:s.dialogue, speaker:s.speaker, focus:s.focus}))"
+     },
+     {
+      "repeat": {
+       "times": 4,
+       "until": "(async()=>{const S=await import('/state/index.ts'); return S.useSessionStore.getState().dialogue===null})()",
+       "actions": [
+        {
+         "pad": {
+          "buttons": [
+           0
+          ],
+          "ms": 200
+         }
+        },
+        {
+         "wait": 600
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(async()=>{const S=await import('/state/index.ts'); const H=await import('/history/index.ts'); const p=S.useLandStore.getState().progress; const e=p.episodes.e1; const n=H.worldNow(); const deeds=Object.values(n.events).filter(r=>r.kind==='deed'); return JSON.stringify({ms: Date.now()-window.__e2e.t0, cleared:e.cleared, met:e.stage?.met, found:e.stage?.found, carry:p.storyCarry, head:n.head.n, deeds: deeds.map(d=>({id:d.id, n:d.n, author:d.author, label:d.label, where:d.where, pending:d.pending}))})})()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-rumors/b-05-chapter-cleared.jpg"
+  }
+ ]
+}

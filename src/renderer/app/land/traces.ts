@@ -24,7 +24,7 @@ import {
   worldNow,
   writeBlocker,
 } from "@renderer/history";
-import { translate } from "@renderer/i18n";
+import { errorLine, translate } from "@renderer/i18n";
 import {
   foreignAt,
   openWorld,
@@ -262,6 +262,8 @@ export async function leaveGift(
 
 /** Gifts whose take this device is waiting on right now (their arrival is told by the panel). */
 const taking = new Set<string>();
+/** Takes still undecided when `takeGift` returned (sent offline): told once decided, by key. */
+const awaited = new Map<string, { worldId: string; giftId: string; takeId: string }>();
 
 /** Resolves once the take is decided (sequenced, or refused), or after `ms` as still waiting. */
 async function settledTake(giftId: string, takeId: string, me: string, ms = 10_000) {
@@ -318,6 +320,10 @@ export async function takeGift(giftId: string): Promise<Result<TakeOutcome>> {
       return appended.error.code === "gift-taken" ? ok({ kind: "lost" }) : appended;
     }
     const outcome = await settledTake(giftId, appended.value.id, me);
+    const worldId = openWorld()?.worldId;
+    if (outcome.kind === "waiting" && worldId !== undefined) {
+      awaited.set(`${worldId}|${giftId}`, { worldId, giftId, takeId: appended.value.id });
+    }
     receiveGifts();
     return outcome.kind === "refused" ? { ok: false, error: outcome.error } : ok(outcome);
   } finally {
@@ -478,6 +484,25 @@ export function takeVariantsRequest(): boolean {
   return wanted;
 }
 
+/**
+ * A take sent while the service was away is decided when it comes back: a take that lost the race
+ * is told here ("someone took it first"), as is a refusal; a take that won is told by the bag.
+ */
+function tellAwaited(): void {
+  const open = openWorld();
+  const me = open?.status.me ?? null;
+  if (open === null || me === null) return;
+  for (const [key, take] of awaited) {
+    if (take.worldId !== open.worldId) continue;
+    const outcome = giftOutcome(open.sequenced, open.refused, take.giftId, take.takeId, me);
+    if (outcome.kind === "waiting") continue;
+    awaited.delete(key);
+    const toast = useSessionStore.getState().toast;
+    if (outcome.kind === "lost") toast("info", translate("traces.tookFirst"));
+    if (outcome.kind === "refused") toast("danger", errorLine(outcome.error));
+  }
+}
+
 // Gifts taken while offline are received when their receipts arrive; a take the panel is waiting
 // on tells its own outcome there.
 useHistoryStore.subscribe((state, previous) => {
@@ -486,6 +511,7 @@ useHistoryStore.subscribe((state, previous) => {
     if (taking.has(gift.id)) continue;
     useSessionStore.getState().toast("success", translate("traces.tookIt", { item: item.name }));
   }
+  tellAwaited();
 });
 useWorldStore.subscribe((state, previous) => {
   if (previous.hydrating && !state.hydrating) receiveGifts();

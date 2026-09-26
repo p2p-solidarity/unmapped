@@ -1,0 +1,53 @@
+{
+ "app": "A",
+ "port": 9356,
+ "what": "A walks to its door, E, Open my door to friends: a continent under A's door number",
+ "actions": [
+  {
+   "pad": {
+    "toward": "[8.5, 9.5]",
+    "within": 0.8,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 40000
+   }
+  },
+  {
+   "pad": {
+    "toward": "[8.5, 8.5]",
+    "within": 0.5,
+    "timeoutMs": 5000
+   }
+  },
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); return l ? l.innerText.slice(0, 3000) : 'no door layer' })()"
+  },
+  {
+   "clickText": "Open my door to friends"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 60; i++) { const t = document.body.innerText; if (/Continent [A-Z0-9]{6} · (Live|Connected)/i.test(t)) break; await new Promise(r => setTimeout(r, 250)); } const m = document.body.innerText.match(/Continent [A-Z0-9]{6}[^\\n]*/g); return m })()"
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); return l ? l.innerText.slice(0, 3000) : 'no door layer' })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-continent/a-02-door-open.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 500
+  }
+ ]
+}

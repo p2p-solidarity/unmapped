@@ -1,0 +1,34 @@
+{
+ "app": "A2",
+ "port": 9356,
+ "what": "verification — the host leaves the continent while C2 stands on its land",
+ "actions": [
+  {
+   "pad": {
+    "toward": "[8.5, 8.5]",
+    "within": 0.5,
+    "timeoutMs": 8000
+   }
+  },
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Leave the continent"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 400
+  }
+ ]
+}

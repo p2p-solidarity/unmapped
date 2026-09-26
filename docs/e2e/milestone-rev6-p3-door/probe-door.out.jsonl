@@ -1,0 +1,46 @@
+{"scenario":"door","step":"the owner attaches a friends world (control)","expect":"opened:owner","got":"opened:owner","ok":true}
+{"scenario":"door","step":"a stranger opens the friends world without an invite","expect":"access-members-only","got":"access-members-only","ok":true}
+{"scenario":"door","step":"Bea opens with its invite (control)","expect":"opened:invitee","got":"opened:invitee","ok":true}
+{"scenario":"door","step":"Bea submits its member.join (control)","expect":"accepted","got":"accepted","ok":true}
+{"scenario":"door","step":"C opens with Bea's invite and the proof copied from her logged member.join (a use left)","expect":"invite-proof-invalid","got":"invite-proof-invalid","ok":true}
+{"scenario":"door","step":"C opens with an invite of its own (control)","expect":"opened:invitee","got":"opened:invitee","ok":true}
+{"scenario":"door","step":"C submits a member.join replaying Bea's invite and proof under C's key","expect":"invite-proof-invalid","got":"invite-proof-invalid","ok":true}
+{"scenario":"door","step":"C submits Bea's signed member.join verbatim","expect":"event-not-yours","got":"event-not-yours","ok":true}
+{"scenario":"door","step":"an invite naming the owner but signed by another key","expect":"invite-sig-invalid","got":"invite-sig-invalid","ok":true}
+{"scenario":"door","step":"an invite signed by a key that does not own the world","expect":"invite-not-owner","got":"invite-not-owner","ok":true}
+{"scenario":"door","step":"an expired invite, at the open","expect":"invite-expired","got":"invite-expired","ok":true}
+{"scenario":"door","step":"an expired invite, in a member.join","expect":"invite-expired","got":"invite-expired","ok":true}
+{"scenario":"door","step":"Eve opens with its invite (control)","expect":"opened:invitee","got":"opened:invitee","ok":true}
+{"scenario":"door","step":"Eve submits its member.join (control)","expect":"accepted","got":"accepted","ok":true}
+{"scenario":"door","step":"an invite already used up, at the open","expect":"invite-used-up","got":"invite-used-up","ok":true}
+{"scenario":"door","step":"an invite already used up, in a member.join","expect":"invite-used-up","got":"invite-used-up","ok":true}
+{"scenario":"door","step":"the owner revokes an unused invite (control)","expect":"accepted","got":"accepted","ok":true}
+{"scenario":"door","step":"a revoked invite, at the open","expect":"invite-revoked","got":"invite-revoked","ok":true}
+{"scenario":"door","step":"a revoked invite, in a member.join","expect":"invite-revoked","got":"invite-revoked","ok":true}
+{"scenario":"door","step":"C joins with its own invite after every refusal (control)","expect":"accepted","got":"accepted","ok":true}
+{"scenario":"door","step":"move the receipt clock one day on, to a day this address brought no visitor keys (test mode)","expect":"ok","got":"ok","ok":true}
+{"scenario":"door","step":"the owner opens the door to the public","expect":"accepted","got":"accepted","ok":true}
+{"scenario":"door","step":"a visitor opens the public world","expect":"opened:visitor","got":"opened:visitor","ok":true}
+{"scenario":"door","step":"the visitor leaves a note","expect":"accepted","got":"accepted","ok":true}
+{"scenario":"door","step":"the visitor puts up a signpost","expect":"accepted","got":"accepted","ok":true}
+{"scenario":"door","step":"the visitor claims a chunk to witness","expect":"access-visitor-kind","got":"access-visitor-kind","ok":true}
+{"scenario":"door","step":"the visitor submits a witness","expect":"access-visitor-kind","got":"access-visitor-kind","ok":true}
+{"scenario":"door","step":"the visitor submits a profile (a visitor kind, control)","expect":"accepted","got":"accepted","ok":true}
+{"scenario":"door","step":"the visitor's traces 4..20 of the receipt day","expect":"accepted","got":"accepted","ok":true,"detail":"17/17 accepted"}
+{"scenario":"door","step":"the visitor's trace 21 of the day","expect":"quota-visitor-key","got":"quota-visitor-key","ok":true}
+{"scenario":"door","step":"a member's note while the visitor is at its limit (visitor limits never touch members)","expect":"accepted","got":"accepted","ok":true}
+{"scenario":"door","step":"new visitor key 2 of this address today writes a signpost","expect":"accepted","got":"accepted","ok":true}
+{"scenario":"door","step":"new visitor key 3 of this address today writes a signpost","expect":"accepted","got":"accepted","ok":true}
+{"scenario":"door","step":"new visitor key 4 of this address today writes a signpost","expect":"accepted","got":"accepted","ok":true}
+{"scenario":"door","step":"new visitor key 5 of this address today writes a signpost","expect":"accepted","got":"accepted","ok":true}
+{"scenario":"door","step":"new visitor key 6 of this address today writes a signpost","expect":"quota-visitor-keys","got":"quota-visitor-keys","ok":true}
+{"scenario":"door","step":"a visitor key already known today writes again (the cap counts new keys only)","expect":"accepted","got":"accepted","ok":true}
+{"scenario":"door","step":"the owner removes Bea","expect":"accepted","got":"accepted","ok":true}
+{"scenario":"door","step":"Bea, still connected, is dropped at once","expect":"access-removed","got":"access-removed","ok":true}
+{"scenario":"door","step":"Bea opens the world again","expect":"access-removed","got":"access-removed","ok":true}
+{"scenario":"door","step":"Bea's member.join is still in the log","expect":"kept","got":"kept","ok":true}
+{"scenario":"door","step":"the owner makes the world private","expect":"accepted","got":"accepted","ok":true}
+{"scenario":"door","step":"Eve, a member, opens the private world","expect":"access-private","got":"access-private","ok":true}
+{"scenario":"door","step":"a visitor opens the private world","expect":"access-private","got":"access-private","ok":true}
+{"scenario":"door","step":"every frame the service sent reads with readFromService","expect":"0 unreadable","got":"0 unreadable","ok":true}
+{"scenario":"door","summary":true,"steps":45,"failed":0,"ok":true}

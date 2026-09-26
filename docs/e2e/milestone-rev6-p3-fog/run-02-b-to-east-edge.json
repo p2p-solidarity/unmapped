@@ -1,0 +1,32 @@
+{
+ "app": "B",
+ "port": 9357,
+ "what": "B walks back west to (56.5, 16.5), inside (1, 0); the fold before the beat (first answers the ENS chapter-cleared card 'Not now')",
+ "actions": [
+  {
+   "clickText": "Not now"
+  },
+  {
+   "wait": 500
+  },
+  {
+   "pad": {
+    "toward": "[56.5, 16.5]",
+    "within": 1.0,
+    "buttons": [
+     5
+    ],
+    "timeoutMs": 30000
+   }
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; const L = S.useLandStore.getState(); const P = (await import('/engine/playerProbe.ts')).samplePlayer(); const c = n.chunks['2,0']; return JSON.stringify({ head: n.head, season: n.season, beats: n.beats.map(b => ({ n: b.n, at: b.body.at, season: b.body.season, fog: b.body.fog, slots: b.body.slots.length, fp: b.body.fingerprint })), care: n.care, lastTouch: n.lastTouch, c20: c ? { live: c.live.id, n: c.live.n, name: c.live.body.index.name, fogged: c.fogged, legends: c.legends.map(l => l.body.index.name), variants: c.variants.length } : null, land20: L.chunks['2,0']?.status ?? null, marks20: L.world?.marks?.['2,0'] ? { fogged: L.world.marks['2,0'].fogged, fading: L.world.marks['2,0'].fading, live: L.world.marks['2,0'].live?.name ?? null, legends: L.world.marks['2,0'].legends.map(x => x.name) } : null, ignored: n.ignored, link: w.status.link, p: P && [Math.round(P.x * 10) / 10, Math.round(P.z * 10) / 10], engineChunk: S.useEngineStore.getState().chunk }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-fog/b-00-before-east-edge-1-0.jpg"
+  }
+ ]
+}

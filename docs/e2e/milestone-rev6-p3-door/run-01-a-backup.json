@@ -1,0 +1,43 @@
+{
+ "app": "A",
+ "port": 9356,
+ "what": "A (owner of the attached fixture world, from the continent flow) exports a .spire-backup of its save (AETHER_TEST_BACKUP_PATH answers the dialog), then resumes Play",
+ "actions": [
+  {
+   "clickText": "← Home"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "clickText": "Worlds"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Saves"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Backup save"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 40; i++) { const m = document.body.innerText.match(/[^\\n]*spire-backup[^\\n]*/); if (m) return m[0]; await new Promise(r => setTimeout(r, 250)); } return 'no toast' })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-door/a-00-backup-exported.jpg"
+  },
+  {
+   "clickText": "Resume"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && w.value.status.link === 'online') return 'online'; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ worldId: w.worldId, head: w.now.head, access: w.now.access, role: w.status.role, link: w.status.link }) })()"
+  }
+ ]
+}

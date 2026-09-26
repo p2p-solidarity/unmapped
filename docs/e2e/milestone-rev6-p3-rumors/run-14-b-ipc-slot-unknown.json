@@ -1,0 +1,10 @@
+{
+ "app": "B",
+ "port": 9357,
+ "what": "after the fog beat (n=21, one slot): B appends a rumor for a slot that beat did not open; main refuses it (run after the fog flow's beat)",
+ "actions": [
+  {
+   "eval": "(async () => {\n  const H = await import('/history/index.ts'); const S = await import('/state/index.ts');\n  const w = S.useHistoryStore.getState().world.value; const n = H.worldNow();\n  const beat = n.beats[n.beats.length - 1];\n  const opened = beat.body.slots.map(s => s.slot);\n  const free = [0, 1, 2, 3, 4, 5].find(s => !opened.includes(s));\n  const cited = n.events[beat.body.slots[0].cite].label;\n  const r = await window.seed.world.append(w.worldId, { kind: 'rumor', body: { beat: beat.id, slot: free, text: 'They say ' + cited + ' was here.' }, seen: n.head.n });\n  return JSON.stringify({ beat: beat.id.slice(0, 12), n: beat.n, opened, tried: free, cited, result: r.ok ? 'written ' + r.value.id : r.error.code + ': ' + r.error.message, head: H.worldNow().head.n });\n})()"
+  }
+ ]
+}

@@ -1,0 +1,97 @@
+{
+ "app": "A2",
+ "port": 9356,
+ "what": "verification of this session's continentSync fix — host: fresh userData, Settings (English, signaling ws://127.0.0.1:4454), New game, open the door",
+ "actions": [
+  {
+   "clickText": "設定"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "English"
+  },
+  {
+   "wait": 600
+  },
+  {
+   "eval": "(() => { const ta = [...document.querySelectorAll('textarea')].find(t => (t.closest('label')?.innerText ?? '').startsWith('Servers — ws://')); ta.scrollIntoView({block: 'center'}); ta.focus(); ta.select(); return ta.value })()"
+  },
+  {
+   "type": "ws://127.0.0.1:4454"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "clickText": "Save for this device"
+  },
+  {
+   "wait": 400
+  },
+  {
+   "eval": "localStorage.getItem('unwritten.signaling')"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "clickText": "Worlds"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Start"
+  },
+  {
+   "repeat": {
+    "times": 120,
+    "until": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return n !== null && n.chunks['0,0'] !== undefined })()",
+    "actions": [
+     {
+      "wait": 1000
+     }
+    ]
+   }
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "pad": {
+    "toward": "[8.5, 8.5]",
+    "within": 0.5,
+    "timeoutMs": 8000
+   }
+  },
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Open my door to friends"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const m = document.body.innerText.match(/Continent [A-Z0-9]{6}[^\\n]*/g); return m })()"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 400
+  }
+ ]
+}

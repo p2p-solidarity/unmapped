@@ -1,0 +1,73 @@
+{
+ "app": "B",
+ "port": 9357,
+ "what": "the same settings on B",
+ "actions": [
+  {
+   "clickText": "設定"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "English"
+  },
+  {
+   "wait": 600
+  },
+  {
+   "eval": "(() => { const ta = [...document.querySelectorAll('textarea')].find(t => (t.closest('label')?.innerText ?? '').startsWith('Servers — ws://')); ta.scrollIntoView({block: 'center'}); ta.focus(); ta.select(); return ta.value })()"
+  },
+  {
+   "type": "ws://127.0.0.1:4454"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "clickText": "Test connection"
+  },
+  {
+   "eval": "(async()=>{for(let i=0;i<200;i++){await new Promise(r=>setTimeout(r,100)); if(!/testing…/i.test(document.body.innerText)) break;} const s=document.body.innerText; const i=s.indexOf('Signaling servers'); return s.slice(i, i+500)})()"
+  },
+  {
+   "clickText": "Save for this device"
+  },
+  {
+   "wait": 400
+  },
+  {
+   "eval": "localStorage.getItem('unwritten.signaling')"
+  },
+  {
+   "eval": "(() => { const ta = [...document.querySelectorAll('textarea')].find(t => (t.closest('label')?.innerText ?? '').includes('World services')); ta.scrollIntoView({block: 'center'}); ta.focus(); return ta === document.activeElement })()"
+  },
+  {
+   "type": "ws://127.0.0.1:8802"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "clickText": "Save"
+  },
+  {
+   "wait": 400
+  },
+  {
+   "eval": "(() => { const field = [...document.querySelectorAll('textarea')].find(t => t.value.includes('ws://127.0.0.1:8802')); let box = field; while (box && ![...box.querySelectorAll('button')].some(b => b.innerText.trim() === 'Test')) box = box.parentElement; const btn = [...box.querySelectorAll('button')].find(b => b.innerText.trim() === 'Test'); btn.scrollIntoView({block: 'center'}); btn.click(); return 'clicked Test' })()"
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(() => { const t = document.body.innerText; const at = t.indexOf('ws://127.0.0.1:8802\\n'); return at < 0 ? 'no probe line' : t.slice(at, at + 300) })()"
+  },
+  {
+   "eval": "localStorage.getItem('unwritten.worldServices')"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-continent/b-00-settings.jpg"
+  }
+ ]
+}

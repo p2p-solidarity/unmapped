@@ -1,0 +1,10 @@
+{
+ "app": "A",
+ "port": 9356,
+ "what": "A reads its log after the removal: B's past events are still there",
+ "actions": [
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; const r = await window.seed.world.read(w.worldId); const es = r.value.entries; const bea = Object.entries(w.now.names).find(([k, v]) => v === 'Bea')?.[0]; const byB = es.filter(e => e.entry.event.author === bea).map(e => e.entry.n + ':' + e.entry.event.kind + (e.verdict.ok ? '' : ' ' + e.verdict.code)); const rm = es.find(e => e.entry.event.kind === 'member.remove'); return JSON.stringify({ head: w.now.head.n, bea: bea?.slice(0, 12), byB, remove: rm ? { n: rm.entry.n, key: rm.entry.event.body.key.slice(0, 12) } : null, members: Object.keys(w.now.members).map(k => k.slice(0, 12)), removed: Object.keys(w.now.removed ?? {}).map(k => k.slice(0, 12)), gifts: Object.values(w.now.gifts).map(g => g.n + ' taken by ' + (w.now.names[g.taken?.by] ?? g.taken?.by)) }) })()"
+  }
+ ]
+}

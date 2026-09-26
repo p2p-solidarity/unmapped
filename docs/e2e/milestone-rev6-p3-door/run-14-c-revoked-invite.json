@@ -1,0 +1,46 @@
+{
+ "app": "C",
+ "port": 9358,
+ "what": "C: Worlds → Join a world with invite 3, revoked by A; the preview refuses it, and world.join (what Join and play calls) is refused too",
+ "actions": [
+  {
+   "clickText": "Worlds"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "clickText": "Join a world"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('input, textarea')].find(x => (x.closest('label')?.innerText ?? '').includes('Invite link')); if (!f) return 'no field'; f.focus(); f.select(); return document.activeElement === f })()"
+  },
+  {
+   "type": "__INVITE__"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "clickText": "Look at the world"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 60; i++) { if (/Your name in this world/.test(document.body.innerText) || /Error/.test(document.body.innerText)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('JOIN A WORLD'); return t.slice(at, at + 1400) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-door/c-07-revoked-invite-preview.jpg"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-door/c-08-revoked-invite-refused.jpg"
+  },
+  {
+   "eval": "(async () => { const r = await window.seed.world.join('__INVITE__', 'Cy'); return JSON.stringify(r.ok ? { joined: r.value } : r.error) })()"
+  }
+ ]
+}

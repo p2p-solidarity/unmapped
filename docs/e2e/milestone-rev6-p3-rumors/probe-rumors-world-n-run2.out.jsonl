@@ -1,0 +1,16 @@
+{"scenario":"rumors","step":"the probe key opens the world as a member","expect":"opened:member|opened:owner","got":"opened:member","ok":true}
+{"scenario":"rumors","step":"the served history is folded here","expect":"reached","got":"reached","ok":true}
+{"scenario":"rumors","step":"a rumor slot to write against (from the service's beats)","expect":"found","got":"found","ok":true,"detail":"slot 0 of beat hcdzf7la4ubm76csny25jf34eufgfgqlxlczakofn3t2pwvdnd7cq"}
+{"scenario":"rumors","step":"a rumor that does not name the event its slot cites","expect":"rumor-uncited","got":"rumor-uncited","ok":true,"detail":"cites deed \"The Twice-a-Day Bus\", told by aya of Windmill Field; text \"They say the wind turned at dusk.\""}
+{"scenario":"rumors","step":"a known label the slot does not allow","expect":"found","got":"found","ok":true}
+{"scenario":"rumors","step":"a rumor that names a label its slot does not cite","expect":"rumor-names-other","got":"rumor-names-other","ok":true,"detail":"cites deed \"The Twice-a-Day Bus\", told by aya of Windmill Field; text \"They say The Twice-a-Day Bus was seen with player-9U7T.\""}
+{"scenario":"rumors","step":"a rumor for a beat this world never had","expect":"rumor-beat-unknown","got":"rumor-beat-unknown","ok":true,"detail":"cites deed \"The Twice-a-Day Bus\", told by aya of Windmill Field; text \"They say The Twice-a-Day Bus was here.\""}
+{"scenario":"rumors","step":"a visitor opens the public world (control)","expect":"opened:visitor","got":"opened:visitor","ok":true}
+{"scenario":"rumors","step":"a valid rumor written by a visitor","expect":"access-visitor-kind","got":"access-visitor-kind","ok":true,"detail":"cites deed \"The Twice-a-Day Bus\", told by aya of Windmill Field; text \"They say The Twice-a-Day Bus was here.\""}
+{"scenario":"rumors","step":"the valid rumor, from a member (control)","expect":"accepted","got":"quota-variant","ok":false,"detail":"cites deed \"The Twice-a-Day Bus\", told by aya of Windmill Field; text \"They say The Twice-a-Day Bus was here.\""}
+{"scenario":"rumors","step":"the control rumor stands in the fold","expect":"live|variant","got":"missing","ok":false}
+{"scenario":"rumors","step":"the served log verifies (chain and receipt schedule)","expect":"ok","got":"ok","ok":true,"detail":"20 entries"}
+{"scenario":"rumors","step":"every beat the service wrote equals its recomputation here","expect":"equal","got":"equal","ok":true,"detail":"1 beats"}
+{"scenario":"rumors","step":"every frame the service sent reads with readFromService","expect":"0 unreadable","got":"0 unreadable","ok":true}
+{"scenario":"rumors","summary":true,"steps":14,"failed":2,"ok":false}
+error: script "world:probe" exited with code 1

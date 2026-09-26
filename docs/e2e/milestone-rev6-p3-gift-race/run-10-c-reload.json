@@ -1,0 +1,24 @@
+{
+ "app": "C",
+ "port": 9358,
+ "what": "C: reload the page (this session's gift-take fix in TracePanel.tsx / traces.ts), Continue",
+ "actions": [
+  {
+   "cdp": {
+    "method": "Page.reload",
+    "params": {
+     "ignoreCache": true
+    }
+   }
+  },
+  {
+   "wait": 7000
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 120; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && (w.value.status.link === 'online' || w.value.status.error)) break; await new Promise(r => setTimeout(r, 250)); } await new Promise(r => setTimeout(r, 2500)); const w = S.useHistoryStore.getState().world; return JSON.stringify(w.status === 'ready' ? { head: w.value.now.head.n, link: w.value.status.link, role: w.value.status.role, writable: w.value.status.writable, error: w.value.status.error } : w) })()"
+  }
+ ]
+}

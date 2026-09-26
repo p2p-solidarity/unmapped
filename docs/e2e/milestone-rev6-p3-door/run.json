@@ -1,0 +1,1148 @@
+{
+ "flow": "door",
+ "env": {
+  "build": "The working tree as of 2026-09-26T04:04:51Z (HEAD 51817a3; its files equal origin/main 1feecbf plus other sessions' uncommitted changes; `git diff HEAD | shasum -a 256` = bb7c45172e4baa5a…, `git status --porcelain | shasum -a 256` = 919c119cb9dea3ec…), copied with `rsync -a --exclude node_modules --exclude .git --exclude docs --exclude native --exclude .cache --exclude out` to a scratch dir SNAP; node_modules and .env symlinked to the repo's; native/afm-bridge cloned (`cp -cR`). One snapshot-only line: electron.vite.config.ts renderer `cacheDir: resolve(__dirname, '.vite-cache')`. Why: other sessions edit the shared tree live and HMR reloads put apps back on the title mid-run. This session's fixes were copied into SNAP as they were made (see result.md, 'Code changed').",
+  "service": "cd $SNAP && UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8802 --data <fresh dir>   (background)",
+  "apps": "cd $SNAP && AETHER_TEST_USER_DATA=<fresh dir> bun run dev --remoteDebuggingPort <port>   (background; A 9356, B 9357, C 9358)",
+  "driver": "CDP_PORT=<port> bun scripts/cdp-drive.ts \"$(cat <step file>)\"   (from the repo root; a step file is {app, port, what, actions})",
+  "invite": "__INVITE__ in a step file is the link the owner's invite step printed last; substitute it with a literal string replace (python), not sed (the link holds '&k=')",
+  "quit": "Browser.close on the browser target (GET http://127.0.0.1:<port>/json/version → webSocketDebuggerUrl), then kill the electron-vite process if it still listens",
+  "window": "1440 x 846 CSS px at device scale 2 (screenshots 2880 x 1678), in the background; each app switched to English in its first step",
+  "platform": "macOS 27.0, Bun 1.3.6, Electron 44.3.0",
+  "service_data": "svc-f (the continent flow's world F, attached in continent run-10)",
+  "userData": "ud-af (A, 9356, AETHER_TEST_BACKUP_PATH=$SCR/f-world.spire-backup), ud-bf (B, 9357), ud-cf (C, 9358, AETHER_TEST_BACKUP_PATH=$SCR/f-world.spire-backup: C's only way into the world is A's restored backup, which makes C a non-member of it)",
+  "probe": "a fresh service dir svc-probe on 8802 for `bun run world:probe -- --service ws://127.0.0.1:8802 door`"
+ },
+ "model": {
+  "provider": "openai",
+  "model": "gpt-5.4-mini",
+  "source": "Settings → Model default on a fresh userData; OPENAI_API_KEY from the repo .env, read by main only"
+ },
+ "note": "The expired invite uses the service's test clock (+2 days); A's door still lists that invite as open because A's main clock did not move (it judges with its own clock).",
+ "steps": [
+  {
+   "step": 1,
+   "app": "A",
+   "port": 9356,
+   "what": "A (owner of the attached fixture world, from the continent flow) exports a .spire-backup of its save (AETHER_TEST_BACKUP_PATH answers the dialog), then resumes Play",
+   "file": "run-01-a-backup.json",
+   "actions": [
+    {
+     "clickText": "← Home"
+    },
+    {
+     "wait": 2500
+    },
+    {
+     "clickText": "Worlds"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "clickText": "Saves"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "clickText": "Backup save"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 40; i++) { const m = document.body.innerText.match(/[^\\n]*spire-backup[^\\n]*/); if (m) return m[0]; await new Promise(r => setTimeout(r, 250)); } return 'no toast' })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/a-00-backup-exported.jpg"
+    },
+    {
+     "clickText": "Resume"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && w.value.status.link === 'online') return 'online'; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ worldId: w.worldId, head: w.now.head, access: w.now.access, role: w.status.role, link: w.status.link }) })()"
+    }
+   ]
+  },
+  {
+   "step": 2,
+   "app": "shell",
+   "what": "start C: cd $SNAP && AETHER_TEST_BACKUP_PATH=$SCR/f-world.spire-backup AETHER_TEST_USER_DATA=$SCR/ud-cf bun run dev --remoteDebuggingPort 9358"
+  },
+  {
+   "step": 3,
+   "app": "C",
+   "port": 9358,
+   "what": "C (a third device, fresh userData, AETHER_TEST_BACKUP_PATH = A's backup): Settings (English, the service), Worlds → Saves → Restore backup → Resume. C's key is not a member of this friends world: the service refuses it",
+   "file": "run-02-c-restore-friends.json",
+   "actions": [
+    {
+     "clickText": "設定"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "English"
+    },
+    {
+     "wait": 600
+    },
+    {
+     "eval": "(() => { const ta = [...document.querySelectorAll('textarea')].find(t => (t.closest('label')?.innerText ?? '').includes('World services')); ta.scrollIntoView({block: 'center'}); ta.focus(); return ta === document.activeElement })()"
+    },
+    {
+     "type": "ws://127.0.0.1:8802"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Save"
+    },
+    {
+     "wait": 400
+    },
+    {
+     "eval": "localStorage.getItem('unwritten.worldServices')"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 600
+    },
+    {
+     "clickText": "Worlds"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "clickText": "Saves"
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "clickText": "Restore backup"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 40; i++) { const m = document.body.innerText.match(/Restored[^\\n]*/); if (m) return m[0]; await new Promise(r => setTimeout(r, 250)); } return document.body.innerText.slice(0, 800) })()"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "text": true
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/c-00-restored.jpg"
+    },
+    {
+     "clickText": "Resume"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 120; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && (w.value.status.link === 'online' || w.value.status.link === 'refused' || w.value.status.error)) break; await new Promise(r => setTimeout(r, 250)); } await new Promise(r => setTimeout(r, 3000)); const w = S.useHistoryStore.getState().world; return JSON.stringify(w.status === 'ready' ? { worldId: w.value.worldId, head: w.value.now.head.n, status: w.value.status } : w) })()"
+    },
+    {
+     "text": true
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/c-01-friends-refused.jpg"
+    }
+   ]
+  },
+  {
+   "step": 4,
+   "app": "A",
+   "port": 9356,
+   "what": "A: door → Private",
+   "file": "run-03-a-private.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[8.5, 8.5]",
+      "within": 0.5,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "hold": "KeyE",
+     "ms": 120
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "clickText": "Private"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 40; i++) { const w = S.useHistoryStore.getState().world.value; if (w.now.access === 'private' && w.status.pending === 0) return JSON.stringify({ access: w.now.access, head: w.now.head.n }); await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; const i = t.indexOf('Sharing'); return t.slice(i, i + 1600) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/a-01-private.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 400
+    }
+   ]
+  },
+  {
+   "step": 5,
+   "app": "C",
+   "port": 9358,
+   "what": "C leaves Play and continues the restored save: the service refuses a private world",
+   "file": "run-04-c-private-refused.json",
+   "actions": [
+    {
+     "clickText": "← Home"
+    },
+    {
+     "wait": 2000
+    },
+    {
+     "clickText": "Continue"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 120; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && (w.value.status.link === 'online' || w.value.status.error)) break; await new Promise(r => setTimeout(r, 250)); } await new Promise(r => setTimeout(r, 2500)); const w = S.useHistoryStore.getState().world; return JSON.stringify(w.status === 'ready' ? { head: w.value.now.head.n, link: w.value.status.link, role: w.value.status.role, writable: w.value.status.writable, error: w.value.status.error } : w) })()"
+    },
+    {
+     "text": true
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/c-02-private-refused.jpg"
+    }
+   ]
+  },
+  {
+   "step": 6,
+   "app": "A",
+   "port": 9356,
+   "what": "A: door → Friends",
+   "file": "run-05-a-friends.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[8.5, 8.5]",
+      "within": 0.5,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "hold": "KeyE",
+     "ms": 120
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "clickText": "Friends"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 40; i++) { const w = S.useHistoryStore.getState().world.value; if (w.now.access === 'friends' && w.status.pending === 0) return JSON.stringify({ access: w.now.access, head: w.now.head.n }); await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; const i = t.indexOf('Sharing'); return t.slice(i, i + 1600) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/a-02-friends-again.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 400
+    }
+   ]
+  },
+  {
+   "step": 7,
+   "app": "A",
+   "port": 9356,
+   "what": "A: Create an invite (1 use, 7 days) — invite 1, for B",
+   "file": "run-06-a-invite-1.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[8.5, 8.5]",
+      "within": 0.5,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "hold": "KeyE",
+     "ms": 120
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "clickText": "Create an invite"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 40; i++) { const l = document.querySelector('[data-layer=door]'); const m = l && /unmapped:\\/\\/join\\?i=[A-Za-z0-9_\\-]+&k=[A-Za-z0-9_\\-]+/.exec([...l.querySelectorAll('input, textarea')].map(x => x.value).join('\\n')); if (m) { window.__invite = m[0]; return m[0].length; } await new Promise(r => setTimeout(r, 250)); } return 'no link' })()"
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; const i = t.indexOf('Invites'); return t.slice(i, i + 900) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/a-03-invite-1.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 400
+    },
+    {
+     "eval": "window.__invite"
+    }
+   ]
+  },
+  {
+   "step": 8,
+   "app": "B",
+   "port": 9357,
+   "what": "B (on the title): Worlds → Join a world with invite 1, name Bea, Join and play",
+   "file": "run-07-b-join-1.json",
+   "actions": [
+    {
+     "clickText": "Worlds"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "Join a world"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input, textarea')].find(x => (x.closest('label')?.innerText ?? '').includes('Invite link')); if (!f) return 'no field'; f.focus(); f.select(); return document.activeElement === f })()"
+    },
+    {
+     "type": "__INVITE__"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Look at the world"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 60; i++) { if (/Your name in this world/.test(document.body.innerText) || /Error/.test(document.body.innerText)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('JOIN A WORLD'); return t.slice(at, at + 1400) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/b-00-join-preview.jpg"
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input')].find(x => (x.closest('label')?.innerText ?? '').includes('Your name in this world')); if (!f) return 'no name field'; f.focus(); f.select(); return f.value })()"
+    },
+    {
+     "type": "Bea"
+    },
+    {
+     "eval": "window.__t0 = performance.now(); 'mark'"
+    },
+    {
+     "clickText": "Join and play"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 80; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && s.activeInstance && w.status === 'ready') return { ms: Math.round(performance.now() - window.__t0), link: w.value.status.link, role: w.value.status.role, head: w.value.status.head.n }; if (/Error ·/.test(document.body.innerText) && i > 4) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('JOIN A WORLD'); return 'not joined: ' + t.slice(at, at + 1400) })()"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/b-01-joined.jpg"
+    }
+   ]
+  },
+  {
+   "step": 9,
+   "app": "C",
+   "port": 9358,
+   "what": "C: Home → Worlds → Join a world with invite 1, already used by B; the preview refuses it, and world.join (what Join and play calls) is refused too",
+   "file": "run-08-c-used-invite.json",
+   "actions": [
+    {
+     "clickText": "← Home"
+    },
+    {
+     "wait": 2000
+    },
+    {
+     "clickText": "Worlds"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "Join a world"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input, textarea')].find(x => (x.closest('label')?.innerText ?? '').includes('Invite link')); if (!f) return 'no field'; f.focus(); f.select(); return document.activeElement === f })()"
+    },
+    {
+     "type": "__INVITE__"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Look at the world"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 60; i++) { if (/Your name in this world/.test(document.body.innerText) || /Error/.test(document.body.innerText)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('JOIN A WORLD'); return t.slice(at, at + 1400) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/c-03-used-invite-preview.jpg"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/c-04-used-invite-refused.jpg"
+    },
+    {
+     "eval": "(async () => { const r = await window.seed.world.join('__INVITE__', 'Cy'); return JSON.stringify(r.ok ? { joined: r.value } : r.error) })()"
+    }
+   ]
+  },
+  {
+   "step": 10,
+   "app": "A",
+   "port": 9356,
+   "what": "A: Create an invite (1 use, 1 day) — invite 2, to expire",
+   "file": "run-09-a-invite-2.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[8.5, 8.5]",
+      "within": 0.5,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "hold": "KeyE",
+     "ms": 120
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('[data-layer=door] input')].find(x => (x.closest('label')?.innerText ?? '').includes('Days valid')); f.focus(); f.select(); return f.value })()"
+    },
+    {
+     "type": "1"
+    },
+    {
+     "clickText": "Create an invite"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 40; i++) { const l = document.querySelector('[data-layer=door]'); const m = l && /unmapped:\\/\\/join\\?i=[A-Za-z0-9_\\-]+&k=[A-Za-z0-9_\\-]+/.exec([...l.querySelectorAll('input, textarea')].map(x => x.value).join('\\n')); if (m) { window.__invite = m[0]; return m[0].length; } await new Promise(r => setTimeout(r, 250)); } return 'no link' })()"
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; const i = t.indexOf('Invites'); return t.slice(i, i + 900) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/a-05-invite-2-one-day.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 400
+    },
+    {
+     "eval": "window.__invite"
+    }
+   ]
+  },
+  {
+   "step": 11,
+   "app": "shell",
+   "what": "curl -s -X POST http://127.0.0.1:8802/v1/test/advance -d '{\"days\":2}'  → offsetDays 2, world F beats (n=37)"
+  },
+  {
+   "step": 12,
+   "app": "C",
+   "port": 9358,
+   "what": "C: Worlds → Join a world with invite 2 (1 day), after the service clock moved 2 days; the preview refuses it, and world.join (what Join and play calls) is refused too",
+   "file": "run-11-c-expired-invite.json",
+   "actions": [
+    {
+     "clickText": "Worlds"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "Join a world"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input, textarea')].find(x => (x.closest('label')?.innerText ?? '').includes('Invite link')); if (!f) return 'no field'; f.focus(); f.select(); return document.activeElement === f })()"
+    },
+    {
+     "type": "__INVITE__"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Look at the world"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 60; i++) { if (/Your name in this world/.test(document.body.innerText) || /Error/.test(document.body.innerText)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('JOIN A WORLD'); return t.slice(at, at + 1400) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/c-05-expired-invite-preview.jpg"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/c-06-expired-invite-refused.jpg"
+    },
+    {
+     "eval": "(async () => { const r = await window.seed.world.join('__INVITE__', 'Cy'); return JSON.stringify(r.ok ? { joined: r.value } : r.error) })()"
+    }
+   ]
+  },
+  {
+   "step": 13,
+   "app": "A",
+   "port": 9356,
+   "what": "A: Create an invite (1 use, 7 days) — invite 3, to revoke",
+   "file": "run-12-a-invite-3.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[8.5, 8.5]",
+      "within": 0.5,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "hold": "KeyE",
+     "ms": 120
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "clickText": "Create an invite"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 40; i++) { const l = document.querySelector('[data-layer=door]'); const m = l && /unmapped:\\/\\/join\\?i=[A-Za-z0-9_\\-]+&k=[A-Za-z0-9_\\-]+/.exec([...l.querySelectorAll('input, textarea')].map(x => x.value).join('\\n')); if (m) { window.__invite = m[0]; return m[0].length; } await new Promise(r => setTimeout(r, 250)); } return 'no link' })()"
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; const i = t.indexOf('Invites'); return t.slice(i, i + 900) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/a-07-invite-3.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 400
+    },
+    {
+     "eval": "window.__invite"
+    }
+   ]
+  },
+  {
+   "step": 14,
+   "app": "A",
+   "port": 9356,
+   "what": "A revokes invite 3 from the door (its row's Revoke): an invite.revoke event",
+   "file": "run-13-a-revoke-3.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[8.5, 8.5]",
+      "within": 0.5,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "hold": "KeyE",
+     "ms": 120
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "eval": "(() => { const nonce = 'q7dnog6e'; const l = document.querySelector('[data-layer=door]'); const row = [...l.querySelectorAll('div')].filter(d => d.innerText.startsWith(nonce) && [...d.querySelectorAll('button')].some(b => b.innerText.trim() === 'Revoke')).sort((a, b) => a.innerText.length - b.innerText.length)[0]; if (!row) return 'no row'; const btn = [...row.querySelectorAll('button')].find(b => b.innerText.trim() === 'Revoke'); btn.click(); return 'revoked ' + row.innerText.slice(0, 80) })()"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 40; i++) { const w = S.useHistoryStore.getState().world.value; if (w.status.pending === 0 && Object.values(w.now.events).some(e => e.kind === 'invite.revoke')) break; await new Promise(r => setTimeout(r, 250)); } const l = document.querySelector('[data-layer=door]'); const t = l.innerText; const i = t.indexOf('Invites'); return t.slice(i, i + 700) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/a-08-invite-3-revoked.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 400
+    }
+   ]
+  },
+  {
+   "step": 15,
+   "app": "C",
+   "port": 9358,
+   "what": "C: Worlds → Join a world with invite 3, revoked by A; the preview refuses it, and world.join (what Join and play calls) is refused too",
+   "file": "run-14-c-revoked-invite.json",
+   "actions": [
+    {
+     "clickText": "Worlds"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "Join a world"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('input, textarea')].find(x => (x.closest('label')?.innerText ?? '').includes('Invite link')); if (!f) return 'no field'; f.focus(); f.select(); return document.activeElement === f })()"
+    },
+    {
+     "type": "__INVITE__"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Look at the world"
+    },
+    {
+     "eval": "(async () => { for (let i = 0; i < 60; i++) { if (/Your name in this world/.test(document.body.innerText) || /Error/.test(document.body.innerText)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('JOIN A WORLD'); return t.slice(at, at + 1400) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/c-07-revoked-invite-preview.jpg"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/c-08-revoked-invite-refused.jpg"
+    },
+    {
+     "eval": "(async () => { const r = await window.seed.world.join('__INVITE__', 'Cy'); return JSON.stringify(r.ok ? { joined: r.value } : r.error) })()"
+    }
+   ]
+  },
+  {
+   "step": 16,
+   "app": "A",
+   "port": 9356,
+   "what": "A: door → Public",
+   "file": "run-15-a-public.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[8.5, 8.5]",
+      "within": 0.5,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "hold": "KeyE",
+     "ms": 120
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "clickText": "Public"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 40; i++) { const w = S.useHistoryStore.getState().world.value; if (w.now.access === 'public' && w.status.pending === 0) return JSON.stringify({ access: w.now.access, head: w.now.head.n }); await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; const i = t.indexOf('Sharing'); return t.slice(i, i + 1600) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/a-09-public.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 400
+    }
+   ]
+  },
+  {
+   "step": 17,
+   "app": "C",
+   "port": 9358,
+   "what": "C: Worlds → Saves → Resume the restored save: the public world opens for C's key as a visitor",
+   "file": "run-16-c-public-visitor.json",
+   "actions": [
+    {
+     "clickText": "Saves"
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "clickText": "Resume"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 120; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && (w.value.status.link === 'online' || w.value.status.error)) break; await new Promise(r => setTimeout(r, 250)); } await new Promise(r => setTimeout(r, 2500)); const w = S.useHistoryStore.getState().world; return JSON.stringify(w.status === 'ready' ? { head: w.value.now.head.n, link: w.value.status.link, role: w.value.status.role, writable: w.value.status.writable, error: w.value.status.error } : w) })()"
+    },
+    {
+     "text": true
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/c-09-public-visitor.jpg"
+    }
+   ]
+  },
+  {
+   "step": 18,
+   "app": "C",
+   "port": 9358,
+   "what": "C (visitor) near A's door: N, puts up a signpost",
+   "file": "run-17-c-signpost.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[11.5, 12.5]",
+      "within": 0.6,
+      "timeoutMs": 15000
+     }
+    },
+    {
+     "hold": "KeyN",
+     "ms": 100
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 1500) : 'no notes layer' })()"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "wait": 2000
+    },
+    {
+     "clickText": "Put up a signpost"
+    },
+    {
+     "wait": 600
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('[data-layer=notes] input')].find(x => (x.closest('label')?.innerText ?? '').includes('What it says')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+    },
+    {
+     "type": "Visitors' lane"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Put it up"
+    },
+    {
+     "wait": 2500
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 1500) : 'no notes layer' })()"
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; const mine = Object.values(n.events).filter(e => e.author === w.status.me).map(e => e.n + ':' + e.kind + (e.pending ? ' (pending)' : '')); return JSON.stringify({ head: n.head.n, pending: w.status.pending, refused: w.status.refused, role: w.status.role, mine }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/c-10-visitor-note-signpost.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 500
+    }
+   ]
+  },
+  {
+   "step": 19,
+   "app": "C",
+   "port": 9358,
+   "what": "C (visitor): N, leaves a note",
+   "file": "run-17b-c-note.json",
+   "actions": [
+    {
+     "hold": "KeyN",
+     "ms": 100
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('[data-layer=notes] input, [data-layer=notes] textarea')].find(x => (x.closest('label')?.innerText ?? '').trim().startsWith('your note')); if (!f) return 'no field: ' + [...document.querySelectorAll('[data-layer=notes] label')].map(l => l.innerText.slice(0, 30)).join(' | '); f.focus(); return document.activeElement === f })()"
+    },
+    {
+     "type": "A visitor passed through here on a public day."
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Leave the note"
+    },
+    {
+     "wait": 2500
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 1500) : 'no notes layer' })()"
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; const mine = Object.values(n.events).filter(e => e.author === w.status.me).map(e => e.n + ':' + e.kind + (e.pending ? ' (pending)' : '')); return JSON.stringify({ head: n.head.n, pending: w.status.pending, refused: w.status.refused, role: w.status.role, mine }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/c-10-visitor-note-signpost.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 500
+    }
+   ]
+  },
+  {
+   "step": 20,
+   "app": "C",
+   "port": 9358,
+   "what": "C (visitor) walks south into the unwritten (0, -1): the claim to witness it is refused, no model call",
+   "file": "run-18-c-claim-refused.json",
+   "actions": [
+    {
+     "pad": {
+      "toward": "[16.5, 6.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "pad": {
+      "toward": "[16.5, -6.5]",
+      "within": 1.0,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "wait": 3000
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); return JSON.stringify({ chunk: S.useEngineStore.getState().chunk, land: S.useLandStore.getState().chunks['0,-1'] ?? null }) })()"
+    },
+    {
+     "text": true
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/c-11-visitor-claim-refused.jpg"
+    },
+    {
+     "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; const mine = Object.values(n.events).filter(e => e.author === w.status.me).map(e => e.n + ':' + e.kind + (e.pending ? ' (pending)' : '')); return JSON.stringify({ head: n.head.n, pending: w.status.pending, refused: w.status.refused, role: w.status.role, mine }) })()"
+    }
+   ]
+  },
+  {
+   "step": 21,
+   "app": "shell",
+   "what": "(the gift-race flow runs here, on the same public world)"
+  },
+  {
+   "step": 22,
+   "app": "A",
+   "port": 9356,
+   "what": "A (after the gift race): door → People → Bea → Remove: a member.remove event",
+   "file": "run-19-a-remove-b.json",
+   "actions": [
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 400
+    },
+    {
+     "pad": {
+      "toward": "[8.5, 8.5]",
+      "within": 0.5,
+      "buttons": [
+       5
+      ],
+      "timeoutMs": 20000
+     }
+    },
+    {
+     "hold": "KeyE",
+     "ms": 120
+    },
+    {
+     "wait": 1200
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door'; const t = l.innerText; const i = t.indexOf('People'); return t.slice(i, i + 500) })()"
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); const row = [...l.querySelectorAll('div')].filter(d => d.innerText.startsWith('Bea') && [...d.querySelectorAll('button')].some(b => b.innerText.trim() === 'Remove')).sort((a, b) => a.innerText.length - b.innerText.length)[0]; if (!row) return 'no row'; [...row.querySelectorAll('button')].find(b => b.innerText.trim() === 'Remove').click(); return 'clicked Remove on ' + row.innerText.slice(0, 60) })()"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); const b = [...l.querySelectorAll('button')].find(x => /^(Remove Bea|Yes, remove|Confirm|Remove them)/.test(x.innerText.trim())); if (b) { b.click(); return 'confirmed: ' + b.innerText.trim(); } return 'no confirm step' })()"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 40; i++) { const w = S.useHistoryStore.getState().world.value; if (w.status.pending === 0 && Object.values(w.now.events).some(e => e.kind === 'member.remove')) break; await new Promise(r => setTimeout(r, 250)); } const w = S.useHistoryStore.getState().world.value; const rm = Object.values(w.now.events).find(e => e.kind === 'member.remove'); return JSON.stringify({ head: w.now.head.n, remove: rm ? { n: rm.n, id: rm.id.slice(0, 12) } : null }) })()"
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door'; const t = l.innerText; const i = t.indexOf('People'); return t.slice(i, i + 500) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/a-10-member-removed.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 400
+    }
+   ]
+  },
+  {
+   "step": 23,
+   "app": "B",
+   "port": 9357,
+   "what": "B after its removal: its status; a note from the notes panel and a direct world.append are refused; leaving Play and continuing, the service refuses to serve B",
+   "file": "run-20-b-removed.json",
+   "actions": [
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 2000
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: w.now.head.n, link: w.status.link, role: w.status.role, writable: w.status.writable, pending: w.status.pending, refused: w.status.refused, error: w.status.error }) })()"
+    },
+    {
+     "hold": "KeyN",
+     "ms": 100
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('[data-layer=notes] input, [data-layer=notes] textarea')].find(x => (x.closest('label')?.innerText ?? '').trim().startsWith('your note')); if (!f) return 'no field: ' + (document.querySelector('[data-layer=notes]')?.innerText.slice(0, 600) ?? 'no notes layer'); f.focus(); return document.activeElement === f })()"
+    },
+    {
+     "type": "Bea after being removed."
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Leave the note"
+    },
+    {
+     "wait": 2000
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 1200) : 'no notes layer' })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/b-02-removed-cannot-write.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 500
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; const r = await window.seed.world.append(w.worldId, { kind: 'note', body: { coord: { cx: 0, cz: 0, x: 13, z: 13 }, anchors: [], text: 'direct append after removal', contests: null, name: 'Bea' }, seen: w.now.head.n }); return JSON.stringify(r.ok ? r.value : r.error) })()"
+    },
+    {
+     "clickText": "← Home"
+    },
+    {
+     "wait": 2000
+    },
+    {
+     "clickText": "Continue"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 120; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && (w.value.status.link === 'online' || w.value.status.error)) break; await new Promise(r => setTimeout(r, 250)); } await new Promise(r => setTimeout(r, 2500)); const w = S.useHistoryStore.getState().world; return JSON.stringify(w.status === 'ready' ? { head: w.value.now.head.n, link: w.value.status.link, role: w.value.status.role, writable: w.value.status.writable, error: w.value.status.error } : w) })()"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: w.now.head.n, link: w.status.link, role: w.status.role, writable: w.status.writable, pending: w.status.pending, refused: w.status.refused, error: w.status.error }) })()"
+    },
+    {
+     "text": true
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/b-03-removed-cannot-read.jpg"
+    }
+   ]
+  },
+  {
+   "step": 24,
+   "app": "shell",
+   "what": "this session's writeBlocker fix (access-removed) copied into SNAP"
+  },
+  {
+   "step": 25,
+   "app": "B",
+   "port": 9357,
+   "what": "B after this session's writeBlocker fix (access-removed blocks writing): reload, Continue, try a note",
+   "file": "run-21-b-removed-after-fix.json",
+   "actions": [
+    {
+     "cdp": {
+      "method": "Page.reload",
+      "params": {
+       "ignoreCache": true
+      }
+     }
+    },
+    {
+     "wait": 7000
+    },
+    {
+     "clickText": "Continue"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 120; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && (w.value.status.link === 'online' || w.value.status.error)) break; await new Promise(r => setTimeout(r, 250)); } await new Promise(r => setTimeout(r, 2500)); const w = S.useHistoryStore.getState().world; return JSON.stringify(w.status === 'ready' ? { head: w.value.now.head.n, link: w.value.status.link, role: w.value.status.role, writable: w.value.status.writable, error: w.value.status.error } : w) })()"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const W = await import('/history/write.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: w.now.head.n, link: w.status.link, role: w.status.role, writable: w.status.writable, pending: w.status.pending, error: w.status.error?.code ?? null, writeBlocker: W.writeBlocker()?.code ?? null }) })()"
+    },
+    {
+     "hold": "KeyN",
+     "ms": 100
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "(() => { const f = [...document.querySelectorAll('[data-layer=notes] input, [data-layer=notes] textarea')].find(x => (x.closest('label')?.innerText ?? '').trim().startsWith('your note')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+    },
+    {
+     "type": "Bea tries again after the fix."
+    },
+    {
+     "wait": 300
+    },
+    {
+     "clickText": "Leave the note"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(-700) : 'no notes layer' })()"
+    },
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const W = await import('/history/write.ts'); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: w.now.head.n, link: w.status.link, role: w.status.role, writable: w.status.writable, pending: w.status.pending, error: w.status.error?.code ?? null, writeBlocker: W.writeBlocker()?.code ?? null }) })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p3-door/b-04-removed-write-refused-after-fix.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 500
+    }
+   ]
+  },
+  {
+   "step": 26,
+   "app": "A",
+   "port": 9356,
+   "what": "A reads its log after the removal: B's past events are still there",
+   "file": "run-22-a-b-past-events.json",
+   "actions": [
+    {
+     "eval": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; const r = await window.seed.world.read(w.worldId); const es = r.value.entries; const bea = Object.entries(w.now.names).find(([k, v]) => v === 'Bea')?.[0]; const byB = es.filter(e => e.entry.event.author === bea).map(e => e.entry.n + ':' + e.entry.event.kind + (e.verdict.ok ? '' : ' ' + e.verdict.code)); const rm = es.find(e => e.entry.event.kind === 'member.remove'); return JSON.stringify({ head: w.now.head.n, bea: bea?.slice(0, 12), byB, remove: rm ? { n: rm.entry.n, key: rm.entry.event.body.key.slice(0, 12) } : null, members: Object.keys(w.now.members).map(k => k.slice(0, 12)), removed: Object.keys(w.now.removed ?? {}).map(k => k.slice(0, 12)), gifts: Object.values(w.now.gifts).map(g => g.n + ' taken by ' + (w.now.names[g.taken?.by] ?? g.taken?.by)) }) })()"
+    }
+   ]
+  },
+  {
+   "step": 27,
+   "app": "shell",
+   "what": "all apps quit, svc-f stopped; fresh svc-probe on 8802: cd $SNAP && bun run world:probe -- --service ws://127.0.0.1:8802 door  (output probe-door.out.jsonl)"
+  }
+ ]
+}

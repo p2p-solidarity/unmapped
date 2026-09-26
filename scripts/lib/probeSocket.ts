@@ -60,6 +60,8 @@ export interface Mirror {
   now: WorldNow;
   entries: LogEntry[];
   role: OpenedRole;
+  /** The head n the `opened` frame announced: the history served after it reaches at least this. */
+  served: number;
   /** An entries frame skipped an n: the mirror stopped folding there. */
   gap: boolean;
 }
@@ -175,6 +177,7 @@ export class ProbeSocket {
         now,
         entries: [],
         role: frame.role,
+        served: frame.head.n,
         gap: false,
       });
       return;

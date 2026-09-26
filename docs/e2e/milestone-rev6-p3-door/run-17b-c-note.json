@@ -1,0 +1,45 @@
+{
+ "app": "C",
+ "port": 9358,
+ "what": "C (visitor): N, leaves a note",
+ "actions": [
+  {
+   "hold": "KeyN",
+   "ms": 100
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('[data-layer=notes] input, [data-layer=notes] textarea')].find(x => (x.closest('label')?.innerText ?? '').trim().startsWith('your note')); if (!f) return 'no field: ' + [...document.querySelectorAll('[data-layer=notes] label')].map(l => l.innerText.slice(0, 30)).join(' | '); f.focus(); return document.activeElement === f })()"
+  },
+  {
+   "type": "A visitor passed through here on a public day."
+  },
+  {
+   "wait": 300
+  },
+  {
+   "clickText": "Leave the note"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 1500) : 'no notes layer' })()"
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; const mine = Object.values(n.events).filter(e => e.author === w.status.me).map(e => e.n + ':' + e.kind + (e.pending ? ' (pending)' : '')); return JSON.stringify({ head: n.head.n, pending: w.status.pending, refused: w.status.refused, role: w.status.role, mine }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-door/c-10-visitor-note-signpost.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 500
+  }
+ ]
+}

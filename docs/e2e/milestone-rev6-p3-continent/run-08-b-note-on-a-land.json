@@ -1,0 +1,81 @@
+{
+ "app": "B",
+ "port": 9357,
+ "what": "B: Go to their door (A's), steps off it, N, leaves a note on A's land",
+ "actions": [
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Go to their door"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const P = (await import('/engine/playerProbe.ts')).samplePlayer(); return JSON.stringify({ p: P && [Math.round(P.x*10)/10, Math.round(P.z*10)/10], visiting: P?.visiting ?? P?.tag ?? null, chunk: S.useEngineStore.getState().chunk, layers: [...document.querySelectorAll('[data-layer]')].map(l => l.getAttribute('data-layer')) }) })()"
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-continent/b-04-at-a-door.jpg"
+  },
+  {
+   "pad": {
+    "axes": [
+     0,
+     1,
+     0,
+     0
+    ],
+    "ms": 700
+   }
+  },
+  {
+   "hold": "KeyN",
+   "ms": 100
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=notes]') ?? document.querySelector('[role=dialog]'); return l ? l.innerText.slice(0, 800) : 'no notes layer: ' + [...document.querySelectorAll('[data-layer]')].map(x => x.getAttribute('data-layer')).join(',') })()"
+  },
+  {
+   "eval": "(() => { const f = document.querySelector('[data-layer=notes] textarea') ?? document.querySelector('[data-layer=notes] input'); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+  },
+  {
+   "type": "Bea from the next world over: your windmill field is lovely at dusk."
+  },
+  {
+   "wait": 300
+  },
+  {
+   "clickText": "Leave the note"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 800) : 'closed' })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-continent/b-05-note-left-on-a-land.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 500
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const C = S.useContinentStore.getState(); return JSON.stringify({ notes: C.notes, territory: typeof C.territory }) })()"
+  }
+ ]
+}

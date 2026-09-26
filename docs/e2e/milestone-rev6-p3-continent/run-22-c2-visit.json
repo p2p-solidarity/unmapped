@@ -1,0 +1,52 @@
+{
+ "app": "C2",
+ "port": 9358,
+ "what": "verification — C2 walks through A2's door number and goes to A2's door (visiting)",
+ "actions": [
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('input')].find(x => (x.closest('label')?.innerText ?? '').includes(\"Friend's door number\")); f.scrollIntoView({block:'center'}); f.focus(); return document.activeElement === f })()"
+  },
+  {
+   "type": "AQYUSA"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "clickText": "Walk through"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 80; i++) { if (/Go to their door/.test(document.body.innerText)) break; await new Promise(r => setTimeout(r, 250)); } return (document.body.innerText.match(/Live[^\\n]*|offset[^\\n]*/g)) })()"
+  },
+  {
+   "clickText": "Go to their door"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "pad": {
+    "axes": [
+     0,
+     1,
+     0,
+     0
+    ],
+    "ms": 500
+   }
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const P = (await import('/engine/playerProbe.ts')).samplePlayer(); const C = S.useContinentStore.getState(); return JSON.stringify({ p: P && [Math.round(P.x*10)/10, Math.round(P.z*10)/10], sceneId: P?.sceneId, chunk: S.useEngineStore.getState().chunk, worlds: (C.worlds ?? []).map(w => w.worldId.slice(0, 10)), status: C.status }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-continent/c2-00-visiting-a2.jpg"
+  }
+ ]
+}

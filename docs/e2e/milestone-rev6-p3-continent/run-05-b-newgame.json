@@ -1,0 +1,46 @@
+{
+ "app": "B",
+ "port": 9357,
+ "what": "Worlds → New game → Start (a second, local world); the origin is witnessed",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "clickText": "Worlds"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Start"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance) return { ms: Date.now() - t0, seed: s.activeInstance.instance?.save?.seed ?? null }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+  },
+  {
+   "repeat": {
+    "times": 120,
+    "until": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); return n !== null && n.chunks['0,0'] !== undefined })()",
+    "actions": [
+     {
+      "wait": 1000
+     }
+    ]
+   }
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world; const s = S.useSessionStore.getState(); const kinds = {}; for (const e of Object.values(n?.events ?? {})) kinds[e.kind] = (kinds[e.kind] ?? 0) + 1; return JSON.stringify({ instance: s.activeInstance?.instance?.meta?.instanceId, profile: s.playerProfile?.displayName ?? null, worldId: w.value?.worldId, head: n?.head, link: w.value?.status?.link, role: w.value?.status?.role, kinds, chunks: n && Object.keys(n.chunks), notes: n && Object.values(n.notes ?? {}).length, inventory: S.useWorldStore.getState().inventory?.items?.map(i => i.id + ':' + i.name) ?? null }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-continent/b-01-new-game.jpg"
+  }
+ ]
+}

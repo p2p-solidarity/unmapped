@@ -1,0 +1,47 @@
+{
+ "app": "A",
+ "port": 9356,
+ "what": "Worlds → Saves → Resume the legacy-land fixture save: Play migrates it into a local world",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "clickText": "Worlds"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Saves"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "text": true
+  },
+  {
+   "clickText": "Resume"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready') return { ms: Date.now() - t0 }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "text": true
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world; const s = S.useSessionStore.getState(); const kinds = {}; for (const e of Object.values(n?.events ?? {})) kinds[e.kind] = (kinds[e.kind] ?? 0) + 1; return JSON.stringify({ instance: s.activeInstance?.instance?.meta?.instanceId, profile: s.playerProfile?.displayName ?? null, worldId: w.value?.worldId, head: n?.head, link: w.value?.status?.link, role: w.value?.status?.role, kinds, chunks: n && Object.keys(n.chunks), notes: n && Object.values(n.notes ?? {}).length, inventory: S.useWorldStore.getState().inventory?.items?.map(i => i.id + ':' + i.name) ?? null }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-continent/a-01-migrated-play.jpg"
+  }
+ ]
+}

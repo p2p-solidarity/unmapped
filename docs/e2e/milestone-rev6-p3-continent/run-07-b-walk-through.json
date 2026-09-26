@@ -1,0 +1,61 @@
+{
+ "app": "B",
+ "port": 9357,
+ "what": "B at its door: types A's door number PVWU76, Walk through: B's world joins A's continent and B arrives at A's door",
+ "actions": [
+  {
+   "pad": {
+    "toward": "[8.5, 8.5]",
+    "within": 0.5,
+    "timeoutMs": 8000
+   }
+  },
+  {
+   "hold": "KeyE",
+   "ms": 120
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('input')].find(x => (x.closest('label')?.innerText ?? '').includes(\"Friend's door number\")); if (!f) return 'no field'; f.scrollIntoView({block:'center'}); f.focus(); return document.activeElement === f })()"
+  },
+  {
+   "type": "PVWU76"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "clickText": "Walk through"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 80; i++) { const t = document.body.innerText; if (/Continent PVWU76[^\\n]*\\n?(Live|Connected)[^\\n]*1 peer/i.test(t) || /1 peer/.test(t)) break; await new Promise(r => setTimeout(r, 250)); } const m = document.body.innerText.match(/Continent [A-Z0-9]{6}[^\\n]*|Live[^\\n]*|offset[^\\n]*/g); return m })()"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=door]'); return l ? l.innerText.slice(0, 3000) : 'no door layer' })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-continent/b-02-walked-through.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const P = (await import('/engine/playerProbe.ts')).samplePlayer(); const C = S.useContinentStore?.getState?.(); return JSON.stringify({ p: P && [Math.round(P.x*10)/10, Math.round(P.z*10)/10, P.visiting ?? null], chunk: S.useEngineStore.getState().chunk, continent: C ? Object.keys(C).slice(0, 12) : null }) })()"
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-continent/b-03-on-a-land.jpg"
+  }
+ ]
+}

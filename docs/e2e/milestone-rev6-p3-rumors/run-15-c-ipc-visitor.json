@@ -1,0 +1,10 @@
+{
+ "app": "C",
+ "port": 9358,
+ "what": "a visitor author through main: C (a visitor in the door flow's public world F, which has beats with slots) appends a rumor for its last beat's slot 0; main refuses it before signing",
+ "actions": [
+  {
+   "eval": "(async () => {\n  const H = await import('/history/index.ts'); const S = await import('/state/index.ts');\n  const w = S.useHistoryStore.getState().world.value; const n = H.worldNow();\n  const beat = n.beats[n.beats.length - 1]; const slot = beat.body.slots[0];\n  const cited = n.events[slot.cite].label;\n  const r = await window.seed.world.append(w.worldId, { kind: 'rumor', body: { beat: beat.id, slot: slot.slot, text: 'They say ' + cited + ' was here.' }, seen: n.head.n });\n  return JSON.stringify({ world: w.worldId.slice(0, 12), access: n.access, role: w.status.role, beat: beat.n, cited, result: r.ok ? 'written ' + r.value.id : r.error.code + ': ' + r.error.message, pending: S.useHistoryStore.getState().world.value.status.pending });\n})()"
+  }
+ ]
+}

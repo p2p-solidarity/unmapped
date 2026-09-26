@@ -11,7 +11,7 @@
 import { serializeScene } from "@dsl";
 import { setNotePublisher } from "@renderer/app/land/notes";
 import { subscribeOpenWorld } from "@renderer/app/land/together";
-import { type Facing4, samplePlayer, samplePose } from "@renderer/engine/playerProbe";
+import { type Facing4, isVisiting, samplePlayer, samplePose } from "@renderer/engine/playerProbe";
 import { type RemotePlayer, setRemotePlayers } from "@renderer/engine/remoteRoster";
 import { errorLine, translate } from "@renderer/i18n";
 import { useContinentStore, useLandStore, useSessionStore, useWorldStore } from "@renderer/state";
@@ -32,6 +32,7 @@ import {
   leaveContinent,
   offerVisitorNotes,
   refreshWorldBadges,
+  sendPlayerHome,
   WORLD_ATTACHED,
   worldAttached,
 } from "./continentActions";
@@ -163,7 +164,16 @@ export function useContinentSync(continent: Continent | null): void {
         return;
       }
       const view = buildContinentView(snapshot, worldId, online());
-      if (view !== null) useContinentStore.getState().setView(view);
+      if (view !== null) {
+        const before = samplePlayer();
+        useContinentStore.getState().setView(view);
+        // The world this player stood on left (or moved): the spot is now this world's own land,
+        // never walked. Home first, before a checkpoint can store it (as leaving does).
+        const after = samplePlayer();
+        if (before !== null && isVisiting(before) && after !== null && !isVisiting(after)) {
+          sendPlayerHome();
+        }
+      }
       offerNotes(doc, worldId);
     };
 

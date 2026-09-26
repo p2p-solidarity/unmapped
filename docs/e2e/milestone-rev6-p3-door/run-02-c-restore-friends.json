@@ -1,0 +1,83 @@
+{
+ "app": "C",
+ "port": 9358,
+ "what": "C (a third device, fresh userData, AETHER_TEST_BACKUP_PATH = A's backup): Settings (English, the service), Worlds → Saves → Restore backup → Resume. C's key is not a member of this friends world: the service refuses it",
+ "actions": [
+  {
+   "clickText": "設定"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "English"
+  },
+  {
+   "wait": 600
+  },
+  {
+   "eval": "(() => { const ta = [...document.querySelectorAll('textarea')].find(t => (t.closest('label')?.innerText ?? '').includes('World services')); ta.scrollIntoView({block: 'center'}); ta.focus(); return ta === document.activeElement })()"
+  },
+  {
+   "type": "ws://127.0.0.1:8802"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "clickText": "Save"
+  },
+  {
+   "wait": 400
+  },
+  {
+   "eval": "localStorage.getItem('unwritten.worldServices')"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 600
+  },
+  {
+   "clickText": "Worlds"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Saves"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Restore backup"
+  },
+  {
+   "eval": "(async () => { for (let i = 0; i < 40; i++) { const m = document.body.innerText.match(/Restored[^\\n]*/); if (m) return m[0]; await new Promise(r => setTimeout(r, 250)); } return document.body.innerText.slice(0, 800) })()"
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-door/c-00-restored.jpg"
+  },
+  {
+   "clickText": "Resume"
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 120; i++) { const s = S.useSessionStore.getState(); const w = S.useHistoryStore.getState().world; if (s.screen === 'play' && w.status === 'ready' && (w.value.status.link === 'online' || w.value.status.link === 'refused' || w.value.status.error)) break; await new Promise(r => setTimeout(r, 250)); } await new Promise(r => setTimeout(r, 3000)); const w = S.useHistoryStore.getState().world; return JSON.stringify(w.status === 'ready' ? { worldId: w.value.worldId, head: w.value.now.head.n, status: w.value.status } : w) })()"
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-door/c-01-friends-refused.jpg"
+  }
+ ]
+}

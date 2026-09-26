@@ -1,0 +1,33 @@
+{
+ "app": "B",
+ "port": 9357,
+ "what": "B after the service is back: the second race is decided (with the fix)",
+ "actions": [
+  {
+   "repeat": {
+    "times": 90,
+    "until": "(async () => { const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; return w.status.link === 'online' && w.status.pending === 0 })()",
+    "actions": [
+     {
+      "wait": 1000
+     }
+    ]
+   }
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 900) : 'no notes layer' })()"
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; return JSON.stringify({ head: n.head.n, pending: w.status.pending, refused: w.status.refused, me: w.status.me.slice(0, 10), role: w.status.role, link: w.status.link, gifts: Object.values(n.gifts).map(g => ({ id: g.id.slice(0, 12), n: g.n, item: g.body.item.name, for: g.body.for, taken: g.taken ? { by: (n.names[g.taken.by] ?? g.taken.by.slice(0, 10)), n: g.taken.n ?? null, pending: g.taken.pending } : null })), bag: S.useWorldStore.getState().inventory.items.map(i => i.id + ':' + i.name), refusedList: (w.refused ?? []).map(r => r.event.kind + ':' + r.error.code) }) })()"
+  },
+  {
+   "eval": "(() => (document.body.innerText.match(/[^\\n]*(in your bag|took it first|Taken by)[^\\n]*/g) ?? []))()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-gift-race/b-05-after-second-race.jpg"
+  }
+ ]
+}

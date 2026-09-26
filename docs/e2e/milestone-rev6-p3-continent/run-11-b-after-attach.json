@@ -1,0 +1,16 @@
+{
+ "app": "B",
+ "port": 9357,
+ "what": "B after A attached: A's world is gone from the continent",
+ "actions": [
+  {
+   "wait": 3000
+  },
+  {
+   "eval": "(async () => { const S = await import('/state/index.ts'); const C = S.useContinentStore.getState(); return JSON.stringify({ status: C.status, worlds: Object.keys(C.worlds ?? {}), hud: (document.body.innerText.match(/CONTINENT[^\\n]*/g) ?? []), land: (document.body.innerText.match(/LAND\\n[^\\n]*\\n[^\\n]*/g) ?? []) }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-continent/b-06-after-a-attached.jpg"
+  }
+ ]
+}

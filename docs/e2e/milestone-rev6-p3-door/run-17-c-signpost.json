@@ -1,0 +1,67 @@
+{
+ "app": "C",
+ "port": 9358,
+ "what": "C (visitor) near A's door: N, puts up a signpost",
+ "actions": [
+  {
+   "pad": {
+    "toward": "[11.5, 12.5]",
+    "within": 0.6,
+    "timeoutMs": 15000
+   }
+  },
+  {
+   "hold": "KeyN",
+   "ms": 100
+  },
+  {
+   "wait": 1000
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 1500) : 'no notes layer' })()"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "clickText": "Put up a signpost"
+  },
+  {
+   "wait": 600
+  },
+  {
+   "eval": "(() => { const f = [...document.querySelectorAll('[data-layer=notes] input')].find(x => (x.closest('label')?.innerText ?? '').includes('What it says')); if (!f) return 'no field'; f.focus(); return document.activeElement === f })()"
+  },
+  {
+   "type": "Visitors' lane"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "clickText": "Put it up"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(() => { const l = document.querySelector('[data-layer=notes]'); return l ? l.innerText.slice(0, 1500) : 'no notes layer' })()"
+  },
+  {
+   "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const n = H.worldNow(); const w = S.useHistoryStore.getState().world.value; const mine = Object.values(n.events).filter(e => e.author === w.status.me).map(e => e.n + ':' + e.kind + (e.pending ? ' (pending)' : '')); return JSON.stringify({ head: n.head.n, pending: w.status.pending, refused: w.status.refused, role: w.status.role, mine }) })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p3-door/c-10-visitor-note-signpost.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 500
+  }
+ ]
+}

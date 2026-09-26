@@ -13,8 +13,9 @@ import { parseErrands, parseScene } from "@dsl";
 import type { ChunkStatus } from "@renderer/state/landStore";
 import type { ChapterKind } from "@shared/chapter";
 import { clearFords } from "@shared/chunks";
-import { chunkStands, FADING_BELOW } from "@shared/history/decay";
+import { careAt, chunkStands, dayOf, FADING_BELOW } from "@shared/history/decay";
 import { worldLore } from "@shared/history/fold";
+import { timeMs } from "@shared/history/ids";
 import { RUMOR_SHOW_BEATS } from "@shared/history/rumor";
 import type {
   ChunkNow,
@@ -182,7 +183,20 @@ function visible(now: WorldNow, witnesses: readonly Folded<WitnessBody>[]): Witn
   return witnesses.filter((one) => now.hidden[one.id] !== true).map((one) => markOf(now, one));
 }
 
-function chunkMarks(now: WorldNow, key: string, chunk: ChunkNow): ChunkMarks {
+/**
+ * Care as of the newest receipt: the last beat's figure is stale for a chunk touched since (one
+ * witnessed after the beat has none in it and would read as fading the moment it is written).
+ */
+function careNow(now: WorldNow): Readonly<Record<string, number>> {
+  return now.rt === null ? now.care : careAt(now.touches, dayOf(timeMs(now.rt)));
+}
+
+function chunkMarks(
+  now: WorldNow,
+  key: string,
+  chunk: ChunkNow,
+  care: Readonly<Record<string, number>>,
+): ChunkMarks {
   const hidden = now.hidden[chunk.live.id] === true;
   const stands = chunkStands(now, chunk);
   return {
@@ -190,7 +204,7 @@ function chunkMarks(now: WorldNow, key: string, chunk: ChunkNow): ChunkMarks {
     provisional: chunk.live.pending,
     fogged: chunk.fogged,
     hidden,
-    fading: stands && now.beats.length > 0 && (now.care[key] ?? 0) < FADING_BELOW,
+    fading: stands && now.beats.length > 0 && (care[key] ?? 0) < FADING_BELOW,
     legacyOnly: false,
     localCopy: false,
     variants: visible(now, chunk.variants),
@@ -290,10 +304,11 @@ export function landFromHistory(
   const marks: Record<string, ChunkMarks> = {};
   const witnessOf: Record<string, string> = {};
   const keys = Object.keys(now.chunks).sort();
+  const care = careNow(now);
   for (const key of keys) {
     const chunk = now.chunks[key];
     if (chunk === undefined) continue;
-    marks[key] = chunkMarks(now, key, chunk);
+    marks[key] = chunkMarks(now, key, chunk, care);
     if (!chunkStands(now, chunk)) continue;
     chunks[key] = witnessStatus(chunk.live);
     witnessOf[key] = chunk.live.id;
