@@ -1,10 +1,10 @@
 # Lineage market — ENSv2 names the family tree, Uniswap prices it
 
-Status: contracts are deployed on Sepolia under `unmapped.eth`: registry
-`0x439F5982163D4D4AbA6FAB2bF494d866bD2B5237`, hook `0x0f1167F421fD246c5C78cF88a26f225cb3336044`,
-router `0x57C5Ea5F82a132c6F2f8FF42133c354027A1609C`. The full flow has only been run as a dry run
-(`docs/e2e/milestone-lineage-market/result.md`). No world has been launched for real yet, and the
-app does not launch or trade.
+Status (2026-09-26): v2 (names first) is deployed on Sepolia under `unmapped.eth` — addresses in
+`contracts/README.md`. Worlds are named, launched, bid on, settled and traded from the app with a
+passkey and a gas station (`docs/e2e/milestone-lineage-{names,relay,demo}`), and the names are in
+the game itself (`docs/e2e/milestone-ens-in-game`). The v1 registry `0x439F…5237` still exists but
+`unmapped.eth` no longer points at it.
 
 ## Product shape
 
@@ -48,8 +48,8 @@ off the chain.
   included, can repoint, take back or upgrade a world's name. The name holder gets only
   `CAN_TRANSFER_ADMIN`, so they cannot cut a branch out of the tree either.
 - **A dedicated `<label>.eth`.** First-generation worlds live in the registry's own root registry,
-  and the parent name points its subregistry there. Cartridge names from `ens:setup` keep their own
-  parent; sharing one would make that registry unemancipated.
+  and the parent name points its subregistry there. (The older `ens:setup` parent was removed from
+  the app and the scripts on 2026-09-26; one tree is easier to explain and to trust.)
 - **CCA instead of seeding liquidity by hand.** The auction discovers the price, and LBPStrategy
   opens the v4 pool at it. Half of what is raised seeds the pool (`LP_SHARE_MPS`); the rest goes to
   the owner as launch revenue. A remix's auction takes bids in the parent's token.
@@ -60,6 +60,24 @@ off the chain.
 - **Launch is permissionless.** A label is first come, first served under its parent. That lineage
   is real is backed by the sha256 in the records, which anyone can check against the cartridge's
   `lineage.parent`.
+
+## Names in the game (2026-09-26)
+
+- **Found by cartridge id.** The app finds a revision's name from `NameRegistered` + `nameOf`, the
+  earliest registered for that cartridge id, instead of re-deriving a label. So the first naming picks
+  the label: a world called 霧之港 has the id `xn--9iq609e681a-…`, whose derived label
+  `xn-9iq609e681a-…` no longer decodes; the player names it `misty-harbor` instead.
+- **Players without a player kind.** The registry has no player kind, and a v3 deploy would reset
+  the live market. The operator registers one cartridge-kind name, `players.<root>`
+  (`bun run lineage:demo players`), and a player's own name is a `recordSave` under it, held by their
+  PasskeyAccount, whose `unwritten.save` is the sha256 of the passkey's public key. Honest wart: its
+  `unwritten.kind` says `save`; the app and the web view read the `players` branch as players.
+- **A save's door in `description`.** A save name also carries its continent door number in the
+  standard ENS `description` (`UNMAPPED save · door ABC234`), so a friend can walk in by name. The
+  door comes from the save's instance id, which also tells two runs of a world apart when neither
+  hash matches (a new run no longer offers to overwrite an older run's name).
+- **Launch from the app.** The holder signs `launch(node, LAUNCH_TERMS)`; the gas station pays a
+  launch alone in its batch under a 7M gas cap and `MAX_LAUNCH_FEE_GWEI` (default 5).
 
 ## Run it
 
@@ -87,9 +105,8 @@ measured in the dry run:
 
 ## Next
 
-1. **App.** On publish, offer "Launch" (main-side, key in main, Rule 6), and show a world's name,
-   price and owed royalties next to the cartridge name. `claimCartridgeName` stays for worlds that
-   are not launched.
+1. **A player kind in the registry** (`<label>.players.<root>` with `unwritten.kind = player` and an
+   `addr` record, so it can be a primary name), in the next deploy.
 2. **Explorer page** (the live link the ENS prize asks for). Type a name to see the tree, prices
    and auctions, and bid, buy or claim with a browser wallet.
 3. **Collect LP fees** to the owner, if they turn out to matter.

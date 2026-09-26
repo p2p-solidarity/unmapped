@@ -12,6 +12,7 @@ import type {
   MarketKey,
   MarketView,
   MarketWorld,
+  PlayerView,
   SaveNameView,
 } from "@shared/market";
 import { err, ok, type Result, toError } from "@shared/result";
@@ -39,6 +40,7 @@ import {
   UNISWAP_SEPOLIA,
 } from "./lineageCalls";
 import { cartridgeNameView, type Dirs, saveNameView } from "./names";
+import { playerNamesOf, playerView } from "./players";
 import { relayUrl } from "./relayClient";
 
 const DEFAULT_RPC = "https://ethereum-sepolia-rpc.publicnode.com";
@@ -342,11 +344,13 @@ export async function marketView(
   }
 }
 
-/** What a local cartridge revision's ENS name says, for this passkey's account (names.ts). */
+/** What a local cartridge revision's ENS name says, for this passkey's account (names.ts); `label`
+ * is the player's pick for a name nobody holds yet. */
 export async function cartridgeName(
   cartridgeId: string,
   version: string,
   key: MarketKey | null,
+  label: string | null,
   dirs: Dirs,
   env: NodeJS.ProcessEnv = process.env,
 ): Promise<Result<EnsNameStatus>> {
@@ -354,7 +358,7 @@ export async function cartridgeName(
   if (!clients.ok) return clients;
   try {
     const account = key === null ? null : await accountAddress(clients.value, key);
-    return await cartridgeNameView(clients.value, dirs, cartridgeId, version, account);
+    return await cartridgeNameView(clients.value, dirs, cartridgeId, version, account, label);
   } catch (cause) {
     return err("market-unreachable", toError(cause, "market-unreachable").message, "Refresh.");
   }
@@ -373,6 +377,35 @@ export async function saveName(
   try {
     const account = key === null ? null : await accountAddress(clients.value, key);
     return await saveNameView(clients.value, dirs, instanceId, label, account);
+  } catch (cause) {
+    return err("market-unreachable", toError(cause, "market-unreachable").message, "Refresh.");
+  }
+}
+
+/** The player's own ENS name (players.ts): the name their account holds, or whether `label` is free. */
+export async function playerName(
+  key: MarketKey,
+  label: string | null,
+  env: NodeJS.ProcessEnv = process.env,
+): Promise<Result<PlayerView>> {
+  const clients = marketClients(env);
+  if (!clients.ok) return clients;
+  try {
+    return await playerView(clients.value, await accountAddress(clients.value, key), label);
+  } catch (cause) {
+    return err("market-unreachable", toError(cause, "market-unreachable").message, "Refresh.");
+  }
+}
+
+/** Player names for these accounts (holders on a name, peers on a continent); unknown ones left out. */
+export async function playerNames(
+  addresses: string[],
+  env: NodeJS.ProcessEnv = process.env,
+): Promise<Result<Record<string, string>>> {
+  const clients = marketClients(env);
+  if (!clients.ok) return clients;
+  try {
+    return ok(await playerNamesOf(clients.value, addresses));
   } catch (cause) {
     return err("market-unreachable", toError(cause, "market-unreachable").message, "Refresh.");
   }

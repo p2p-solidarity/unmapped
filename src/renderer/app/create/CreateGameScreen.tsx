@@ -10,6 +10,7 @@ import { type JSX, useEffect, useState } from "react";
 import { UsageLine } from "../hud/UsagePanel";
 import { GameShell } from "../shell/GameShell";
 import { BuildStep } from "./BuildStep";
+import { BuiltPanel } from "./BuiltPanel";
 import {
   canKeepStory,
   canKeepWorld,
@@ -156,7 +157,12 @@ export function CreateGameScreen(): JSX.Element {
           <Text variant="title" as="h1">
             {t("create.title")}
           </Text>
-          {draft === null ? (
+          {c.built !== null ? (
+            <>
+              <BuiltPanel built={c.built} onEnter={c.enter} />
+              {c.error !== null && <ErrorBlock error={c.error} />}
+            </>
+          ) : draft === null ? (
             <DraftPicker c={c} />
           ) : (
             <>

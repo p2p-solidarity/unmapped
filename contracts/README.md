@@ -67,6 +67,7 @@ but `unmapped.eth` no longer points at its tree.
 | LineageRouter | `0x2201fBDB7f17BD687d8965B9Dc2Ae000689039BE` |
 | root registry / resolver (made by the registry) | `0x11E97A5ea6a127F2Fb6050A3FeDbB25f20B14491` / `0x36bEafe8E54eAA2B1c6Aa31750bA51A8B1e2876c` |
 | PasskeyAccountFactory (players' passkey accounts) | `0x7B8b8E17590cC85c315d459feD8fC9384C2c9bE5` |
+| Player names | `<you>.players.unmapped.eth`: a `recordSave` under the directory `players.unmapped.eth`, which the operator registers once (`bun run lineage:demo players`) |
 | Gas station key (pays for players; `src/relay`) | `0xB62Ccd1A90896911b21546a60eC78E934f9fFd3D` |
 
 Where to look (line numbers are the deployed source):

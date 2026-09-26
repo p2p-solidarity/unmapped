@@ -24,7 +24,6 @@ import type {
   WitnessOnChainInput,
 } from "./chain";
 import type { CreateDraft, CreateDraftEntry, DraftIdea, LookPicture } from "./createDraft";
-import type { ClaimNameResult, EnsNamesConfig } from "./ensNames";
 import { GATEWAY_IPC, type GatewayApi } from "./gatewayApi";
 import type { DataKeyWrappingRecord } from "./identity";
 import { IMAGES_IPC, type ImagesApi } from "./imagesApi";
@@ -53,8 +52,10 @@ import type {
   MarketKey,
   MarketReceipt,
   MarketView,
+  PlayerView,
   PreparedAction,
   SaveNameView,
+  SignInBrowserInput,
   SubmitActionInput,
 } from "./market";
 import type { ModBundle, ModSummary } from "./mods";
@@ -205,14 +206,14 @@ export const IPC = {
     signInBrowser: "market:sign-in-browser",
     cartridgeName: "market:cartridge-name",
     saveName: "market:save-name",
+    playerName: "market:player-name",
+    playerNames: "market:player-names",
   },
   chain: {
     config: "chain:config",
     lookup: "chain:lookup",
     publish: "chain:publish",
     witness: "chain:witness",
-    ensConfig: "chain:ens-config",
-    claimName: "chain:claim-name",
   },
   app: {
     info: "app:info",
@@ -513,11 +514,8 @@ export interface SeedApi {
     /** Forgets a session; `kill` also stops its frame process (a hung world). */
     closeSession(token: string, kill: boolean): Promise<Result<void>>;
   };
-  /**
-   * The lineage market (Sepolia): read worlds, auctions, pools and a passkey account; everything a
-   * player does is a batch main builds, the passkey signs (`prepare` → sign → `submit`) and main's
-   * relayer pays for. Absent config answers `market-not-configured`.
-   */
+  /** The lineage market and its ENS names (Sepolia): a player's action is a batch main builds, the
+   * passkey signs (`prepare` → sign → `submit`) and the gas station pays; unset = `market-not-configured`. */
   market: {
     config(): Promise<MarketConfig>;
     view(key: MarketKey | null): Promise<Result<MarketView>>;
@@ -529,16 +527,14 @@ export interface SeedApi {
     /** Opens the system browser to create or choose the passkey (Touch ID works there). */
     link(): Promise<Result<{ credentialId: string; key: MarketKey }>>;
     /** Opens the system browser to sign a prepared batch; resolves once it is relayed. */
-    signInBrowser(input: {
-      preparedId: string;
-      credentialId: string;
-      summary: string;
-    }): Promise<Result<MarketReceipt>>;
-    /** What a local revision's ENS name says (`<cartridge>.<root>`), for this passkey or nobody. */
+    signInBrowser(input: SignInBrowserInput): Promise<Result<MarketReceipt>>;
+    /** What a local revision's ENS name says (`<label>.<root>`), for this passkey or nobody;
+     * `label` is the player's pick while nobody holds a name for it (null = its id's label). */
     cartridgeName(
-      cartridgeId: string,
-      version: string,
+      id: string,
+      v: string,
       key: MarketKey | null,
+      label: string | null,
     ): Promise<Result<EnsNameStatus>>;
     /** A local save's ENS name (`<label>.<cartridge>.<root>`); `label` null = its default. */
     saveName(
@@ -546,6 +542,10 @@ export interface SeedApi {
       label: string | null,
       key: MarketKey | null,
     ): Promise<Result<SaveNameView>>;
+    /** The player's own name (`<label>.players.<root>`), or whether `label` is free to claim;
+     * `playerNames` maps accounts to the player names they hold (others are left out). */
+    playerName(key: MarketKey, label: string | null): Promise<Result<PlayerView>>;
+    playerNames(addresses: string[]): Promise<Result<Record<string, string>>>;
   };
   /** Optional on-chain provenance (contracts/src/UnwrittenLedger.sol); absent config is not an error. */
   chain: {
@@ -553,10 +553,6 @@ export interface SeedApi {
     lookup(contentHash: string): Promise<Result<LedgerRevision | null>>;
     publish(input: PublishOnChainInput): Promise<Result<{ txHash: string }>>;
     witness(input: WitnessOnChainInput): Promise<Result<{ txHash: string }>>;
-    /** Cartridge ENS names (Sepolia ENSv2): the parent, and whether this machine can write. */
-    ensConfig(): Promise<EnsNamesConfig>;
-    /** Names a local revision `<cartridgeId>.<parent>` and points its records at it; waits for receipts. */
-    claimName(cartridgeId: string, version: string): Promise<Result<ClaimNameResult>>;
   };
   app: {
     info(): Promise<AppInfo>;

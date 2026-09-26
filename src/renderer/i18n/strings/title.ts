@@ -255,58 +255,7 @@ export const TITLE = {
 
   // ── Cartridge ENS names (Sepolia ENSv2) ─────────────────────────────────────────────────────
   ensName: { en: "ENS", "zh-TW": "ENS", ja: "ENS" },
-  ensNotSetUp: {
-    en: "ENS names are not set up on this machine (bun run ens:setup).",
-    "zh-TW": "這台機器還沒設定 ENS 名稱（bun run ens:setup）。",
-    ja: "このマシンでは ENS 名がまだ設定されていません（bun run ens:setup）。",
-  },
-  ensNoLabel: {
-    en: "This cartridge id has no letters or digits to name.",
-    "zh-TW": "這個卡帶 id 沒有可用來命名的字母或數字。",
-    ja: "このカートリッジ ID には名前にできる英数字がありません。",
-  },
   ensChecking: { en: "asking Sepolia…", "zh-TW": "正在查詢 Sepolia…", ja: "Sepolia に照会中…" },
-  ensUnclaimed: { en: "not claimed yet", "zh-TW": "尚未認領", ja: "まだ取得していません" },
-  ensPointsHere: {
-    en: "points at this version",
-    "zh-TW": "指向這個版本",
-    ja: "この版を指しています",
-  },
-  ensPointsElsewhere: { en: "points at {ref}", "zh-TW": "指向 {ref}", ja: "{ref} を指しています" },
-  ensClaim: { en: "Claim ENS name", "zh-TW": "認領 ENS 名稱", ja: "ENS 名を取得" },
-  ensRepoint: {
-    en: "Point name at this version",
-    "zh-TW": "把名稱指向這個版本",
-    ja: "名前をこの版に向ける",
-  },
-  // A first claim registers the name, then writes its records; a half-finished claim that already
-  // registered it sends only the records, hence "up to". Repointing only writes the records.
-  ensWritingClaim: {
-    en: "Registering the name and writing its records on Sepolia… (up to two transactions)",
-    "zh-TW": "正在 Sepolia 註冊名稱並寫入紀錄…（最多兩筆交易）",
-    ja: "Sepolia で名前を登録し、レコードを書き込み中…（最大 2 件のトランザクション）",
-  },
-  ensWritingRepoint: {
-    en: "Pointing the name at this version on Sepolia… (one transaction)",
-    "zh-TW": "正在 Sepolia 把名稱指向這個版本…（一筆交易）",
-    ja: "Sepolia で名前をこの版に向けています…（1 件のトランザクション）",
-  },
-  ensSent: {
-    en: "Sent {n} {n|transaction|transactions}:",
-    "zh-TW": "已送出 {n} 筆交易：",
-    ja: "{n} 件のトランザクションを送信しました：",
-  },
-  ensTxLink: { en: "{tx} ↗ Etherscan", "zh-TW": "{tx} ↗ Etherscan", ja: "{tx} ↗ Etherscan" },
-  ensClaimed: {
-    en: "{name} now points at {ref}",
-    "zh-TW": "{name} 現在指向 {ref}",
-    ja: "{name} は {ref} を指すようになりました",
-  },
-  ensReadOnly: {
-    en: "Read-only: this machine has no signing key.",
-    "zh-TW": "唯讀：這台機器沒有簽署金鑰。",
-    ja: "読み取り専用：このマシンには署名鍵がありません。",
-  },
   ensOpenHeading: { en: "Open by ENS name", "zh-TW": "用 ENS 名稱開啟", ja: "ENS 名で開く" },
   ensOpenPlaceholder: {
     en: "a cartridge's ENS name",

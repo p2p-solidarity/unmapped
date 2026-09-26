@@ -23,7 +23,6 @@
     "dist": "node scripts/build-afm-bridge.mjs release && electron-vite build && electron-builder && node scripts/check-dist-secrets.mjs",
     "contracts:build": "node scripts/build-contracts.mjs && node scripts/build-lineage.mjs && node scripts/build-provenance.mjs",
     "contracts:deploy": "node scripts/deploy-ledger.mjs",
-    "ens:setup": "bun scripts/ens-setup.ts",
     "lineage:market": "bun scripts/lineage-market.ts",
     "lineage:demo": "bun scripts/lineage-demo.ts",
     "provenance": "bun --tsconfig-override tsconfig.node.json scripts/provenance.ts",

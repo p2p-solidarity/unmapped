@@ -5,8 +5,10 @@
 //   execute    a passkey-signed batch through PasskeyAccountFactory.execute. The account checks the
 //              signature on chain, so the station can neither change nor replay it; the station
 //              only makes sure every call targets the market (MockUSDC, Permit2, the router, a
-//              world's token or a world's auction, or the registry to name a cartridge or record
-//              the player's own save) and carries no ETH.
+//              world's token or a world's auction, or the registry to name a cartridge, record
+//              the player's own save or player name, or launch a name the account holds) and
+//              carries no ETH. A launch deploys a token and an auction (~5M gas), so a batch with
+//              one gets its own gas cap and a lower fee ceiling (MAX_LAUNCH_FEE_GWEI), alone.
 //   faucet     1,000 MockUSDC to a passkey account that holds less than 2,000.
 //   exit/claim a bid of a world's auction (open to anyone once the auction ends).
 //   graduate   a world's auction into its Uniswap v4 pool (open to anyone).
@@ -44,10 +46,14 @@ export interface RelayEnv {
   USDC: string;
   PERMIT2: string;
   MAX_FEE_GWEI?: string;
+  /** Launches cost ~5M gas; above this fee (default 5 gwei) the station waits instead. */
+  MAX_LAUNCH_FEE_GWEI?: string;
 }
 
 const FAUCET_AMOUNT = 1_000n * 10n ** 6n;
 const FAUCET_CEILING = 2_000n * 10n ** 6n;
+/** A batch that launches a world: one call, the launch itself (LineageRegistry.launch). */
+const LAUNCH_GAS_CAP = 7_000_000n;
 const GAS_CAP: Record<RelayRequest["kind"], bigint> = {
   execute: 1_500_000n,
   faucet: 150_000n,
@@ -65,16 +71,21 @@ const registryAbi = parseAbi([
   "function worldOf(address token) view returns ((bytes32 node, address parent, address currency, address auction))",
   "function graduate(address token)",
 ]);
-/** What a passkey batch may ask of the registry: naming cartridges and its own saves, nothing else. */
-const REGISTRY_CALLS = new Set(
-  [
+const LAUNCH = toFunctionSelector(
+  "function launch(bytes32 node, (uint128 supply, uint128 lpReserve, uint64 auctionBlocks, uint256 floorPriceQ96, uint256 tickSpacingQ96, uint128 requiredCurrencyRaised) lp)",
+);
+/** What a passkey batch may ask of the registry: naming cartridges, its own saves and player name,
+ * and launching a name it holds (the registry itself refuses anyone but the holder). */
+const REGISTRY_CALLS = new Set([
+  LAUNCH,
+  ...[
     "function register((bytes32 parent, string label, address owner, string cartridgeId, string version, bytes32 contentHash))",
     "function revise(bytes32 node, string version, bytes32 contentHash)",
     "function recordSave((bytes32 cartridge, string label, string version, bytes32 contentHash, bytes32 saveHash, string progress))",
     "function updateSave(bytes32 node, string version, bytes32 contentHash, bytes32 saveHash, string progress)",
     "function describe(bytes32 node, string description)",
   ].map((signature) => toFunctionSelector(signature)),
-);
+]);
 const auctionAbi = parseAbi([
   "function token() view returns (address)",
   "function exitBid(uint256 bidId)",
@@ -164,6 +175,7 @@ async function send(
   kind: RelayRequest["kind"],
   to: Address,
   data: Hex,
+  launch = false,
 ): Promise<RelayAnswer> {
   let gas: bigint;
   try {
@@ -175,14 +187,16 @@ async function send(
       "Refresh the market and try again.",
     );
   }
-  const cap = GAS_CAP[kind];
+  const cap = launch ? LAUNCH_GAS_CAP : GAS_CAP[kind];
   if (gas > cap)
     return refuse(
       "relay-too-much-gas",
       `This needs ${gas} gas; the station pays up to ${cap} for a ${kind}.`,
     );
   const fees = await s.public.estimateFeesPerGas();
-  const maxFee = parseGwei(s.env.MAX_FEE_GWEI ?? "30");
+  const maxFee = parseGwei(
+    launch ? (s.env.MAX_LAUNCH_FEE_GWEI ?? "5") : (s.env.MAX_FEE_GWEI ?? "30"),
+  );
   if (fees.maxFeePerGas > maxFee) {
     return refuse(
       "relay-gas-price",
@@ -215,6 +229,12 @@ export async function sponsor(s: Station, r: RelayRequest): Promise<RelayAnswer>
   const registry = s.env.REGISTRY as Address;
   switch (r.kind) {
     case "execute": {
+      const launches = r.calls.filter(
+        (c) => same(c.target, registry) && c.data.slice(0, 10).toLowerCase() === LAUNCH,
+      ).length;
+      if (launches > 0 && r.calls.length > 1) {
+        return refuse("relay-refused", "A launch travels alone in its batch.");
+      }
       for (const c of r.calls) {
         if (c.value !== "0") return refuse("relay-refused", "A market batch never sends ETH.");
         if (!(await marketTarget(s, c.target, c.data))) {
@@ -236,7 +256,7 @@ export async function sponsor(s: Station, r: RelayRequest): Promise<RelayAnswer>
           },
         ],
       });
-      return send(s, r.kind, s.env.ACCOUNTS as Address, data);
+      return send(s, r.kind, s.env.ACCOUNTS as Address, data, launches > 0);
     }
     case "faucet": {
       const account = await s.public.readContract({

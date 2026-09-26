@@ -3,12 +3,7 @@
 
 import { type DslError, parseScene, serializeScene } from "@dsl/index";
 import { errorLine, useT } from "@renderer/i18n";
-import {
-  currentKey,
-  EnsLookup,
-  exportEncryptedSeed,
-  importEncryptedSeed,
-} from "@renderer/identity";
+import { currentKey, exportEncryptedSeed, importEncryptedSeed } from "@renderer/identity";
 import { useSessionStore, useWorldStore } from "@renderer/state";
 import { Button, colors, font, radius, Surface, space, Text } from "@renderer/ui";
 import { errored, ready } from "@shared/result";
@@ -274,8 +269,6 @@ export function WorldTab() {
       </Text>
 
       {issues === null ? null : <IssueList error={issues} />}
-
-      <EnsLookup />
     </>
   );
 }

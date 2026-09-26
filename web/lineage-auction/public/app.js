@@ -137,8 +137,11 @@ async function loadWorlds(latest) {
 }
 
 /** The whole name tree: a launched world is a button (it has an auction here), a cartridge named
- * without a market and a player's save are plain rows, tagged, a save with its latest progress. */
+ * without a market and a player's save are plain rows, tagged, a save with its latest progress.
+ * `players.<root>` is the directory of players' own names (`<you>.players.<root>`, each recorded
+ * by the player's passkey account with recordSave), so its children read as players, not saves. */
 function renderTree() {
+  const directory = `players.${CONFIG.parent}`;
   const byParent = new Map();
   for (const n of state.names) byParent.set(n.parent, [...(byParent.get(n.parent) ?? []), n]);
   const rows = [];
@@ -149,7 +152,11 @@ function renderTree() {
       const save = state.saves.get(n.node);
       const label = world
         ? `<button type="button" data-token="${world.token}" aria-current="${lower(world.token) === lower($("world").value)}">${escape(n.name)}</button><span class="tag good">market</span>`
-        : n.kind === KIND.save
+        : n.name === directory
+          ? `<span>${escape(n.name)}</span><span class="tag">player names</span>`
+          : n.kind === KIND.save && n.name.endsWith(`.${directory}`)
+            ? `<span>${escape(n.name)}</span><span class="tag passkey">player</span>`
+            : n.kind === KIND.save
           ? `<span>${escape(n.name)}</span><span class="tag passkey">save</span>${save ? `<span class="hint">${escape(save.progress)} · v${escape(save.version)}</span>` : ""}`
           : `<span>${escape(n.name)}</span><span class="tag">cartridge</span>`;
       rows.push(`<li>${indent}${label}</li>`);

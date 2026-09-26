@@ -1,4 +1,4 @@
-// Unlock and keys, ENS lookup, and friends' rooms.
+// Unlock and keys, encrypted seeds, and friends' rooms.
 
 import type { Phrase } from "./phrase";
 
@@ -68,7 +68,7 @@ export const IDENTITY = {
     ja: "キーチェーンによる復元を追加しました。このマシンのセーブは OS キーチェーンでもロック解除できます。",
   },
 
-  // ── Encrypted seeds and ENS ────────────────────────────────────────────────────────────────
+  // ── Encrypted seeds ────────────────────────────────────────────────────────────────────────
   exportSeedDialog: {
     en: "Export encrypted seed",
     "zh-TW": "匯出加密種子",
@@ -80,62 +80,6 @@ export const IDENTITY = {
     ja: "暗号化シードを読み込む",
   },
   restored: { en: "Restored {name}", "zh-TW": "已還原 {name}", ja: "{name} を復元しました" },
-  restoredFloor: {
-    en: "Restored {name} (floor {floor}).",
-    "zh-TW": "已還原 {name}（第 {floor} 層）。",
-    ja: "{name} を復元しました（{floor} 階）。",
-  },
-  ensTitle: { en: "Restore from ENS", "zh-TW": "從 ENS 還原", ja: "ENS から復元" },
-  ensPlaceholder: {
-    en: "ENS name (.eth or DNS)",
-    "zh-TW": "ENS 名稱（.eth 或 DNS 網域）",
-    ja: "ENS 名（.eth または DNS）",
-  },
-  ensNetworkSepolia: { en: "Sepolia · ENSv2", "zh-TW": "Sepolia · ENSv2", ja: "Sepolia · ENSv2" },
-  ensNetworkMainnet: { en: "Mainnet", "zh-TW": "主網", ja: "メインネット" },
-  ensSepoliaNote: {
-    en: "ENSv2 is a preview on Sepolia; names there are test names.",
-    "zh-TW": "ENSv2 目前是 Sepolia 上的預覽版，那裡的名稱都是測試用。",
-    ja: "ENSv2 は Sepolia 上のプレビューです。そこの名前はテスト用です。",
-  },
-  ensMainnetNote: {
-    en: "Mainnet still runs ENSv1 behind the same Universal Resolver.",
-    "zh-TW": "主網在同一個 Universal Resolver 後面仍是 ENSv1。",
-    ja: "メインネットは同じ Universal Resolver の裏で、まだ ENSv1 です。",
-  },
-  ensResolve: { en: "Resolve", "zh-TW": "查詢", ja: "照会" },
-  ensIdle: {
-    en: "Enter an ENS name to look up its aether.seed record.",
-    "zh-TW": "輸入 ENS 名稱，查詢它的 aether.seed 紀錄。",
-    ja: "ENS 名を入力すると、その aether.seed レコードを照会します。",
-  },
-  ensLoading: {
-    en: "Asking the Universal Resolver on {network}…",
-    "zh-TW": "正在向 {network} 的 Universal Resolver 查詢…",
-    ja: "{network} の Universal Resolver に問い合わせ中…",
-  },
-  ensRestoring: {
-    en: "Fetching and decrypting the seed…",
-    "zh-TW": "正在下載並解密種子…",
-    ja: "シードを取得して復号しています…",
-  },
-  ensAddress: { en: "address", "zh-TW": "位址", ja: "アドレス" },
-  ensNoAddress: {
-    en: "No address record on this name.",
-    "zh-TW": "這個名稱沒有位址紀錄。",
-    ja: "この名前にはアドレスのレコードがありません。",
-  },
-  ensNoSeed: {
-    en: "This name has no aether.seed record.",
-    "zh-TW": "這個名稱沒有 aether.seed 紀錄。",
-    ja: "この名前には aether.seed レコードがありません。",
-  },
-  ensFetchRestore: { en: "Fetch and restore", "zh-TW": "下載並還原", ja: "取得して復元" },
-  ensUnlockFirst: {
-    en: "Unlock your saves first — the seed is encrypted with your key.",
-    "zh-TW": "請先解鎖存檔——種子是用你的金鑰加密的。",
-    ja: "先にセーブのロックを解除してください。シードはあなたの鍵で暗号化されています。",
-  },
 
   // ── Rooms (multiplayer) ────────────────────────────────────────────────────────────────────
   statusConnected: { en: "connected", "zh-TW": "已連線", ja: "接続済み" },

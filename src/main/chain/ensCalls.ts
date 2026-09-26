@@ -1,12 +1,12 @@
-// ENSv2 on Sepolia: the contracts a cartridge name touches and the calls that make one. Pure — no
-// client, no key — so the app, the one-time setup script and its dry run all send the same calls.
+// ENSv2 on Sepolia: the contracts and ABIs the lineage name tree reads and the market scripts call.
+// Pure — no client, no key — so the app and the scripts' dry runs build the same calls.
 // Addresses and ABIs: the deployment the Universal Resolver actually walks today —
 // ens_v2_sepolia_20260916, ensdomains/contracts-v2@366de741 `contracts/deployments/sepolia/`. The
 // docs' Deployments table is an older set (root 0xc960…) that the resolver no longer reaches, and
 // this build's resolver takes DNS-encoded names (`setText(bytes name, …)`), not namehashes.
-// `rootRegistry` + `ethRegistry` let the setup script notice the next redeploy instead of writing
-// names nobody can resolve.
-// Only viem is imported here, so `scripts/ens-setup.ts` can load this file without path aliases.
+// `rootRegistry` + `ethRegistry` let the market scripts notice the next redeploy instead of writing
+// names nobody can resolve (scripts/lib/ensParent.ts `checkEnsDeployment`).
+// Only viem is imported here, so the scripts can load this file without path aliases.
 
 import {
   type Address,
@@ -15,12 +15,10 @@ import {
   type Hex,
   keccak256,
   labelhash,
-  maxUint64,
   namehash,
   parseAbi,
   stringToHex,
   toHex,
-  zeroAddress,
 } from "viem";
 import { packetToBytes } from "viem/ens";
 
@@ -44,7 +42,6 @@ const ROLE_UNREGISTER = 1n << 12n;
 const ROLE_RENEW = 1n << 16n;
 const ROLE_SET_SUBREGISTRY = 1n << 20n;
 const ROLE_SET_RESOLVER = 1n << 24n;
-const ROLE_CAN_TRANSFER_ADMIN = (1n << 28n) << 128n;
 const ROLE_UPGRADE = 1n << 124n;
 /** The owner's root roles on the parent's User Registry (RegistryRolesLib, with admins). */
 export const REGISTRY_ROOT_ROLES =
@@ -55,12 +52,6 @@ export const REGISTRY_ROOT_ROLES =
   withAdmin(ROLE_SET_SUBREGISTRY) |
   withAdmin(ROLE_SET_RESOLVER) |
   withAdmin(ROLE_UPGRADE);
-/** What a name's owner holds on its own entry — the ETH Registrar's bitmap. */
-export const NAME_ROLES =
-  withAdmin(ROLE_SET_SUBREGISTRY) | withAdmin(ROLE_SET_RESOLVER) | ROLE_CAN_TRANSFER_ADMIN;
-
-/** PermissionedRegistry `Status`. */
-export const NAME_STATUS = { available: 0, reserved: 1, registered: 2 } as const;
 
 export const registryAbi = parseAbi([
   "function register(string label, address owner, address registry, address resolver, uint256 roleBitmap, uint64 expiry) returns (uint256)",
@@ -174,46 +165,6 @@ export function deployRegistryCall(owner: Address, parent: string): Call {
       args: [ENSV2_SEPOLIA.userRegistryImpl, registrySalt(parent), init],
     }),
   };
-}
-
-export interface NameSetup {
-  owner: Address;
-  /** The parent's User Registry. */
-  registry: Address;
-  /** The owner's Permissioned Resolver. */
-  resolver: Address;
-}
-
-export interface SubnameCallsInput extends NameSetup {
-  label: string;
-  parent: string;
-  /** False when the label is already registered to `owner` and only the records change. */
-  register: boolean;
-  texts: Record<string, string>;
-}
-
-/** Register `label.parent` (permanent, owner keeps the standard name roles) and write its texts. */
-export function subnameCalls(input: SubnameCallsInput): Call[] {
-  const name = dnsEncode(`${input.label}.${input.parent}`);
-  const calls: Call[] = [];
-  if (input.register) {
-    calls.push({
-      to: input.registry,
-      data: encodeFunctionData({
-        abi: registryAbi,
-        functionName: "register",
-        args: [input.label, input.owner, zeroAddress, input.resolver, NAME_ROLES, maxUint64],
-      }),
-    });
-  }
-  const setters = Object.entries(input.texts).map(([key, value]) =>
-    encodeFunctionData({ abi: resolverAbi, functionName: "setText", args: [name, key, value] }),
-  );
-  calls.push({
-    to: input.resolver,
-    data: encodeFunctionData({ abi: resolverAbi, functionName: "multicall", args: [setters] }),
-  });
-  return calls;
 }
 
 export function labelId(label: string): bigint {

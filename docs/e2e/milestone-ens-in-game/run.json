@@ -1,0 +1,508 @@
+{
+ "flow": "ENS in the game: name a world right after Create (a Chinese name gets a chosen label), launch it from the app, the HUD's name chip, the chapter-clear offer that records the run with its door, remix → name under the parent → launch in the parent's token, a friend walking onto the continent by the save's ENS name, and the old ENS paths gone",
+ "env": {
+  "station": "bun run relay:dev (wrangler dev on 8790, the station's own key 0xB62C…Fd3D, this build's src/relay with the launch rule)",
+  "app A": "AETHER_TEST_USER_DATA=$TMPDIR/ud-ens-a (fresh) UNWRITTEN_PRIVATE_KEY= UNWRITTEN_LINEAGE_RELAY=http://127.0.0.1:8790 UNWRITTEN_SIGN_BROWSER=none bun run dev --remoteDebuggingPort 9336 (restarted three times on the same userData to load main-side fixes; see result.md)",
+  "app B": "AETHER_TEST_USER_DATA=$TMPDIR/ud-ens-b (fresh) UNWRITTEN_PRIVATE_KEY= UNWRITTEN_LINEAGE_RELAY= UNWRITTEN_SIGN_BROWSER=none bun run dev --remoteDebuggingPort 9337 (no passkey, no station)",
+  "signaling": "PORT=4464 node node_modules/y-webrtc/bin/server.js; both apps: localStorage unwritten.signaling = ws://127.0.0.1:4464",
+  "browser": "'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless=new --remote-debugging-port=9350 --user-data-dir=<fresh>; each '[market] sign page' URL from app A's log opened with PUT /json/new?<url>",
+  "passkey": "CDP WebAuthn virtual authenticator with the credential exported in milestone-lineage-relay (account 0xfBaB…8537), standing in for Touch ID",
+  "contracts": "v2 LineageRegistry 0xda8051e3e2855C125AAd6050f97Ea64cf203dAf6 under unmapped.eth (unchanged)"
+ },
+ "model": "openai gpt-5.4-mini (Create's cards, story and origin; the chapter; witnessing). Naming, launching and joining ask no model.",
+ "runs": {
+  "every signature (page side, CDP_PORT=9350)": [
+   {
+    "cdp": {
+     "method": "WebAuthn.enable",
+     "params": {
+      "enableUI": false
+     }
+    }
+   },
+   {
+    "cdp": {
+     "method": "WebAuthn.addVirtualAuthenticator",
+     "params": {
+      "options": {
+       "protocol": "ctap2",
+       "ctap2Version": "ctap2_1",
+       "transport": "internal",
+       "hasResidentKey": true,
+       "hasUserVerification": true,
+       "isUserVerified": true,
+       "automaticPresenceSimulation": true
+      }
+     }
+    }
+   },
+   {
+    "cdp": {
+     "method": "WebAuthn.addCredential",
+     "params": {
+      "authenticatorId": "$authenticatorId",
+      "credential": "<the exported credential of account 0xfBaB…8537 (.cache/e2e/browser-credential.json)>"
+     }
+    }
+   },
+   {
+    "text": true
+   },
+   {
+    "clickText": "Approve with Touch ID  (the link page: Use my existing passkey)"
+   },
+   {
+    "wait": 40000
+   },
+   {
+    "text": true
+   },
+   {
+    "eval": "document.querySelector('#status a')?.href"
+   }
+  ],
+  "A1 link the passkey (app A, CDP_PORT=9336)": [
+   {
+    "clickText": "世界"
+   },
+   {
+    "wait": 2000
+   },
+   {
+    "clickText": "市場"
+   },
+   {
+    "wait": 4000
+   },
+   {
+    "text": true
+   },
+   {
+    "shot": "docs/e2e/milestone-ens-in-game/02-market-no-passkey.jpg"
+   },
+   {
+    "clickText": "用 Touch ID（在瀏覽器開啟）"
+   },
+   "… link page: Use my existing passkey …",
+   {
+    "wait": 2000
+   },
+   {
+    "text": true
+   },
+   {
+    "shot": "docs/e2e/milestone-ens-in-game/03-market-linked.jpg"
+   }
+  ],
+  "A2 Create 霧之港 → name → launch": [
+   {
+    "clickText": "創造世界"
+   },
+   {
+    "clickText": "開始新的遊戲"
+   },
+   {
+    "eval": "document.querySelectorAll('input')[0].focus()"
+   },
+   {
+    "type": "霧氣終年不散的港口小鎮，燈塔守著回不了家的船。"
+   },
+   {
+    "eval": "document.querySelectorAll('input')[1].focus()"
+   },
+   {
+    "type": "霧之港"
+   },
+   {
+    "clickText": "撰寫世界"
+   },
+   "… wait for 前往看樣子 …",
+   {
+    "clickText": "前往看樣子"
+   },
+   {
+    "clickText": "停止繪製"
+   },
+   "… wait for the story (4 chapters) …",
+   {
+    "clickText": "不選圖片，繼續"
+   },
+   {
+    "clickText": "前往建立"
+   },
+   {
+    "shot": "docs/e2e/milestone-ens-in-game/04-create-build-quote.jpg"
+   },
+   {
+    "clickText": "建立並開始玩"
+   },
+   {
+    "wait": 11000
+   },
+   {
+    "text": true
+   },
+   {
+    "shot": "docs/e2e/milestone-ens-in-game/06-built-ens-default-label.jpg"
+   },
+   {
+    "eval": "(()=>{const i=document.querySelector('input');i.focus();i.select()})()"
+   },
+   {
+    "type": "misty-harbor"
+   },
+   {
+    "wait": 4000
+   },
+   {
+    "shot": "docs/e2e/milestone-ens-in-game/07-built-ens-chosen-label.jpg"
+   },
+   {
+    "clickText": "用 passkey 登記名稱"
+   },
+   "… sign …",
+   {
+    "shot": "docs/e2e/milestone-ens-in-game/08-built-named.jpg"
+   },
+   {
+    "clickText": "上架到市場"
+   },
+   "… sign …",
+   {
+    "shot": "docs/e2e/milestone-ens-in-game/09-built-launched.jpg"
+   },
+   {
+    "clickText": "進入世界"
+   },
+   {
+    "wait": 12000
+   },
+   {
+    "eval": "[...document.querySelectorAll('[title]')].map(e=>e.getAttribute('title')).filter(t=>/eth|ENS/.test(t)).join(' | ')"
+   },
+   {
+    "shot": "docs/e2e/milestone-ens-in-game/10-hud-world-name.jpg"
+   }
+  ],
+  "A3 clear chapter 1 of 霧之港 (the gamepad run's helpers, docs/e2e/milestone-rev6-p2-gamepad)": [
+   {
+    "cdp": {
+     "method": "Emulation.setFocusEmulationEnabled",
+     "params": {
+      "enabled": true
+     }
+    }
+   },
+   {
+    "eval": "(() => {\n  const e2e = (window.__e2e = window.__e2e || {});\n  // Shared modules are served under /@fs/<absolute path>; read that URL from a renderer module\n  // that imports them, so the helper runs on any checkout.\n  e2e.shared = async (name) => {\n    e2e.urls = e2e.urls || {};\n    if (!e2e.urls[name]) {\n      const code = await (await fetch('/engine2d/LandView2D.tsx')).text();\n      const found = code.match(new RegExp('\"(/@fs/[^\"]*/src/shared/' + name + '\\\\.ts[^\"]*)\"'));\n      e2e.urls[name] = found ? found[1] : null;\n    }\n    return import(e2e.urls[name]);\n  };\n  e2e.pos = async () => {\n    const p = (await import('/engine/playerProbe.ts')).samplePlayer();\n    return p === null ? null : [Math.round(p.x * 10) / 10, Math.round(p.z * 10) / 10];\n  };\n  // What a player sees of the current chapter: its gate, its people and treasures (world tiles).\n  e2e.chapter = async () => {\n    const S = await import('/state/index.ts');\n    const L = await import('/engine2d/chapterLayer.ts');\n    const M = await import('/engine2d/landModel.ts');\n    const story = await e2e.shared('story');\n    const land = await e2e.shared('land');\n    const session = S.useSessionStore.getState();\n    const world = S.useWorldStore.getState();\n    const landState = S.useLandStore.getState();\n    const active = session.activeInstance;\n    if (!active || world.scene.status !== 'ready' || !active.cartridge.story) return null;\n    const progress = landState.progress;\n    const episodes = story.storyEpisodes(active.cartridge.story, progress?.storyMore);\n    const next = story.nextEpisode(episodes, progress?.episodes ?? {});\n    if (!next) return { cleared: true, episodes: progress?.episodes ?? {} };\n    const gate = story.episodeGate(next);\n    const stage = progress?.episodes?.[next.id]?.stage ?? null;\n    const base = { id: next.id, title: next.title, gate: [gate.x, gate.z], written: stage !== null };\n    if (!stage || stage.kind !== 'land') return { ...base, kind: stage?.kind ?? null };\n    const draft = L.readChapter(stage.source);\n    if (!draft) return { ...base, unreadable: true };\n    const seed = land.landSeedOf(active.instance.save);\n    const graph = world.scene.value;\n    const residents = L.residentTiles ? L.residentTiles(landState.chunks) : new Set();\n    const free = (x, z) => !residents.has(x + ',' + z) && M.canStandAt(graph, seed, landState.chunks, x + 0.5, z + 0.5, null);\n    const scene = L.chapterScene(next, stage, draft, free);\n    return {\n      ...base,\n      npcs: scene.npcs.map((n) => ({ id: n.id, name: n.name, at: [n.x + 0.5, n.z + 0.5],\n        met: stage.met.includes(n.id.split(':')[2]) })),\n      treasures: scene.treasures.map((t) => ({ id: t.id, at: [t.x + 0.5, t.z + 0.5],\n        found: stage.found.includes(t.id.split(':')[2]) })),\n      monsters: scene.monsters.length,\n      met: stage.met, found: stage.found,\n    };\n  };\n  // The next thing of the chapter still to do: the nearest unmet person or unopened treasure.\n  e2e.nextTodo = async () => {\n    const c = await e2e.chapter();\n    const at = await e2e.pos();\n    if (!c || !c.npcs || !at) return null;\n    const todo = [...c.npcs.filter((n) => !n.met), ...c.treasures.filter((t) => !t.found)];\n    todo.sort((a, b) => Math.hypot(a.at[0] - at[0], a.at[1] - at[1]) - Math.hypot(b.at[0] - at[0], b.at[1] - at[1]));\n    return todo[0] ?? null;\n  };\n  // Where a player would stand to face it: a free spot next to it from which it, and nothing else\n  // (the gate, a neighbour, a resident of the land), is the nearest thing when A is pressed.\n  e2e.others = async () => {\n    const S = await import('/state/index.ts');\n    const c = await e2e.chapter();\n    // [x, z, reach]: a gate reaches 0.8 tiles further than a person (engine2d/storyLayer).\n    const points = c && c.gate ? [[c.gate[0], c.gate[1], 0.8]] : [];\n    if (c && c.npcs) points.push(...c.npcs.map((n) => [...n.at, 0]), ...c.treasures.filter((t) => !t.found).map((t) => [...t.at, 0]));\n    for (const [key, chunk] of Object.entries(S.useLandStore.getState().chunks)) {\n      if (chunk.status !== 'written') continue;\n      const [cx, cz] = key.split(',').map(Number);\n      for (const n of chunk.scene.npcs) points.push([cx * 32 + n.x + 0.5, cz * 32 + n.z + 0.5, 0]);\n    }\n    return points;\n  };\n  e2e.spot = async () => {\n    const t = await e2e.nextTodo();\n    const at = await e2e.pos();\n    if (!t || !at) return null;\n    const S = await import('/state/index.ts');\n    const M = await import('/engine2d/landModel.ts');\n    const land = await e2e.shared('land');\n    const active = S.useSessionStore.getState().activeInstance;\n    const graph = S.useWorldStore.getState().scene.value;\n    const seed = land.landSeedOf(active.instance.save);\n    const chunks = S.useLandStore.getState().chunks;\n    const others = (await e2e.others()).filter((p) => Math.hypot(p[0] - t.at[0], p[1] - t.at[1]) > 0.01);\n    const spots = [];\n    for (const r of [0.8, 1.2]) {\n      for (let i = 0; i < 16; i += 1) {\n        const a = (i / 16) * Math.PI * 2;\n        const p = [t.at[0] + Math.cos(a) * r, t.at[1] + Math.sin(a) * r];\n        if (!M.canStandAt(graph, seed, chunks, p[0], p[1], null)) continue;\n        const nearestOther = Math.min(...others.map((o) => Math.hypot(o[0] - p[0], o[1] - p[1]) - o[2]));\n        if (nearestOther <= r + 0.3) continue;\n        spots.push(p);\n      }\n    }\n    spots.sort((a, b) => Math.hypot(a[0] - at[0], a[1] - at[1]) - Math.hypot(b[0] - at[0], b[1] - at[1]));\n    return spots[0] ?? t.at;\n  };\n  e2e.state = async () => {\n    const S = await import('/state/index.ts');\n    const s = S.useSessionStore.getState();\n    const en = S.useEngineStore.getState();\n    const layer = [...document.querySelectorAll('[data-layer], [role=dialog]')].filter((l) => l.getClientRects().length > 0).map((l) => l.getAttribute('data-layer') ?? l.getAttribute('role'));\n    return {\n      screen: s.screen, input: document.documentElement.dataset.input ?? null,\n      pos: await e2e.pos(), chunk: en.chunk, nearby: en.nearby && { kind: en.nearby.kind, id: en.nearby.id, label: en.nearby.label },\n      locked: en.inputLocked, dialogue: s.dialogue?.status ?? null, speaker: s.dialogueSpeaker,\n      episodeOpen: s.episodeOpen, layers: layer,\n      focus: document.activeElement && document.activeElement !== document.body ? (document.activeElement.innerText || document.activeElement.getAttribute('aria-label') || document.activeElement.tagName).slice(0, 60) : null,\n    };\n  };\n  return Object.keys(e2e);\n})()\n"
+   },
+   {
+    "wait": 800
+   },
+   {
+    "eval": "window.__e2e.chapter().then(c=>c&&({id:c.id,title:c.title,gate:c.gate,written:c.written}))"
+   },
+   {
+    "pad": {
+     "toward": "window.__e2e.chapter().then(c=>c&&c.gate)",
+     "within": 1.0,
+     "buttons": [
+      5
+     ],
+     "timeoutMs": 60000
+    }
+   },
+   {
+    "eval": "window.__e2e.pos()"
+   },
+   {
+    "eval": "(async()=>{for(let i=0;i<360;i++){const c=await window.__e2e.chapter(); if(c&&c.written){return {ms: Date.now()-window.__e2e.t0, npcs: c.npcs?.map(n=>n.name), treasures: c.treasures?.length, monsters: c.monsters};} const card=[...document.querySelectorAll('div')].find(e=>/撰寫下一章|寫作失敗|失敗/.test(e.innerText) && e.innerText.length<300); if(card && /失敗|錯誤|error/i.test(card.innerText)) return {failed: card.innerText}; await new Promise(r=>setTimeout(r,500));} return 'not written after 180 s'})()"
+   },
+   {
+    "shot": "docs/e2e/milestone-ens-in-game/11-at-gate.jpg"
+   },
+   {
+    "repeat": {
+     "times": 14,
+     "until": "(async()=>{const S=await import('/state/index.ts'); const e=Object.values(S.useLandStore.getState().progress?.episodes??{}); return e.some(x=>x.cleared)})()",
+     "actions": [
+      {
+       "eval": "window.__e2e.nextTodo()"
+      },
+      {
+       "pad": {
+        "toward": "window.__e2e.spot()",
+        "within": 0.3,
+        "timeoutMs": 15000
+       }
+      },
+      {
+       "eval": "window.__e2e.state().then(s=>s.nearby)"
+      },
+      {
+       "repeat": {
+        "times": 1,
+        "until": "(async()=>{const s=await window.__e2e.state(); const t=await window.__e2e.nextTodo(); return !t || !s.nearby || s.nearby.id!==t.id})()",
+        "actions": [
+         {
+          "pad": {
+           "buttons": [
+            0
+           ]
+          }
+         }
+        ]
+       }
+      },
+      {
+       "wait": 600
+      },
+      {
+       "eval": "window.__e2e.state().then(s=>({dialogue:s.dialogue, speaker:s.speaker, focus:s.focus}))"
+      },
+      {
+       "repeat": {
+        "times": 1,
+        "until": "(async()=>{const S=await import('/state/index.ts'); return S.useSessionStore.getState().dialogue===null})()",
+        "actions": [
+         {
+          "pad": {
+           "buttons": [
+            0
+           ],
+           "ms": 200
+          }
+         },
+         {
+          "wait": 600
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   {
+    "eval": "(async()=>{const S=await import('/state/index.ts'); const p=S.useLandStore.getState().progress; return Object.entries(p.episodes).map(([k,e])=>({k,cleared:e.cleared,met:e.stage?.met,found:e.stage?.found}))})()"
+   },
+   {
+    "wait": 4000
+   },
+   {
+    "eval": "(()=>{const l=document.querySelector('[data-layer=ens-offer]'); return l? l.innerText : 'no offer; layers: '+[...document.querySelectorAll('[data-layer]')].map(x=>x.dataset.layer).join(',')})()"
+   },
+   {
+    "shot": "docs/e2e/milestone-ens-in-game/12-chapter-cleared-offer.jpg"
+   },
+   {
+    "clickText": "用 passkey 記錄"
+   },
+   "… sign …",
+   {
+    "wait": 5000
+   },
+   {
+    "eval": "[...document.querySelectorAll('[title]')].map(e=>e.getAttribute('title')).filter(t=>/eth|ENS/.test(t)).join(' | ')"
+   },
+   {
+    "shot": "docs/e2e/milestone-ens-in-game/13-hud-save-name.jpg"
+   },
+   {
+    "eval": "(async()=>{const m=await import('/identity/index.ts'); return JSON.stringify(await m.lookupEnsName('my-save.misty-harbor.unmapped.eth'))})()"
+   }
+  ],
+  "A4 remix aether-land from the Remix button": [
+   {
+    "clickText": "世界"
+   },
+   {
+    "clickText": "卡帶"
+   },
+   {
+    "clickText": "改編"
+   },
+   {
+    "eval": "(()=>{const i=document.querySelectorAll('input')[0];i.focus();i.select()})()"
+   },
+   {
+    "type": "lantern-quay"
+   },
+   {
+    "eval": "(()=>{const i=document.querySelectorAll('input')[1];i.focus();i.select()})()"
+   },
+   {
+    "type": "燈籠碼頭"
+   },
+   {
+    "eval": "(()=>{const i=document.querySelectorAll('input')[2];i.focus();i.select()})()"
+   },
+   {
+    "type": "kidney"
+   },
+   {
+    "clickText": "建立"
+   },
+   {
+    "clickText": "驗證並預覽"
+   },
+   {
+    "clickText": "發布"
+   },
+   "(1.0.0 failed validation before the fix; after it: set 版本 1.0.1, 驗證並預覽, 發布)",
+   {
+    "clickText": "卡帶"
+   },
+   {
+    "eval": "[...document.querySelectorAll('button')].find(b=>b.innerText.includes('燈籠碼頭')&&b.innerText.includes('1.0.1'))?.click()"
+   },
+   {
+    "wait": 6000
+   },
+   {
+    "shot": "docs/e2e/milestone-ens-in-game/19-remix-name-under-parent.jpg"
+   },
+   {
+    "clickText": "用 passkey 登記名稱"
+   },
+   "… sign …",
+   {
+    "shot": "docs/e2e/milestone-ens-in-game/21-remix-launch-terms.jpg"
+   },
+   {
+    "clickText": "上架到市場"
+   },
+   "… sign …",
+   {
+    "shot": "docs/e2e/milestone-ens-in-game/22-remix-launched.jpg"
+   },
+   {
+    "clickText": "市場"
+   },
+   {
+    "wait": 8000
+   },
+   {
+    "shot": "docs/e2e/milestone-ens-in-game/23-market-three-worlds.jpg"
+   }
+  ],
+  "A5 open the door": [
+   {
+    "eval": "localStorage.setItem('unwritten.signaling','ws://127.0.0.1:4464')"
+   },
+   {
+    "clickText": "世界"
+   },
+   {
+    "clickText": "大陸"
+   },
+   {
+    "clickText": "霧之港"
+   },
+   {
+    "wait": 5000
+   },
+   {
+    "shot": "docs/e2e/milestone-ens-in-game/24-continent-name-line.jpg"
+   },
+   {
+    "clickText": "向夥伴敞開我的門"
+   },
+   {
+    "wait": 10000
+   },
+   {
+    "eval": "(document.body.innerText.match(/大陸 [A-Z0-9]{6}[^\\n]*/)||['none'])[0]"
+   }
+  ],
+  "B1 walk in by name (app B, CDP_PORT=9337)": [
+   {
+    "eval": "localStorage.setItem('unwritten.signaling','ws://127.0.0.1:4464');localStorage.setItem('aether.playerName','friend-b')"
+   },
+   {
+    "clickText": "世界"
+   },
+   {
+    "clickText": "新遊戲"
+   },
+   {
+    "clickText": "開始"
+   },
+   {
+    "wait": 9000
+   },
+   {
+    "clickText": "← 主頁"
+   },
+   {
+    "clickText": "世界"
+   },
+   {
+    "clickText": "大陸"
+   },
+   {
+    "clickText": "無界之地 · GZHB-A273"
+   },
+   {
+    "eval": "(()=>{const all=[...document.querySelectorAll('input')];all[all.length-1].focus()})()"
+   },
+   {
+    "type": "my-save.misty-harbor.unmapped.eth"
+   },
+   {
+    "shot": "docs/e2e/milestone-ens-in-game/25-B-join-by-name.jpg"
+   },
+   {
+    "clickText": "穿過這扇門"
+   },
+   {
+    "eval": "(async()=>{const seen=[];let last='';const t=Date.now();for(let i=0;i<300;i++){const m=(document.body.innerText.match(/大陸 [A-Z0-9]{6}[^\\n]*|正在查[^\\n]*/)||[''])[0];if(m&&m!==last){seen.push((Date.now()-t)+' ms '+m);last=m;}if(/1 位夥伴/.test(m))return JSON.stringify(seen);await new Promise(r=>setTimeout(r,100));}return JSON.stringify(seen)})()"
+   },
+   {
+    "shot": "docs/e2e/milestone-ens-in-game/26-B-on-continent.jpg"
+   },
+   {
+    "eval": "(async()=>{const m=await import('/net/doorByName.ts');const out={};for(const n of ['first-light.aether-land.unmapped.eth','nobody-here-7x.unmapped.eth','misty-harbor.unmapped.eth','my-save.misty-harbor.unmapped.eth']){const r=await m.resolveDoor(n);out[n]=r.ok?r.value:r.error.code}return JSON.stringify(out)})()"
+   }
+  ],
+  "B2 the old paths": [
+   {
+    "shell": "bun run ens:setup   # → Script not found"
+   },
+   {
+    "clickText": "主控台"
+   },
+   {
+    "eval": "document.body.innerText.includes('aether.seed') || /ENS/.test(document.body.innerText)"
+   },
+   {
+    "shot": "docs/e2e/milestone-ens-in-game/27-console-world-tab.jpg"
+   }
+  ],
+  "A6 clear chapter 2, then move the name (app A)": [
+   "(the chapter loop of A3 with until = two episodes cleared)",
+   {
+    "shot": "docs/e2e/milestone-ens-in-game/29-chapter2-update-offer.jpg"
+   },
+   "(the renderer reloaded to the title here; the card was gone)",
+   {
+    "clickText": "世界"
+   },
+   {
+    "clickText": "存檔"
+   },
+   {
+    "wait": 7000
+   },
+   {
+    "clickText": "更新到目前進度"
+   },
+   "… sign …",
+   {
+    "wait": 6000
+   },
+   {
+    "shot": "docs/e2e/milestone-ens-in-game/30-save-updated.jpg"
+   }
+  ]
+ }
+}

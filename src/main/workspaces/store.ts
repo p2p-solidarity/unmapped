@@ -7,6 +7,7 @@ import type {
   CartridgeRef,
   CartridgeRevision,
   CreateWorkspaceOptions,
+  PublishCartridgeInput,
   WorkspaceMeta,
   WorkspaceRecord,
 } from "@shared/cartridge";
@@ -14,7 +15,7 @@ import { WORKSPACE_FORMAT_VERSION } from "@shared/cartridge";
 import { err, fail, ok, type Result, toError } from "@shared/result";
 import { manifestCore, sha256 } from "../cartridges/integrity";
 import { isCartridgeId, isCartridgeVersion, isSceneId } from "../cartridges/paths";
-import { publishCartridgeRevision } from "../cartridges/store";
+import { publishCartridgeRevision, readCartridgeRevision } from "../cartridges/store";
 import { isCreateDraftDir } from "./createDrafts";
 import { isWorkspaceId, workspaceDir, workspaceScenePath } from "./paths";
 import { workspaceMetaSchema } from "./schemas";
@@ -247,6 +248,25 @@ export async function writeWorkspaceRules(
   }
 }
 
+/**
+ * What a published revision keeps from its base beyond rules, scenes and assets (which the workspace
+ * edits): the world bible and its story — without them a remix of an open-land world could not be
+ * witnessed — and baked dialogues. The same carry a mod revision gets (mods/proposal.ts).
+ */
+async function carriedFromBase(
+  cartridgesDir: string,
+  base: CartridgeRef,
+): Promise<Pick<PublishCartridgeInput, "bible" | "story" | "dialogues">> {
+  const revision = await readCartridgeRevision(cartridgesDir, base.cartridgeId, base.version);
+  if (!revision.ok) return {};
+  const { bible, story, dialogues } = revision.value;
+  return {
+    dialogues,
+    ...(bible === null ? {} : { bible }),
+    ...(story === null || story === undefined ? {} : { story }),
+  };
+}
+
 export async function publishWorkspace(
   workspacesDir: string,
   cartridgesDir: string,
@@ -279,6 +299,7 @@ export async function publishWorkspace(
       parent: meta.base,
     };
     return publishCartridgeRevision(cartridgesDir, {
+      ...(await carriedFromBase(cartridgesDir, meta.base)),
       manifest: {
         ...source,
         cartridgeId: meta.targetCartridgeId,

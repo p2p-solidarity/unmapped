@@ -1,4 +1,5 @@
-// Create a game: a few words → world cards → look → story → a quote → Build. Only Build publishes.
+// Create a game: a few words → world cards → look → story → a quote → Build. Only Build publishes;
+// with a lineage market set up, the built world waits on a small panel where it can be named first.
 // Foreground model calls go through `run` (one at a time, a stage label, a preview, Cancel); the
 // look pictures (useLookPictures) and the story plan written ahead (useStoryAhead) run beside it.
 import { contentLanguage, useT } from "@renderer/i18n";
@@ -42,6 +43,14 @@ const initialIdea = (): Idea => ({
   play: PEACEFUL,
 });
 
+/** A world Build just published, kept on screen while it can be named (BuiltPanel). */
+export interface BuiltWorld {
+  instanceId: string;
+  cartridgeId: string;
+  version: string;
+  name: string;
+}
+
 /** New fields from the model, with every locked card kept as the player had it. */
 function keepLocked(world: DraftWorld | null, fields: BibleFields): BibleFields {
   if (world === null) return fields;
@@ -68,6 +77,7 @@ export function useCreateController() {
   const [progress, setProgress] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const controller = useRef<AbortController | null>(null);
+  const [built, setBuilt] = useState<BuiltWorld | null>(null);
   // Every call made for this draft counts toward it, and toward the world Build makes from it.
   useUsageScope(draft === null ? null : { kind: "create", id: draft.draftId });
 
@@ -162,6 +172,11 @@ export function useCreateController() {
   };
   const back = async (): Promise<void> => {
     if (busy) return;
+    if (built !== null) {
+      // The world is published and waits in Worlds → Saves.
+      setScreen("worlds");
+      return;
+    }
     await saves.current;
     if (saveFailed.current) return;
     if (draft === null) {
@@ -386,7 +401,25 @@ export function useCreateController() {
     if (!linked.ok) setError(linked.error);
     const removed = await window.seed.createDrafts.remove(current.draftId);
     if (!removed.ok) setError(removed.error);
-    void openInstance(result.value.instanceId);
+    // With a lineage market set up the new world may be named before the player goes in (optional;
+    // entering never waits for it). Without one, straight into Play.
+    const market = await window.seed.market.config();
+    if (market.parent === null) {
+      void openInstance(result.value.instanceId);
+      return;
+    }
+    // The draft is gone: nothing may autosave it back.
+    latest.current = null;
+    setDraft(null);
+    setBuilt({
+      instanceId: result.value.instanceId,
+      cartridgeId: result.value.cartridge.cartridgeId,
+      version: result.value.cartridge.version,
+      name: result.value.name,
+    });
+  };
+  const enter = (): void => {
+    if (built !== null) void openInstance(built.instanceId);
   };
 
   return {
@@ -424,6 +457,8 @@ export function useCreateController() {
     ahead,
     story,
     build,
+    built,
+    enter,
   };
 }
 

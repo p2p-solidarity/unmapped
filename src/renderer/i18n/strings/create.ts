@@ -172,6 +172,29 @@ const CREATE_FRAME = {
   toStory: { en: "Continue to the story", "zh-TW": "繼續寫故事", ja: "ストーリーへ進む" },
   toBuild: { en: "Continue to build", "zh-TW": "前往建立", ja: "作成へ進む" },
   buildAndPlay: { en: "Build and play", "zh-TW": "建立並開始玩", ja: "作って遊ぶ" },
+
+  // ── Built: the world is published (BuiltPanel, when a lineage market is set up) ─────────────
+  builtHeading: {
+    en: "Your world is published",
+    "zh-TW": "你的世界已經發布",
+    ja: "ワールドを公開しました",
+  },
+  builtNote: {
+    en: "You can give it an ENS name now, or later in Worlds → Cartridges. Entering never waits for it.",
+    "zh-TW": "你可以現在幫它登記 ENS 名稱，也可以之後到「世界 → 卡帶」再登記。進入世界不必等它。",
+    ja: "今 ENS 名を付けても、あとで「ワールド → カートリッジ」で付けてもかまいません。入るのに待つ必要はありません。",
+  },
+  builtNameHeading: {
+    en: "Its ENS name (optional)",
+    "zh-TW": "它的 ENS 名稱（可略過）",
+    ja: "ENS 名（任意）",
+  },
+  builtReading: {
+    en: "Reading the published world…",
+    "zh-TW": "正在讀取已發布的世界…",
+    ja: "公開したワールドを読み込んでいます…",
+  },
+  enterWorld: { en: "Enter the world", "zh-TW": "進入世界", ja: "ワールドに入る" },
   backToTitle: { en: "Back to the title", "zh-TW": "回到標題畫面", ja: "タイトルに戻る" },
   replace: { en: "Replace", "zh-TW": "取代", ja: "置き換える" },
   keepMine: { en: "Keep mine", "zh-TW": "保留我的", ja: "自分のを残す" },

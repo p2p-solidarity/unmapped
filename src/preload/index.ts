@@ -25,7 +25,6 @@ import type {
   WitnessOnChainInput,
 } from "@shared/chain";
 import type { CreateDraft, CreateDraftEntry, DraftIdea, LookPicture } from "@shared/createDraft";
-import type { ClaimNameResult, EnsNamesConfig } from "@shared/ensNames";
 import type { AccountStatus, PairingLookup, QuotaView } from "@shared/gatewayApi";
 import type { AccessPolicy } from "@shared/history/types";
 import type { DataKeyWrappingRecord } from "@shared/identity";
@@ -82,6 +81,7 @@ import type {
   MarketKey,
   MarketReceipt,
   MarketView,
+  PlayerView,
   PreparedAction,
   SaveNameView,
   SubmitActionInput,
@@ -331,10 +331,18 @@ const api: SeedApi = {
     link: () => invoke<Result<{ credentialId: string; key: MarketKey }>>(IPC.market.link),
     signInBrowser: (input: { preparedId: string; credentialId: string; summary: string }) =>
       invoke<Result<MarketReceipt>>(IPC.market.signInBrowser, input),
-    cartridgeName: (cartridgeId: string, version: string, key: MarketKey | null) =>
-      invoke<Result<EnsNameStatus>>(IPC.market.cartridgeName, cartridgeId, version, key),
+    cartridgeName: (
+      cartridgeId: string,
+      version: string,
+      key: MarketKey | null,
+      label: string | null,
+    ) => invoke<Result<EnsNameStatus>>(IPC.market.cartridgeName, cartridgeId, version, key, label),
     saveName: (instanceId: string, label: string | null, key: MarketKey | null) =>
       invoke<Result<SaveNameView>>(IPC.market.saveName, instanceId, label, key),
+    playerName: (key: MarketKey, label: string | null) =>
+      invoke<Result<PlayerView>>(IPC.market.playerName, key, label),
+    playerNames: (addresses: string[]) =>
+      invoke<Result<Record<string, string>>>(IPC.market.playerNames, addresses),
   },
   chain: {
     config: () => invoke<LedgerConfig>(IPC.chain.config),
@@ -344,9 +352,6 @@ const api: SeedApi = {
       invoke<Result<{ txHash: string }>>(IPC.chain.publish, input),
     witness: (input: WitnessOnChainInput) =>
       invoke<Result<{ txHash: string }>>(IPC.chain.witness, input),
-    ensConfig: () => invoke<EnsNamesConfig>(IPC.chain.ensConfig),
-    claimName: (cartridgeId: string, version: string) =>
-      invoke<Result<ClaimNameResult>>(IPC.chain.claimName, cartridgeId, version),
   },
   app: {
     info: () => invoke<AppInfo>(IPC.app.info),

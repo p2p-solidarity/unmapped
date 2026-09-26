@@ -6,8 +6,8 @@
 // Live: deploys LineageRegistry (which makes its own resolver and root registry), LineageHook
 // (CREATE2, address mined for its permission bits), LineageRouter and the PasskeyAccountFactory
 // (players' passkey-owned accounts), then registers <label>.eth
-// pointing at the registry's root — or repoints it, if the key already owns it. Use a label of its
-// own: cartridge names from `ens:setup` live under a different parent. The dry run does the same on a
+// pointing at the registry's root — or repoints it, if the key already owns it (so use a label of
+// its own). The dry run does the same on a
 // fresh label, then launches `zelda`, its remix `mushroom` and that one's remix `night`, bids in each
 // Continuous Clearing Auction, graduates them into v4 pools, buys down the line, hands a name on,
 // claims royalties and sells back — all as simulated blocks on top of Sepolia's real contracts.

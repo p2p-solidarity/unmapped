@@ -150,7 +150,10 @@ export function validateWorkspace(workspace: WorkspaceRecord): WorkspacePreview 
     }
     if (contract.terminal) {
       terminals.add(id);
-      if (!endingGate) endingMessages.push(`${id}.oui is terminal but has no ending gate.`);
+      // Open land has no finale, as publishing already allows (cartridges/validate-revision.ts).
+      if (!endingGate && contract.kit !== "tps_exploration@1") {
+        endingMessages.push(`${id}.oui is terminal but has no ending gate.`);
+      }
     }
     routes.set(id, targets);
   }

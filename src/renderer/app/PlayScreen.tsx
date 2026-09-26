@@ -16,6 +16,7 @@ import { useFloorAdvance } from "./advanceFloor";
 import { ChangeProposalPanel } from "./ChangeProposalPanel";
 import { Console } from "./Console";
 import { Hud } from "./Hud";
+import { ChapterNameOffer } from "./land/ChapterNameOffer";
 import { ChapterPanel } from "./land/ChapterPanel";
 import { chapterFelled } from "./land/chapters";
 import { DoorPanel } from "./land/DoorPanel";
@@ -148,6 +149,7 @@ export function PlayScreen() {
       <DoorPanel />
       <ForeignDoorCard />
       <ChapterPanel />
+      <ChapterNameOffer />
       {hasStory ? <EpisodePrefetch /> : null}
       <NotePanel />
       <TweakPanel />

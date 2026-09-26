@@ -70,10 +70,40 @@ export type MarketAction =
   /** Spend `usdc` MockUSDC on the world, through its ancestors. */
   | { kind: "buy"; world: string; usdc: string }
   /** Name a local cartridge revision on ENS (or point the player's name at it). Main reads id,
-   * version, hash and lineage from disk; the renderer only says which revision. */
-  | { kind: "name-cartridge"; cartridgeId: string; version: string }
+   * version, hash and lineage from disk; the renderer only says which revision, and — for a name
+   * nobody holds yet — which label (its id's own label when absent). */
+  | { kind: "name-cartridge"; cartridgeId: string; version: string; label?: string }
   /** Record (or move forward) the player's own save as `<label>.<cartridge>`; main hashes it. */
-  | { kind: "name-save"; instanceId: string; label: string };
+  | { kind: "name-save"; instanceId: string; label: string }
+  /** Put the player's own cartridge name on the market: a world token and its Uniswap auction.
+   * Main picks every parameter (LAUNCH_TERMS); the renderer only says which revision. */
+  | { kind: "launch"; cartridgeId: string; version: string }
+  /** Claim `<label>.players.<root>` for the player's passkey account: their own ENS name. */
+  | { kind: "name-player"; label: string };
+
+/** What an in-app launch always uses, shown to the player before they sign. */
+export const LAUNCH_TERMS = {
+  supply: "1000000",
+  /** Half the supply seeds the Uniswap v4 pool once the auction graduates. */
+  lpReserve: "500000",
+  /** ~20 minutes of Sepolia blocks; must divide 10,000,000 (LineageRegistry). */
+  auctionBlocks: 100,
+  /** Floor price in the currency per token: USDC at the top level, the parent's token for a remix. */
+  floorTopLevel: "0.01",
+  floorRemix: "0.1",
+  /** Raised before the auction may graduate into its pool. */
+  requiredRaised: "10",
+} as const;
+
+/** A cartridge name's place on the market. */
+export interface NameMarket {
+  /** Its world token once launched; null before. */
+  token: string | null;
+  /** The parent's name for a remix (it trades in the parent's token); null at the top level. */
+  parentName: string | null;
+  /** A remix launches only after its parent has; always true at the top level. */
+  parentLaunched: boolean;
+}
 
 /**
  * An ENS name in the lineage tree as this player sees it. `free`: nobody holds it yet. `current`:
@@ -93,6 +123,10 @@ export interface EnsNameStatus {
   /** Saves only: the recorded checkpoint's hash and progress line. */
   saveHash: string | null;
   progress: string | null;
+  /** Cartridges only (null for a save or a player name): whether it is on the market. */
+  market: NameMarket | null;
+  /** Saves only: the door number (門牌) the name carries in its `description`, if any. */
+  door: string | null;
 }
 
 /** A save and its name: the cartridge must be named first, since a save hangs under it. */
@@ -107,7 +141,23 @@ export interface SaveNameView {
     progress: string;
     cartridgeId: string;
     version: string;
+    /** This save's door number (門牌); a recorded name carries it so friends can walk in by name. */
+    door: string;
   };
+}
+
+/**
+ * The player's own ENS name: `<label>.players.<root>`, held by their passkey account (recorded in
+ * the `players.<root>` directory the operator registered once; LineageRegistry.recordSave).
+ */
+export interface PlayerView {
+  account: string;
+  /** `players.<root>`; null until the directory exists on chain (then no name can be claimed). */
+  directory: string | null;
+  /** The name this account holds, e.g. `kidney.players.unmapped.eth`; null before a claim. */
+  name: string | null;
+  /** The label asked about, when the account has no name yet: free, or taken. */
+  candidate: EnsNameStatus | null;
 }
 
 /** A batch main built and is holding; the renderer signs `challenge` with the passkey. */
@@ -131,6 +181,14 @@ export interface WireAuth {
   typeIndex: number;
   authenticatorData: `0x${string}`;
   clientDataJSON: string;
+}
+
+/** A prepared batch to sign in the system browser (Touch ID) with the linked passkey. */
+export interface SignInBrowserInput {
+  preparedId: string;
+  credentialId: string;
+  /** What the browser page says the signature is for. */
+  summary: string;
 }
 
 export interface SubmitActionInput {

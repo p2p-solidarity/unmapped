@@ -18,7 +18,9 @@
     "ACCOUNTS": "0x7B8b8E17590cC85c315d459feD8fC9384C2c9bE5",
     "USDC": "0x16f95d91dba7da3aca778ec053df0ff6c6a8aa8e",
     "PERMIT2": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
-    "MAX_FEE_GWEI": "30"
+    "MAX_FEE_GWEI": "30",
+    // A player's in-app launch (~5M gas) waits for gas under this instead.
+    "MAX_LAUNCH_FEE_GWEI": "5"
   },
   "ratelimits": [
     { "name": "LIMITER", "namespace_id": "4801", "simple": { "limit": 30, "period": 60 } }

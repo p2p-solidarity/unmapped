@@ -1,123 +1,74 @@
 // ENS names in the lineage tree (LineageRegistry, `<root>` = UNWRITTEN_LINEAGE_PARENT): a cartridge
-// revision is `<cartridge>.<root>` (a remix hangs under its parent's name once that has one), and a
-// player's save is `<save>.<cartridge>.<root>`, held by their PasskeyAccount. This file reads what a
-// name says and builds the passkey batch that writes one; main reads every value it writes from disk
-// (the revision's id, version, hash and lineage; the save's fingerprint) — the renderer only picks
-// which revision or save. Writes go through the gas station like every other market action.
+// revision is `<label>.<root>` (a remix hangs under its parent's name once that has one), and a
+// player's save is `<save>.<cartridge>.<root>`, held by their PasskeyAccount. A cartridge's name is
+// found by its id (nameIndex.ts), so its label is the player's choice the first time it is named.
+// This file reads what a name says and builds the passkey batch that writes one; main reads every
+// value it writes from disk (the revision's id, version, hash and lineage; the save's fingerprint
+// and door) — the renderer only picks which revision or save and a label. Writes go through the gas
+// station like every other market action.
 
+import { doorDescription, doorFromDescription, plateOf } from "@shared/doorCode";
 import { cartridgeLabel } from "@shared/ensNames";
 import type { EnsNameStatus, SaveNameView } from "@shared/market";
 import { err, ok, type Result } from "@shared/result";
-import {
-  type Address,
-  decodeFunctionResult,
-  encodeFunctionData,
-  type Hex,
-  namehash,
-  parseAbiItem,
-} from "viem";
+import { type Address, encodeFunctionData, type Hex, namehash, parseAbiItem } from "viem";
 import { readCartridgeRevision } from "../cartridges/store";
 import { type SaveFingerprint, saveFingerprint } from "../instances/saveHash";
-import { resolverAbi, textProfileAbi, textQuery } from "./ensCalls";
 import { type AccountCall, contentHashBytes, lineageRegistry } from "./lineageCalls";
 import type { MarketClients } from "./market";
+import {
+  CARTRIDGE,
+  cartridgeNameById,
+  holderOf,
+  nameMarket,
+  nameOf,
+  SAVE,
+  texts,
+} from "./nameIndex";
+import { playerNamesOf } from "./players";
 
-const CARTRIDGE = 1;
-const SAVE = 2;
 const abi = lineageRegistry.abi;
-
-interface OnChainName {
-  kind: number;
-  cartridgeId: string;
-}
 
 export interface Dirs {
   cartridgesDir: string;
   instancesDir: string;
 }
 
-async function nameOf(c: MarketClients, node: Hex): Promise<OnChainName> {
-  return (await c.public.readContract({
-    address: c.deployment.registry,
-    abi,
-    functionName: "nameOf",
-    args: [node],
-  })) as OnChainName;
-}
-
-async function texts(c: MarketClients, name: string, keys: string[]): Promise<string[]> {
-  const resolver = (await c.public.readContract({
-    address: c.deployment.registry,
-    abi,
-    functionName: "resolver",
-  })) as Address;
-  return Promise.all(
-    keys.map(async (key) => {
-      const query = textQuery(name, key);
-      try {
-        const data = await c.public.readContract({
-          address: resolver,
-          abi: resolverAbi,
-          functionName: "resolve",
-          args: [query.name, query.data],
-        });
-        return decodeFunctionResult({ abi: textProfileAbi, functionName: "text", data });
-      } catch {
-        return "";
-      }
-    }),
-  );
-}
-
-/** The name a local revision gets: under its remix parent's name when that exists, else top level. */
+/**
+ * The name a local revision has, or would get: the name already registered for its cartridge id,
+ * else `<label>.<parent's name>` for a remix whose parent is named, else `<label>.<root>` — with
+ * `label` the player's pick, or the id's own label.
+ */
 async function cartridgeName(
   c: MarketClients,
   dirs: Dirs,
   cartridgeId: string,
   version: string,
-): Promise<Result<{ name: string; parent: Hex; label: string; hash: string }>> {
+  wanted: string | null = null,
+): Promise<Result<{ name: string; parent: Hex; label: string; hash: string; named: boolean }>> {
   const revision = await readCartridgeRevision(dirs.cartridgesDir, cartridgeId, version);
   if (!revision.ok) return revision;
-  const label = cartridgeLabel(cartridgeId);
+  const hash = revision.value.manifest.contentHash;
+  const existing = await cartridgeNameById(c, cartridgeId);
+  if (existing !== null) {
+    const [label = ""] = existing.name.split(".");
+    return ok({ name: existing.name, parent: existing.parent, label, hash, named: true });
+  }
+  const label = wanted === null ? cartridgeLabel(cartridgeId) : cartridgeLabel(wanted);
   if (label === null) {
     return err(
       "ens-bad-label",
-      `${cartridgeId} has no letters or digits to name.`,
-      "Remix it under an id made of a–z, 0–9 and hyphens.",
+      `${wanted ?? cartridgeId} has no letters or digits to name.`,
+      "Pick a label made of a–z, 0–9 and hyphens.",
     );
   }
   const root = c.deployment.parent;
   const lineage = revision.value.manifest.lineage;
-  const parentLabel =
-    lineage?.kind === "remix" && lineage.parent !== null
-      ? cartridgeLabel(lineage.parent.cartridgeId)
-      : null;
-  if (parentLabel !== null && parentLabel !== label) {
-    const parentName = `${parentLabel}.${root}`;
-    if ((await nameOf(c, namehash(parentName))).kind === CARTRIDGE) {
-      return ok({
-        name: `${label}.${parentName}`,
-        parent: namehash(parentName),
-        label,
-        hash: revision.value.manifest.contentHash,
-      });
-    }
-  }
-  return ok({
-    name: `${label}.${root}`,
-    parent: namehash(root),
-    label,
-    hash: revision.value.manifest.contentHash,
-  });
-}
-
-async function holderOf(c: MarketClients, node: Hex): Promise<Address> {
-  return (await c.public.readContract({
-    address: c.deployment.registry,
-    abi,
-    functionName: "holderOf",
-    args: [node],
-  })) as Address;
+  const parentId =
+    lineage?.kind === "remix" && lineage.parent !== null ? lineage.parent.cartridgeId : null;
+  const parentName = parentId === null ? null : await cartridgeNameById(c, parentId);
+  const under = parentName?.name ?? root;
+  return ok({ name: `${label}.${under}`, parent: namehash(under), label, hash, named: false });
 }
 
 async function cartridgeStatus(
@@ -129,9 +80,10 @@ async function cartridgeStatus(
 ): Promise<EnsNameStatus> {
   const node = namehash(name);
   const onChain = await nameOf(c, node);
-  const blank = { saveHash: null, progress: null };
+  const blank = { saveHash: null, progress: null, door: null };
   if (onChain.kind === 0) {
-    return { name, state: "free", holder: null, mine: false, version: null, ...blank };
+    const market = { token: null, parentName: null, parentLaunched: false };
+    return { name, state: "free", holder: null, mine: false, version: null, market, ...blank };
   }
   const holder = await holderOf(c, node);
   const mine = account !== null && holder.toLowerCase() === account.toLowerCase();
@@ -144,7 +96,8 @@ async function cartridgeStatus(
       : mine
         ? "outdated"
         : "other-version";
-  return { name, state, holder, mine, version: version || null, ...blank };
+  const market = sameCartridge ? await nameMarket(c, name) : null;
+  return { name, state, holder, mine, version: version || null, market, ...blank };
 }
 
 /** What the cartridge revision's ENS name says, for this passkey's account (or nobody). */
@@ -154,14 +107,31 @@ export async function cartridgeNameView(
   cartridgeId: string,
   version: string,
   account: Address | null,
+  label: string | null = null,
 ): Promise<Result<EnsNameStatus>> {
-  const named = await cartridgeName(c, dirs, cartridgeId, version);
+  const named = await cartridgeName(c, dirs, cartridgeId, version, label);
   if (!named.ok) return named;
   return ok(await cartridgeStatus(c, named.value.name, cartridgeId, named.value.hash, account));
 }
 
 function saveLabel(label: string): string | null {
   return cartridgeLabel(label);
+}
+
+/**
+ * A new run's default label: the player's own name (or "run") and this save's id tail, e.g.
+ * `kidney-muhutk0b` — one per run, so two players (or two runs) of a world never collide on a
+ * default like the world's own name, and a CJK save name still gets a readable label.
+ */
+async function defaultSaveLabel(
+  c: MarketClients,
+  instanceId: string,
+  account: Address | null,
+): Promise<string> {
+  const player = account === null ? undefined : (await playerNamesOf(c, [account]))[account];
+  const base = player?.split(".")[0] ?? "run";
+  const tail = instanceId.split("-").pop() ?? instanceId;
+  return saveLabel(`${base.slice(0, 40)}-${tail}`) ?? "my-save";
 }
 
 const saveRecorded = parseAbiItem(
@@ -171,38 +141,37 @@ const saveRecorded = parseAbiItem(
 /**
  * The label this save already has on chain: a save name under the cartridge that records exactly
  * this checkpoint (so a backup restored elsewhere finds its name), else the newest save name this
- * passkey's account holds there (so the player moves their own name forward). Null when neither.
+ * passkey's account holds there that carries this save's door (so the player moves their own
+ * run's name forward, and never another run's). Null when neither.
  */
 async function recordedLabel(
   c: MarketClients,
-  cartridgeNode: Hex,
+  cartridgeName: string,
   saveHash: string,
+  door: string,
   account: Address | null,
 ): Promise<string | null> {
   const logs = await c.public.getLogs({
     address: c.deployment.registry,
     event: saveRecorded,
-    args: { cartridge: cartridgeNode },
+    args: { cartridge: namehash(cartridgeName) },
     fromBlock: c.deployment.fromBlock,
   });
   const wanted = contentHashBytes(saveHash).toLowerCase();
   const newest = [...logs].reverse();
-  const labelOf = async (node: Hex) =>
-    (
-      (await c.public.readContract({
-        address: c.deployment.registry,
-        abi,
-        functionName: "nameOf",
-        args: [node],
-      })) as { label: string }
-    ).label;
+  const labelOf = async (node: Hex) => (await nameOf(c, node)).label;
   const same = newest.find((log) => log.args.saveHash?.toLowerCase() === wanted);
   if (same?.args.node !== undefined) return labelOf(same.args.node);
   if (account === null) return null;
   for (const log of newest.slice(0, 20)) {
     const node = log.args.node;
     if (node === undefined) continue;
-    if ((await holderOf(c, node)).toLowerCase() === account.toLowerCase()) return labelOf(node);
+    if ((await holderOf(c, node)).toLowerCase() !== account.toLowerCase()) continue;
+    // The same run moved on (its hash changed): its name carries this save's door. Another run of
+    // the same world by the same player has another door, so it gets a name of its own.
+    const record = await nameOf(c, node);
+    const [description] = await texts(c, `${record.label}.${cartridgeName}`, ["description"]);
+    if (doorFromDescription(description) === door) return record.label;
   }
   return null;
 }
@@ -215,6 +184,7 @@ async function saveStatus(
 ): Promise<EnsNameStatus> {
   const node = namehash(name);
   const onChain = await nameOf(c, node);
+  const blank = { market: null, door: null };
   if (onChain.kind === 0) {
     return {
       name,
@@ -224,14 +194,16 @@ async function saveStatus(
       version: null,
       saveHash: null,
       progress: null,
+      ...blank,
     };
   }
   const holder = await holderOf(c, node);
   const mine = account !== null && holder.toLowerCase() === account.toLowerCase();
-  const [version, saveHash, progress] = await texts(c, name, [
+  const [version, saveHash, progress, description] = await texts(c, name, [
     "unwritten.version",
     "unwritten.save",
     "unwritten.progress",
+    "description",
   ]);
   // `current` is about the save, not who holds the name: a backup restored on another machine
   // (no passkey there) still reads as the checkpoint the name records.
@@ -251,6 +223,8 @@ async function saveStatus(
     version: version || null,
     saveHash: saveHash || null,
     progress: progress || null,
+    market: null,
+    door: onChain.kind === SAVE ? doorFromDescription(description) : null,
   };
 }
 
@@ -276,15 +250,17 @@ export async function saveNameView(
   );
   const known =
     label === null && cartridge.state !== "free" && cartridge.state !== "taken"
-      ? await recordedLabel(c, namehash(named.value.name), local.value.saveHash, account)
+      ? await recordedLabel(c, named.value.name, local.value.saveHash, plateOf(instanceId), account)
       : null;
-  const chosen = saveLabel(label ?? known ?? local.value.name) ?? "my-save";
+  const chosen =
+    saveLabel(label ?? known ?? "") ?? (await defaultSaveLabel(c, instanceId, account));
   const localView = {
     label: chosen,
     saveHash: local.value.saveHash,
     progress: local.value.progress,
     cartridgeId: pin.cartridgeId,
     version: pin.version,
+    door: plateOf(instanceId),
   };
   // A save hangs under its cartridge's name whoever holds that name, as long as it names this cartridge.
   if (cartridge.state === "free" || cartridge.state === "taken") {
@@ -301,15 +277,16 @@ const onRegistry = (c: MarketClients, functionName: string, args: readonly unkno
     data: encodeFunctionData({ abi, functionName, args } as never),
   }) as AccountCall;
 
-/** register (a free name) or revise (the player's own name, another version). */
+/** register (a free name, under the label the player picked) or revise (theirs, another version). */
 export async function nameCartridgeCalls(
   c: MarketClients,
   dirs: Dirs,
   account: Address,
   cartridgeId: string,
   version: string,
+  wanted: string | null = null,
 ): Promise<Result<AccountCall[]>> {
-  const named = await cartridgeName(c, dirs, cartridgeId, version);
+  const named = await cartridgeName(c, dirs, cartridgeId, version, wanted);
   if (!named.ok) return named;
   const { name, parent, label, hash } = named.value;
   const status = await cartridgeStatus(c, name, cartridgeId, hash, account);
@@ -320,7 +297,9 @@ export async function nameCartridgeCalls(
     return err(
       "ens-name-taken",
       `${name} is held by ${status.holder}${status.state === "taken" ? " for another cartridge" : ""}.`,
-      "Only its holder can point it at a new revision; remix under a different id for a name of your own.",
+      status.state === "taken"
+        ? "Pick another label for this world."
+        : "Only its holder can point it at a new revision; remix it for a name of your own.",
     );
   }
   const contentHash = contentHashBytes(hash);
@@ -333,7 +312,11 @@ export async function nameCartridgeCalls(
   ]);
 }
 
-/** recordSave (a free label) or updateSave (the player's own save name, a later checkpoint). */
+/**
+ * recordSave (a free label) or updateSave (the player's own save name, a later checkpoint), and
+ * `describe` so the name carries this save's door number (a friend can walk in by name) whenever
+ * it does not yet — also on its own, for a name that already records this checkpoint.
+ */
 export async function nameSaveCalls(
   c: MarketClients,
   dirs: Dirs,
@@ -351,7 +334,9 @@ export async function nameSaveCalls(
       "Name the cartridge first (Worlds → Cartridges).",
     );
   }
+  const describe = onRegistry(c, "describe", [namehash(save.name), doorDescription(local.door)]);
   if (save.state === "current") {
+    if (save.mine && save.door !== local.door) return ok([describe]);
     return err("ens-name-current", `${save.name} already records this save.`, "Play on first.");
   }
   if (save.state === "taken") {
@@ -379,5 +364,6 @@ export async function nameSaveCalls(
           },
         ])
       : onRegistry(c, "updateSave", [namehash(save.name), pin.version, pinned, saveHash, progress]),
+    ...(save.door === local.door ? [] : [describe]),
   ]);
 }

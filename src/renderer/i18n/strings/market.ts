@@ -301,4 +301,151 @@ export const MARKET = {
     "zh-TW": "這是 {ref} 的一個存檔：{progress}（進度雜湊 {hash}）。",
     ja: "{ref} のセーブです：{progress}（チェックポイント {hash}）。",
   },
+
+  // ── A cartridge's label, and putting it on the market (CartridgeEns.tsx, LaunchLine.tsx) ────
+  cartridgeLabel: {
+    en: "ENS label for “{world}”",
+    "zh-TW": "「{world}」的 ENS 標籤",
+    ja: "「{world}」の ENS ラベル",
+  },
+  labelPunycode: {
+    en: "This world's name is not in Latin letters, so the label made from its id is hard to read. Pick a readable English label.",
+    "zh-TW": "這個世界的名稱不是拉丁字母，由 id 轉出來的標籤很難讀。請改成好讀的英文標籤。",
+    ja: "この世界の名前はラテン文字ではないため、ID から作ったラベルは読みにくくなります。読みやすい英語のラベルにしてください。",
+  },
+  labelInvalid: {
+    en: "A label needs letters (a–z) or digits (0–9); hyphens may join them.",
+    "zh-TW": "標籤需要英文字母（a–z）或數字（0–9），中間可以用連字號連接。",
+    ja: "ラベルには英字（a–z）か数字（0–9）が必要です。間をハイフンでつなげます。",
+  },
+  labelTaken: {
+    en: "That name belongs to another world. Pick another label.",
+    "zh-TW": "這個名稱已屬於另一個世界，請換一個標籤。",
+    ja: "その名前は別の世界のものです。別のラベルにしてください。",
+  },
+  labelFixed: {
+    en: "The label is fixed once the name is registered; later versions keep the same name.",
+    "zh-TW": "名稱登記後標籤就固定了，之後的版本都沿用同一個名稱。",
+    ja: "名前を登録するとラベルは固定され、以後のバージョンも同じ名前を使います。",
+  },
+  launch: { en: "Put on the market", "zh-TW": "上架到市場", ja: "マーケットに出す" },
+  launchTerms: {
+    en: "{supply} tokens · half ({pool}) seeds the Uniswap pool · auction about {min} min ({blocks} blocks) · floor {floor} USDC per token · graduates after raising {raised} USDC",
+    "zh-TW":
+      "{supply} 枚代幣 · 一半（{pool}）注入 Uniswap 池 · 拍賣約 {min} 分鐘（{blocks} 個區塊）· 底價每枚 {floor} USDC · 募得 {raised} USDC 後轉入交易池",
+    ja: "トークン {supply} 枚 · 半分（{pool}）を Uniswap プールに入れます · オークションは約 {min} 分（{blocks} ブロック）· 最低価格は 1 枚 {floor} USDC · {raised} USDC 集まるとプールに移ります",
+  },
+  launchTermsRemix: {
+    en: "{supply} tokens · half ({pool}) seeds the Uniswap pool · auction about {min} min ({blocks} blocks) · floor {floor} of {parent}'s token per token · graduates after raising {raised} of {parent}'s token",
+    "zh-TW":
+      "{supply} 枚代幣 · 一半（{pool}）注入 Uniswap 池 · 拍賣約 {min} 分鐘（{blocks} 個區塊）· 底價每枚 {floor} 枚 {parent} 代幣 · 募得 {raised} 枚 {parent} 代幣後轉入交易池",
+    ja: "トークン {supply} 枚 · 半分（{pool}）を Uniswap プールに入れます · オークションは約 {min} 分（{blocks} ブロック）· 最低価格は 1 枚 {parent} のトークン {floor} · {parent} のトークンが {raised} 集まるとプールに移ります",
+  },
+  launchOnMarket: {
+    en: "On the market — find it in Worlds → Market.",
+    "zh-TW": "已在市場上——到「世界 → 市場」查看。",
+    ja: "マーケットに出ています。「ワールド → マーケット」で見られます。",
+  },
+  launchParentFirst: {
+    en: "{parent} must go on the market first: a remix trades in its parent's token.",
+    "zh-TW": "{parent} 要先上架：remix 以上一代世界的代幣交易。",
+    ja: "先に {parent} をマーケットに出す必要があります。リミックスは親の世界のトークンで取引されます。",
+  },
+  launchDone: {
+    en: "{name} is on the market; its auction has begun.",
+    "zh-TW": "{name} 已上架，拍賣開始了。",
+    ja: "{name} をマーケットに出しました。オークションが始まりました。",
+  },
+  summaryLaunch: {
+    en: "Put {name} on the market",
+    "zh-TW": "把 {name} 上架到市場",
+    ja: "{name} をマーケットに出す",
+  },
+
+  // ── A save's door number on its name (EnsNames.tsx) ──────────────────────────────────────
+  saveDoorNote: {
+    en: "The name will carry this save's door number ({door}), so friends can walk in by it.",
+    "zh-TW": "名稱會記上這個存檔的門牌（{door}），夥伴可以用名稱走進來。",
+    ja: "名前にはこのセーブの扉番号（{door}）が載り、仲間は名前で入れます。",
+  },
+  saveDoor: {
+    en: "Carries door {door} — friends can walk in by this name.",
+    "zh-TW": "記著門牌 {door}——夥伴可以用這個名稱走進來。",
+    ja: "扉番号 {door} が載っています。仲間はこの名前で入れます。",
+  },
+  saveDoorOther: {
+    en: "Carries door {door}; this save's door is {own}.",
+    "zh-TW": "記著門牌 {door}；這個存檔的門牌是 {own}。",
+    ja: "載っている扉番号は {door}、このセーブの扉番号は {own} です。",
+  },
+  saveDoorNone: {
+    en: "Carries no door yet; this save's door is {own}.",
+    "zh-TW": "還沒有記上門牌；這個存檔的門牌是 {own}。",
+    ja: "まだ扉番号が載っていません。このセーブの扉番号は {own} です。",
+  },
+  saveDoorButton: {
+    en: "Put my door on this name",
+    "zh-TW": "把我的門牌寫上名稱",
+    ja: "扉番号を名前に載せる",
+  },
+  summaryDoor: {
+    en: "Put door {door} on {name}",
+    "zh-TW": "把門牌 {door} 寫上 {name}",
+    ja: "{name} に扉番号 {door} を載せる",
+  },
+  saveCartridgeLabelHint: {
+    en: "Its label comes from the world's id and is hard to read. To pick a readable one, name it in Worlds → Cartridges.",
+    "zh-TW": "它的標籤由世界的 id 轉成，很難讀。想取個好讀的標籤，請到「世界 → 卡帶」登記。",
+    ja: "ラベルは世界の ID から作られるため読みにくくなります。読みやすいラベルにするには「ワールド → カートリッジ」で登録してください。",
+  },
+
+  // ── The player's own name (PlayerName.tsx) ───────────────────────────────────────────────
+  playerNeedsPasskey: {
+    en: "Link your passkey to claim your own player name.",
+    "zh-TW": "連結你的 passkey，就能認領自己的玩家名稱。",
+    ja: "パスキーをつなぐと、自分のプレイヤー名を取得できます。",
+  },
+  playerNoDirectory: {
+    en: "Player names are not set up on this deployment yet.",
+    "zh-TW": "這個部署還沒有開放玩家名稱。",
+    ja: "このデプロイではまだプレイヤー名が用意されていません。",
+  },
+  playerIntro: {
+    en: "Claim your own name under {directory}. Your passkey's account holds it, and other players see it on a continent.",
+    "zh-TW":
+      "在 {directory} 底下認領你自己的名稱。它由你的 passkey 帳戶持有，其他玩家在大陸上會看到它。",
+    ja: "{directory} の下に自分の名前を取得します。パスキーのアカウントが保有し、大陸では他のプレイヤーにこの名前が見えます。",
+  },
+  playerLabel: { en: "Your player name", "zh-TW": "你的玩家名稱", ja: "プレイヤー名" },
+  playerClaim: { en: "Claim with passkey", "zh-TW": "用 passkey 認領", ja: "パスキーで取得" },
+  playerFree: {
+    en: "{name} is free.",
+    "zh-TW": "{name} 還沒有人使用。",
+    ja: "{name} は空いています。",
+  },
+  playerTaken: {
+    en: "{name} is held by {holder}. Pick another.",
+    "zh-TW": "{name} 已由 {holder} 持有，請換一個。",
+    ja: "{name} は {holder} が保有しています。別の名前にしてください。",
+  },
+  playerClaimed: {
+    en: "{name} is yours, and now your player name on this device.",
+    "zh-TW": "{name} 是你的了，也已成為這台裝置上的玩家名稱。",
+    ja: "{name} を取得し、この端末のプレイヤー名にしました。",
+  },
+  playerDeviceName: {
+    en: "This device plays as “{name}”.",
+    "zh-TW": "這台裝置目前以「{name}」遊玩。",
+    ja: "この端末は「{name}」としてプレイしています。",
+  },
+  playerUseName: {
+    en: "Use as my player name",
+    "zh-TW": "設為我的玩家名稱",
+    ja: "プレイヤー名にする",
+  },
+  summaryNamePlayer: {
+    en: "Claim {name} as your player name",
+    "zh-TW": "認領 {name} 作為你的玩家名稱",
+    ja: "{name} をプレイヤー名として取得",
+  },
 } as const satisfies Record<string, Phrase>;

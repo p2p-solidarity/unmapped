@@ -7,8 +7,9 @@ import { useSessionStore } from "@renderer/state";
 import { Button, Text, TextField } from "@renderer/ui";
 import { type MarketView, type MarketWorld, SEPOLIA_TX } from "@shared/market";
 import { type JSX, useState } from "react";
-import { amount, phaseLabel, short } from "./format";
+import { amount, phaseLabel } from "./format";
 import type { MarketState } from "./useMarket";
+import { usePlayerNames } from "./usePlayerNames";
 
 const AMOUNT = /^\d{1,12}(\.\d{1,18})?$/;
 
@@ -41,6 +42,7 @@ export function WorldDetail({
   const canAct = market.config?.relayer === true;
   const bids = view.account?.bids.filter((b) => b.world === world.token) ?? [];
   const owed = Number(world.owedToken) > 0 || Number(world.owedCurrency) > 0;
+  const who = usePlayerNames([world.owner]);
 
   const placeBid = async (): Promise<void> => {
     const landed = await market.signed(
@@ -76,7 +78,7 @@ export function WorldDetail({
     <div className="detail">
       <Text variant="title">{world.name}</Text>
       <span className="g-meta">
-        {`${phaseLabel(t, world.phase)} · $${world.symbol} · ${t("market.owner", { owner: short(world.owner) })}`}
+        {`${phaseLabel(t, world.phase)} · $${world.symbol} · ${t("market.owner", { owner: who(world.owner) })}`}
       </span>
       {world.phase === "pool" && world.poolPrice !== null ? (
         <Text>

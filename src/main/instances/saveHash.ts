@@ -11,8 +11,10 @@ import { hashText } from "@shared/content-hash";
 import type { Result } from "@shared/result";
 import { ok } from "@shared/result";
 import { canonicalJson } from "../cartridges/integrity";
+import { readProgress, readWorldPin } from "../histories/pin";
 import { landEntries } from "./backupLand";
 import { readLand } from "./land";
+import { saveDir } from "./paths";
 import { readInstance } from "./store";
 
 export interface SaveFingerprint {
@@ -38,7 +40,24 @@ export async function saveFingerprint(
   const saveHash = await hashText(
     canonicalJson({ save: state, karma, land: landEntries(land.value) }),
   );
-  const cleared = Object.values(save.land?.episodes ?? {}).filter((e) => e.cleared).length;
+  // A save that plays in a world's history keeps its clears in progress.json, not save.json; the
+  // progress line counts both (the hash above stays what a backup carries of save.json).
+  const clearedIds = new Set(
+    Object.entries(save.land?.episodes ?? {})
+      .filter(([, episode]) => episode.cleared)
+      .map(([id]) => id),
+  );
+  const slot = saveDir(instancesDir, instanceId, meta.activeSaveId);
+  const pin = await readWorldPin(slot);
+  if (pin.ok && pin.value !== null) {
+    const progress = await readProgress(slot, pin.value.worldId);
+    if (progress.ok) {
+      for (const [id, episode] of Object.entries(progress.value.episodes)) {
+        if (episode.cleared) clearedIds.add(id);
+      }
+    }
+  }
+  const cleared = clearedIds.size;
   const chapters = cleared === 1 ? "1 chapter cleared" : `${cleared} chapters cleared`;
   const deeds = karma.length === 1 ? "1 deed" : `${karma.length} deeds`;
   return ok({

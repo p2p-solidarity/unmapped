@@ -16,6 +16,7 @@ import { IDENTITY_ERRORS } from "./errors-identity";
 import { IMAGES_ERRORS } from "./errors-images";
 import { LAND_ERRORS } from "./errors-land";
 import { LAND_HISTORY_ERRORS } from "./errors-landHistory";
+import { MARKET_ERRORS } from "./errors-market";
 import { MODEL_ERRORS } from "./errors-model";
 import { NET_ERRORS } from "./errors-net";
 import { SAVE_ERRORS } from "./errors-save";
@@ -47,4 +48,5 @@ export const ERRORS: Record<string, ErrorText> = {
   ...BROWSER_ERRORS,
   ...TRACE_ERRORS,
   ...BUNDLE_ERRORS,
+  ...MARKET_ERRORS,
 };

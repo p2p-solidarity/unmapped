@@ -1,10 +1,11 @@
 // The door at home (plan.md §7): four dials, each pinned to a place the player has witnessed or to a
 // friend's door number. Turning to a place walks through to it; turning to a number brings this world
-// onto the continent behind that friend's door (plan.md §8). Keepsakes carried home are set on the
-// shelf here. The world's own door (sharing, who may come in, invites, people) is ./WorldDoorSection.
+// onto the continent behind that friend's door (plan.md §8). A friend's save's ENS name works too: it
+// is followed back to its door number (./useFriendDoor), which is what a dial keeps. Keepsakes
+// carried home are set on the shelf here. The world's own door (sharing, who may come in, invites,
+// people) is ./WorldDoorSection.
 
-import { translate, useT } from "@renderer/i18n";
-import { normalizeRoomCode, ROOM_CODE_LENGTH } from "@renderer/net/codes";
+import { errorLine, translate, useT } from "@renderer/i18n";
 import { joinContinentByCode } from "@renderer/net/continentActions";
 import { useEngineStore, useLandStore, useSessionStore, useWorldStore } from "@renderer/state";
 import { Button, Surface, space, Text, TextField, zIndex } from "@renderer/ui";
@@ -12,6 +13,7 @@ import type { DoorSlot } from "@shared/land";
 import { type JSX, useState } from "react";
 import { ContinentSection, continentOk } from "./ContinentSection";
 import { currentDoorArrival } from "./doorArrival";
+import { useFriendDoor } from "./useFriendDoor";
 import { WorldDoorSection } from "./WorldDoorSection";
 import { WorldRecordsSection } from "./WorldRecordsSection";
 
@@ -36,7 +38,7 @@ export function DoorPanel(): JSX.Element | null {
   const chunks = useLandStore((state) => state.chunks);
   const items = useWorldStore((state) => state.inventory.items);
   const [dial, setDial] = useState(0);
-  const [code, setCode] = useState("");
+  const friend = useFriendDoor();
   if (!open || progress === null) return null;
 
   const places = Object.entries(chunks).flatMap(([key, chunk]) => {
@@ -139,33 +141,48 @@ export function DoorPanel(): JSX.Element | null {
         <ContinentSection />
         <div style={{ display: "flex", flexWrap: "wrap", gap: space.sm, alignItems: "flex-end" }}>
           <TextField
-            label={t("land.friendDoorCode")}
-            value={code}
-            maxLength={ROOM_CODE_LENGTH}
+            label={t("land.friendDoorOrName")}
+            value={friend.value}
+            maxLength={friend.maxLength}
             mono
-            onChange={(event) => setCode(normalizeRoomCode(event.target.value))}
+            spellCheck={false}
+            autoCapitalize="none"
+            autoCorrect="off"
+            onChange={friend.onChange}
           />
           <Button
             variant="secondary"
-            disabled={code.length !== ROOM_CODE_LENGTH}
-            onClick={() =>
+            disabled={friend.input === null || friend.resolving !== null}
+            onClick={async () => {
+              const code = await friend.resolve("pin");
+              if (code === null) return;
               useLandStore
                 .getState()
-                .setDoorSlot(dial, { kind: "room", code, label: `Door ${code}` })
-            }
+                .setDoorSlot(dial, { kind: "room", code, label: `Door ${code}` });
+            }}
           >
-            {t("land.pinToDial", { n: dial + 1 })}
+            {friend.resolving === "pin"
+              ? t("continent.resolvingName")
+              : t("land.pinToDial", { n: dial + 1 })}
           </Button>
           <Button
             variant="primary"
-            disabled={code.length !== ROOM_CODE_LENGTH}
-            onClick={() => {
-              if (continentOk(joinContinentByCode(code))) setCode("");
+            disabled={friend.input === null || friend.resolving !== null}
+            onClick={async () => {
+              const code = await friend.resolve("walk");
+              if (code !== null && continentOk(joinContinentByCode(code))) friend.clear();
             }}
           >
-            {t("continent.walkThrough")}
+            {friend.resolving === "walk"
+              ? t("continent.resolvingName")
+              : t("continent.walkThrough")}
           </Button>
         </div>
+        {friend.error === null ? null : (
+          <Text variant="caption" tone="danger">
+            {errorLine(friend.error)}
+          </Text>
+        )}
 
         <Text variant="label" tone="muted">
           {t("land.keepsakes")}

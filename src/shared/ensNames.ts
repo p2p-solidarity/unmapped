@@ -1,6 +1,8 @@
-// A cartridge's ENS name: `<cartridgeId>.<parent>` on Sepolia ENSv2. The name carries only what
-// the app already knows about a published revision — its id, version and sha256 hash — never its
-// content (Rule 13). Whoever reads the name still needs the `.cartridge` file; the hash is what
+// ENS names in the lineage market's tree on Sepolia ENSv2 (src/main/chain/names.ts): a revision is
+// `<cartridge>.<root>` (a remix hangs under its parent's name once that has one), and a save is
+// `<save>.<cartridge>.<root>`. A name carries only what the app already knows about a published
+// revision — its id, version and sha256 hash (plus a save's fingerprint and progress line) — never
+// its content (Rule 13). Whoever reads the name still needs the `.cartridge` file; the hash is what
 // proves the file they have is the one the name points at.
 
 /** Frozen: on-chain text-record keys. Renaming one would orphan every name already written. */
@@ -21,14 +23,8 @@ export const ENS_SAVE_KEYS = {
 export interface EnsLookup {
   pointer: CartridgePointer;
   save: { saveHash: string; progress: string } | null;
-}
-
-/** What the renderer may know about this machine's ENS setup: no key, no RPC URL, no addresses. */
-export interface EnsNamesConfig {
-  /** e.g. `unwritten.eth`; null when UNWRITTEN_ENS_* is not set. */
-  parent: string | null;
-  /** True when a signing key is also set, so this machine can write names. */
-  writable: boolean;
+  /** Saves only: the door number (門牌) in the name's `description` (@shared/doorCode), if any. */
+  door: string | null;
 }
 
 export interface CartridgePointer {
@@ -36,13 +32,6 @@ export interface CartridgePointer {
   version: string;
   contentHash: string;
 }
-
-export interface ClaimNameResult {
-  name: string;
-  txHashes: string[];
-}
-
-export const SEPOLIA_TX_URL = "https://sepolia.etherscan.io/tx/";
 
 /** The label a cartridge id gets: lowercase a–z 0–9 and single hyphens, at most 63 characters. */
 export function cartridgeLabel(cartridgeId: string): string | null {
@@ -53,11 +42,6 @@ export function cartridgeLabel(cartridgeId: string): string | null {
     .slice(0, 63)
     .replace(/^-+|-+$/g, "");
   return label.length >= 1 ? label : null;
-}
-
-export function cartridgeName(cartridgeId: string, parent: string): string | null {
-  const label = cartridgeLabel(cartridgeId);
-  return label === null ? null : `${label}.${parent}`;
 }
 
 /** The three records → a pointer, or null unless all three are present and the hash is well formed. */

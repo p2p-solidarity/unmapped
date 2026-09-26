@@ -1,6 +1,7 @@
 // A cartridge's ENS name in the Cartridges panel. The line is the lineage tree's name for the
-// selected revision (`<cartridge>.<root>`, market/EnsNames.tsx): read live, and named or pointed at
-// this revision with the player's passkey (the gas station pays). `OpenByEnsName` goes the other
+// selected revision (`<label>.<root>`, market/CartridgeEns.tsx): read live, named under a label the
+// player picks or pointed at this revision with the player's passkey (the gas station pays), and
+// put on the market once it is theirs. `OpenByEnsName` goes the other
 // way: a name → the exact revision it points at (and, for a save's name, its checkpoint) → Play if
 // that revision's hash is in the library.
 
@@ -11,7 +12,7 @@ import type { CartridgeManifest } from "@shared/cartridge";
 import type { EnsLookup } from "@shared/ensNames";
 import { errored, idle, type Loadable, loading, ready } from "@shared/result";
 import { useState } from "react";
-import { CartridgeEnsLine } from "../market/EnsNames";
+import { CartridgeEnsLine } from "../market/CartridgeEns";
 
 const ref = (pointer: { cartridgeId: string; version: string }) =>
   `${pointer.cartridgeId}@${pointer.version}`;

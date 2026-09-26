@@ -1,5 +1,5 @@
 // Errors about unlocking saves (passkey, OS keychain, the Data Key), encrypted and plain .seed files,
-// and restoring a seed through an ENS name.
+// and reading cartridge and save ENS names.
 
 import type { ErrorText } from "./errors";
 import { HINT } from "./errors-hints";
@@ -312,7 +312,7 @@ export const IDENTITY_ERRORS: Record<string, ErrorText> = {
     hint: SEED_CORRUPT,
   },
 
-  // ── Restoring a seed through ENS ───────────────────────────────────────────────────────────
+  // ── ENS names ──────────────────────────────────────────────────────────────────────────────
   "ens-invalid-name": {
     message: {
       en: "That is not a valid ENS name.",
@@ -325,77 +325,28 @@ export const IDENTITY_ERRORS: Record<string, ErrorText> = {
       ja: ".eth の名前や ENS に取り込んだ DNS ドメインなど、完全な名前を入力してください。",
     },
   },
-  "ens-not-found": {
-    message: {
-      en: "That name has no address or aether.seed record on this network.",
-      "zh-TW": "這個名稱在這個網路上沒有位址，也沒有 aether.seed 紀錄。",
-      ja: "その名前には、このネットワーク上でアドレスも aether.seed レコードもありません。",
-    },
-    hint: {
-      en: "Check the spelling and the network (Sepolia or mainnet), and that records were set on the name.",
-      "zh-TW": "請檢查拼字與網路（Sepolia 或主網），並確認名稱上已經設定紀錄。",
-      ja: "つづりとネットワーク（Sepolia かメインネットか）、名前にレコードが設定されているかを確認してください。",
-    },
-  },
-  "ens-names-not-configured": {
-    message: {
-      en: "ENS names are not set up on this machine.",
-      "zh-TW": "這台機器還沒設定 ENS 名稱。",
-      ja: "このマシンでは ENS 名が設定されていません。",
-    },
-    hint: {
-      en: "Run bun run ens:setup <label> and put the UNWRITTEN_ENS_* lines it prints in .env.",
-      "zh-TW": "執行 bun run ens:setup <label>，再把它印出的 UNWRITTEN_ENS_* 設定放進 .env。",
-      ja: "bun run ens:setup <label> を実行し、表示された UNWRITTEN_ENS_* の行を .env に入れてください。",
-    },
-  },
-  "ens-names-read-only": {
-    message: {
-      en: "This machine has no signing key for ENS names.",
-      "zh-TW": "這台機器沒有 ENS 名稱的簽署金鑰。",
-      ja: "このマシンには ENS 名の署名鍵がありません。",
-    },
-    hint: {
-      en: "Set UNWRITTEN_PRIVATE_KEY in .env to write names; reading works without it.",
-      "zh-TW": "在 .env 設定 UNWRITTEN_PRIVATE_KEY 才能寫入名稱；不設也能讀取。",
-      ja: "名前を書き込むには .env に UNWRITTEN_PRIVATE_KEY を設定してください。読み取りは不要です。",
-    },
-  },
   "ens-bad-label": {
     message: {
-      en: "This cartridge id cannot be an ENS label.",
-      "zh-TW": "這個卡帶 id 不能當作 ENS 標籤。",
-      ja: "このカートリッジ ID は ENS のラベルにできません。",
+      en: "That can't be an ENS label.",
+      "zh-TW": "這不能當作 ENS 標籤。",
+      ja: "それは ENS のラベルにできません。",
     },
     hint: {
-      en: "Remix the cartridge under an id made of a–z, 0–9 and hyphens.",
-      "zh-TW": "請用只含 a–z、0–9 與連字號的 id 重新混製這個卡帶。",
-      ja: "a–z、0–9、ハイフンだけの ID でリミックスしてください。",
+      en: "Pick a label made of a–z, 0–9 and hyphens.",
+      "zh-TW": "請改用只含 a–z、0–9 與連字號的標籤。",
+      ja: "a–z、0–9、ハイフンだけのラベルを選んでください。",
     },
   },
   "ens-name-taken": {
     message: {
-      en: "That ENS name already belongs to something else.",
-      "zh-TW": "這個 ENS 名稱已經屬於別的東西。",
-      ja: "その ENS 名はすでに別のものに使われています。",
+      en: "That ENS name is already held by someone else.",
+      "zh-TW": "這個 ENS 名稱已經有人持有。",
+      ja: "その ENS 名はすでに他の人が持っています。",
     },
     hint: {
-      en: "Two cartridge ids share this label; remix under a different id.",
-      "zh-TW": "有兩個卡帶 id 對應到同一個標籤；請換一個 id 重新混製。",
-      ja: "2 つのカートリッジ ID が同じラベルになっています。別の ID でリミックスしてください。",
-    },
-  },
-  "ens-write-failed": {
-    message: {
-      en: "Sepolia refused the ENS transaction.",
-      "zh-TW": "Sepolia 拒絕了這筆 ENS 交易。",
-      ja: "Sepolia が ENS のトランザクションを拒否しました。",
-    },
-    hint: {
-      en: "Check the key has Sepolia ETH and that UNWRITTEN_ENS_* came from bun run ens:setup with this key.",
-      "zh-TW":
-        "請確認金鑰有 Sepolia ETH，且 UNWRITTEN_ENS_* 是用同一把金鑰執行 bun run ens:setup 產生的。",
-      ja: "鍵に Sepolia ETH があり、UNWRITTEN_ENS_* が同じ鍵で bun run ens:setup を実行して得たものか確認してください。",
+      en: "Pick another label. Only a name's holder can point it somewhere new.",
+      "zh-TW": "請換一個標籤。只有名稱的持有人能改變它指向的地方。",
+      ja: "別のラベルを選んでください。名前の指す先を変えられるのは持ち主だけです。",
     },
   },
   "ens-unreachable": {
@@ -408,66 +359,6 @@ export const IDENTITY_ERRORS: Record<string, ErrorText> = {
       en: "Check your network connection (or your RPC), then try again.",
       "zh-TW": "請檢查網路連線（或你的 RPC），然後再試一次。",
       ja: "ネットワーク接続（または RPC）を確認してから、もう一度試してください。",
-    },
-  },
-  "seed-fetch-failed": {
-    message: {
-      en: "The seed could not be downloaded.",
-      "zh-TW": "無法下載種子。",
-      ja: "シードをダウンロードできませんでした。",
-    },
-    hint: {
-      en: "Check your network connection and the name's aether.seed link, then try again.",
-      "zh-TW": "請檢查網路連線與這個名稱的 aether.seed 連結，然後再試一次。",
-      ja: "ネットワーク接続と、名前の aether.seed のリンクを確認してから、もう一度試してください。",
-    },
-  },
-  "seed-timeout": {
-    message: {
-      en: "The seed download timed out.",
-      "zh-TW": "種子下載逾時。",
-      ja: "シードのダウンロードがタイムアウトしました。",
-    },
-    hint: {
-      en: "The server is slow or unreachable; try again later.",
-      "zh-TW": "對方伺服器太慢或無法連線，請稍後再試。",
-      ja: "配信元のサーバーが遅いか、接続できません。しばらくしてから試してください。",
-    },
-  },
-  "seed-too-large": {
-    message: {
-      en: "The seed is too large.",
-      "zh-TW": "種子太大了。",
-      ja: "シードが大きすぎます。",
-    },
-    hint: {
-      en: "Seeds are capped at 20 MB.",
-      "zh-TW": "種子的上限是 20 MB。",
-      ja: "シードの上限は 20 MB です。",
-    },
-  },
-  "seed-url-invalid": {
-    message: {
-      en: "The aether.seed record is not a link.",
-      "zh-TW": "aether.seed 紀錄不是連結。",
-      ja: "aether.seed レコードがリンクではありません。",
-    },
-    hint: {
-      en: "Set the name's aether.seed record to an https:// link.",
-      "zh-TW": "請把這個名稱的 aether.seed 紀錄設成 https:// 連結。",
-      ja: "名前の aether.seed レコードを https:// のリンクにしてください。",
-    },
-  },
-  "seed-url-insecure": {
-    message: {
-      en: "The seed link is not secure, so it was not fetched.",
-      "zh-TW": "種子連結不安全，所以沒有下載。",
-      ja: "シードのリンクが安全でないため、取得しませんでした。",
-    },
-    hint: {
-      en: "Only https:// seed links are fetched.",
-      "zh-TW": "只會下載 https:// 的種子連結。",
-      ja: "取得できるのは https:// のシードのリンクだけです。",
     },
   },
 };

@@ -226,6 +226,43 @@ export const NET_ERRORS: Record<string, ErrorText> = {
       ja: "代わりに扉の招待で仲間を迎えてください。大陸はこの端末だけにある世界のためのものです。",
     },
   },
+  "continent-name-not-found": {
+    message: {
+      en: "That name belongs to no save or cartridge.",
+      "zh-TW": "這個名稱不屬於任何存檔或卡帶。",
+      ja: "その名前はどのセーブにもカートリッジにも結びついていません。",
+    },
+    hint: {
+      en: "Check the spelling with your friend: a save's name is its own label followed by its cartridge's name.",
+      "zh-TW": "請和夥伴核對拼字：存檔的名稱是它自己的標籤，後面接著卡帶的名稱。",
+      ja: "仲間とつづりを確かめてください。セーブの名前は、そのセーブのラベルのあとにカートリッジの名前が続きます。",
+    },
+  },
+  "continent-name-not-save": {
+    message: {
+      en: "That name belongs to a cartridge, not a save, so it has no door.",
+      "zh-TW": "這個名稱屬於卡帶，不是存檔，所以沒有門牌。",
+      ja: "その名前はセーブではなくカートリッジのものなので、扉がありません。",
+    },
+    hint: {
+      en: "Ask your friend for their save's name (Worlds → Saves) or their door number.",
+      "zh-TW": "請向夥伴要他們存檔的名稱（世界 → 存檔）或門牌。",
+      ja: "仲間にセーブの名前（ワールド → セーブ）か扉番号を聞いてください。",
+    },
+  },
+  "continent-name-no-door": {
+    message: {
+      en: "That name carries no door number.",
+      "zh-TW": "這個名稱沒有記上門牌。",
+      ja: "その名前には扉番号が載っていません。",
+    },
+    hint: {
+      en: "Its holder records the save again from Worlds → Saves, which adds the door; or ask them for the door number.",
+      "zh-TW":
+        "請名稱的持有者到「世界 → 存檔」再記錄一次存檔，就會加上門牌；也可以直接向對方要門牌。",
+      ja: "名前の持ち主が「ワールド → セーブ」でセーブを記録し直すと扉番号が加わります。扉番号を直接聞くこともできます。",
+    },
+  },
   "world-not-migrated": {
     message: {
       en: "This save has no world history yet.",

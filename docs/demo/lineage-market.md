@@ -16,7 +16,7 @@ creation, witnessing, continent) are in `docs/demo-flow/`.
 | LineageHook / LineageRouter | `0x59FA49D974B4564Eade17EDDC4a3CCf8D819a044` / `0x2201fBDB7f17BD687d8965B9Dc2Ae000689039BE` |
 | PasskeyAccountFactory | `0x7B8b8E17590cC85c315d459feD8fC9384C2c9bE5` |
 | First world | `aether-land.unmapped.eth`: cartridge `aether-land` 1.3.0, `sha256:57f17e0d…e81b`; token `0xA801C5067a0649c640AF21fa2334Cf822bb8dBb6`; auction `0xAB2Df6CA3f3972b22D4980897aD12cd401a56203` ended at block 11,781,522 and graduated; v4 pool open |
-| Other names | `moss-hollow.aether-land.unmapped.eth` (a remix cartridge, not launched); saves `kidney-run.…` and `first-light.aether-land.unmapped.eth` |
+| Other names | `moss-hollow.aether-land.unmapped.eth` (a remix cartridge, not launched); saves `kidney-run.…` and `first-light.aether-land.unmapped.eth`; from milestone-ens-in-game: `misty-harbor.unmapped.eth` (launched from the app; its 100-block auction ended with no bid), `lantern-quay.aether-land.unmapped.eth` (a remix launched from the app, priced in AETHERLAND) and the save `my-save.misty-harbor.unmapped.eth` (door GEC2AA) |
 | Gas station | https://unmapped-relay.gimmychang.workers.dev (Cloudflare Worker); its key `0xB62C…Fd3D` pays |
 | Live web view | https://unmapped-auction.gimmychang.workers.dev (read-only; `bun run web:deploy`) |
 
@@ -38,6 +38,9 @@ creation, witnessing, continent) are in `docs/demo-flow/`.
    - **Trading and names only.** `aether-land` has graduated, so a buy, royalties, naming a cartridge
      and recording a save can be shown at any time.
 6. `bun run lineage:demo status` lists every world with its phase, price, bids and pool.
+7. Player names need the directory once: `bun run lineage:demo players` registers
+   `players.unmapped.eth` (operator key, ~1.04M gas). In-app launches need the station deployed from
+   this build (`bun run relay:deploy`); the older one refuses `launch`.
 
 ## Click path in the app (no wallet, no key)
 
@@ -57,6 +60,15 @@ creation, witnessing, continent) are in `docs/demo-flow/`.
    `<label>.aether-land.unmapped.eth`, held by the player's passkey account, recording only a hash, the
    exact version and a progress line. After playing on, **更新到目前進度**. Export the backup, restore it
    on another machine: that machine finds the name by the save's hash and says it records this save.
+8. **In the game.** Right after **建立並開始玩**, the "你的世界已經發布" panel names the new world (pick a
+   label — a Chinese name's own label is unreadable) and offers **上架到市場**. In Play the player card
+   shows the save's (else the world's) name; clearing a chapter brings a card that records the run or
+   moves its name to the new checkpoint. **Worlds → 卡帶 → a revision you hold → 上架到市場** launches it
+   (a remix only after its parent, priced in the parent's token).
+9. **By name on the continent.** A save's name carries its door number, so a friend types
+   `<save>.<cartridge>.unmapped.eth` in Worlds → 大陸 (or the door at home) instead of the six symbols.
+   **Worlds → 市場 → your name** claims `<you>.players.unmapped.eth` (用 passkey 認領); 設為我的玩家名稱 makes it what
+   others see.
 
 A USB security key can sign inside the app: **在 app 內使用安全金鑰**.
 
@@ -76,6 +88,7 @@ bun run lineage:demo status [world]           # worlds, auctions, pools, royalti
 bun run lineage:demo launch <label> [--parent 0x…] [--blocks 50|100|250] [--floor 1/100] [--required 10]
 bun run lineage:demo seed-bids <world> [--usdc 40,30,20]
 bun run lineage:demo settle <world>           # the same as 結算拍賣, paid by the operator key
+bun run lineage:demo players                  # once: players.unmapped.eth, where player names hang
 bun run relay:key                             # the station's key in .cache/relay/ (prints only its address)
 bun run relay:dev                             # the station on http://localhost:8790
 bun run relay:deploy                          # ship the station to Cloudflare

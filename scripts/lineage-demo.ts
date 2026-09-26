@@ -8,6 +8,8 @@
 //        [--required 10] [--cartridge id --version v --hash sha256:…] [--owner 0x…]
 //   bun run lineage:demo seed-bids <world> [--count 3] [--usdc 40,30,20]  # software passkeys bid
 //   bun run lineage:demo settle <world>                 # after the auction: exit, claim, graduate
+//   bun run lineage:demo players                        # once: the `players.<root>` directory that
+//                                                       # holds players' own names (src/main/chain/players.ts)
 //
 // Seed bidders are software passkeys (scripts/lib/softPasskey.ts) whose keys are kept in
 // .cache/lineage/ so their accounts can act again; the app uses the player's real passkey.
@@ -23,6 +25,7 @@ import {
   http,
   isAddress,
   maxUint256,
+  namehash,
   type PublicClient,
   parseAbiItem,
   parseUnits,
@@ -43,6 +46,7 @@ import {
   stateViewAbi,
   UNISWAP_SEPOLIA,
 } from "../src/main/chain/lineageCalls";
+import { hashText } from "../src/shared/content-hash";
 import { call, dryExec, type Exec, liveExec, read } from "./lib/chainExec";
 import { humanPrice, type Launched, marketDay } from "./lib/marketDay";
 import { accountOf, passkeyExecute } from "./lib/passkeyRelay";
@@ -340,6 +344,34 @@ async function settle(token: Address): Promise<void> {
   await status(token);
 }
 
+/**
+ * `players.<root>`: the directory players' own names hang under (`<label>.players.<root>`, each
+ * recorded by the player's passkey account with recordSave). Held by the operator, who never
+ * launches it; its records say what it is, since the registry has no player kind of its own.
+ */
+async function players(): Promise<void> {
+  const rootNode = (await read(exec, registry, lineageRegistry.abi, "rootNode", [])) as Hex;
+  const name = `players.${parentName}`;
+  const description = `Player names of UNMAPPED: <you>.${name}, held by each player's passkey account.`;
+  await exec.send(
+    call(registry, lineageRegistry.abi, "register", [
+      {
+        parent: rootNode,
+        label: "players",
+        owner: exec.account,
+        cartridgeId: "unmapped-players",
+        version: "1",
+        contentHash: contentHashBytes(await hashText(description)),
+      },
+    ]),
+    `register ${name}`,
+  );
+  await exec.send(
+    call(registry, lineageRegistry.abi, "describe", [namehash(name), description]),
+    `describe ${name}`,
+  );
+}
+
 const target = subject as Address | undefined;
 switch (command) {
   case "status":
@@ -358,7 +390,12 @@ switch (command) {
     if (!target || !isAddress(target)) fail("Usage: bun run lineage:demo settle <world token>");
     await settle(target as Address);
     break;
+  case "players":
+    await players();
+    break;
   default:
-    fail("Commands: status [world] | launch <label> | seed-bids <world> | settle <world>");
+    fail(
+      "Commands: status [world] | launch <label> | seed-bids <world> | settle <world> | players",
+    );
 }
 say(dryRun ? "\n(dry run — nothing was sent)" : `\n(parent ${parentName}; transactions on ${TX})`);

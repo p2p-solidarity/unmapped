@@ -504,7 +504,7 @@ export function unlock(): Promise<Result<UnlockedKey>>;   // PRF/keychain derive
 export function wrapDataKey(wrappingKey, dataKey, identity): Promise<DataKeyWrappingRecord>;
 export function encryptBytes(key: UnlockedKey, bytes: Uint8Array): Promise<Uint8Array>;   // AES-GCM with the unwrapped Data Key, 12-byte IV prefix, versioned header
 export function decryptBytes(key: UnlockedKey, bytes: Uint8Array): Promise<Result<Uint8Array>>;
-export function resolveEnsSeed(name: string, network?: EnsNetwork): Promise<Result<{ network; address: string | null; seedUrl: string | null }>>;   // ENSv2: viem Universal Resolver (never hard-code its address), "sepolia" (ENSv2 preview, default) | "mainnet"; text record "aether.seed"
+export function lookupEnsName(name: string): Promise<Result<EnsLookup | null>>;   // ENSv2 Sepolia, viem Universal Resolver (never hard-code its address): a lineage name's revision, a save's checkpoint and door
 ```
 - Wrapping records are written one at a time (`vault.putWrappingRecord`, upsert by id); nothing
   can replace the whole list. A passkey unlock also enrols this machine's OS keychain as a
@@ -537,32 +537,50 @@ export function witnessOnChain(input, clients?): Promise<Result<{ txHash: string
 // `bun run contracts:deploy` is run by a person — it spends gas.
 ```
 
-### Cartridge and save ENS names (lineage tree; `src/main/chain/names.ts`, `app/market/EnsNames.tsx`)
+### ENS names: worlds, saves, players (lineage tree; `src/main/chain/{names,nameIndex,players,launch}.ts`, `app/market/`)
 ```ts
-window.seed.market.cartridgeName(cartridgeId, version, key | null): Result<EnsNameStatus>   // what a revision's name says
-window.seed.market.saveName(instanceId, label | null, key | null): Result<SaveNameView>     // a save, its cartridge's name, its own name
-MarketAction { kind: "name-cartridge"; cartridgeId; version } | { kind: "name-save"; instanceId; label }   // passkey-signed, station-paid
-export function lookupEnsName(name): Promise<Result<EnsLookup | null>>;   // renderer, Universal Resolver: revision + a save's checkpoint
+window.seed.market.cartridgeName(cartridgeId, version, key | null, label | null): Result<EnsNameStatus>   // + market: { token, parentName, parentLaunched }
+window.seed.market.saveName(instanceId, label | null, key | null): Result<SaveNameView>     // a save, its cartridge's name, its own name + door
+window.seed.market.playerName(key, label | null): Result<PlayerView>;  playerNames(addresses): Result<Record<address, name>>
+MarketAction { kind: "name-cartridge"; cartridgeId; version; label? } | { kind: "name-save"; instanceId; label }
+  | { kind: "launch"; cartridgeId; version } | { kind: "name-player"; label }   // passkey-signed, station-paid
+export function lookupEnsName(name): Promise<Result<EnsLookup | null>>;   // renderer: revision + a save's checkpoint + door
 export function saveFingerprint(instancesDir, instanceId, cartridgesDir?): Result<{ name, pin, saveHash, progress }>   // main/instances/saveHash.ts
 ```
-- Names live in the lineage market's tree under `UNWRITTEN_LINEAGE_PARENT` (`unmapped.eth`), not the
-  `ens:setup` parent: a revision is `<cartridgeLabel(id)>.<root>`, a remix `<label>.<parent's name>` once
-  the parent has one, a save `<label>.<cartridge's name>`, held by the player's PasskeyAccount.
+- One tree under `UNWRITTEN_LINEAGE_PARENT` (`unmapped.eth`): a revision is `<label>.<root>`, a remix
+  `<label>.<parent's name>` once the parent has one, a save `<label>.<cartridge's name>`, a player
+  `<label>.players.<root>`; saves and players are held by the player's PasskeyAccount.
+- A cartridge's name is found by its **cartridge id** (`nameIndex.ts`: NameRegistered logs + `nameOf`,
+  earliest wins), never re-derived from a label. So the first naming may pick the label (a world called
+  霧之森 has a punycode id; the player names it `misty-forest.<root>`); after that it is fixed.
 - Main reads everything it writes from disk (revision id / version / hash / lineage; the save's
-  fingerprint); the renderer only picks which revision or save and the save's label. Content never goes
+  fingerprint and door); the renderer only picks which revision or save and a label. Content never goes
   on chain. Text keys are frozen: `unwritten.cartridge/version/hash`, plus `unwritten.kind`,
   `unwritten.save`, `unwritten.progress` for saves and `unwritten.token/auction` for a launched world.
+  A save's name also carries its door number in the standard `description` (`UNMAPPED save · door
+  ABC234`, `@shared/doorCode`), written with `describe` whenever it differs.
 - A save's fingerprint is sha256 of canonical JSON of what a `.spire-backup` carries (save state
   without `updatedAt`, karma, written land), never ids or paths, so a restored backup hashes the same;
   Worlds → Saves finds an existing save name by that hash (`SaveRecorded` logs), else the newest one
-  this passkey holds. Progress is one English line from real state ("2 chapters cleared · 14 deeds").
+  this passkey holds. Progress is one English line from real state ("2 chapters cleared · 14 deeds";
+  a history-mode save's clears in progress.json count too).
+- **Player names.** The registry has no player kind: the operator registered the directory
+  `players.<root>` once (`bun run lineage:demo players`), and a player's name is a `recordSave` under it
+  whose `unwritten.save` is the sha256 of the passkey's public key. One per account. Worlds → Market
+  shows it in place of `0x…`, "Use as my player name" makes it the name others see on a continent, and
+  every holder/owner line shows player names (`playerNames`).
+- **Launch from the app.** The holder of a current cartridge name puts it on the market
+  (`chain/launch.ts`): `LineageRegistry.launch` with `LAUNCH_TERMS` (`@shared/market`, main picks every
+  parameter); a remix only after its parent. The station pays it alone in its batch under its own caps.
+- **In the game.** The HUD's player card shows the save's (else the world's) ENS name; when a chapter is
+  cleared, a card offers to move the save's name to the new checkpoint (or record it) with one passkey
+  signature. Create's last step offers to name the new world before entering it. A friend's door field
+  takes a door number or a save's ENS name (its door comes from `description`).
 - Worlds → Cartridges shows each revision's name (free / this version / the player's, older / someone
-  else's, other version / another cartridge) and names or repoints it; "Open by ENS name" follows a
-  name back to a revision, and a save's name to its checkpoint.
-- The older `ens:setup` path (`src/main/chain/ensNames.ts`, `claimCartridgeName`, a separate parent and
-  `UNWRITTEN_ENS_*`, signed with the key in main) is no longer in the UI; `bun run ens:setup` still
-  works for a separate parent. `ENSV2_SEPOLIA` (`ensCalls.ts`) is the deployment the Universal Resolver
-  walks today (`ens_v2_sepolia_20260916`); this build's resolver takes DNS-encoded names.
+  else's, other version / another cartridge), names, repoints or launches it; "Open by ENS name" follows
+  a name back to a revision, and a save's name to its checkpoint. `ENSV2_SEPOLIA` (`ensCalls.ts`) is the
+  deployment the Universal Resolver walks today (`ens_v2_sepolia_20260916`); this build's resolver takes
+  DNS-encoded names. The older `ens:setup` parent and the F12 `aether.seed` lookup were removed.
 
 ### Lineage market (`contracts/src/lineage`, `src/main/chain/lineageCalls.ts`, Sepolia; docs/plans/lineage-market.md)
 ```ts
@@ -596,12 +614,13 @@ LineageRouter // buy/sell along pathTo(world) in one unlock
   `@shared/relay`) holds the only key that pays (`RELAYER_KEY` secret; `bun run relay:key` makes it in
   `.cache/relay/`, a person adds it with `wrangler secret put`). One request = one transaction it builds
   itself: `execute` (a passkey batch whose calls may target only MockUSDC, Permit2, the router, a world's
-  token or auction, or the registry's naming functions), `faucet`, `exit`/`claim`/`graduate`,
-  `royalties`. It simulates first, caps gas per kind and the fee (`MAX_FEE_GWEI`), refuses browsers
-  (`Origin`) and rate-limits per client. `bun run relay:dev` runs it locally; `relay:deploy` ships it.
+  token or auction, or the registry's naming functions and `launch` — a launch travels alone, under a
+  7M gas cap and `MAX_LAUNCH_FEE_GWEI`), `faucet`, `exit`/`claim`/`graduate`, `royalties`. It simulates
+  first, caps gas per kind and the fee (`MAX_FEE_GWEI`), refuses browsers (`Origin`) and rate-limits per
+  client. `bun run relay:dev` runs it locally; `relay:deploy` ships it.
 - Electron dev cannot reach Touch ID, so `chain/signBridge.ts` serves a localhost page the system
   browser opens for the one signature (`UNWRITTEN_SIGN_BROWSER=none` only logs the URL, for E2E).
-- `bun run lineage:demo status|launch|seed-bids|settle` are the live operator tools (they still use
+- `bun run lineage:demo status|launch|seed-bids|settle|players` are the live operator tools (they still use
   `UNWRITTEN_PRIVATE_KEY`; the app does not); the read-only web view is `web/lineage-auction`
   (`bun run web:deploy` → Cloudflare), whose Family tree shows the whole name tree.
 
@@ -609,7 +628,7 @@ LineageRouter // buy/sell along pathTo(world) in one unlock
 ```ts
 export function openContinent({ code, worldId, name }): Result<Continent>;   // y-webrtc room per continent; no host
 export function openMyDoor(): Result<string>;  joinContinentByCode(code): Result<string>;  leaveContinent(): void
-export function plateOf(worldId): string;      // a world's stable door number (門牌) = the continent code it opens
+export function plateOf(worldId): string;      // a world's stable door number (門牌) = the continent code it opens (@shared/doorCode)
 export function useContinentSync(continent): void;   // publish own world, read the others into useContinentStore
 // shared: resolveAnchors(claims) (earlier claim keeps a slot), ownerOf (nearest anchor), territoryMap → at(coord): Territory | null
 ```

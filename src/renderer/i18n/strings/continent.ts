@@ -23,6 +23,26 @@ export const CONTINENT = {
   },
   openDoor: { en: "Open my door to friends", "zh-TW": "向夥伴敞開我的門", ja: "仲間に扉を開く" },
   walkThrough: { en: "Walk through", "zh-TW": "穿過這扇門", ja: "くぐる" },
+  resolvingName: {
+    en: "Looking up the name…",
+    "zh-TW": "正在查詢名稱…",
+    ja: "名前を調べています…",
+  },
+  nameReading: {
+    en: "Reading this save's ENS name…",
+    "zh-TW": "正在讀取這個存檔的 ENS 名稱…",
+    ja: "このセーブの ENS 名を読み込んでいます…",
+  },
+  nameCarriesDoor: {
+    en: "Friends can also walk in by name: {name}",
+    "zh-TW": "夥伴也可以用名稱走進來：{name}",
+    ja: "仲間は名前でも入れます：{name}",
+  },
+  nameNeedsDoor: {
+    en: "{name} does not carry this door number yet. Record the save again in Worlds → Saves to put it on the name.",
+    "zh-TW": "{name} 還沒有記上這個門牌。到「世界 → 存檔」再記錄一次存檔，就會把門牌寫上名稱。",
+    ja: "{name} にはまだこの扉番号が載っていません。「ワールド → セーブ」でセーブを記録し直すと、名前に扉番号が載ります。",
+  },
   code: {
     en: "Continent {code} — share this door number with friends.",
     "zh-TW": "大陸 {code} — 把這個門牌分享給夥伴。",

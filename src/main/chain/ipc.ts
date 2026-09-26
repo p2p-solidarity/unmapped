@@ -1,15 +1,13 @@
 // `chain:*` channels. The renderer may ask what is configured, look a revision up and ask this
-// machine to publish or witness a local revision, or to name a local cartridge revision on ENS — it
-// never sees the RPC URL, the key or the ENS contract addresses, and it never supplies the hash
-// that goes on chain: main reads every revision it writes about from disk.
+// machine to publish or witness a local revision — it never sees the RPC URL or the key, and it
+// never supplies the hash that goes on chain: main reads every revision it writes about from disk.
+// ENS names are the lineage market's (`market:*`, marketIpc.ts).
 
 import { LEDGER_NOTE_MAX, LEDGER_URI_MAX, utf8Bytes } from "@shared/chain";
 import { IPC } from "@shared/ipc";
 import { z } from "zod";
-import { readCartridgeRevision } from "../cartridges/store";
 import type { MainContext } from "../context";
 import { handle, handleValue } from "../handle";
-import { claimCartridgeName, ensNamesConfig } from "./ensNames";
 import { ledgerConfig, lookupRevision, publishRevisionOnChain, witnessOnChain } from "./ledger";
 import { readSubject } from "./subjects";
 
@@ -58,20 +56,4 @@ export function registerChainIpc(ctx: MainContext): void {
     if (!subject.ok) return subject;
     return witnessOnChain({ contentHash: subject.value.contentHash, note: input.note });
   });
-  handleValue(IPC.chain.ensConfig, () => ensNamesConfig());
-  handle(
-    IPC.chain.claimName,
-    z.tuple([z.string().min(1).max(80), z.string().min(1).max(128)]),
-    async ([cartridgeId, version]) => {
-      // Only a revision on disk can be named, with the hash its files verified to.
-      const revision = await readCartridgeRevision(ctx.cartridgesDir, cartridgeId, version);
-      if (!revision.ok) return revision;
-      const { manifest } = revision.value;
-      return claimCartridgeName({
-        cartridgeId: manifest.cartridgeId,
-        version: manifest.version,
-        contentHash: manifest.contentHash,
-      });
-    },
-  );
 }

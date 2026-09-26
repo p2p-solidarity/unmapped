@@ -1,6 +1,7 @@
 // Worlds → Market: the lineage market on Sepolia, played with the passkey the app already has.
-// The player's account (address, test USDC, holdings), every launched world with its auction or
-// pool, and the chosen world's actions (WorldDetail). No wallet: the passkey signs, main relays.
+// The player's account (their own ENS name and address, test USDC, holdings), every launched world
+// with its auction or pool, and the chosen world's actions (WorldDetail). No wallet: the passkey
+// signs, main relays.
 
 import { useT } from "@renderer/i18n";
 import { Button, StatePanel, Text } from "@renderer/ui";
@@ -9,7 +10,9 @@ import { type JSX, useRef, useState } from "react";
 import { AUTOFOCUS, useArrowFocus } from "../library/focus";
 import type { SectionProps } from "../library/sections";
 import { useKeys } from "../shell/useKeys";
-import { amount, phaseLabel, short } from "./format";
+import { EnrolPasskey } from "./EnrolPasskey";
+import { amount, phaseLabel } from "./format";
+import { PlayerName } from "./PlayerName";
 import { type MarketState, useMarket } from "./useMarket";
 import { WorldDetail } from "./WorldDetail";
 
@@ -27,25 +30,7 @@ function Account({ market, view }: { market: MarketState; view: MarketView }): J
         <Text variant="label" tone="muted">
           {t("market.accountHeading")}
         </Text>
-        <Text variant="caption" tone="dim">
-          {t("market.useBrowserNote")}
-        </Text>
-        <div className="row-actions">
-          <Button
-            className={AUTOFOCUS}
-            variant="primary"
-            disabled={busy}
-            onClick={() => void market.enrol("browser")}
-          >
-            {market.busy === "browser" ? t("market.waitingBrowser") : t("market.useBrowserPasskey")}
-          </Button>
-          <Button variant="ghost" disabled={busy} onClick={() => void market.enrol("app")}>
-            {market.busy === "passkey" ? t("market.signing") : t("market.useAppPasskey")}
-          </Button>
-        </div>
-        <Text variant="caption" tone="dim">
-          {t("market.usePasskeyNote")}
-        </Text>
+        <EnrolPasskey signer={market} autofocus />
       </div>
     );
   }
@@ -55,10 +40,7 @@ function Account({ market, view }: { market: MarketState; view: MarketView }): J
       <Text variant="label" tone="muted">
         {t("market.accountHeading")}
       </Text>
-      <span className="g-meta">
-        {t("market.address", { address: short(account.address) })}
-        {account.deployed ? "" : ` · ${t("market.notDeployed")}`}
-      </span>
+      <PlayerName signer={market} deployed={account.deployed} />
       <Text variant="title">{t("market.usdc", { amount: amount(account.usdc) })}</Text>
       {account.holdings.length === 0 ? null : (
         <span className="g-meta">

@@ -1,11 +1,13 @@
 // Play: the HUD, dock, player card, turn panel, toasts, tweaks, places and floors.
 // Key hints keep the key names (WASD, Shift, E…) and translate only the verbs.
 
+import { HUD_ENS } from "./hud-ens";
 import { HUD_PANELS } from "./hud-panels";
 import type { Phrase } from "./phrase";
 
 export const HUD = {
   ...HUD_PANELS,
+  ...HUD_ENS,
 
   // ── Key hints ──────────────────────────────────────────────────────────────────────────────
   controlsLandArmed: {

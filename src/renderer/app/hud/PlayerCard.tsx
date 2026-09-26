@@ -21,6 +21,7 @@ import { formatSeedCode } from "@shared/seedCode";
 import { nextEpisode, STORY_CAP, storyEpisodes } from "@shared/story";
 import type { JSX } from "react";
 import { chapterParts } from "../land/chapters";
+import { EnsChip } from "./EnsChip";
 import { LandStatus } from "./LandStatus";
 import type { HudSummary } from "./summary";
 
@@ -148,11 +149,20 @@ export function PlayerCard({ summary }: { summary: HudSummary }): JSX.Element {
       }}
     >
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 3 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
           <Text variant="label" tone="accent" style={{ fontWeight: font.weight.bold }}>
             {summary.worldName ?? t("hud.noWorldLoaded")}
           </Text>
-          {/* Open land has no tower and no floors: where you are is the LAND readout below. */}
+          {/* Open land has no tower and no floors (where you are is the LAND readout below), so
+              the badge's slot names the run on ENS instead (kept mounted so a place keeps it). */}
+          <EnsChip shown={chunk !== null} />
           {chunk !== null ? null : (
             <div
               style={{

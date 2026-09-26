@@ -179,6 +179,11 @@ export const LAND = {
     ja: "扉 {code} から訪問中です。",
   },
   friendDoorCode: { en: "a friend's door code", "zh-TW": "夥伴的門牌代碼", ja: "仲間の扉コード" },
+  friendDoorOrName: {
+    en: "Friend's door number or ENS name",
+    "zh-TW": "夥伴的門牌或 ENS 名稱",
+    ja: "仲間の扉番号または ENS 名",
+  },
   pinToDial: { en: "Pin to dial {n}", "zh-TW": "設定到轉盤 {n}", ja: "ダイヤル {n} に登録" },
   doorOf: { en: "Door {code}", "zh-TW": "門 {code}", ja: "扉 {code}" },
   keepsakes: { en: "Keepsakes you carry", "zh-TW": "你攜帶的紀念品", ja: "持っている記念品" },

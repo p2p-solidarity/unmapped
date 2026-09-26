@@ -6,7 +6,14 @@ import { IPC } from "@shared/ipc";
 import { z } from "zod";
 import type { MainContext } from "../context";
 import { handle, handleValue } from "../handle";
-import { cartridgeName, marketConfig, marketView, saveName } from "./market";
+import {
+  cartridgeName,
+  marketConfig,
+  marketView,
+  playerName,
+  playerNames,
+  saveName,
+} from "./market";
 import { faucet, payRoyalties, prepareAction, settleWorld, submitAction } from "./marketRelay";
 import { linkInBrowser, signInBrowser } from "./signBridge";
 
@@ -18,13 +25,18 @@ const key = z.object({ qx: hex32, qy: hex32 }).strict();
 const cartridgeId = z.string().min(1).max(80);
 const version = z.string().min(1).max(40);
 const instanceId = z.string().regex(/^[a-z0-9][a-z0-9-]{0,95}$/);
-const saveLabel = z.string().regex(/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/);
+/** One DNS label as LineageRegistry accepts it: a–z, 0–9, inner hyphens, ≤ 63 bytes. */
+const label = z.string().regex(/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/);
 
 const action = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("bid"), world: address, amount }).strict(),
   z.object({ kind: z.literal("buy"), world: address, usdc: amount }).strict(),
-  z.object({ kind: z.literal("name-cartridge"), cartridgeId, version }).strict(),
-  z.object({ kind: z.literal("name-save"), instanceId, label: saveLabel }).strict(),
+  z
+    .object({ kind: z.literal("name-cartridge"), cartridgeId, version, label: label.optional() })
+    .strict(),
+  z.object({ kind: z.literal("name-save"), instanceId, label }).strict(),
+  z.object({ kind: z.literal("launch"), cartridgeId, version }).strict(),
+  z.object({ kind: z.literal("name-player"), label }).strict(),
 ]);
 
 const submit = z
@@ -51,13 +63,20 @@ export function registerMarketIpc(ctx: MainContext): void {
   handle(IPC.market.view, z.tuple([key.nullable()]), ([k]) => marketView(k));
   handle(IPC.market.prepare, z.tuple([key, action]), ([k, a]) => prepareAction(k, a, dirs));
   // ENS names for cartridges and saves (names.ts): what a name says for this passkey (or nobody).
-  handle(IPC.market.cartridgeName, z.tuple([cartridgeId, version, key.nullable()]), ([id, v, k]) =>
-    cartridgeName(id, v, k, dirs),
+  handle(
+    IPC.market.cartridgeName,
+    z.tuple([cartridgeId, version, key.nullable(), label.nullable()]),
+    ([id, v, k, l]) => cartridgeName(id, v, k, l, dirs),
   );
   handle(
     IPC.market.saveName,
-    z.tuple([instanceId, saveLabel.nullable(), key.nullable()]),
-    ([id, label, k]) => saveName(id, label, k, dirs),
+    z.tuple([instanceId, label.nullable(), key.nullable()]),
+    ([id, l, k]) => saveName(id, l, k, dirs),
+  );
+  // The player's own name (players.ts), and the player names other accounts hold.
+  handle(IPC.market.playerName, z.tuple([key, label.nullable()]), ([k, l]) => playerName(k, l));
+  handle(IPC.market.playerNames, z.tuple([z.array(address).max(64)]), ([list]) =>
+    playerNames(list),
   );
   handle(IPC.market.submit, z.tuple([submit]), ([input]) => submitAction(input));
   handle(IPC.market.faucet, z.tuple([key]), ([k]) => faucet(k));

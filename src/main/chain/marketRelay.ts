@@ -17,6 +17,7 @@ import type { RelayRequest } from "@shared/relay";
 import { err, ok, type Result, toError } from "@shared/result";
 import { type Address, encodeFunctionData, type Hex, parseUnits } from "viem";
 import { sepolia } from "viem/chains";
+import { launchCalls } from "./launch";
 import {
   type AccountCall,
   ccaAbi,
@@ -42,7 +43,9 @@ import {
   marketClients,
   USDC,
 } from "./market";
+import { forgetNames } from "./nameIndex";
 import { type Dirs, nameCartridgeCalls, nameSaveCalls } from "./names";
+import { forgetPlayers, namePlayerCalls } from "./players";
 import { relayed } from "./relayClient";
 
 const PENDING_MS = 5 * 60_000;
@@ -209,14 +212,26 @@ async function buyCalls(
 async function callsFor(
   c: MarketClients,
   dirs: Dirs,
+  key: MarketKey,
   account: Address,
   action: MarketAction,
 ): Promise<Result<AccountCall[]>> {
   switch (action.kind) {
     case "name-cartridge":
-      return nameCartridgeCalls(c, dirs, account, action.cartridgeId, action.version);
+      return nameCartridgeCalls(
+        c,
+        dirs,
+        account,
+        action.cartridgeId,
+        action.version,
+        action.label ?? null,
+      );
     case "name-save":
       return nameSaveCalls(c, dirs, account, action.instanceId, action.label);
+    case "launch":
+      return launchCalls(c, dirs, account, action.cartridgeId, action.version);
+    case "name-player":
+      return namePlayerCalls(c, account, key, action.label);
     case "bid":
     case "buy": {
       const world = await findWorld(c, action.world);
@@ -239,7 +254,7 @@ export async function prepareAction(
   const c = clients.value;
   try {
     const account = await accountAddress(c, key);
-    const calls = await callsFor(c, dirs, account, action);
+    const calls = await callsFor(c, dirs, key, account, action);
     if (!calls.ok) return calls;
     const code = await c.public.getCode({ address: account });
     const nonce =
@@ -291,6 +306,9 @@ export async function submitAction(
     deadline: entry.deadline.toString(),
     auth: input.auth,
   });
+  // Names this batch wrote (or the player's) must read fresh on the next view.
+  forgetNames();
+  forgetPlayers();
   return sent.ok ? ok({ txHashes: [sent.value] }) : sent;
 }
 
