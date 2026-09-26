@@ -1,74 +1,89 @@
-// Unlock and keys, encrypted seeds, and friends' rooms.
+// Settings → Your passkey, unlocking encrypted seeds (F12 → World), and friends' rooms.
 
 import type { Phrase } from "./phrase";
 
 export const IDENTITY = {
-  // ── Unlock ─────────────────────────────────────────────────────────────────────────────────
-  passkeyCaption: {
-    en: "Passkey PRF: when this runtime supports WebAuthn PRF, the key is derived from the passkey itself.",
-    "zh-TW": "通行密鑰 PRF：若此執行環境支援 WebAuthn PRF，金鑰會直接由通行密鑰衍生。",
-    ja: "パスキー PRF：この実行環境が WebAuthn PRF に対応していれば、鍵はパスキー自体から導出されます。",
+  // ── Settings → Your passkey (app/title/PasskeyPanel.tsx, SystemPanel.tsx) ─────────────────
+  passkeyHeading: { en: "Your passkey", "zh-TW": "你的 passkey", ja: "あなたのパスキー" },
+  passkeyWhat: {
+    en: "One passkey is you: naming your worlds and confirming on the market both use it.",
+    "zh-TW": "一把 passkey 就是你：幫世界取名字、在市場上確認，都用它。",
+    ja: "パスキーひとつがあなたです。世界に名前を付けるのも、マーケットでの確認も、これを使います。",
   },
-  keychainCaption: {
-    en: "OS keychain: the key is stored by this operating system and never leaves this machine.",
-    "zh-TW": "系統鑰匙圈：金鑰由作業系統保管，絕不會離開這台電腦。",
-    ja: "OS キーチェーン：鍵はこの OS が保管し、このマシンの外には出ません。",
+  passkeyNone: { en: "Not set up yet", "zh-TW": "還沒設定", ja: "まだ設定していません" },
+  passkeySet: { en: "Set up ✓", "zh-TW": "已設定 ✓", ja: "設定済み ✓" },
+  settingsAdvanced: { en: "Advanced settings", "zh-TW": "進階設定", ja: "詳細設定" },
+
+  // ── Unlocking encrypted seeds (F12 → World: identity/UnlockPanel.tsx) ──────────────────────
+  unlockNeeded: {
+    en: "Unlock first to export or import an encrypted seed.",
+    "zh-TW": "要匯出或匯入加密種子，請先解鎖。",
+    ja: "暗号化シードを書き出す・読み込むには、先にロックを解除してください。",
   },
-  unlocking: { en: "Unlocking", "zh-TW": "解鎖中", ja: "ロック解除中" },
-  waitingAuthenticator: {
-    en: "Waiting for the authenticator…",
-    "zh-TW": "正在等待驗證器…",
-    ja: "認証器を待っています…",
+  unlockNote: {
+    en: "With your passkey, the seed opens wherever your passkey works. With the OS keychain, it opens only on this computer.",
+    "zh-TW":
+      "用 passkey 解鎖，種子在你的 passkey 能用的地方都打得開；用系統鑰匙圈，就只能在這台電腦上打開。",
+    ja: "パスキーなら、パスキーが使える所ならどこでも開けます。OS キーチェーンなら、このコンピューターでしか開けません。",
   },
-  unlockFailed: { en: "Unlock failed", "zh-TW": "解鎖失敗", ja: "ロック解除に失敗しました" },
+  unlocking: { en: "Unlocking…", "zh-TW": "解鎖中…", ja: "ロック解除中…" },
+  unlockPasskey: {
+    en: "Unlock with my passkey",
+    "zh-TW": "用我的 passkey 解鎖",
+    ja: "パスキーでロック解除",
+  },
+  retryPasskey: {
+    en: "Try my passkey again",
+    "zh-TW": "再用 passkey 試一次",
+    ja: "もう一度パスキーで試す",
+  },
   useKeychain: {
-    en: "Use OS keychain instead",
+    en: "Use the OS keychain instead",
     "zh-TW": "改用系統鑰匙圈",
     ja: "OS キーチェーンを使う",
   },
-  retryPasskey: {
-    en: "Try the passkey again",
-    "zh-TW": "再試一次通行密鑰",
-    ja: "パスキーで再試行",
+  unlockedPasskey: {
+    en: "Unlocked with your passkey: encrypted seeds open wherever your passkey works.",
+    "zh-TW": "已用 passkey 解鎖：加密種子在你的 passkey 能用的地方都打得開。",
+    ja: "パスキーでロックを解除しました。暗号化シードはパスキーが使える所ならどこでも開けます。",
   },
-  unlocked: { en: "Saves unlocked", "zh-TW": "存檔已解鎖", ja: "セーブのロックを解除しました" },
-  methodPrf: {
-    en: "Passkey (WebAuthn PRF)",
-    "zh-TW": "通行密鑰（WebAuthn PRF）",
-    ja: "パスキー（WebAuthn PRF）",
+  unlockedKeychain: {
+    en: "Unlocked with the OS keychain: encrypted seeds open only on this computer.",
+    "zh-TW": "已用系統鑰匙圈解鎖：加密種子只能在這台電腦上打開。",
+    ja: "OS キーチェーンでロックを解除しました。暗号化シードはこのコンピューターでしか開けません。",
   },
-  methodKeychain: { en: "OS keychain", "zh-TW": "系統鑰匙圈", ja: "OS キーチェーン" },
-  credential: { en: "credential {id}", "zh-TW": "憑證 {id}", ja: "認証情報 {id}" },
+  addPasskey: {
+    en: "Let my passkey unlock it too",
+    "zh-TW": "也讓我的 passkey 能解鎖",
+    ja: "パスキーでも開けるようにする",
+  },
   waitingPasskey: {
-    en: "Waiting for passkey…",
-    "zh-TW": "正在等待通行密鑰…",
-    ja: "パスキーを待っています…",
+    en: "Confirm with your passkey…",
+    "zh-TW": "請用 passkey 確認…",
+    ja: "パスキーで確認してください…",
   },
-  addPasskey: { en: "Add another passkey", "zh-TW": "新增另一把通行密鑰", ja: "パスキーを追加" },
-  addedCredential: {
-    en: "Added credential {id}",
-    "zh-TW": "已新增憑證 {id}",
-    ja: "認証情報 {id} を追加しました",
-  },
-  continue: { en: "Continue", "zh-TW": "繼續", ja: "続ける" },
-  unlockTitle: { en: "Unlock your saves", "zh-TW": "解鎖你的存檔", ja: "セーブのロックを解除" },
-  unlockPasskey: {
-    en: "Unlock with passkey",
-    "zh-TW": "用通行密鑰解鎖",
-    ja: "パスキーでロック解除",
+  passkeyLinked: {
+    en: "Done: your passkey unlocks it too.",
+    "zh-TW": "好了，你的 passkey 也能解鎖了。",
+    ja: "完了しました。パスキーでも開けます。",
   },
   recoveryFailed: {
-    en: "Saves unlocked, but keychain recovery was not added: {reason}",
-    "zh-TW": "存檔已解鎖，但未能加入鑰匙圈復原方式：{reason}",
-    ja: "セーブのロックは解除しましたが、キーチェーンによる復元を追加できませんでした：{reason}",
+    en: "Unlocked, but the OS keychain was not added as a way back in: {reason}",
+    "zh-TW": "已解鎖，但沒能把系統鑰匙圈加為備用解鎖方式：{reason}",
+    ja: "ロックは解除しましたが、OS キーチェーンを予備の解除方法に追加できませんでした：{reason}",
   },
   recoveryAdded: {
-    en: "Keychain recovery added: saves on this machine also unlock through the OS keychain.",
-    "zh-TW": "已加入鑰匙圈復原：這台電腦上的存檔也能透過系統鑰匙圈解鎖。",
-    ja: "キーチェーンによる復元を追加しました。このマシンのセーブは OS キーチェーンでもロック解除できます。",
+    en: "The OS keychain was added as a way back in: on this computer it can unlock too.",
+    "zh-TW": "已把系統鑰匙圈加為備用解鎖方式：在這台電腦上它也能解鎖。",
+    ja: "OS キーチェーンを予備の解除方法に追加しました。このコンピューターではこれでも開けます。",
   },
 
   // ── Encrypted seeds ────────────────────────────────────────────────────────────────────────
+  seedHeading: {
+    en: "Encrypted seed (.seed.enc)",
+    "zh-TW": "加密種子（.seed.enc）",
+    ja: "暗号化シード（.seed.enc）",
+  },
   exportSeedDialog: {
     en: "Export encrypted seed",
     "zh-TW": "匯出加密種子",
@@ -86,9 +101,9 @@ export const IDENTITY = {
   statusUnreachable: { en: "unreachable", "zh-TW": "無法連線", ja: "接続不可" },
   statusConnecting: { en: "connecting…", "zh-TW": "連線中…", ja: "接続中…" },
   waitingPeer: {
-    en: "Waiting for a player with the same cartridge revision.",
-    "zh-TW": "正在等待持有相同卡帶版本的玩家。",
-    ja: "同じカートリッジの版を持つプレイヤーを待っています。",
+    en: "Waiting for a friend on the same version of this world.",
+    "zh-TW": "正在等玩同一個世界版本的朋友。",
+    ja: "同じバージョンの世界にいる友だちを待っています。",
   },
   peerLine: {
     en: "{name} — scene {floor}",
@@ -96,8 +111,8 @@ export const IDENTITY = {
     ja: "{name} — シーン {floor}",
   },
   codeCopied: {
-    en: "Room code copied",
-    "zh-TW": "已複製加入代碼",
+    en: "Join code copied",
+    "zh-TW": "已複製加入碼",
     ja: "参加コードをコピーしました",
   },
   copyFailed: {
@@ -105,32 +120,40 @@ export const IDENTITY = {
     "zh-TW": "無法複製：{reason}",
     ja: "コピーできませんでした：{reason}",
   },
-  roomCode: { en: "room code", "zh-TW": "加入代碼", ja: "参加コード" },
-  roleHost: { en: "host", "zh-TW": "房主", ja: "ホスト" },
+  roomCode: { en: "join code", "zh-TW": "加入碼", ja: "参加コード" },
+  roleHost: { en: "host", "zh-TW": "主持人", ja: "ホスト" },
   roleJoined: { en: "joined", "zh-TW": "已加入", ja: "参加中" },
-  copyCode: { en: "Copy code", "zh-TW": "複製代碼", ja: "コードをコピー" },
+  copyCode: { en: "Copy code", "zh-TW": "複製加入碼", ja: "コードをコピー" },
   players: { en: "players", "zh-TW": "玩家", ja: "プレイヤー" },
   chooseTitle: {
-    en: "Choose a game, then join",
-    "zh-TW": "選擇遊戲後加入",
-    ja: "ゲームを選んで参加",
+    en: "Choose a world, then join",
+    "zh-TW": "選一個世界再加入",
+    ja: "ワールドを選んで参加",
   },
   chooseNote: {
-    en: "The room opens only after the local cartridge and runtime hashes are verified.",
-    "zh-TW": "本機卡帶與執行環境的雜湊值驗證通過後，房間才會開啟。",
-    ja: "ローカルのカートリッジとランタイムのハッシュを検証してから、ルームが開きます。",
+    en: "It starts once this computer has checked the world's version.",
+    "zh-TW": "這台電腦確認過世界的版本後才會開始。",
+    ja: "このコンピューターで世界のバージョンを確認してから始まります。",
   },
-  loadingGames: { en: "Loading saved games…", "zh-TW": "正在載入存檔…", ja: "セーブを読み込み中…" },
-  savedGame: { en: "saved game", "zh-TW": "存檔", ja: "セーブ" },
+  loadingGames: {
+    en: "Loading your worlds…",
+    "zh-TW": "正在載入你的世界…",
+    ja: "ワールドを読み込み中…",
+  },
+  savedGame: { en: "world", "zh-TW": "世界", ja: "ワールド" },
   noInstances: {
-    en: "Create an instance from Cartridges first.",
-    "zh-TW": "請先從卡帶建立遊玩進度。",
-    ja: "先にカートリッジからプレイを作成してください。",
+    en: "Start a world from Worlds → My worlds first.",
+    "zh-TW": "請先到「世界 → 我的世界」開始一個世界。",
+    ja: "先に「ワールド → マイワールド」でワールドを始めてください。",
   },
   playerProfile: { en: "player profile", "zh-TW": "玩家檔案", ja: "プレイヤープロフィール" },
   displayName: { en: "display name", "zh-TW": "顯示名稱", ja: "表示名" },
-  hostGame: { en: "Host this game", "zh-TW": "主持這場遊戲", ja: "このゲームをホスト" },
-  orJoin: { en: "or join with a code", "zh-TW": "或用加入代碼加入", ja: "または参加コードで参加" },
+  hostGame: { en: "Invite friends", "zh-TW": "邀請朋友", ja: "友だちを招待" },
+  orJoin: {
+    en: "or join with a join code",
+    "zh-TW": "或用加入碼加入",
+    ja: "または参加コードで参加",
+  },
   join: { en: "Join", "zh-TW": "加入", ja: "参加" },
   noteNotKept: {
     en: "A visitor's note was not kept: {reason}",

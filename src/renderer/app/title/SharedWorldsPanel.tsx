@@ -1,4 +1,4 @@
-// Settings → Shared worlds (rev 6 phase 3, WP8): the world services this device uses (a per-device
+// Settings → Advanced settings → Shared worlds (rev 6 phase 3, WP8): the world services this device uses (a per-device
 // preference, ./net/worldServices), a real test of each from main (`/v1/health` + the WebSocket
 // challenge), save and clear. The door offers these when its owner shares a world; a world already
 // shared keeps the service it was shared on.

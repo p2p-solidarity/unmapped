@@ -1,4 +1,4 @@
-// Settings → Account (rev 6 phase 4, D1): this device's account on the generation gateway. Signed
+// Settings → Advanced settings → Account (rev 6 phase 4, D1): this device's account on the generation gateway. Signed
 // out: sign in with the device key, or join an existing account with a pairing code shown beside
 // this device's key and fingerprint (main polls for the approval by itself). Signed in: the
 // allowance as a share plus the gateway's credits and this computer's own tokens and calls (never

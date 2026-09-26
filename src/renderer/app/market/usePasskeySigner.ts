@@ -1,14 +1,20 @@
-// Signing with the player's passkey, for anything on chain: market actions and ENS names. Every
+// Signing with the player's one passkey, for anything on chain: market actions and ENS names. Every
 // action goes prepare (main builds the batch) → sign (the passkey, one prompt; in the system browser
 // for Touch ID) → submit (the gas station pays). The renderer never sees a key or an RPC — only the
 // digest to sign and what the browser page should say. `after` runs once something landed.
+//
+// Linking picks its own way (`autoEnrolPath`): this window cannot show Touch ID, so the system
+// browser is the default; a device that already made a passkey in this window (F12's unlock) links
+// that same one here, so the player never ends up with two.
 
 import { errorLine } from "@renderer/i18n";
 import {
   type MarketPasskey,
   marketPasskey,
+  prfAvailability,
   rememberMarketPasskey,
   signMarketChallenge,
+  storedCredentialId,
   storedMarketPasskey,
 } from "@renderer/identity";
 import { useSessionStore } from "@renderer/state";
@@ -17,6 +23,15 @@ import type { Result } from "@shared/result";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export type MarketBusy = null | "passkey" | "signing" | "sending" | "browser";
+export type EnrolPath = "browser" | "app";
+
+/**
+ * How this device links the player's passkey: in this window when it already holds one made here
+ * (reusing it), else through the system browser (Touch ID).
+ */
+export function autoEnrolPath(): EnrolPath {
+  return prfAvailability() === null && storedCredentialId() !== null ? "app" : "browser";
+}
 
 export interface PasskeySigner {
   config: MarketConfig | null;
@@ -24,7 +39,7 @@ export interface PasskeySigner {
   busy: MarketBusy;
   lastTx: string | null;
   /** Links the passkey: in the system browser (Touch ID) or in this window (a security key). */
-  enrol(via: "browser" | "app"): Promise<MarketPasskey | null>;
+  enrol(via: EnrolPath): Promise<MarketPasskey | null>;
   /** A passkey-signed action (`summary` is what the browser page shows); true once on chain. */
   signed(action: MarketAction, summary: string): Promise<boolean>;
   /** An action anyone may take, carried by the gas station without a signature. */
@@ -50,7 +65,7 @@ export function usePasskeySigner(after?: () => Promise<void> | void): PasskeySig
   }, []);
 
   const enrol = useCallback(
-    async (via: "browser" | "app"): Promise<MarketPasskey | null> => {
+    async (via: EnrolPath): Promise<MarketPasskey | null> => {
       setBusy(via === "browser" ? "browser" : "passkey");
       const result =
         via === "browser"
@@ -76,7 +91,7 @@ export function usePasskeySigner(after?: () => Promise<void> | void): PasskeySig
 
   const signed = useCallback(
     async (action: MarketAction, summary: string): Promise<boolean> => {
-      const key = passkey ?? (await enrol("browser"));
+      const key = passkey ?? (await enrol(autoEnrolPath()));
       if (key === null) return false;
       setBusy("sending");
       const prepared = await window.seed.market.prepare(key.key, action);

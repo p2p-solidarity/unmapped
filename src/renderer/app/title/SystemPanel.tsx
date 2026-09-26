@@ -1,9 +1,9 @@
-// Settings (title → Settings, a dialog over the title): real readings of this machine (build,
-// storage, model endpoint, the gateway account and its plans, signaling servers, world services)
-// and save protection. Only reached on purpose — the title screen itself stays quiet.
+// Settings (title → Settings, a dialog over the title), kept simple enough for anyone: the language,
+// the model, and the player's one passkey. Everything else — the gateway account and its plans,
+// pictures, signaling servers, world services and this build's readings — waits folded under
+// Advanced settings. Only reached on purpose — the title screen itself stays quiet.
 
 import { LANGUAGE_LABEL, UI_LANGUAGES, useLanguageStore, useT } from "@renderer/i18n";
-import { UnlockPanel } from "@renderer/identity";
 import { Button, StatePanel } from "@renderer/ui";
 import type { AppInfo } from "@shared/ipc";
 import { errored, idle, type Loadable, loading, ready, toError } from "@shared/result";
@@ -12,6 +12,7 @@ import { useKeys } from "../shell/useKeys";
 import { AccountPanel } from "./AccountPanel";
 import { ImagePanel } from "./ImagePanel";
 import { ModelPanel } from "./ModelPanel";
+import { PasskeyPanel } from "./PasskeyPanel";
 import { PlanPanel } from "./PlanPanel";
 import { SharedWorldsPanel } from "./SharedWorldsPanel";
 import { SignalingPanel } from "./SignalingPanel";
@@ -36,9 +37,41 @@ function useAppInfo(): Loadable<AppInfo> {
   return info;
 }
 
-export function SystemPanel({ onClose }: { onClose(): void }) {
+/** What a player rarely needs: mounted only while Advanced settings is open. */
+function Advanced() {
   const t = useT();
   const info = useAppInfo();
+  return (
+    <>
+      <AccountPanel />
+
+      <PlanPanel />
+
+      <ImagePanel />
+
+      <SignalingPanel />
+
+      <SharedWorldsPanel />
+
+      <StatePanel state={info} loadingText={t("title.readingBuild")}>
+        {(value) => (
+          <dl className="info-list">
+            <dt>{t("title.version")}</dt>
+            <dd>{value.version}</dd>
+            <dt>{t("title.platform")}</dt>
+            <dd>{`${value.platform} · electron ${value.electron}`}</dd>
+            <dt>{t("title.worldsFolder")}</dt>
+            <dd>{value.worldsDir}</dd>
+          </dl>
+        )}
+      </StatePanel>
+    </>
+  );
+}
+
+export function SystemPanel({ onClose }: { onClose(): void }) {
+  const t = useT();
+  const [advanced, setAdvanced] = useState(false);
 
   useKeys({ Escape: onClose });
 
@@ -71,30 +104,16 @@ export function SystemPanel({ onClose }: { onClose(): void }) {
 
       <ModelPanel />
 
-      <AccountPanel />
+      <PasskeyPanel />
 
-      <PlanPanel />
-
-      <ImagePanel />
-
-      <SignalingPanel />
-
-      <SharedWorldsPanel />
-
-      <StatePanel state={info} loadingText={t("title.readingBuild")}>
-        {(value) => (
-          <dl className="info-list">
-            <dt>{t("title.version")}</dt>
-            <dd>{value.version}</dd>
-            <dt>{t("title.platform")}</dt>
-            <dd>{`${value.platform} · electron ${value.electron}`}</dd>
-            <dt>{t("title.worldsFolder")}</dt>
-            <dd>{value.worldsDir}</dd>
-          </dl>
-        )}
-      </StatePanel>
-
-      <UnlockPanel onUnlocked={onClose} />
+      <section style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+        <div>
+          <Button variant="ghost" onClick={() => setAdvanced(!advanced)}>
+            {`${advanced ? "▾" : "▸"} ${t("identity.settingsAdvanced")}`}
+          </Button>
+        </div>
+        {advanced ? <Advanced /> : null}
+      </section>
     </div>
   );
 }

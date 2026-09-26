@@ -1,13 +1,14 @@
-// One world on the market: its auction (bid with the passkey), its end (settle — open to anyone),
-// an end below its required raise (no pool ever; a bidder with open bids can have them refunded),
-// or its Uniswap pool (buy through its ancestors with the passkey; pay out the royalties its ENS
-// name holder is owed). The last transaction links to Sepolia Etherscan.
+// One world on the market: its auction (bid, confirmed with the passkey), its end (settle — open to
+// anyone), an end below its required raise (no pool ever; a bidder with open bids can have them
+// refunded), or its Uniswap pool (buy through its ancestors, confirmed with the passkey; pay out the
+// royalties its ENS name holder is owed). The last transaction links to Sepolia Etherscan.
 
 import { errorLine, useT } from "@renderer/i18n";
 import { useSessionStore } from "@renderer/state";
 import { Button, Text, TextField } from "@renderer/ui";
 import { type MarketView, type MarketWorld, SEPOLIA_TX } from "@shared/market";
 import { type JSX, useState } from "react";
+import { busyLabel } from "./ensCommon";
 import { amount, phaseLabel } from "./format";
 import type { MarketState } from "./useMarket";
 import { usePlayerNames } from "./usePlayerNames";
@@ -144,13 +145,7 @@ export function WorldDetail({
               disabled={busy || !canAct || !AMOUNT.test(bid)}
               onClick={() => void placeBid()}
             >
-              {market.busy === "browser"
-                ? t("market.waitingBrowser")
-                : market.busy === "signing"
-                  ? t("market.signing")
-                  : market.busy === "sending"
-                    ? t("market.sending")
-                    : t("market.bidButton")}
+              {busyLabel(t, market, t("market.bidButton"))}
             </Button>
           </div>
           <Text variant="caption" tone="dim">
@@ -208,13 +203,7 @@ export function WorldDetail({
               disabled={busy || !canAct || !AMOUNT.test(spend)}
               onClick={() => void buy()}
             >
-              {market.busy === "browser"
-                ? t("market.waitingBrowser")
-                : market.busy === "signing"
-                  ? t("market.signing")
-                  : market.busy === "sending"
-                    ? t("market.sending")
-                    : t("market.buyButton")}
+              {busyLabel(t, market, t("market.buyButton"))}
             </Button>
           </div>
           <Text variant="caption" tone="dim">

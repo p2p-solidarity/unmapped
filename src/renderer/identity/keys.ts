@@ -74,22 +74,30 @@ export function lock(): void {
   useSessionStore.getState().setUnlock(null);
 }
 
-/** Adds one credential-specific wrapper around the already-unlocked Data Key. */
-export async function addPasskeyWrapping(): Promise<Result<string>> {
+/**
+ * Adds one credential-specific wrapper around the already-unlocked Data Key. `existing` is a
+ * passkey this device already has (the player's one passkey, e.g. the market's in this window);
+ * without one a new passkey is registered. The wrapping is the same either way.
+ */
+export async function addPasskeyWrapping(existing: string | null = null): Promise<Result<string>> {
   const dataKey = current?.key;
   if (dataKey === undefined) {
     return err("data-key-locked", "Unlock saves before adding another passkey.");
   }
-  const registered = await registerPasskey();
-  if (!registered.ok) return registered;
-  if (!registered.value.prfEnabled) {
-    return err(
-      "prf-unsupported",
-      "The new passkey was created without PRF support.",
-      KEYCHAIN_HINT,
-    );
+  let credentialId = existing;
+  if (credentialId === null) {
+    const registered = await registerPasskey();
+    if (!registered.ok) return registered;
+    if (!registered.value.prfEnabled) {
+      return err(
+        "prf-unsupported",
+        "The new passkey was created without PRF support.",
+        KEYCHAIN_HINT,
+      );
+    }
+    credentialId = registered.value.credentialId;
   }
-  const secret = await derivePrf(registered.value.credentialId);
+  const secret = await derivePrf(credentialId);
   if (!secret.ok) return secret;
   const wrappingKey = await deriveSaveKey(secret.value);
   if (!wrappingKey.ok) return wrappingKey;
@@ -97,19 +105,16 @@ export async function addPasskeyWrapping(): Promise<Result<string>> {
   if (!api.ok) return api;
   const stored = await api.value.vault.getWrappingRecords();
   if (!stored.ok) return stored;
-  const id = `prf:${registered.value.credentialId}`;
+  const id = `prf:${credentialId}`;
   if (stored.value.some((record) => record.id === id)) {
-    storeCredentialId(registered.value.credentialId);
-    return ok(registered.value.credentialId);
+    storeCredentialId(credentialId);
+    return ok(credentialId);
   }
-  const record = await wrapDataKey(wrappingKey.value, dataKey, {
-    method: "prf",
-    credentialId: registered.value.credentialId,
-  });
+  const record = await wrapDataKey(wrappingKey.value, dataKey, { method: "prf", credentialId });
   const saved = await api.value.vault.putWrappingRecord(record);
   if (!saved.ok) return saved;
-  storeCredentialId(registered.value.credentialId);
-  return ok(registered.value.credentialId);
+  storeCredentialId(credentialId);
+  return ok(credentialId);
 }
 
 function adopt(unlocked: UnlockedKey): Result<UnlockedKey> {

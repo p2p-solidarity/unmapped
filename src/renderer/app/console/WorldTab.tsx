@@ -1,9 +1,16 @@
 // world.oui in a text box. The parser is the only judge: "Apply" either produces a SceneGraph and
 // writes the file, or shows exactly what the DSL rejected (Rule 7 — no partial application).
+// Below it, the legacy `.seed` exports; the encrypted one offers its unlock right there
+// (UnlockPanel: the player's passkey, or this machine's keychain).
 
 import { type DslError, parseScene, serializeScene } from "@dsl/index";
 import { errorLine, useT } from "@renderer/i18n";
-import { currentKey, exportEncryptedSeed, importEncryptedSeed } from "@renderer/identity";
+import {
+  currentKey,
+  exportEncryptedSeed,
+  importEncryptedSeed,
+  UnlockPanel,
+} from "@renderer/identity";
 import { useSessionStore, useWorldStore } from "@renderer/state";
 import { Button, colors, font, radius, Surface, space, Text } from "@renderer/ui";
 import { errored, ready } from "@shared/result";
@@ -250,25 +257,26 @@ export function WorldTab() {
         <Button variant="ghost" onClick={exportSeed} disabled={worldId === null}>
           {t("console.exportSeed")}
         </Button>
-        <Button
-          variant="ghost"
-          onClick={exportEncrypted}
-          disabled={worldId === null || unlock === null}
-        >
-          {t("console.exportSeedEnc")}
-        </Button>
-        <Button variant="ghost" onClick={importEncrypted} disabled={unlock === null}>
-          {t("console.importSeedEnc")}
-        </Button>
       </div>
 
-      <Text variant="caption" tone="dim">
-        {unlock?.method === "keychain"
-          ? t("console.seedKeychainNote")
-          : t("console.seedPasskeyNote")}
-      </Text>
-
       {issues === null ? null : <IssueList error={issues} />}
+
+      <Surface variant="inset" padding="md">
+        <Text variant="label" tone="muted">
+          {t("identity.seedHeading")}
+        </Text>
+        <UnlockPanel />
+        {unlock === null ? null : (
+          <div style={{ display: "flex", gap: space.sm, flexWrap: "wrap" }}>
+            <Button variant="ghost" onClick={exportEncrypted} disabled={worldId === null}>
+              {t("console.exportSeedEnc")}
+            </Button>
+            <Button variant="ghost" onClick={importEncrypted}>
+              {t("console.importSeedEnc")}
+            </Button>
+          </div>
+        )}
+      </Surface>
     </>
   );
 }

@@ -1,4 +1,4 @@
-// Settings → Account, signed in: the account's devices, approving a new device's pairing code, and
+// Settings → Advanced settings → Account, signed in: the account's devices, approving a new device's pairing code, and
 // then — only offered, never done silently (rev 6 phase 4, D1) — making that device a co-owner of
 // the shared worlds this device owns (`world.addOwner`, D5). The approving device types only the code
 // the new device shows; the gateway answers which key asked for it (looking up never spends the

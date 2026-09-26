@@ -1,16 +1,17 @@
-// Settings → Account and Settings → Plan (rev 6 phase 4, D1, D3): the generation gateway's account
-// of device keys, its allowance, pairing a second device, and the billing provider's plans. Numbers
-// are the gateway's and the provider's own; the allowance is shown as a share plus tokens and calls,
-// never as money.
+// Settings → Advanced settings → Account and Plan (rev 6 phase 4, D1, D3): the generation
+// gateway's account of device keys, its allowance, pairing a second device, and the billing
+// provider's plans. Numbers are the gateway's and the provider's own; the allowance is shown as a
+// share plus tokens and calls, never as money. Not the player's passkey (identity.ts).
 
 import type { Phrase } from "./phrase";
 
 export const ACCOUNT = {
   heading: { en: "Account", "zh-TW": "帳號", ja: "アカウント" },
   intro: {
-    en: "An account on the generation gateway holds this device's key and its free allowance. Your own key and local models work without one.",
-    "zh-TW": "生成閘道上的帳號記著這台裝置的金鑰和免費額度。使用自己的金鑰或本地模型不需要帳號。",
-    ja: "生成ゲートウェイのアカウントには、このデバイスのキーと無料枠が記録されます。自分のキーやローカルモデルならアカウントは不要です。",
+    en: "This account only holds this device's free AI allowance on the generation gateway; it is not your passkey. Your own key or a model on this computer needs no account.",
+    "zh-TW":
+      "這個帳號只管這台裝置在生成閘道上的 AI 免費額度，和你的 passkey 無關。用自己的金鑰或這台電腦上的模型就不需要它。",
+    ja: "このアカウントは、生成ゲートウェイでのこのデバイスの AI 無料枠だけを管理します（パスキーとは別です）。自分のキーやこのコンピューターのモデルなら不要です。",
   },
   reading: {
     en: "Asking the gateway…",
@@ -35,9 +36,9 @@ export const ACCOUNT = {
     ja: "ゲートウェイはこのデバイスのサインインを受け付けなくなりました（取り消しまたは期限切れ）。もう一度サインインするか、.env の UNMAPPED_GATEWAY_KEY にトークンを入れてください。",
   },
   signInNote: {
-    en: "Signing in signs the gateway's challenge with this device's key. A key that is in no account starts a new one.",
-    "zh-TW": "登入時會用這台裝置的金鑰簽署閘道的挑戰。還不屬於任何帳號的金鑰會建立新帳號。",
-    ja: "サインインでは、このデバイスのキーでゲートウェイのチャレンジに署名します。どのアカウントにも属さないキーは新しいアカウントを作ります。",
+    en: "Signing in proves it is this device, with this device's own key. A device in no account yet starts a new one.",
+    "zh-TW": "登入時用這台裝置自己的金鑰證明是它。還沒有帳號的裝置會建立一個新帳號。",
+    ja: "サインインでは、このデバイス自身のキーでこのデバイスであることを示します。まだどのアカウントにもないデバイスは新しいアカウントを作ります。",
   },
   signIn: {
     en: "Sign in with this device",
@@ -68,10 +69,10 @@ export const ACCOUNT = {
     ja: "ペアリングコード（{time} まで）",
   },
   codeSteps: {
-    en: "On a device already in the account, open Settings → Account and enter this code. Approve there only if it shows this same fingerprint.",
+    en: "On a device already in the account, open Settings → Advanced settings → Account and enter this code. Approve there only if it shows this same fingerprint.",
     "zh-TW":
-      "在已加入帳號的裝置上打開「設定 → 帳號」並輸入這組配對碼。只有當它顯示和這裡相同的指紋時才核准。",
-    ja: "アカウントに入っているデバイスで「設定 → アカウント」を開き、このコードを入力してください。同じフィンガープリントが表示された場合だけ承認してください。",
+      "在已加入帳號的裝置上打開「設定 → 進階設定 → 帳號」並輸入這組配對碼。只有當它顯示和這裡相同的指紋時才核准。",
+    ja: "アカウントに入っているデバイスで「設定 → 詳細設定 → アカウント」を開き、このコードを入力してください。同じフィンガープリントが表示された場合だけ承認してください。",
   },
   fingerprint: { en: "Fingerprint", "zh-TW": "指紋", ja: "フィンガープリント" },
   waiting: {
@@ -171,7 +172,7 @@ export const ACCOUNT = {
     ja: "トークン未報告の呼び出し {n} 回",
   },
   quotaPlan: { en: "Plan: {plan}", "zh-TW": "方案：{plan}", ja: "プラン：{plan}" },
-  // ── Plans (Settings → Plan) ──────────────────────────────────────────────────────────────────
+  // ── Plans (Settings → Advanced settings → Plan) ──────────────────────────────────────────────────────────────────
   planHeading: { en: "Plan", "zh-TW": "方案", ja: "プラン" },
   planReading: {
     en: "Asking for the plans…",
@@ -189,9 +190,9 @@ export const ACCOUNT = {
     ja: "テストモード：実際の料金は請求されません。",
   },
   planNone: {
-    en: "The provider lists no plans yet.",
-    "zh-TW": "供應商目前沒有列出方案。",
-    ja: "プロバイダーにはまだプランがありません。",
+    en: "The service lists no plans yet.",
+    "zh-TW": "這個服務目前沒有列出方案。",
+    ja: "このサービスにはまだプランがありません。",
   },
   planPerDay: { en: "{price} a day", "zh-TW": "每天 {price}", ja: "1日 {price}" },
   planPerWeek: { en: "{price} a week", "zh-TW": "每週 {price}", ja: "1週間 {price}" },

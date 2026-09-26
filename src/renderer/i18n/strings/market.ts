@@ -1,46 +1,56 @@
-// The lineage market (Worlds → Market): auctions and trading on Sepolia, signed by the player's
-// passkey and paid for by UNMAPPED's gas station — no wallet anywhere, and no key in the app.
+// The lineage market (Worlds → Market) and the player's one passkey (its block there, Settings → Your
+// passkey): auctions and trading on Sepolia, confirmed with the passkey and paid for by UNMAPPED's
+// gas station — no wallet anywhere, and no key in the app. Every passkey-confirmed button reads the
+// same way: "用 passkey 確認…" / "… with passkey" / "パスキーで…".
 
 import type { Phrase } from "./phrase";
 
 export const MARKET = {
   intro: {
-    en: "Bid on and trade worlds on Sepolia. Your passkey signs every move and UNMAPPED's gas station pays the gas — no wallet, no ETH.",
+    en: "Bid on and trade worlds on Sepolia. Your passkey confirms every move and UNMAPPED's gas station pays the fee — no wallet, no ETH.",
     "zh-TW":
-      "在 Sepolia 上競標、交易世界。每個動作都由你的 passkey 簽名，gas 由《無界之地》的代付站支付——不需要錢包，也不需要 ETH。",
-    ja: "Sepolia で世界に入札し、売買します。操作はすべてパスキーで署名し、ガス代は UNMAPPED のガスステーションが払います。ウォレットも ETH も要りません。",
+      "在 Sepolia 上競標、交易世界。每一步都用你的 passkey 確認，手續費由《無界之地》的代付站支付——不需要錢包，也不需要 ETH。",
+    ja: "Sepolia で世界に入札し、売買します。操作はすべてパスキーで確認し、手数料は UNMAPPED のガスステーションが払います。ウォレットも ETH も要りません。",
   },
   reading: { en: "Reading the market…", "zh-TW": "正在讀取市場…", ja: "マーケットを読み込み中…" },
   readOnly: {
-    en: "This machine can read the market but not act on it: no gas station is set up.",
-    "zh-TW": "這台機器可以讀取市場，但還沒設定代付站，無法送出動作。",
-    ja: "この端末はマーケットを読めますが、ガスステーションが未設定のため操作は送れません。",
+    en: "This computer can look but not send anything yet: no gas station is set up.",
+    "zh-TW": "這台電腦現在只能看、不能送出：還沒設定代付站。",
+    ja: "このコンピューターは見るだけで、まだ送信できません。ガスステーションが未設定です。",
   },
-  accountHeading: {
-    en: "Your passkey account",
-    "zh-TW": "你的 passkey 帳戶",
-    ja: "パスキーのアカウント",
-  },
+  accountHeading: { en: "Your passkey", "zh-TW": "你的 passkey", ja: "あなたのパスキー" },
+  accountMore: { en: "Advanced", "zh-TW": "進階", ja: "詳細" },
+  setUpPasskey: { en: "Set up my passkey", "zh-TW": "設定我的 passkey", ja: "パスキーを設定" },
   useBrowserPasskey: {
-    en: "Use Touch ID (opens your browser)",
-    "zh-TW": "用 Touch ID（在瀏覽器開啟）",
-    ja: "Touch ID を使う（ブラウザが開きます）",
+    en: "Set up with Touch ID (opens your browser)",
+    "zh-TW": "用 Touch ID 設定（會打開瀏覽器）",
+    ja: "Touch ID で設定（ブラウザが開きます）",
   },
   useBrowserNote: {
-    en: "This app cannot show Touch ID itself, so your browser asks for it and hands the signature back. Your passkey stays in your own keychain.",
-    "zh-TW":
-      "這個 app 本身無法跳出 Touch ID，所以會由瀏覽器請你驗證，再把簽名交回 app。passkey 留在你自己的鑰匙圈裡。",
-    ja: "このアプリは Touch ID を直接出せないため、ブラウザで確認して署名をアプリに戻します。パスキーはあなたのキーチェーンに残ります。",
+    en: "Your browser opens: confirm with Touch ID there, then come back here. Your passkey stays on your own computer.",
+    "zh-TW": "會打開瀏覽器：在那裡用 Touch ID 確認，再回到這裡。passkey 留在你自己的電腦裡。",
+    ja: "ブラウザが開きます。そこで Touch ID で確認して、ここに戻ってください。パスキーはあなたのコンピューターに残ります。",
+  },
+  useAppHaveNote: {
+    en: "This computer already has your passkey, so it is used right here. The first time it asks you twice.",
+    "zh-TW": "這台電腦已經有你的 passkey，就直接用它。第一次會請你確認兩次。",
+    ja: "このコンピューターにはもうあなたのパスキーがあるので、ここでそれを使います。初回だけ 2 回確認します。",
   },
   useAppPasskey: {
-    en: "Use a security key in the app",
-    "zh-TW": "在 app 內使用安全金鑰",
-    ja: "アプリ内でセキュリティキーを使う",
+    en: "Set up with a security key",
+    "zh-TW": "用安全金鑰設定",
+    ja: "セキュリティキーで設定",
   },
+  otherWayApp: {
+    en: "Use a security key instead",
+    "zh-TW": "改用安全金鑰",
+    ja: "セキュリティキーを使う",
+  },
+  otherWayBrowser: { en: "Use Touch ID instead", "zh-TW": "改用 Touch ID", ja: "Touch ID を使う" },
   waitingBrowser: {
-    en: "Finish in your browser…",
-    "zh-TW": "請到瀏覽器完成…",
-    ja: "ブラウザで続けてください…",
+    en: "Confirm in your browser…",
+    "zh-TW": "請到瀏覽器確認…",
+    ja: "ブラウザで確認してください…",
   },
   summaryBid: {
     en: "Bid {amount} {currency} in {name}",
@@ -52,11 +62,10 @@ export const MARKET = {
     "zh-TW": "用 {amount} USDC 買入 {name}",
     ja: "{amount} USDC で {name} を購入",
   },
-  usePasskey: { en: "Use my passkey", "zh-TW": "使用我的 passkey", ja: "パスキーを使う" },
   usePasskeyNote: {
-    en: "The first time, your passkey is asked twice so the app can learn its public key. After that, one prompt per action.",
-    "zh-TW": "第一次會請 passkey 驗證兩次，讓 app 取得它的公鑰；之後每個動作只驗證一次。",
-    ja: "初回だけ公開鍵を知るためにパスキーを 2 回求めます。以降は操作ごとに 1 回です。",
+    en: "Plug in your security key. The first time it asks you twice; after that, once per action.",
+    "zh-TW": "插上你的安全金鑰。第一次會請你確認兩次，之後每次只要確認一次。",
+    ja: "セキュリティキーを挿してください。初回は 2 回、その後は操作ごとに 1 回確認します。",
   },
   address: { en: "Account {address}", "zh-TW": "帳戶 {address}", ja: "アカウント {address}" },
   notDeployed: {
@@ -114,7 +123,7 @@ export const MARKET = {
   },
   owner: { en: "Name held by {owner}", "zh-TW": "名字持有人 {owner}", ja: "名前の保有者 {owner}" },
   bidLabel: { en: "Bid ({currency})", "zh-TW": "出價（{currency}）", ja: "入札額（{currency}）" },
-  bidButton: { en: "Bid with passkey", "zh-TW": "用 passkey 出價", ja: "パスキーで入札" },
+  bidButton: { en: "Bid with passkey", "zh-TW": "用 passkey 確認出價", ja: "パスキーで入札" },
   bidHelp: {
     en: "Everyone pays the same clearing price when the auction ends; what you bid above it comes back.",
     "zh-TW": "拍賣結束時所有人都付同一個成交價；多出的部分會退還給你。",
@@ -160,7 +169,7 @@ export const MARKET = {
     ja: "{n} 件のトランザクションで返金しました。",
   },
   buyLabel: { en: "Spend (USDC)", "zh-TW": "花費（USDC）", ja: "支払う額（USDC）" },
-  buyButton: { en: "Buy with passkey", "zh-TW": "用 passkey 買入", ja: "パスキーで購入" },
+  buyButton: { en: "Buy with passkey", "zh-TW": "用 passkey 確認買入", ja: "パスキーで購入" },
   buyHelp: {
     en: "Buys through every ancestor ({path}); each hop pays a 1% royalty up the family tree.",
     "zh-TW": "沿著每一代祖先買入（{path}）；每一跳都會付 1% 分潤給上面的族譜。",
@@ -193,9 +202,9 @@ export const MARKET = {
   bidRefunded: { en: "refunded", "zh-TW": "已退款", ja: "返金済み" },
   bidClaimed: { en: "tokens claimed", "zh-TW": "已領代幣", ja: "受取済み" },
   signing: {
-    en: "Waiting for your passkey…",
-    "zh-TW": "等待 passkey 驗證…",
-    ja: "パスキーを待っています…",
+    en: "Confirm with your passkey…",
+    "zh-TW": "請用 passkey 確認…",
+    ja: "パスキーで確認してください…",
   },
   sending: { en: "Sending to Sepolia…", "zh-TW": "正在送到 Sepolia…", ja: "Sepolia に送信中…" },
   viewTx: { en: "View on Etherscan", "zh-TW": "在 Etherscan 查看", ja: "Etherscan で見る" },
@@ -224,19 +233,19 @@ export const MARKET = {
     ja: "{holder} が保有。{version} を指しています",
   },
   nameTaken: {
-    en: "held by {holder} for another cartridge",
-    "zh-TW": "已被 {holder} 用於另一個卡帶",
-    ja: "{holder} が別のカートリッジに使っています",
+    en: "held by {holder} for another world",
+    "zh-TW": "已被 {holder} 用在另一個世界",
+    ja: "{holder} が別の世界に使っています",
   },
   nameRegister: {
-    en: "Name it with your passkey",
-    "zh-TW": "用 passkey 登記名稱",
+    en: "Name it with passkey",
+    "zh-TW": "用 passkey 確認取名",
     ja: "パスキーで名前を登録",
   },
   nameRepoint: {
-    en: "Point it at this version",
-    "zh-TW": "把名稱指到這個版本",
-    ja: "このバージョンに向ける",
+    en: "Point it here with passkey",
+    "zh-TW": "用 passkey 確認指到這個版本",
+    ja: "パスキーでこのバージョンに向ける",
   },
   nameDone: {
     en: "{name} is written on ENS.",
@@ -249,42 +258,42 @@ export const MARKET = {
     ja: "{name} を登録 → {ref}",
   },
   summaryRecordSave: {
-    en: "Record your save as {name}",
-    "zh-TW": "把你的存檔記錄為 {name}",
-    ja: "セーブを {name} として記録",
+    en: "Record your world as {name}",
+    "zh-TW": "把你的世界記錄為 {name}",
+    ja: "ワールドを {name} として記録",
   },
   summaryUpdateSave: {
-    en: "Move {name} to this checkpoint",
+    en: "Update {name} to where you are now",
     "zh-TW": "把 {name} 更新到目前的進度",
-    ja: "{name} をこのチェックポイントに更新",
+    ja: "{name} を今の進み具合に更新",
   },
   saveHeading: {
-    en: "ENS name for this save",
-    "zh-TW": "這個存檔的 ENS 名稱",
-    ja: "このセーブの ENS 名",
+    en: "ENS name for this world",
+    "zh-TW": "這個世界的 ENS 名稱",
+    ja: "このワールドの ENS 名",
   },
   saveNote: {
-    en: "The name is yours (your passkey's account holds it). It records only a hash of this save, the exact cartridge version and a line of progress — never the save itself.",
+    en: "The name is yours (your passkey holds it). It records only a fingerprint of this world, its exact version and one line of progress — never the world itself.",
     "zh-TW":
-      "名稱屬於你（由你的 passkey 帳戶持有）。上面只記錄這個存檔的雜湊、確切的卡帶版本和一行進度，存檔內容本身不會上鏈。",
-    ja: "名前はあなたのもの（パスキーのアカウントが保有）です。記録するのはこのセーブのハッシュ、正確なカートリッジのバージョン、進行状況の一行だけで、セーブそのものは載りません。",
+      "名稱是你的（屬於你的 passkey）。上面只記著這個世界的指紋、它的確切版本和一行進度，世界的內容本身不會上鏈。",
+    ja: "名前はあなたのもの（パスキーが保有）です。記録するのはこのワールドの指紋、正確なバージョン、進み具合の一行だけで、ワールドそのものは載りません。",
   },
   saveNeedsCartridge: {
-    en: "A save hangs under its cartridge's name, and {name} has none yet.",
-    "zh-TW": "存檔要掛在卡帶的名稱底下，但 {name} 還沒登記。",
-    ja: "セーブはカートリッジの名前の下に付きますが、{name} はまだ登録されていません。",
+    en: "Your world's name hangs under the original world's name, and {name} is not named yet.",
+    "zh-TW": "你的世界名稱要掛在原版世界的名稱底下，但 {name} 還沒取名。",
+    ja: "ワールドの名前は元の世界の名前の下に付きますが、{name} はまだ登録されていません。",
   },
   saveNameCartridge: {
-    en: "Name the cartridge first",
-    "zh-TW": "先登記卡帶名稱",
-    ja: "先にカートリッジを登録",
+    en: "Name the original world with passkey",
+    "zh-TW": "用 passkey 確認原版世界的名稱",
+    ja: "パスキーで元の世界の名前を登録",
   },
   saveCartridgeTaken: {
-    en: "{name} names another cartridge, so this save cannot hang under it.",
-    "zh-TW": "{name} 已是另一個卡帶的名稱，這個存檔無法掛在底下。",
-    ja: "{name} は別のカートリッジの名前なので、このセーブを付けられません。",
+    en: "{name} belongs to another world, so this world cannot hang under it.",
+    "zh-TW": "{name} 已是另一個世界的名稱，這個世界無法掛在底下。",
+    ja: "{name} は別の世界の名前なので、このワールドを付けられません。",
   },
-  saveLabel: { en: "Save name", "zh-TW": "存檔名稱", ja: "セーブ名" },
+  saveLabel: { en: "World name", "zh-TW": "世界名稱", ja: "ワールド名" },
   saveLocal: {
     en: "Now: {progress} · {hash}",
     "zh-TW": "目前：{progress} · {hash}",
@@ -296,14 +305,14 @@ export const MARKET = {
     ja: "{name} は空いています。",
   },
   saveCurrent: {
-    en: "{name} records this save as it is now.",
-    "zh-TW": "{name} 記錄的就是這個存檔目前的樣子。",
-    ja: "{name} はこのセーブの現在の状態を記録しています。",
+    en: "{name} records this world as it is now.",
+    "zh-TW": "{name} 記錄的就是這個世界目前的樣子。",
+    ja: "{name} はこのワールドの今の状態を記録しています。",
   },
   saveOutdated: {
-    en: "{name} records an earlier checkpoint: {progress}.",
+    en: "{name} records an earlier point: {progress}.",
     "zh-TW": "{name} 記錄的是較早的進度：{progress}。",
-    ja: "{name} は以前のチェックポイントを記録しています：{progress}。",
+    ja: "{name} は以前の進み具合を記録しています：{progress}。",
   },
   saveTaken: {
     en: "{name} is held by someone else. Pick another name.",
@@ -311,20 +320,20 @@ export const MARKET = {
     ja: "{name} は他の人が使っています。別の名前にしてください。",
   },
   saveHeldBy: {
-    en: "Held by the passkey account {holder}, not this machine's passkey.",
-    "zh-TW": "由 passkey 帳戶 {holder} 持有，不是這台機器的 passkey。",
-    ja: "パスキーのアカウント {holder} が保有しています（この端末のパスキーではありません）。",
+    en: "Held by {holder}, not by the passkey on this computer.",
+    "zh-TW": "由 {holder} 持有，不是你這台電腦上的 passkey。",
+    ja: "{holder} が保有しています（このコンピューターのパスキーではありません）。",
   },
-  saveRecord: { en: "Record with passkey", "zh-TW": "用 passkey 記錄", ja: "パスキーで記録" },
+  saveRecord: { en: "Record with passkey", "zh-TW": "用 passkey 確認記錄", ja: "パスキーで記録" },
   saveUpdate: {
-    en: "Update to this checkpoint",
-    "zh-TW": "更新到目前進度",
-    ja: "このチェックポイントに更新",
+    en: "Update with passkey",
+    "zh-TW": "用 passkey 確認更新進度",
+    ja: "パスキーで進み具合を更新",
   },
   lookupSave: {
-    en: "A save of {ref}: {progress} (checkpoint {hash}).",
-    "zh-TW": "這是 {ref} 的一個存檔：{progress}（進度雜湊 {hash}）。",
-    ja: "{ref} のセーブです：{progress}（チェックポイント {hash}）。",
+    en: "A world of {ref}: {progress} (checkpoint {hash}).",
+    "zh-TW": "這是 {ref} 裡的一個世界：{progress}（進度指紋 {hash}）。",
+    ja: "{ref} のワールドです：{progress}（チェックポイント {hash}）。",
   },
 
   // ── A cartridge's label, and putting it on the market (CartridgeEns.tsx, LaunchLine.tsx) ────
@@ -353,7 +362,11 @@ export const MARKET = {
     "zh-TW": "名稱登記後標籤就固定了，之後的版本都沿用同一個名稱。",
     ja: "名前を登録するとラベルは固定され、以後のバージョンも同じ名前を使います。",
   },
-  launch: { en: "Put on the market", "zh-TW": "上架到市場", ja: "マーケットに出す" },
+  launch: {
+    en: "Put on the market with passkey",
+    "zh-TW": "用 passkey 確認上架",
+    ja: "パスキーでマーケットに出す",
+  },
   launchTerms: {
     en: "{supply} tokens · half ({pool}) seeds the Uniswap pool · auction about {min} min ({blocks} blocks) · floor {floor} USDC per token · graduates after raising {raised} USDC",
     "zh-TW":
@@ -389,46 +402,47 @@ export const MARKET = {
 
   // ── A save's door number on its name (EnsNames.tsx) ──────────────────────────────────────
   saveDoorNote: {
-    en: "The name will carry this save's door number ({door}), so friends can walk in by it.",
-    "zh-TW": "名稱會記上這個存檔的門牌（{door}），夥伴可以用名稱走進來。",
-    ja: "名前にはこのセーブの扉番号（{door}）が載り、仲間は名前で入れます。",
+    en: "The name will carry this world's join code ({door}), so friends can join by it.",
+    "zh-TW": "名稱會記上這個世界的加入碼（{door}），朋友可以用名稱加入。",
+    ja: "名前にはこのワールドの参加コード（{door}）が載り、友だちは名前で参加できます。",
   },
   saveDoor: {
-    en: "Carries door {door} — friends can walk in by this name.",
-    "zh-TW": "記著門牌 {door}——夥伴可以用這個名稱走進來。",
-    ja: "扉番号 {door} が載っています。仲間はこの名前で入れます。",
+    en: "Carries join code {door} — friends can join by this name.",
+    "zh-TW": "記著加入碼 {door}——朋友可以用這個名稱加入。",
+    ja: "参加コード {door} が載っています。友だちはこの名前で参加できます。",
   },
   saveDoorOther: {
-    en: "Carries door {door}; this save's door is {own}.",
-    "zh-TW": "記著門牌 {door}；這個存檔的門牌是 {own}。",
-    ja: "載っている扉番号は {door}、このセーブの扉番号は {own} です。",
+    en: "Carries join code {door}; this world's join code is {own}.",
+    "zh-TW": "記著加入碼 {door}；這個世界的加入碼是 {own}。",
+    ja: "載っている参加コードは {door}、このワールドの参加コードは {own} です。",
   },
   saveDoorNone: {
-    en: "Carries no door yet; this save's door is {own}.",
-    "zh-TW": "還沒有記上門牌；這個存檔的門牌是 {own}。",
-    ja: "まだ扉番号が載っていません。このセーブの扉番号は {own} です。",
+    en: "Carries no join code yet; this world's join code is {own}.",
+    "zh-TW": "還沒有記上加入碼；這個世界的加入碼是 {own}。",
+    ja: "まだ参加コードが載っていません。このワールドの参加コードは {own} です。",
   },
   saveDoorButton: {
-    en: "Put my door on this name",
-    "zh-TW": "把我的門牌寫上名稱",
-    ja: "扉番号を名前に載せる",
+    en: "Add my join code with passkey",
+    "zh-TW": "用 passkey 確認寫上加入碼",
+    ja: "パスキーで参加コードを載せる",
   },
   summaryDoor: {
-    en: "Put door {door} on {name}",
-    "zh-TW": "把門牌 {door} 寫上 {name}",
-    ja: "{name} に扉番号 {door} を載せる",
+    en: "Put join code {door} on {name}",
+    "zh-TW": "把加入碼 {door} 寫上 {name}",
+    ja: "{name} に参加コード {door} を載せる",
   },
   saveCartridgeLabelHint: {
-    en: "Its label comes from the world's id and is hard to read. To pick a readable one, name it in Worlds → Cartridges.",
-    "zh-TW": "它的標籤由世界的 id 轉成，很難讀。想取個好讀的標籤，請到「世界 → 卡帶」登記。",
-    ja: "ラベルは世界の ID から作られるため読みにくくなります。読みやすいラベルにするには「ワールド → カートリッジ」で登録してください。",
+    en: "Its label comes from the world's id and is hard to read. To pick a readable one, name the original world in Worlds → My worlds.",
+    "zh-TW":
+      "它的標籤由世界的 id 轉成，很難讀。想取個好讀的標籤，請到「世界 → 我的世界」幫原版世界取名。",
+    ja: "ラベルは世界の ID から作られるため読みにくくなります。読みやすいラベルにするには「ワールド → マイワールド」で元の世界に名前を付けてください。",
   },
 
   // ── The player's own name (PlayerName.tsx) ───────────────────────────────────────────────
   playerNeedsPasskey: {
-    en: "Link your passkey to claim your own player name.",
-    "zh-TW": "連結你的 passkey，就能認領自己的玩家名稱。",
-    ja: "パスキーをつなぐと、自分のプレイヤー名を取得できます。",
+    en: "Set up your passkey to claim your own player name.",
+    "zh-TW": "設定你的 passkey，就能取自己的玩家名稱。",
+    ja: "パスキーを設定すると、自分のプレイヤー名を取得できます。",
   },
   playerNoDirectory: {
     en: "Player names are not set up on this deployment yet.",
@@ -436,22 +450,25 @@ export const MARKET = {
     ja: "このデプロイではまだプレイヤー名が用意されていません。",
   },
   playerIntro: {
-    en: "Claim your own name under {directory}. Your passkey's account holds it, and other players see it on a continent.",
-    "zh-TW":
-      "在 {directory} 底下認領你自己的名稱。它由你的 passkey 帳戶持有，其他玩家在大陸上會看到它。",
-    ja: "{directory} の下に自分の名前を取得します。パスキーのアカウントが保有し、大陸では他のプレイヤーにこの名前が見えます。",
+    en: "Pick a name of your own. Your passkey holds it, and friends see it in the game.",
+    "zh-TW": "取一個你自己的名字。它屬於你的 passkey，朋友在遊戲裡會看到它。",
+    ja: "自分の名前を決めましょう。パスキーが保有し、友だちはゲームの中でこの名前を見ます。",
   },
   playerLabel: { en: "Your player name", "zh-TW": "你的玩家名稱", ja: "プレイヤー名" },
-  playerClaim: { en: "Claim with passkey", "zh-TW": "用 passkey 認領", ja: "パスキーで取得" },
+  playerClaim: {
+    en: "Claim with passkey",
+    "zh-TW": "用 passkey 確認這個名字",
+    ja: "パスキーで取得",
+  },
   playerFree: {
     en: "{name} is free.",
     "zh-TW": "{name} 還沒有人使用。",
     ja: "{name} は空いています。",
   },
   playerTaken: {
-    en: "{name} is held by {holder}. Pick another.",
-    "zh-TW": "{name} 已由 {holder} 持有，請換一個。",
-    ja: "{name} は {holder} が保有しています。別の名前にしてください。",
+    en: "{name} is taken. Pick another.",
+    "zh-TW": "{name} 已經有人用了，請換一個。",
+    ja: "{name} はもう使われています。別の名前にしてください。",
   },
   playerClaimed: {
     en: "{name} is yours, and now your player name on this device.",
@@ -459,9 +476,9 @@ export const MARKET = {
     ja: "{name} を取得し、この端末のプレイヤー名にしました。",
   },
   playerDeviceName: {
-    en: "This device plays as “{name}”.",
-    "zh-TW": "這台裝置目前以「{name}」遊玩。",
-    ja: "この端末は「{name}」としてプレイしています。",
+    en: "This computer plays as “{name}”.",
+    "zh-TW": "這台電腦目前用「{name}」這個名字玩。",
+    ja: "このコンピューターは「{name}」としてプレイしています。",
   },
   playerUseName: {
     en: "Use as my player name",

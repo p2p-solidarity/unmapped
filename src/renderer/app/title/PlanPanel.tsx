@@ -1,4 +1,4 @@
-// Settings → Plan (rev 6 phase 4, D3): the billing provider's plans exactly as it names and prices
+// Settings → Advanced settings → Plan (rev 6 phase 4, D3): the billing provider's plans exactly as it names and prices
 // them (`GET /v1/plans` through main), or the error it answers — `billing-not-configured` when the
 // gateway sells nothing, `gateway-not-configured` when this build has no gateway at all. Never idle
 // and never a made-up plan or price (Rule 2). Checkout and the customer portal open in the system

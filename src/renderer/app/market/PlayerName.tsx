@@ -1,8 +1,9 @@
-// The player's own ENS name, `<label>.players.<root>`, held by their passkey account (main/chain/
-// players.ts): claimed once with one passkey signature, and then shown wherever that account holds
-// a name or owns a world. The name is also the natural player name — what other players see on a
-// continent — so a claim sets it on this device, and a device that plays under another name is
-// offered the switch.
+// The player's own ENS name, `<label>.players.<root>`, held by their passkey's account (main/chain/
+// players.ts): claimed once with one passkey confirmation, and then shown wherever that account holds
+// a name or owns a world. The name is also the natural player name — what friends see in the game —
+// so a claim sets it on this device, and a device that plays under another name is offered the
+// switch. No address, key or credential is shown here (the Market keeps the account's address in
+// its folded details).
 
 import { useT } from "@renderer/i18n";
 import { playerName, setPlayerName } from "@renderer/net";
@@ -14,9 +15,8 @@ import { errored, idle, type Loadable, loading, ready } from "@shared/result";
 import { type JSX, useCallback, useEffect, useRef, useState } from "react";
 import { EnrolPasskey } from "./EnrolPasskey";
 import { busyLabel, SetupNote, typedLabel } from "./ensCommon";
-import { short } from "./format";
 import type { PasskeySigner } from "./usePasskeySigner";
-import { rememberPlayerName, usePlayerNames } from "./usePlayerNames";
+import { rememberPlayerName } from "./usePlayerNames";
 
 /** A view and the label it was asked about, so a reply for an older label never acts. */
 interface Asked {
@@ -28,14 +28,7 @@ interface Asked {
 const suggested = (name: string): string | null =>
   cartridgeLabel(name.replace(/\.players\..*$/, ""));
 
-export function PlayerName({
-  signer,
-  deployed = true,
-}: {
-  signer: PasskeySigner;
-  /** False until the account's first action creates it on chain (said next to the address). */
-  deployed?: boolean;
-}): JSX.Element | null {
+export function PlayerName({ signer }: { signer: PasskeySigner }): JSX.Element | null {
   const t = useT();
   const toast = useSessionStore((state) => state.toast);
   const [deviceName, setDeviceName] = useState(() => playerName());
@@ -66,9 +59,6 @@ export function PlayerName({
     return () => window.clearTimeout(timer);
   }, [read, delay, invalid, key, signer.config]);
 
-  const current = asked.status === "ready" ? asked.value.player : null;
-  const who = usePlayerNames([current?.candidate?.holder]);
-
   if (signer.config === null) return null;
   if (signer.config.parent === null) return <SetupNote signer={signer} />;
   if (key === null) {
@@ -97,20 +87,14 @@ export function PlayerName({
     setTyped(null);
     await latestRead.current();
   };
-  const address = (account: string): string =>
-    `${t("market.address", { address: short(account) })}${deployed ? "" : ` · ${t("market.notDeployed")}`}`;
-
   return (
     <StatePanel state={asked} loadingText={t("market.nameChecking")}>
       {({ label: askedLabel, player }) => {
         if (player.directory === null) {
           return (
-            <>
-              <span className="g-meta">{address(player.account)}</span>
-              <Text variant="caption" tone="dim">
-                {t("market.playerNoDirectory")}
-              </Text>
-            </>
+            <Text variant="caption" tone="dim">
+              {t("market.playerNoDirectory")}
+            </Text>
           );
         }
         if (player.name !== null) {
@@ -118,7 +102,6 @@ export function PlayerName({
           return (
             <>
               <Text variant="title">{name}</Text>
-              <span className="g-meta">{address(player.account)}</span>
               {deviceName === name ? null : (
                 <>
                   <span className="g-meta">
@@ -136,9 +119,8 @@ export function PlayerName({
         const free = candidate?.state === "free";
         return (
           <>
-            <span className="g-meta">{address(player.account)}</span>
             <Text variant="caption" tone="dim">
-              {t("market.playerIntro", { directory: player.directory })}
+              {t("market.playerIntro")}
             </Text>
             <div className="row-actions">
               <TextField
@@ -172,10 +154,7 @@ export function PlayerName({
                   ? t("market.nameChecking")
                   : free
                     ? t("market.playerFree", { name: candidate.name })
-                    : t("market.playerTaken", {
-                        name: candidate.name,
-                        holder: who(candidate.holder),
-                      })}
+                    : t("market.playerTaken", { name: candidate.name })}
             </span>
             {signer.config?.relayer ? null : <span className="g-meta">{t("market.readOnly")}</span>}
           </>

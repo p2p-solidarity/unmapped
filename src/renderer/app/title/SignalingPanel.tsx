@@ -1,4 +1,4 @@
-// Settings → Signaling servers: which servers this device uses to find friends (a per-device
+// Settings → Advanced settings → Signaling servers: which servers this device uses to find friends (a per-device
 // preference), a real connection test for each, and the way back to the default. A continent reads
 // the list when it opens, so a change applies to the next door opened or walked through.
 

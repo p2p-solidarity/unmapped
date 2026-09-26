@@ -1,4 +1,4 @@
-// Settings → Images (rev 6 phase 4, D4): which model draws this computer's pictures. Every provider
+// Settings → Advanced settings → Images (rev 6 phase 4, D4): which model draws this computer's pictures. Every provider
 // shows the licence its pictures carry (commercial use yes or no, where the claim was read and on
 // which day), where it runs, where its key comes from, and a test that asks its server without
 // drawing anything. The choice is stored by main; the renderer only ever names a provider id, and

@@ -1,7 +1,7 @@
-// Worlds → Market: the lineage market on Sepolia, played with the passkey the app already has.
-// The player's account (their own ENS name and address, test USDC, holdings), every launched world
-// with its auction or pool, and the chosen world's actions (WorldDetail). No wallet: the passkey
-// signs, main relays.
+// Worlds → Market: the lineage market on Sepolia, played with the player's one passkey. Their
+// passkey block (their own ENS name, test USDC, holdings; the account's address folded under
+// Advanced), every launched world with its auction or pool, and the chosen world's actions
+// (WorldDetail). No wallet: the passkey confirms, main relays.
 
 import { useT } from "@renderer/i18n";
 import { Button, StatePanel, Text } from "@renderer/ui";
@@ -11,7 +11,7 @@ import { AUTOFOCUS, useArrowFocus } from "../library/focus";
 import type { SectionProps } from "../library/sections";
 import { useKeys } from "../shell/useKeys";
 import { EnrolPasskey } from "./EnrolPasskey";
-import { amount, phaseLabel } from "./format";
+import { amount, phaseLabel, short } from "./format";
 import { PlayerName } from "./PlayerName";
 import { type MarketState, useMarket } from "./useMarket";
 import { WorldDetail } from "./WorldDetail";
@@ -22,6 +22,7 @@ function worldPrice(world: MarketWorld): string {
 
 function Account({ market, view }: { market: MarketState; view: MarketView }): JSX.Element {
   const t = useT();
+  const [more, setMore] = useState(false);
   const account = view.account;
   const busy = market.busy !== null;
   if (market.passkey === null || account === null) {
@@ -40,7 +41,7 @@ function Account({ market, view }: { market: MarketState; view: MarketView }): J
       <Text variant="label" tone="muted">
         {t("market.accountHeading")}
       </Text>
-      <PlayerName signer={market} deployed={account.deployed} />
+      <PlayerName signer={market} />
       <Text variant="title">{t("market.usdc", { amount: amount(account.usdc) })}</Text>
       {account.holdings.length === 0 ? null : (
         <span className="g-meta">
@@ -58,7 +59,16 @@ function Account({ market, view }: { market: MarketState; view: MarketView }): J
         >
           {t("market.faucet")}
         </Button>
+        <Button variant="ghost" onClick={() => setMore(!more)}>
+          {`${more ? "▾" : "▸"} ${t("market.accountMore")}`}
+        </Button>
       </div>
+      {more ? (
+        <span className="g-meta">
+          {t("market.address", { address: short(account.address) })}
+          {account.deployed ? "" : ` · ${t("market.notDeployed")}`}
+        </span>
+      ) : null}
     </div>
   );
 }
