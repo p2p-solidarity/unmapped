@@ -1,0 +1,565 @@
+[
+ {
+  "n": "01",
+  "where": "title",
+  "method": "sigterm",
+  "requestedAt": "2026-09-26T07:43:46.742Z",
+  "exitMs": 1176,
+  "hung": false,
+  "second": null,
+  "cdpReply": "",
+  "at": "UNMAPPED |  | 無界之地 |  | An Autonomous Open World |  | Continue | Worlds\"",
+  "visitLine": null,
+  "savePosition": null,
+  "saveUpdatedAt": null,
+  "stayedAfterClose": null,
+  "chats": 0,
+  "chatsDone": 0,
+  "usageLines": "",
+  "quitLines": [
+   "[quit] requested; closing windows",
+   "[quit] windows closed 324 ms after the request; page calls finished",
+   "[quit] 7 cleanups done 333 ms after the request: registerInferenceIpc 1 ms · registerAccountIpc 0 ms · appleLocalHelper 9 ms · startWorldsWatcher 7 ms · createSidecar 1 ms · registerWorldIpc 0 ms · startModsWatcher 0 ms",
+   "[quit] exit 0 956 ms after the request"
+  ]
+ },
+ {
+  "n": "02",
+  "where": "play",
+  "method": "sigterm",
+  "requestedAt": "2026-09-26T07:44:52.672Z",
+  "exitMs": 503,
+  "hung": false,
+  "second": null,
+  "cdpReply": "",
+  "at": "{\\\"x\\\":38.581,\\\"z\\\":15.514,\\\"chunk\\\":{\\\"cx\\\":1,\\\"cz\\\":0},\\\"screen\\\":\\\"play\\\"}",
+  "visitLine": "[world] h6bllerabiim… visit of 1 chunks written on quit",
+  "savePosition": {
+   "x": 38.581,
+   "z": 15.514
+  },
+  "saveUpdatedAt": "2026-09-26T07:44:52.789Z",
+  "stayedAfterClose": null,
+  "chats": 3,
+  "chatsDone": 2,
+  "usageLines": "done,done,aborted",
+  "quitLines": [
+   "[quit] requested; closing windows",
+   "[quit] windows closed 370 ms after the request; page calls finished",
+   "[quit] 7 cleanups done 385 ms after the request: registerInferenceIpc 1 ms · registerAccountIpc 1 ms · appleLocalHelper 4 ms · startWorldsWatcher 3 ms · createSidecar 1 ms · startModsWatcher 0 ms · registerWorldIpc 12 ms",
+   "[quit] exit 0 385 ms after the request"
+  ]
+ },
+ {
+  "n": "03",
+  "where": "title",
+  "method": "page",
+  "requestedAt": "2026-09-26T07:45:08.008Z",
+  "exitMs": 1070,
+  "hung": false,
+  "second": null,
+  "cdpReply": "no reply",
+  "at": "UNMAPPED |  | 無界之地 |  | An Autonomous Open World |  | Continue | Worlds\"",
+  "visitLine": null,
+  "savePosition": null,
+  "saveUpdatedAt": null,
+  "stayedAfterClose": null,
+  "chats": 0,
+  "chatsDone": 0,
+  "usageLines": "",
+  "quitLines": [
+   "[quit] requested; closing windows",
+   "[quit] windows closed 365 ms after the request; page calls finished",
+   "[quit] 7 cleanups done 377 ms after the request: registerInferenceIpc 1 ms · registerAccountIpc 0 ms · appleLocalHelper 12 ms · startWorldsWatcher 10 ms · createSidecar 1 ms · registerWorldIpc 1 ms · startModsWatcher 0 ms",
+   "[quit] exit 0 805 ms after the request"
+  ]
+ },
+ {
+  "n": "04",
+  "where": "play",
+  "method": "page",
+  "requestedAt": "2026-09-26T07:45:31.148Z",
+  "exitMs": 1637,
+  "hung": false,
+  "second": null,
+  "cdpReply": "no reply",
+  "at": "{\\\"x\\\":38.907,\\\"z\\\":15.83,\\\"chunk\\\":{\\\"cx\\\":1,\\\"cz\\\":0},\\\"screen\\\":\\\"play\\\"}",
+  "visitLine": "[world] hcfdcb23blbd… visit of 1 chunks written on quit",
+  "savePosition": {
+   "x": 38.907,
+   "z": 15.83
+  },
+  "saveUpdatedAt": "2026-09-26T07:45:31.680Z",
+  "stayedAfterClose": null,
+  "chats": 3,
+  "chatsDone": 2,
+  "usageLines": "done,done,aborted",
+  "quitLines": [
+   "[quit] requested; closing windows",
+   "[quit] windows closed 1203 ms after the request; page calls finished",
+   "[quit] 7 cleanups done 1219 ms after the request: registerInferenceIpc 0 ms · registerAccountIpc 0 ms · appleLocalHelper 8 ms · startWorldsWatcher 6 ms · createSidecar 0 ms · startModsWatcher 0 ms · registerWorldIpc 8 ms",
+   "[quit] exit 0 1219 ms after the request"
+  ]
+ },
+ {
+  "n": "05",
+  "where": "title",
+  "method": "browser",
+  "requestedAt": "2026-09-26T07:45:46.359Z",
+  "exitMs": 351,
+  "hung": false,
+  "second": null,
+  "cdpReply": "no reply",
+  "at": "UNMAPPED |  | 無界之地 |  | An Autonomous Open World |  | Continue | Worlds\"",
+  "visitLine": null,
+  "savePosition": null,
+  "saveUpdatedAt": null,
+  "stayedAfterClose": null,
+  "chats": 0,
+  "chatsDone": 0,
+  "usageLines": "",
+  "quitLines": [
+   "[quit] requested; closing windows",
+   "[quit] windows closed 114 ms after the request; page calls finished",
+   "[quit] 7 cleanups done 117 ms after the request: registerInferenceIpc 0 ms · registerAccountIpc 0 ms · appleLocalHelper 3 ms · startWorldsWatcher 2 ms · createSidecar 0 ms · registerWorldIpc 0 ms · startModsWatcher 0 ms",
+   "[quit] exit 0 204 ms after the request"
+  ]
+ },
+ {
+  "n": "06",
+  "where": "play",
+  "method": "browser",
+  "requestedAt": "2026-09-26T07:46:09.903Z",
+  "exitMs": 420,
+  "hung": false,
+  "second": null,
+  "cdpReply": "no reply",
+  "at": "{\\\"x\\\":39.238,\\\"z\\\":16.533,\\\"chunk\\\":{\\\"cx\\\":1,\\\"cz\\\":0},\\\"screen\\\":\\\"play\\\"}",
+  "visitLine": "[world] h2qvrmqjgul3… visit of 1 chunks written on quit",
+  "savePosition": {
+   "x": 39.238,
+   "z": 16.533
+  },
+  "saveUpdatedAt": "2026-09-26T07:46:09.659Z",
+  "stayedAfterClose": null,
+  "chats": 3,
+  "chatsDone": 2,
+  "usageLines": "done,done,aborted",
+  "quitLines": [
+   "[quit] requested; closing windows",
+   "[quit] windows closed 138 ms after the request; page calls finished",
+   "[quit] 7 cleanups done 301 ms after the request: registerInferenceIpc 0 ms · registerAccountIpc 0 ms · appleLocalHelper 3 ms · startWorldsWatcher 2 ms · createSidecar 0 ms · startModsWatcher 0 ms · registerWorldIpc 160 ms",
+   "[quit] exit 0 301 ms after the request"
+  ]
+ },
+ {
+  "n": "07",
+  "where": "title",
+  "method": "sigterm",
+  "requestedAt": "2026-09-26T07:46:23.721Z",
+  "exitMs": 321,
+  "hung": false,
+  "second": null,
+  "cdpReply": "",
+  "at": "UNMAPPED |  | 無界之地 |  | An Autonomous Open World |  | Continue | Worlds\"",
+  "visitLine": null,
+  "savePosition": null,
+  "saveUpdatedAt": null,
+  "stayedAfterClose": null,
+  "chats": 0,
+  "chatsDone": 0,
+  "usageLines": "",
+  "quitLines": [
+   "[quit] requested; closing windows",
+   "[quit] windows closed 116 ms after the request; page calls finished",
+   "[quit] 7 cleanups done 118 ms after the request: registerInferenceIpc 0 ms · registerAccountIpc 0 ms · appleLocalHelper 2 ms · startWorldsWatcher 2 ms · createSidecar 0 ms · registerWorldIpc 0 ms · startModsWatcher 0 ms",
+   "[quit] exit 0 215 ms after the request"
+  ]
+ },
+ {
+  "n": "08",
+  "where": "play",
+  "method": "sigterm",
+  "requestedAt": "2026-09-26T07:46:46.623Z",
+  "exitMs": 352,
+  "hung": false,
+  "second": null,
+  "cdpReply": "",
+  "at": "{\\\"x\\\":39.429,\\\"z\\\":15.549,\\\"chunk\\\":{\\\"cx\\\":1,\\\"cz\\\":0},\\\"screen\\\":\\\"play\\\"}",
+  "visitLine": "[world] h4pyklgabese… visit of 1 chunks written on quit",
+  "savePosition": {
+   "x": 39.429,
+   "z": 15.549
+  },
+  "saveUpdatedAt": "2026-09-26T07:46:46.728Z",
+  "stayedAfterClose": null,
+  "chats": 3,
+  "chatsDone": 2,
+  "usageLines": "done,done,aborted",
+  "quitLines": [
+   "[quit] requested; closing windows",
+   "[quit] windows closed 218 ms after the request; page calls finished",
+   "[quit] 7 cleanups done 233 ms after the request: registerInferenceIpc 1 ms · registerAccountIpc 0 ms · appleLocalHelper 7 ms · startWorldsWatcher 7 ms · createSidecar 1 ms · startModsWatcher 0 ms · registerWorldIpc 9 ms",
+   "[quit] exit 0 233 ms after the request"
+  ]
+ },
+ {
+  "n": "09",
+  "where": "title",
+  "method": "page",
+  "requestedAt": "2026-09-26T07:47:00.363Z",
+  "exitMs": 569,
+  "hung": false,
+  "second": null,
+  "cdpReply": "{\"method\":\"Inspector.detached\",\"params\":{\"reason\":\"target_closed\"}}",
+  "at": "UNMAPPED |  | 無界之地 |  | An Autonomous Open World |  | Continue | Worlds\"",
+  "visitLine": null,
+  "savePosition": null,
+  "saveUpdatedAt": null,
+  "stayedAfterClose": null,
+  "chats": 0,
+  "chatsDone": 0,
+  "usageLines": "",
+  "quitLines": [
+   "[quit] requested; closing windows",
+   "[quit] windows closed 116 ms after the request; page calls finished",
+   "[quit] 7 cleanups done 118 ms after the request: registerInferenceIpc 0 ms · registerAccountIpc 0 ms · appleLocalHelper 2 ms · startWorldsWatcher 2 ms · createSidecar 1 ms · registerWorldIpc 0 ms · startModsWatcher 0 ms",
+   "[quit] exit 0 203 ms after the request"
+  ]
+ },
+ {
+  "n": "10",
+  "where": "play",
+  "method": "page",
+  "requestedAt": "2026-09-26T07:47:24.670Z",
+  "exitMs": 480,
+  "hung": false,
+  "second": null,
+  "cdpReply": "{\"method\":\"Inspector.detached\",\"params\":{\"reason\":\"target_closed\"}}",
+  "at": "{\\\"x\\\":39.159,\\\"z\\\":15.947,\\\"chunk\\\":{\\\"cx\\\":1,\\\"cz\\\":0},\\\"screen\\\":\\\"play\\\"}",
+  "visitLine": "[world] h4jrt5ecpycx… visit of 1 chunks written on quit",
+  "savePosition": {
+   "x": 39.159,
+   "z": 15.947
+  },
+  "saveUpdatedAt": "2026-09-26T07:47:24.800Z",
+  "stayedAfterClose": null,
+  "chats": 3,
+  "chatsDone": 2,
+  "usageLines": "done,done,aborted",
+  "quitLines": [
+   "[quit] requested; closing windows",
+   "[quit] windows closed 339 ms after the request; page calls finished",
+   "[quit] 7 cleanups done 348 ms after the request: registerInferenceIpc 0 ms · registerAccountIpc 0 ms · appleLocalHelper 2 ms · startWorldsWatcher 2 ms · createSidecar 0 ms · startModsWatcher 0 ms · registerWorldIpc 7 ms",
+   "[quit] exit 0 349 ms after the request"
+  ]
+ },
+ {
+  "n": "11",
+  "where": "title",
+  "method": "browser",
+  "requestedAt": "2026-09-26T07:47:38.356Z",
+  "exitMs": 352,
+  "hung": false,
+  "second": null,
+  "cdpReply": "no reply",
+  "at": "UNMAPPED |  | 無界之地 |  | An Autonomous Open World |  | Continue | Worlds\"",
+  "visitLine": null,
+  "savePosition": null,
+  "saveUpdatedAt": null,
+  "stayedAfterClose": null,
+  "chats": 0,
+  "chatsDone": 0,
+  "usageLines": "",
+  "quitLines": [
+   "[quit] requested; closing windows",
+   "[quit] windows closed 116 ms after the request; page calls finished",
+   "[quit] 7 cleanups done 119 ms after the request: registerInferenceIpc 0 ms · registerAccountIpc 0 ms · appleLocalHelper 3 ms · startWorldsWatcher 2 ms · createSidecar 1 ms · registerWorldIpc 0 ms · startModsWatcher 0 ms",
+   "[quit] exit 0 184 ms after the request"
+  ]
+ },
+ {
+  "n": "12",
+  "where": "play",
+  "method": "browser",
+  "requestedAt": "2026-09-26T07:48:00.543Z",
+  "exitMs": 336,
+  "hung": false,
+  "second": null,
+  "cdpReply": "no reply",
+  "at": "{\\\"x\\\":39.568,\\\"z\\\":15.047,\\\"chunk\\\":{\\\"cx\\\":1,\\\"cz\\\":0},\\\"screen\\\":\\\"play\\\"}",
+  "visitLine": "[world] hpcjyq6pxdyz… visit of 1 chunks written on quit",
+  "savePosition": {
+   "x": 39.568,
+   "z": 15.047
+  },
+  "saveUpdatedAt": "2026-09-26T07:48:00.653Z",
+  "stayedAfterClose": null,
+  "chats": 3,
+  "chatsDone": 2,
+  "usageLines": "done,done,aborted",
+  "quitLines": [
+   "[quit] requested; closing windows",
+   "[quit] windows closed 225 ms after the request; page calls finished",
+   "[quit] 7 cleanups done 233 ms after the request: registerInferenceIpc 0 ms · registerAccountIpc 0 ms · appleLocalHelper 3 ms · startWorldsWatcher 2 ms · createSidecar 1 ms · startModsWatcher 0 ms · registerWorldIpc 5 ms",
+   "[quit] exit 0 233 ms after the request"
+  ]
+ },
+ {
+  "n": "13",
+  "where": "title",
+  "method": "sigterm",
+  "requestedAt": "2026-09-26T07:48:13.203Z",
+  "exitMs": 321,
+  "hung": false,
+  "second": null,
+  "cdpReply": "",
+  "at": "UNMAPPED |  | 無界之地 |  | An Autonomous Open World |  | Continue | Worlds\"",
+  "visitLine": null,
+  "savePosition": null,
+  "saveUpdatedAt": null,
+  "stayedAfterClose": null,
+  "chats": 0,
+  "chatsDone": 0,
+  "usageLines": "",
+  "quitLines": [
+   "[quit] requested; closing windows",
+   "[quit] windows closed 117 ms after the request; page calls finished",
+   "[quit] 7 cleanups done 120 ms after the request: registerInferenceIpc 0 ms · registerAccountIpc 1 ms · appleLocalHelper 3 ms · startWorldsWatcher 3 ms · createSidecar 1 ms · registerWorldIpc 1 ms · startModsWatcher 1 ms",
+   "[quit] exit 0 186 ms after the request"
+  ]
+ },
+ {
+  "n": "14",
+  "where": "play",
+  "method": "sigterm",
+  "requestedAt": "2026-09-26T07:48:39.058Z",
+  "exitMs": 237,
+  "hung": false,
+  "second": null,
+  "cdpReply": "",
+  "at": "{\\\"x\\\":38.657,\\\"z\\\":16.317,\\\"chunk\\\":{\\\"cx\\\":1,\\\"cz\\\":0},\\\"screen\\\":\\\"play\\\"}",
+  "visitLine": "[world] hor47cw2ssnk… visit of 1 chunks written on quit",
+  "savePosition": {
+   "x": 38.657,
+   "z": 16.317
+  },
+  "saveUpdatedAt": "2026-09-26T07:48:39.161Z",
+  "stayedAfterClose": null,
+  "chats": 3,
+  "chatsDone": 2,
+  "usageLines": "done,done,aborted",
+  "quitLines": [
+   "[quit] requested; closing windows",
+   "[quit] windows closed 164 ms after the request; page calls finished",
+   "[quit] 7 cleanups done 174 ms after the request: registerInferenceIpc 0 ms · registerAccountIpc 0 ms · appleLocalHelper 5 ms · startWorldsWatcher 5 ms · createSidecar 1 ms · startModsWatcher 0 ms · registerWorldIpc 4 ms",
+   "[quit] exit 0 174 ms after the request"
+  ]
+ },
+ {
+  "n": "15",
+  "where": "title",
+  "method": "page",
+  "requestedAt": "2026-09-26T07:48:52.888Z",
+  "exitMs": 305,
+  "hung": false,
+  "second": null,
+  "cdpReply": "{\"method\":\"Inspector.detached\",\"params\":{\"reason\":\"target_closed\"}}",
+  "at": "UNMAPPED |  | 無界之地 |  | An Autonomous Open World |  | Continue | Worlds\"",
+  "visitLine": null,
+  "savePosition": null,
+  "saveUpdatedAt": null,
+  "stayedAfterClose": null,
+  "chats": 0,
+  "chatsDone": 0,
+  "usageLines": "",
+  "quitLines": [
+   "[quit] requested; closing windows",
+   "[quit] windows closed 107 ms after the request; page calls finished",
+   "[quit] 7 cleanups done 109 ms after the request: registerInferenceIpc 1 ms · registerAccountIpc 0 ms · appleLocalHelper 2 ms · startWorldsWatcher 2 ms · createSidecar 1 ms · registerWorldIpc 1 ms · startModsWatcher 0 ms",
+   "[quit] exit 0 141 ms after the request"
+  ]
+ },
+ {
+  "n": "16",
+  "where": "play",
+  "method": "page",
+  "requestedAt": "2026-09-26T07:49:17.325Z",
+  "exitMs": 478,
+  "hung": false,
+  "second": null,
+  "cdpReply": "{\"method\":\"Inspector.detached\",\"params\":{\"reason\":\"target_closed\"}}",
+  "at": "{\\\"x\\\":38.786,\\\"z\\\":15.877,\\\"chunk\\\":{\\\"cx\\\":1,\\\"cz\\\":0},\\\"screen\\\":\\\"play\\\"}",
+  "visitLine": "[world] h3zmhsmkhmrk… visit of 1 chunks written on quit",
+  "savePosition": {
+   "x": 38.786,
+   "z": 15.877
+  },
+  "saveUpdatedAt": "2026-09-26T07:49:17.452Z",
+  "stayedAfterClose": null,
+  "chats": 3,
+  "chatsDone": 2,
+  "usageLines": "done,done,aborted",
+  "quitLines": [
+   "[quit] requested; closing windows",
+   "[quit] windows closed 315 ms after the request; page calls finished",
+   "[quit] 7 cleanups done 328 ms after the request: registerInferenceIpc 0 ms · registerAccountIpc 0 ms · appleLocalHelper 5 ms · startWorldsWatcher 4 ms · createSidecar 1 ms · startModsWatcher 0 ms · registerWorldIpc 8 ms",
+   "[quit] exit 0 329 ms after the request"
+  ]
+ },
+ {
+  "n": "17",
+  "where": "title",
+  "method": "browser",
+  "requestedAt": "2026-09-26T07:49:33.210Z",
+  "exitMs": 321,
+  "hung": false,
+  "second": null,
+  "cdpReply": "no reply",
+  "at": "UNMAPPED |  | 無界之地 |  | An Autonomous Open World |  | Continue | Worlds\"",
+  "visitLine": null,
+  "savePosition": null,
+  "saveUpdatedAt": null,
+  "stayedAfterClose": null,
+  "chats": 0,
+  "chatsDone": 0,
+  "usageLines": "",
+  "quitLines": [
+   "[quit] requested; closing windows",
+   "[quit] windows closed 107 ms after the request; page calls finished",
+   "[quit] 7 cleanups done 119 ms after the request: registerInferenceIpc 1 ms · registerAccountIpc 0 ms · appleLocalHelper 12 ms · startWorldsWatcher 12 ms · createSidecar 1 ms · registerWorldIpc 1 ms · startModsWatcher 0 ms",
+   "[quit] exit 0 189 ms after the request"
+  ]
+ },
+ {
+  "n": "18",
+  "where": "play",
+  "method": "browser",
+  "requestedAt": "2026-09-26T07:50:03.078Z",
+  "exitMs": 562,
+  "hung": false,
+  "second": null,
+  "cdpReply": "no reply",
+  "at": "{\\\"x\\\":38.999,\\\"z\\\":15.211,\\\"chunk\\\":{\\\"cx\\\":1,\\\"cz\\\":0},\\\"screen\\\":\\\"play\\\"}",
+  "visitLine": "[world] h5prpfrvta7e… visit of 1 chunks written on quit",
+  "savePosition": {
+   "x": 38.999,
+   "z": 15.211
+  },
+  "saveUpdatedAt": "2026-09-26T07:50:03.216Z",
+  "stayedAfterClose": null,
+  "chats": 3,
+  "chatsDone": 2,
+  "usageLines": "done,done,aborted",
+  "quitLines": [
+   "[quit] requested; closing windows",
+   "[quit] windows closed 239 ms after the request; page calls finished",
+   "[quit] 7 cleanups done 264 ms after the request: registerInferenceIpc 2 ms · registerAccountIpc 2 ms · appleLocalHelper 10 ms · startWorldsWatcher 10 ms · createSidecar 2 ms · startModsWatcher 2 ms · registerWorldIpc 16 ms",
+   "[quit] exit 0 264 ms after the request"
+  ]
+ },
+ {
+  "n": "19",
+  "where": "title",
+  "method": "sigterm",
+  "requestedAt": "2026-09-26T07:50:16.322Z",
+  "exitMs": 440,
+  "hung": false,
+  "second": null,
+  "cdpReply": "",
+  "at": "UNMAPPED |  | 無界之地 |  | An Autonomous Open World |  | Continue | Worlds\"",
+  "visitLine": null,
+  "savePosition": null,
+  "saveUpdatedAt": null,
+  "stayedAfterClose": null,
+  "chats": 0,
+  "chatsDone": 0,
+  "usageLines": "",
+  "quitLines": [
+   "[quit] requested; closing windows",
+   "[quit] windows closed 118 ms after the request; page calls finished",
+   "[quit] 7 cleanups done 121 ms after the request: registerInferenceIpc 0 ms · registerAccountIpc 0 ms · appleLocalHelper 3 ms · startWorldsWatcher 2 ms · createSidecar 0 ms · registerWorldIpc 0 ms · startModsWatcher 0 ms",
+   "[quit] exit 0 200 ms after the request"
+  ]
+ },
+ {
+  "n": "20",
+  "where": "play",
+  "method": "sigterm",
+  "requestedAt": "2026-09-26T07:50:41.138Z",
+  "exitMs": 324,
+  "hung": false,
+  "second": null,
+  "cdpReply": "",
+  "at": "{\\\"x\\\":39.539,\\\"z\\\":16.548,\\\"chunk\\\":{\\\"cx\\\":1,\\\"cz\\\":0},\\\"screen\\\":\\\"play\\\"}",
+  "visitLine": "[world] hfyrykou6wco… visit of 1 chunks written on quit",
+  "savePosition": {
+   "x": 39.539,
+   "z": 16.548
+  },
+  "saveUpdatedAt": "2026-09-26T07:50:41.242Z",
+  "stayedAfterClose": null,
+  "chats": 3,
+  "chatsDone": 2,
+  "usageLines": "done,done,aborted",
+  "quitLines": [
+   "[quit] requested; closing windows",
+   "[quit] windows closed 207 ms after the request; page calls finished",
+   "[quit] 7 cleanups done 215 ms after the request: registerInferenceIpc 0 ms · registerAccountIpc 0 ms · appleLocalHelper 2 ms · startWorldsWatcher 2 ms · createSidecar 0 ms · startModsWatcher 0 ms · registerWorldIpc 6 ms",
+   "[quit] exit 0 215 ms after the request"
+  ]
+ },
+ {
+  "n": "21",
+  "where": "title",
+  "method": "closethen",
+  "requestedAt": "2026-09-26T07:50:54.465Z",
+  "exitMs": 54,
+  "hung": false,
+  "second": null,
+  "cdpReply": "window.close(): after 3 s alive=true pages=0; then SIGTERM",
+  "at": "UNMAPPED |  | 無界之地 |  | An Autonomous Open World |  | Continue | Worlds\"",
+  "visitLine": null,
+  "savePosition": null,
+  "saveUpdatedAt": null,
+  "stayedAfterClose": true,
+  "chats": 0,
+  "chatsDone": 0,
+  "usageLines": "",
+  "quitLines": [
+   "[app] last window closed; the app stays open (macOS)",
+   "[quit] requested; closing windows",
+   "[quit] windows closed 0 ms after the request; page calls finished",
+   "[quit] 7 cleanups done 2 ms after the request: registerInferenceIpc 1 ms · registerAccountIpc 1 ms · appleLocalHelper 2 ms · startWorldsWatcher 2 ms · createSidecar 1 ms · registerWorldIpc 1 ms · startModsWatcher 0 ms",
+   "[quit] exit 0 2 ms after the request"
+  ]
+ },
+ {
+  "n": "22",
+  "where": "play",
+  "method": "closethen",
+  "requestedAt": "2026-09-26T07:51:18.444Z",
+  "exitMs": 88,
+  "hung": false,
+  "second": null,
+  "cdpReply": "window.close(): after 3 s alive=true pages=0; then SIGTERM",
+  "at": "{\\\"x\\\":38.659,\\\"z\\\":16.553,\\\"chunk\\\":{\\\"cx\\\":1,\\\"cz\\\":0},\\\"screen\\\":\\\"play\\\"}",
+  "visitLine": "[world] hrkvurhrjjud… visit of 1 chunks written on quit",
+  "savePosition": {
+   "x": 38.659,
+   "z": 16.553
+  },
+  "saveUpdatedAt": "2026-09-26T07:51:18.451Z",
+  "stayedAfterClose": true,
+  "chats": 3,
+  "chatsDone": 2,
+  "usageLines": "done,done,aborted",
+  "quitLines": [
+   "[app] last window closed; the app stays open (macOS)",
+   "[quit] requested; closing windows",
+   "[quit] windows closed 0 ms after the request; page calls finished",
+   "[quit] 7 cleanups done 6 ms after the request: registerInferenceIpc 0 ms · registerAccountIpc 0 ms · appleLocalHelper 1 ms · startWorldsWatcher 1 ms · createSidecar 0 ms · startModsWatcher 0 ms · registerWorldIpc 4 ms",
+   "[quit] exit 0 6 ms after the request"
+  ]
+ }
+]

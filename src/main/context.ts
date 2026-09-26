@@ -24,6 +24,9 @@ export interface MainContext {
   profilesDir: string;
   /** Sends an event to every open renderer window (`webContents.send`). */
   broadcast(channel: string, payload: unknown): void;
-  /** Registers cleanup run on `before-quit` (kill sidecars, close watchers). */
+  /**
+   * Registers a cleanup run once when the app quits, after its windows have closed (kill sidecars,
+   * close watchers, flush outboxes). Each quit waits for it at most a few seconds (quit.ts).
+   */
   onBeforeQuit(cleanup: () => Promise<void> | void): void;
 }

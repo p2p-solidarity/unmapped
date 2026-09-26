@@ -6,6 +6,26 @@ import { err, fail, type Result, toError } from "@shared/result";
 import { type IpcMainInvokeEvent, ipcMain } from "electron";
 import type { z } from "zod";
 
+/**
+ * Calls not answered yet. A quit waits for them (quit.ts), so the checkpoint a closing page sends
+ * from its `beforeunload` is written before the process ends.
+ */
+const unanswered = new Set<Promise<unknown>>();
+
+function track<T>(answer: Promise<T>): Promise<T> {
+  unanswered.add(answer);
+  const settle = (): void => {
+    unanswered.delete(answer);
+  };
+  void answer.then(settle, settle);
+  return answer;
+}
+
+/** Resolves once every call that is running now has been answered (or has failed). */
+export function callsSettled(): Promise<void> {
+  return Promise.allSettled([...unanswered]).then(() => undefined);
+}
+
 export function invalidPayload(channel: string, error: z.ZodError): Result<never> {
   const issue = error.issues[0];
   const where = issue !== undefined && issue.path.length > 0 ? issue.path.join(".") : "payload";
@@ -23,7 +43,7 @@ export function handle<S extends z.ZodType<readonly unknown[]>, T>(
   schema: S,
   run: (input: z.output<S>, event: IpcMainInvokeEvent) => Promise<Result<T>> | Result<T>,
 ): void {
-  ipcMain.handle(channel, async (event, ...args: unknown[]): Promise<Result<T>> => {
+  const answer = async (event: IpcMainInvokeEvent, args: unknown[]): Promise<Result<T>> => {
     const parsed = schema.safeParse(args);
     if (!parsed.success) return invalidPayload(channel, parsed.error);
     try {
@@ -31,7 +51,8 @@ export function handle<S extends z.ZodType<readonly unknown[]>, T>(
     } catch (error) {
       return fail(toError(error, "ipc-failed"));
     }
-  });
+  };
+  ipcMain.handle(channel, (event, ...args: unknown[]) => track(answer(event, args)));
 }
 
 /**
@@ -39,5 +60,5 @@ export function handle<S extends z.ZodType<readonly unknown[]>, T>(
  * `app.info()`, which cannot fail).
  */
 export function handleValue<T>(channel: string, run: () => Promise<T> | T): void {
-  ipcMain.handle(channel, async (): Promise<T> => await run());
+  ipcMain.handle(channel, () => track(Promise.resolve().then(run)));
 }

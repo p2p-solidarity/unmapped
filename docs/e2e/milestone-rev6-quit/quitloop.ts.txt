@@ -1,0 +1,239 @@
+// Quit loop: launch the dev app on a fresh throwaway userData, optionally enter Play and walk into a
+// second chunk, then quit with one method and time the request → Electron pid exit.
+//   bun quitloop.ts <snapDir> <label> <plan>   plan = "title:sigterm,play:page,..."
+// methods: sigterm | page (Browser.close on the page target) | browser (Browser.close on the
+// browser target) | selfquit (diag copy only: QUITDIAG_SELF_QUIT_MS)
+import { spawn, spawnSync } from "node:child_process";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+
+const PORT = 9341;
+const [snap, label, planText] = process.argv.slice(2);
+if (!snap || !label || !planText) throw new Error("usage: quitloop.ts <snap> <label> <plan>");
+const SP = new URL(".", import.meta.url).pathname;
+const VITE_PORT = Number(process.env.QUIT_VITE_PORT ?? 5341);
+const HANG_MS = Number(process.env.QUIT_HANG_MS ?? 20_000);
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function electronPid(): number | null {
+  const r = spawnSync("pgrep", ["-f", `Electron . --remote-debugging-port=${PORT}`], {
+    encoding: "utf8",
+  });
+  const pids = r.stdout.trim().split("\n").filter(Boolean).map(Number);
+  return pids[0] ?? null;
+}
+function alive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+async function waitGone(pid: number, ms: number): Promise<number | null> {
+  const t0 = performance.now();
+  while (performance.now() - t0 < ms) {
+    if (!alive(pid)) return performance.now() - t0;
+    await sleep(25);
+  }
+  return null;
+}
+async function cdpSend(wsUrl: string, method: string): Promise<string> {
+  const ws = new WebSocket(wsUrl);
+  await new Promise((r, j) => {
+    ws.addEventListener("open", r, { once: true });
+    ws.addEventListener("error", j, { once: true });
+  });
+  let reply = "no reply";
+  ws.addEventListener("message", (e) => {
+    reply = String(e.data).slice(0, 120);
+  });
+  ws.send(JSON.stringify({ id: 1, method }));
+  await sleep(300);
+  try {
+    ws.close();
+  } catch {}
+  return reply;
+}
+async function cdpEval(wsUrl: string, expression: string): Promise<string> {
+  const ws = new WebSocket(wsUrl);
+  await new Promise((r) => ws.addEventListener("open", r, { once: true }));
+  ws.send(JSON.stringify({ id: 1, method: "Runtime.evaluate", params: { expression } }));
+  await sleep(300);
+  try {
+    ws.close();
+  } catch {}
+  return "sent";
+}
+async function targets(): Promise<Array<{ type: string; url: string; webSocketDebuggerUrl: string }>> {
+  return (await (await fetch(`http://127.0.0.1:${PORT}/json`)).json()) as never;
+}
+function drive(actions: unknown[], out: string): string {
+  const r = spawnSync("bun", [join(snap, "scripts/cdp-drive.ts"), JSON.stringify(actions)], {
+    cwd: snap,
+    env: { ...process.env, CDP_PORT: String(PORT) },
+    encoding: "utf8",
+    timeout: 120_000,
+  });
+  writeFileSync(out, `${r.stdout}\n${r.stderr}`);
+  return r.stdout;
+}
+
+const TITLE_READY = {
+  eval: "(async () => { for (let i = 0; i < 120; i++) { const t = document.body.innerText; if (t.includes('設定') || t.includes('Settings')) return 'ready'; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()",
+};
+const ENGLISH = [
+  TITLE_READY,
+  { wait: 500 },
+  { clickText: "設定" },
+  { wait: 800 },
+  { clickText: "English" },
+  { wait: 600 },
+  { hold: "Escape", ms: 80 },
+  { wait: 600 },
+  { eval: "'TITLE ' + document.body.innerText.split('\\n').slice(0, 8).join(' | ')" },
+];
+const PLAY = [
+  ...ENGLISH,
+  { clickText: "Worlds" },
+  { wait: 1200 },
+  { clickText: "Start" },
+  {
+    eval: "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance && S.useLandStore.getState().progress !== null) return 'play ' + (Date.now() - t0) + ' ms'; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + S.useSessionStore.getState().screen })()",
+  },
+  { wait: 2000 },
+  { pad: { toward: "[40, 16]", within: 1.5, buttons: [5], timeoutMs: 45000 } },
+  {
+    eval: "(async () => { const P = await import('/engine/playerProbe.ts'); const S = await import('/state/index.ts'); const p = P.samplePlayer(); return 'AT ' + JSON.stringify({ x: p && +p.x.toFixed(3), z: p && +p.z.toFixed(3), chunk: S.useEngineStore.getState().chunk, screen: S.useSessionStore.getState().screen }) })()",
+  },
+];
+
+function findSave(ud: string): { position?: { x: number; z: number }; updatedAt?: string } | null {
+  const dir = join(ud, "instances");
+  if (!existsSync(dir)) return null;
+  for (const inst of readdirSync(dir)) {
+    const saves = join(dir, inst, "saves");
+    if (!existsSync(saves)) continue;
+    for (const s of readdirSync(saves)) {
+      const f = join(saves, s, "save.json");
+      if (existsSync(f)) return JSON.parse(readFileSync(f, "utf8"));
+    }
+  }
+  return null;
+}
+
+const rows: Array<Record<string, unknown>> = [];
+const plan = planText.split(",");
+for (const [i, item] of plan.entries()) {
+  const [where, method] = item.split(":") as ["title" | "play", string];
+  const n = String(i + 1).padStart(2, "0");
+  const ud = join(SP, "ud", `${label}-${n}`);
+  mkdirSync(ud, { recursive: true });
+  const log = join(SP, "logs", `${label}-${n}.log`);
+  const env: Record<string, string> = {
+    ...(process.env as Record<string, string>),
+    AETHER_TEST_USER_DATA: ud,
+    QUIT_VITE_PORT: String(VITE_PORT),
+  };
+  if (method === "selfquit") env.QUITDIAG_SELF_QUIT_MS = where === "title" ? "25000" : "90000";
+  if (electronPid() !== null) throw new Error("an app is already on 9341");
+  const fd = Bun.file(log).writer();
+  const child = spawn("bunx", ["electron-vite", "dev", "--remoteDebuggingPort", String(PORT)], {
+    cwd: snap,
+    env,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  child.stdout.on("data", (d) => fd.write(d));
+  child.stderr.on("data", (d) => fd.write(d));
+  let pid: number | null = null;
+  for (let t = 0; t < 240 && pid === null; t++) {
+    await sleep(250);
+    try {
+      const ts = await targets();
+      if (ts.some((x) => x.type === "page" && x.url.startsWith("http://localhost:"))) pid = electronPid();
+    } catch {}
+  }
+  if (pid === null) throw new Error(`${label}-${n}: app did not start`);
+  let at = "";
+  const shots = process.env.QUIT_SHOTS;
+  const shot = shots ? [{ shot: join(shots, `${label}-${n}-${where}-before-quit.jpg`) }] : [];
+  if (where === "play") {
+    const out = drive([...PLAY, ...shot], join(SP, "logs", `${label}-${n}.drive.txt`));
+    at = out.match(/AT (\{[^\n]*\})/)?.[1] ?? "no AT";
+  } else {
+    const out = drive([...ENGLISH, { wait: 1000 }, ...shot], join(SP, "logs", `${label}-${n}.drive.txt`));
+    at = out.match(/TITLE ([^\n]*)/)?.[1]?.slice(0, 80) ?? "no TITLE";
+  }
+  const requestedAt = new Date().toISOString();
+  let t0 = performance.now();
+  let reply = "";
+  let stayedAfterClose: boolean | null = null;
+  if (method === "sigterm") process.kill(pid, "SIGTERM");
+  else if (method === "page") {
+    const page = (await targets()).find((x) => x.type === "page" && x.url.startsWith("http://localhost:"));
+    reply = page ? await cdpSend(page.webSocketDebuggerUrl, "Browser.close") : "no page";
+  } else if (method === "browser") {
+    const v = (await (await fetch(`http://127.0.0.1:${PORT}/json/version`)).json()) as {
+      webSocketDebuggerUrl: string;
+    };
+    reply = await cdpSend(v.webSocketDebuggerUrl, "Browser.close");
+  } else if (method === "closethen") {
+    // Close the last window (not a quit): on macOS the app must stay. Then quit it with SIGTERM.
+    const page = (await targets()).find((x) => x.type === "page" && x.url.startsWith("http://localhost:"));
+    reply = page ? await cdpEval(page.webSocketDebuggerUrl, "window.close()") : "no page";
+    await sleep(3000);
+    const stayed = alive(pid);
+    const pages = (await targets().catch(() => [])).filter((x) => x.type === "page").length;
+    reply = `window.close(): after 3 s alive=${stayed} pages=${pages}; then SIGTERM`;
+    stayedAfterClose = stayed;
+    t0 = performance.now();
+    process.kill(pid, "SIGTERM");
+  } // selfquit: the app's own timer
+  const waitMs = method === "selfquit" ? HANG_MS + 90_000 : HANG_MS;
+  const gone = await waitGone(pid, waitMs);
+  const exitMs = gone === null ? null : Math.round(performance.now() - t0);
+  let second: string | null = null;
+  if (gone === null) {
+    const t1 = performance.now();
+    process.kill(pid, "SIGTERM");
+    const g2 = await waitGone(pid, 10_000);
+    second = g2 === null ? "still alive → SIGKILL" : `2nd SIGTERM → gone in ${Math.round(performance.now() - t1)} ms`;
+    if (g2 === null) process.kill(pid, "SIGKILL");
+  }
+  await sleep(1500);
+  if (child.exitCode === null) child.kill("SIGTERM");
+  await sleep(500);
+  await fd.end();
+  const text = readFileSync(log, "utf8");
+  const visit = text.match(/\[world\][^\n]*(written on quit|not written on quit[^\n]*)/)?.[0] ?? null;
+  const save = findSave(ud);
+  const usageFile = join(ud, "usage.jsonl");
+  const usage = existsSync(usageFile)
+    ? readFileSync(usageFile, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l) as { outcome?: string })
+    : [];
+  const chats = (text.match(/\[inference\] chat /g) ?? []).length;
+  const chatsDone = (text.match(/\[inference\] done /g) ?? []).length;
+  const row = {
+    n,
+    where,
+    method,
+    requestedAt,
+    exitMs,
+    hung: gone === null,
+    second,
+    cdpReply: reply,
+    at,
+    visitLine: visit,
+    savePosition: save?.position ? { x: +save.position.x.toFixed(3), z: +save.position.z.toFixed(3) } : null,
+    saveUpdatedAt: save?.updatedAt ?? null,
+    stayedAfterClose,
+    chats,
+    chatsDone,
+    usageLines: usage.filter((u) => u.outcome !== undefined).map((u) => u.outcome).join(","),
+    quitLines: text.split("\n").filter((l) => l.startsWith("[quit]") || l.startsWith("[app]")),
+  };
+  rows.push(row);
+  console.log(JSON.stringify(row));
+  writeFileSync(join(SP, "logs", `${label}.rows.json`), JSON.stringify(rows, null, 1));
+  await sleep(1000);
+}

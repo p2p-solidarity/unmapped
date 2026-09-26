@@ -1,0 +1,152 @@
+# origin/main 12c29e7 with logging only (behaviour unchanged): the [quitdiag] lines of src/main/index.ts
+# (diag patch: diag-index.patch.txt). +ms = since main started. 'handles' = process._getActiveHandles() by type.
+
+## title, SIGTERM to the Electron pid (hung; a 2nd SIGTERM killed it)
+[quitdiag] +35846ms before-quit shuttingDown=false cleanups=7
+[quitdiag] +35847ms at before-quit windows=[1:visible] webContents=[1:window:http://localhost:5342/] handles={"Socket":4,"ChildProcess":1,"FSWatcher":2}
+[quitdiag] +35850ms before-quit (last listener) defaultPrevented=true listeners=2
+[quitdiag] +35850ms cleanup done at registerInferenceIpc  in 1ms
+[quitdiag] +35850ms cleanup done at registerAccountIpc  in 0ms
+[quitdiag] +35850ms cleanup done apple-local provider.close in 3ms
+[quitdiag] +35850ms cleanup done at startWorldsWatcher  in 3ms
+[quitdiag] +35850ms cleanup done at createSidecar  in 1ms
+[quitdiag] +35850ms cleanup done at registerWorldIpc  in 1ms
+[quitdiag] +35850ms cleanup done at startModsWatcher  in 0ms
+[quitdiag] +35850ms all cleanups settled; calling app.quit()
+[quitdiag] +35850ms before second app.quit windows=[1:visible] webContents=[1:window:http://localhost:5342/] handles={"Socket":4,"ChildProcess":1,"FSWatcher":2}
+[quitdiag] +35850ms app.quit() called from     at  |     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+[quitdiag] +35850ms before-quit shuttingDown=true cleanups=7
+[quitdiag] +35850ms at before-quit windows=[1:visible] webContents=[1:window:http://localhost:5342/] handles={"Socket":4,"ChildProcess":1,"FSWatcher":2}
+[quitdiag] +35850ms before-quit (last listener) defaultPrevented=false listeners=2
+[quitdiag] +35851ms window 1 close defaultPrevented=false
+[quitdiag] +35951ms second app.quit() returned
+[quitdiag] +35951ms after second app.quit windows=[1:visible] webContents=[1:window:http://localhost:5342/] handles={"Socket":4,"ChildProcess":1,"FSWatcher":2}
+[quitdiag] +35952ms window 1 -before-unload-fired proceed=true prevented=false
+[quitdiag] +35955ms webContents of window 1 destroyed
+[quitdiag] +35956ms window 1 closed
+[quitdiag] +35956ms window-all-closed
+[quitdiag] +37952ms waiting windows=[] webContents=[] handles={"Socket":1}
+[quitdiag] +39954ms waiting windows=[] webContents=[] handles={"Socket":1}
+
+## title, Browser.close on the page target (hung; a 2nd SIGTERM killed it)
+[quitdiag] +32803ms before-quit shuttingDown=false cleanups=7
+[quitdiag] +32804ms at before-quit windows=[1:visible] webContents=[1:window:http://localhost:5342/] handles={"Socket":4,"ChildProcess":1,"FSWatcher":2}
+[quitdiag] +32806ms before-quit (last listener) defaultPrevented=true listeners=2
+[quitdiag] +32807ms cleanup done at registerInferenceIpc  in 1ms
+[quitdiag] +32807ms cleanup done at registerAccountIpc  in 1ms
+[quitdiag] +32807ms cleanup done apple-local provider.close in 3ms
+[quitdiag] +32807ms cleanup done at startWorldsWatcher  in 3ms
+[quitdiag] +32807ms cleanup done at createSidecar  in 1ms
+[quitdiag] +32807ms cleanup done at registerWorldIpc  in 1ms
+[quitdiag] +32807ms cleanup done at startModsWatcher  in 1ms
+[quitdiag] +32807ms all cleanups settled; calling app.quit()
+[quitdiag] +32807ms before second app.quit windows=[1:visible] webContents=[1:window:http://localhost:5342/] handles={"Socket":4,"ChildProcess":1,"FSWatcher":2}
+[quitdiag] +32807ms app.quit() called from     at  |     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+[quitdiag] +32807ms before-quit shuttingDown=true cleanups=7
+[quitdiag] +32807ms at before-quit windows=[1:visible] webContents=[1:window:http://localhost:5342/] handles={"Socket":4,"ChildProcess":1,"FSWatcher":2}
+[quitdiag] +32807ms before-quit (last listener) defaultPrevented=false listeners=2
+[quitdiag] +32807ms window 1 close defaultPrevented=false
+[quitdiag] +32908ms second app.quit() returned
+[quitdiag] +32908ms after second app.quit windows=[1:visible] webContents=[1:window:http://localhost:5342/] handles={"Socket":4,"ChildProcess":1,"FSWatcher":2}
+[quitdiag] +32909ms window 1 -before-unload-fired proceed=true prevented=false
+[quitdiag] +32914ms webContents of window 1 destroyed
+[quitdiag] +32914ms window 1 closed
+[quitdiag] +32914ms window-all-closed
+[quitdiag] +34908ms waiting windows=[] webContents=[] handles={"Socket":1}
+[quitdiag] +36909ms waiting windows=[] webContents=[] handles={"Socket":1}
+[quitdiag] +45109ms before-quit shuttingDown=true cleanups=7
+[quitdiag] +45109ms at before-quit windows=[] webContents=[] handles={"Socket":1}
+[quitdiag] +45109ms before-quit (last listener) defaultPrevented=false listeners=2
+[quitdiag] +45109ms will-quit defaultPrevented=false
+[quitdiag] +45109ms process exit 0
+[quitdiag] +45109ms quit code=0
+
+## title, Browser.close on the browser target (hung; a 2nd SIGTERM killed it)
+[quitdiag] +32626ms before-quit shuttingDown=false cleanups=7
+[quitdiag] +32627ms at before-quit windows=[1:visible] webContents=[1:window:http://localhost:5342/] handles={"Socket":4,"ChildProcess":1,"FSWatcher":2}
+[quitdiag] +32628ms before-quit (last listener) defaultPrevented=true listeners=2
+[quitdiag] +32628ms cleanup done at registerInferenceIpc  in 0ms
+[quitdiag] +32628ms cleanup done at registerAccountIpc  in 0ms
+[quitdiag] +32628ms cleanup done apple-local provider.close in 1ms
+[quitdiag] +32628ms cleanup done at startWorldsWatcher  in 1ms
+[quitdiag] +32628ms cleanup done at createSidecar  in 0ms
+[quitdiag] +32628ms cleanup done at registerWorldIpc  in 0ms
+[quitdiag] +32628ms cleanup done at startModsWatcher  in 0ms
+[quitdiag] +32628ms all cleanups settled; calling app.quit()
+[quitdiag] +32628ms before second app.quit windows=[1:visible] webContents=[1:window:http://localhost:5342/] handles={"Socket":4,"ChildProcess":1,"FSWatcher":2}
+[quitdiag] +32628ms app.quit() called from     at  |     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+[quitdiag] +32628ms before-quit shuttingDown=true cleanups=7
+[quitdiag] +32628ms at before-quit windows=[1:visible] webContents=[1:window:http://localhost:5342/] handles={"Socket":4,"ChildProcess":1,"FSWatcher":2}
+[quitdiag] +32628ms before-quit (last listener) defaultPrevented=false listeners=2
+[quitdiag] +32629ms window 1 close defaultPrevented=false
+[quitdiag] +32729ms second app.quit() returned
+[quitdiag] +32729ms after second app.quit windows=[1:visible] webContents=[1:window:http://localhost:5342/] handles={"Socket":4,"ChildProcess":1,"FSWatcher":2}
+[quitdiag] +32730ms window 1 -before-unload-fired proceed=true prevented=false
+[quitdiag] +32733ms webContents of window 1 destroyed
+[quitdiag] +32733ms window 1 closed
+[quitdiag] +32733ms window-all-closed
+[quitdiag] +34729ms waiting windows=[] webContents=[] handles={"Socket":1}
+[quitdiag] +36730ms waiting windows=[] webContents=[] handles={"Socket":1}
+[quitdiag] +44931ms before-quit shuttingDown=true cleanups=7
+[quitdiag] +44931ms at before-quit windows=[] webContents=[] handles={"Socket":1}
+[quitdiag] +44931ms before-quit (last listener) defaultPrevented=false listeners=2
+[quitdiag] +44931ms will-quit defaultPrevented=false
+[quitdiag] +44931ms process exit 0
+[quitdiag] +44931ms quit code=0
+
+## title, app.quit() from a JS timer in main (exited)
+[quitdiag] +25001ms self quit timer fires
+[quitdiag] +25002ms app.quit() called from     at Timeout._onTimeout  |     at listOnTimeout (node:internal/timers:685:17)
+[quitdiag] +25002ms before-quit shuttingDown=false cleanups=7
+[quitdiag] +25002ms at before-quit windows=[1:visible] webContents=[1:window:http://localhost:5342/] handles={"Socket":4,"ChildProcess":1,"FSWatcher":2}
+[quitdiag] +25005ms before-quit (last listener) defaultPrevented=true listeners=2
+[quitdiag] +25005ms cleanup done at registerInferenceIpc  in 0ms
+[quitdiag] +25005ms cleanup done at registerAccountIpc  in 0ms
+[quitdiag] +25005ms cleanup done apple-local provider.close in 3ms
+[quitdiag] +25005ms cleanup done at startWorldsWatcher  in 3ms
+[quitdiag] +25005ms cleanup done at createSidecar  in 1ms
+[quitdiag] +25005ms cleanup done at registerWorldIpc  in 0ms
+[quitdiag] +25005ms cleanup done at startModsWatcher  in 0ms
+[quitdiag] +25005ms all cleanups settled; calling app.quit()
+[quitdiag] +25006ms before second app.quit windows=[1:visible] webContents=[1:window:http://localhost:5342/] handles={"Socket":4,"ChildProcess":1,"FSWatcher":2}
+[quitdiag] +25006ms app.quit() called from     at  |     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+[quitdiag] +25006ms before-quit shuttingDown=true cleanups=7
+[quitdiag] +25006ms at before-quit windows=[1:visible] webContents=[1:window:http://localhost:5342/] handles={"Socket":4,"ChildProcess":1,"FSWatcher":2}
+[quitdiag] +25006ms before-quit (last listener) defaultPrevented=false listeners=2
+[quitdiag] +25006ms window 1 close defaultPrevented=false
+[quitdiag] +25107ms second app.quit() returned
+[quitdiag] +25107ms after second app.quit windows=[1:visible] webContents=[1:window:http://localhost:5342/] handles={"Socket":4,"ChildProcess":1,"FSWatcher":2}
+[quitdiag] +25109ms window 1 -before-unload-fired proceed=true prevented=false
+[quitdiag] +25113ms webContents of window 1 destroyed
+[quitdiag] +25114ms window 1 closed
+[quitdiag] +25114ms will-quit defaultPrevented=false
+[quitdiag] +25114ms process exit 0
+[quitdiag] +25114ms quit code=0
+
+## Play (walked into chunk 1,0), SIGTERM (exited: the history flush did real I/O)
+[quitdiag] +47355ms before-quit shuttingDown=false cleanups=7
+[quitdiag] +47355ms at before-quit windows=[1:visible] webContents=[1:window:http://localhost:5342/] handles={"Socket":3,"ChildProcess":1,"FSWatcher":2}
+[quitdiag] +47358ms before-quit (last listener) defaultPrevented=true listeners=2
+[quitdiag] +47358ms cleanup done at registerInferenceIpc  in 1ms
+[quitdiag] +47358ms cleanup done at registerAccountIpc  in 0ms
+[quitdiag] +47358ms cleanup done apple-local provider.close in 3ms
+[quitdiag] +47358ms cleanup done at startWorldsWatcher  in 2ms
+[quitdiag] +47358ms cleanup done at createSidecar  in 1ms
+[quitdiag] +47358ms cleanup done at startModsWatcher  in 0ms
+[world] hre5p6cye7ls… visit of 1 chunks written on quit
+[quitdiag] +47364ms cleanup done at registerWorldIpc  in 7ms
+[quitdiag] +47365ms all cleanups settled; calling app.quit()
+[quitdiag] +47365ms before second app.quit windows=[1:visible] webContents=[1:window:http://localhost:5342/] handles={}
+[quitdiag] +47365ms app.quit() called from     at 
+[quitdiag] +47365ms before-quit shuttingDown=true cleanups=7
+[quitdiag] +47365ms at before-quit windows=[1:visible] webContents=[1:window:http://localhost:5342/] handles={}
+[quitdiag] +47365ms before-quit (last listener) defaultPrevented=false listeners=2
+[quitdiag] +47365ms window 1 close defaultPrevented=false
+[quitdiag] +47465ms second app.quit() returned
+[quitdiag] +47465ms after second app.quit windows=[1:visible] webContents=[1:window:http://localhost:5342/] handles={}
+[quitdiag] +47465ms window 1 -before-unload-fired proceed=true prevented=false
+[quitdiag] +47469ms webContents of window 1 destroyed
+[quitdiag] +47469ms window 1 closed
+[quitdiag] +47469ms will-quit defaultPrevented=false
+[quitdiag] +47469ms process exit 0
+[quitdiag] +47469ms quit code=0

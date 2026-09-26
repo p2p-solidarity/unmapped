@@ -1,0 +1,119 @@
+--- index.orig.ts	2026-09-26 16:43:52
++++ snap-diag/src/main/index.ts	2026-09-26 16:14:11
+@@ -3,7 +3,7 @@
+ 
+ import { mkdir } from "node:fs/promises";
+ import { join, resolve } from "node:path";
+-import { app, BrowserWindow } from "electron";
++import { app, BrowserWindow, webContents } from "electron";
+ import type { MainContext } from "./context";
+ import { loadEnv } from "./env";
+ import {
+@@ -31,6 +31,34 @@
+ 
+ const cleanups: Cleanup[] = [];
+ let shuttingDown = false;
++const T0 = Date.now();
++const qlog = (m: string) => process.stderr.write(`[quitdiag] +${Date.now() - T0}ms ${m}\n`);
++function dumpState(label: string): void {
++  // biome-ignore lint/suspicious/noExplicitAny: diag
++  const handles = ((process as any)._getActiveHandles() as any[]).map((h) => h?.constructor?.name ?? typeof h);
++  const counts: Record<string, number> = {};
++  for (const h of handles) counts[h] = (counts[h] ?? 0) + 1;
++  const wins = BrowserWindow.getAllWindows().map((w) => `${w.id}:${w.isDestroyed() ? "destroyed" : w.isVisible() ? "visible" : "hidden"}`);
++  const wcs = webContents.getAllWebContents().map((c) => `${c.id}:${c.getType()}:${c.isDestroyed() ? "x" : c.getURL().slice(0, 40)}`);
++  qlog(`${label} windows=[${wins}] webContents=[${wcs}] handles=${JSON.stringify(counts)}`);
++}
++for (const sig of ["SIGTERM", "SIGINT", "SIGHUP"] as const) {
++  // Only observe: listing a listener would replace Chromium's handler, so do not register one.
++}
++app.on("window-all-closed", () => qlog("window-all-closed"));
++app.on("will-quit", (e) => qlog(`will-quit defaultPrevented=${e.defaultPrevented}`));
++app.on("quit", (_e, code) => qlog(`quit code=${code}`));
++process.on("exit", (code) => qlog(`process exit ${code}`));
++app.on("browser-window-created", (_e, w) => {
++  w.on("close", (e) => qlog(`window ${w.id} close defaultPrevented=${e.defaultPrevented}`));
++  w.on("closed", () => qlog(`window ${w.id} closed`));
++  w.webContents.on("destroyed", () => qlog(`webContents of window ${w.id} destroyed`));
++  w.webContents.on("will-prevent-unload", () => qlog(`window ${w.id} will-prevent-unload`));
++  // biome-ignore lint/suspicious/noExplicitAny: diag
++  (w.webContents as any).on("-before-unload-fired", (e: any, proceed: boolean) => qlog(`window ${w.id} -before-unload-fired proceed=${proceed} prevented=${e.defaultPrevented}`));
++  w.webContents.on("render-process-gone", (_e, d) => qlog(`render-process-gone ${d.reason}`));
++  w.on("session-end" as never, () => qlog("session-end"));
++});
+ 
+ function createContext(appleLocalProvider: MainContext["appleLocalProvider"]): MainContext {
+   const userData = app.getPath("userData");
+@@ -48,13 +76,30 @@
+       }
+     },
+     onBeforeQuit(cleanup) {
+-      cleanups.push(cleanup);
++      const name = new Error().stack?.split("\n")[2]?.trim() ?? "?";
++      cleanups.push(named(name, cleanup));
+     },
+   };
+ }
+ 
++function named(name: string, cleanup: Cleanup): Cleanup {
++  return async () => {
++    const t = Date.now();
++    qlog(`cleanup start ${name}`);
++    try {
++      await cleanup();
++      qlog(`cleanup done ${name} in ${Date.now() - t}ms`);
++    } catch (e) {
++      qlog(`cleanup threw ${name}: ${String(e)}`);
++      throw e;
++    }
++  };
++}
++
+ /** Runs registered cleanups (watchers, sidecars) once, then lets the quit proceed. */
+ app.on("before-quit", (event) => {
++  qlog(`before-quit shuttingDown=${shuttingDown} cleanups=${cleanups.length}`);
++  dumpState("at before-quit");
+   if (shuttingDown || cleanups.length === 0) return;
+   shuttingDown = true;
+   event.preventDefault();
+@@ -62,7 +107,13 @@
+     await cleanup();
+   });
+   void Promise.allSettled(pending).then(() => {
++    qlog("all cleanups settled; calling app.quit()");
++    dumpState("before second app.quit");
+     app.quit();
++    qlog("second app.quit() returned");
++    dumpState("after second app.quit");
++    const t = setInterval(() => dumpState("waiting"), 2000);
++    t.unref();
+   });
+ });
+ 
+@@ -80,7 +131,7 @@
+             resourcesPath: process.resourcesPath,
+           }),
+           onBeforeQuit(cleanup) {
+-            cleanups.push(cleanup);
++            cleanups.push(named("apple-local provider.close", cleanup));
+           },
+         })
+       : null;
+@@ -114,6 +165,17 @@
+   });
+ }
+ 
++app.on("before-quit", (e) => qlog(`before-quit (last listener) defaultPrevented=${e.defaultPrevented} listeners=${app.listenerCount("before-quit")}`));
++{
++  const original = app.quit.bind(app);
++  app.quit = () => {
++    qlog(`app.quit() called from ${new Error().stack?.split("\n").slice(2, 4).join(" | ")}`);
++    original();
++  };
++}
++if (process.env.QUITDIAG_SELF_QUIT_MS) {
++  setTimeout(() => { qlog("self quit timer fires"); app.quit(); }, Number(process.env.QUITDIAG_SELF_QUIT_MS));
++}
+ void app.whenReady().then(boot, (error: unknown) => {
+   const message = error instanceof Error ? error.message : String(error);
+   process.stderr.write(`UNMAPPED failed to start: ${message}\n`);

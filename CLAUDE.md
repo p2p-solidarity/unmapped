@@ -317,6 +317,10 @@ Components take **positional** args in zod key order (required first). Enums com
 ### `src/main`
 - `index.ts` creates the window, loads `.env` (dotenv) before anything else, registers all IPC via
   `registerIpc()` in `ipc.ts`, which calls `registerInferenceIpc()` from `main/inference/ipc.ts`.
+- Quitting (`quit.ts`): never `preventDefault()` in `before-quit` (Electron drops a re-quit made
+  inside its own quit, and on macOS the app then stays open). Windows close first, so each page's
+  `beforeunload` checkpoint arrives; `will-quit` is held once — pending IPC ≤ 1.5 s, every
+  `ctx.onBeforeQuit` cleanup ≤ 4 s — then `setImmediate(() => app.quit())`.
 - `cartridges/` publishes, verifies, lists, and imports/exports immutable content revisions.
 - `instances/` owns pinned progress, explicit compatible upgrades, and `.spire-backup` restore.
 - `workspaces/` owns mutable rules/scenes, full validation preview, and publishing with lineage.

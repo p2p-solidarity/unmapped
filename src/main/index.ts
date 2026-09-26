@@ -11,6 +11,7 @@ import {
   resolveAppleLocalHelperPath,
 } from "./inference/appleLocalHelper";
 import { registerIpc } from "./ipc";
+import { installQuitSequence, onQuit, quitting, registrantOf } from "./quit";
 import { applyCsp, createWindow } from "./window";
 import { registerWorkScheme } from "./works/ipc";
 
@@ -27,11 +28,6 @@ if (!app.isPackaged && process.env.AETHER_TEST_USER_DATA) {
   app.commandLine.appendSwitch("disable-renderer-backgrounding");
 }
 
-type Cleanup = () => Promise<void> | void;
-
-const cleanups: Cleanup[] = [];
-let shuttingDown = false;
-
 function createContext(appleLocalProvider: MainContext["appleLocalProvider"]): MainContext {
   const userData = app.getPath("userData");
   return {
@@ -44,30 +40,27 @@ function createContext(appleLocalProvider: MainContext["appleLocalProvider"]): M
     profilesDir: join(userData, "profiles"),
     broadcast(channel, payload) {
       for (const window of BrowserWindow.getAllWindows()) {
-        if (!window.isDestroyed()) window.webContents.send(channel, payload);
+        // A closing window loses its page first (a quit closes every page, and a chat that page
+        // started ends with it), so check both.
+        if (!window.isDestroyed() && !window.webContents.isDestroyed()) {
+          window.webContents.send(channel, payload);
+        }
       }
     },
     onBeforeQuit(cleanup) {
-      cleanups.push(cleanup);
+      onQuit(registrantOf(new Error().stack), cleanup);
     },
   };
 }
 
-/** Runs registered cleanups (watchers, sidecars) once, then lets the quit proceed. */
-app.on("before-quit", (event) => {
-  if (shuttingDown || cleanups.length === 0) return;
-  shuttingDown = true;
-  event.preventDefault();
-  const pending = cleanups.map(async (cleanup) => {
-    await cleanup();
-  });
-  void Promise.allSettled(pending).then(() => {
-    app.quit();
-  });
-});
+// Cleanups (watchers, helpers, the history flush) run once the windows have closed: ./quit.ts.
+installQuitSequence();
 
 app.on("window-all-closed", () => {
+  // macOS keeps an app with no window running; the dock's `activate` opens a new one. A quit never
+  // gets here: once Electron has closed the windows for a quit it goes on to `will-quit`.
   if (process.platform !== "darwin") app.quit();
+  else console.log("[app] last window closed; the app stays open (macOS)");
 });
 
 async function boot(): Promise<void> {
@@ -80,7 +73,7 @@ async function boot(): Promise<void> {
             resourcesPath: process.resourcesPath,
           }),
           onBeforeQuit(cleanup) {
-            cleanups.push(cleanup);
+            onQuit("appleLocalHelper", cleanup);
           },
         })
       : null;
@@ -110,7 +103,7 @@ async function boot(): Promise<void> {
   createWindow();
 
   app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (!quitting() && BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 }
 
