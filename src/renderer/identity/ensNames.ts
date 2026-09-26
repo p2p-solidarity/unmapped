@@ -1,7 +1,13 @@
-// Reading a cartridge's ENS name: its three text records through the Universal Resolver on Sepolia,
-// where ENSv2 lives. Public and read-only — any machine can follow a name, key or no key.
+// Reading a cartridge's (or a save's) ENS name: its text records through the Universal Resolver on
+// Sepolia, where ENSv2 lives. Public and read-only — any machine can follow a name, key or no key.
 
-import { type CartridgePointer, ENS_CARTRIDGE_KEYS, pointerFromTexts } from "@shared/ensNames";
+import {
+  type CartridgePointer,
+  ENS_CARTRIDGE_KEYS,
+  ENS_SAVE_KEYS,
+  type EnsLookup,
+  pointerFromTexts,
+} from "@shared/ensNames";
 import { err, ok, type Result, toError } from "@shared/result";
 import { normalize } from "viem/ens";
 import { ensClient, looksLikeEnsName } from "./ens";
@@ -40,6 +46,29 @@ export async function lookupCartridgeName(name: string): Promise<Result<Cartridg
         hash: hash ?? null,
       }),
     );
+  } catch (cause) {
+    return err(
+      "ens-unreachable",
+      toError(cause, "ens-unreachable").message,
+      "Check your network connection (or your RPC), then try again.",
+    );
+  }
+}
+
+/** A name → its revision, and its checkpoint when it names a save (`unwritten.kind` = "save"). */
+export async function lookupEnsName(name: string): Promise<Result<EnsLookup | null>> {
+  const pointer = await lookupCartridgeName(name);
+  if (!pointer.ok || pointer.value === null) return pointer as Result<null>;
+  try {
+    const client = ensClient("sepolia");
+    const trimmed = normalize(name.trim());
+    const [kind, saveHash, progress] = await Promise.all(
+      [ENS_SAVE_KEYS.kind, ENS_SAVE_KEYS.save, ENS_SAVE_KEYS.progress].map((key) =>
+        client.getEnsText({ name: trimmed, key }),
+      ),
+    );
+    const save = kind === "save" && saveHash ? { saveHash, progress: progress ?? "" } : null;
+    return ok({ pointer: pointer.value, save });
   } catch (cause) {
     return err(
       "ens-unreachable",

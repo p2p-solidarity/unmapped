@@ -11,6 +11,7 @@ import { IDENTITY } from "./identity";
 import { INPUT } from "./input";
 import { LAND } from "./land";
 import { LIBRARY } from "./library";
+import { MARKET } from "./market";
 import { MODEL } from "./model";
 import type { Phrase } from "./phrase";
 import { PLACE_VIEW } from "./placeView";
@@ -29,6 +30,7 @@ export const STRINGS = {
   input: INPUT,
   land: LAND,
   library: LIBRARY,
+  market: MARKET,
   model: MODEL,
   placeView: PLACE_VIEW,
   title: TITLE,

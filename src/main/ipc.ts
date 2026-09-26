@@ -10,6 +10,7 @@ import { registerProfilesIpc } from "./profiles/ipc";
 import { registerAppIpc } from "./app/ipc";
 import { registerCartridgesIpc } from "./cartridges/ipc";
 import { registerChainIpc } from "./chain/ipc";
+import { registerMarketIpc } from "./chain/marketIpc";
 import type { MainContext } from "./context";
 import { registerGameIpc } from "./game/base";
 import { registerInferenceIpc } from "./inference/ipc";
@@ -38,6 +39,7 @@ export function registerIpc(ctx: MainContext): void {
   registerModsIpc(ctx);
   registerWorksIpc(ctx);
   registerChainIpc(ctx);
+  registerMarketIpc(ctx);
   registerCreateDraftsIpc(ctx);
   registerUsageIpc(ctx);
 }

@@ -14,6 +14,7 @@ export const LIBRARY = {
   sectionCartridges: { en: "Cartridges", "zh-TW": "卡帶", ja: "カートリッジ" },
   sectionContinent: { en: "Continent", "zh-TW": "大陸", ja: "大陸" },
   sectionArchive: { en: "Archive", "zh-TW": "封存", ja: "アーカイブ" },
+  sectionMarket: { en: "Market", "zh-TW": "市場", ja: "マーケット" },
 
   // ── Saves ──────────────────────────────────────────────────────────────────────────────────
   readingSaves: { en: "Reading saves…", "zh-TW": "正在讀取存檔…", ja: "セーブを読み込み中…" },

@@ -1,0 +1,295 @@
+{
+  "flow": "the Market's gas station: the app holds no key; every write goes app → passkey → station (src/relay) → Sepolia",
+  "env": {
+    "station": "cd web/lineage-relay && bunx wrangler@4 dev --port 8790 --env-file ../../.cache/relay/dev.env   (the station's own key from `bun run relay:key`; the first round used a temporary copy of the operator key, deleted afterwards)",
+    "app": "UNWRITTEN_PRIVATE_KEY= UNWRITTEN_LINEAGE_RELAY=http://127.0.0.1:8790 UNWRITTEN_SIGN_BROWSER=none AETHER_TEST_USER_DATA=<fresh dir> bun run dev --remoteDebuggingPort 9336   (an empty UNWRITTEN_PRIVATE_KEY wins over .env: dotenv never overrides a set variable)",
+    "browser": "'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless=new --remote-debugging-port=9340 --user-data-dir=<fresh dir> about:blank; open each '[market] sign page' URL from the app log with PUT /json/new?<url>",
+    "passkey": "CDP WebAuthn virtual authenticator (ctap2, internal, resident key, user verified) standing in for Touch ID; created on the link page, exported with WebAuthn.getCredentials, re-added for each signature",
+    "contracts": "v1 (round 1: 0x439F…5237) and v2 (rounds 2–3: registry 0xda80…dAf6, hook 0x59FA…a044, router 0x2201…39BE, factory 0x7B8b…9bE5)"
+  },
+  "model": null,
+  "hostile_requests (curl to the station; none may send a transaction)": [
+    "GET /status with an Origin header → 403 relay-forbidden",
+    "POST /relay {kind: graduate, world: 0x…01} → market-unknown-world",
+    "POST /relay {kind: mint-me} → 400 relay-bad-request",
+    "execute with a call to 0x…dEaD → relay-refused (not part of the lineage market)",
+    "execute with value 1 → relay-refused (a market batch never sends ETH)",
+    "execute with a forged WebAuthn signature on a MockUSDC approve → relay-reverted (simulation fails)",
+    "exit of an already settled bid → relay-reverted",
+    "royalties in a foreign currency → relay-refused; royalties with nothing owed → market-nothing-owed"
+  ],
+  "runs": {
+    "round 1 (v1, station on the operator key) app side, CDP_PORT=9336": [
+      {
+        "clickText": "世界"
+      },
+      {
+        "wait": 1500
+      },
+      {
+        "clickText": "市場"
+      },
+      {
+        "wait": 7000
+      },
+      {
+        "text": true
+      },
+      {
+        "shot": "docs/e2e/milestone-lineage-relay/01-market-no-key.jpg"
+      },
+      {
+        "clickText": "用 Touch ID（在瀏覽器開啟）"
+      },
+      {
+        "wait": 2500
+      },
+      {
+        "clickText": "領 1,000 測試 USDC"
+      },
+      {
+        "wait": 35000
+      },
+      {
+        "shot": "docs/e2e/milestone-lineage-relay/04-faucet-via-station.jpg"
+      },
+      {
+        "clickText": "aether-land.unmapped.eth"
+      },
+      {
+        "wait": 2500
+      },
+      {
+        "eval": "document.getElementById(\"market-buy-amount\").focus()"
+      },
+      {
+        "type": "5"
+      },
+      {
+        "clickText": "用 passkey 買入"
+      },
+      {
+        "clickText": "發放分潤"
+      },
+      {
+        "wait": 40000
+      },
+      {
+        "shot": "docs/e2e/milestone-lineage-relay/08-royalties-via-station.jpg"
+      }
+    ],
+    "round 1 page side (link with the existing passkey), CDP_PORT=9340": [
+      {
+        "cdp": {
+          "method": "WebAuthn.enable",
+          "params": {
+            "enableUI": false
+          }
+        }
+      },
+      {
+        "cdp": {
+          "method": "WebAuthn.addVirtualAuthenticator",
+          "params": {
+            "options": {
+              "protocol": "ctap2",
+              "ctap2Version": "ctap2_1",
+              "transport": "internal",
+              "hasResidentKey": true,
+              "hasUserVerification": true,
+              "isUserVerified": true,
+              "automaticPresenceSimulation": true
+            }
+          }
+        }
+      },
+      {
+        "cdp": {
+          "method": "WebAuthn.addCredential",
+          "params": {
+            "authenticatorId": "$authenticatorId",
+            "credential": "<the exported credential>"
+          }
+        }
+      },
+      {
+        "clickText": "Use my existing passkey"
+      },
+      {
+        "wait": 6000
+      },
+      {
+        "text": true
+      }
+    ],
+    "round 2 (v2 auction) app side: bid, then settle after the last block": [
+      {
+        "clickText": "aether-land.unmapped.eth"
+      },
+      {
+        "wait": 2500
+      },
+      {
+        "eval": "document.getElementById(\"market-bid-amount\").focus()"
+      },
+      {
+        "type": "25"
+      },
+      {
+        "clickText": "用 passkey 出價"
+      },
+      {
+        "wait": 4000
+      },
+      {
+        "shot": "docs/e2e/milestone-lineage-relay/12-auction-ended.jpg"
+      },
+      {
+        "clickText": "結算拍賣"
+      },
+      {
+        "wait": 200000
+      },
+      {
+        "text": true
+      },
+      {
+        "shot": "docs/e2e/milestone-lineage-relay/14-pool-open.jpg"
+      }
+    ],
+    "round 3 (v2 pool, station on its own key) app side": [
+      {
+        "clickText": "用 Touch ID（在瀏覽器開啟）"
+      },
+      {
+        "wait": 3000
+      },
+      {
+        "clickText": "領 1,000 測試 USDC"
+      },
+      {
+        "wait": 30000
+      },
+      {
+        "clickText": "aether-land.unmapped.eth"
+      },
+      {
+        "wait": 2500
+      },
+      {
+        "eval": "document.getElementById(\"market-buy-amount\").focus()"
+      },
+      {
+        "type": "10"
+      },
+      {
+        "clickText": "用 passkey 買入"
+      },
+      {
+        "wait": 5000
+      },
+      {
+        "clickText": "發放分潤"
+      },
+      {
+        "wait": 35000
+      },
+      {
+        "shot": "docs/e2e/milestone-lineage-relay/18-royalties-live-key.jpg"
+      }
+    ],
+    "round 3 page side (create a passkey, then export it)": [
+      {
+        "cdp": {
+          "method": "WebAuthn.enable",
+          "params": {
+            "enableUI": false
+          }
+        }
+      },
+      {
+        "cdp": {
+          "method": "WebAuthn.addVirtualAuthenticator",
+          "params": {
+            "options": {
+              "protocol": "ctap2",
+              "ctap2Version": "ctap2_1",
+              "transport": "internal",
+              "hasResidentKey": true,
+              "hasUserVerification": true,
+              "isUserVerified": true,
+              "automaticPresenceSimulation": true
+            }
+          }
+        }
+      },
+      {
+        "clickText": "Create a passkey"
+      },
+      {
+        "wait": 5000
+      },
+      {
+        "text": true
+      },
+      {
+        "cdp": {
+          "method": "WebAuthn.getCredentials",
+          "params": {
+            "authenticatorId": "$authenticatorId"
+          }
+        }
+      }
+    ],
+    "every signature (page side, the newest sign URL)": [
+      {
+        "cdp": {
+          "method": "WebAuthn.enable",
+          "params": {
+            "enableUI": false
+          }
+        }
+      },
+      {
+        "cdp": {
+          "method": "WebAuthn.addVirtualAuthenticator",
+          "params": {
+            "options": {
+              "protocol": "ctap2",
+              "ctap2Version": "ctap2_1",
+              "transport": "internal",
+              "hasResidentKey": true,
+              "hasUserVerification": true,
+              "isUserVerified": true,
+              "automaticPresenceSimulation": true
+            }
+          }
+        }
+      },
+      {
+        "cdp": {
+          "method": "WebAuthn.addCredential",
+          "params": {
+            "authenticatorId": "$authenticatorId",
+            "credential": "<the exported credential (.cache/e2e/browser-credential.json)>"
+          }
+        }
+      },
+      {
+        "text": true
+      },
+      {
+        "clickText": "Approve with Touch ID"
+      },
+      {
+        "wait": 40000
+      },
+      {
+        "text": true
+      },
+      {
+        "eval": "document.querySelector('#status a')?.href"
+      }
+    ]
+  }
+}

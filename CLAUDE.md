@@ -462,43 +462,73 @@ export function witnessOnChain(input, clients?): Promise<Result<{ txHash: string
 // `bun run contracts:deploy` is run by a person — it spends gas.
 ```
 
-### Cartridge ENS names (`src/shared/ensNames.ts`, `src/main/chain/ens*.ts`, Sepolia ENSv2)
+### Cartridge and save ENS names (lineage tree; `src/main/chain/names.ts`, `app/market/EnsNames.tsx`)
 ```ts
-export function ensNamesConfig(env?): EnsNamesConfig;      // { parent: "x.eth" | null, writable }
-export function claimCartridgeName(pointer, env?): Promise<Result<{ name; txHashes }>>;   // main only
-export function lookupCartridgeName(name): Promise<Result<CartridgePointer | null>>;      // renderer, via the Universal Resolver
-window.seed.chain.claimName(cartridgeId, version)   // main re-reads the revision; the renderer never supplies the hash
+window.seed.market.cartridgeName(cartridgeId, version, key | null): Result<EnsNameStatus>   // what a revision's name says
+window.seed.market.saveName(instanceId, label | null, key | null): Result<SaveNameView>     // a save, its cartridge's name, its own name
+MarketAction { kind: "name-cartridge"; cartridgeId; version } | { kind: "name-save"; instanceId; label }   // passkey-signed, station-paid
+export function lookupEnsName(name): Promise<Result<EnsLookup | null>>;   // renderer, Universal Resolver: revision + a save's checkpoint
+export function saveFingerprint(instancesDir, instanceId, cartridgesDir?): Result<{ name, pin, saveHash, progress }>   // main/instances/saveHash.ts
 ```
-- A published revision is named `<cartridgeLabel(cartridgeId)>.<parent>`; its text records are only
-  `unwritten.cartridge` / `unwritten.version` / `unwritten.hash` (frozen keys). Content never goes on chain.
-- `bun run ens:setup <label> [--dry-run]` is run by a person (Sepolia gas; MockUSDC is free): it deploys
-  the key's Permissioned Resolver + the parent's User Registry and registers `<label>.eth`, then prints
-  `UNWRITTEN_ENS_*`. `--dry-run` replays every step through `eth_simulateV1` and resolves a test subname.
-- `ENSV2_SEPOLIA` (`ensCalls.ts`) is the deployment the Universal Resolver walks today
-  (`ens_v2_sepolia_20260916`), not the older table in the ENS docs; this build's resolver takes
-  DNS-encoded names. The setup script refuses to run if the live root no longer matches.
-- Worlds → Cartridges shows each cartridge's name live (unclaimed / this version / another version,
-  claim on a keyed machine) and "Open by ENS name" follows a name back to a revision in the library.
+- Names live in the lineage market's tree under `UNWRITTEN_LINEAGE_PARENT` (`unmapped.eth`), not the
+  `ens:setup` parent: a revision is `<cartridgeLabel(id)>.<root>`, a remix `<label>.<parent's name>` once
+  the parent has one, a save `<label>.<cartridge's name>`, held by the player's PasskeyAccount.
+- Main reads everything it writes from disk (revision id / version / hash / lineage; the save's
+  fingerprint); the renderer only picks which revision or save and the save's label. Content never goes
+  on chain. Text keys are frozen: `unwritten.cartridge/version/hash`, plus `unwritten.kind`,
+  `unwritten.save`, `unwritten.progress` for saves and `unwritten.token/auction` for a launched world.
+- A save's fingerprint is sha256 of canonical JSON of what a `.spire-backup` carries (save state
+  without `updatedAt`, karma, written land), never ids or paths, so a restored backup hashes the same;
+  Worlds → Saves finds an existing save name by that hash (`SaveRecorded` logs), else the newest one
+  this passkey holds. Progress is one English line from real state ("2 chapters cleared · 14 deeds").
+- Worlds → Cartridges shows each revision's name (free / this version / the player's, older / someone
+  else's, other version / another cartridge) and names or repoints it; "Open by ENS name" follows a
+  name back to a revision, and a save's name to its checkpoint.
+- The older `ens:setup` path (`src/main/chain/ensNames.ts`, `claimCartridgeName`, a separate parent and
+  `UNWRITTEN_ENS_*`, signed with the key in main) is no longer in the UI; `bun run ens:setup` still
+  works for a separate parent. `ENSV2_SEPOLIA` (`ensCalls.ts`) is the deployment the Universal Resolver
+  walks today (`ens_v2_sepolia_20260916`); this build's resolver takes DNS-encoded names.
 
 ### Lineage market (`contracts/src/lineage`, `src/main/chain/lineageCalls.ts`, Sepolia; docs/plans/lineage-market.md)
 ```ts
-LineageRegistry.launch({ label, parent, owner, cartridgeId, version, contentHash, supply, lpReserve, auctionBlocks, floorPriceQ96, tickSpacingQ96, requiredCurrencyRaised })
-// → ENS name under the parent world's name + remix registry + WorldToken + Uniswap CCA (LBPStrategy) priced in the parent's token
+LineageRegistry.register({ parent, label, owner, cartridgeId, version, contentHash })   // names first: a cartridge + its children's registry
+LineageRegistry.recordSave({ cartridge, label, version, contentHash, saveHash, progress }) / updateSave(node, …)   // held by msg.sender
+LineageRegistry.launch(node, { supply, lpReserve, auctionBlocks, floorPriceQ96, tickSpacingQ96, requiredCurrencyRaised })   // holder only
+LineageRegistry.registerAndLaunch(nameParams, launchParams)   // the operator's scripts
+// launch → WorldToken + Uniswap CCA (LBPStrategy) priced in the parent's token; a remix launches only after its parent
 LineageHook   // v4: only LBPStrategy opens world pools; afterSwap 1% royalty, 50/30/20 up the line; claim() pays the ENS name holder
 LineageRouter // buy/sell along pathTo(world) in one unlock
 ```
-- The registry keeps only `REGISTRAR | SET_PARENT` on every registry it makes, so every world name is an
-  emancipated ENSv2 token (safe transfer works). Never grant it, or anyone, a role from
-  `UNEMANCIPATED_ROLE_BITMAP`; a world's remix registry is made at launch for this reason.
-- Worlds live under their own `<label>.eth` (the registry's root registry), not the `ens:setup` parent.
+- Nodes are real ENS namehashes (`rootNode` = namehash of the parent). The registry keeps only
+  `REGISTRAR | SET_PARENT` on every registry it makes, so every name is an emancipated ENSv2 token (safe
+  transfer works). Never grant it, or anyone, a role from `UNEMANCIPATED_ROLE_BITMAP`; a cartridge's
+  children's registry is made when it is named for this reason. Saves have no children.
 - `bun run contracts:build` rebuilds `contracts/LineageMarket.json` (`scripts/build-lineage.mjs`); the
   structs in `LaunchTypes.sol` mirror liquidity-launcher v3.1.0 / CCA v2.1.0 field for field.
 - `bun run lineage:market --dry-run` is the check: it simulates deploy → three generations of
-  launch/auction/graduation → swaps → royalties → name transfer → refusals on Sepolia's real contracts
-  (the failure list is at the top of `scripts/lineage-market.ts`). A live deploy is run by a person.
-- Deployed on Sepolia under `unmapped.eth` (addresses in `contracts/README.md`); `UNWRITTEN_LINEAGE_*`
-  in `.env` are main-only like every `UNWRITTEN_*` var. Not wired into the app yet: no IPC or screen
-  launches or trades.
+  launch/auction/graduation → swaps → royalties → name transfer → passkey accounts → names and saves
+  (`scripts/lib/namesDay.ts`) → refusals on Sepolia's real contracts (the failure list is at the top of
+  `scripts/lineage-market.ts`). A live deploy is run by a person.
+- Deployed on Sepolia under `unmapped.eth` (v2 addresses in `contracts/README.md`); `UNWRITTEN_LINEAGE_*`
+  in `.env` are main-only like every `UNWRITTEN_*` var. Runbook: `docs/demo/lineage-market.md`.
+- The app plays it with no wallet and holds no key (Worlds → Market, `app/market/`): a passkey owns a
+  `PasskeyAccount`; main builds every batch (`chain/marketRelay.ts`, `prepare` → the passkey signs the
+  digest → `submit`) and hands it to the gas station (`chain/relayClient.ts`, `UNWRITTEN_LINEAGE_RELAY`),
+  then waits for the receipt on its own RPC. Never let the renderer name calls or a challenge — main
+  keeps both. `@shared/passkeyAuth` turns an assertion into OpenZeppelin's `WebAuthnAuth` and recovers a
+  key from two assertions. Without a station URL the market is read-only.
+- The gas station (`src/relay`, a Cloudflare Worker, `web/lineage-relay/wrangler.jsonc`, wire format
+  `@shared/relay`) holds the only key that pays (`RELAYER_KEY` secret; `bun run relay:key` makes it in
+  `.cache/relay/`, a person adds it with `wrangler secret put`). One request = one transaction it builds
+  itself: `execute` (a passkey batch whose calls may target only MockUSDC, Permit2, the router, a world's
+  token or auction, or the registry's naming functions), `faucet`, `exit`/`claim`/`graduate`,
+  `royalties`. It simulates first, caps gas per kind and the fee (`MAX_FEE_GWEI`), refuses browsers
+  (`Origin`) and rate-limits per client. `bun run relay:dev` runs it locally; `relay:deploy` ships it.
+- Electron dev cannot reach Touch ID, so `chain/signBridge.ts` serves a localhost page the system
+  browser opens for the one signature (`UNWRITTEN_SIGN_BROWSER=none` only logs the URL, for E2E).
+- `bun run lineage:demo status|launch|seed-bids|settle` are the live operator tools (they still use
+  `UNWRITTEN_PRIVATE_KEY`; the app does not); the read-only web view is `web/lineage-auction`
+  (`bun run web:deploy` → Cloudflare), whose Family tree shows the whole name tree.
 
 ### `src/renderer/net` + `src/shared/continent.ts` (open land is shared as a continent)
 ```ts

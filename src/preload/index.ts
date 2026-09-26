@@ -62,6 +62,17 @@ import type {
   SetApiKeyInput,
   SidecarStatus,
 } from "@shared/llm";
+import type {
+  EnsNameStatus,
+  MarketAction,
+  MarketConfig,
+  MarketKey,
+  MarketReceipt,
+  MarketView,
+  PreparedAction,
+  SaveNameView,
+  SubmitActionInput,
+} from "@shared/market";
 import type { ModBundle, ModSummary } from "@shared/mods";
 import type { Result } from "@shared/result";
 import type {
@@ -265,6 +276,23 @@ const api: SeedApi = {
       invoke<Result<WorkSession>>(IPC.works.openSession, source),
     closeSession: (token: string, kill: boolean) =>
       invoke<Result<void>>(IPC.works.closeSession, token, kill),
+  },
+  market: {
+    config: () => invoke<MarketConfig>(IPC.market.config),
+    view: (key: MarketKey | null) => invoke<Result<MarketView>>(IPC.market.view, key),
+    prepare: (key: MarketKey, action: MarketAction) =>
+      invoke<Result<PreparedAction>>(IPC.market.prepare, key, action),
+    submit: (input: SubmitActionInput) => invoke<Result<MarketReceipt>>(IPC.market.submit, input),
+    faucet: (key: MarketKey) => invoke<Result<MarketReceipt>>(IPC.market.faucet, key),
+    settle: (world: string) => invoke<Result<MarketReceipt>>(IPC.market.settle, world),
+    royalties: (world: string) => invoke<Result<MarketReceipt>>(IPC.market.royalties, world),
+    link: () => invoke<Result<{ credentialId: string; key: MarketKey }>>(IPC.market.link),
+    signInBrowser: (input: { preparedId: string; credentialId: string; summary: string }) =>
+      invoke<Result<MarketReceipt>>(IPC.market.signInBrowser, input),
+    cartridgeName: (cartridgeId: string, version: string, key: MarketKey | null) =>
+      invoke<Result<EnsNameStatus>>(IPC.market.cartridgeName, cartridgeId, version, key),
+    saveName: (instanceId: string, label: string | null, key: MarketKey | null) =>
+      invoke<Result<SaveNameView>>(IPC.market.saveName, instanceId, label, key),
   },
   chain: {
     config: () => invoke<LedgerConfig>(IPC.chain.config),

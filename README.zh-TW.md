@@ -294,17 +294,25 @@ skills: [skills]
 
 玩遊戲完全不需要這些。什麼都沒設定時，每個畫面都會直接說明尚未設定帳本。
 
-- **ENSv2 卡帶名稱（Sepolia）。** 已發布的版本可以認領 `<cartridge>.<parent>.eth`。它的文字紀錄只有
-  id、版本和內容雜湊；在 **標題畫面 → 卡帶 → 用 ENS 名稱開啟** 可以從名稱找回確切的版本。先執行
-  `bun run ens:setup <label> --dry-run`。
+- **卡帶與存檔的 ENSv2 名稱（Sepolia）。** 全部掛在 `unmapped.eth` 底下的同一棵樹：卡帶版本是
+  `<cartridge>.unmapped.eth`，改編作品掛在母卡帶的名稱底下，存檔是 `<save>.<cartridge>.unmapped.eth`，由玩家
+  自己的 passkey 帳戶持有。在 **世界 → 卡帶** 可以替版本登記名稱（或把自己的名稱指到新版本），**用 ENS
+  名稱開啟** 能從名稱找回確切的版本，或存檔的進度；在 **世界 → 存檔 → 這個存檔的 ENS 名稱** 可以記錄這趟
+  旅程，玩下去再更新。紀錄只有 id、版本和內容雜湊（存檔則是它的 sha256、釘住的版本和一行進度）；備份在
+  另一台機器還原後，會用雜湊自己找到名稱。
 - **出處帳本。** [`contracts/src/UnwrittenLedger.sol`](contracts/src/UnwrittenLedger.sol) 記錄誰發布了哪個
   雜湊、它是從哪裡改編來的，以及玩家的短評。內容永遠不上鏈。
-- **血統市場（實驗中）。** 每個改編作品都會在母世界的名稱底下拿到一個 ENS 名稱，以及一種透過 Uniswap
-  連續清算拍賣（CCA）發售的代幣；之後由 v4 hook 把 1% 權利金沿著家族往上分配。合約已部署在 Sepolia 的
-  `unmapped.eth` 底下，完整流程只以 dry run 跑過，app 目前還不會發行或交易。詳見
+- **血統市場（實驗中，Sepolia）。** 登記了名稱的卡帶可以發行：它的代幣透過 Uniswap 連續清算拍賣（CCA）
+  以母世界的代幣計價發售，之後由 v4 hook 把 1% 權利金沿著家族往上分配（世界、上一代、再上一代各
+  50／30／20），付給當下持有 ENS 名稱的人。第一個世界 `aether-land.unmapped.eth` 已經拍賣、結算並開始交易。
+  在 **世界 → 市場** 裡，玩家用 passkey 出價、結算、買入、發放分潤：不用錢包、不用 ETH，app 裡也沒有私鑰——
+  passkey 擁有一個小型帳戶合約，由代付站（Cloudflare Worker，`src/relay`）只替市場自己的動作付 gas。發行新
+  世界目前仍是操作者指令（`bun run lineage:demo launch`）。唯讀的拍賣頁面在 https://unmapped-auction.gimmychang.workers.dev。詳見
+  [`docs/demo/lineage-market.md`](docs/demo/lineage-market.md)、
   [`docs/plans/lineage-market.md`](docs/plans/lineage-market.md) 與 [`contracts/README.md`](contracts/README.md)。
 
-鏈相關的金鑰（`UNWRITTEN_*`）只有主程序讀得到。會花 gas 的腳本一律由人手動執行，app 不會自己跑。
+鏈相關的金鑰（`UNWRITTEN_*`）只有主程序讀得到。部署與發行的腳本一律由人手動執行；app 不為市場保管任何私鑰，
+只把玩家用 passkey 簽過的動作交給 `UNWRITTEN_LINEAGE_RELAY` 的代付站送出。
 
 ## 目前狀態
 
@@ -324,8 +332,10 @@ skills: [skills]
 | 雲端模型（OpenAI `gpt-5.4-mini`）與用量帳本 | ✅ 已驗證 | [model-switch](docs/e2e/milestone-model-switch/result.md) · [rev6-create](docs/e2e/milestone-rev6-create/result.md) |
 | 本機模型生成（llama.cpp、Ollama、Apple） | ⏳ 已驗證偵測，生成尚未 | [model-switch](docs/e2e/milestone-model-switch/result.md) |
 | AI 世界（沙箱互動世界） | ✅ 已驗證 | [acceptance](docs/experiments/interactive-works-acceptance.md) |
-| Sepolia 上的 ENSv2 卡帶名稱 | ✅ 已驗證 | [ensv2-cartridge-names](docs/e2e/milestone-ensv2-cartridge-names/result.md) |
-| 血統市場 | 🧪 已部署到 Sepolia，只跑過 dry run，尚未接進 app | [lineage-market](docs/e2e/milestone-lineage-market/result.md) |
+| Sepolia 上的 ENSv2 卡帶名稱（舊的 `ens:setup` 上層名稱） | ✅ 已驗證 | [ensv2-cartridge-names](docs/e2e/milestone-ensv2-cartridge-names/result.md) |
+| 名稱樹裡的 ENS 名稱：改編卡帶、玩家存檔、更新、還原後用雜湊找到名稱 | ✅ 已在 Sepolia 驗證 | [lineage-names](docs/e2e/milestone-lineage-names/result.md) |
+| 代付站：app 裡沒有私鑰 | ✅ 已驗證（代付站在本機執行）；部署的 Worker 還在等私鑰 | [lineage-relay](docs/e2e/milestone-lineage-relay/result.md) |
+| 血統市場：在 app 裡用 passkey 出價、結算、買入、發放分潤 | ✅ 已在 Sepolia 驗證（Touch ID 由虛擬驗證器代替）；三代只跑過 dry run | [lineage-demo](docs/e2e/milestone-lineage-demo/result.md) · [lineage-market](docs/e2e/milestone-lineage-market/result.md) |
 | 同伴 | 🚧 規則裡有，但大地上還不會畫出來、也不會跟隨 | — |
 | Windows / Linux | ❔ 未測試；打包目前只支援 macOS | — |
 
@@ -354,6 +364,9 @@ skills: [skills]
 | `bun run demo:cartridges` | 建置 `cartridges-examples/` 裡的示範卡帶 |
 | `bun run contracts:build` | 重新編譯 Solidity 產物（已提交進 repo） |
 | `bun run lineage:market --dry-run` | 在 Sepolia 上模擬部署 → 三代發行 → 拍賣 → 交易 → 權利金 |
+| `bun run lineage:demo status\|launch\|seed-bids\|settle` | 市場的現場操作工具（launch 與 seed-bids 會花 Sepolia gas） |
+| `bun run web:deploy` | 把唯讀的拍賣頁面部署到 Cloudflare |
+| `bun run relay:key` / `relay:dev` / `relay:deploy` | 代付站：產生它的私鑰、在本機執行、部署到 Cloudflare |
 
 **端到端測試** 透過 Chrome DevTools Protocol 操作真正的 app，而且一律使用拋棄式的 userData：
 

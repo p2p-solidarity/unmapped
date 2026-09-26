@@ -11,6 +11,7 @@ import {
   type InstanceMeta,
 } from "@shared/cartridge";
 import { type JSX, useRef, useState } from "react";
+import { SaveEnsBlock } from "../market/EnsNames";
 import { useKeys } from "../shell/useKeys";
 import { isCompatible } from "../title/CartridgesPanel";
 import { isCancelled } from "../title/useLibrary";
@@ -145,6 +146,7 @@ export function SavesPanel({ data, refresh, onClose }: SectionProps): JSX.Elemen
               </Button>
             )}
           </div>
+          <SaveEnsBlock instanceId={selected.instanceId} />
         </div>
       )}
       <div className="row-actions">

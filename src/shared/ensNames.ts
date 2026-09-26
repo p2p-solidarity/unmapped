@@ -10,6 +10,19 @@ export const ENS_CARTRIDGE_KEYS = {
   hash: "unwritten.hash",
 } as const;
 
+/** Frozen too: a save's name (`<save>.<cartridge>.<root>`, LineageRegistry.recordSave) adds these. */
+export const ENS_SAVE_KEYS = {
+  kind: "unwritten.kind",
+  save: "unwritten.save",
+  progress: "unwritten.progress",
+} as const;
+
+/** A name followed back: the revision it points at, plus the checkpoint when it names a save. */
+export interface EnsLookup {
+  pointer: CartridgePointer;
+  save: { saveHash: string; progress: string } | null;
+}
+
 /** What the renderer may know about this machine's ENS setup: no key, no RPC URL, no addresses. */
 export interface EnsNamesConfig {
   /** e.g. `unwritten.eth`; null when UNWRITTEN_ENS_* is not set. */

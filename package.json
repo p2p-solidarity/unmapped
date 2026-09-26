@@ -25,7 +25,12 @@
     "contracts:deploy": "node scripts/deploy-ledger.mjs",
     "ens:setup": "bun scripts/ens-setup.ts",
     "lineage:market": "bun scripts/lineage-market.ts",
-    "service": "bun --tsconfig-override tsconfig.node.json src/service/main.ts"
+    "lineage:demo": "bun scripts/lineage-demo.ts",
+    "service": "bun --tsconfig-override tsconfig.node.json src/service/main.ts",
+    "web:deploy": "cd web/lineage-auction && bunx wrangler@4 deploy",
+    "relay:key": "bun scripts/relay-key.ts",
+    "relay:dev": "cd web/lineage-relay && bunx wrangler@4 dev --port 8790 --env-file ../../.cache/relay/dev.env",
+    "relay:deploy": "cd web/lineage-relay && bunx wrangler@4 deploy"
   },
   "dependencies": {
     "@deepseek-ai/cordis": "^4.0.2",

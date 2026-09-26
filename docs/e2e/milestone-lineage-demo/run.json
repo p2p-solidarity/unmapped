@@ -1,0 +1,382 @@
+{
+  "flow": "lineage market in the app: passkey account (in-app and system-browser), faucet, bids, settle, buy, royalties — real Sepolia transactions",
+  "env": {
+    "app": "AETHER_TEST_USER_DATA=<fresh dir> UNWRITTEN_SIGN_BROWSER=none bun run dev --remoteDebuggingPort 9336",
+    "dotenv": "UNWRITTEN_PRIVATE_KEY (relayer) + UNWRITTEN_LINEAGE_{PARENT,REGISTRY,HOOK,ROUTER,ACCOUNTS} from `bun run lineage:market unmapped`",
+    "browser": "'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless=new --remote-debugging-port=9340 --user-data-dir=<fresh dir> about:blank",
+    "passkey": "CDP WebAuthn virtual authenticator (ctap2, internal, resident key, user verified) stands in for Touch ID; virtual authenticators live only as long as the DevTools session, so enrol → faucet → bid run in one session and the credential is exported (WebAuthn.getCredentials) and re-added (WebAuthn.addCredential) for later signatures",
+    "ui_language": "zh-TW (system default)"
+  },
+  "model": null,
+  "runs": {
+    "app_passkey_enrol_faucet_bid (CDP_PORT=9336)": [
+      {
+        "cdp": {
+          "method": "WebAuthn.enable",
+          "params": {
+            "enableUI": false
+          }
+        }
+      },
+      {
+        "cdp": {
+          "method": "WebAuthn.addVirtualAuthenticator",
+          "params": {
+            "options": {
+              "protocol": "ctap2",
+              "ctap2Version": "ctap2_1",
+              "transport": "internal",
+              "hasResidentKey": true,
+              "hasUserVerification": true,
+              "isUserVerified": true,
+              "automaticPresenceSimulation": true,
+              "hasPrf": true
+            }
+          }
+        }
+      },
+      {
+        "eval": "localStorage.removeItem('aether.marketPasskey'); location.reload()"
+      },
+      {
+        "wait": 5000
+      },
+      {
+        "clickText": "世界"
+      },
+      {
+        "wait": 1500
+      },
+      {
+        "clickText": "市場"
+      },
+      {
+        "wait": 4000
+      },
+      {
+        "clickText": "使用我的 passkey"
+      },
+      {
+        "wait": 8000
+      },
+      {
+        "eval": "localStorage.getItem('aether.marketPasskey')"
+      },
+      {
+        "clickText": "領 1,000 測試 USDC"
+      },
+      {
+        "wait": 30000
+      },
+      {
+        "text": true
+      },
+      {
+        "shot": "docs/e2e/milestone-lineage-demo/04-faucet.jpg"
+      },
+      {
+        "clickText": "aether-land.unmapped.eth"
+      },
+      {
+        "wait": 2000
+      },
+      {
+        "eval": "document.getElementById('market-bid-amount').focus()"
+      },
+      {
+        "type": "50"
+      },
+      {
+        "wait": 500
+      },
+      {
+        "shot": "docs/e2e/milestone-lineage-demo/05-bid-form.jpg"
+      },
+      {
+        "clickText": "用 passkey 出價"
+      },
+      {
+        "wait": 40000
+      },
+      {
+        "text": true
+      },
+      {
+        "shot": "docs/e2e/milestone-lineage-demo/06-bid-placed.jpg"
+      },
+      {
+        "cdp": {
+          "method": "WebAuthn.getCredentials",
+          "params": {
+            "authenticatorId": "$authenticatorId"
+          }
+        }
+      }
+    ],
+    "browser_link: app side (CDP_PORT=9336)": [
+      {
+        "eval": "localStorage.removeItem(\"aether.marketPasskey\"); location.reload()"
+      },
+      {
+        "wait": 5000
+      },
+      {
+        "clickText": "世界"
+      },
+      {
+        "wait": 1500
+      },
+      {
+        "clickText": "市場"
+      },
+      {
+        "wait": 4000
+      },
+      {
+        "clickText": "用 Touch ID（在瀏覽器開啟）"
+      }
+    ],
+    "browser_link: page side (CDP_PORT=9340, open the '[market] sign page' URL from the dev log first)": [
+      {
+        "cdp": {
+          "method": "WebAuthn.enable",
+          "params": {
+            "enableUI": false
+          }
+        }
+      },
+      {
+        "cdp": {
+          "method": "WebAuthn.addVirtualAuthenticator",
+          "params": {
+            "options": {
+              "protocol": "ctap2",
+              "ctap2Version": "ctap2_1",
+              "transport": "internal",
+              "hasResidentKey": true,
+              "hasUserVerification": true,
+              "isUserVerified": true,
+              "automaticPresenceSimulation": true
+            }
+          }
+        }
+      },
+      {
+        "clickText": "Create a passkey"
+      },
+      {
+        "wait": 3000
+      },
+      {
+        "cdp": {
+          "method": "WebAuthn.getCredentials",
+          "params": {
+            "authenticatorId": "$authenticatorId"
+          }
+        }
+      }
+    ],
+    "browser_bid: app side (CDP_PORT=9336)": [
+      {
+        "clickText": "領 1,000 測試 USDC"
+      },
+      {
+        "wait": 28000
+      },
+      {
+        "clickText": "aether-land.unmapped.eth"
+      },
+      {
+        "wait": 2000
+      },
+      {
+        "eval": "document.getElementById(\"market-bid-amount\").focus()"
+      },
+      {
+        "type": "20"
+      },
+      {
+        "clickText": "用 passkey 出價"
+      }
+    ],
+    "browser_bid: page side (CDP_PORT=9340)": [
+      {
+        "cdp": {
+          "method": "WebAuthn.enable",
+          "params": {
+            "enableUI": false
+          }
+        }
+      },
+      {
+        "cdp": {
+          "method": "WebAuthn.addVirtualAuthenticator",
+          "params": {
+            "options": {
+              "protocol": "ctap2",
+              "ctap2Version": "ctap2_1",
+              "transport": "internal",
+              "hasResidentKey": true,
+              "hasUserVerification": true,
+              "isUserVerified": true,
+              "automaticPresenceSimulation": true
+            }
+          }
+        }
+      },
+      {
+        "cdp": {
+          "method": "WebAuthn.addCredential",
+          "params": {
+            "authenticatorId": "$authenticatorId",
+            "credential": "<the exported credential>"
+          }
+        }
+      },
+      {
+        "clickText": "Approve with Touch ID"
+      },
+      {
+        "wait": 35000
+      }
+    ],
+    "settle: app side, after the auction's last block (CDP_PORT=9336)": [
+      {
+        "clickText": "世界"
+      },
+      {
+        "wait": 1500
+      },
+      {
+        "clickText": "市場"
+      },
+      {
+        "wait": 6000
+      },
+      {
+        "clickText": "aether-land.unmapped.eth"
+      },
+      {
+        "wait": 2500
+      },
+      {
+        "text": true
+      },
+      {
+        "shot": "docs/e2e/milestone-lineage-demo/14-auction-ended.jpg"
+      },
+      {
+        "clickText": "結算拍賣"
+      },
+      {
+        "wait": 3000
+      },
+      {
+        "shot": "docs/e2e/milestone-lineage-demo/15-settling.jpg"
+      },
+      {
+        "wait": 240000
+      },
+      {
+        "text": true
+      },
+      {
+        "shot": "docs/e2e/milestone-lineage-demo/16-pool-open.jpg"
+      }
+    ],
+    "browser_buy: app side (CDP_PORT=9336)": [
+      {
+        "eval": "document.getElementById(\"market-buy-amount\").focus()"
+      },
+      {
+        "type": "10"
+      },
+      {
+        "clickText": "用 passkey 買入"
+      },
+      {
+        "wait": 4000
+      },
+      {
+        "text": true
+      }
+    ],
+    "browser_buy: page side (CDP_PORT=9340, open the new '[market] sign page' URL; close the previous sign tab first)": [
+      {
+        "cdp": {
+          "method": "WebAuthn.enable",
+          "params": {
+            "enableUI": false
+          }
+        }
+      },
+      {
+        "cdp": {
+          "method": "WebAuthn.addVirtualAuthenticator",
+          "params": {
+            "options": {
+              "protocol": "ctap2",
+              "ctap2Version": "ctap2_1",
+              "transport": "internal",
+              "hasResidentKey": true,
+              "hasUserVerification": true,
+              "isUserVerified": true,
+              "automaticPresenceSimulation": true
+            }
+          }
+        }
+      },
+      {
+        "cdp": {
+          "method": "WebAuthn.addCredential",
+          "params": {
+            "authenticatorId": "$authenticatorId",
+            "credential": "<the exported credential>"
+          }
+        }
+      },
+      {
+        "text": true
+      },
+      {
+        "shot": "docs/e2e/milestone-lineage-demo/17-browser-buy-page.jpg"
+      },
+      {
+        "clickText": "Approve with Touch ID"
+      },
+      {
+        "wait": 40000
+      },
+      {
+        "text": true
+      },
+      {
+        "shot": "docs/e2e/milestone-lineage-demo/18-browser-buy-sent.jpg"
+      }
+    ],
+    "royalties: app side (CDP_PORT=9336)": [
+      {
+        "wait": 3000
+      },
+      {
+        "text": true
+      },
+      {
+        "shot": "docs/e2e/milestone-lineage-demo/19-app-after-buy.jpg"
+      },
+      {
+        "clickText": "發放分潤"
+      },
+      {
+        "wait": 45000
+      },
+      {
+        "text": true
+      },
+      {
+        "shot": "docs/e2e/milestone-lineage-demo/20-royalties-paid.jpg"
+      }
+    ]
+  },
+  "web_view": "21-web-graduated.jpg: https://unmapped-auction.gimmychang.workers.dev opened in the headless Chrome (PUT /json/new?<url>), viewport 1440 × 2500, Page.captureScreenshot 12 s after load"
+}

@@ -36,19 +36,70 @@ export const CREATE2_DEPLOYER: Address = "0x4e59b44847b379578588920ca78fbf26c0b4
 
 type Compiled = { abi: Abi; bytecode: Hex };
 const contracts = market.contracts as unknown as Record<
-  "LineageRegistry" | "LineageHook" | "LineageRouter" | "WorldToken",
+  | "LineageRegistry"
+  | "LineageHook"
+  | "LineageRouter"
+  | "WorldToken"
+  | "PasskeyAccount"
+  | "PasskeyAccountFactory",
   Compiled
 >;
 export const lineageRegistry = contracts.LineageRegistry;
 export const lineageHook = contracts.LineageHook;
 export const lineageRouter = contracts.LineageRouter;
 export const worldTokenAbi = contracts.WorldToken.abi;
+export const passkeyAccount = contracts.PasskeyAccount;
+export const passkeyAccountFactory = contracts.PasskeyAccountFactory;
+
+/** One call a passkey signs for its PasskeyAccount (`PasskeyAccount.Call`). */
+export interface AccountCall {
+  target: Address;
+  value: bigint;
+  data: Hex;
+}
+
+/**
+ * The WebAuthn challenge for a batch: keccak256(abi.encode(chainid, account, nonce, deadline,
+ * calls)), exactly `PasskeyAccount.digest` — so the challenge can be built before the account exists.
+ */
+export function passkeyDigest(input: {
+  chainId: bigint;
+  account: Address;
+  nonce: bigint;
+  deadline: bigint;
+  calls: readonly AccountCall[];
+}): Hex {
+  return keccak256(
+    encodeAbiParameters(
+      [
+        { type: "uint256" },
+        { type: "address" },
+        { type: "uint256" },
+        { type: "uint256" },
+        {
+          type: "tuple[]",
+          components: [
+            { name: "target", type: "address" },
+            { name: "value", type: "uint256" },
+            { name: "data", type: "bytes" },
+          ],
+        },
+      ],
+      [input.chainId, input.account, input.nonce, input.deadline, input.calls],
+    ),
+  );
+}
 
 export const ccaAbi = parseAbi([
   "function submitBid(uint256 maxPriceQ96, uint128 amount, address owner, bytes hookData) payable returns (uint256)",
   "function exitBid(uint256 bidId)",
   "function claimTokens(uint256 bidId)",
+  "function startBlock() view returns (uint64)",
   "function endBlock() view returns (uint64)",
+  "function nextBidId() view returns (uint256)",
+  "function floorPrice() view returns (uint256)",
+  "function tickSpacing() view returns (uint256)",
+  "function currencyRaised() view returns (uint256)",
   "function claimBlock() view returns (uint64)",
   "function isGraduated() view returns (bool)",
   "function clearingPrice() view returns (uint256)",
@@ -67,6 +118,7 @@ export const permit2Abi = parseAbi([
 export const erc20Abi = parseAbi([
   "function approve(address spender, uint256 amount) returns (bool)",
   "function balanceOf(address account) view returns (uint256)",
+  "function symbol() view returns (string)",
 ]);
 
 /** ENSv2 registries are ERC-1155: a name changes hands, and its roles with it, by transfer. */

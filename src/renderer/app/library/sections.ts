@@ -7,6 +7,7 @@
 import type { StringKey } from "@renderer/i18n";
 import type { Loadable } from "@shared/result";
 import type { JSX } from "react";
+import { MarketPanel } from "../market/MarketPanel";
 import { ArchivePanel } from "../title/ArchivePanel";
 import { CartridgesPanel } from "../title/CartridgesPanel";
 import { ContinentPanel } from "../title/ContinentPanel";
@@ -47,6 +48,7 @@ export const SECTIONS: readonly Section[] = [
     count: (library) => library.cartridges.length + library.workspaces.length,
   },
   { id: "continent", label: "library.sectionContinent", Panel: ContinentPanel },
+  { id: "market", label: "library.sectionMarket", Panel: MarketPanel },
   {
     id: "archive",
     label: "library.sectionArchive",

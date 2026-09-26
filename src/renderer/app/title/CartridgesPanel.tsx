@@ -18,7 +18,7 @@ import { AUTOFOCUS, useArrowFocus } from "../library/focus";
 import type { SectionProps } from "../library/sections";
 import { useKeys } from "../shell/useKeys";
 import { hydrateInstance } from "../useInstanceLoader";
-import { CartridgeNameLine, OpenByEnsName, useEnsNames } from "./CartridgeName";
+import { CartridgeNameLine, OpenByEnsName } from "./CartridgeName";
 import { isCancelled, type LibraryData } from "./useLibrary";
 
 type Entry =
@@ -97,7 +97,6 @@ export function CartridgesPanel({ data, refresh, onClose }: SectionProps): JSX.E
   const [remix, setRemix] = useState<RemixDraft | null>(null);
   const [busy, setBusy] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
-  const ens = useEnsNames();
 
   const list = data.status === "ready" ? entries(data.value) : [];
   const selected = list[Math.min(cursor, list.length - 1)];
@@ -265,7 +264,7 @@ export function CartridgesPanel({ data, refresh, onClose }: SectionProps): JSX.E
                       names: matchingRuns.map((run) => run.name).join(", "),
                     })}
               </span>
-              <CartridgeNameLine manifest={selected.manifest} config={ens} />
+              <CartridgeNameLine manifest={selected.manifest} />
             </>
           ) : null}
           {selected.kind === "draft" ? (

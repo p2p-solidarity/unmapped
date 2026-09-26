@@ -11,8 +11,15 @@ const compiled = compile(
   ["abi", "evm.bytecode.object", "evm.deployedBytecode.object"],
 );
 const market = { solc: solc.version(), contracts: {} };
-for (const name of ["LineageRegistry", "LineageHook", "LineageRouter", "WorldToken"]) {
-  const contract = compiled[`lineage/${name}.sol`][name];
+for (const [file, name] of [
+  ["LineageRegistry", "LineageRegistry"],
+  ["LineageHook", "LineageHook"],
+  ["LineageRouter", "LineageRouter"],
+  ["WorldToken", "WorldToken"],
+  ["PasskeyAccount", "PasskeyAccount"],
+  ["PasskeyAccount", "PasskeyAccountFactory"],
+]) {
+  const contract = compiled[`lineage/${file}.sol`][name];
   const runtime = byteLength(contract.evm.deployedBytecode.object);
   // EIP-170: a deployed contract's code may not exceed 24,576 bytes.
   if (runtime > 24_576) {

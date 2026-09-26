@@ -9,7 +9,7 @@ export {
   MAX_SEED_BYTES,
   resolveEnsSeed,
 } from "./ens";
-export { lookupCartridgeName } from "./ensNames";
+export { lookupCartridgeName, lookupEnsName } from "./ensNames";
 export {
   addPasskeyWrapping,
   currentKey,
@@ -19,6 +19,13 @@ export {
   unlock,
   unlockWithKeychain,
 } from "./keys";
+export {
+  type MarketPasskey,
+  marketPasskey,
+  remember as rememberMarketPasskey,
+  signMarketChallenge,
+  storedMarketPasskey,
+} from "./passkeySign";
 export {
   CREDENTIAL_STORAGE_KEY,
   clearCredentialId,

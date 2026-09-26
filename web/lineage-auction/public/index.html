@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lineage Auction House</title>
+<meta name="description" content="Live view of UNMAPPED world auctions on Sepolia: Uniswap Continuous Clearing Auctions under ENSv2 names, read straight from the chain — no wallet.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="bar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <span class="brand-name">Lineage Auction House</span>
+    <span class="brand-sub">UNMAPPED · worlds under <b id="parent-name">unmapped.eth</b></span>
+  </div>
+  <div class="bar-right">
+    <label class="select">
+      <span class="label">World</span>
+      <select id="world"></select>
+    </label>
+    <span class="chain" id="chain"><i class="dot"></i><span id="chain-text">Sepolia · connecting…</span></span>
+  </div>
+</header>
+
+<main>
+  <section class="board" aria-live="polite">
+    <div class="board-main">
+      <div class="world-line">
+        <h1 id="world-name">Reading worlds from Sepolia…</h1>
+        <span class="pill" id="phase" data-phase="loading">loading</span>
+      </div>
+      <p class="world-meta" id="world-meta">&nbsp;</p>
+      <div class="price">
+        <span class="price-label">Clearing price</span>
+        <span class="price-value" id="clearing">—</span>
+        <span class="price-unit" id="clearing-unit"></span>
+      </div>
+      <p class="price-note" id="price-note">&nbsp;</p>
+    </div>
+    <dl class="stats">
+      <div><dt>Time left</dt><dd id="time-left">—</dd><dd class="sub" id="time-sub"></dd></div>
+      <div><dt>Raised</dt><dd id="raised">—</dd><dd class="sub" id="raised-sub"></dd></div>
+      <div><dt>Sold so far</dt><dd id="sold">—</dd><dd class="sub" id="sold-sub"></dd></div>
+      <div><dt>Bids</dt><dd id="bid-count">—</dd><dd class="sub" id="bid-sub"></dd></div>
+    </dl>
+  </section>
+
+  <section class="chart-card">
+    <div class="card-head">
+      <h2>Price discovery, block by block</h2>
+      <p class="legend">
+        <span><i class="key key-clear"></i>clearing price</span>
+        <span><i class="key key-floor"></i>floor</span>
+        <span><i class="key key-bid"></i>bid (height = amount)</span>
+        <span><i class="key key-now"></i>now</span>
+      </p>
+    </div>
+    <div class="chart-wrap"><svg id="chart" viewBox="0 0 960 320" role="img" aria-label="Clearing price and bids over the auction's blocks"></svg></div>
+  </section>
+
+  <div class="columns">
+    <section class="card">
+      <div class="card-head"><h2>Bids</h2><p class="hint">Every bid is signed by a passkey and carried on chain by a relayer that only pays gas.</p></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Bidder</th><th class="num">Amount</th><th class="num">Max price</th><th class="num">Block</th><th>State</th></tr></thead>
+          <tbody id="bids"><tr><td colspan="6" class="empty">No bids read yet.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>How the auction clears</h2></div>
+      <ol class="steps">
+        <li><b>Supply is released every block.</b> The world's auction sells an equal slice of its tokens in each of its blocks — no one can buy it all in the first second.</li>
+        <li><b>Bids say “up to this price”.</b> A bid is an amount of currency and a ceiling. Each block, the clearing price is the lowest price at which demand meets that block's supply.</li>
+        <li><b>Everyone pays the same price.</b> Bids above the clearing price are filled at the clearing price, never at their ceiling; the difference is refunded when the bid exits.</li>
+        <li><b>Graduation opens a Uniswap v4 pool.</b> When the auction ends having raised enough, Uniswap's LBPStrategy opens a pool at the discovered price, paired with the parent world's token, under the lineage hook that pays royalties up the family line.</li>
+      </ol>
+      <div class="how-bid">
+        <h3>Bid without a wallet</h3>
+        <p>In the UNMAPPED app: <b>Worlds → Market</b>, pick the world, enter an amount and approve Touch ID. The app turns the signature into a relayed transaction; the player never holds ETH or connects a wallet.</p>
+      </div>
+    </section>
+  </div>
+
+  <div class="columns">
+    <section class="card">
+      <div class="card-head"><h2>After the auction</h2></div>
+      <div id="pool" class="pool"><p class="empty">The pool opens when the auction is settled.</p></div>
+    </section>
+    <section class="card">
+      <div class="card-head"><h2>Family tree</h2><p class="hint">ENSv2 names under unmapped.eth — cartridges, the remixes that hang under them and players' saves (held by their passkey accounts). A world on the market trades against its parent's token.</p></div>
+      <ul class="tree" id="tree"><li class="empty">Reading worlds…</li></ul>
+    </section>
+  </div>
+
+  <section class="card contracts">
+    <div class="card-head"><h2>On chain</h2><p class="hint">Everything on this page is read from Sepolia in your browser. Nothing here can sign or send.</p></div>
+    <ul class="links" id="links"></ul>
+  </section>
+  <p class="error" id="error" hidden></p>
+</main>
+<script type="module" src="app.js"></script>
+</body>
+</html>

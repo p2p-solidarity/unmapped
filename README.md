@@ -322,22 +322,32 @@ Full example: [`mods-examples/onsen-festival`](mods-examples/onsen-festival). De
 None of this is needed to play. With nothing configured, every screen says plainly that no ledger
 is set up.
 
-- **ENSv2 cartridge names (Sepolia).** A published revision can claim
-  `<cartridge>.<parent>.eth`. Its text records hold only the id, version and content hash, and
-  **Title → Cartridges → Open by ENS name** follows a name back to the exact revision. Run
-  `bun run ens:setup <label> --dry-run` first.
+- **ENSv2 names for cartridges and saves (Sepolia).** Everything hangs in one tree under
+  `unmapped.eth`: a cartridge revision is `<cartridge>.unmapped.eth`, a remix sits under its parent's
+  name, and a save is `<save>.<cartridge>.unmapped.eth`, held by the player's own passkey account.
+  In **Worlds → Cartridges** a player names a revision (or points their name at a newer one), and
+  **Open by ENS name** follows a name back to the exact revision, or to a save's checkpoint. In
+  **Worlds → Saves → ENS name for this save** they record their run and move it forward as they play.
+  The records hold only the id, version and content hash (for a save: its sha256, the pinned version
+  and one line of progress); a backup restored on another machine finds its name by hash.
 - **Provenance ledger.** [`contracts/src/UnwrittenLedger.sol`](contracts/src/UnwrittenLedger.sol)
   records who published which hash and what it was remixed from, plus short player notes. Content
   never goes on chain.
-- **Lineage market (experimental).** Each remix gets an ENS name under its parent world's name and a
-  token sold through a Uniswap Continuous Clearing Auction. A v4 hook then pays a 1% royalty up the
-  family line. The contracts are deployed on Sepolia under `unmapped.eth`, and the full flow has
-  been run as a dry run. The app does not launch or trade yet. See
+- **Lineage market (experimental, Sepolia).** A named cartridge can be launched: its token is sold
+  through a Uniswap Continuous Clearing Auction priced in its parent's token, and a v4 hook then pays
+  a 1% royalty up the family line (50 / 30 / 20 to the world, its parent and its grandparent), to
+  whoever holds the ENS name. The first world, `aether-land.unmapped.eth`, has been auctioned,
+  settled and traded. In **Worlds → Market** a player bids, settles, buys and pays out royalties with
+  a passkey. There is no wallet and no ETH, and no key in the app: the passkey owns a small account
+  contract, and a gas station (a Cloudflare Worker, `src/relay`) pays for exactly the market's own
+  actions. Launching a world is still an operator command (`bun run lineage:demo launch`). A read-only auction page runs at
+  https://unmapped-auction.gimmychang.workers.dev. See [`docs/demo/lineage-market.md`](docs/demo/lineage-market.md),
   [`docs/plans/lineage-market.md`](docs/plans/lineage-market.md) and
   [`contracts/README.md`](contracts/README.md).
 
-Chain keys (`UNWRITTEN_*`) are read only by the main process. Scripts that spend gas are run by a
-person, never by the app.
+Chain keys (`UNWRITTEN_*`) are read only by the main process. Deploy and launch scripts are run by a
+person. The app holds no key for the market: it asks the gas station at `UNWRITTEN_LINEAGE_RELAY` to
+carry an action the player signed with their passkey.
 
 ## Status
 
@@ -358,8 +368,10 @@ screenshots.
 | Cloud model (OpenAI `gpt-5.4-mini`), usage ledger | ✅ verified | [model-switch](docs/e2e/milestone-model-switch/result.md) · [rev6-create](docs/e2e/milestone-rev6-create/result.md) |
 | Local model generation (llama.cpp, Ollama, Apple) | ⏳ detection verified, generation not yet | [model-switch](docs/e2e/milestone-model-switch/result.md) |
 | AI Worlds (sandboxed interactive worlds) | ✅ verified | [acceptance](docs/experiments/interactive-works-acceptance.md) |
-| ENSv2 cartridge names on Sepolia | ✅ verified | [ensv2-cartridge-names](docs/e2e/milestone-ensv2-cartridge-names/result.md) |
-| Lineage market | 🧪 deployed on Sepolia, dry run only, not in the app | [lineage-market](docs/e2e/milestone-lineage-market/result.md) |
+| ENSv2 cartridge names on Sepolia (the older `ens:setup` parent) | ✅ verified | [ensv2-cartridge-names](docs/e2e/milestone-ensv2-cartridge-names/result.md) |
+| ENS names in the lineage tree: a remix cartridge, a player's save, its update, a restored backup found by hash | ✅ verified on Sepolia | [lineage-names](docs/e2e/milestone-lineage-names/result.md) |
+| Gas station: no key in the app | ✅ verified with the station run locally; the deployed Worker waits for its key | [lineage-relay](docs/e2e/milestone-lineage-relay/result.md) |
+| Lineage market: bid, settle, buy and royalties from the app with a passkey | ✅ verified on Sepolia (a virtual authenticator stood in for Touch ID); three generations in the dry run only | [lineage-demo](docs/e2e/milestone-lineage-demo/result.md) · [lineage-market](docs/e2e/milestone-lineage-market/result.md) |
 | Companions | 🚧 in the rules, not yet drawn or followed on the land | — |
 | Windows / Linux | ❔ untested; packaging targets macOS only | — |
 
@@ -396,6 +408,9 @@ The current direction is **Revision 6** ([engineering notes](docs/rev6-engineeri
 | `bun run demo:cartridges` | build the demo cartridges in `cartridges-examples/` |
 | `bun run contracts:build` | recompile the Solidity artifacts (committed) |
 | `bun run lineage:market --dry-run` | simulate deploy → three generations → auctions → swaps → royalties on Sepolia |
+| `bun run lineage:demo status\|launch\|seed-bids\|settle` | live market operator tools (launch and seed bids spend Sepolia gas) |
+| `bun run web:deploy` | deploy the read-only auction page to Cloudflare |
+| `bun run relay:key` / `relay:dev` / `relay:deploy` | the gas station: make its key, run it locally, ship it to Cloudflare |
 
 **End-to-end runs** drive the real app over the Chrome DevTools Protocol, always on a throwaway
 userData:

@@ -43,6 +43,17 @@ import type {
   SetApiKeyInput,
   SidecarStatus,
 } from "./llm";
+import type {
+  EnsNameStatus,
+  MarketAction,
+  MarketConfig,
+  MarketKey,
+  MarketReceipt,
+  MarketView,
+  PreparedAction,
+  SaveNameView,
+  SubmitActionInput,
+} from "./market";
 import type { ModBundle, ModSummary } from "./mods";
 import type { Result } from "./result";
 import type {
@@ -177,6 +188,19 @@ export const IPC = {
     changePlay: "works:change-play",
     openSession: "works:open-session",
     closeSession: "works:close-session",
+  },
+  market: {
+    config: "market:config",
+    view: "market:view",
+    prepare: "market:prepare",
+    submit: "market:submit",
+    faucet: "market:faucet",
+    settle: "market:settle",
+    royalties: "market:royalties",
+    link: "market:link",
+    signInBrowser: "market:sign-in-browser",
+    cartridgeName: "market:cartridge-name",
+    saveName: "market:save-name",
   },
   chain: {
     config: "chain:config",
@@ -479,6 +503,40 @@ export interface SeedApi {
     openSession(source: WorkSessionSource): Promise<Result<WorkSession>>;
     /** Forgets a session; `kill` also stops its frame process (a hung world). */
     closeSession(token: string, kill: boolean): Promise<Result<void>>;
+  };
+  /**
+   * The lineage market (Sepolia): read worlds, auctions, pools and a passkey account; everything a
+   * player does is a batch main builds, the passkey signs (`prepare` → sign → `submit`) and main's
+   * relayer pays for. Absent config answers `market-not-configured`.
+   */
+  market: {
+    config(): Promise<MarketConfig>;
+    view(key: MarketKey | null): Promise<Result<MarketView>>;
+    prepare(key: MarketKey, action: MarketAction): Promise<Result<PreparedAction>>;
+    submit(input: SubmitActionInput): Promise<Result<MarketReceipt>>;
+    faucet(key: MarketKey): Promise<Result<MarketReceipt>>;
+    settle(world: string): Promise<Result<MarketReceipt>>;
+    royalties(world: string): Promise<Result<MarketReceipt>>;
+    /** Opens the system browser to create or choose the passkey (Touch ID works there). */
+    link(): Promise<Result<{ credentialId: string; key: MarketKey }>>;
+    /** Opens the system browser to sign a prepared batch; resolves once it is relayed. */
+    signInBrowser(input: {
+      preparedId: string;
+      credentialId: string;
+      summary: string;
+    }): Promise<Result<MarketReceipt>>;
+    /** What a local revision's ENS name says (`<cartridge>.<root>`), for this passkey or nobody. */
+    cartridgeName(
+      cartridgeId: string,
+      version: string,
+      key: MarketKey | null,
+    ): Promise<Result<EnsNameStatus>>;
+    /** A local save's ENS name (`<label>.<cartridge>.<root>`); `label` null = its default. */
+    saveName(
+      instanceId: string,
+      label: string | null,
+      key: MarketKey | null,
+    ): Promise<Result<SaveNameView>>;
   };
   /** Optional on-chain provenance (contracts/src/UnwrittenLedger.sol); absent config is not an error. */
   chain: {

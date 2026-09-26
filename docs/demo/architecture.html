@@ -1,0 +1,334 @@
+<meta charset="utf-8">
+<title>Unmapped Lineage Market</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+  :root {
+    --ground: #eef2f0; --surface: #ffffff; --ink: #11282c; --muted: #56706c; --rule: #cfdad6;
+    --money: #bf6f00; --money-soft: rgba(191, 111, 0, 0.12); --ens: #4656b0; --ens-soft: rgba(70, 86, 176, 0.1);
+    --good: #1d7a4c;
+    --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+    --body: "Source Sans 3", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark; --ground: #0e1517; --surface: #152125; --ink: #e2ebe9; --muted: #93a8a4; --rule: #27383c;
+      --money: #f0a33a; --money-soft: rgba(240, 163, 58, 0.14); --ens: #93a2f2; --ens-soft: rgba(147, 162, 242, 0.12); --good: #4cc38a;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark; --ground: #0e1517; --surface: #152125; --ink: #e2ebe9; --muted: #93a8a4; --rule: #27383c;
+    --money: #f0a33a; --money-soft: rgba(240, 163, 58, 0.14); --ens: #93a2f2; --ens-soft: rgba(147, 162, 242, 0.12); --good: #4cc38a;
+  }
+  body { background: var(--ground); color: var(--ink); font: 16px/1.6 var(--body); padding-inline: 16px; padding-block: 0 56px; }
+  .page { max-width: 1040px; margin: 0 auto; }
+  header { padding-block: 40px 12px; border-bottom: 1px solid var(--rule); display: grid; gap: 10px; }
+  .eyebrow { font: 600 12px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  h1 { font-family: var(--display); font-size: clamp(34px, 6vw, 54px); line-height: 1; margin: 0; text-wrap: balance; letter-spacing: 0.01em; }
+  h1 em { font-style: normal; color: var(--money); }
+  h2 { font-family: var(--display); font-size: 28px; margin: 48px 0 10px; text-wrap: balance; }
+  h3 { font-family: var(--display); font-size: 20px; margin: 20px 0 6px; }
+  p { margin: 0 0 12px; max-width: 70ch; }
+  .lede { font-size: 19px; max-width: 64ch; }
+  .muted { color: var(--muted); }
+  code, .mono { font-family: var(--mono); font-size: 0.86em; overflow-wrap: anywhere; }
+  a { color: var(--ens); }
+  .facts { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 6px 0 0; font-size: 14px; color: var(--muted); }
+  .facts b { color: var(--ink); font-weight: 600; }
+  figure { margin: 18px 0 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 16px; }
+  figure .scroll { overflow-x: auto; }
+  figure svg { display: block; width: 100%; min-width: 760px; height: auto; color: var(--ink); }
+  figcaption { margin-top: 10px; font-size: 14px; color: var(--muted); max-width: 80ch; }
+  svg text { font-family: var(--body); font-size: 13px; fill: currentColor; }
+  svg .small { font-size: 11px; fill: var(--muted); }
+  svg .title { font-family: var(--display); font-size: 16px; font-weight: 600; }
+  svg .zone { fill: none; stroke: var(--rule); stroke-dasharray: 4 4; }
+  svg .zone-label { font: 600 11px var(--mono); letter-spacing: 0.1em; fill: var(--muted); }
+  svg .box { fill: var(--surface); stroke: currentColor; stroke-width: 1.2; }
+  svg .box-ens { fill: var(--ens-soft); stroke: var(--ens); stroke-width: 1.4; }
+  svg .box-money { fill: var(--money-soft); stroke: var(--money); stroke-width: 1.4; }
+  svg .edge { fill: none; stroke: currentColor; stroke-width: 1.3; }
+  svg .edge-money { fill: none; stroke: var(--money); stroke-width: 1.8; }
+  svg .edge-ens { fill: none; stroke: var(--ens); stroke-width: 1.5; }
+  svg .edge-read { fill: none; stroke: var(--muted); stroke-width: 1.1; stroke-dasharray: 3 4; }
+  svg .label { font-size: 11.5px; fill: var(--muted); }
+  svg .label-money { font-size: 11.5px; fill: var(--money); font-weight: 600; }
+  svg .label-ens { font-size: 11.5px; fill: var(--ens); font-weight: 600; }
+  .table-wrap { overflow-x: auto; margin-top: 10px; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font: 600 11px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 10px 12px; border-bottom: 1px solid var(--rule); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .pill { font: 600 10.5px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; border: 1px solid currentColor; border-radius: 999px; padding: 1px 8px; white-space: nowrap; }
+  .pill.live { color: var(--good); } .pill.dry { color: var(--ens); } .pill.todo { color: var(--muted); }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin-top: 8px; }
+  .note { border-left: 3px solid var(--money); padding: 4px 0 4px 14px; margin: 16px 0; max-width: 72ch; }
+  ol.flow { padding-left: 22px; display: grid; gap: 8px; max-width: 76ch; }
+  @media (max-width: 640px) { h2 { font-size: 24px; } }
+</style>
+
+<div class="page">
+<header>
+  <p class="eyebrow">UNMAPPED · 無界之地 · Sepolia · ETHGlobal Tokyo 2026</p>
+  <h1>ENS names the family tree. <em>Uniswap prices it.</em> A passkey owns it.</h1>
+  <p class="lede">Names come first: every cartridge gets an ENSv2 name under the world it was remixed from, and every player's save gets one under its cartridge, held by the player's own passkey account. A named world can then be launched: a token sold in a Uniswap Continuous Clearing Auction and — once the auction graduates — a v4 pool whose hook pays royalties up the family tree to whoever holds each name. Players never connect a wallet, and the app holds no key: their passkey signs, a gas station pays.</p>
+  <div class="facts">
+    <span>Parent name <b class="mono">unmapped.eth</b></span>
+    <span>First world <b class="mono">aether-land.unmapped.eth</b></span>
+    <span>A save <b class="mono">first-light.aether-land.unmapped.eth</b></span>
+    <span>Live view <a href="https://unmapped-auction.gimmychang.workers.dev">unmapped-auction.gimmychang.workers.dev</a></span>
+  </div>
+</header>
+
+<h2>How the pieces talk</h2>
+<p>Four places run code. The player's side only ever <em>signs</em>; the app's main process builds every batch and keeps its digest but holds no key; a gas station (a Cloudflare Worker) carries it and pays; the contracts on Sepolia check the passkey signature themselves, so the station can carry an action but never change or replay it.</p>
+<figure>
+<div class="scroll">
+<svg viewBox="0 0 1000 600" role="img" aria-label="Architecture: the player's app panel and a browser sign page talk to the app's main process, which hands each signed batch to the gas station, which calls the PasskeyAccountFactory on Sepolia; the account bids in the Uniswap auction and trades through the LineageRouter; the LineageRegistry registers ENSv2 names and starts auctions through Uniswap's LBPStrategy; the LineageHook takes royalties on every swap and pays the ENS name holder.">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+    <marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--money)"/></marker>
+    <marker id="ae" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ens)"/></marker>
+  </defs>
+  <!-- zones -->
+  <rect class="zone" x="10" y="10" width="220" height="580" rx="10"/>
+  <text class="zone-label" x="24" y="32">PLAYER · NO WALLET</text>
+  <rect class="zone" x="250" y="10" width="200" height="580" rx="10"/>
+  <text class="zone-label" x="264" y="32">APP · GAS STATION</text>
+  <rect class="zone" x="470" y="10" width="520" height="580" rx="10"/>
+  <text class="zone-label" x="484" y="32">SEPOLIA</text>
+
+  <!-- player -->
+  <rect class="box" x="30" y="60" width="180" height="58" rx="6"/>
+  <text class="title" x="42" y="84">Market panel</text>
+  <text class="small" x="42" y="104">app · Worlds → Market</text>
+  <rect class="box" x="30" y="170" width="180" height="58" rx="6"/>
+  <text class="title" x="42" y="194">Sign page · Touch ID</text>
+  <text class="small" x="42" y="214">system browser, localhost</text>
+  <rect class="box" x="30" y="500" width="180" height="58" rx="6"/>
+  <text class="title" x="42" y="524">Lineage Auction House</text>
+  <text class="small" x="42" y="544">web, read-only, Cloudflare</text>
+
+  <!-- app -->
+  <rect class="box" x="268" y="56" width="164" height="96" rx="6"/>
+  <text class="title" x="280" y="80">App main process</text>
+  <text class="small" x="280" y="100">builds each batch</text>
+  <text class="small" x="280" y="116">keeps the digest</text>
+  <text class="small" x="280" y="132">holds no key</text>
+  <rect class="box-money" x="268" y="196" width="164" height="112" rx="6"/>
+  <text class="title" x="280" y="220">Gas station</text>
+  <text class="small" x="280" y="240">Cloudflare Worker</text>
+  <text class="small" x="280" y="256">market calls only</text>
+  <text class="small" x="280" y="272">simulates, caps gas</text>
+  <text class="small" x="280" y="288">pays the gas</text>
+
+  <!-- lineage contracts -->
+  <rect class="box" x="490" y="56" width="200" height="50" rx="6"/>
+  <text class="title" x="502" y="78">PasskeyAccountFactory</text>
+  <text class="small" x="502" y="96">one clone per passkey key</text>
+  <rect class="box" x="490" y="130" width="200" height="58" rx="6"/>
+  <text class="title" x="502" y="152">PasskeyAccount</text>
+  <text class="small" x="502" y="170">WebAuthn + P-256 at 0x100</text>
+  <rect class="box-ens" x="490" y="240" width="200" height="58" rx="6"/>
+  <text class="title" x="502" y="262">LineageRegistry</text>
+  <text class="small" x="502" y="280">names · saves · launch</text>
+  <rect class="box" x="490" y="350" width="200" height="50" rx="6"/>
+  <text class="title" x="502" y="372">LineageRouter</text>
+  <text class="small" x="502" y="390">buy / sell along the line</text>
+  <rect class="box-money" x="490" y="470" width="200" height="58" rx="6"/>
+  <text class="title" x="502" y="492">LineageHook</text>
+  <text class="small" x="502" y="510">1% royalty · 50 / 30 / 20</text>
+
+  <!-- ENS -->
+  <text class="zone-label" x="780" y="60">ENSV2</text>
+  <rect class="box-ens" x="770" y="70" width="200" height="44" rx="6"/>
+  <text x="782" y="97">unmapped.eth → root registry</text>
+  <rect class="box-ens" x="770" y="124" width="200" height="44" rx="6"/>
+  <text x="782" y="151">a UserRegistry per cartridge</text>
+  <rect class="box-ens" x="770" y="178" width="200" height="44" rx="6"/>
+  <text x="782" y="205">PermissionedResolver · records</text>
+  <!-- Uniswap -->
+  <text class="zone-label" x="780" y="270">UNISWAP</text>
+  <rect class="box" x="770" y="280" width="200" height="44" rx="6"/>
+  <text x="782" y="307">LBPStrategy v3.1.0</text>
+  <rect class="box" x="770" y="340" width="200" height="44" rx="6"/>
+  <text x="782" y="367">Clearing auction (CCA v2.1)</text>
+  <rect class="box-money" x="770" y="430" width="200" height="54" rx="6"/>
+  <text x="782" y="453">PoolManager · v4 pool</text>
+  <text class="small" x="782" y="472">world × parent's token</text>
+
+  <!-- player ↔ app -->
+  <path class="edge" d="M210,82 H268" marker-end="url(#a)"/>
+  <text class="label" x="214" y="76">action</text>
+  <path class="edge" d="M268,124 C240,124 240,196 212,196" marker-end="url(#a)"/>
+  <text class="label" x="222" y="150">digest</text>
+  <path class="edge" d="M210,214 C250,214 250,140 268,140" marker-end="url(#a)"/>
+  <text class="label" x="216" y="236">signature</text>
+  <!-- app → station -->
+  <path class="edge" d="M350,152 V196" marker-end="url(#a)"/>
+  <text class="label" x="356" y="180">batch + signature</text>
+  <!-- station → factory → account -->
+  <path class="edge-money" d="M432,226 C462,226 460,81 490,81" marker-end="url(#am)"/>
+  <text class="label-money" x="438" y="120">execute</text>
+  <path class="edge" d="M590,106 V130" marker-end="url(#a)"/>
+  <!-- station → registry (settle, graduate) -->
+  <path class="edge-money" d="M432,280 C462,280 462,270 490,270" marker-end="url(#am)"/>
+  <text class="label-money" x="436" y="300">settle · graduate</text>
+  <!-- account → registry (names, saves), auction, router -->
+  <path class="edge-ens" d="M560,188 V240" marker-end="url(#ae)"/>
+  <text class="label-ens" x="566" y="222">name · save</text>
+  <path class="edge" d="M690,166 C740,166 730,362 770,362" marker-end="url(#a)"/>
+  <text class="label" x="702" y="350">submitBid</text>
+  <path class="edge" d="M490,172 H480 V375 H488" marker-end="url(#a)"/>
+  <text class="label" transform="rotate(-90 476 356)" x="476" y="356">buy</text>
+  <!-- registry → ENS -->
+  <path class="edge-ens" d="M690,254 C730,254 730,146 770,146" marker-end="url(#ae)"/>
+  <text class="label-ens" x="700" y="128">register · records</text>
+  <path class="edge-ens" d="M690,272 C735,272 735,200 770,200" marker-end="url(#ae)"/>
+  <!-- registry → LBP → CCA → pool -->
+  <path class="edge" d="M690,288 C730,288 730,302 770,302" marker-end="url(#a)"/>
+  <text class="label" x="702" y="318">start CCA</text>
+  <path class="edge" d="M870,324 V340" marker-end="url(#a)"/>
+  <path class="edge" d="M960,302 C990,302 990,457 970,457" marker-end="url(#a)"/>
+  <text class="label" x="916" y="410">graduate</text>
+  <!-- router → pool; pool → hook; hook → registry -->
+  <path class="edge-money" d="M690,375 C735,375 730,445 770,445" marker-end="url(#am)"/>
+  <text class="label-money" x="702" y="420">swap</text>
+  <path class="edge-money" d="M770,470 C735,470 735,500 690,500" marker-end="url(#am)"/>
+  <text class="label-money" x="706" y="516">afterSwap</text>
+  <path class="edge-money" d="M550,470 C520,450 520,310 548,298" marker-end="url(#am)"/>
+  <text class="label-money" x="498" y="446">claim → name holder</text>
+  <!-- reads -->
+  <path class="edge-read" d="M210,530 C400,530 420,560 770,478" marker-end="url(#a)"/>
+  <text class="label" x="300" y="560">eth_call + logs, straight from the browser</text>
+</svg>
+</div>
+<figcaption>Solid black arrows are calls; indigo arrows write ENSv2 state; amber arrows move money. The dashed line is the read-only web view, which needs neither the app nor a wallet. The only key that pays is the gas station's, a Cloudflare secret; the app holds none, and the station pays only for the market's own calls.</figcaption>
+</figure>
+
+<h2>Who gets paid when a remix trades</h2>
+<p>A remix's token is sold and traded against its parent's token, so the pools form the same tree as the names. Buying a grandchild walks down the line — each hop is a swap in one pool — and every hop takes a 1% royalty from its output and splits it up the family: half to the world traded in that pool, 30% to its parent, 20% to its grandparent. A missing ancestor's share stays with the world.</p>
+<figure>
+<div class="scroll">
+<svg viewBox="0 0 1000 330" role="img" aria-label="A three-hop buy from USDC through aether-land, a remix and a remix of the remix; the third hop's 1% royalty is split 50% to the remix of the remix, 30% to the remix and 20% to aether-land, each paid to that world's ENS name holder.">
+  <defs>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+    <marker id="bm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--money)"/></marker>
+  </defs>
+  <text class="small" x="30" y="30">ENS NAME (example names under the real first world)</text>
+  <text class="label-ens" x="170" y="56">aether-land.unmapped.eth</text>
+  <text class="label-ens" x="430" y="56">bloom.aether-land.unmapped.eth</text>
+  <text class="label-ens" x="700" y="56">night.bloom.aether-land.…</text>
+  <rect class="box" x="30" y="90" width="100" height="56" rx="6"/>
+  <text class="title" x="58" y="124">USDC</text>
+  <rect class="box-ens" x="170" y="80" width="200" height="76" rx="6"/>
+  <text class="title" x="184" y="104">aether-land pool</text>
+  <text class="small" x="184" y="124">AETHERLAND / USDC</text>
+  <text class="small" x="184" y="142">generation 1</text>
+  <rect class="box-ens" x="430" y="80" width="200" height="76" rx="6"/>
+  <text class="title" x="444" y="104">bloom pool</text>
+  <text class="small" x="444" y="124">BLOOM / AETHERLAND</text>
+  <text class="small" x="444" y="142">generation 2 (remix)</text>
+  <rect class="box-ens" x="700" y="80" width="200" height="76" rx="6"/>
+  <text class="title" x="714" y="104">night pool</text>
+  <text class="small" x="714" y="124">NIGHT / BLOOM</text>
+  <text class="small" x="714" y="142">generation 3</text>
+  <path class="edge" d="M130,118 H168" marker-end="url(#b)"/>
+  <path class="edge" d="M370,118 H428" marker-end="url(#b)"/>
+  <path class="edge" d="M630,118 H698" marker-end="url(#b)"/>
+  <text class="label" x="376" y="110">hop 2</text>
+  <text class="label" x="136" y="110">hop 1</text>
+  <text class="label" x="638" y="110">hop 3</text>
+  <text class="small" x="30" y="196">HOP 3 ROYALTY: 1% OF THE NIGHT BOUGHT</text>
+  <rect class="box-money" x="700" y="212" width="200" height="40" rx="6"/>
+  <text x="714" y="237">50% → night's holder</text>
+  <rect class="box-money" x="430" y="212" width="200" height="40" rx="6"/>
+  <text x="444" y="237">30% → bloom's holder</text>
+  <rect class="box-money" x="170" y="212" width="200" height="40" rx="6"/>
+  <text x="184" y="237">20% → aether-land's holder</text>
+  <path class="edge-money" d="M800,156 V210" marker-end="url(#bm)"/>
+  <path class="edge-money" d="M780,156 C780,190 560,180 540,210" marker-end="url(#bm)"/>
+  <path class="edge-money" d="M760,156 C760,196 300,176 280,210" marker-end="url(#bm)"/>
+  <text class="small" x="30" y="290">Hop 1 pays aether-land 100% of its royalty; hop 2 pays bloom 70% and aether-land 30%. Measured in the dry run:</text>
+  <text class="small" x="30" y="308">a 10-USDC three-hop buy paid 7.2986 / 10.9479 / 18.2465 NIGHT — exactly 20 / 30 / 50 of 1/99 of what the buyer received.</text>
+</svg>
+</div>
+<figcaption>Royalties accrue per world in the hook and are paid, on <code>claim</code>, to whoever holds that world's ENS name at that moment — the name is the royalty right. A remix's auction also takes bids in its parent's token, so launching remixes creates demand for the parent.</figcaption>
+</figure>
+
+<h2>The life of a world</h2>
+<ol class="flow">
+  <li><b>Publish</b> a cartridge in the app. Its sha256 content hash is its identity; the bytes never go on chain.</li>
+  <li><b>Name</b> — <code>LineageRegistry.register</code> (Worlds → Cartridges, one passkey signature): <code>&lt;cartridge&gt;.unmapped.eth</code>, or under its parent's name for a remix, with its own children's registry and the id / version / hash records. The name's holder can point it at later revisions.</li>
+  <li><b>Play and record</b> — a player names their own save with <code>recordSave</code> (Worlds → Saves): <code>&lt;save&gt;.&lt;cartridge&gt;.unmapped.eth</code>, held by their passkey account, recording the save's sha256, the pinned version and a progress line; <code>updateSave</code> moves it forward. A backup restored elsewhere finds its name by hash.</li>
+  <li><b>Launch</b> — the holder calls <code>launch</code> on the name: mint the token and start the Continuous Clearing Auction through Uniswap's LBPStrategy (priced in the parent's token, or MockUSDC at the top). A remix launches only after its parent.</li>
+  <li><b>Bid</b> — each block the auction sells an equal slice of supply at the price where demand meets it. Players bid from their passkey account; the gas station carries it.</li>
+  <li><b>Settle</b> — after the last block anyone may exit and claim bids; every filled bid pays the one clearing price.</li>
+  <li><b>Graduate</b> — LBPStrategy opens the v4 pool at the discovered price with half of what was raised; LineageHook accepts only this initializer and only a world × parent pairing.</li>
+  <li><b>Trade</b> along the family line through LineageRouter; every hop pays the 1% royalty up the tree.</li>
+  <li><b>Claim</b> — the hook pays each world's accrued royalty to its current ENS holder; <b>revise</b> points the name at a newer revision (holder only).</li>
+  <li><b>Remix</b> — a new cartridge named under this one hangs under its name and, once launched, trades against its token. The loop repeats.</li>
+</ol>
+
+<h2>ENSv2 design</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Piece</th><th>What it holds</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td><code>unmapped.eth</code></td><td>Registered through the ETH Registrar; its subregistry is the LineageRegistry's own root registry.</td><td>Top-level cartridges live directly under it, in a registry nobody but the lineage contract can register into. Every node is a real namehash (<code>rootNode = namehash("unmapped.eth")</code>).</td></tr>
+    <tr><td>Registry per cartridge</td><td>Made when the cartridge is named (Verifiable Factory proxy of UserRegistry). The contract keeps only <code>REGISTRAR | SET_PARENT</code>.</td><td>Neither role is in <code>UNEMANCIPATED_ROLE_BITMAP</code>, so <code>isEmancipated()</code> is true: no one — the contract included — can repoint, take back or upgrade a name, and names transfer safely. Remixes and saves share the cartridge's label space.</td></tr>
+    <tr><td>A save</td><td>A name in its cartridge's registry, registered to <code>msg.sender</code> — the player's PasskeyAccount (an ERC-1155 holder). No children.</td><td>The run is the player's without a wallet; only they move it forward. The record is a hash, so a backup can be checked against it anywhere.</td></tr>
+    <tr><td>Name holder</td><td>Only <code>CAN_TRANSFER_ADMIN</code> on its own name.</td><td>The holder can sell the name (and with it the royalty right and revisions) but cannot cut a branch out of the tree.</td></tr>
+    <tr><td>PermissionedResolver</td><td><code>unwritten.kind</code>, <code>.cartridge</code>, <code>.version</code>, <code>.hash</code> (sha256); a world adds <code>.token</code>, <code>.auction</code>; a save adds <code>.save</code> (sha256) and <code>.progress</code>.</td><td>The Universal Resolver reads them at any depth; the app's “Open by ENS name” follows a name to the exact revision (or a save's checkpoint) and checks its hash. Content never goes on chain.</td></tr>
+  </tbody>
+</table></div>
+<p class="muted" style="margin-top:10px">We first gave the registry <code>SET_SUBREGISTRY</code> to attach remix registries later. ENSv2 then refused safe transfers with <code>TransferUnsafeUntilRegistryIsEmancipated</code> — so each cartridge's registry is created when it is named instead. v1 named a world only at launch; v2 (deployed 2026-09-26) names first so cartridges and saves can have names without a market.</p>
+
+<h2>Contracts on Sepolia</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Contract</th><th>Address</th><th>Key code</th></tr></thead>
+  <tbody>
+    <tr><td>LineageRegistry</td><td class="num"><a href="https://sepolia.etherscan.io/address/0xda8051e3e2855C125AAd6050f97Ea64cf203dAf6">0xda80…dAf6</a></td><td class="mono">register L188 · revise L207 · recordSave L215 · updateSave L229 · launch L249 · registerAndLaunch L255 · graduate L260 · holderOf L271 · ownerOf L278 · _launch L322 · _startAuction L348 · _newRegistry L444</td></tr>
+    <tr><td>LineageHook</td><td class="num"><a href="https://sepolia.etherscan.io/address/0x59FA49D974B4564Eade17EDDC4a3CCf8D819a044">0x59FA…a044</a></td><td class="mono">getHookPermissions L63 · _beforeInitialize L96 · _afterSwap L104 · _split L122 · claim L83</td></tr>
+    <tr><td>LineageRouter</td><td class="num"><a href="https://sepolia.etherscan.io/address/0x2201fBDB7f17BD687d8965B9Dc2Ae000689039BE">0x2201…39BE</a></td><td class="mono">buy L48 · sell L59 · unlockCallback L68</td></tr>
+    <tr><td>PasskeyAccountFactory</td><td class="num"><a href="https://sepolia.etherscan.io/address/0x7B8b8E17590cC85c315d459feD8fC9384C2c9bE5">0x7B8b…9bE5</a></td><td class="mono">accountOf L79 · deploy L83 · execute L92; account digest L49 · execute L53</td></tr>
+    <tr><td>Gas station (ours, off chain)</td><td class="num"><a href="https://sepolia.etherscan.io/address/0xB62Ccd1A90896911b21546a60eC78E934f9fFd3D">0xB62C…Fd3D</a></td><td class="mono">src/relay/worker.ts · sponsor.ts (kinds: execute, faucet, exit, claim, graduate, royalties)</td></tr>
+    <tr><td>Uniswap (theirs)</td><td class="num">PoolManager 0xE03A…3543<br>LBPStrategy 0x9664…E000<br>CCA factory 0x0000…63F8</td><td class="muted">Official Sepolia deployments; our structs mirror liquidity-launcher v3.1.0 / CCA v2.1.0 field for field (LaunchTypes.sol).</td></tr>
+  </tbody>
+</table></div>
+<p class="muted" style="margin-top:10px">Source: <code>contracts/src/lineage/</code>. Line numbers are for the deployed source.</p>
+
+<h2>How it is tested</h2>
+<p>No mocked chain. The dry run replays every call as simulated blocks (<code>eth_simulateV1</code>) on top of Sepolia's real ENSv2 and Uniswap contracts; the live steps are real transactions.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Check</th><th>How</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>Launch encodes what LBPStrategy / CCA decode; auction lands where predicted; graduation emits <code>Migrated</code></td><td><code>bun run lineage:market --dry-run</code></td><td><span class="pill dry">dry run</span> three generations launched, auctioned, graduated</td></tr>
+    <tr><td>Hook address carries exactly its permission bits</td><td>CREATE2 salt mined; v4 accepts it</td><td><span class="pill live">live</span> <code>0x…6044</code> → bits <code>0x2044</code></td></tr>
+    <tr><td>No faked lineage: pool opened by anyone but LBPStrategy; world paired with the wrong currency</td><td>refusal checks</td><td><span class="pill dry">dry run</span> both refused</td></tr>
+    <tr><td>Royalties are 1% per hop, split 50/30/20, paid to the current name holder</td><td>2- and 3-hop buys; safe transfer of a name, then claim</td><td><span class="pill dry">dry run</span> exact splits; new holder paid, old holder not</td></tr>
+    <tr><td>Name tree and market agree</td><td>Universal Resolver reads <code>unwritten.token</code> of a remix name</td><td><span class="pill dry">dry run</span> resolves to the launched token</td></tr>
+    <tr><td>Names are emancipated</td><td><code>isEmancipated()</code></td><td><span class="pill live">live</span> root registry: true</td></tr>
+    <tr><td>Passkey accounts move only on their passkey's signature</td><td>replayed batch, batch altered after signing, another passkey</td><td><span class="pill dry">dry run</span> all three refused</td></tr>
+    <tr><td>P-256 precompile on Sepolia</td><td><code>eth_call</code> 0x100 with a real and a tampered signature</td><td><span class="pill live">live</span> 1 / empty</td></tr>
+    <tr><td>Names first: a cartridge without a market; a remix waits for its parent; a save is held by its passkey account and only it moves it; nothing under a save</td><td><code>bun run lineage:market --dry-run</code> (checks 9, 10)</td><td><span class="pill dry">dry run</span> name 846,210 gas · record a save 880,211 · update 277,320; four refusals</td></tr>
+    <tr><td>First world on v2 + price discovery</td><td><code>lineage:demo launch</code> aether-land 1.3.0; three seed passkeys bid 4,000 / 3,000 / 2,000 USDC, the app adds 25 through the gas station</td><td><span class="pill live">live</span> closed at 0.018636 USDC (floor 0.01, +86%); 9,025 USDC raised; settled from the app, graduate tx <a class="mono" href="https://sepolia.etherscan.io/tx/0xac7221df2857af0f454523d20e5956b1392c1939259f9c540ed35d48b4223f63">0xac72…3f63</a></td></tr>
+    <tr><td>No key in the app: faucet, buy, royalties paid by the gas station</td><td>app started with an empty <code>UNWRITTEN_PRIVATE_KEY</code>; station on its own key</td><td><span class="pill live">live</span> 10 USDC → 528.45 AETHERLAND, buy tx <a class="mono" href="https://sepolia.etherscan.io/tx/0x89794d10ee4218cd39a0e126d2dd6a2a2940220048069945c3606f9626fa9344">0x8979…9344</a>; 8 hostile requests refused</td></tr>
+    <tr><td>A remix cartridge named from the app</td><td>Worlds → Cartridges → 用 passkey 登記名稱</td><td><span class="pill live">live</span> <code>moss-hollow.aether-land.unmapped.eth</code>, tx <a class="mono" href="https://sepolia.etherscan.io/tx/0x866a8c933973e6f8459aef6df3c178eebe26fe4069ae584e3a60b3ea0d19f9e9">0x866a…f9e9</a></td></tr>
+    <tr><td>A player's save named, moved forward, and checked on another machine</td><td>Worlds → Saves → record; update; export the backup, restore it on an app with no passkey and no station</td><td><span class="pill live">live</span> <code>first-light.aether-land.unmapped.eth</code>, update tx <a class="mono" href="https://sepolia.etherscan.io/tx/0x7156551a5da3bd5e0902041210b3f57f96992dad6d768114fb696b074031084d">0x7156…084d</a>; the restored save finds its name by hash (cf063883…4dbc)</td></tr>
+    <tr><td>v1: first world + price discovery (the earlier deployment)</td><td><code>lineage:demo launch</code>, three seed passkeys bid 4,000 / 3,000 / 2,000 MockUSDC, the app adds 50 and 20</td><td><span class="pill live">live</span> closed at 0.018395 USDC (floor 0.01, +84%); 9,070 USDC raised</td></tr>
+    <tr><td>v1: app bids with a passkey, no wallet</td><td>E2E in the real app (DevTools virtual authenticator): enrol → faucet → bid 50 USDC</td><td><span class="pill live">live</span> bid #3, tx <a class="mono" href="https://sepolia.etherscan.io/tx/0x892bac1e0feba6b422fe73b0dc31498ce6ce3151af9adb7d4ddff1321d9b9e6e">0x892b…9e6e</a></td></tr>
+    <tr><td>v1: bid signed in the system browser (the Touch ID path)</td><td>app → localhost page → passkey; 20 USDC</td><td><span class="pill live">live</span> bid #4, tx <a class="mono" href="https://sepolia.etherscan.io/tx/0xad4755f8762b4708bfd9bacab8fac7d9f97e1d69d3710d97c3b77a80a539acc3">0xad47…acc3</a></td></tr>
+    <tr><td>v1: settle and graduate from the app, no signature</td><td>after block 11,781,083: 5 exits + 5 claims, then <code>graduate</code></td><td><span class="pill live">live</span> all 500,000 tokens claimed; v4 pool opened, tx <a class="mono" href="https://sepolia.etherscan.io/tx/0x218ae77b5e93eb91314be7bf81a723f1f82d82976bfb76dfb89baff7c709f6bb">0x218a…f6bb</a></td></tr>
+    <tr><td>v1: buy through the pool with a passkey; the hook takes 1%</td><td>10 USDC, signed in the browser</td><td><span class="pill live">live</span> 535.39 AETHERLAND out, 5.408 to the hook (exactly 1%), tx <a class="mono" href="https://sepolia.etherscan.io/tx/0x0aca30e5070fb34b6d88cdb862a0f650f8cc643dd94e3e37f3f98f3e0f2cd55f">0x0aca…d55f</a></td></tr>
+    <tr><td>v1: royalties reach the ENS name holder</td><td>app: 發放分潤</td><td><span class="pill live">live</span> 5.408 AETHERLAND to <code>0x8eEC…51C3</code>, tx <a class="mono" href="https://sepolia.etherscan.io/tx/0x3161c7881cf3464cf6336f473ff3ea6f9f190ced5dbdec7c1ca79b28b5c0d819">0x3161…d819</a></td></tr>
+  </tbody>
+</table></div>
+
+<h2>One thing to know before a live demo</h2>
+<div class="note">
+  <p>Electron cannot show Touch ID for WebAuthn in a development build — that needs <code>app.configureWebAuthn</code> and a keychain entitlement in a signed build. So the app hands the one signature step to the system browser: it opens a localhost page, Chrome or Safari asks for Touch ID, and the signature comes back to the app, which hands it to the gas station. The passkey lives in the player's own keychain; still no wallet. A USB security key also works inside the app. The deployed station needs its key once: <code>wrangler secret put RELAYER_KEY</code>.</p>
+</div>
+</div>

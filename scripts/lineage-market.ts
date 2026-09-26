@@ -4,7 +4,8 @@
 //   UNWRITTEN_PRIVATE_KEY=0x… bun run lineage:market <label>   # deploy; worlds live under <label>.eth
 //
 // Live: deploys LineageRegistry (which makes its own resolver and root registry), LineageHook
-// (CREATE2, address mined for its permission bits) and LineageRouter, then registers <label>.eth
+// (CREATE2, address mined for its permission bits), LineageRouter and the PasskeyAccountFactory
+// (players' passkey-owned accounts), then registers <label>.eth
 // pointing at the registry's root — or repoints it, if the key already owns it. Use a label of its
 // own: cartridge names from `ens:setup` live under a different parent. The dry run does the same on a
 // fresh label, then launches `zelda`, its remix `mushroom` and that one's remix `night`, bids in each
@@ -24,57 +25,59 @@
 // 6. Someone who does not hold a world's name revises it.
 // 7. A world's name is not an emancipated ENSv2 token, so it cannot be transferred safely and some
 //    root role could still take it back or repoint it.
+// 8. A passkey account moves without its passkey: a batch replayed, altered after signing, or signed
+//    by another passkey goes through (the relayer must only ever be able to pay the gas).
+// 9. A name without a market is not a real name: a cartridge named without launching does not
+//    resolve to its revision, or can be launched by someone who does not hold it, or a remix can be
+//    launched before its parent (so it would trade against nothing).
+// 10. A save is not its player's: its name is held by anyone but the passkey account that recorded
+//    it, its records do not resolve, someone else can move it, or it can grow children of its own.
 
 import { config as loadEnv } from "dotenv";
 import {
   type Abi,
   type Address,
   createPublicClient,
-  decodeFunctionResult,
   encodeDeployData,
+  encodeFunctionData,
   formatUnits,
   type Hex,
   http,
   keccak256,
-  type Log,
   maxUint256,
   type PublicClient,
-  parseEventLogs,
   parseUnits,
   toHex,
   zeroAddress,
 } from "viem";
 import { sepolia } from "viem/chains";
+import { ENSV2_SEPOLIA, registryAbi as ensRegistryAbi, usdcAbi } from "../src/main/chain/ensCalls";
 import {
-  ENSV2_SEPOLIA,
-  registryAbi as ensRegistryAbi,
-  textProfileAbi,
-  textQuery,
-  universalResolverAbi,
-  usdcAbi,
-} from "../src/main/chain/ensCalls";
-import {
+  type AccountCall,
   auctionPrices,
   ccaAbi,
   create2,
   ensRegistryAbiEmancipation,
   erc20Abi,
   erc1155Abi,
-  lbpStrategyAbi,
   lineageHook,
   lineageRegistry,
   lineageRouter,
   mineHook,
   type PoolKey,
+  passkeyAccount,
+  passkeyAccountFactory,
   permit2Abi,
-  poolId,
   poolManagerAbi,
   registryInitCode,
-  stateViewAbi,
   UNISWAP_SEPOLIA,
 } from "../src/main/chain/lineageCalls";
 import { call, dryExec, expectRevert, liveExec, read } from "./lib/chainExec";
 import { checkEnsDeployment, pointDotEth } from "./lib/ensParent";
+import { bidIdOf, marketDay } from "./lib/marketDay";
+import { namesAndSaves } from "./lib/namesDay";
+import { accountNonce, accountOf, passkeyExecute, signBatch } from "./lib/passkeyRelay";
+import { softPasskey } from "./lib/softPasskey";
 
 loadEnv({ quiet: true });
 const args = process.argv.slice(2);
@@ -143,6 +146,11 @@ const router = create2(
   salt,
 );
 await deployOnce("LineageRouter", router);
+const accounts = create2(
+  encodeDeployData({ abi: passkeyAccountFactory.abi, bytecode: passkeyAccountFactory.bytecode }),
+  salt,
+);
+await deployOnce("PasskeyAccountFactory", accounts);
 const currentHook = (await read(exec, registry.address, registryAbi, "hook", [])) as Address;
 if (currentHook === zeroAddress) {
   await exec.send(call(registry.address, registryAbi, "setHook", [hook.address]), "set the hook");
@@ -176,137 +184,24 @@ if (!dryRun) {
   say(`UNWRITTEN_LINEAGE_REGISTRY=${registry.address}`);
   say(`UNWRITTEN_LINEAGE_HOOK=${hook.address}`);
   say(`UNWRITTEN_LINEAGE_ROUTER=${router.address}`);
+  say(`UNWRITTEN_LINEAGE_ACCOUNTS=${accounts.address}`);
   process.exit(0);
 }
 
 // ── A market day (dry run only) ────────────────────────────────────────────────────────────────
 const me = exec.account;
 const usdc = ENSV2_SEPOLIA.mockUsdc;
-
-interface Launched {
-  label: string;
-  token: Address;
-  auction: Address;
-  currency: Address;
-}
-
-async function launch(
-  label: string,
-  parentToken: Address,
-  currency: Address,
-  floor: { price: [bigint, bigint]; currencyDecimals: number },
-  requiredCurrencyRaised: bigint,
-): Promise<Launched> {
-  const prices = auctionPrices(floor.price[0], floor.price[1], floor.currencyDecimals, 18);
-  const logs = await exec.send(
-    call(registry.address, registryAbi, "launch", [
-      {
-        label,
-        parent: parentToken,
-        owner: me,
-        cartridgeId: `${label}-dry-run`,
-        version: "1",
-        contentHash: keccak256(toHex(label)),
-        supply: parseUnits("1000000", 18),
-        lpReserve: parseUnits("500000", 18),
-        auctionBlocks: 10n,
-        floorPriceQ96: prices.floorPriceQ96,
-        tickSpacingQ96: prices.tickSpacingQ96,
-        requiredCurrencyRaised,
-      },
-    ]),
-    `launch ${label}`,
-  );
-  const [event] = parseEventLogs({
-    abi: registryAbi,
-    eventName: "WorldLaunched",
-    logs,
-  }) as unknown as {
-    args: { token: Address; auction: Address };
-  }[];
-  if (event === undefined) throw new Error(`launch ${label}: no WorldLaunched event`);
-  say(`    ${label}: token ${event.args.token}, auction ${event.args.auction}`);
-  return { label, token: event.args.token, auction: event.args.auction, currency };
-}
-
-/** Bids `amount` of the world's currency at 10 ticks above the floor; returns the bid id. */
-async function bid(world: Launched, amount: bigint, floorPriceQ96: bigint, tick: bigint) {
-  await exec.send(
-    call(world.currency, erc20Abi, "approve", [UNISWAP_SEPOLIA.permit2, maxUint256]),
-    "approve Permit2",
-  );
-  await exec.send(
-    call(UNISWAP_SEPOLIA.permit2, permit2Abi, "approve", [
-      world.currency,
-      world.auction,
-      amount,
-      2n ** 48n - 1n,
-    ]),
-    `let ${world.label}'s auction pull the bid`,
-  );
-  const logs = await exec.send(
-    call(world.auction, ccaAbi, "submitBid", [floorPriceQ96 + 10n * tick, amount, me, "0x"]),
-    `bid in ${world.label}'s auction`,
-  );
-  const [event] = parseEventLogs({ abi: ccaAbi, eventName: "BidSubmitted", logs });
-  if (event === undefined) throw new Error("no BidSubmitted event");
-  return event.args.id;
-}
-
-/** Ends the auction, collects the bid's tokens and moves the auction into its v4 pool. */
-async function graduate(world: Launched, bidId: bigint, decimals: number): Promise<PoolKey> {
-  const end = (await read(exec, world.auction, ccaAbi, "endBlock", [])) as bigint;
-  await exec.mineTo(end + 1n);
-  const clearing = (await read(exec, world.auction, ccaAbi, "clearingPrice", [])) as bigint;
-  const held = await balance(world.token);
-  await exec.send(call(world.auction, ccaAbi, "exitBid", [bidId]), `exit the ${world.label} bid`);
-  await exec.send(call(world.auction, ccaAbi, "claimTokens", [bidId]), `claim ${world.label}`);
-  const filled = (await balance(world.token)) - held;
-  const logs: Log[] = await exec.send(
-    call(registry.address, registryAbi, "graduate", [world.token]),
-    `graduate ${world.label} into its v4 pool`,
-  );
-  const failed = parseEventLogs({ abi: lbpStrategyAbi, eventName: "MigrationFailed", logs });
-  if (failed.length > 0)
-    throw new Error(`${world.label} migration failed: ${failed[0]?.args.reason}`);
-  if (parseEventLogs({ abi: lbpStrategyAbi, eventName: "Migrated", logs }).length === 0) {
-    throw new Error(`${world.label}: no Migrated event`);
-  }
-  const key = (await read(exec, registry.address, registryAbi, "poolKeyOf", [
-    world.token,
-  ])) as PoolKey;
-  const [sqrtPriceX96] = (await read(exec, UNISWAP_SEPOLIA.stateView, stateViewAbi, "getSlot0", [
-    poolId(key),
-  ])) as [bigint];
-  const owner = (await read(exec, hook.address, hookAbi, "worldOf", [poolId(key)])) as Address;
-  if (owner.toLowerCase() !== world.token.toLowerCase())
-    throw new Error("hook does not know the pool");
-  say(
-    `    ${world.label}: cleared at ${humanPrice(clearing, decimals)} per token, bid filled ${formatUnits(filled, 18)}; pool sqrtPriceX96 ${sqrtPriceX96}; hook maps pool → world ✓`,
-  );
-  return key;
-}
-
-/** A Q96 auction price (currency per token, raw units) in whole currency per whole token. */
-function humanPrice(priceQ96: bigint, currencyDecimals: number): string {
-  return formatUnits((priceQ96 * 10n ** 18n) >> 96n, currencyDecimals);
-}
-
-async function balance(token: Address): Promise<bigint> {
-  return (await read(exec, token, erc20Abi, "balanceOf", [me])) as bigint;
-}
-
-async function text(name: string, key: string): Promise<string> {
-  const query = textQuery(name, key);
-  const [result] = (await read(
-    exec,
-    sepolia.contracts.ensUniversalResolver.address,
-    universalResolverAbi as Abi,
-    "resolve",
-    [query.name, query.data],
-  )) as [Hex, Address];
-  return decodeFunctionResult({ abi: textProfileAbi, functionName: "text", data: result });
-}
+const { launch, bid, graduate, balance, text, owed } = marketDay(
+  exec,
+  registry.address,
+  hook.address,
+);
+const encode = (abi: Abi, functionName: string, args: readonly unknown[]): AccountCall => ({
+  target: "0x0000000000000000000000000000000000000000",
+  value: 0n,
+  data: encodeFunctionData({ abi, functionName, args }),
+});
+const at = (target: Address, callData: AccountCall): AccountCall => ({ ...callData, target });
 
 say("\nMarket day");
 await exec.send(
@@ -316,40 +211,46 @@ await exec.send(
 
 // zelda: first generation, priced in MockUSDC from 0.01 per token (check 1).
 const zeldaPrices = auctionPrices(1n, 100n, 6, 18);
-const zelda = await launch(
-  "zelda",
-  zeroAddress,
-  usdc,
-  { price: [1n, 100n], currencyDecimals: 6 },
-  parseUnits("100", 6),
-);
+const zelda = await launch({
+  label: "zelda",
+  parent: zeroAddress,
+  currency: usdc,
+  owner: me,
+  price: [1n, 100n],
+  currencyDecimals: 6,
+  requiredCurrencyRaised: parseUnits("100", 6),
+  auctionBlocks: 10n,
+});
 const zeldaBid = await bid(
   zelda,
   parseUnits("1000", 6),
   zeldaPrices.floorPriceQ96,
   zeldaPrices.tickSpacingQ96,
 );
-await graduate(zelda, zeldaBid, 6);
+await graduate(zelda, [{ id: zeldaBid, owner: me }], 6);
 say(
   `    holds ${formatUnits(await balance(zelda.token), 18)} ZELDA (the fill, plus the LP reserve the pool did not need, which goes to the owner)`,
 );
 
 // mushroom: a remix of zelda, priced in ZELDA from 0.1 per token (checks 1, 5).
 const mushroomPrices = auctionPrices(1n, 10n, 18, 18);
-const mushroom = await launch(
-  "mushroom",
-  zelda.token,
-  zelda.token,
-  { price: [1n, 10n], currencyDecimals: 18 },
-  parseUnits("10", 18),
-);
+const mushroom = await launch({
+  label: "mushroom",
+  parent: zelda.token,
+  currency: zelda.token,
+  owner: me,
+  price: [1n, 10n],
+  currencyDecimals: 18,
+  requiredCurrencyRaised: parseUnits("10", 18),
+  auctionBlocks: 10n,
+});
 const mushroomBid = await bid(
   mushroom,
   parseUnits("1000", 18),
   mushroomPrices.floorPriceQ96,
   mushroomPrices.tickSpacingQ96,
 );
-const mushroomKey = await graduate(mushroom, mushroomBid, 18);
+const mushroomKey = await graduate(mushroom, [{ id: mushroomBid, owner: me }], 18);
 
 const mushroomName = `mushroom.zelda.${parentName}`;
 const resolvedToken = await text(mushroomName, "unwritten.token");
@@ -371,8 +272,6 @@ await exec.send(
   "buy mushroom with 10 MockUSDC (USDC → zelda → mushroom)",
 );
 const bought = (await balance(mushroom.token)) - before;
-const owed = async (world: Address, currency: Address) =>
-  (await read(exec, hook.address, hookAbi, "owed", [world, currency])) as bigint;
 const zeldaOwedZelda = await owed(zelda.token, zelda.token);
 const zeldaOwedMushroom = await owed(zelda.token, mushroom.token);
 const mushroomOwedMushroom = await owed(mushroom.token, mushroom.token);
@@ -399,12 +298,21 @@ if ((await balance(zelda.token)) - zeldaBefore !== zeldaOwedZelda)
 say(`    zelda's ENS holder received ${formatUnits(zeldaOwedZelda, 18)} ZELDA`);
 
 // Every registry in the tree is emancipated: no root role can repoint or take back a name (7).
-const zeldaWorld = (await read(exec, registry.address, registryAbi, "worldOf", [zelda.token])) as {
-  subregistry: Address;
+const nameOfWorld = async (token: Address) => {
+  const world = (await read(exec, registry.address, registryAbi, "worldOf", [token])) as {
+    node: Hex;
+  };
+  const name = (await read(exec, registry.address, registryAbi, "nameOf", [world.node])) as {
+    entryRegistry: Address;
+    subregistry: Address;
+    labelId: bigint;
+  };
+  return { node: world.node, ...name };
 };
+const zeldaWorld = await nameOfWorld(zelda.token);
 for (const [what, at] of [
   [`${parentName} (first generation)`, rootRegistry],
-  ["zelda's remixes", zeldaWorld.subregistry],
+  ["zelda's remixes and saves", zeldaWorld.subregistry],
 ] as const) {
   if (!((await read(exec, at, ensRegistryAbiEmancipation, "isEmancipated", [])) as boolean)) {
     throw new Error(`the registry for ${what} is not emancipated`);
@@ -414,9 +322,7 @@ for (const [what, at] of [
 
 // The name is the royalty right: hand mushroom's name to someone else and its royalty follows (4).
 const heir: Address = "0x000000000000000000000000000000000000bEEF";
-const mushroomWorld = (await read(exec, registry.address, registryAbi, "worldOf", [
-  mushroom.token,
-])) as { entryRegistry: Address; labelId: bigint };
+const mushroomWorld = await nameOfWorld(mushroom.token);
 const nameState = (await read(
   exec,
   mushroomWorld.entryRegistry,
@@ -458,23 +364,99 @@ const usdcGot = (await balance(usdc)) - usdcBefore;
 if (usdcGot === 0n) throw new Error("the sell returned nothing");
 say(`    got ${formatUnits(usdcGot, 6)} MockUSDC`);
 
-// Refusals (checks 3, 6).
-// night: a remix of mushroom, so a buy is three hops and pays three generations (1, 4).
+// A passkey account: it acts only on its passkey's signature over exactly these calls (8). The
+// relayer here is `me`; it pays the gas and nothing else.
+say("\nPasskey account");
+const player = softPasskey();
+const playerAccount = await accountOf(exec, accounts.address, player);
+await exec.send(
+  call(usdc, usdcAbi as Abi, "mint", [playerAccount, parseUnits("100", 6)]),
+  "faucet: mint 100 MockUSDC to the passkey account",
+);
+const buyWith = (amount: bigint): AccountCall[] => [
+  at(usdc, encode(erc20Abi, "approve", [router.address, amount])),
+  at(router.address, encode(lineageRouter.abi, "buy", [mushroom.token, amount, 0n, playerAccount])),
+];
+const signed = await passkeyExecute(
+  exec,
+  accounts.address,
+  player,
+  buyWith(parseUnits("10", 6)),
+  "passkey signs: buy mushroom with 10 MockUSDC",
+);
+const playerMushroom = await balance(mushroom.token, playerAccount);
+if (playerMushroom === 0n || (await accountNonce(exec, playerAccount)) !== 1n) {
+  throw new Error("the passkey batch did not run exactly once");
+}
+say(`    account ${playerAccount} holds ${formatUnits(playerMushroom, 18)} MUSHROOM, nonce 1`);
+await expectRevert("the same signed batch sent again", exec.read(signed.request));
+const fresh = await signBatch(exec, accounts.address, player, buyWith(parseUnits("10", 6)));
+await expectRevert(
+  "a signed batch whose calls were changed after signing",
+  exec.read(
+    call(accounts.address, passkeyAccountFactory.abi, "execute", [
+      player.publicKey.qx,
+      player.publicKey.qy,
+      buyWith(parseUnits("20", 6)),
+      fresh.deadline,
+      fresh.auth,
+    ]),
+  ),
+);
+const intruder = await signBatch(exec, accounts.address, softPasskey(), buyWith(1n));
+await expectRevert(
+  "another passkey's signature on this account",
+  exec.read(
+    call(playerAccount, passkeyAccount.abi, "execute", [
+      intruder.calls,
+      intruder.deadline,
+      intruder.auth,
+    ]),
+  ),
+);
+
+// night: a remix of mushroom, so a buy is three hops and pays three generations (1, 4). The
+// passkey account bids, the relayer settles the bid (exit and claim are open to anyone).
 const nightPrices = auctionPrices(1n, 10n, 18, 18);
-const night = await launch(
-  "night",
-  mushroom.token,
-  mushroom.token,
-  { price: [1n, 10n], currencyDecimals: 18 },
-  parseUnits("10", 18),
+const night = await launch({
+  label: "night",
+  parent: mushroom.token,
+  currency: mushroom.token,
+  owner: me,
+  price: [1n, 10n],
+  currencyDecimals: 18,
+  requiredCurrencyRaised: parseUnits("10", 18),
+  auctionBlocks: 10n,
+});
+const nightBidAmount = parseUnits("1000", 18);
+const passkeyBid = await passkeyExecute(
+  exec,
+  accounts.address,
+  player,
+  [
+    at(mushroom.token, encode(erc20Abi, "approve", [UNISWAP_SEPOLIA.permit2, nightBidAmount])),
+    at(
+      UNISWAP_SEPOLIA.permit2,
+      encode(permit2Abi, "approve", [
+        mushroom.token,
+        night.auction,
+        nightBidAmount,
+        2n ** 48n - 1n,
+      ]),
+    ),
+    at(
+      night.auction,
+      encode(ccaAbi, "submitBid", [
+        nightPrices.floorPriceQ96 + 10n * nightPrices.tickSpacingQ96,
+        nightBidAmount,
+        playerAccount,
+        "0x",
+      ]),
+    ),
+  ],
+  "passkey signs: bid 1,000 MUSHROOM in night's auction",
 );
-const nightBid = await bid(
-  night,
-  parseUnits("1000", 18),
-  nightPrices.floorPriceQ96,
-  nightPrices.tickSpacingQ96,
-);
-await graduate(night, nightBid, 18);
+await graduate(night, [{ id: bidIdOf(passkeyBid.logs), owner: playerAccount }], 18);
 const nightBefore = await balance(night.token);
 await exec.send(
   call(router.address, lineageRouter.abi, "buy", [night.token, parseUnits("10", 6), 0n, me]),
@@ -498,8 +480,33 @@ if (toGrandparent !== (hop3 * 20n) / 100n || toParent !== (hop3 * 30n) / 100n) {
   throw new Error("the grandparent / parent shares are not 20% / 30%");
 }
 
-say("\nRefusals");
+// Names first and saves (checks 9, 10): scripts/lib/namesDay.ts.
 const stranger: Address = "0x000000000000000000000000000000000000dEaD";
+const rootNode = (await read(exec, registry.address, registryAbi, "rootNode", [])) as Hex;
+const launchParams = (prices: { floorPriceQ96: bigint; tickSpacingQ96: bigint }) => ({
+  supply: parseUnits("1000000", 18),
+  lpReserve: parseUnits("500000", 18),
+  auctionBlocks: 10n,
+  floorPriceQ96: prices.floorPriceQ96,
+  tickSpacingQ96: prices.tickSpacingQ96,
+  requiredCurrencyRaised: 1n,
+});
+await namesAndSaves({
+  exec,
+  registry: registry.address,
+  accounts: accounts.address,
+  player,
+  playerAccount,
+  parentName,
+  rootNode,
+  zeldaNode: zeldaWorld.node,
+  launch: launchParams(zeldaPrices),
+  stranger,
+  text,
+});
+
+// Refusals (checks 3, 6).
+say("\nRefusals");
 const fakeKey: PoolKey = {
   ...mushroomKey,
   currency0: usdc < mushroom.token ? usdc : mushroom.token,
@@ -517,28 +524,23 @@ say("  ✓ refused: mushroom paired with MockUSDC is not a world pool");
 await expectRevert(
   "a revision by someone who does not hold the name",
   exec.read(
-    call(registry.address, registryAbi, "revise", [zelda.token, "2", keccak256("0x01")]),
+    call(registry.address, registryAbi, "revise", [zeldaWorld.node, "2", keccak256("0x01")]),
     stranger,
   ),
 );
 await expectRevert(
   "a second zelda under the same parent",
   exec.read(
-    call(registry.address, registryAbi, "launch", [
+    call(registry.address, registryAbi, "registerAndLaunch", [
       {
+        parent: rootNode,
         label: "zelda",
-        parent: zeroAddress,
         owner: me,
         cartridgeId: "zelda-again",
         version: "1",
         contentHash: keccak256("0x02"),
-        supply: parseUnits("1000000", 18),
-        lpReserve: parseUnits("500000", 18),
-        auctionBlocks: 10n,
-        floorPriceQ96: zeldaPrices.floorPriceQ96,
-        tickSpacingQ96: zeldaPrices.tickSpacingQ96,
-        requiredCurrencyRaised: 1n,
       },
+      launchParams(zeldaPrices),
     ]),
   ),
 );
