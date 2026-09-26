@@ -1,0 +1,10 @@
+$ bun --tsconfig-override tsconfig.node.json src/service/main.ts --port "8796" --data "$SCR/service"
+world service kexmkqnxdpv7l2zqmi7bvv7e7m6xtunio55imh2zfruv5c5unx46q
+  ws://127.0.0.1:8796/v1/ws  data $SCR/service  worlds 0 (0 not served)  new key TEST MODE (beat every 21600000 ms)
+2026-09-26T07:14:17.940Z attached world houui35vqbxkwhgya6kia65ku62w4h5c7436b3vccgpgewmoln34a (3 entries)
+2026-09-26T07:14:40.397Z provenance: opened the stream of houui35vqbxkwhgya6kia65ku62w4h5c7436b3vccgpgewmoln34a (0xd1a8e5165428d02a94a07115b144769206731d54ba557b8449c9d10108b417a0)
+2026-09-26T07:14:48.656Z provenance: recorded 1 beats (0xd49e588a1d24c6dd96db3afeebf42fc24a68c2b3ec10c51d54d421fddfd87917)
+2026-09-26T07:15:04.172Z provenance: recorded 1 beats (0xb314cea210d41f45051dc491cf2263e077ce5e0006a326a9ca2768146629124c)
+2026-09-26T07:15:13.595Z provenance: recorded 1 beats (0xc3c14ec73cde2d9dee6e5c737bb7d51a0deac6212d6d7ba960eb5c16c4c8b49b)
+world service: stopped (SIGTERM), snapshots written
+Internal error: directory mismatch for directory "$SCR/snap/tsconfig.node.json", fd 3. You don't need to do anything, but this indicates a bug.

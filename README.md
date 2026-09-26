@@ -108,8 +108,8 @@ path has been verified end to end so far; the [status table](#status) lists what
   placeholder data. When something is missing, the screen says so and tells you how to fix it.
 - **Optional on-chain provenance.** Worlds, remixes, saves and players can hold ENSv2 names on
   Sepolia, and the names are in the game: the player card, chapter clears, joining a continent by
-  name. A shared world's service can also record a fingerprint of each beat on a chain (simulated
-  so far, not deployed). Content never goes on chain, and every screen works without a chain
+  name. A shared world's service can also record a fingerprint of each beat on a chain (deployed on
+  Sepolia). Content never goes on chain, and every screen works without a chain
   configured.
 
 ## Screenshots
@@ -484,13 +484,13 @@ is set up.
 - **Provenance ledger.** [`contracts/src/UnwrittenLedger.sol`](contracts/src/UnwrittenLedger.sol)
   records who published which hash and what it was remixed from, plus short player notes. Content
   never goes on chain.
-- **Light chain for shared worlds (not deployed).** An owner can choose **Record beats** in the
+- **Light chain for shared worlds (Sepolia).** An owner can choose **Record beats** in the
   door's **Recorded on a public chain** section. The world service then writes each beat's
   fingerprint (the world's id, the entry number and hashes) to
   [`WorldProvenance`](contracts/src/provenance/WorldProvenance.sol) and pays for it; nobody needs a
-  wallet, and the app only reads the chain and compares it with its own copy. The contract is not
-  deployed yet: `bun run provenance --dry-run` simulates it on Sepolia against a real service's
-  beats, and `--deploy` is run by a person.
+  wallet, and the app only reads the chain and compares it with its own copy. The contract is
+  deployed on Sepolia at [`0xF625…Ef02`](https://sepolia.etherscan.io/address/0xF625ec3c228e3BCE34977C0b7e97BD591291Ef02); set `UNMAPPED_PROVENANCE_*` (see `.env.example`) for the door to
+  compare. `bun run provenance --dry-run` simulates it against a real service's beats.
 - **Lineage market (experimental, Sepolia).** A named cartridge can be launched: its token is sold
   through a Uniswap Continuous Clearing Auction priced in its parent's token, and a v4 hook then pays
   a 1% royalty up the family line (50 / 30 / 20 to the world, its parent and its grandparent), to
@@ -553,11 +553,11 @@ screenshots.
 | No gateway, or no billing: Account, Plan and Model say so; Create still asks a local model | ✅ verified | [p4-billing-off](docs/e2e/milestone-rev6-p4-billing-off/result.md) |
 | Pictures through the gateway, each with a licence record | ✅ verified with a test image model; an AI-world asset and a reference picture not run | [p4-images-hosted](docs/e2e/milestone-rev6-p4-images-hosted/result.md) |
 | Commercial mode: a non-commercial provider cannot be chosen, a new picture of unknown licence blocks publishing, a gateway in commercial mode refuses to start with a non-commercial model | ✅ verified; publishing driven through the app's publish call, not a screen | [p4-licence](docs/e2e/milestone-rev6-p4-licence/result.md) |
-| Light chain: a real service's beat fingerprints recorded on a simulated Sepolia | ✅ dry run only: nothing sent, not deployed; the no-chain check with the service stopped was cut short | [p4-chain](docs/e2e/milestone-rev6-p4-chain/result.md) |
+| Light chain: a real service's beat fingerprints recorded on Sepolia, and the door comparing them | ✅ verified live: the contract deployed, a service opened a stream and recorded 3 beats, and the door read "The chain matches your copy at entry 6"; a changed copy reads "differs" (through main's reader) | [p4-chain](docs/e2e/milestone-rev6-p4-chain/result.md) · [p4-chain-live](docs/e2e/milestone-rev6-p4-chain-live/result.md) |
 | Phone-sized browser proof: join by invite, the land, walking by touch, notes offline and after a reload, seeing a desktop player | ✅ verified in a headless 375 × 812 browser on the dev page; no real phone; a world on the built-in cartridge cannot be drawn yet (no pack) | [p4-mobile-proof](docs/e2e/milestone-rev6-p4-mobile-proof/result.md) |
 | No servers at all: no screen asks for an account; walking, notes, the door with no world service, and `.world` export, offline check and import on a second device | ✅ verified; later, Apple's on-device model (inside the app) wrote Create's world cards, but its 4K context refuses a witness (`model-context-too-small`); llama.cpp and Ollama were not installed | [p4-no-servers](docs/e2e/milestone-rev6-p4-no-servers/result.md) · [integrated-journey](docs/e2e/milestone-rev6-integrated-journey/result.md) |
 | One world through everything: Create → play → share → watch a place written together → co-owner → a phone joins and walks → `.world` to another device → Apple on-device → quit and continue | ✅ verified in one run; 0 renderer errors on six clients; the same 21-entry history on the service and every device; 12 paid calls | [integrated-journey](docs/e2e/milestone-rev6-integrated-journey/result.md) |
-| Stripe checkout (test mode and live), Qwen-Image on your own GPU endpoint, deploying `WorldProvenance` | ⏳ not run; each needs a person | — |
+| Stripe checkout (test mode and live), Qwen-Image on your own GPU endpoint | ⏳ not run; each needs a person | — |
 | Companions | 🚧 in the rules, not yet drawn or followed on the land | — |
 | Windows / Linux | ❔ untested; packaging targets macOS only | — |
 
@@ -590,7 +590,7 @@ says what has been run. The direction:
 Still ahead:
 
 - **Steps a person takes.** Hosting a gateway and a world service for everyone (hosts, TLS,
-  backups), setting up Stripe, and deploying the light chain.
+  backups), and setting up Stripe.
 - **Mobile.** Whether a full mobile client gets built is not decided; the browser proof is the
   smallest one.
 - **Later.** Per-world sprite sheets, video and music, forks, and fighting together.

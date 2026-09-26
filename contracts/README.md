@@ -89,3 +89,25 @@ bun run lineage:market --dry-run                           # deploy + names + sa
 UNWRITTEN_PRIVATE_KEY=0x… bun run lineage:market <label>   # real deploy (gas) under <label>.eth
 bun run relay:key && bun run relay:deploy                  # the gas station (Cloudflare Worker, src/relay)
 ```
+
+## Light chain (`src/provenance/WorldProvenance.sol`, Ethereum Sepolia)
+
+Where a shared world began and what each of its beats said: a world service opens one stream per
+world it sequences (`openStream`) and records each beat's `upTo`, `chain(upTo)` and fingerprint
+(`recordBeats`). Only hashes go on chain; the Ed25519 signatures are checked offline. The service
+signs and pays (`SERVICE_CHAIN_*`, `SERVICE_PROVENANCE_ADDRESS`); the app only reads
+(`UNMAPPED_PROVENANCE_*`). No owner, no constructor argument: it is deployed through the
+deterministic CREATE2 deployer (`0x4e59b44847b379578588920cA78FbF26c0B4956C`, salt
+`keccak256("unmapped.provenance:v1")`), so the address follows from the committed
+`WorldProvenance.json` bytecode alone.
+
+Deployed on Sepolia 2026-09-26, block 11,784,651 (`docs/e2e/milestone-rev6-p4-chain-live/`).
+
+| Contract | Address |
+| --- | --- |
+| WorldProvenance | `0xF625ec3c228e3BCE34977C0b7e97BD591291Ef02` |
+
+```bash
+bun run provenance --dry-run [--from <service data dir>]     # deploy + streams + beats + refusals, simulated
+SERVICE_CHAIN_KEY=0x… bun run provenance --deploy            # real deploy (gas); skips if already there
+```

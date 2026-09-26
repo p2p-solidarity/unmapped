@@ -1,0 +1,11 @@
+{"world":"houui35vqbxkwhgya6kia65ku62w4h5c7436b3vccgpgewmoln34a","head":7,"beats":[{"upTo":4,"season":1,"at":"2026-10-03T07:14:27.718Z","fingerprint":"sha256:d81fb32fc5036f34b15a393ee52082844b309f3c261c97b007545c54774c6e01"},{"upTo":5,"season":2,"at":"2026-10-10T07:14:55.909Z","fingerprint":"sha256:7d8e96d6d1c980adcae60f20d7e1fe8baeb258731003aacf8de2ec0fb056a051"},{"upTo":6,"season":3,"at":"2026-10-17T07:15:05.297Z","fingerprint":"sha256:698ec55e8623f96228b1aec3c6af28efbe1423e95cfa2c55f085538d3bb6a3d3"}]}
+pad toward: arrived 10.5,8.5 (573 ms)
+["Open the door"]
+{"ms":502}
+{"sharing":"Sharing\nShared on 127.0.0.1:8796\nOnline\nYou own this world.\n","chain":"Recorded on a public chain\nDon't record\nRecord beats\nWhen on, this world's service writes a fingerprint of each beat to a public blockchain: the world's id, the entry number and hashes, never what anyone wrote. It is public metadata: anyone can read it, and it cannot be taken back. The service writes it and pays for it; nobody here signs anything or needs a wallet. Off unless an owner turns it on.\nThe chain matches your copy at entry 6.\nCheck again\n"}
+{"ok":true,"ms":300,"verdict":{"status":"matches","upTo":6},"streams":[{"recorder":"0x8eecf2cd24664eb2275bfd74e324d9e0541b51c3","sequencerKey":"kexmkqnxdpv7l2zqmi7bvv7e7m6xtunio55imh2zfruv5c5unx46q","trust":"verified","beats":[{"upTo":4,"match":"matches"},{"upTo":5,"match":"matches"},{"upTo":6,"match":"matches"}]}]}
+true
+shot docs/e2e/milestone-rev6-p4-chain-live/c-00-door-chain-matches.jpg
+clicked "Check again" at 475,406
+{"ms":301,"line":"Recorded on a public chain\nDon't record\nRecord beats\nWhen on, this world's service writes a fingerprint of each beat to a public blockchain: the world's id, the entry number and hashes, never what anyone wrote. It is public metadata: anyone can read it, and it cannot be taken back. The service writes it and pays for it; nobody here signs anything or needs a wallet. Off unless an owner turns it on.\nThe chain matches your copy at entry 6.\n"}
+{"screen":"play","door":false}

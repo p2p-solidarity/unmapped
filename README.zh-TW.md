@@ -88,7 +88,7 @@
 - **誠實的數字。** 每次模型呼叫都記進本機的用量帳本：token、快取 token 和毫秒數，絕不記錄提示詞或金鑰。
   HUD 會顯示每個世界的累計。畫面上沒有任何假資料；缺了什麼，畫面就直接說，並告訴你怎麼補上。
 - **可選的鏈上出處。** 世界、改編、存檔和玩家可以在 Sepolia 上擁有 ENSv2 名稱，而且名稱就在遊戲裡：玩家卡片、過章、用名稱加入大陸。共享世界的服務也能把每個節拍的指紋
-  記錄到鏈上（目前只模擬過，尚未部署）。內容永遠不上鏈，沒有設定任何鏈，每個畫面也都照常運作。
+  記錄到鏈上（已部署在 Sepolia）。內容永遠不上鏈，沒有設定任何鏈，每個畫面也都照常運作。
 
 ## 畫面
 
@@ -414,11 +414,11 @@ skills: [skills]
   sha256、釘住的版本、一行進度和門牌）；備份在另一台機器還原後，會用雜湊自己找到名稱。
 - **出處帳本。** [`contracts/src/UnwrittenLedger.sol`](contracts/src/UnwrittenLedger.sol) 記錄誰發布了哪個
   雜湊、它是從哪裡改編來的，以及玩家的短評。內容永遠不上鏈。
-- **共享世界的輕量鏈（尚未部署）。** 主人可以在門的**記錄在公開的區塊鏈上**區塊選**記錄節拍**。之後世界服務
+- **共享世界的輕量鏈（Sepolia）。** 主人可以在門的**記錄在公開的區塊鏈上**區塊選**記錄節拍**。之後世界服務
   會把每個節拍的指紋（世界的 id、紀錄編號與雜湊值）寫進
   [`WorldProvenance`](contracts/src/provenance/WorldProvenance.sol) 並支付費用；沒有人需要錢包，app 只讀取
-  鏈上的紀錄，拿來和自己的副本比對。合約尚未部署：`bun run provenance --dry-run` 以真實服務的節拍在 Sepolia
-  上模擬，`--deploy` 由人手動執行。
+  鏈上的紀錄，拿來和自己的副本比對。合約已部署在 Sepolia 的 [`0xF625…Ef02`](https://sepolia.etherscan.io/address/0xF625ec3c228e3BCE34977C0b7e97BD591291Ef02)；設定 `UNMAPPED_PROVENANCE_*`（見
+  `.env.example`）後門就會比對。`bun run provenance --dry-run` 以真實服務的節拍模擬它。
 - **血統市場（實驗中，Sepolia）。** 登記了名稱的卡帶可以發行：它的代幣透過 Uniswap 連續清算拍賣（CCA）
   以母世界的代幣計價發售，之後由 v4 hook 把 1% 權利金沿著家族往上分配（世界、上一代、再上一代各
   50／30／20），付給當下持有 ENS 名稱的人。第一個世界 `aether-land.unmapped.eth` 已經拍賣、結算並開始交易。
@@ -476,11 +476,11 @@ skills: [skills]
 | 沒有閘道或沒有付費服務：帳號、方案與模型都照實說明；創作仍會找本機模型 | ✅ 已驗證 | [p4-billing-off](docs/e2e/milestone-rev6-p4-billing-off/result.md) |
 | 經由閘道畫圖，每張都有授權紀錄 | ✅ 已驗證（測試用圖片模型）；AI 世界的素材與參考圖未跑 | [p4-images-hosted](docs/e2e/milestone-rev6-p4-images-hosted/result.md) |
 | 商業模式：不能選非商用的提供者、授權未知的新圖片會擋下發布、商業模式的閘道遇到非商用模型時拒絕啟動 | ✅ 已驗證；發布是透過 app 的發布呼叫驅動，不是畫面 | [p4-licence](docs/e2e/milestone-rev6-p4-licence/result.md) |
-| 輕量鏈：把真實服務的節拍指紋記錄在模擬的 Sepolia 上 | ✅ 只跑過 dry run：沒有送出、尚未部署；服務停掉時的無鏈檢查沒跑完 | [p4-chain](docs/e2e/milestone-rev6-p4-chain/result.md) |
+| 輕量鏈：把真實服務的節拍指紋記錄在 Sepolia 上，門邊拿來比對 | ✅ 實際上鏈驗證：合約已部署，服務開串流並記錄 3 個節拍，門邊顯示「The chain matches your copy at entry 6」；改過的副本（經 main 的讀取）判為不同 | [p4-chain](docs/e2e/milestone-rev6-p4-chain/result.md) · [p4-chain-live](docs/e2e/milestone-rev6-p4-chain-live/result.md) |
 | 手機大小的瀏覽器證明：用邀請加入、畫出大地、觸控走動、離線與重開後留言、看到桌面版的玩家 | ✅ 已驗證（無頭瀏覽器 375 × 812，開發版網頁）；沒有在真的手機上跑；從內建卡帶開始的世界還畫不出來（沒有卡帶包） | [p4-mobile-proof](docs/e2e/milestone-rev6-p4-mobile-proof/result.md) |
 | 完全沒有伺服器：沒有任何畫面要求帳號；走動、留言、沒有世界服務時的門，以及 `.world` 匯出、離線驗證與在第二台裝置匯入 | ✅ 已驗證；之後 Apple 裝置端模型（在應用程式內）寫出了「創造世界」的世界卡片，但它 4K 的上下文會拒絕見證（`model-context-too-small`）；這台沒有安裝 llama.cpp 與 Ollama | [p4-no-servers](docs/e2e/milestone-rev6-p4-no-servers/result.md) · [integrated-journey](docs/e2e/milestone-rev6-integrated-journey/result.md) |
 | 一個世界走完全程：創造世界 → 遊玩 → 分享 → 兩人一起看一個地方被寫出來 → 共同擁有者 → 手機加入並走動 → `.world` 帶到另一台裝置 → Apple 裝置端模型 → 關閉後繼續 | ✅ 一次跑完並驗證；六個用戶端的前端 0 個錯誤；服務與每台裝置上是同一份 21 筆的歷史；付費呼叫 12 次 | [integrated-journey](docs/e2e/milestone-rev6-integrated-journey/result.md) |
-| Stripe 結帳（測試模式與正式）、在你自己的 GPU 端點上跑 Qwen-Image、部署 `WorldProvenance` | ⏳ 未跑；每一項都需要人來做 | — |
+| Stripe 結帳（測試模式與正式）、在你自己的 GPU 端點上跑 Qwen-Image | ⏳ 未跑；每一項都需要人來做 | — |
 | 同伴 | 🚧 規則裡有，但大地上還不會畫出來、也不會跟隨 | — |
 | Windows / Linux | ❔ 未測試；打包目前只支援 macOS | — |
 
@@ -503,7 +503,7 @@ skills: [skills]
 
 接下來：
 
-- **需要人來做的步驟。** 替大家架設閘道與世界服務（主機、TLS、備份）、設定 Stripe，以及部署輕量鏈。
+- **需要人來做的步驟。** 替大家架設閘道與世界服務（主機、TLS、備份），以及設定 Stripe。
 - **手機。** 還沒決定要不要做完整的手機用戶端；瀏覽器證明是最小的那一個。
 - **之後。** 每個世界自己的角色圖、影片與音樂、分支，以及一起戰鬥。
 

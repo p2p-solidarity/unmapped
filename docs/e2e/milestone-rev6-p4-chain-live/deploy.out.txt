@@ -1,0 +1,9 @@
+$ bun --tsconfig-override tsconfig.node.json scripts/provenance.ts --deploy
+Deploying WorldProvenance on Sepolia as 0x8eECf2cD24664EB2275BFd74E324D9E0541b51C3
+  ✓ deploy WorldProvenance  0x26b95de1a8d6a9f82c6cc043b42586feb013e5ef054d8065e140773566b88036  (609,729 gas)
+
+SERVICE_PROVENANCE_ADDRESS=0xF625ec3c228e3BCE34977C0b7e97BD591291Ef02
+UNMAPPED_PROVENANCE_ADDRESS=0xF625ec3c228e3BCE34977C0b7e97BD591291Ef02
+UNMAPPED_PROVENANCE_CHAIN_ID=11155111
+SERVICE_CHAIN_ID=11155111
+Internal error: directory mismatch for directory "<repo>/tsconfig.node.json", fd 3. You don't need to do anything, but this indicates a bug.

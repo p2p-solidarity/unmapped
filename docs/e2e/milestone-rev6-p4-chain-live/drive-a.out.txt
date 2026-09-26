@@ -1,0 +1,8 @@
+clicked "設定" at 254,740
+clicked "English" at 710,161
+true
+clicked "Save" at 777,483
+"clicked the Shared worlds Test"
+"ws://127.0.0.1:8796\nReachable: unmapped-service/1, physics 1, 0 worlds kept. Health 16 ms, greeting 19 ms.\nService key kexmkqnxdpv7l2zqmi7bvv7e7m6xtunio55imh2zfruv5c5unx46q\nThis service runs in test mode (its clock can be moved forward).\nSaved. The door offers these services the next time you share a world.\nA world already shared keeps the service it was shared on.\nRumors\nWhen a shared world you b"
+"ws://127.0.0.1:8796"
+shot docs/e2e/milestone-rev6-p4-chain-live/a-00-settings-service.jpg

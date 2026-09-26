@@ -1,0 +1,46 @@
+{
+  "flow": "rev6-p4-chain-live: deploy WorldProvenance on Ethereum Sepolia, then a shared world's beats recorded by a test-mode world service and compared at the door by main's reader",
+  "date": "2026-09-26",
+  "tree": "snapshot of origin/main 12c29e7 (git archive), node_modules and .env symlinked, private Vite cacheDir .vite-cache and renderer port 5198 (strictPort) added to electron.vite.config.ts",
+  "chain": {
+    "network": "Ethereum Sepolia (11155111)",
+    "rpc": "https://ethereum-sepolia-rpc.publicnode.com",
+    "contract": "0xF625ec3c228e3BCE34977C0b7e97BD591291Ef02",
+    "recorderAndDeployer": "0x8eECf2cD24664EB2275BFd74E324D9E0541b51C3",
+    "keySource": "UNWRITTEN_PRIVATE_KEY from the repo .env, passed only as SERVICE_CHAIN_KEY to the deploy and service processes; never printed or written"
+  },
+  "env": {
+    "service": {
+      "UNMAPPED_SERVICE_TEST": "1",
+      "SERVICE_CHAIN_RPC_URL": "https://ethereum-sepolia-rpc.publicnode.com",
+      "SERVICE_CHAIN_ID": "11155111",
+      "SERVICE_PROVENANCE_ADDRESS": "0xF625ec3c228e3BCE34977C0b7e97BD591291Ef02",
+      "SERVICE_CHAIN_KEY": "<from .env UNWRITTEN_PRIVATE_KEY>"
+    },
+    "app": {
+      "AETHER_TEST_USER_DATA": "$SCR/ud (fresh)",
+      "UNMAPPED_PROVENANCE_RPC_URL": "https://ethereum-sepolia-rpc.publicnode.com",
+      "UNMAPPED_PROVENANCE_ADDRESS": "0xF625ec3c228e3BCE34977C0b7e97BD591291Ef02",
+      "UNMAPPED_PROVENANCE_CHAIN_ID": "11155111",
+      "blanked": ["OPENAI_API_KEY", "THESYS_API_KEY", "UNMAPPED_GATEWAY_URL", "UNMAPPED_GATEWAY_KEY", "UNWRITTEN_PRIVATE_KEY", "UNWRITTEN_LINEAGE_ACCOUNTS", "UNWRITTEN_LINEAGE_FROM_BLOCK", "UNWRITTEN_LINEAGE_HOOK", "UNWRITTEN_LINEAGE_PARENT", "UNWRITTEN_LINEAGE_REGISTRY", "UNWRITTEN_LINEAGE_RELAY", "UNWRITTEN_LINEAGE_ROUTER"],
+      "unset": ["SERVICE_CHAIN_KEY", "SERVICE_CHAIN_ID", "SERVICE_CHAIN_RPC_URL", "SERVICE_PROVENANCE_ADDRESS"]
+    }
+  },
+  "model": "none answering: the HUD showed \"UNREACHABLE llamacpp · local\" and \"No model calls counted for this world yet.\"; no model call was made",
+  "sequence": [
+    "env -u SERVICE_CHAIN_KEY bun run provenance --dry-run --out $SCRATCH/prov-dry",
+    "SERVICE_CHAIN_KEY=\"$(grep '^UNWRITTEN_PRIVATE_KEY=' .env | cut -d= -f2-)\" bun run provenance --deploy",
+    "SCR=$(mktemp -d); mkdir -p $SCR/snap $SCR/service $SCR/ud; git archive origin/main | tar -x -C $SCR/snap; ln -s $PWD/node_modules $SCR/snap/node_modules; ln -s $PWD/.env $SCR/snap/.env",
+    "$SCR/snap/electron.vite.config.ts, renderer section: cacheDir: resolve(__dirname, \".vite-cache\"), server: { port: 5198, strictPort: true }",
+    "(cd $SCR/snap && UNMAPPED_SERVICE_TEST=1 SERVICE_CHAIN_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com SERVICE_CHAIN_ID=11155111 SERVICE_PROVENANCE_ADDRESS=0xF625ec3c228e3BCE34977C0b7e97BD591291Ef02 SERVICE_CHAIN_KEY=\"$(grep '^UNWRITTEN_PRIVATE_KEY=' <repo>/.env | cut -d= -f2-)\" bun run service -- --port 8796 --data $SCR/service) &",
+    "(cd $SCR/snap && env -u SERVICE_CHAIN_KEY -u SERVICE_CHAIN_ID -u SERVICE_CHAIN_RPC_URL -u SERVICE_PROVENANCE_ADDRESS OPENAI_API_KEY= THESYS_API_KEY= UNMAPPED_GATEWAY_URL= UNMAPPED_GATEWAY_KEY= UNWRITTEN_LINEAGE_ACCOUNTS= UNWRITTEN_LINEAGE_FROM_BLOCK= UNWRITTEN_LINEAGE_HOOK= UNWRITTEN_LINEAGE_PARENT= UNWRITTEN_LINEAGE_REGISTRY= UNWRITTEN_LINEAGE_RELAY= UNWRITTEN_LINEAGE_ROUTER= UNWRITTEN_PRIVATE_KEY= UNMAPPED_PROVENANCE_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com UNMAPPED_PROVENANCE_ADDRESS=0xF625ec3c228e3BCE34977C0b7e97BD591291Ef02 UNMAPPED_PROVENANCE_CHAIN_ID=11155111 AETHER_TEST_USER_DATA=$SCR/ud bunx electron-vite dev --remoteDebuggingPort 9342) &",
+    "CDP_PORT=9342 bun scripts/cdp-drive.ts \"$(cat docs/e2e/milestone-rev6-p4-chain-live/run-a-settings.json)\"",
+    "CDP_PORT=9342 bun scripts/cdp-drive.ts \"$(cat docs/e2e/milestone-rev6-p4-chain-live/run-b-newgame-share-record.json)\"",
+    "for k in 1 2 3: curl -s -X POST http://127.0.0.1:8796/v1/test/advance -H 'content-type: application/json' -d '{\"days\":7}', then wait until the service log shows a new 'provenance: recorded' line (one record transaction per beat)",
+    "CDP_PORT=9342 bun scripts/cdp-drive.ts \"$(cat docs/e2e/milestone-rev6-p4-chain-live/run-c-door-after-beats.json)\"",
+    "cp $SCR/ud/histories/<world>/log.jsonl $SCR/copy/real/; copy differs-check.ts.txt to $SCR/snap/scripts/prov-differs.ts; (cd $SCR/snap && UNMAPPED_PROVENANCE_RPC_URL=… UNMAPPED_PROVENANCE_ADDRESS=… UNMAPPED_PROVENANCE_CHAIN_ID=11155111 bun --tsconfig-override tsconfig.node.json scripts/prov-differs.ts $SCR/copy/real <world>)",
+    "kill -TERM $(lsof -tiTCP:8796 -sTCP:LISTEN); CDP Browser.close on ws://127.0.0.1:9342 (json/version webSocketDebuggerUrl); lsof on 8796, 9342, 5198 finds nothing"
+  ],
+  "parts": ["run-a-settings.json", "run-b-newgame-share-record.json", "run-c-door-after-beats.json"],
+  "replayNote": "A replay on a fresh machine skips the deploy (the CREATE2 address already holds the code) and opens a new stream for its own new world: one openStream plus one recordBeats per beat from the recorder key it is given."
+}

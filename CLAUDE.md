@@ -852,8 +852,9 @@ window.seed.bundle.{ list(), export(worldId), inspect(), import(token, name), mo
 - The app only reads (`main/chain/provenance.ts`, `UNMAPPED_PROVENANCE_*`); a stream counts only if
   its sequencer signature verifies with a key the log installs. Without env the door says no chain
   is set up.
-- Not deployed: `bun run provenance --dry-run [--from <service data dir>]` simulates on Sepolia;
-  `--deploy` spends gas and is run by a person.
+- Deployed on Sepolia at `0xF625ec3c228e3BCE34977C0b7e97BD591291Ef02` (2026-09-26, block 11,784,651; contracts/README.md). `bun run
+  provenance --dry-run [--from <service data dir>]` simulates on Sepolia; `--deploy` spends gas and is
+  run by a person (CREATE2: the same address everywhere).
 
 ### Browser proof (`src/browser`, `src/renderer/mobile`; `bun run browser:dev`)
 - The smallest phone client, not a mobile app (plan D7): join by invite, walk by touch, read the
@@ -892,7 +893,7 @@ migrated-share,together,variant,presence,fog,rumors,door,gift-race,continent}` a
 mobile-proof,no-servers}`; progress rows 30–39 summarise them. `milestone-rev6-integrated-journey`
 walks one world through all of it (Create → play → share → together → co-owner → phone → `.world`
 → Apple on-device → quit and continue). Not run, because each needs a person: Stripe checkout (test
-and live), Qwen-Image on a GPU endpoint, deploying `WorldProvenance`, a real phone, and witnessing
+and live), Qwen-Image on a GPU endpoint, a real phone, and witnessing
 on a local model (Apple's 4K context refuses a witness with `model-context-too-small`; no llama.cpp
 or Ollama here). A flow you change is unverified again until its folder is re-run (Rule 2).
 

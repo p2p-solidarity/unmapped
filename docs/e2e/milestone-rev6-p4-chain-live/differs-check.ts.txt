@@ -1,0 +1,80 @@
+// Live "differs" check (docs/e2e/milestone-rev6-p4-chain-live): main's own reader against
+// WorldProvenance on Sepolia, over a COPY of the app's log for one world. Reads only; sends nothing.
+//
+//   bun --tsconfig-override tsconfig.node.json scripts/prov-differs.ts <copied world dir> <world id>
+//
+// 1. compareWithChain(real copy)            — main's full path (what the door runs): expect matches
+// 2. compareWithChain(copy, one event body changed, file rewritten) — main verifies the log first
+// 3. readStreams (main's live reader) + compareProvenance (the comparator compareWithChain calls)
+//    with the chain values changed from entry 5 on: the beat at 4 still matches, 5 and 6 differ
+// 4. the same with the copy cut before the first beat: not synced
+
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { verdictEntries } from "@dsl/history/verdict";
+import { openGenesis } from "@shared/history/fold";
+import { verifyLog } from "@shared/history/log";
+import { compareProvenance, localBeats } from "@shared/provenance";
+import { compareWithChain, provenanceReader, readStreams } from "../src/main/chain/provenance";
+import { readLog } from "../src/main/histories/logStore";
+
+const [dir = "", world = ""] = process.argv.slice(2);
+const out = (label: string, value: unknown) =>
+  process.stdout.write(`${label}: ${JSON.stringify(value)}\n`);
+
+const reader = provenanceReader();
+if (!reader.ok) throw new Error(reader.error.message);
+const log = await readLog(dir);
+if (!log.ok) throw new Error(log.error.message);
+const entries = log.value;
+out("entries", entries.length);
+
+// 1. main's full path on the untouched copy
+const t0 = performance.now();
+const real = await compareWithChain(world, entries, reader.value);
+out("1 compareWithChain(copy)", {
+  ms: Math.round(performance.now() - t0),
+  verdict: real.ok ? real.value.verdict : real.error,
+  beats: real.ok ? real.value.streams.map((s) => s.beats) : null,
+});
+
+// 2. a copy whose note-free history was edited on disk: change one event body field in entry 3
+const edited = join(dir, "..", "edited");
+mkdirSync(edited, { recursive: true });
+const lines = readFileSync(join(dir, "log.jsonl"), "utf8").split("\n");
+const third = JSON.parse(lines[2] ?? "{}");
+third.event.body = { ...third.event.body, _edited: true };
+lines[2] = JSON.stringify(third);
+writeFileSync(join(edited, "log.jsonl"), lines.join("\n"));
+const editedLog = await readLog(edited);
+const tampered = editedLog.ok
+  ? await compareWithChain(world, editedLog.value, reader.value)
+  : editedLog;
+out("2 compareWithChain(edited file)", tampered.ok ? tampered.value.verdict : tampered.error);
+
+// 3 + 4. main's live reader, then the comparator with a copy whose chain parts from entry 5 on
+const checked = verifyLog(world, entries);
+if (!checked.ok) throw new Error(checked.error.message);
+const genesis = openGenesis(entries[0]?.event);
+if (!genesis.ok) throw new Error(genesis.error.message);
+const { schedule } = checked.value;
+const streams = await readStreams(
+  reader.value,
+  world,
+  schedule.map((step) => step.key),
+);
+const chainId = await reader.value.chainId();
+const beats = localBeats(genesis.value, verdictEntries(entries));
+const base = { chainId, contract: reader.value.contract, genesis: genesis.value, schedule, streams };
+const parted = entries.map((entry, index) =>
+  index < 4 ? entry : { ...entry, chain: `sha256:${index.toString(16).padStart(64, "e")}` },
+);
+const differs = compareProvenance({ ...base, entries: parted, beats });
+out("3 differs (chain changed from entry 5)", {
+  verdict: differs.verdict,
+  beats: differs.streams.map((s) => s.beats),
+});
+const firstBeat = beats[0];
+const cut = firstBeat === undefined ? 0 : firstBeat.n - 1;
+const shorter = compareProvenance({ ...base, entries: entries.slice(0, cut), beats: [] });
+out(`4 cut to ${cut} entries`, shorter.verdict);

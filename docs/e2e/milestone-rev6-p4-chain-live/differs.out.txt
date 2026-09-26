@@ -1,0 +1,6 @@
+entries: 7
+1 compareWithChain(copy): {"ms":287,"verdict":{"status":"matches","upTo":6},"beats":[[{"upTo":4,"match":"matches"},{"upTo":5,"match":"matches"},{"upTo":6,"match":"matches"}]]}
+2 compareWithChain(edited file): {"code":"entry-rsig-unexpected","message":"Entry 1 carries a receipt nobody pinned."}
+3 differs (chain changed from entry 5): {"verdict":{"status":"differs","upTo":5},"beats":[[{"upTo":4,"match":"matches"},{"upTo":5,"match":"differs"},{"upTo":6,"match":"differs"}]]}
+4 cut to 4 entries: {"status":"not-synced","upTo":4}
+Internal error: directory mismatch for directory "$SCR/snap/tsconfig.node.json", fd 3. You don't need to do anything, but this indicates a bug.

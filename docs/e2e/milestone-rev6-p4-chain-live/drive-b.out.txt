@@ -1,0 +1,13 @@
+clicked "Worlds" at 254,650
+clicked "Start" at 1008,718
+{"ms":311,"screen":"play","instance":"utw3-x8qm-mui20hsx"}
+"Sharing\nLocal: only this device keeps this world\nYou own this world.\nShare this world\nChoose a world service. This world's history goes there, so the friends you invite can visit, even while you are offline.\nOnce it is shared, make another device of yours a co-owner: a world only one device owns can no longer change its door or move to another service if that device is lost.\nShare on 127.0.0.1:8796\n"
+clicked "Share on 127.0.0.1:8796" at 515,569
+{"ms":503}
+clicked "Record beats" at 561,755
+{"ms":0}
+{"sharing":"Sharing\nShared on 127.0.0.1:8796\nOnline\nYou own this world.\n","chain":"Recorded on a public chain\nDon't record\nRecord beats\nWhen on, this world's service writes a fingerprint of each beat to a public blockchain: the world's id, the entry number and hashes, never what anyone wrote. It is public metadata: anyone can read it, and it cannot be taken back. The service writes it and pays for it; nobody here signs anything or needs a wallet. Off unless an owner turns it on.\nRecording is now: Record beats.\nNot recorded on the chain.\nCheck again\n","buttons":[{"text":"Don't record","disabled":false},{"text":"Record beats","disabled":true},{"text":"Check again","disabled":false}]}
+{"world":"houui35vqbxkwhgya6kia65ku62w4h5c7436b3vccgpgewmoln34a","head":4}
+true
+shot docs/e2e/milestone-rev6-p4-chain-live/b-00-door-recording.jpg
+{"screen":"play","door":false}

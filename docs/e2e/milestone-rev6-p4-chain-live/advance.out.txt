@@ -1,0 +1,3 @@
+advance 1: {"offsetDays":7,"now":"2026-10-03T07:14:27.729Z","beats":[{"world":"houui35vqbxkwhgya6kia65ku62w4h5c7436b3vccgpgewmoln34a","n":5}]}
+advance 2: {"offsetDays":14,"now":"2026-10-10T07:14:55.922Z","beats":[{"world":"houui35vqbxkwhgya6kia65ku62w4h5c7436b3vccgpgewmoln34a","n":6}]}
+advance 3: {"offsetDays":21,"now":"2026-10-17T07:15:05.307Z","beats":[{"world":"houui35vqbxkwhgya6kia65ku62w4h5c7436b3vccgpgewmoln34a","n":7}]}

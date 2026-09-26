@@ -1,0 +1,21 @@
+{
+  "part": "C (after 3 beats recorded on Sepolia, service online): still in Play; wait until this copy holds the beats; walk to the door, E; read Sharing and the chain section (main reads WorldProvenance on Sepolia); ask main for provenance directly; screenshot the chain section; close the door",
+  "actions": [
+    {"eval": "(async () => { const H = await import('/history/write.ts'); for (let i = 0; i < 60; i++) { const n = H.worldNow(); if (n !== null && n.head.n >= 7) return { world: n.world, head: n.head.n, beats: n.beats.map(b => ({ upTo: b.body.upTo, season: b.body.season, at: b.body.at, fingerprint: b.body.fingerprint })) }; await new Promise(r => setTimeout(r, 250)); } const n = H.worldNow(); return n === null ? 'no world open' : { head: n.head.n, beats: n.beats.length } })()"},
+    {"pad": {"toward": "(async () => { const S = await import('/state/index.ts'); const H = await import('/engine/home.ts'); const p = S.useLandStore.getState().progress; const g = S.useWorldStore.getState().scene; return p === null || g.status !== 'ready' ? null : H.doorPosition(g.value, p.home) })()", "within": 0.5, "timeoutMs": 15000}},
+    {"wait": 300},
+    {"eval": "document.body.innerText.split('\\n').filter(l => /Open the door/.test(l))"},
+    {"hold": "KeyE", "ms": 120},
+    {"eval": "(async () => { const t0 = Date.now(); for (let i = 0; i < 120; i++) { const l = document.querySelector('[data-layer=door]'); const t = l ? l.innerText : ''; if (/The chain (matches|differs)|not synced|Not recorded on the chain|Error · provenance/.test(t)) return { ms: Date.now() - t0 }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"},
+    {"eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; const at = t.indexOf('Recorded on a public chain'); return { sharing: t.slice(t.indexOf('Sharing'), t.indexOf('Who may come in')), chain: at < 0 ? 'no chain section' : t.slice(at, t.indexOf('Continent', at)) } })()"},
+    {"eval": "(async () => { const H = await import('/history/write.ts'); const n = H.worldNow(); const t0 = performance.now(); const r = await window.seed.world.provenance(n.world); const ms = Math.round(performance.now() - t0); return r.ok ? { ok: true, ms, verdict: r.value.verdict, streams: r.value.streams.map(s => ({ recorder: s.recorder, sequencerKey: s.sequencerKey, trust: s.trust, beats: s.beats })) } : { ok: false, ms, code: r.error.code, message: r.error.message, hint: r.error.hint } })()"},
+    {"eval": "(() => { const h = [...document.querySelectorAll('[data-layer=door] *')].find(e => e.innerText?.trim() === 'Recorded on a public chain'); h?.scrollIntoView({ block: 'start' }); return !!h })()"},
+    {"wait": 300},
+    {"shot": "docs/e2e/milestone-rev6-p4-chain-live/c-00-door-chain-matches.jpg"},
+    {"clickText": "Check again"},
+    {"eval": "(async () => { const t0 = Date.now(); await new Promise(r => setTimeout(r, 300)); for (let i = 0; i < 120; i++) { const l = document.querySelector('[data-layer=door]'); const t = l ? l.innerText : ''; if (!/Comparing this copy with the chain/.test(t)) { const at = t.indexOf('Recorded on a public chain'); return { ms: Date.now() - t0, line: t.slice(t.indexOf('Recording is now') >= 0 ? t.indexOf('Recording is now') : at, t.indexOf('Check again', at)) }; } await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"},
+    {"hold": "Escape", "ms": 80},
+    {"wait": 500},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); return { screen: S.useSessionStore.getState().screen, door: S.useSessionStore.getState().doorOpen } })()"}
+  ]
+}

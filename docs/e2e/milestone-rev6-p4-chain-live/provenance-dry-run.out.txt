@@ -1,0 +1,28 @@
+$ bun --tsconfig-override tsconfig.node.json scripts/provenance.ts --dry-run --out "$SCRATCH/prov-dry"
+Dry run of WorldProvenance on Sepolia (https://ethereum-sepolia-rpc.publicnode.com); nothing is sent.
+Worlds: two made in memory for this run (no --from).
+  hfzpkuw27rmr6kzip34qj4nnx3h2iwq7injfwnf64ith5roahfk7q: 11 entries, 4 beats (4 recompute), record requested: false
+  hx56uqhfcxguhw4eu2qhxthi364vydm7att6sag5tmlpisetfne5q: 11 entries, 4 beats (4 recompute), record requested: false
+
+Contract 0xF625ec3c228e3BCE34977C0b7e97BD591291Ef02 (CREATE2, salt 0xa3557ee888ab4a72b65d7348d4170ce528dc0953da38bd851239920a1aa7622d); recorder 0xfc3d4983944ffc878639158f9cd525c3b37b63fa
+  ✓ deploy WorldProvenance  (simulated, 609,729 gas)
+  ✓ refused: a beat before its stream is open (3) (StreamNotOpen)
+  ✓ open the stream of hfzpkuw27rmr…  (simulated, 98,464 gas)
+  ✓ open the stream of hx56uqhfcxgu…  (simulated, 98,476 gas)
+  ✓ refused: a second open of one stream (2) (StreamAlreadyOpen)
+  ✓ record 4 beats (catch-up batch)  (simulated, 55,556 gas)
+  ✓ record 2 beats (one pass)  (simulated, 44,398 gas)
+  ✓ record 2 beats (one pass)  (simulated, 44,398 gas)
+  ✓ refused: a falling upTo (4) (UpToNotRising)
+  ✓ refused: the same upTo again (4) (UpToNotRising)
+  ✓ refused: one upTo twice in one batch (4) (UpToNotRising)
+
+Offline checks
+  ✓ hfzpkuw27rmr…: genesis and stream signatures verify; replays read "sequencer-sig-invalid"
+  ✓ hx56uqhfcxgu…: genesis and stream signatures verify; replays read "sequencer-sig-invalid"
+  ✓ the chain takes the same signatures from another sender; offline they do not count (5)
+  ✓ hfzpkuw27rmr6kzip34qj4nnx3h2iwq7injfwnf64ith5roahfk7q: matches at 9 (4 beats walked back); a changed copy: differs at 3; one cut before the first beat: not synced
+  ✓ hx56uqhfcxguhw4eu2qhxthi364vydm7att6sag5tmlpisetfne5q: matches at 9 (4 beats walked back); a changed copy: differs at 3; one cut before the first beat: not synced
+
+Wrote $SCRATCH/prov-dry/result.md
+Internal error: directory mismatch for directory "<repo>/tsconfig.node.json", fd 3. You don't need to do anything, but this indicates a bug.

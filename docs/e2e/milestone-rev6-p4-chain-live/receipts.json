@@ -1,0 +1,104 @@
+{
+ "rows": [
+  {
+   "what": "deploy WorldProvenance (CREATE2)",
+   "hash": "0x26b95de1a8d6a9f82c6cc043b42586feb013e5ef054d8065e140773566b88036",
+   "status": "success",
+   "block": 11784651,
+   "gasUsed": 609729,
+   "gwei": 1.082608347,
+   "feeEth": "0.000660097704807963",
+   "from": "0x8eecf2cd24664eb2275bfd74e324d9e0541b51c3",
+   "to": "0x4e59b44847b379578588920ca78fbf26c0b4956c",
+   "events": []
+  },
+  {
+   "what": "openStream",
+   "hash": "0xd1a8e5165428d02a94a07115b144769206731d54ba557b8449c9d10108b417a0",
+   "status": "success",
+   "block": 11784679,
+   "gasUsed": 98464,
+   "gwei": 1.072340064,
+   "feeEth": "0.000105586892061696",
+   "from": "0x8eecf2cd24664eb2275bfd74e324d9e0541b51c3",
+   "to": "0xf625ec3c228e3bce34977c0b7e97bd591291ef02",
+   "events": [
+    {
+     "event": "StreamOpened",
+     "worldId": "0x75288df6b00dd5639b00f2900f7554f6adc3f45fe6fc1dd44233cc4b31cb6ef8",
+     "sequencerKey": "0x25d8a836e37d7ebd660c47c35afc9f67af3a350eef50c3eb258d2bd1768dbf3d",
+     "cartridgeHash": "0x57f17e0d3e1504466da111ee6eae2e55720b812a2b07afdad932e7f72467e81b",
+     "ownerKey": "0x596cf2cf4e2d7f619ae9dadc72ac402a64b4abe1173d8ef8b6f154f97ec96a56"
+    }
+   ]
+  },
+  {
+   "what": "recordBeats #1",
+   "hash": "0xd49e588a1d24c6dd96db3afeebf42fc24a68c2b3ec10c51d54d421fddfd87917",
+   "status": "success",
+   "block": 11784680,
+   "gasUsed": 34001,
+   "gwei": 1.007733482,
+   "feeEth": "0.000034263946121482",
+   "from": "0x8eecf2cd24664eb2275bfd74e324d9e0541b51c3",
+   "to": "0xf625ec3c228e3bce34977c0b7e97bd591291ef02",
+   "events": [
+    {
+     "event": "BeatRecorded",
+     "upTo": 4,
+     "chain": "0xc7da5a020e982d0cdc708d88f08b3cf708a17b37b0b4704ab1c185f55c6577a6",
+     "fingerprint": "0xd81fb32fc5036f34b15a393ee52082844b309f3c261c97b007545c54774c6e01",
+     "prevBlock": 0
+    }
+   ]
+  },
+  {
+   "what": "recordBeats #2",
+   "hash": "0xb314cea210d41f45051dc491cf2263e077ce5e0006a326a9ca2768146629124c",
+   "status": "success",
+   "block": 11784681,
+   "gasUsed": 34001,
+   "gwei": 0.929928861,
+   "feeEth": "0.000031618511202861",
+   "from": "0x8eecf2cd24664eb2275bfd74e324d9e0541b51c3",
+   "to": "0xf625ec3c228e3bce34977c0b7e97bd591291ef02",
+   "events": [
+    {
+     "event": "BeatRecorded",
+     "upTo": 5,
+     "chain": "0x2bd28aa43679924aa111154ee2d88e3c0524e16845841893b953ab6717440c03",
+     "fingerprint": "0x7d8e96d6d1c980adcae60f20d7e1fe8baeb258731003aacf8de2ec0fb056a051",
+     "prevBlock": 11784680
+    }
+   ]
+  },
+  {
+   "what": "recordBeats #3",
+   "hash": "0xc3c14ec73cde2d9dee6e5c737bb7d51a0deac6212d6d7ba960eb5c16c4c8b49b",
+   "status": "success",
+   "block": 11784682,
+   "gasUsed": 34001,
+   "gwei": 1.046022751,
+   "feeEth": "0.000035565819556751",
+   "from": "0x8eecf2cd24664eb2275bfd74e324d9e0541b51c3",
+   "to": "0xf625ec3c228e3bce34977c0b7e97bd591291ef02",
+   "events": [
+    {
+     "event": "BeatRecorded",
+     "upTo": 6,
+     "chain": "0xa9dc5298786e9f02c19a5e1f35f99c5fd738e69e18f8e5787b98255b5518d58e",
+     "fingerprint": "0x698ec55e8623f96228b1aec3c6af28efbe1423e95cfa2c55f085538d3bb6a3d3",
+     "prevBlock": 11784681
+    }
+   ]
+  }
+ ],
+ "totalGas": 810196,
+ "totalFeeEth": "0.000867132873750753",
+ "streamOf": {
+  "open": true,
+  "upTo": 6,
+  "openedBlock": 11784679,
+  "lastBlock": 11784682
+ }
+}
