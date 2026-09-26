@@ -1,0 +1,69 @@
+{
+ "app": "A (CDP 9340), Settings open; nothing listens on 127.0.0.1:11434 (Ollama's port)",
+ "actions": [
+  {
+   "eval": "document.querySelector('[data-route]').scrollIntoView({block:'center'}); document.querySelector('[data-route]').innerText"
+  },
+  {
+   "clickText": "On this computer"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Ollama"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Use this model"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(() => { const r = document.querySelector('[data-route]'); r.scrollIntoView({block:'center'}); return { route: r.dataset.route, text: r.innerText }; })()"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-quota/a-06-route-local.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "Create World"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Write the world"
+  },
+  {
+   "wait": 5000
+  },
+  {
+   "eval": "(() => { const hits = [...document.querySelectorAll('*')].filter(e => /^Error \u00b7 /.test((e.innerText ?? '').trim())); const el = hits.sort((a, b) => a.innerText.length - b.innerText.length)[0]; el?.scrollIntoView({block: 'center'}); return el ? el.innerText : 'no error on screen'; })()"
+  },
+  {
+   "wait": 400
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-quota/a-07-local-call-fails.jpg"
+  }
+ ]
+}

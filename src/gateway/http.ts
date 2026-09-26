@@ -22,7 +22,7 @@
 //   POST /v1/billing/portal          (T)  { returnUrl } → { url }
 //   POST /v1/billing/webhook              the provider's signed events (never CORS)
 //   POST /v1/admin/{grant,token,revoke}   the CLI, on loopback with the admin secret only
-//   POST /v1/test/advance                 UNMAPPED_GATEWAY_TEST=1 only: moves the ledger clock
+//   POST /v1/test/advance                 UNMAPPED_GATEWAY_TEST=1, as admin: moves the ledger clock
 //
 // (T): `Authorization: Bearer ugk_…`. CORS headers go only to origins in GATEWAY_WEB_ORIGINS, and
 // never on the webhook, admin or test routes.
@@ -318,6 +318,13 @@ async function route(state: GatewayState, request: Request, client: Client, path
   if (path === "/v1/test/advance" && method === "POST") {
     if (!state.test || state.advance === null) {
       return fail(403, { code: "test-mode-off", message: "The test clock is off." });
+    }
+    // Moving the clock spends or renews every account's allowance, so it is an admin act too.
+    if (!adminAllowed(state, request, client)) {
+      return fail(403, {
+        code: "admin-denied",
+        message: "The test clock moves only from this host, with the gateway's admin secret.",
+      });
     }
     const body = await readJson(request, advanceSchema);
     if (!body.ok) return fail(400, body.error);

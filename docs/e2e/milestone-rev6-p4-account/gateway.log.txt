@@ -1,0 +1,19 @@
+$ bun --tsconfig-override tsconfig.node.json src/gateway/main.ts --port "8788" --data "/private/tmp/claude-501/-Users-kidney-Workspace-Hackathon-unmapped/f9f28666-cad2-48fd-9df0-065e8d1d73c3/scratchpad/p4/gw"
+gateway kec4wtlvng6r3z7jiozafp74ft47zqittxzfquclatcobewrtqklq
+  http://127.0.0.1:8788  data /private/tmp/claude-501/-Users-kidney-Workspace-Hackathon-unmapped/f9f28666-cad2-48fd-9df0-065e8d1d73c3/scratchpad/p4/gw  models 2  commercial off  billing off  new key  TEST MODE
+2026-09-26T03:30:50.868Z settle ajbsvnshdt6okxovaszfrreh63m f82e229d-d2d6-470c-88bd-ff433cae7dad test-chat in 20 out 30 credits 335/16964 (usage)
+2026-09-26T03:30:50.892Z settle ajbsvnshdt6okxovaszfrreh63m 9accb98f-fdb0-48a9-9620-1eeaa1d78726 test-chat in 20 out 30 credits 335/17260 (usage)
+2026-09-26T03:30:50.902Z settle ajbsvnshdt6okxovaszfrreh63m 11f4dc05-972f-4fd5-bda6-a1e5d40b75d6 test-chat in 20 out 30 credits 335/17260 (usage)
+2026-09-26T03:33:22.710Z settle ajbsvnshdt6okxovaszfrreh63m f868839a-2618-4ba0-983e-0c52ac678088 test-chat in 20 out 30 credits 335/16964 (usage)
+2026-09-26T03:33:22.747Z settle ajbsvnshdt6okxovaszfrreh63m 41a5f53d-24b5-4f50-869f-fce706475071 test-chat in 20 out 30 credits 335/17260 (usage)
+2026-09-26T03:33:22.788Z settle ajbsvnshdt6okxovaszfrreh63m 59602275-1836-44aa-a6ff-ed04573158ea test-chat in 20 out 30 credits 335/17260 (usage)
+2026-09-26T03:35:53.906Z release ajbsvnshdt6okxovaszfrreh63m 39cd3cde-c36a-448e-981f-cf718b548c29 error
+2026-09-26T03:36:51.123Z release ajbsvnshdt6okxovaszfrreh63m e114575e-5c35-4f07-a9e6-ad590d52249e abort
+2026-09-26T03:38:49.794Z settle ajbsvnshdt6okxovaszfrreh63m 4e6e6c5a-f397-491f-bfa3-c12e720b9b8e test-chat in - out - credits 16974/16974 (reserved)
+gateway: stopped (SIGTERM)
+$ bun --tsconfig-override tsconfig.node.json src/gateway/main.ts --port "8788" --data "/private/tmp/claude-501/-Users-kidney-Workspace-Hackathon-unmapped/f9f28666-cad2-48fd-9df0-065e8d1d73c3/scratchpad/p4/gw"
+gateway kec4wtlvng6r3z7jiozafp74ft47zqittxzfquclatcobewrtqklq
+  http://127.0.0.1:8788  data /private/tmp/claude-501/-Users-kidney-Workspace-Hackathon-unmapped/f9f28666-cad2-48fd-9df0-065e8d1d73c3/scratchpad/p4/gw  models 2  commercial off  billing off  TEST MODE
+2026-09-26T03:46:49.504Z settle ajbsvnshdt6okxovaszfrreh63m d6244533-5f63-4bf9-9f59-20d95f575912 test-image in 50 out 4000 credits 10000/10000 (usage)
+2026-09-26T03:46:49.505Z settle ajbsvnshdt6okxovaszfrreh63m f3eeaaa4-0adc-44d5-a084-014c8634603a test-image in 50 out 4000 credits 10000/10000 (usage)
+2026-09-26T03:46:49.505Z settle ajbsvnshdt6okxovaszfrreh63m ec50aaaf-f0f1-42a6-9b22-7aac53981517 test-image in 50 out 4000 credits 10000/10000 (usage)

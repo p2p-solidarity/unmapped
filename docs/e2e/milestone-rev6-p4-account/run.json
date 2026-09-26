@@ -1,0 +1,373 @@
+{
+ "env": {
+  "code": "main 51817a3 plus this run's fixes (tests/fixtures/gateway/{upstream,serveUpstream}.ts, src/main/account/hostedUsage.ts; later src/gateway/http.ts, src/main/images/commercial.ts, tests/gateway/auth.test.ts)",
+  "SP": "a fresh empty dir: SP/gw (gateway data), SP/udA, SP/udB, SP/udC (throwaway userData)",
+  "SP/gw/upstreams.json": "gateway-upstreams.json in milestone-rev6-p4-quota: upstream fixture (llamacpp, http://127.0.0.1:8791/v1, keyEnv null) serving test-chat (chat, apache-2.0, default, upstreamModel qwen-local) and test-image (image, apache-2.0, default)",
+  "SP/gw/costs.json": "gateway-costs.json in milestone-rev6-p4-quota: test-chat perMillion {input 2, cachedInput 1, output 10}, test-image perImage 0.01, asOf 2026-09-01, each with its source",
+  "fixture upstream": "OPENAI_API_KEY= THESYS_API_KEY= UNMAPPED_GATEWAY_KEY= bun tests/fixtures/gateway/serveUpstream.ts --port 8791",
+  "gateway": "OPENAI_API_KEY= THESYS_API_KEY= UNMAPPED_GATEWAY_KEY= STRIPE_SECRET_KEY= STRIPE_WEBHOOK_SECRET= UNMAPPED_GATEWAY_TEST=1 bun run gateway -- --port 8788 --data $SP/gw",
+  "app A": "UNMAPPED_GATEWAY_URL=http://127.0.0.1:8788 OPENAI_API_KEY= THESYS_API_KEY= UNMAPPED_GATEWAY_KEY= AETHER_TEST_USER_DATA=$SP/udA bun run dev --remoteDebuggingPort 9340 (empty values block the repo .env: dotenv never overrides a set variable)",
+  "app B": "the same with AETHER_TEST_USER_DATA=$SP/udB and --remoteDebuggingPort 9341",
+  "driver": "CDP_PORT=<port> OPENAI_API_KEY= THESYS_API_KEY= UNMAPPED_GATEWAY_KEY= bun scripts/cdp-drive.ts \"$(cat <step file>)\"",
+  "UI language": "en (Settings → English; a restart on another Vite port starts in the system language again, see run-english.json in milestone-rev6-p4-quota)",
+  "tree": "the shared working tree (main 51817a3 plus other sessions' uncommitted edits at 12:25–12:34 JST); B's restart ran `electron-vite dev` directly because `bun run dev`'s first step (the afm-bridge Swift build) was broken by another session"
+ },
+ "model": "test-chat via fixture upstream (no model); pictures: test-image via the same fixture (a fixed 64 x 64 PNG, no model)",
+ "steps": [
+  {
+   "cdpPort": 9340,
+   "file": "run-a1-signin.json",
+   "before": "A: Settings → English, Settings open",
+   "app": "A (CDP 9340, userData udA), Settings open",
+   "note": null,
+   "actions": [
+    {
+     "eval": "document.querySelector('[data-account]').scrollIntoView({block: 'center'}); document.querySelector('[data-account]').innerText"
+    },
+    {
+     "clickText": "Sign in with this device"
+    },
+    {
+     "wait": 2500
+    },
+    {
+     "eval": "(() => { const a = document.querySelector('[data-account]'); a.scrollIntoView({block: 'start'}); return { account: a.dataset.account, text: a.innerText, route: document.querySelector('[data-route]')?.dataset.route, routeText: document.querySelector('[data-route]')?.innerText }; })()"
+    },
+    {
+     "wait": 500
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-account/a-01-signed-in.jpg"
+    }
+   ]
+  },
+  {
+   "cdpPort": 9341,
+   "file": "run-b1-pairing-code.json",
+   "before": null,
+   "app": "B (CDP 9341, userData udB), title screen, UI language from the system (zh-TW) until switched",
+   "note": null,
+   "actions": [
+    {
+     "clickText": "設定"
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "clickText": "English"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "document.querySelector('[role=dialog]') ? 'settings open' : 'settings closed'"
+    },
+    {
+     "eval": "(() => { const a = document.querySelector('[data-account]'); a.scrollIntoView({block: 'center'}); return a.innerText; })()"
+    },
+    {
+     "clickText": "Get a pairing code"
+    },
+    {
+     "wait": 2000
+    },
+    {
+     "eval": "(() => { const p = document.querySelector('[data-pairing]'); p.scrollIntoView({block: 'center'}); return p.innerText; })()"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-account/b-01-pairing-code.jpg"
+    }
+   ]
+  },
+  {
+   "cdpPort": 9340,
+   "file": "run-a2-approve.json",
+   "before": "replace __CODE__ with the code B shows (this run: HPNDVJBC)",
+   "app": "A (CDP 9340), signed in, on Create; __CODE__ = the code B shows (b-01), replaced before the run",
+   "note": null,
+   "actions": [
+    {
+     "clickText": "Back to the title"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "Back to the title"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "Settings"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "document.querySelector('[data-account]').scrollIntoView({block: 'start'}); 'ok'"
+    },
+    {
+     "clickText": "Pairing code"
+    },
+    {
+     "type": "__CODE__"
+    },
+    {
+     "clickText": "Look up this code"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(() => { const f = document.querySelector('[data-pairing-found]'); f?.scrollIntoView({block: 'center'}); return f?.innerText ?? null; })()"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-account/a-02-code-looked-up.jpg"
+    },
+    {
+     "clickText": "Approve this device"
+    },
+    {
+     "wait": 2000
+    },
+    {
+     "eval": "(() => { const a = document.querySelector('[data-account]'); return { text: a.innerText, coOwnerOffer: document.querySelector('[data-co-owner-offer]') !== null }; })()"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-account/a-03-approved.jpg"
+    }
+   ]
+  },
+  {
+   "cdpPort": 9341,
+   "file": "run-b2-paired.json",
+   "before": "wait ≥ 5 s (B polls the approval)",
+   "app": "B (CDP 9341), Settings open, after A approved (B polls every 5 s)",
+   "note": null,
+   "actions": [
+    {
+     "eval": "(() => { const a = document.querySelector('[data-account]'); a.scrollIntoView({block: 'start'}); return { account: a.dataset.account, text: a.innerText, route: document.querySelector('[data-route]')?.innerText }; })()"
+    },
+    {
+     "wait": 400
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-account/b-02-paired-signed-in.jpg"
+    }
+   ]
+  },
+  {
+   "cdpPort": 9341,
+   "file": "run-b3-call-paired.json",
+   "before": "bun run gateway -- grant <accountId> 20000 --data $SP/gw",
+   "app": "B (CDP 9341), paired into A's account after the grant; Settings open",
+   "note": null,
+   "actions": [
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "Create World"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "clickText": "Start a new game"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "clickText": "In one sentence, what is this land?"
+    },
+    {
+     "type": "A cold harbour town where the fog keeps the ledgers."
+    },
+    {
+     "wait": 400
+    },
+    {
+     "clickText": "Write the world"
+    },
+    {
+     "wait": 12000
+    },
+    {
+     "eval": "(() => { const hits = [...document.querySelectorAll('*')].filter(e => /^Error · /.test((e.innerText ?? '').trim())); const el = hits.sort((a, b) => a.innerText.length - b.innerText.length)[0]; el?.scrollIntoView({block: 'center'}); return el ? el.innerText : 'no error on screen'; })()"
+    },
+    {
+     "wait": 400
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-account/b-03-call-while-paired.jpg"
+    }
+   ]
+  },
+  {
+   "cdpPort": 9340,
+   "file": "run-a3-remove-b.json",
+   "before": null,
+   "app": "A (CDP 9340), Settings open on Account; B's key is the only other device row",
+   "note": null,
+   "actions": [
+    {
+     "eval": "document.querySelector('[data-account]').scrollIntoView({block: 'start'}); document.querySelector('[data-account]').innerText"
+    },
+    {
+     "clickText": "Remove"
+    },
+    {
+     "wait": 2000
+    },
+    {
+     "eval": "document.querySelector('[data-account]').innerText"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-account/a-04-removed-b.jpg"
+    }
+   ]
+  },
+  {
+   "cdpPort": 9341,
+   "file": "run-b4-after-removal.json",
+   "before": null,
+   "app": "B (CDP 9341), still on Create's idea step (b-03), after A removed B's key",
+   "note": null,
+   "actions": [
+    {
+     "clickText": "Write the world"
+    },
+    {
+     "wait": 4000
+    },
+    {
+     "eval": "(() => { const hits = [...document.querySelectorAll('*')].filter(e => /^Error · /.test((e.innerText ?? '').trim())); const el = hits.sort((a, b) => a.innerText.length - b.innerText.length)[0]; el?.scrollIntoView({block: 'center'}); return el ? el.innerText : 'no error on screen'; })()"
+    },
+    {
+     "wait": 400
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-account/b-04-call-after-removal-401.jpg"
+    },
+    {
+     "clickText": "Back to the title"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "Back to the title"
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "Settings"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(() => { const a = document.querySelector('[data-account]'); a.scrollIntoView({block: 'start'}); return { account: a.dataset.account, text: a.innerText, route: document.querySelector('[data-route]')?.innerText }; })()"
+    },
+    {
+     "wait": 400
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-account/b-05-signed-out.jpg"
+    }
+   ]
+  },
+  {
+   "cdpPort": 9341,
+   "file": "run-b5-env-token.json",
+   "before": "bun run gateway -- token <accountId> --data $SP/gw --label e2e-b-env > token.env; stop B; start B with UNMAPPED_GATEWAY_KEY=<the token from token.env> (never printed) instead of the empty value",
+   "app": "B (CDP 9341) restarted with UNMAPPED_GATEWAY_KEY=<the token from `bun run gateway -- token <accountId>`>, title screen",
+   "note": null,
+   "actions": [
+    {
+     "clickText": "Settings"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(() => { const a = document.querySelector('[data-account]'); a.scrollIntoView({block: 'start'}); return { account: a.dataset.account, text: a.innerText, route: document.querySelector('[data-route]')?.innerText }; })()"
+    },
+    {
+     "wait": 400
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-account/b-06-env-token-signed-in.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "Create World"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "clickText": "Continue"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "clickText": "Write the world"
+    },
+    {
+     "wait": 8000
+    },
+    {
+     "eval": "(() => { const hits = [...document.querySelectorAll('*')].filter(e => /^Error · /.test((e.innerText ?? '').trim())); const el = hits.sort((a, b) => a.innerText.length - b.innerText.length)[0]; el?.scrollIntoView({block: 'center'}); return el ? el.innerText : 'no error on screen'; })()"
+    },
+    {
+     "wait": 400
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-account/b-07-env-token-call.jpg"
+    }
+   ]
+  }
+ ],
+ "actions": [
+  {
+   "eval": "document.querySelector('[data-account]').scrollIntoView({block: 'center'}); document.querySelector('[data-account]').innerText"
+  },
+  {
+   "clickText": "Sign in with this device"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(() => { const a = document.querySelector('[data-account]'); a.scrollIntoView({block: 'start'}); return { account: a.dataset.account, text: a.innerText, route: document.querySelector('[data-route]')?.dataset.route, routeText: document.querySelector('[data-route]')?.innerText }; })()"
+  },
+  {
+   "wait": 500
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-account/a-01-signed-in.jpg"
+  }
+ ]
+}

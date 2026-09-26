@@ -1,0 +1,17 @@
+{
+ "app": "A (CDP 9340), the hanging call from run-a2 still streaming",
+ "actions": [
+  {
+   "clickText": "Cancel"
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "text": true
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-quota/a-03-cancelled.jpg"
+  }
+ ]
+}

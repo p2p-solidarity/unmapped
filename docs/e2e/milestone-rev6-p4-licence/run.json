@@ -1,0 +1,103 @@
+{
+ "env": {
+  "code": "main 51817a3 plus this run's fixes (tests/fixtures/gateway/{upstream,serveUpstream}.ts, src/main/account/hostedUsage.ts; later src/gateway/http.ts, src/main/images/commercial.ts, tests/gateway/auth.test.ts)",
+  "SP": "a fresh empty dir: SP/gw (gateway data), SP/udA, SP/udB, SP/udC (throwaway userData)",
+  "SP/gw/upstreams.json": "gateway-upstreams.json in milestone-rev6-p4-quota: upstream fixture (llamacpp, http://127.0.0.1:8791/v1, keyEnv null) serving test-chat (chat, apache-2.0, default, upstreamModel qwen-local) and test-image (image, apache-2.0, default)",
+  "SP/gw/costs.json": "gateway-costs.json in milestone-rev6-p4-quota: test-chat perMillion {input 2, cachedInput 1, output 10}, test-image perImage 0.01, asOf 2026-09-01, each with its source",
+  "fixture upstream": "OPENAI_API_KEY= THESYS_API_KEY= UNMAPPED_GATEWAY_KEY= bun tests/fixtures/gateway/serveUpstream.ts --port 8791",
+  "gateway": "OPENAI_API_KEY= THESYS_API_KEY= UNMAPPED_GATEWAY_KEY= STRIPE_SECRET_KEY= STRIPE_WEBHOOK_SECRET= UNMAPPED_GATEWAY_TEST=1 bun run gateway -- --port 8788 --data $SP/gw",
+  "app A": "UNMAPPED_GATEWAY_URL=http://127.0.0.1:8788 OPENAI_API_KEY= THESYS_API_KEY= UNMAPPED_GATEWAY_KEY= AETHER_TEST_USER_DATA=$SP/udA bun run dev --remoteDebuggingPort 9340 (empty values block the repo .env: dotenv never overrides a set variable)",
+  "app B": "the same with AETHER_TEST_USER_DATA=$SP/udB and --remoteDebuggingPort 9341",
+  "driver": "CDP_PORT=<port> OPENAI_API_KEY= THESYS_API_KEY= UNMAPPED_GATEWAY_KEY= bun scripts/cdp-drive.ts \"$(cat <step file>)\"",
+  "UI language": "en (Settings → English; a restart on another Vite port starts in the system language again, see run-english.json in milestone-rev6-p4-quota)",
+  "tree": "the snapshot (git archive 51817a3 + this run's fixes)",
+  "commercial app": "A restarted with UNMAPPED_COMMERCIAL=1 (build switch) for run-a2",
+  "commercial gateway": "GATEWAY_COMMERCIAL=1 bun run gateway -- --port 8788 --data $SP/gw-commercial (gateway-commercial-upstreams.json: the same fixture upstream plus qwen-image-2.1 under qwen-research)"
+ },
+ "model": "test-chat via fixture upstream (no model); pictures: test-image via the same fixture (a fixed 64 x 64 PNG, no model)",
+ "steps": [
+  {
+   "cdpPort": 9340,
+   "file": "run-a1-base-commercial-off.json",
+   "before": "A with commercial mode off, after milestone-rev6-p4-images-hosted",
+   "app": "A (CDP 9340), commercial mode OFF (UNMAPPED_COMMERCIAL unset), after p4-images-hosted (its draft 81e0650a3a32abcd holds the hosted sketches)",
+   "note": "Publishes through window.seed.cartridges.publish, the IPC Create's Build ends with; no screen reaches a publish with a picture while the model is the fixture.",
+   "actions": [
+    {
+     "eval": "(() => {\n  // E2E only: publishes a small open-land revision through window.seed.cartridges.publish — the\n  // same IPC Create's Build ends with — so main's publish-time licence audit runs on a picture.\n  // No screen reaches a publish with a picture while the model is the fixture (it only says\n  // \"Hello.\"), so the revision is made from the built-in world's origin scene.\n  const bytesOf = (b64) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));\n  const pictures = {\n    // the fixture upstream's 64 x 64 PNG, never drawn through this app: no licence record → unknown\n    unknownA: async () => bytesOf(\"iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAeklEQVR4nO3PUQkAIBTAwBfVKEYxqiH8OITBAtxm7fN1wwUNaEEDWtCAFjSgBQ1oQQNa0IAWNKAFDWhBA1rQgBY0oAUNaEEDWtCAFjSgBQ1oQQNa0IAWNKAFDWhBA1rQgBY0oAUNaEEDWtCAFjSgBQ1oQQNa0IAWPHYBHwIBadNjfowAAAAASUVORK5CYII=\"),\n    // another picture nobody drew here: a 64 x 64 canvas fill → unknown\n    unknownB: async () => {\n      const c = new OffscreenCanvas(64, 64); const g = c.getContext(\"2d\");\n      g.fillStyle = \"rgb(40, 90, 200)\"; g.fillRect(0, 0, 64, 64);\n      return new Uint8Array(await (await c.convertToBlob({ type: \"image/png\" })).arrayBuffer());\n    },\n    // a look sketch drawn through the gateway (test-image, apache-2.0) in p4-images-hosted\n    hosted: async () => {\n      const looks = await window.seed.createDrafts.looks(\"81e0650a3a32abcd\");\n      return bytesOf(looks.value[0].dataUrl.slice(\"data:image/png;base64,\".length));\n    },\n  };\n  window.__lic = async (version, parentVersion, picture) => {\n    const { openLandCartridge } = await import(\"/narrative/openLandCartridge.ts\");\n    const base = await window.seed.cartridges.read(\"aether-land\", \"1.3.0\");\n    if (!base.ok) return base;\n    const input = await openLandCartridge({\n      cartridgeId: \"e2e-look\", version, name: \"E2E licence audit\", author: \"e2e\",\n      premise: \"A revision made to exercise the publish-time licence audit.\",\n      originSource: base.value.scenes.origin, bible: base.value.bible,\n      createdAt: new Date().toISOString(), look: await pictures[picture](),\n    });\n    if (!input.ok) return input;\n    let lineage = input.value.manifest.lineage ?? null;\n    if (parentVersion !== null) {\n      const list = await window.seed.cartridges.list();\n      const parent = list.value.find((m) => m.cartridgeId === \"e2e-look\" && m.version === parentVersion);\n      lineage = { kind: \"revision\", parent: { cartridgeId: parent.cartridgeId, version: parent.version, contentHash: parent.contentHash } };\n    }\n    const published = await window.seed.cartridges.publish({ ...input.value, manifest: { ...input.value.manifest, lineage } });\n    if (!published.ok) return { version, picture, refused: published.error };\n    const rev = await window.seed.cartridges.read(\"e2e-look\", version);\n    const licences = rev.ok ? new TextDecoder().decode(rev.value.assets[\"licences.json\"]) : null;\n    return { version, picture, published: published.value.contentHash, lineage: published.value.lineage, licences };\n  };\n  return \"defined\";\n})()\n"
+    },
+    {
+     "eval": "window.__lic('1.0.0', null, 'unknownA')"
+    }
+   ]
+  },
+  {
+   "cdpPort": 9340,
+   "file": "run-a2-commercial-on.json",
+   "before": "A restarted with UNMAPPED_COMMERCIAL=1",
+   "app": "A (CDP 9340) restarted with UNMAPPED_COMMERCIAL=1, title screen",
+   "note": "The click position is what the eval before it returned in this run ([742, 418, disabled=true]); a replay clicks where that eval says.",
+   "actions": [
+    {
+     "eval": "(() => {\n  // E2E only: publishes a small open-land revision through window.seed.cartridges.publish — the\n  // same IPC Create's Build ends with — so main's publish-time licence audit runs on a picture.\n  // No screen reaches a publish with a picture while the model is the fixture (it only says\n  // \"Hello.\"), so the revision is made from the built-in world's origin scene.\n  const bytesOf = (b64) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));\n  const pictures = {\n    // the fixture upstream's 64 x 64 PNG, never drawn through this app: no licence record → unknown\n    unknownA: async () => bytesOf(\"iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAeklEQVR4nO3PUQkAIBTAwBfVKEYxqiH8OITBAtxm7fN1wwUNaEEDWtCAFjSgBQ1oQQNa0IAWNKAFDWhBA1rQgBY0oAUNaEEDWtCAFjSgBQ1oQQNa0IAWNKAFDWhBA1rQgBY0oAUNaEEDWtCAFjSgBQ1oQQNa0IAWPHYBHwIBadNjfowAAAAASUVORK5CYII=\"),\n    // another picture nobody drew here: a 64 x 64 canvas fill → unknown\n    unknownB: async () => {\n      const c = new OffscreenCanvas(64, 64); const g = c.getContext(\"2d\");\n      g.fillStyle = \"rgb(40, 90, 200)\"; g.fillRect(0, 0, 64, 64);\n      return new Uint8Array(await (await c.convertToBlob({ type: \"image/png\" })).arrayBuffer());\n    },\n    // a look sketch drawn through the gateway (test-image, apache-2.0) in p4-images-hosted\n    hosted: async () => {\n      const looks = await window.seed.createDrafts.looks(\"81e0650a3a32abcd\");\n      return bytesOf(looks.value[0].dataUrl.slice(\"data:image/png;base64,\".length));\n    },\n  };\n  window.__lic = async (version, parentVersion, picture) => {\n    const { openLandCartridge } = await import(\"/narrative/openLandCartridge.ts\");\n    const base = await window.seed.cartridges.read(\"aether-land\", \"1.3.0\");\n    if (!base.ok) return base;\n    const input = await openLandCartridge({\n      cartridgeId: \"e2e-look\", version, name: \"E2E licence audit\", author: \"e2e\",\n      premise: \"A revision made to exercise the publish-time licence audit.\",\n      originSource: base.value.scenes.origin, bible: base.value.bible,\n      createdAt: new Date().toISOString(), look: await pictures[picture](),\n    });\n    if (!input.ok) return input;\n    let lineage = input.value.manifest.lineage ?? null;\n    if (parentVersion !== null) {\n      const list = await window.seed.cartridges.list();\n      const parent = list.value.find((m) => m.cartridgeId === \"e2e-look\" && m.version === parentVersion);\n      lineage = { kind: \"revision\", parent: { cartridgeId: parent.cartridgeId, version: parent.version, contentHash: parent.contentHash } };\n    }\n    const published = await window.seed.cartridges.publish({ ...input.value, manifest: { ...input.value.manifest, lineage } });\n    if (!published.ok) return { version, picture, refused: published.error };\n    const rev = await window.seed.cartridges.read(\"e2e-look\", version);\n    const licences = rev.ok ? new TextDecoder().decode(rev.value.assets[\"licences.json\"]) : null;\n    return { version, picture, published: published.value.contentHash, lineage: published.value.lineage, licences };\n  };\n  return \"defined\";\n})()\n"
+    },
+    {
+     "eval": "window.__lic('1.0.1', '1.0.0', 'unknownA')"
+    },
+    {
+     "eval": "window.seed.images.audit({ kind: 'cartridge', cartridgeId: 'e2e-look', version: '1.0.1' })"
+    },
+    {
+     "eval": "window.__lic('1.0.2', '1.0.1', 'unknownB')"
+    },
+    {
+     "eval": "window.__lic('1.0.2', '1.0.1', 'hosted')"
+    },
+    {
+     "eval": "window.seed.images.choose('qwen-image-2.1')"
+    },
+    {
+     "clickText": "Settings"
+    },
+    {
+     "wait": 2000
+    },
+    {
+     "eval": "(() => { const s=[...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Images')); const q = [...s.querySelectorAll('div')].filter(d => d.innerText.startsWith('Qwen-Image 2.1')).sort((a,b)=>a.innerText.length-b.innerText.length)[0]; q?.scrollIntoView({block:'center'}); const buttons = q ? [...q.querySelectorAll('button')].map(b => ({ text: b.innerText, disabled: b.disabled })) : null; return { mode: s.innerText.split(String.fromCharCode(10)).find(l => l.startsWith('Commercial mode')), qwen21: q?.innerText, buttons }; })()"
+    },
+    {
+     "wait": 400
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-licence/a-01-images-commercial-on.jpg"
+    },
+    {
+     "eval": "(() => { const s=[...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Images')); const q = [...s.querySelectorAll('div')].filter(d => d.innerText.startsWith('Qwen-Image 2.1')).sort((a,b)=>a.innerText.length-b.innerText.length)[0]; const b = [...q.querySelectorAll('button')].find(x => x.innerText === 'Use for pictures'); b.scrollIntoView({block:'center'}); const r = b.getBoundingClientRect(); return [Math.round(r.x + r.width / 2), Math.round(r.y + r.height / 2), b.disabled]; })()"
+    },
+    {
+     "click": [
+      742,
+      418
+     ]
+    },
+    {
+     "wait": 1000
+    },
+    {
+     "eval": "window.seed.images.settings().then(r => r.value.choice)"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-licence/a-02-qwen21-click-ignored.jpg"
+    }
+   ]
+  }
+ ],
+ "actions": [
+  {
+   "eval": "(() => {\n  // E2E only: publishes a small open-land revision through window.seed.cartridges.publish — the\n  // same IPC Create's Build ends with — so main's publish-time licence audit runs on a picture.\n  // No screen reaches a publish with a picture while the model is the fixture (it only says\n  // \"Hello.\"), so the revision is made from the built-in world's origin scene.\n  const bytesOf = (b64) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));\n  const pictures = {\n    // the fixture upstream's 64 x 64 PNG, never drawn through this app: no licence record → unknown\n    unknownA: async () => bytesOf(\"iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAeklEQVR4nO3PUQkAIBTAwBfVKEYxqiH8OITBAtxm7fN1wwUNaEEDWtCAFjSgBQ1oQQNa0IAWNKAFDWhBA1rQgBY0oAUNaEEDWtCAFjSgBQ1oQQNa0IAWNKAFDWhBA1rQgBY0oAUNaEEDWtCAFjSgBQ1oQQNa0IAWPHYBHwIBadNjfowAAAAASUVORK5CYII=\"),\n    // another picture nobody drew here: a 64 x 64 canvas fill → unknown\n    unknownB: async () => {\n      const c = new OffscreenCanvas(64, 64); const g = c.getContext(\"2d\");\n      g.fillStyle = \"rgb(40, 90, 200)\"; g.fillRect(0, 0, 64, 64);\n      return new Uint8Array(await (await c.convertToBlob({ type: \"image/png\" })).arrayBuffer());\n    },\n    // a look sketch drawn through the gateway (test-image, apache-2.0) in p4-images-hosted\n    hosted: async () => {\n      const looks = await window.seed.createDrafts.looks(\"81e0650a3a32abcd\");\n      return bytesOf(looks.value[0].dataUrl.slice(\"data:image/png;base64,\".length));\n    },\n  };\n  window.__lic = async (version, parentVersion, picture) => {\n    const { openLandCartridge } = await import(\"/narrative/openLandCartridge.ts\");\n    const base = await window.seed.cartridges.read(\"aether-land\", \"1.3.0\");\n    if (!base.ok) return base;\n    const input = await openLandCartridge({\n      cartridgeId: \"e2e-look\", version, name: \"E2E licence audit\", author: \"e2e\",\n      premise: \"A revision made to exercise the publish-time licence audit.\",\n      originSource: base.value.scenes.origin, bible: base.value.bible,\n      createdAt: new Date().toISOString(), look: await pictures[picture](),\n    });\n    if (!input.ok) return input;\n    let lineage = input.value.manifest.lineage ?? null;\n    if (parentVersion !== null) {\n      const list = await window.seed.cartridges.list();\n      const parent = list.value.find((m) => m.cartridgeId === \"e2e-look\" && m.version === parentVersion);\n      lineage = { kind: \"revision\", parent: { cartridgeId: parent.cartridgeId, version: parent.version, contentHash: parent.contentHash } };\n    }\n    const published = await window.seed.cartridges.publish({ ...input.value, manifest: { ...input.value.manifest, lineage } });\n    if (!published.ok) return { version, picture, refused: published.error };\n    const rev = await window.seed.cartridges.read(\"e2e-look\", version);\n    const licences = rev.ok ? new TextDecoder().decode(rev.value.assets[\"licences.json\"]) : null;\n    return { version, picture, published: published.value.contentHash, lineage: published.value.lineage, licences };\n  };\n  return \"defined\";\n})()\n"
+  },
+  {
+   "eval": "window.__lic('1.0.0', null, 'unknownA')"
+  }
+ ]
+}

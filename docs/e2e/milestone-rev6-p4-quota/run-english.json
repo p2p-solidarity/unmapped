@@ -1,0 +1,9 @@
+{
+  "app": "any app after a restart: the Vite port can change, and the UI language is a per-origin localStorage preference, so it is set again (Settings → English)",
+  "actions": [
+    {"clickText": "設定"}, {"wait": 1000},
+    {"clickText": "English"}, {"wait": 1200},
+    {"hold": "Escape", "ms": 80}, {"wait": 800},
+    {"eval": "document.documentElement.lang"}
+  ]
+}

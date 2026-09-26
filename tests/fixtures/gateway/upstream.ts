@@ -3,6 +3,61 @@
 // an error, or breaking mid-stream. It records every call so a test can prove a refused call never
 // reached it. Test-only; never imported by app code.
 
+import { deflateSync } from "node:zlib";
+
+const CRC_TABLE = Array.from({ length: 256 }, (_, n) => {
+  let c = n;
+  for (let k = 0; k < 8; k += 1) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+  return c >>> 0;
+});
+
+function crc32(bytes: Uint8Array): number {
+  let c = 0xffffffff;
+  for (const byte of bytes) c = (CRC_TABLE[(c ^ byte) & 0xff] as number) ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+
+function pngChunk(type: string, data: Uint8Array): Uint8Array {
+  const out = new Uint8Array(12 + data.length);
+  const view = new DataView(out.buffer);
+  view.setUint32(0, data.length);
+  out.set(new TextEncoder().encode(type), 4);
+  out.set(data, 8);
+  view.setUint32(8 + data.length, crc32(out.subarray(4, 8 + data.length)));
+  return out;
+}
+
+/**
+ * A real, decodable side × side PNG of one opaque colour (8-bit RGB, filter 0 on every row), so the
+ * app's decoder (nativeImage in main) can resize and store what the fixture "draws". Deterministic:
+ * the same bytes every call. It is test text, not a picture anyone drew (Rule 2).
+ */
+export function solidPng(side = 64, rgb: readonly [number, number, number] = [96, 128, 160]) {
+  const header = new Uint8Array(13);
+  const view = new DataView(header.buffer);
+  view.setUint32(0, side);
+  view.setUint32(4, side);
+  header[8] = 8;
+  header[9] = 2;
+  const row = [0, ...Array.from({ length: side }, () => rgb).flat()];
+  const raw = new Uint8Array(Array.from({ length: side }, () => row).flat());
+  const parts = [
+    new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    pngChunk("IHDR", header),
+    pngChunk("IDAT", new Uint8Array(deflateSync(raw))),
+    pngChunk("IEND", new Uint8Array()),
+  ];
+  const out = new Uint8Array(parts.reduce((sum, part) => sum + part.length, 0));
+  let at = 0;
+  for (const part of parts) {
+    out.set(part, at);
+    at += part.length;
+  }
+  return out;
+}
+
+const SOLID_PNG_B64 = Buffer.from(solidPng()).toString("base64");
+
 export type UpstreamMode =
   | "usage"
   | "no-usage"
@@ -66,7 +121,7 @@ export class FakeUpstream {
       return new Response(
         JSON.stringify({
           created: 1,
-          data: Array.from({ length: n }, () => ({ b64_json: "iVBORw0KGgo=" })),
+          data: Array.from({ length: n }, () => ({ b64_json: SOLID_PNG_B64 })),
           usage: { input_tokens: 50, output_tokens: 4_000 },
         }),
         { status: 200 },

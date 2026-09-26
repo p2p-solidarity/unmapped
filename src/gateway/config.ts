@@ -12,7 +12,7 @@
 //   GATEWAY_COMMERCIAL=1        the gateway sells: every served model must be commercial
 //   GATEWAY_BILLING_LIVE=1      with NODE_ENV=production and GATEWAY_COMMERCIAL=1: a live billing key
 //   GATEWAY_WEB_ORIGINS         comma-separated origins that get CORS (the gateway's own web pages)
-//   UNMAPPED_GATEWAY_TEST=1     `POST /v1/test/advance` moves the ledger clock (E2E only)
+//   UNMAPPED_GATEWAY_TEST=1     `POST /v1/test/advance` moves the ledger clock (E2E, as admin)
 //   STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET   billing, when not saved with set-key
 //   plus each upstream's own keyEnv (upstreams.json)
 

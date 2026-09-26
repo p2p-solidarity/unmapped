@@ -1,0 +1,30 @@
+{
+  "v": 1,
+  "records": [
+    {
+      "model": "test-chat",
+      "upstream": "fixture",
+      "perMillion": {
+        "input": 2,
+        "cachedInput": 1,
+        "output": 10
+      },
+      "source": "E2E fixture cost (tests/fixtures/gateway/serveUpstream.ts, no model); operator's own test number",
+      "asOf": "2026-09-01"
+    },
+    {
+      "model": "test-image",
+      "upstream": "fixture",
+      "perImage": 0.01,
+      "source": "E2E fixture cost (tests/fixtures/gateway/serveUpstream.ts, no model); operator's own test number",
+      "asOf": "2026-09-01"
+    },
+    {
+      "model": "qwen-image-2.1",
+      "upstream": "fixture",
+      "perImage": 0.01,
+      "source": "E2E fixture cost (no model); operator's own test number",
+      "asOf": "2026-09-01"
+    }
+  ]
+}

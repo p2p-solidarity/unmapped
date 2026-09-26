@@ -1,0 +1,8 @@
+{
+  "app": "A (CDP 9340), Settings open, after the three sketches",
+  "actions": [
+    {"eval": "(() => { const q = document.querySelector('[data-quota]'); q.scrollIntoView({block: 'center'}); return q.innerText; })()"},
+    {"wait": 400},
+    {"shot": "docs/e2e/milestone-rev6-p4-images-hosted/a-03-account-after-pictures.jpg"}
+  ]
+}

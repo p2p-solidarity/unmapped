@@ -1,0 +1,158 @@
+{
+ "env": {
+  "code": "main 51817a3 plus this run's fixes (tests/fixtures/gateway/{upstream,serveUpstream}.ts, src/main/account/hostedUsage.ts; later src/gateway/http.ts, src/main/images/commercial.ts, tests/gateway/auth.test.ts)",
+  "SP": "a fresh empty dir: SP/gw (gateway data), SP/udA, SP/udB, SP/udC (throwaway userData)",
+  "SP/gw/upstreams.json": "gateway-upstreams.json in milestone-rev6-p4-quota: upstream fixture (llamacpp, http://127.0.0.1:8791/v1, keyEnv null) serving test-chat (chat, apache-2.0, default, upstreamModel qwen-local) and test-image (image, apache-2.0, default)",
+  "SP/gw/costs.json": "gateway-costs.json in milestone-rev6-p4-quota: test-chat perMillion {input 2, cachedInput 1, output 10}, test-image perImage 0.01, asOf 2026-09-01, each with its source",
+  "fixture upstream": "OPENAI_API_KEY= THESYS_API_KEY= UNMAPPED_GATEWAY_KEY= bun tests/fixtures/gateway/serveUpstream.ts --port 8791",
+  "gateway": "OPENAI_API_KEY= THESYS_API_KEY= UNMAPPED_GATEWAY_KEY= STRIPE_SECRET_KEY= STRIPE_WEBHOOK_SECRET= UNMAPPED_GATEWAY_TEST=1 bun run gateway -- --port 8788 --data $SP/gw",
+  "app A": "UNMAPPED_GATEWAY_URL=http://127.0.0.1:8788 OPENAI_API_KEY= THESYS_API_KEY= UNMAPPED_GATEWAY_KEY= AETHER_TEST_USER_DATA=$SP/udA bun run dev --remoteDebuggingPort 9340 (empty values block the repo .env: dotenv never overrides a set variable)",
+  "app B": "the same with AETHER_TEST_USER_DATA=$SP/udB and --remoteDebuggingPort 9341",
+  "driver": "CDP_PORT=<port> OPENAI_API_KEY= THESYS_API_KEY= UNMAPPED_GATEWAY_KEY= bun scripts/cdp-drive.ts \"$(cat <step file>)\"",
+  "UI language": "en (Settings → English; a restart on another Vite port starts in the system language again, see run-english.json in milestone-rev6-p4-quota)",
+  "tree": "the snapshot (git archive 51817a3 + this run's fixes), A restarted with every key empty",
+  "grant": "bun run gateway -- grant <accountId> 40000 --data $SP/gw (60,000 granted in 2026-09, 18,984 used before the pictures)"
+ },
+ "model": "test-chat via fixture upstream (no model); pictures: test-image via the same fixture (a fixed 64 x 64 PNG, no model)",
+ "steps": [
+  {
+   "cdpPort": 9340,
+   "file": "run-a1-sketches.json",
+   "before": "A at the title, signed in (udA from the account and quota flows)",
+   "app": "A (CDP 9340) from the snapshot tree, no key anywhere (OPENAI_API_KEY blank, no saved key); signed in to the gateway account; Settings → Images: OpenAI (the default choice)",
+   "note": "The first eval writes the look step's world cards through window.seed.createDrafts.save (test data typed by hand), because the fixture model only answers 'Hello.' and cannot write them.",
+   "actions": [
+    {
+     "eval": "(async () => {\n  // Test data typed by hand (E2E only): the world cards the look step needs, because the fixture\n  // model answers only \"Hello.\" and so never writes them. Saved through the app's own IPC.\n  const list = await window.seed.createDrafts.list();\n  if (!list.ok) return list;\n  const entry = list.value.find((e) => e.kind !== \"broken\" && JSON.stringify(e).includes(\"A river delta\"));\n  const id = entry?.draftId ?? entry?.draft?.draftId;\n  const read = await window.seed.createDrafts.read(id);\n  if (!read.ok) return read;\n  const d = read.value;\n  d.world = {\n    fields: {\n      premise: \"A river delta where lantern keepers trade salt for stories.\",\n      tone: \"Quiet, warm, a little wistful.\",\n      rules: [\"Lanterns are never left dark.\", \"Salt pays for every story.\"],\n      taboos: [\"No one crosses the delta at night without a lantern.\"],\n      naming: \"Short names taken from boats and tides.\",\n      voice: \"Plain speech with river sayings.\",\n      look: \"Reed-roofed stilt houses, paper lanterns, grey-green water, low evening light.\",\n    },\n    edited: [\"premise\", \"tone\", \"rules\", \"taboos\", \"naming\", \"voice\", \"look\"],\n    basis: { name: d.idea.name, intent: d.idea.intent, material: d.idea.story, language: d.idea.language, fights: d.idea.play.fights },\n    rev: 1,\n  };\n  d.step = \"look\";\n  const saved = await window.seed.createDrafts.save(d);\n  return saved.ok ? { draftId: saved.value.draftId, step: saved.value.step, look: saved.value.world.fields.look } : saved;\n})()"
+    },
+    {
+     "clickText": "Settings"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "eval": "(() => { const r = document.querySelector('[data-route]'); return r.innerText; })()"
+    },
+    {
+     "eval": "(() => { const s=[...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Images')); s?.scrollIntoView({block:'start'}); return s?.innerText.slice(0,700); })()"
+    },
+    {
+     "wait": 300
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-images-hosted/a-00-images-panel.jpg"
+    },
+    {
+     "hold": "Escape",
+     "ms": 80
+    },
+    {
+     "wait": 800
+    },
+    {
+     "clickText": "Create World"
+    },
+    {
+     "wait": 1500
+    },
+    {
+     "clickText": "Continue"
+    },
+    {
+     "wait": 2000
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-images-hosted/a-01-look-step.jpg"
+    },
+    {
+     "clickText": "Draw sketches"
+    },
+    {
+     "wait": 6000
+    },
+    {
+     "eval": "({ images: [...document.querySelectorAll('img')].filter(i => i.src.startsWith('data:image/png')).map(i => ({ w: i.naturalWidth, h: i.naturalHeight, bytes: i.src.length })), text: document.body.innerText.slice(0, 1200) })"
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-images-hosted/a-02-sketches-drawn.jpg"
+    }
+   ]
+  },
+  {
+   "cdpPort": 9340,
+   "file": "run-account-after.json",
+   "before": null,
+   "app": "A (CDP 9340), Settings open, after the three sketches",
+   "note": null,
+   "actions": [
+    {
+     "eval": "(() => { const q = document.querySelector('[data-quota]'); q.scrollIntoView({block: 'center'}); return q.innerText; })()"
+    },
+    {
+     "wait": 400
+    },
+    {
+     "shot": "docs/e2e/milestone-rev6-p4-images-hosted/a-03-account-after-pictures.jpg"
+    }
+   ]
+  }
+ ],
+ "actions": [
+  {
+   "eval": "(async () => {\n  // Test data typed by hand (E2E only): the world cards the look step needs, because the fixture\n  // model answers only \"Hello.\" and so never writes them. Saved through the app's own IPC.\n  const list = await window.seed.createDrafts.list();\n  if (!list.ok) return list;\n  const entry = list.value.find((e) => e.kind !== \"broken\" && JSON.stringify(e).includes(\"A river delta\"));\n  const id = entry?.draftId ?? entry?.draft?.draftId;\n  const read = await window.seed.createDrafts.read(id);\n  if (!read.ok) return read;\n  const d = read.value;\n  d.world = {\n    fields: {\n      premise: \"A river delta where lantern keepers trade salt for stories.\",\n      tone: \"Quiet, warm, a little wistful.\",\n      rules: [\"Lanterns are never left dark.\", \"Salt pays for every story.\"],\n      taboos: [\"No one crosses the delta at night without a lantern.\"],\n      naming: \"Short names taken from boats and tides.\",\n      voice: \"Plain speech with river sayings.\",\n      look: \"Reed-roofed stilt houses, paper lanterns, grey-green water, low evening light.\",\n    },\n    edited: [\"premise\", \"tone\", \"rules\", \"taboos\", \"naming\", \"voice\", \"look\"],\n    basis: { name: d.idea.name, intent: d.idea.intent, material: d.idea.story, language: d.idea.language, fights: d.idea.play.fights },\n    rev: 1,\n  };\n  d.step = \"look\";\n  const saved = await window.seed.createDrafts.save(d);\n  return saved.ok ? { draftId: saved.value.draftId, step: saved.value.step, look: saved.value.world.fields.look } : saved;\n})()"
+  },
+  {
+   "clickText": "Settings"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const r = document.querySelector('[data-route]'); return r.innerText; })()"
+  },
+  {
+   "eval": "(() => { const s=[...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Images')); s?.scrollIntoView({block:'start'}); return s?.innerText.slice(0,700); })()"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-images-hosted/a-00-images-panel.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "Create World"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-images-hosted/a-01-look-step.jpg"
+  },
+  {
+   "clickText": "Draw sketches"
+  },
+  {
+   "wait": 6000
+  },
+  {
+   "eval": "({ images: [...document.querySelectorAll('img')].filter(i => i.src.startsWith('data:image/png')).map(i => ({ w: i.naturalWidth, h: i.naturalHeight, bytes: i.src.length })), text: document.body.innerText.slice(0, 1200) })"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-images-hosted/a-02-sketches-drawn.jpg"
+  }
+ ]
+}

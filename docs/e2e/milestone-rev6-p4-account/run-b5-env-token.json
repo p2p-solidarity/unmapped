@@ -1,0 +1,54 @@
+{
+ "app": "B (CDP 9341) restarted with UNMAPPED_GATEWAY_KEY=<the token from `bun run gateway -- token <accountId>`>, title screen",
+ "actions": [
+  {
+   "clickText": "Settings"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const a = document.querySelector('[data-account]'); a.scrollIntoView({block: 'start'}); return { account: a.dataset.account, text: a.innerText, route: document.querySelector('[data-route]')?.innerText }; })()"
+  },
+  {
+   "wait": 400
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-account/b-06-env-token-signed-in.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "Create World"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Write the world"
+  },
+  {
+   "wait": 8000
+  },
+  {
+   "eval": "(() => { const hits = [...document.querySelectorAll('*')].filter(e => /^Error \u00b7 /.test((e.innerText ?? '').trim())); const el = hits.sort((a, b) => a.innerText.length - b.innerText.length)[0]; el?.scrollIntoView({block: 'center'}); return el ? el.innerText : 'no error on screen'; })()"
+  },
+  {
+   "wait": 400
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-account/b-07-env-token-call.jpg"
+  }
+ ]
+}

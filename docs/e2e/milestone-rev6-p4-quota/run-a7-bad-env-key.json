@@ -1,0 +1,75 @@
+{
+ "app": "A (CDP 9340) restarted with OPENAI_API_KEY=sk-e2e-fake-invalid-key-not-real-0000000000 (clearly fake; OpenAI refuses it, which costs nothing), title screen",
+ "actions": [
+  {
+   "clickText": "Settings"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "document.querySelector('[data-route]').scrollIntoView({block:'center'}); document.querySelector('[data-route]').innerText"
+  },
+  {
+   "clickText": "Cloud API"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "OpenAI"
+  },
+  {
+   "wait": 1200
+  },
+  {
+   "clickText": "Use this model"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "eval": "(() => { const r = document.querySelector('[data-route]'); r.scrollIntoView({block:'center'}); return { route: r.dataset.route, text: r.innerText }; })()"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-quota/a-08-route-env-key.jpg"
+  },
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "Create World"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Write the world"
+  },
+  {
+   "wait": 6000
+  },
+  {
+   "eval": "(() => { const hits = [...document.querySelectorAll('*')].filter(e => /^Error \u00b7 /.test((e.innerText ?? '').trim())); const el = hits.sort((a, b) => a.innerText.length - b.innerText.length)[0]; el?.scrollIntoView({block: 'center'}); return el ? el.innerText : 'no error on screen'; })()"
+  },
+  {
+   "wait": 400
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-quota/a-09-env-key-auth-refused.jpg"
+  }
+ ]
+}

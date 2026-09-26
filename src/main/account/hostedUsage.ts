@@ -1,7 +1,10 @@
 // What this computer spent on the gateway in a quota period, read from its own usage ledger
 // (`<userData>/usage.jsonl`, @shared/usage): the raw tokens and calls Settings → Account shows next
-// to the gateway's credits. Only lines main wrote for provider `hosted` count; a call whose tokens
-// the gateway did not report is counted as unreported, never as zero tokens (Rule 2).
+// to the gateway's credits. Only lines main wrote for provider `hosted` count, and only finished
+// ones: the gateway settles a call only when its stream ends, and releases a refused (402, 401),
+// failed or cancelled one, so those spent nothing and are not "calls through the gateway". A
+// finished call whose tokens the gateway did not report is counted as unreported, never as zero
+// tokens (Rule 2).
 
 import { readFile } from "node:fs/promises";
 import type { HostedUsage } from "@shared/gatewayApi";
@@ -22,6 +25,7 @@ export async function hostedUsage(userData: string, period: string): Promise<Res
   const totals: HostedUsage = { calls: 0, input: 0, output: 0, unreported: 0 };
   for (const line of parseUsageLines(text).lines) {
     if (isUsageLink(line) || line.provider !== "hosted" || !line.at.startsWith(period)) continue;
+    if (line.outcome !== "done") continue;
     totals.calls += 1;
     totals.input += line.input ?? 0;
     totals.output += line.output ?? 0;

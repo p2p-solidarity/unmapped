@@ -1,0 +1,48 @@
+{
+ "app": "B (CDP 9341), paired into A's account after the grant; Settings open",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "Create World"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Start a new game"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "In one sentence, what is this land?"
+  },
+  {
+   "type": "A cold harbour town where the fog keeps the ledgers."
+  },
+  {
+   "wait": 400
+  },
+  {
+   "clickText": "Write the world"
+  },
+  {
+   "wait": 12000
+  },
+  {
+   "eval": "(() => { const hits = [...document.querySelectorAll('*')].filter(e => /^Error \u00b7 /.test((e.innerText ?? '').trim())); const el = hits.sort((a, b) => a.innerText.length - b.innerText.length)[0]; el?.scrollIntoView({block: 'center'}); return el ? el.innerText : 'no error on screen'; })()"
+  },
+  {
+   "wait": 400
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-account/b-03-call-while-paired.jpg"
+  }
+ ]
+}

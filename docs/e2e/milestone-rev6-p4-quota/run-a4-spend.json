@@ -1,0 +1,59 @@
+{
+ "app": "A (CDP 9340), title screen; before the run: curl -X POST 'http://127.0.0.1:8791/__fixture/mode?to=no-usage' (the fixture streams its answer with no usage, so the gateway charges each call its whole hold)",
+ "actions": [
+  {
+   "clickText": "Create World"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Write the world"
+  },
+  {
+   "wait": 6000
+  },
+  {
+   "eval": "(() => { const hits = [...document.querySelectorAll('*')].filter(e => /^Error \u00b7 /.test((e.innerText ?? '').trim())); const el = hits.sort((a, b) => a.innerText.length - b.innerText.length)[0]; el?.scrollIntoView({block: 'center'}); return el ? el.innerText : 'no error on screen'; })()"
+  },
+  {
+   "wait": 400
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-quota/a-04-spent-quota-exhausted.jpg"
+  },
+  {
+   "clickText": "Back to the title"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "Back to the title"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "Settings"
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(() => { const q = document.querySelector('[data-quota]'); q.scrollIntoView({block: 'center'}); return { quota: q.innerText, route: document.querySelector('[data-route]')?.innerText }; })()"
+  },
+  {
+   "wait": 400
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-quota/a-05-account-numbers.jpg"
+  }
+ ]
+}

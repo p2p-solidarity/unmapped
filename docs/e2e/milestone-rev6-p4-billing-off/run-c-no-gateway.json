@@ -1,0 +1,16 @@
+{
+  "app": "C (CDP 9341): a fresh userData (udC), UNMAPPED_GATEWAY_URL empty (no gateway at all), every key empty; title screen in the system language (zh-TW)",
+  "actions": [
+    {"clickText": "設定"}, {"wait": 1000},
+    {"clickText": "English"}, {"wait": 2000},
+    {"eval": "(() => { const s=[...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); return { model: s?.innerText, allowanceChip: [...document.querySelectorAll('button')].some(b => b.innerText.trim() === 'Free allowance'), route: document.querySelector('[data-route]')?.innerText ?? null }; })()"},
+    {"clickText": "Cloud API"}, {"wait": 1000},
+    {"eval": "({ cloudChips: [...document.querySelectorAll('button')].filter(b => ['OpenAI','OpenUI Gateway','Custom API','Free allowance'].includes(b.innerText.trim())).map(b => b.innerText.trim()) })"},
+    {"shot": "docs/e2e/milestone-rev6-p4-billing-off/c-00-model-no-allowance-chip.jpg"},
+    {"clickText": "On this computer"}, {"wait": 1500},
+    {"eval": "(() => { const a = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Account')); a.scrollIntoView({block: 'start'}); return { account: a.innerText, dataAccount: document.querySelector('[data-account]') !== null }; })()"},
+    {"eval": "(() => { const p = document.querySelector('[data-plans]'); return { plan: p.innerText, plans: document.querySelectorAll('[data-plan]').length }; })()"},
+    {"wait": 400},
+    {"shot": "docs/e2e/milestone-rev6-p4-billing-off/c-01-account-plan-gateway-not-configured.jpg"}
+  ]
+}

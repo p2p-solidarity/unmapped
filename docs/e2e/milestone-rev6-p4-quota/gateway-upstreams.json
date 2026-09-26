@@ -1,0 +1,15 @@
+{
+  "v": 1,
+  "upstreams": [
+    {
+      "id": "fixture",
+      "kind": "llamacpp",
+      "baseUrl": "http://127.0.0.1:8791/v1",
+      "keyEnv": null,
+      "models": [
+        { "id": "test-chat", "kind": "chat", "licence": "apache-2.0", "default": true, "upstreamModel": "qwen-local" },
+        { "id": "test-image", "kind": "image", "licence": "apache-2.0", "default": true }
+      ]
+    }
+  ]
+}

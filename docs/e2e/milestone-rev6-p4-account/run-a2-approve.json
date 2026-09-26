@@ -1,0 +1,59 @@
+{
+ "app": "A (CDP 9340), signed in, on Create; __CODE__ = the code B shows (b-01), replaced before the run",
+ "actions": [
+  {
+   "clickText": "Back to the title"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "Back to the title"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "Settings"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "document.querySelector('[data-account]').scrollIntoView({block: 'start'}); 'ok'"
+  },
+  {
+   "clickText": "Pairing code"
+  },
+  {
+   "type": "__CODE__"
+  },
+  {
+   "clickText": "Look up this code"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const f = document.querySelector('[data-pairing-found]'); f?.scrollIntoView({block: 'center'}); return f?.innerText ?? null; })()"
+  },
+  {
+   "wait": 300
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-account/a-02-code-looked-up.jpg"
+  },
+  {
+   "clickText": "Approve this device"
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "eval": "(() => { const a = document.querySelector('[data-account]'); return { text: a.innerText, coOwnerOffer: document.querySelector('[data-co-owner-offer]') !== null }; })()"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-account/a-03-approved.jpg"
+  }
+ ]
+}

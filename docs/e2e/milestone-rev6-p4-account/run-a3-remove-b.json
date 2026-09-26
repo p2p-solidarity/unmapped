@@ -1,0 +1,10 @@
+{
+  "app": "A (CDP 9340), Settings open on Account; B's key is the only other device row",
+  "actions": [
+    {"eval": "document.querySelector('[data-account]').scrollIntoView({block: 'start'}); document.querySelector('[data-account]').innerText"},
+    {"clickText": "Remove"},
+    {"wait": 2000},
+    {"eval": "document.querySelector('[data-account]').innerText"},
+    {"shot": "docs/e2e/milestone-rev6-p4-account/a-04-removed-b.jpg"}
+  ]
+}

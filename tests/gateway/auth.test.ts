@@ -15,6 +15,7 @@
 //   8. A restart forgets an account, a key, a revocation or an idle clock (they live in the file).
 //   9. An admin route (the only HTTP answer that carries a token or grants credits) answers anyone
 //      but the CLI on this host: another address, a proxied request, or a wrong or missing secret.
+//      The test clock (UNMAPPED_GATEWAY_TEST=1) is one too: moving it renews or spends allowances.
 //  10. The pairing lookup (code → the pending key, so the approver types only the code) answers
 //      without a signed-in account (no token, a forged one), spends the code (so the approval then
 //      fails) or answers one already spent, expired, unknown or malformed (or 500s on a bad escape),
@@ -47,6 +48,7 @@ import {
   secretOf,
   signIn,
   start,
+  T0,
 } from "./support";
 
 const A = secretOf("device-a");
@@ -353,6 +355,24 @@ describe("admin routes (9)", () => {
     expect(issued.status).toBe(200);
     const view = await tokenCall(h, issued.body.token);
     expect(view.body).toMatchObject({ id: a.account, device: null });
+    h.gw.close();
+  });
+
+  it("move the test clock only for the CLI on this host", async () => {
+    const h = start({ env: { UNMAPPED_GATEWAY_TEST: "1" } });
+    const secret = h.gw.state.adminSecret;
+    const move = (loopback: boolean, headers: Record<string, string>) =>
+      call(h.gw, "POST", "/v1/test/advance", { loopback, headers, json: { days: 40 } });
+    const refused = [
+      await move(false, { "x-unmapped-admin": secret }),
+      await move(true, { "x-unmapped-admin": secret, "x-forwarded-for": "198.51.100.9" }),
+      await move(true, { "x-unmapped-admin": `${secret.slice(0, -1)}x` }),
+      await move(true, {}),
+    ];
+    expect(refused.map((answer) => answer.status)).toEqual([403, 403, 403, 403]);
+    expect(h.clock.now()).toBe(T0);
+    expect((await move(true, { "x-unmapped-admin": secret })).status).toBe(200);
+    expect(h.clock.now()).toBe(T0 + 40 * DAY_MS);
     h.gw.close();
   });
 });

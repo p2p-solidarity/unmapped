@@ -1,0 +1,51 @@
+{
+ "app": "C (CDP 9341), no gateway, Settings open; the model setting is this device's default with no gateway and no key (Apple on-device)",
+ "actions": [
+  {
+   "hold": "Escape",
+   "ms": 80
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "Create World"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Start a new game"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "clickText": "In one sentence, what is this land?"
+  },
+  {
+   "type": "A salt marsh where the herons keep the calendar."
+  },
+  {
+   "wait": 400
+  },
+  {
+   "clickText": "Write the world"
+  },
+  {
+   "wait": 8000
+  },
+  {
+   "eval": "(() => { const all=[...document.querySelectorAll('*')].filter(e => /^Error \u00b7 /.test((e.innerText ?? '').trim())); const blocks = all.filter(e => !all.some(o => o !== e && e.contains(o))); return blocks.map(b => (b.parentElement?.innerText ?? b.innerText)); })()"
+  },
+  {
+   "eval": "(() => { const hits = [...document.querySelectorAll('*')].filter(e => /^Error \u00b7 /.test((e.innerText ?? '').trim())); const el = hits.sort((a, b) => a.innerText.length - b.innerText.length)[0]; el?.scrollIntoView({block: 'center'}); return el ? el.innerText : 'no error on screen'; })()"
+  },
+  {
+   "wait": 400
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-billing-off/c-02-create-local-error.jpg"
+  }
+ ]
+}

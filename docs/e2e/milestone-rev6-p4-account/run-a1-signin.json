@@ -1,0 +1,11 @@
+{
+  "app": "A (CDP 9340, userData udA), Settings open",
+  "actions": [
+    {"eval": "document.querySelector('[data-account]').scrollIntoView({block: 'center'}); document.querySelector('[data-account]').innerText"},
+    {"clickText": "Sign in with this device"},
+    {"wait": 2500},
+    {"eval": "(() => { const a = document.querySelector('[data-account]'); a.scrollIntoView({block: 'start'}); return { account: a.dataset.account, text: a.innerText, route: document.querySelector('[data-route]')?.dataset.route, routeText: document.querySelector('[data-route]')?.innerText }; })()"},
+    {"wait": 500},
+    {"shot": "docs/e2e/milestone-rev6-p4-account/a-01-signed-in.jpg"}
+  ]
+}

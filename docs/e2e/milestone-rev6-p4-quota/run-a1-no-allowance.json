@@ -1,0 +1,44 @@
+{
+ "app": "A (CDP 9340), signed in, no grant yet; starts at the title",
+ "actions": [
+  {
+   "clickText": "Create World"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "document.body.innerText.includes('Continue') && document.body.innerText.includes('A river delta') ? 'draft listed' : 'new draft'"
+  },
+  {
+   "clickText": "Start a new game"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "In one sentence, what is this land?"
+  },
+  {
+   "type": "A river delta where lantern keepers trade salt for stories."
+  },
+  {
+   "wait": 400
+  },
+  {
+   "clickText": "Write the world"
+  },
+  {
+   "wait": 4000
+  },
+  {
+   "eval": "(() => { const hits = [...document.querySelectorAll('*')].filter(e => (e.innerText ?? '').includes('quota-exhausted') && (e.innerText ?? '').includes('reset')); const el = hits.sort((a, b) => a.innerText.length - b.innerText.length)[0]; el?.scrollIntoView({block: 'center'}); return el ? el.tagName + ': ' + el.innerText : null; })()"
+  },
+  {
+   "wait": 400
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-quota/a-01-no-allowance-quota-exhausted.jpg"
+  }
+ ]
+}

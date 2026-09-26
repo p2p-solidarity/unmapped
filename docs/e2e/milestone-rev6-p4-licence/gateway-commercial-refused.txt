@@ -1,0 +1,5 @@
+$ bun --tsconfig-override tsconfig.node.json src/gateway/main.ts --port "8788" --data "/private/tmp/claude-501/-Users-kidney-Workspace-Hackathon-unmapped/f9f28666-cad2-48fd-9df0-065e8d1d73c3/scratchpad/p4/gw-commercial"
+gateway: GATEWAY_COMMERCIAL=1, but qwen-image-2.1 (qwen-research) may not be sold.
+  Stop serving those models, or unset GATEWAY_COMMERCIAL.
+error: script "gateway" exited with code 1
+exit 1

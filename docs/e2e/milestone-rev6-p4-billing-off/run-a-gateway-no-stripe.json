@@ -1,0 +1,11 @@
+{
+  "app": "A (CDP 9340), gateway on :8788 started without STRIPE_*",
+  "actions": [
+    {"clickText": "Settings"},
+    {"wait": 1500},
+    {"eval": "document.querySelector('[data-plans]').scrollIntoView({block: 'start'}); 'scrolled'"},
+    {"wait": 600},
+    {"eval": "(() => { const p = document.querySelector('[data-plans]'); return { text: p.innerText, plans: document.querySelectorAll('[data-plan]').length, price: /\\$|€|¥|per month|per year/.test(p.innerText) }; })()"},
+    {"shot": "docs/e2e/milestone-rev6-p4-billing-off/a-00-plan-billing-not-configured.jpg"}
+  ]
+}

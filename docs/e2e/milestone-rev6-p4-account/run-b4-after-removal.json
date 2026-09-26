@@ -1,0 +1,47 @@
+{
+ "app": "B (CDP 9341), still on Create's idea step (b-03), after A removed B's key",
+ "actions": [
+  {
+   "clickText": "Write the world"
+  },
+  {
+   "wait": 4000
+  },
+  {
+   "eval": "(() => { const hits = [...document.querySelectorAll('*')].filter(e => /^Error \u00b7 /.test((e.innerText ?? '').trim())); const el = hits.sort((a, b) => a.innerText.length - b.innerText.length)[0]; el?.scrollIntoView({block: 'center'}); return el ? el.innerText : 'no error on screen'; })()"
+  },
+  {
+   "wait": 400
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-account/b-04-call-after-removal-401.jpg"
+  },
+  {
+   "clickText": "Back to the title"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "Back to the title"
+  },
+  {
+   "wait": 800
+  },
+  {
+   "clickText": "Settings"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "eval": "(() => { const a = document.querySelector('[data-account]'); a.scrollIntoView({block: 'start'}); return { account: a.dataset.account, text: a.innerText, route: document.querySelector('[data-route]')?.innerText }; })()"
+  },
+  {
+   "wait": 400
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-account/b-05-signed-out.jpg"
+  }
+ ]
+}

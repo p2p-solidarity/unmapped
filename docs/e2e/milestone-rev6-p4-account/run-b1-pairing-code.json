@@ -1,0 +1,16 @@
+{
+  "app": "B (CDP 9341, userData udB), title screen, UI language from the system (zh-TW) until switched",
+  "actions": [
+    {"clickText": "設定"},
+    {"wait": 1000},
+    {"clickText": "English"},
+    {"wait": 1500},
+    {"eval": "document.querySelector('[role=dialog]') ? 'settings open' : 'settings closed'"},
+    {"eval": "(() => { const a = document.querySelector('[data-account]'); a.scrollIntoView({block: 'center'}); return a.innerText; })()"},
+    {"clickText": "Get a pairing code"},
+    {"wait": 2000},
+    {"eval": "(() => { const p = document.querySelector('[data-pairing]'); p.scrollIntoView({block: 'center'}); return p.innerText; })()"},
+    {"wait": 300},
+    {"shot": "docs/e2e/milestone-rev6-p4-account/b-01-pairing-code.jpg"}
+  ]
+}

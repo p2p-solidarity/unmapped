@@ -1,0 +1,26 @@
+{
+ "app": "A (CDP 9340), title screen; before the run: curl -X POST 'http://127.0.0.1:8791/__fixture/mode?to=hang-stream' (the fixture opens the stream and never sends a token)",
+ "actions": [
+  {
+   "clickText": "Create World"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Write the world"
+  },
+  {
+   "wait": 2500
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-quota/a-02-hanging-call.jpg"
+  }
+ ]
+}

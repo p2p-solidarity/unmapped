@@ -4,10 +4,11 @@
 // whose licence is not commercial may be chosen or draw, and no revision may add or change a
 // picture whose licence is not commercial (./registry.ts, ./cartridgeLicences.ts, ./workLicences.ts).
 //
-// The gateway half is a seam: main has no gateway client yet. The route package's client calls
-// `setGatewayCommercialSource` with a reader of `/v1/status` (`GatewayStatus` in @shared/quota);
-// until then only the build switch counts. A gateway that cannot be reached says nothing, so the
-// mode then follows the build switch alone — which is why release builds set it.
+// The gateway half is a seam that main's account IPC fills at start (`registerAccountIpc` in
+// ../account/ipc.ts calls `setGatewayCommercialSource` with a reader of the configured gateway's
+// `/v1/status`, `GatewayStatus` in @shared/quota); with no gateway configured only the build switch
+// counts. A gateway that cannot be reached says nothing, so the mode then follows the build switch
+// alone — which is why release builds set it.
 
 import type { CommercialMode } from "@shared/images";
 
@@ -18,7 +19,7 @@ export type GatewayCommercialSource = () => Promise<boolean | null>;
 
 let gatewaySource: GatewayCommercialSource | null = null;
 
-/** The seam for the route package's gateway client; null removes it. */
+/** Set by main's account IPC (the gateway's `/v1/status`); null removes it. */
 export function setGatewayCommercialSource(source: GatewayCommercialSource | null): void {
   gatewaySource = source;
 }

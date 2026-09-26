@@ -24,6 +24,7 @@ interface BunServe {
   serve(options: {
     hostname: string;
     port: number;
+    idleTimeout: number;
     fetch(request: Request): Response | Promise<Response>;
   }): { port: number };
 }
@@ -50,6 +51,8 @@ if (bun === undefined) {
 const server = bun.serve({
   hostname: "127.0.0.1",
   port: Number(arg("--port") ?? 8791),
+  // A hang mode must hang until the client (the gateway) goes away, not for Bun's default 10 s.
+  idleTimeout: 0,
   async fetch(request) {
     const url = new URL(request.url);
     if (request.method === "POST" && url.pathname === "/__fixture/mode") {
@@ -63,12 +66,10 @@ const server = bun.serve({
     }
     const multipart = (request.headers.get("content-type") ?? "").includes("multipart/form-data");
     const body = multipart ? await request.formData() : await request.text();
-    return upstream.fetch(request.url, {
-      method: request.method,
-      headers: request.headers,
-      body,
-      signal: request.signal,
-    });
+    // No signal: when the client leaves, Bun cancels the answer's body itself. Erroring that body
+    // from the request's abort signal (as the in-memory fake does for the tests) is an unhandled
+    // error in a served stream, and it stopped this process mid-run.
+    return upstream.fetch(request.url, { method: request.method, headers: request.headers, body });
   },
 });
 

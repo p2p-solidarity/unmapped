@@ -1,0 +1,8 @@
+{
+  "app": "B (CDP 9341), Settings open, after A approved (B polls every 5 s)",
+  "actions": [
+    {"eval": "(() => { const a = document.querySelector('[data-account]'); a.scrollIntoView({block: 'start'}); return { account: a.dataset.account, text: a.innerText, route: document.querySelector('[data-route]')?.innerText }; })()"},
+    {"wait": 400},
+    {"shot": "docs/e2e/milestone-rev6-p4-account/b-02-paired-signed-in.jpg"}
+  ]
+}
