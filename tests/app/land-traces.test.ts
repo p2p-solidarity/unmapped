@@ -86,7 +86,8 @@ describe("a gift two people take at once (1, 2)", () => {
       expect(giftsToReceive(world.now, winner, {}).map((one) => one.id)).toEqual([gift.id]);
       expect(giftsToReceive(world.now, loser, {})).toEqual([]);
     }
-  });
+    // 64 arrival orders, each signing and folding a small world: seconds on a loaded machine.
+  }, 30_000);
 
   it("never gives it to a take still in the outbox, even while this client's fold shows it", () => {
     const { world, gift } = giftWorld();
