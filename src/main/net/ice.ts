@@ -1,13 +1,17 @@
 // Main's side of the relay service (src/turn, @shared/ice): the relay servers joined worlds may use
-// when no direct path exists. The service URL is UNMAPPED_TURN_URL, else the baked TURN_URL (null:
-// dev builds have none). With neither, the answer is public STUN only — friends still meet when a
-// direct path exists. Minted credentials are kept until shortly before they expire.
+// when no direct path exists. The service URL is UNMAPPED_TURN_URL, else the baked TURN_URL (the
+// project's deployed Worker). If it cannot be reached, the answer is an error and the renderer keeps
+// public STUN — friends still meet when a direct path exists. Minted credentials are kept until
+// shortly before they expire.
 
 import { type IceView, readIceAnswer, STUN_ONLY } from "@shared/ice";
 import { err, ok, type Result } from "@shared/result";
 
-/** The relay service a release build asks when UNMAPPED_TURN_URL is not set. A person deploys it. */
-export const TURN_URL: string | null = null;
+/**
+ * The relay service asked when UNMAPPED_TURN_URL is not set: the project's Worker (web/turn,
+ * deployed 2026-09-26). Set UNMAPPED_TURN_URL to use your own.
+ */
+export const TURN_URL: string | null = "https://unmapped-turn.gimmychang.workers.dev";
 
 const ASK_MS = 8_000;
 /** Ask again this long before the credentials expire. */

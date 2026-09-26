@@ -909,7 +909,7 @@ window.seed.bundle.{ list(), export(worldId), inspect(), import(token, name), mo
 | Var | Read by | Meaning |
 | --- | --- | --- |
 | `UNMAPPED_GATEWAY_URL`, `UNMAPPED_GATEWAY_KEY` | main (`inference/config.ts`, `keys.ts`) | the gateway; a `.env` account token (fallback) |
-| `UNMAPPED_TURN_URL` | main (`net/ice.ts`) | the relay service (src/turn) that mints TURN credentials for friends' worlds; empty = STUN only |
+| `UNMAPPED_TURN_URL` | main (`net/ice.ts`) | the relay service (src/turn) that mints TURN credentials for friends' worlds; empty = the baked `TURN_URL` (the project's Worker, `unmapped-turn.gimmychang.workers.dev`) |
 | `UNMAPPED_COMMERCIAL` | main (`images/commercial.ts`) | `1` = commercial mode |
 | `QWEN_IMAGE_BASE_URL`, `QWEN_IMAGE_API_KEY` | main (`inference/keys.ts`) | the Qwen-Image server and its key (fallback) |
 | `UNMAPPED_PROVENANCE_RPC_URL` / `_ADDRESS` / `_CHAIN_ID` | main (`chain/provenance.ts`) | read-only light chain |
