@@ -27,12 +27,12 @@ export const BUNDLE = {
     ja: "この端末にはまだ歴史を持つワールドがありません。セーブの大地を一度開くとできます。",
   },
   rowShared: {
-    en: "{entries} entries · on {service}",
+    en: "{entries} {entries|entry|entries} · on {service}",
     "zh-TW": "{entries} 筆紀錄 · 在 {service}",
     ja: "{entries} 件の記録 · {service}",
   },
   rowLocal: {
-    en: "{entries} entries · on this device only",
+    en: "{entries} {entries|entry|entries} · on this device only",
     "zh-TW": "{entries} 筆紀錄 · 只在這台裝置",
     ja: "{entries} 件の記録 · この端末のみ",
   },
@@ -78,12 +78,12 @@ export const BUNDLE = {
   choose: { en: "Choose a .world file", "zh-TW": "選擇 .world 檔", ja: ".world ファイルを選ぶ" },
   checking: { en: "Checking the file…", "zh-TW": "正在驗證檔案…", ja: "ファイルを確認中…" },
   reportEntries: {
-    en: "{entries} entries, up to #{head} · physics {physics}",
+    en: "{entries} {entries|entry|entries}, up to #{head} · physics {physics}",
     "zh-TW": "{entries} 筆紀錄，到第 {head} 筆 · 物理 {physics}",
     ja: "{entries} 件の記録（#{head} まで）· 物理 {physics}",
   },
   reportOwners: {
-    en: "{owners} owners · {authors} writers · {beats} beats · {works} AI worlds",
+    en: "{owners} {owners|owner|owners} · {authors} {authors|writer|writers} · {beats} {beats|beat|beats} · {works} AI {works|world|worlds}",
     "zh-TW": "{owners} 位主人 · {authors} 位書寫者 · {beats} 次脈動 · {works} 個 AI 世界",
     ja: "持ち主 {owners} · 書き手 {authors} · 脈動 {beats} · AI ワールド {works}",
   },
@@ -103,7 +103,7 @@ export const BUNDLE = {
     ja: "{at} に書き出し、{key} が署名。",
   },
   reportNewer: {
-    en: "{n} entries from a newer build are kept and skipped.",
+    en: "{n} {n|entry|entries} from a newer build {n|is|are} kept and skipped.",
     "zh-TW": "有 {n} 筆來自較新版本的紀錄，會保留但略過。",
     ja: "新しいビルドの記録 {n} 件は残したまま読み飛ばします。",
   },
@@ -113,7 +113,7 @@ export const BUNDLE = {
     ja: "すべての確認に合格：ハッシュ、チェーン、受領、判定、脈動、パック。",
   },
   reportProblems: {
-    en: "{n} problems — this file cannot be brought in:",
+    en: "{n} {n|problem|problems} — this file cannot be brought in:",
     "zh-TW": "有 {n} 個問題——這個檔案不能帶進來：",
     ja: "問題が {n} 件——このファイルは取り込めません：",
   },
@@ -155,7 +155,7 @@ export const BUNDLE = {
     ja: "新しいサービスへワールドを追いかけています…",
   },
   moveFollowed: {
-    en: "The world now syncs with {service} ({added} new entries).",
+    en: "The world now syncs with {service} ({added} new {added|entry|entries}).",
     "zh-TW": "世界現在與 {service} 同步（新增 {added} 筆紀錄）。",
     ja: "ワールドは {service} と同期しています（新しい記録 {added} 件）。",
   },
