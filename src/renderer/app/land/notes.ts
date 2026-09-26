@@ -67,7 +67,11 @@ export async function writeNote(text: string, contests: string | null): Promise<
   const foreign = foreignAt(chunk);
   if (foreign !== null) {
     if (publisher === null) {
-      return err("note-no-room", "That world is not reachable.", "Rejoin the continent.");
+      return err(
+        "note-no-room",
+        "That world is not reachable.",
+        "Join that world again from the door at home.",
+      );
     }
     // In its owner's coordinates; what they remember there is theirs, so no anchors are guessed.
     const note: LandNote = {
@@ -91,7 +95,7 @@ export async function writeNote(text: string, contests: string | null): Promise<
     return err(
       "note-no-room",
       "A visitor's notes are not kept in a shared room.",
-      "Open land is shared as a continent: use the door at home.",
+      "Play together through the door at home.",
     );
   }
   const coord = {

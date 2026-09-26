@@ -89,9 +89,9 @@ export const FILE_ERRORS: Record<string, ErrorText> = {
   },
   "workspace-cartridge-id-invalid": {
     message: {
-      en: "The new cartridge id is not valid.",
-      "zh-TW": "新的卡帶 id 無效。",
-      ja: "新しいカートリッジ ID が正しくありません。",
+      en: "The new world id is not valid.",
+      "zh-TW": "新的世界 id 無效。",
+      ja: "新しいワールド ID が正しくありません。",
     },
     hint: {
       en: "Use lowercase letters, digits and hyphens.",
@@ -101,9 +101,9 @@ export const FILE_ERRORS: Record<string, ErrorText> = {
   },
   "workspace-mode-invalid": {
     message: {
-      en: "A new version keeps its cartridge id; a remix needs a new one.",
-      "zh-TW": "新版本沿用原本的卡帶 id；改編版則需要新的 id。",
-      ja: "新しい版はカートリッジ ID をそのまま使い、リミックスには新しい ID が必要です。",
+      en: "A new version keeps its world id; a remix needs a new one.",
+      "zh-TW": "新版本沿用原本的世界 id；改編版則需要新的 id。",
+      ja: "新しい版はワールド ID をそのまま使い、リミックスには新しい ID が必要です。",
     },
   },
   "workspace-kit-missing": {
@@ -184,7 +184,7 @@ export const FILE_ERRORS: Record<string, ErrorText> = {
   "world-file-missing": {
     message: {
       en: "A world file could not be read.",
-      "zh-TW": "無法讀取世界檔案。",
+      "zh-TW": "無法讀取世界的某個檔案。",
       ja: "ワールドのファイルを読み込めませんでした。",
     },
     hint: {
@@ -196,7 +196,7 @@ export const FILE_ERRORS: Record<string, ErrorText> = {
   "world-file-invalid": {
     message: {
       en: "A world file is not valid.",
-      "zh-TW": "世界檔案無效。",
+      "zh-TW": "世界的某個檔案無效。",
       ja: "ワールドのファイルが正しくありません。",
     },
     hint: {
@@ -251,14 +251,14 @@ export const FILE_ERRORS: Record<string, ErrorText> = {
   },
   "migration-exit-missing": {
     message: {
-      en: "This floor has no exit, so it cannot become the cartridge's ending.",
-      "zh-TW": "這一層沒有出口，所以無法成為卡帶的結局。",
-      ja: "この階には出口がないため、カートリッジのエンディングにできません。",
+      en: "This floor has no exit, so it cannot become the world's ending.",
+      "zh-TW": "這一層沒有出口，所以無法成為世界的結局。",
+      ja: "この階には出口がないため、ワールドのエンディングにできません。",
     },
     hint: {
-      en: "Add one Exit to world.oui; reaching it will finish the migrated cartridge.",
-      "zh-TW": "請在 world.oui 加上一個 Exit；抵達它就會完成轉換後的卡帶。",
-      ja: "world.oui に Exit を 1 つ追加してください。そこに着くと、移行したカートリッジをクリアできます。",
+      en: "Add one Exit to world.oui; reaching it will finish the migrated world.",
+      "zh-TW": "請在 world.oui 加上一個 Exit；抵達它就會完成轉換後的世界。",
+      ja: "world.oui に Exit を 1 つ追加してください。そこに着くと、移行したワールドをクリアできます。",
     },
   },
   "migration-scene-invalid": {

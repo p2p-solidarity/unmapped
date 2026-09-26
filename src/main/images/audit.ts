@@ -25,6 +25,6 @@ export function refuseRedraw(
   return err(
     "image-licence-redraw",
     `Commercial mode is on (${commercial.source}): redraw these pictures before publishing, their licence does not allow commercial use: ${blocked.join(", ")}.`,
-    "Draw them again with an image provider whose licence allows commercial use (Settings → Images), or replace them with your own files.",
+    "Draw them again with an image provider whose licence allows commercial use (Settings → Advanced settings → Images), or replace them with your own files.",
   );
 }

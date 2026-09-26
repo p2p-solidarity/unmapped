@@ -331,7 +331,7 @@ export async function nameSaveCalls(
     return err(
       "ens-cartridge-unnamed",
       `${cartridge.name} has no name yet, so a save cannot hang under it.`,
-      "Name the cartridge first (Worlds → Cartridges).",
+      "Name the world first (Worlds → My worlds → More).",
     );
   }
   const describe = onRegistry(c, "describe", [namehash(save.name), doorDescription(local.door)]);

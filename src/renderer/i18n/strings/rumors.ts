@@ -15,7 +15,7 @@ export const RUMORS = {
     ja: "まだ共有されていません",
   },
 
-  // ── Settings → Shared worlds ──────────────────────────────────────────────────────────────
+  // ── Settings → Advanced settings → Shared worlds ───────────────────────────────────────────────
   switchHeading: { en: "Rumors", "zh-TW": "傳聞", ja: "噂" },
   switchLabel: {
     en: "Write rumors in the background",
@@ -23,18 +23,18 @@ export const RUMORS = {
     ja: "バックグラウンドで噂を書く",
   },
   switchIntro: {
-    en: "When a shared world you belong to turns a beat, its residents can pass on what members did. This device can write those rumors with its own model and key: one call per beat at most, each counted in that world's usage. Auto writes them for the worlds you own and not for others' worlds, where it would spend your key on a world that is not yours, and never on the hosted route, where it would spend your quota.",
+    en: "Now and then, the residents of a shared world pass on what friends did there. This device can write those rumors with its own model: at most one call each time, counted in that world's usage. Auto writes them only for worlds you own, and never with the free allowance.",
     "zh-TW":
-      "當你所屬的共享世界走過一個節拍，居民會傳述成員們做過的事。這台裝置可以用自己的模型與金鑰寫下這些傳聞：每個節拍最多一次呼叫，每一次都記在那個世界的用量裡。「自動」只替你擁有的世界寫，不替別人的世界寫，因為那會花你的金鑰在不屬於你的世界上；走託管路線時也不寫，因為那會花你的額度。",
-    ja: "所属する共有ワールドが拍を刻むと、住人たちがメンバーのしたことを語り継ぎます。この端末は自分のモデルとキーでその噂を書けます。1 拍につき呼び出しは多くて 1 回で、毎回そのワールドの使用量に記録されます。「自動」はあなたが持ち主のワールドでだけ書き、ほかの人のワールドでは書きません。あなたのものではないワールドにあなたのキーを使うことになるからです。ホスト経由のルートでも書きません。あなたの利用枠を使うことになるからです。",
+      "共享世界每隔一段時間，居民會傳述朋友們在那裡做過的事。這台裝置可以用自己的模型寫下這些傳聞：每次最多呼叫一次，記在那個世界的用量裡。「自動」只替你擁有的世界寫，也從不花用免費額度。",
+    ja: "共有ワールドでは、ときどき住人たちが友だちのしたことを語り継ぎます。この端末は自分のモデルでその噂を書けます。1 回につき呼び出しは多くて 1 回で、そのワールドの使用量に記録されます。「自動」はあなたが持ち主のワールドでだけ書き、無料枠は使いません。",
   },
   switchAuto: { en: "Auto", "zh-TW": "自動", ja: "自動" },
   switchOn: { en: "On", "zh-TW": "開", ja: "オン" },
   switchOff: { en: "Off", "zh-TW": "關", ja: "オフ" },
   switchNote: {
-    en: "Only for shared worlds this device is a member of. Walking never waits for it.",
-    "zh-TW": "只用於這台裝置身為成員的共享世界。走動時從不需要等它。",
-    ja: "この端末がメンバーになっている共有ワールドだけが対象です。歩くときに待たされることはありません。",
+    en: "Only for shared worlds you have joined. Walking never waits for it.",
+    "zh-TW": "只用於你加入的共享世界。走動時從不需要等它。",
+    ja: "参加している共有ワールドだけが対象です。歩くときに待たされることはありません。",
   },
 
   // ── A batch ───────────────────────────────────────────────────────────────────────────────
@@ -44,9 +44,9 @@ export const RUMORS = {
     ja: "住人たちに新しい話題：噂を {n} 件書きました",
   },
   batchFailed: {
-    en: "This beat's rumors were not written: {reason}",
-    "zh-TW": "這個節拍的傳聞沒有寫成：{reason}",
-    ja: "この拍の噂は書けませんでした：{reason}",
+    en: "This time's rumors were not written: {reason}",
+    "zh-TW": "這一次的傳聞沒有寫成：{reason}",
+    ja: "今回の噂は書けませんでした：{reason}",
   },
   batchRefused: {
     en: "{n} {n|rumor was|rumors were} not kept: {reason}",
@@ -59,15 +59,15 @@ export const RUMORS = {
 } as const satisfies Record<string, Phrase>;
 
 const REPAIRED = {
-  en: "Nothing was written; the next beat brings new news. A larger model in Settings → Model writes them more reliably.",
-  "zh-TW": "這次什麼都沒寫下；下一個節拍會帶來新消息。到「設定 → 模型」換用較大的模型會更穩定。",
-  ja: "何も書かれていません。次の拍で新しい話題が届きます。「設定 → モデル」で大きめのモデルにすると安定します。",
+  en: "Nothing was written; new rumors come next time. A larger model (Settings → Model) writes them better.",
+  "zh-TW": "這次什麼都沒寫下；下一次會有新消息。到「設定 → 模型」換用較大的模型會更穩定。",
+  ja: "何も書かれていません。次の回に新しい話題が届きます。「設定 → モデル」で大きめのモデルにすると安定します。",
 };
 
 const NEXT_BEAT = {
-  en: "Nothing was written; the next beat brings new news.",
-  "zh-TW": "這次什麼都沒寫下；下一個節拍會帶來新消息。",
-  ja: "何も書かれていません。次の拍で新しい話題が届きます。",
+  en: "Nothing was written; new rumors come next time.",
+  "zh-TW": "這次什麼都沒寫下；下一次會有新消息。",
+  ja: "何も書かれていません。次の回に新しい話題が届きます。",
 };
 
 /** What the screen shows for the codes a rumor batch can end with (spread into ERRORS). */
@@ -82,25 +82,25 @@ export const RUMOR_ERRORS: Record<string, ErrorText> = {
   },
   "rumor-beat-expired": {
     message: {
-      en: "That beat is too old to write rumors for.",
-      "zh-TW": "那個節拍太久了，不能再為它寫傳聞。",
-      ja: "その拍は古すぎて、もう噂を書けません。",
+      en: "That time is too long ago to write rumors for.",
+      "zh-TW": "那一次太久了，不能再為它寫傳聞。",
+      ja: "その回は古すぎて、もう噂を書けません。",
     },
     hint: NEXT_BEAT,
   },
   "rumor-beat-unknown": {
     message: {
-      en: "The rumor names a beat this world never had.",
-      "zh-TW": "這則傳聞指向這個世界從未有過的節拍。",
-      ja: "この噂は、このワールドにない拍を指しています。",
+      en: "The rumor names a time this world never had.",
+      "zh-TW": "這則傳聞指向這個世界從未有過的一次。",
+      ja: "この噂は、このワールドにない回を指しています。",
     },
     hint: NEXT_BEAT,
   },
   "rumor-slot-unknown": {
     message: {
-      en: "The beat has no such rumor slot.",
-      "zh-TW": "這個節拍沒有這個傳聞位置。",
-      ja: "この拍にその噂の枠はありません。",
+      en: "This time has no such rumor slot.",
+      "zh-TW": "這一次沒有這個傳聞位置。",
+      ja: "この回にその噂の枠はありません。",
     },
     hint: NEXT_BEAT,
   },

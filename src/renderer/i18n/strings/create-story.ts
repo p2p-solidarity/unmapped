@@ -3,7 +3,7 @@ import type { Phrase } from "./phrase";
 export const CREATE_STORY = {
   mapLabel: { en: "Chapter map", "zh-TW": "章節地圖", ja: "章のマップ" },
   mapHome: { en: "Start", "zh-TW": "起點", ja: "スタート" },
-  storyReview: { en: "Review the story", "zh-TW": "審查故事", ja: "ストーリーを確認" },
+  storyReview: { en: "Review the story", "zh-TW": "確認故事", ja: "ストーリーを確認" },
   storyReviewNote: {
     en: "Edit a chapter, rewrite one, or add a chapter between its neighbours. Locked chapters stay untouched when you revise the whole story.",
     "zh-TW": "可修改或重寫單一章節，也可在章節之間插入新章。修改整個故事時，鎖定的章節不會變動。",

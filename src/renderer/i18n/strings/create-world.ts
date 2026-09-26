@@ -1,12 +1,11 @@
 import type { Phrase } from "./phrase";
 
 export const CREATE_WORLD = {
-  worldReview: { en: "Review the world", "zh-TW": "審查世界", ja: "ワールドを確認" },
+  worldReview: { en: "Review the world", "zh-TW": "確認世界", ja: "ワールドを確認" },
   worldReviewNote: {
-    en: "Edit each card, ask the model to rewrite just that card, or lock the cards you like and rewrite the rest at once. A locked card is never overwritten.",
-    "zh-TW":
-      "可以直接修改各張卡片、請模型只重寫其中一張，或鎖定喜歡的卡片後一次重寫其餘的。鎖定的卡片絕不會被覆寫。",
-    ja: "カードを編集したり、そのカードだけ書き直したり、気に入ったカードをロックして残りをまとめて書き直せます。ロックしたカードは上書きされません。",
+    en: "Edit any card or have the model rewrite it. Lock the cards you like, and they are never rewritten.",
+    "zh-TW": "可以直接修改卡片，或請模型重寫。鎖定喜歡的卡片，它們就不會被改寫。",
+    ja: "カードは直接直すことも、モデルに書き直してもらうこともできます。気に入ったカードはロックすると書き換えられません。",
   },
   worldNameNote: {
     en: "Renaming the world keeps every card as it is.",

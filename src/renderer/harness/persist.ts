@@ -19,7 +19,7 @@ const NO_WORLD: AppError = {
 export const CARTRIDGE_IMMUTABLE: AppError = {
   code: "cartridge-immutable",
   message: "This scene belongs to a published cartridge revision and cannot change during play.",
-  hint: "Remix the cartridge from the library to edit its scenes.",
+  hint: "Remix the world in Worlds → My worlds → More to edit its scenes.",
 };
 
 function playingInstance(): boolean {

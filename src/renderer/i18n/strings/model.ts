@@ -90,10 +90,10 @@ export const MODEL = {
   // ── The free allowance and where the next call goes (rev 6 phase 4, D2) ────────────────────────
   hosted: { en: "Free allowance", "zh-TW": "免費額度", ja: "無料枠" },
   hostedNote: {
-    en: "Calls go through the UNMAPPED gateway and are counted against your account's allowance (Settings → Account). An empty model ID uses the gateway's default.",
+    en: "Calls go through the UNMAPPED gateway and are counted against your account's allowance (Settings → Advanced settings → Account). An empty model ID uses the gateway's default.",
     "zh-TW":
-      "呼叫會經由 UNMAPPED 閘道，並從你帳號的額度扣除（「設定 → 帳號」）。模型 ID 留空則使用閘道的預設模型。",
-    ja: "呼び出しは UNMAPPED ゲートウェイを通り、アカウントの枠から差し引かれます（「設定 → アカウント」）。モデル ID が空ならゲートウェイの既定モデルを使います。",
+      "呼叫會經由 UNMAPPED 閘道，並從你帳號的額度扣除（「設定 → 進階設定 → 帳號」）。模型 ID 留空則使用閘道的預設模型。",
+    ja: "呼び出しは UNMAPPED ゲートウェイを通り、アカウントの枠から差し引かれます（「設定 → 詳細設定 → アカウント」）。モデル ID が空ならゲートウェイの既定モデルを使います。",
   },
   routeChecking: {
     en: "Checking where the next call goes…",

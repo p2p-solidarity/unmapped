@@ -30,7 +30,7 @@ export interface CommercialMode {
   source: "build" | "gateway" | null;
 }
 
-/** What the Settings → Images panel may know about one provider: never a key. */
+/** What the Settings → Advanced settings → Images panel may know about one provider: never a key. */
 export interface ImageProviderInfo {
   id: ImageProviderId;
   model: string;

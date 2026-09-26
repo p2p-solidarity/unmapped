@@ -48,7 +48,7 @@ export function registerModelIpc(ctx: MainContext): void {
 
   handle(
     IPC.inference.clearApiKey,
-    // The account token is cleared by signing out (Settings → Account), never from here.
+    // The account token is cleared by signing out (Settings → Advanced settings → Account), never from here.
     z.tuple([z.enum(TYPED_KEY_PROVIDERS)]),
     async ([provider]): Promise<Result<KeyStatusMap>> => {
       const cleared = await clearKeyRecord(provider);

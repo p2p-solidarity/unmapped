@@ -91,14 +91,14 @@ export function witnessBlocker(): AppError | null {
     return {
       code: "witness-no-model",
       message: "No model is configured, so new land stays unwritten.",
-      hint: "Configure a provider in Console → Inference. Walking still works.",
+      hint: "Set up a model in Settings → Model. Walking still works.",
     };
   }
   if (probe.status !== "ready" || !probe.value.reachable) {
     return {
       code: "witness-model-offline",
       message: "The model is not reachable, so new land stays unwritten.",
-      hint: "Start the model or check the provider in Console → Inference. Walking still works.",
+      hint: "Start the model, or check it in Settings → Model. Walking still works.",
     };
   }
   return null;

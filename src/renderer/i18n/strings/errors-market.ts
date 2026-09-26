@@ -105,14 +105,14 @@ export const MARKET_ERRORS: Record<string, ErrorText> = {
   },
   "ens-cartridge-unnamed": {
     message: {
-      en: "The cartridge has no name yet, so a save cannot hang under it.",
-      "zh-TW": "卡帶還沒有名稱，存檔無法掛在底下。",
-      ja: "カートリッジにまだ名前がないため、セーブを付けられません。",
+      en: "The world has no ENS name yet, so a save cannot hang under it.",
+      "zh-TW": "這個世界還沒有 ENS 名稱，存檔無法掛在底下。",
+      ja: "ワールドにまだ ENS 名がないため、セーブを付けられません。",
     },
     hint: {
-      en: "Name the cartridge first (Worlds → Cartridges).",
-      "zh-TW": "請先登記卡帶名稱（世界 → 卡帶）。",
-      ja: "先にカートリッジの名前を登録してください（ワールド → カートリッジ）。",
+      en: "Name the world first (Worlds → My worlds → More).",
+      "zh-TW": "請先登記世界的名稱（世界 → 我的世界 → 更多）。",
+      ja: "先にワールドの名前を登録してください（ワールド → マイワールド → もっと）。",
     },
   },
 };

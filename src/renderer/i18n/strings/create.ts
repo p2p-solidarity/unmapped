@@ -110,9 +110,9 @@ const CREATE_FRAME = {
     ja: "ここで起きることを考えています…",
   },
   genLayout: {
-    en: "Laying out the room…",
-    "zh-TW": "正在配置房間…",
-    ja: "部屋を配置しています…",
+    en: "Laying out this place…",
+    "zh-TW": "正在配置這個地方…",
+    ja: "この場所を配置しています…",
   },
   genPhase: {
     en: "Generating scene · {phase}",
@@ -180,9 +180,10 @@ const CREATE_FRAME = {
     ja: "ワールドを公開しました",
   },
   builtNote: {
-    en: "You can give it an ENS name now, or later in Worlds → Cartridges. Entering never waits for it.",
-    "zh-TW": "你可以現在幫它登記 ENS 名稱，也可以之後到「世界 → 卡帶」再登記。進入世界不必等它。",
-    ja: "今 ENS 名を付けても、あとで「ワールド → カートリッジ」で付けてもかまいません。入るのに待つ必要はありません。",
+    en: "Give it an ENS name now, or later in Worlds → My worlds → More. You can go in right away.",
+    "zh-TW":
+      "你可以現在幫它登記 ENS 名稱，也可以之後到「世界 → 我的世界 → 更多」再登記。現在就能進去玩。",
+    ja: "今 ENS 名を付けても、あとで「ワールド → マイワールド → もっと」で付けてもかまいません。すぐに入れます。",
   },
   builtNameHeading: {
     en: "Its ENS name (optional)",

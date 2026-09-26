@@ -70,7 +70,7 @@ export function licensedFor(
   return err(
     "image-licence-noncommercial",
     `${provider.id} draws under ${name}, which does not allow commercial use, and commercial mode is on (${commercial.source}).`,
-    "Choose an image provider whose licence allows commercial use in Settings → Images.",
+    "Choose an image provider whose licence allows commercial use in Settings → Advanced settings → Images.",
   );
 }
 
@@ -229,7 +229,7 @@ async function probeOpenAi(env: EnvLike, signal: AbortSignal): Promise<Result<Im
   });
 }
 
-/** Settings → Images "test": asks the provider's server, spends nothing. */
+/** Settings → Advanced settings → Images "test": asks the provider's server, spends nothing. */
 export async function probeImageProvider(
   id: ImageProviderId,
   signal: AbortSignal,

@@ -8,9 +8,9 @@ import type { Phrase } from "./phrase";
 export const TRACES = {
   // ── The HUD's land line ───────────────────────────────────────────────────────────────────
   mist: {
-    en: "In the mist — this place faded from memory and can be witnessed anew.",
-    "zh-TW": "霧中 — 這個地方已被淡忘，可以重新見證。",
-    ja: "霧の中 — この場所は忘れられ、もう一度見届けられます。",
+    en: "In the mist — this place faded from memory and can be written anew.",
+    "zh-TW": "霧中 — 這個地方已被淡忘，可以重新寫出來。",
+    ja: "霧の中 — この場所は忘れられ、もう一度書き出せます。",
   },
   legend: { en: "Legend · {name}", "zh-TW": "傳說 · {name}", ja: "伝説 · {name}" },
   fading: {
@@ -182,7 +182,7 @@ export const TRACES = {
     "zh-TW": "有 {n} 筆來自較新版本《無界之地》的紀錄已保留但沒有顯示；更新後就能看到。",
     ja: "新しいビルドの UNMAPPED による記録 {n} 件は保存されていますが表示されません。更新すると見られます。",
   },
-  whatChunk: { en: "Chunk ({key})", "zh-TW": "區塊（{key}）", ja: "区画（{key}）" },
+  whatChunk: { en: "Land ({key})", "zh-TW": "土地（{key}）", ja: "土地（{key}）" },
   whatNote: { en: "A note ({key})", "zh-TW": "手記（{key}）", ja: "手記（{key}）" },
   whatPlace: { en: "A place ({key})", "zh-TW": "地點（{key}）", ja: "場所（{key}）" },
   whatOther: { en: "{what} ({key})", "zh-TW": "{what}（{key}）", ja: "{what}（{key}）" },
@@ -191,9 +191,9 @@ export const TRACES = {
   evGift: { en: "Gift: {item}", "zh-TW": "禮物：{item}", ja: "贈り物：{item}" },
   evTake: { en: "Taking a gift", "zh-TW": "收下禮物", ja: "贈り物の受け取り" },
   evWitness: {
-    en: "Witnessing ({cx} · {cz})",
-    "zh-TW": "見證（{cx} · {cz}）",
-    ja: "見届け（{cx} · {cz}）",
+    en: "Writing the land ({cx} · {cz})",
+    "zh-TW": "寫出大地（{cx} · {cz}）",
+    ja: "大地を書く（{cx} · {cz}）",
   },
   evPlace: { en: "Place: {title}", "zh-TW": "地點：{title}", ja: "場所：{title}" },
   evChapter: { en: "Chapter: {title}", "zh-TW": "章節：{title}", ja: "章：{title}" },
@@ -248,14 +248,14 @@ export const TRACE_ERRORS: Record<string, ErrorText> = {
   },
   "signpost-quota": {
     message: {
-      en: "You already put three signposts on this chunk.",
-      "zh-TW": "你已經在這個區塊立了三塊路標。",
-      ja: "この区画にはもう三つ道しるべを立てました。",
+      en: "You already put three signposts in this area.",
+      "zh-TW": "你已經在這一帶立了三塊路標。",
+      ja: "このあたりにはもう三つ道しるべを立てました。",
     },
     hint: {
-      en: "Put the next one on another chunk.",
-      "zh-TW": "下一塊請立在別的區塊。",
-      ja: "次は別の区画に立ててください。",
+      en: "Put the next one somewhere else.",
+      "zh-TW": "下一塊請立在別的地方。",
+      ja: "次は別の場所に立ててください。",
     },
   },
   "trace-nowhere": {
@@ -272,9 +272,9 @@ export const TRACE_ERRORS: Record<string, ErrorText> = {
   },
   "access-visitor-kind": {
     message: {
-      en: "Only members write this world.",
-      "zh-TW": "只有成員能寫下這個世界。",
-      ja: "この世界に書けるのはメンバーだけです。",
+      en: "Only invited friends write in this world.",
+      "zh-TW": "只有受邀的朋友能在這個世界寫下新的內容。",
+      ja: "この世界に書けるのは、招待された友だちだけです。",
     },
     hint: {
       en: "Visitors leave notes, signposts and gifts; ask the owner for an invite to write more.",

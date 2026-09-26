@@ -47,7 +47,7 @@ export async function readImageChoice(userData: string): Promise<ReadChoice> {
     problem: {
       code: "image-choice-invalid",
       message: `${IMAGES_FILE} is not a valid image-provider choice; OpenAI is used until one is chosen again.`,
-      hint: "Choose an image provider in Settings → Images.",
+      hint: "Choose an image provider in Settings → Advanced settings → Images.",
     },
   };
 }
@@ -62,7 +62,7 @@ export async function writeImageChoice(
     return fail({
       code: "image-choice-invalid",
       message: "That is not an image provider this build has.",
-      hint: "Choose one of the providers listed in Settings → Images.",
+      hint: "Choose one of the providers listed in Settings → Advanced settings → Images.",
     });
   }
   const path = imageChoicePath(userData);

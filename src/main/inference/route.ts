@@ -51,7 +51,7 @@ function noApiKey(config: InferenceConfig, gateway: boolean): AppError {
   return {
     code: "no-api-key",
     message: `The ${config.kind} provider needs an API key and none is set.`,
-    hint: `Enter a key in Settings → Model (Cloud API), or add ${config.apiKeyEnv ?? "the key"} to .env${gateway ? " — or sign in (Settings → Account) to use the free allowance" : ""}.`,
+    hint: `Enter a key in Settings → Model (Cloud API), or add ${config.apiKeyEnv ?? "the key"} to .env${gateway ? " — or sign in (Settings → Advanced settings → Account) to use the free allowance" : ""}.`,
   };
 }
 

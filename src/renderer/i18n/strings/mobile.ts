@@ -103,11 +103,11 @@ export const MOBILE = {
   },
 
   // ── What the history holds ─────────────────────────────────────────────────────────────────
-  witnessedTitle: { en: "Places witnessed", "zh-TW": "被見證的地方", ja: "見届けられた場所" },
+  witnessedTitle: { en: "Places written", "zh-TW": "已寫出的地方", ja: "書かれた場所" },
   witnessedEmpty: {
-    en: "Nobody has witnessed a place here yet.",
-    "zh-TW": "這裡還沒有人見證過任何地方。",
-    ja: "まだだれもここで場所を見届けていません。",
+    en: "Nobody has written a place here yet.",
+    "zh-TW": "這裡還沒有人寫出任何地方。",
+    ja: "まだだれもここに場所を書いていません。",
   },
   fogged: { en: "returned to fog", "zh-TW": "已回到霧中", ja: "霧に還った" },
   placesTitle: { en: "Places to enter", "zh-TW": "可以進入的地方", ja: "入れる場所" },

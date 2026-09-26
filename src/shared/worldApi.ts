@@ -258,7 +258,7 @@ export interface WorldBadge {
   ownerName: string | null;
 }
 
-/** A world service that answered on both halves of its address (Settings → Shared worlds). */
+/** A world service that answered on both halves of its address (Settings → Advanced settings → Shared worlds). */
 export interface ServiceProbe {
   url: string;
   /** The key the service proved; equal on `/v1/health` and in its WebSocket challenge. */

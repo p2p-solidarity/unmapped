@@ -12,9 +12,9 @@ const CHUNKS_BACKUP = {
 
 const SCENE_SETUP: ErrorText = {
   message: {
-    en: "This scene needs gameplay the cartridge does not set up.",
-    "zh-TW": "這個場景需要的玩法，卡帶沒有設定。",
-    ja: "このシーンに必要な遊び方が、カートリッジに設定されていません。",
+    en: "This scene needs gameplay the world does not set up.",
+    "zh-TW": "這個場景需要的玩法，世界沒有設定。",
+    ja: "このシーンに必要な遊び方が、ワールドに設定されていません。",
   },
   hint: HINT.repairCartridge,
 };
@@ -23,33 +23,33 @@ export const LAND_ERRORS: Record<string, ErrorText> = {
   // ── The land, written as you walk ──────────────────────────────────────────────────────────
   "witness-no-cartridge": {
     message: {
-      en: "Only a cartridge world has land that is written as you walk.",
-      "zh-TW": "只有卡帶世界的大地會隨著你走動寫出來。",
-      ja: "歩くたびに大地が書かれるのは、カートリッジのワールドだけです。",
+      en: "Only a world with open land is written as you walk.",
+      "zh-TW": "只有開放大地的世界會隨著你走動寫出來。",
+      ja: "歩くたびに書かれるのは、オープンな大地のあるワールドだけです。",
     },
     hint: {
-      en: "Open a world from the cartridge library.",
-      "zh-TW": "請從卡帶收藏庫開啟一個世界。",
-      ja: "カートリッジのライブラリからワールドを開いてください。",
+      en: "Open a world from Worlds → My worlds.",
+      "zh-TW": "請到「世界 → 我的世界」開啟一個世界。",
+      ja: "「ワールド → マイワールド」でワールドを開いてください。",
     },
   },
   "witness-no-bible": {
     message: {
-      en: "This cartridge has no world bible, so its land stays unwritten.",
-      "zh-TW": "這張卡帶沒有世界設定集，所以它的大地不會被寫出來。",
-      ja: "このカートリッジには世界設定がないため、大地は書かれないままです。",
+      en: "This world has no bible, so its land stays unwritten.",
+      "zh-TW": "這個世界沒有世界設定集，所以它的大地不會被寫出來。",
+      ja: "このワールドには世界設定がないため、大地は書かれないままです。",
     },
     hint: {
-      en: "Make a new world; cartridges published before this feature have no bible.",
-      "zh-TW": "請建立新的世界；在這個功能之前發布的卡帶沒有世界設定集。",
-      ja: "新しいワールドを作ってください。この機能より前に公開されたカートリッジには世界設定がありません。",
+      en: "Create a new world; older worlds have no bible.",
+      "zh-TW": "請建立新的世界；較舊的世界沒有世界設定集。",
+      ja: "新しいワールドを作ってください。古いワールドには世界設定がありません。",
     },
   },
   "witness-peer": {
     message: {
-      en: "You are visiting; the host's land is written by the host.",
-      "zh-TW": "你正在拜訪別人的世界；房主的大地由房主來寫。",
-      ja: "訪問中です。ホストの大地はホストが書きます。",
+      en: "You are visiting a friend; their land is written by them.",
+      "zh-TW": "你正在朋友的世界裡；那片大地由朋友來寫。",
+      ja: "友だちのワールドを訪問中です。その大地は友だちが書きます。",
     },
     hint: {
       en: "Walk there together.",
@@ -68,9 +68,9 @@ export const LAND_ERRORS: Record<string, ErrorText> = {
       ja: "モデルが設定されていないため、新しい大地は書かれません。",
     },
     hint: {
-      en: "Set up a provider in F12 → Inference. Walking still works.",
-      "zh-TW": "請到「F12 → 推論」設定供應商。走動仍然可以進行。",
-      ja: "「F12 → 推論」でプロバイダーを設定してください。歩き回ることはできます。",
+      en: "Choose a model in Settings → Model. You can still walk.",
+      "zh-TW": "請到「設定 → 模型」選一個模型。你仍然可以走動。",
+      ja: "「設定 → モデル」でモデルを選んでください。歩き回ることはできます。",
     },
   },
   "witness-model-offline": {
@@ -80,64 +80,64 @@ export const LAND_ERRORS: Record<string, ErrorText> = {
       ja: "モデルに接続できないため、新しい大地は書かれません。",
     },
     hint: {
-      en: "Start the model or check the provider in F12 → Inference. Walking still works.",
-      "zh-TW": "請啟動模型，或到「F12 → 推論」檢查供應商。走動仍然可以進行。",
-      ja: "モデルを起動するか、「F12 → 推論」でプロバイダーを確認してください。歩き回ることはできます。",
+      en: "Start the model or check it in Settings → Model. You can still walk.",
+      "zh-TW": "請啟動模型，或到「設定 → 模型」檢查。你仍然可以走動。",
+      ja: "モデルを起動するか、「設定 → モデル」で確認してください。歩き回ることはできます。",
     },
   },
   "witness-scene-invalid": {
     message: {
       en: "The land written for this area is not a valid scene.",
-      "zh-TW": "替這個區塊寫出的大地不是有效的場景。",
-      ja: "このチャンクに書かれた大地は、正しいシーンではありません。",
+      "zh-TW": "替這一帶寫出的大地不是有效的場景。",
+      ja: "このあたりに書かれた大地は、正しいシーンではありません。",
     },
     hint: HINT.writeAreaAgain,
   },
   "witness-dialogue-invalid": {
     message: {
       en: "A resident's words written for this area are not valid.",
-      "zh-TW": "替這個區塊寫出的居民台詞無效。",
-      ja: "このチャンクに書かれた住人のセリフが正しくありません。",
+      "zh-TW": "替這一帶寫出的居民台詞無效。",
+      ja: "このあたりに書かれた住人のセリフが正しくありません。",
     },
     hint: HINT.writeAreaAgain,
   },
   "witness-dialogue-mismatch": {
     message: {
       en: "Not every resident written for this area has their own words.",
-      "zh-TW": "替這個區塊寫出的居民，並不是每一位都有自己的台詞。",
-      ja: "このチャンクに書かれた住人の全員が、自分のセリフを持っているわけではありません。",
+      "zh-TW": "替這一帶寫出的居民，並不是每一位都有自己的台詞。",
+      ja: "このあたりに書かれた住人の全員が、自分のセリフを持っているわけではありません。",
     },
     hint: HINT.writeAreaAgain,
   },
   "witness-errands-invalid": {
     message: {
       en: "The errands written for this area do not fit it.",
-      "zh-TW": "替這個區塊寫出的委託和這裡對不上。",
-      ja: "このチャンクに書かれた依頼が、この場所に合っていません。",
+      "zh-TW": "替這一帶寫出的委託和這裡對不上。",
+      ja: "このあたりに書かれた依頼が、この場所に合っていません。",
     },
     hint: HINT.writeAreaAgain,
   },
   "witness-lore-invalid": {
     message: {
       en: "The lore written for this area does not fit the world.",
-      "zh-TW": "替這個區塊寫出的傳說和這個世界對不上。",
-      ja: "このチャンクに書かれた伝承が、ワールドに合っていません。",
+      "zh-TW": "替這一帶寫出的傳說和這個世界對不上。",
+      ja: "このあたりに書かれた伝承が、ワールドに合っていません。",
     },
     hint: HINT.writeAreaAgain,
   },
   "witness-write-failed": {
     message: {
       en: "This area could not be saved.",
-      "zh-TW": "無法儲存這個區塊。",
-      ja: "このチャンクを保存できませんでした。",
+      "zh-TW": "無法儲存這一帶。",
+      ja: "このあたりを保存できませんでした。",
     },
     hint: HINT.disk,
   },
   "chunk-already-witnessed": {
     message: {
       en: "This area was already written.",
-      "zh-TW": "這個區塊已經寫過了。",
-      ja: "このチャンクはすでに書かれています。",
+      "zh-TW": "這一帶已經寫過了。",
+      ja: "このあたりはすでに書かれています。",
     },
     hint: {
       en: "Reload the land; what was written first is what this place is.",
@@ -148,8 +148,8 @@ export const LAND_ERRORS: Record<string, ErrorText> = {
   "witnessed-chunk-invalid": {
     message: {
       en: "A written area of this save can no longer be read.",
-      "zh-TW": "這個存檔裡已寫好的區塊無法再讀取。",
-      ja: "このセーブの書かれたチャンクが読み込めなくなっています。",
+      "zh-TW": "這個存檔裡有一塊已寫好的大地無法再讀取。",
+      ja: "このセーブで書かれた土地の一部が読み込めなくなっています。",
     },
     hint: CHUNKS_BACKUP,
   },
@@ -296,14 +296,14 @@ export const LAND_ERRORS: Record<string, ErrorText> = {
   },
   "note-no-room": {
     message: {
-      en: "The host's world cannot be reached.",
-      "zh-TW": "無法連到房主的世界。",
-      ja: "ホストのワールドに接続できません。",
+      en: "Your friend's world cannot be reached.",
+      "zh-TW": "無法連到朋友的世界。",
+      ja: "友だちのワールドに接続できません。",
     },
     hint: {
-      en: "Rejoin the room.",
-      "zh-TW": "請重新加入房間。",
-      ja: "ルームに参加し直してください。",
+      en: "Join their world again.",
+      "zh-TW": "請重新加入朋友的世界。",
+      ja: "もう一度友だちのワールドに参加してください。",
     },
   },
   "note-exists": {
@@ -402,23 +402,23 @@ export const LAND_ERRORS: Record<string, ErrorText> = {
   },
   "cartridge-immutable": {
     message: {
-      en: "This scene belongs to a published cartridge and cannot change during play.",
-      "zh-TW": "這個場景屬於已發布的卡帶，遊玩中無法變更。",
-      ja: "このシーンは公開済みカートリッジのもので、プレイ中は変更できません。",
+      en: "This scene belongs to a published world and cannot change during play.",
+      "zh-TW": "這個場景屬於已發布的世界，遊玩中無法變更。",
+      ja: "このシーンは公開済みのワールドのもので、プレイ中は変更できません。",
     },
     hint: {
-      en: "Remix the cartridge from the library to edit its scenes.",
-      "zh-TW": "要編輯場景，請在收藏庫改編這張卡帶。",
-      ja: "シーンを編集するには、ライブラリでカートリッジをリミックスしてください。",
+      en: "Remix the world in Worlds → My worlds → More to edit its scenes.",
+      "zh-TW": "要編輯場景，請到「世界 → 我的世界 → 更多」改編這個世界。",
+      ja: "シーンを編集するには、「ワールド → マイワールド → もっと」でワールドをリミックスしてください。",
     },
   },
 
   // ── The depths and moving between scenes ───────────────────────────────────────────────────
   "endless-locked": {
     message: {
-      en: "The depths open only after this cartridge's ending.",
-      "zh-TW": "要在這張卡帶的結局之後，無盡深層才會開啟。",
-      ja: "深層は、このカートリッジのエンディングの後に開きます。",
+      en: "The depths open only after this world's ending.",
+      "zh-TW": "要在這個世界的結局之後，無盡深層才會開啟。",
+      ja: "深層は、このワールドのエンディングの後に開きます。",
     },
     hint: {
       en: "Reach the ending gate first.",
@@ -428,9 +428,9 @@ export const LAND_ERRORS: Record<string, ErrorText> = {
   },
   "endless-unavailable": {
     message: {
-      en: "This cartridge has no scene you can walk in, so there are no depths below it.",
-      "zh-TW": "這張卡帶沒有可以走動的場景，所以底下沒有無盡深層。",
-      ja: "このカートリッジには歩けるシーンがないため、その下に深層はありません。",
+      en: "This world has no scene you can walk in, so there are no depths below it.",
+      "zh-TW": "這個世界沒有可以走動的場景，所以底下沒有無盡深層。",
+      ja: "このワールドには歩けるシーンがないため、その下に深層はありません。",
     },
     hint: HINT.exactRevision,
   },
@@ -460,9 +460,9 @@ export const LAND_ERRORS: Record<string, ErrorText> = {
   },
   "scene-not-terminal": {
     message: {
-      en: "This scene is not an ending, so it cannot finish the cartridge.",
-      "zh-TW": "這個場景不是結局，無法結束這張卡帶。",
-      ja: "このシーンはエンディングではないため、カートリッジを終えられません。",
+      en: "This scene is not an ending, so it cannot finish the world.",
+      "zh-TW": "這個場景不是結局，無法結束這個世界。",
+      ja: "このシーンはエンディングではないため、ワールドを終えられません。",
     },
     hint: {
       en: "Leave through an exit to the next scene.",
@@ -520,9 +520,9 @@ export const LAND_ERRORS: Record<string, ErrorText> = {
   },
   "tweak-unknown-weapon": {
     message: {
-      en: "This cartridge has no such weapon.",
-      "zh-TW": "這張卡帶沒有這把武器。",
-      ja: "このカートリッジにその武器はありません。",
+      en: "This world has no such weapon.",
+      "zh-TW": "這個世界沒有這把武器。",
+      ja: "このワールドにその武器はありません。",
     },
     hint: HINT.askAgain,
   },
@@ -540,16 +540,16 @@ export const LAND_ERRORS: Record<string, ErrorText> = {
   },
   "tweak-no-combat": {
     message: {
-      en: "This cartridge has no combat, so a weapon would do nothing.",
-      "zh-TW": "這張卡帶沒有戰鬥系統，加武器沒有意義。",
-      ja: "このカートリッジには戦闘がないため、武器を加えても意味がありません。",
+      en: "This world has no combat, so a weapon would do nothing.",
+      "zh-TW": "這個世界沒有戰鬥，加武器沒有意義。",
+      ja: "このワールドには戦闘がないため、武器を加えても意味がありません。",
     },
   },
   "tweak-no-generation": {
     message: {
-      en: "This cartridge's map is not generated.",
-      "zh-TW": "這張卡帶的地圖不是生成的。",
-      ja: "このカートリッジのマップは生成されたものではありません。",
+      en: "This world's map is not generated.",
+      "zh-TW": "這個世界的地圖不是生成的。",
+      ja: "このワールドのマップは生成されたものではありません。",
     },
   },
   "tweak-empty": {

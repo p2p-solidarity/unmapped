@@ -1,4 +1,4 @@
-// "Test" in Settings → Shared worlds (rev 6 phase 3, D9, D10): both halves of a service address,
+// "Test" in Settings → Advanced settings → Shared worlds (rev 6 phase 3, D9, D10): both halves of a service address,
 // from main, because the service sends no CORS headers and a page may not read it.
 //
 //   1. `GET <http base>/v1/health` — the service's key, version, protocol and physics;

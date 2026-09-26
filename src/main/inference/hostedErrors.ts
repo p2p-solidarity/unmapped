@@ -29,7 +29,7 @@ export function signedOutError(why?: string): AppError {
   return {
     code: "account-signed-out",
     message: why ?? "This device is not signed in to the generation gateway.",
-    hint: "Sign in again in Settings → Account, add UNMAPPED_GATEWAY_KEY to .env, or use your own key or a local model in Settings → Model.",
+    hint: "Sign in again in Settings → Advanced settings → Account, add UNMAPPED_GATEWAY_KEY to .env, or use your own key or a local model in Settings → Model.",
   };
 }
 
@@ -58,7 +58,7 @@ export function hostedError(e: APIError): AppError {
       message: `${body.message}${body.resetsAt === undefined ? "" : ` It resets ${body.resetsAt}.`}`,
       hint:
         body.hint ??
-        "Use your own key or a local model (Settings → Model), subscribe (Settings → Plan), or wait for the reset.",
+        "Use your own key or a local model (Settings → Model), subscribe (Settings → Advanced settings → Plan), or wait for the reset.",
     };
   }
   return body.hint === undefined

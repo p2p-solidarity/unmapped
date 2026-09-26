@@ -42,9 +42,9 @@ export const MODEL_ERRORS: Record<string, ErrorText> = {
   },
   auth: {
     message: {
-      en: "The model provider rejected the API key.",
-      "zh-TW": "模型供應商拒絕了這把 API 金鑰。",
-      ja: "モデルのプロバイダーが API キーを拒否しました。",
+      en: "The model service rejected the API key.",
+      "zh-TW": "模型服務拒絕了這把 API 金鑰。",
+      ja: "モデルのサービスが API キーを拒否しました。",
     },
     hint: {
       en: "Enter a valid key in Settings → Model, or check the key in .env.",
@@ -102,9 +102,9 @@ export const MODEL_ERRORS: Record<string, ErrorText> = {
   },
   provider: {
     message: {
-      en: "The model provider returned an error.",
-      "zh-TW": "模型供應商回傳了錯誤。",
-      ja: "モデルのプロバイダーがエラーを返しました。",
+      en: "The model service returned an error.",
+      "zh-TW": "模型服務回傳了錯誤。",
+      ja: "モデルのサービスがエラーを返しました。",
     },
     hint: HINT.checkModel,
   },
@@ -115,21 +115,21 @@ export const MODEL_ERRORS: Record<string, ErrorText> = {
       ja: "モデルが時間内に応答しませんでした。",
     },
     hint: {
-      en: "Try a smaller model or a shorter context, or check the provider in Settings → Model.",
-      "zh-TW": "請改用較小的模型或較短的上下文，或到「設定 → 模型」檢查供應商。",
-      ja: "小さいモデルや短いコンテキストを試すか、「設定 → モデル」でプロバイダーを確認してください。",
+      en: "Try a smaller model, or check it in Settings → Model.",
+      "zh-TW": "請改用較小的模型，或到「設定 → 模型」檢查。",
+      ja: "小さいモデルを試すか、「設定 → モデル」で確認してください。",
     },
   },
   "invalid-config": {
     message: {
-      en: "The inference settings are not valid.",
-      "zh-TW": "推論設定無效。",
-      ja: "推論の設定が正しくありません。",
+      en: "The model settings are not valid.",
+      "zh-TW": "模型設定無效。",
+      ja: "モデルの設定が正しくありません。",
     },
     hint: {
-      en: "The endpoint must be a full URL ending in /v1, with a known provider type.",
-      "zh-TW": "端點必須是以 /v1 結尾的完整網址，且供應商必須是已知的類型。",
-      ja: "エンドポイントは /v1 で終わる完全な URL で、既知のプロバイダー種別である必要があります。",
+      en: "The address must be a full URL ending in /v1, of a kind the app knows.",
+      "zh-TW": "位址必須是以 /v1 結尾的完整網址，而且是應用程式認得的類型。",
+      ja: "アドレスは /v1 で終わる完全な URL で、アプリが知っている種類である必要があります。",
     },
   },
   "untrusted-config": {
@@ -146,9 +146,9 @@ export const MODEL_ERRORS: Record<string, ErrorText> = {
   },
   "config-write-failed": {
     message: {
-      en: "The inference settings could not be saved.",
-      "zh-TW": "無法儲存推論設定。",
-      ja: "推論の設定を保存できませんでした。",
+      en: "The model settings could not be saved.",
+      "zh-TW": "無法儲存模型設定。",
+      ja: "モデルの設定を保存できませんでした。",
     },
     hint: HINT.disk,
   },
@@ -207,14 +207,14 @@ export const MODEL_ERRORS: Record<string, ErrorText> = {
   // ── Local servers: llama-server ────────────────────────────────────────────────────────────
   "no-sidecar-config": {
     message: {
-      en: "This provider has no local server to start.",
-      "zh-TW": "這個供應商沒有可以啟動的本機伺服器。",
-      ja: "このプロバイダーには起動できるローカルサーバーがありません。",
+      en: "This choice has no local server to start.",
+      "zh-TW": "這個選項沒有可以啟動的本機伺服器。",
+      ja: "この選択肢には起動できるローカルサーバーがありません。",
     },
     hint: {
-      en: "Choose the llama.cpp provider to let the app start llama-server for you.",
-      "zh-TW": "請選擇 llama.cpp 供應商，讓應用程式替你啟動 llama-server。",
-      ja: "llama.cpp プロバイダーを選ぶと、アプリが llama-server を起動します。",
+      en: "Choose llama.cpp to let the app start llama-server for you.",
+      "zh-TW": "請選擇 llama.cpp，讓應用程式替你啟動 llama-server。",
+      ja: "llama.cpp を選ぶと、アプリが llama-server を起動します。",
     },
   },
   "binary-missing": {
@@ -444,8 +444,8 @@ export const MODEL_ERRORS: Record<string, ErrorText> = {
   "dsl-invalid-chunk": {
     message: {
       en: "The model could not write valid land for this area.",
-      "zh-TW": "模型沒能替這個區塊寫出有效的大地。",
-      ja: "モデルがこのチャンクの大地を正しく書けませんでした。",
+      "zh-TW": "模型沒能替這一帶寫出有效的大地。",
+      ja: "モデルがこのあたりの大地を正しく書けませんでした。",
     },
     hint: HINT.retryModel,
   },
@@ -561,9 +561,9 @@ export const MODEL_ERRORS: Record<string, ErrorText> = {
       ja: "モデルが設定されていないため、次の章は先に書かれません。",
     },
     hint: {
-      en: "Set up a provider in Settings → Model. Walking and chapters already played still work.",
-      "zh-TW": "請到「設定 → 模型」設定供應商。走動和已玩過的章節仍然可以進行。",
-      ja: "「設定 → モデル」でプロバイダーを設定してください。歩き回ることと、プレイ済みの章はそのまま遊べます。",
+      en: "Choose a model in Settings → Model. You can still walk and play chapters already written.",
+      "zh-TW": "請到「設定 → 模型」選一個模型。你仍然可以走動，也能玩已寫好的章節。",
+      ja: "「設定 → モデル」でモデルを選んでください。歩き回ることも、書かれた章を遊ぶこともできます。",
     },
   },
   "story-model-offline": {
@@ -573,9 +573,9 @@ export const MODEL_ERRORS: Record<string, ErrorText> = {
       ja: "モデルに接続できないため、次の章は先に書かれません。",
     },
     hint: {
-      en: "Start the model or check the provider in Settings → Model, then press Retry.",
-      "zh-TW": "請啟動模型，或到「設定 → 模型」檢查供應商，然後按「重試」。",
-      ja: "モデルを起動するか「設定 → モデル」でプロバイダーを確認してから、「リトライ」を押してください。",
+      en: "Start the model or check it in Settings → Model, then press Retry.",
+      "zh-TW": "請啟動模型，或到「設定 → 模型」檢查，然後按「重試」。",
+      ja: "モデルを起動するか「設定 → モデル」で確認してから、「リトライ」を押してください。",
     },
   },
 };

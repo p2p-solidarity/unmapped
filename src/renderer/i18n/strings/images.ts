@@ -1,4 +1,4 @@
-// Settings → Images (rev 6 phase 4, D4): which model draws this computer's pictures, the licence
+// Settings → Advanced settings → Images (rev 6 phase 4, D4): which model draws this computer's pictures, the licence
 // each one draws under, and whether commercial mode lets it draw.
 
 import type { Phrase } from "./phrase";

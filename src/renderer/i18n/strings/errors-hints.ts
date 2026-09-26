@@ -51,24 +51,24 @@ export const HINT = {
     ja: "UNMAPPED からもう一度書き出してください。",
   },
   repairCartridge: {
-    en: "Repair it in a Remix workspace, or reinstall the cartridge.",
-    "zh-TW": "請在 Remix 工作區修正，或重新安裝這張卡帶。",
-    ja: "リミックスのワークスペースで直すか、カートリッジを入れ直してください。",
+    en: "Fix it in a remix, or reinstall this world.",
+    "zh-TW": "請在改編版裡修正，或重新安裝這個世界。",
+    ja: "リミックスで直すか、このワールドを入れ直してください。",
   },
   reinstall: {
-    en: "Reinstall this cartridge from a trusted copy.",
-    "zh-TW": "請從可信任的來源重新安裝這張卡帶。",
-    ja: "信頼できるコピーからカートリッジを入れ直してください。",
+    en: "Reinstall this world from a trusted copy.",
+    "zh-TW": "請從可信任的來源重新安裝這個世界。",
+    ja: "信頼できるコピーからこのワールドを入れ直してください。",
   },
   exactRevision: {
-    en: "Restore the exact cartridge version this save was made with.",
-    "zh-TW": "請還原這個存檔所使用的那個卡帶版本。",
-    ja: "このセーブが使っているカートリッジと同じ版を復元してください。",
+    en: "Restore the exact version of the world this save was made with.",
+    "zh-TW": "請還原這個存檔所用的那個世界版本。",
+    ja: "このセーブが使っているワールドと同じ版を復元してください。",
   },
   writeAreaAgain: {
     en: "Try writing this area again.",
-    "zh-TW": "請重新寫一次這個區塊。",
-    ja: "このチャンクをもう一度書き直してください。",
+    "zh-TW": "請重新寫一次這一帶。",
+    ja: "このあたりをもう一度書き直してください。",
   },
   reloadLand: {
     en: "Reload the land.",
@@ -81,9 +81,9 @@ export const HINT = {
     ja: "不具合です。報告してください。",
   },
   sameAsHost: {
-    en: "Open a save of the host's exact cartridge version, on the same version of UNMAPPED.",
-    "zh-TW": "請開啟與房主相同卡帶版本的存檔，並使用相同版本的《無界之地》。",
-    ja: "ホストと同じカートリッジの版のセーブを、同じバージョンの UNMAPPED で開いてください。",
+    en: "Open the same version of the world as your friend, on the same UNMAPPED.",
+    "zh-TW": "請開啟和朋友相同版本的世界，並使用相同版本的《無界之地》。",
+    ja: "友だちと同じ版のワールドを、同じバージョンの UNMAPPED で開いてください。",
   },
   askAgain: {
     en: "Describe the change again, more simply.",

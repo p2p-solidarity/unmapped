@@ -14,9 +14,9 @@ export const SAVE_ERRORS: Record<string, ErrorText> = {
   // ── Reading and writing saves ──────────────────────────────────────────────────────────────
   "instance-list-failed": {
     message: {
-      en: "Your saves could not be listed.",
-      "zh-TW": "無法列出你的存檔。",
-      ja: "セーブの一覧を読み込めませんでした。",
+      en: "Your worlds could not be listed.",
+      "zh-TW": "無法列出你的世界。",
+      ja: "マイワールドの一覧を読み込めませんでした。",
     },
     hint: HINT.readable,
   },
@@ -30,9 +30,9 @@ export const SAVE_ERRORS: Record<string, ErrorText> = {
   },
   "instance-create-failed": {
     message: {
-      en: "A new save could not be created.",
-      "zh-TW": "無法建立新的存檔。",
-      ja: "新しいセーブを作成できませんでした。",
+      en: "A new game could not be started.",
+      "zh-TW": "無法開始新遊戲。",
+      ja: "新しいゲームを始められませんでした。",
     },
     hint: HINT.disk,
   },
@@ -66,9 +66,9 @@ export const SAVE_ERRORS: Record<string, ErrorText> = {
   },
   "instance-exists": {
     message: {
-      en: "A save with this name already exists.",
-      "zh-TW": "已經有同名的存檔。",
-      ja: "同じ名前のセーブがすでにあります。",
+      en: "A world with this name already exists.",
+      "zh-TW": "已經有同名的世界。",
+      ja: "同じ名前のワールドがすでにあります。",
     },
     hint: {
       en: "Choose a different name, or try again later.",
@@ -78,9 +78,9 @@ export const SAVE_ERRORS: Record<string, ErrorText> = {
   },
   "instance-name-invalid": {
     message: {
-      en: "The save needs a name.",
-      "zh-TW": "存檔需要名稱。",
-      ja: "セーブには名前が必要です。",
+      en: "The world needs a name.",
+      "zh-TW": "世界需要名稱。",
+      ja: "ワールドには名前が必要です。",
     },
   },
   "instance-id-invalid": {
@@ -116,22 +116,22 @@ export const SAVE_ERRORS: Record<string, ErrorText> = {
   },
   "save-identity-mismatch": {
     message: {
-      en: "The save does not belong to this playthrough and cartridge.",
-      "zh-TW": "這個存檔不屬於這個遊玩進度與卡帶。",
-      ja: "このセーブは、このプレイとカートリッジのものではありません。",
+      en: "The save does not belong to this world.",
+      "zh-TW": "這個存檔不屬於這個世界。",
+      ja: "このセーブは、このワールドのものではありません。",
     },
     hint: SAVE_FILE_HINT,
   },
   "save-schema-mismatch": {
     message: {
-      en: "The save format does not match its cartridge version.",
-      "zh-TW": "存檔格式和它的卡帶版本不符。",
-      ja: "セーブの形式が、カートリッジの版と一致しません。",
+      en: "The save format does not match its version of the world.",
+      "zh-TW": "存檔格式和它的世界版本不符。",
+      ja: "セーブの形式が、ワールドの版と一致しません。",
     },
     hint: {
-      en: "Play it with the exact cartridge version it was made with.",
-      "zh-TW": "請用建立它時的那個卡帶版本來玩。",
-      ja: "作成したときと同じ版のカートリッジで遊んでください。",
+      en: "Play it with the exact version of the world it was made with.",
+      "zh-TW": "請用建立它時的那個世界版本來玩。",
+      ja: "作成したときと同じ版のワールドで遊んでください。",
     },
   },
   "instance-legacy-format": {
@@ -141,24 +141,24 @@ export const SAVE_ERRORS: Record<string, ErrorText> = {
       ja: "このセーブは古いバージョンの UNMAPPED で作られました。",
     },
     hint: {
-      en: "It is left untouched on disk. Import its exact cartridge version, or restore it from a backup.",
-      "zh-TW": "它在磁碟上保持原樣。請匯入它所用的卡帶版本，或從備份還原。",
-      ja: "ディスク上のデータはそのままです。同じ版のカートリッジを読み込むか、バックアップから復元してください。",
+      en: "It is left untouched; import its exact version of the world, or restore it from a backup.",
+      "zh-TW": "它保持原樣；請匯入它所用的世界版本，或從備份還原。",
+      ja: "データはそのままです。同じ版のワールドを読み込むか、バックアップから復元してください。",
     },
   },
   "instance-cartridge-mismatch": {
     message: {
-      en: "The installed cartridge does not match the one this save uses.",
-      "zh-TW": "已安裝的卡帶和這個存檔使用的不符。",
-      ja: "インストール済みのカートリッジが、このセーブのものと一致しません。",
+      en: "The installed version of the world does not match the one this save uses.",
+      "zh-TW": "已安裝的世界版本和這個存檔使用的不符。",
+      ja: "インストール済みのワールドの版が、このセーブのものと一致しません。",
     },
     hint: HINT.exactRevision,
   },
   "instance-scene-missing": {
     message: {
-      en: "This save's current scene is missing from its cartridge.",
-      "zh-TW": "這個存檔目前所在的場景，在它的卡帶裡找不到。",
-      ja: "このセーブの現在のシーンが、カートリッジにありません。",
+      en: "This save's current scene is missing from its world.",
+      "zh-TW": "這個存檔目前所在的場景，在它的世界裡找不到。",
+      ja: "このセーブの現在のシーンが、ワールドにありません。",
     },
     hint: HINT.exactRevision,
   },
@@ -174,8 +174,8 @@ export const SAVE_ERRORS: Record<string, ErrorText> = {
   // ── Moving a save to a newer cartridge version ─────────────────────────────────────────────
   "upgrade-version-not-newer": {
     message: {
-      en: "That cartridge version is not newer than the one this save uses.",
-      "zh-TW": "那個卡帶版本並不比這個存檔所用的版本新。",
+      en: "That version is not newer than the one this save uses.",
+      "zh-TW": "那個版本並不比這個存檔所用的版本新。",
       ja: "その版は、このセーブが使っている版より新しくありません。",
     },
     hint: {
@@ -203,9 +203,9 @@ export const SAVE_ERRORS: Record<string, ErrorText> = {
       ja: "新しい版はゲームの動き方が変わるため、このセーブは移行できません。",
     },
     hint: {
-      en: "Start a new playthrough on that version.",
-      "zh-TW": "請用那個版本開始新的遊玩進度。",
-      ja: "その版で新しいプレイを始めてください。",
+      en: "Start a new game on that version.",
+      "zh-TW": "請用那個版本開始新遊戲。",
+      ja: "その版ではじめから遊んでください。",
     },
   },
   "upgrade-snapshot-failed": {
@@ -297,15 +297,15 @@ export const SAVE_ERRORS: Record<string, ErrorText> = {
       ja: ".spire-backup がバックアップの上限より大きすぎます。",
     },
     hint: {
-      en: "Use a backup exported by UNMAPPED; a save with this much land is kept by copying its instance folder.",
-      "zh-TW": "請使用《無界之地》匯出的備份；土地這麼多的存檔，請直接複製它的存檔資料夾保存。",
-      ja: "UNMAPPED が書き出したバックアップを使ってください。これほど土地の多いセーブは、インスタンスのフォルダーをそのままコピーして保管します。",
+      en: "Use a backup exported by UNMAPPED; a save this big is kept by copying its folder.",
+      "zh-TW": "請使用《無界之地》匯出的備份；這麼大的存檔，請直接複製它的資料夾保存。",
+      ja: "UNMAPPED が書き出したバックアップを使ってください。これほど大きなセーブは、フォルダーをそのままコピーして保管します。",
     },
   },
   "backup-land-invalid": {
     message: {
-      en: "The witnessed land in this save is damaged.",
-      "zh-TW": "這個存檔裡已顯影的土地資料已損毀。",
+      en: "The land written in this save is damaged.",
+      "zh-TW": "這個存檔裡已寫出的土地資料已損毀。",
       ja: "このセーブに記録された土地のデータが壊れています。",
     },
     hint: {
@@ -316,9 +316,9 @@ export const SAVE_ERRORS: Record<string, ErrorText> = {
   },
   "backup-scene-missing": {
     message: {
-      en: "The backup's current scene is missing from its cartridge.",
-      "zh-TW": "備份目前所在的場景，在它的卡帶裡找不到。",
-      ja: "バックアップの現在のシーンが、カートリッジにありません。",
+      en: "The backup's current scene is missing from its world.",
+      "zh-TW": "備份目前所在的場景，在它的世界裡找不到。",
+      ja: "バックアップの現在のシーンが、ワールドにありません。",
     },
     hint: HINT.exactRevision,
   },

@@ -32,9 +32,9 @@ export const USAGE = {
   },
   loading: { en: "Reading usage…", "zh-TW": "正在讀取用量…", ja: "使用量を読み込み中…" },
   unreported: {
-    en: "{n} {n|call|calls} without token counts from the provider (not counted as zero).",
-    "zh-TW": "有 {n} 次呼叫供應商沒有回報 token 數（不當作 0）。",
-    ja: "{n} 回はプロバイダがトークン数を返しませんでした（0 とは数えません）。",
+    en: "{n} {n|call|calls} without token counts from the model service (not counted as zero).",
+    "zh-TW": "有 {n} 次呼叫，模型服務沒有回報 token 數（不當作 0）。",
+    ja: "{n} 回はモデルのサービスがトークン数を返しませんでした（0 とは数えません）。",
   },
   skipped: {
     en: "{n} unreadable ledger {n|line|lines} skipped.",
@@ -67,7 +67,7 @@ export const USAGE = {
   outcomeFailed: { en: "failed", "zh-TW": "失敗", ja: "失敗" },
   outcomeAborted: { en: "cancelled", "zh-TW": "已取消", ja: "キャンセル" },
 
-  purposeWitness: { en: "Witnessing", "zh-TW": "顯影", ja: "観測" },
+  purposeWitness: { en: "Writing the land", "zh-TW": "寫出大地", ja: "大地を書く" },
   purposeChapter: { en: "Chapter", "zh-TW": "章節", ja: "章" },
   purposePlace: { en: "Place", "zh-TW": "地點", ja: "場所" },
   purposeDialogue: { en: "Dialogue", "zh-TW": "對話", ja: "会話" },

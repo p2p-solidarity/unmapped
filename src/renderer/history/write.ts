@@ -13,7 +13,7 @@ import { syncWorld } from "./session";
 const NOT_OPEN: AppError = {
   code: "world-not-open",
   message: "This save's world is not open.",
-  hint: "Open the save from the library.",
+  hint: "Open it from Worlds → My worlds.",
 };
 
 /** Whether this save's land plays on a world's history (else: its legacy files, or no land). */

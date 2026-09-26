@@ -48,7 +48,7 @@ export function hostedImageModel(
     return err(
       "gateway-model-unavailable",
       "The generation gateway serves no default image model.",
-      "Enter your own OpenAI key in Settings → Model, or choose another image provider in Settings → Images.",
+      "Enter your own OpenAI key in Settings → Model, or choose another image provider in Settings → Advanced settings → Images.",
     );
   }
   return ok(chosen);

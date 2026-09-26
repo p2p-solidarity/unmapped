@@ -175,7 +175,7 @@ async function listServer(
   });
 }
 
-/** Settings → Images "test": the server answers, serves this model, and whether it has edits. */
+/** Settings → Advanced settings → Images "test": the server answers, serves this model, and whether it has edits. */
 export async function probeQwen(
   id: QwenId,
   deps: QwenDeps,

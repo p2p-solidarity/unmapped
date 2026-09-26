@@ -1,5 +1,5 @@
 // What this computer spent on the gateway in a quota period, read from its own usage ledger
-// (`<userData>/usage.jsonl`, @shared/usage): the raw tokens and calls Settings → Account shows next
+// (`<userData>/usage.jsonl`, @shared/usage): the raw tokens and calls Settings → Advanced settings → Account shows next
 // to the gateway's credits. Only lines main wrote for provider `hosted` count, and only finished
 // ones: the gateway settles a call only when its stream ends, and releases a refused (402, 401),
 // failed or cancelled one, so those spent nothing and are not "calls through the gateway". A

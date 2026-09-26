@@ -250,7 +250,7 @@ export function registerInferenceIpc(ctx: MainContext): void {
         outcome:
           settled.code === "done" ? "done" : settled.code === "aborted" ? "aborted" : "failed",
       });
-      // The allowance changed (or was released): Settings → Account reads it again.
+      // The allowance changed (or was released): Settings → Advanced settings → Account reads it again.
       if (hosted) void account.refreshQuota();
     }
   }

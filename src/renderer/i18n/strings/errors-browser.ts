@@ -118,9 +118,9 @@ export const BROWSER_ERRORS: Record<string, ErrorText> = {
   },
   "browser-pack-none": {
     message: {
-      en: "This world's maker has not shared its cartridge with the world yet.",
-      "zh-TW": "這個世界的建立者還沒把卡帶分享到世界裡。",
-      ja: "このワールドをつくった人は、まだカートリッジをワールドに共有していません。",
+      en: "This world's maker has not shared the world's own pack yet.",
+      "zh-TW": "這個世界的建立者還沒把世界本身的資料包分享出來。",
+      ja: "このワールドをつくった人は、まだワールド本体のパックを共有していません。",
     },
     hint: {
       en: "Ask the world's owner to share the world again from the desktop app.",
@@ -142,9 +142,9 @@ export const BROWSER_ERRORS: Record<string, ErrorText> = {
   },
   "browser-pack-mismatch": {
     message: {
-      en: "The world's pack is not the cartridge this world was made on.",
-      "zh-TW": "世界的資料包不是這個世界建立時用的卡帶。",
-      ja: "ワールドのパックは、このワールドがつくられたカートリッジではありません。",
+      en: "The world's pack is not the version this world was made on.",
+      "zh-TW": "世界的資料包不是這個世界建立時用的版本。",
+      ja: "ワールドのパックは、このワールドがつくられた版ではありません。",
     },
     hint: {
       en: "Ask the world's owner to share the world again from the desktop app.",

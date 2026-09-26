@@ -374,9 +374,9 @@ export const WORKS_ERRORS: Record<string, ErrorText> = {
   },
   "mod-base-mismatch": {
     message: {
-      en: "The change proposal was made for a different cartridge version.",
-      "zh-TW": "這份變更提案是針對另一個卡帶版本。",
-      ja: "この変更案は、別の版のカートリッジに向けたものです。",
+      en: "The change proposal was made for a different version of the world.",
+      "zh-TW": "這份變更提案是針對這個世界的另一個版本。",
+      ja: "この変更案は、ワールドの別の版に向けたものです。",
     },
     hint: {
       en: "Ask for the change again on this version.",
@@ -386,9 +386,9 @@ export const WORKS_ERRORS: Record<string, ErrorText> = {
   },
   "mod-v2-required": {
     message: {
-      en: "Structural changes need a v2 cartridge.",
-      "zh-TW": "結構性的變更需要 v2 卡帶。",
-      ja: "構造の変更には v2 のカートリッジが必要です。",
+      en: "Structural changes need a world in the v2 format.",
+      "zh-TW": "結構性的變更需要 v2 格式的世界。",
+      ja: "構造の変更には v2 形式のワールドが必要です。",
     },
   },
   "mod-version-invalid": {

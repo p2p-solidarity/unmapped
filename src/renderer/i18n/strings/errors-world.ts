@@ -125,9 +125,9 @@ export const WORLD_ERRORS: Record<string, ErrorText> = {
       ja: "この端末にはワールドサービスがありません。",
     },
     hint: {
-      en: "Add one in Settings → Shared worlds, then open the door again.",
-      "zh-TW": "請到「設定 → 共享世界」加入一個，再重新開門。",
-      ja: "「設定 → 共有ワールド」で追加してから、扉を開き直してください。",
+      en: "Add one in Settings → Advanced settings → Shared worlds, then open the door again.",
+      "zh-TW": "請到「設定 → 進階設定 → 共享世界」加入一個，再重新開門。",
+      ja: "「設定 → 詳細設定 → 共有ワールド」で追加してから、扉を開き直してください。",
     },
   },
   "world-services-not-saved": {
@@ -146,9 +146,9 @@ export const WORLD_ERRORS: Record<string, ErrorText> = {
   // ── Attaching and syncing ──────────────────────────────────────────────────────────────────
   "attach-already": {
     message: {
-      en: "This world is already shared on a service.",
-      "zh-TW": "這個世界已經共享到某個服務了。",
-      ja: "このワールドはすでにサービスで共有されています。",
+      en: "This world is already shared.",
+      "zh-TW": "這個世界已經分享出去了。",
+      ja: "このワールドはすでに共有されています。",
     },
   },
   "attach-url-invalid": {
@@ -172,9 +172,9 @@ export const WORLD_ERRORS: Record<string, ErrorText> = {
       ja: "このワールドは別の端末から共有されていて、この端末はそのメンバーではありません。",
     },
     hint: {
-      en: "Open it on the device that made it, or ask its owner for an invite and redeem it at this save's door.",
-      "zh-TW": "請在建立它的裝置上開啟，或向主人要一份邀請，在這個存檔的門口兌換。",
-      ja: "つくった端末で開くか、持ち主に招待をもらい、このセーブの扉で使ってください。",
+      en: "Open it on the device that made it, or ask its owner for an invite link and paste it in Join a world.",
+      "zh-TW": "請在建立它的裝置上開啟，或向主人要一個邀請連結，貼到「加入世界」。",
+      ja: "つくった端末で開くか、持ち主に招待リンクをもらって「ワールドに参加」に貼ってください。",
     },
   },
 
@@ -244,9 +244,9 @@ export const WORLD_ERRORS: Record<string, ErrorText> = {
       ja: "このワールドはまだ共有されていません。",
     },
     hint: {
-      en: "Share it on a world service first.",
-      "zh-TW": "請先把它共享到某個世界服務。",
-      ja: "まずワールドサービスで共有してください。",
+      en: "Share it first: make an invite link at the door.",
+      "zh-TW": "請先分享它：在門口建立邀請連結。",
+      ja: "先に共有してください。扉で招待リンクをつくれます。",
     },
   },
   "world-invite-not-recorded": {
@@ -275,14 +275,14 @@ export const WORLD_ERRORS: Record<string, ErrorText> = {
   },
   "world-door-no-history": {
     message: {
-      en: "This save has no shared history yet.",
-      "zh-TW": "這個存檔還沒有共享歷史。",
-      ja: "このセーブにはまだ共有の歴史がありません。",
+      en: "This world has no shared history yet.",
+      "zh-TW": "這個世界還沒有共享的歷史。",
+      ja: "このワールドにはまだ共有の歴史がありません。",
     },
     hint: {
-      en: "It is made when Play opens the save; leave to the title and open the save again.",
-      "zh-TW": "開始遊玩這個存檔時就會建立；請回到標題畫面再開啟一次存檔。",
-      ja: "セーブを遊び始めると作られます。タイトルに戻って、もう一度セーブを開いてください。",
+      en: "It is made when you play the world; go back to the title and continue it again.",
+      "zh-TW": "開始玩這個世界時就會建立；請回到標題畫面，再繼續玩一次。",
+      ja: "ワールドを遊び始めると作られます。タイトルに戻って、もう一度続きから遊んでください。",
     },
   },
 
@@ -377,9 +377,9 @@ export const WORLD_ERRORS: Record<string, ErrorText> = {
   },
   "join-pack-mismatch": {
     message: {
-      en: "The cartridge this world sent is not the one its history names.",
-      "zh-TW": "這個世界送來的卡匣和它歷史中記載的不一樣。",
-      ja: "このワールドが送ってきたカートリッジは、歴史に記されたものと違います。",
+      en: "The version this world sent is not the one its history names.",
+      "zh-TW": "這個世界送來的版本和它歷史中記載的不一樣。",
+      ja: "このワールドが送ってきた版は、歴史に記されたものと違います。",
     },
     hint: NEW_LINK,
   },

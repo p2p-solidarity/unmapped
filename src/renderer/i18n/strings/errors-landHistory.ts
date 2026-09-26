@@ -19,9 +19,9 @@ const INVITE = {
 export const LAND_HISTORY_ERRORS: Record<string, ErrorText> = {
   "claim-refused": {
     message: {
-      en: "Only members write this world.",
-      "zh-TW": "只有成員能在這個世界寫下新的內容。",
-      ja: "このワールドに書けるのはメンバーだけです。",
+      en: "Only invited friends write in this world.",
+      "zh-TW": "只有受邀的朋友能在這個世界寫下新的內容。",
+      ja: "このワールドに書けるのは、招待された友だちだけです。",
     },
     hint: INVITE,
   },
@@ -43,14 +43,14 @@ export const LAND_HISTORY_ERRORS: Record<string, ErrorText> = {
   },
   "world-not-open": {
     message: {
-      en: "This save's world is not open.",
-      "zh-TW": "這個存檔的世界尚未開啟。",
-      ja: "このセーブのワールドは開かれていません。",
+      en: "This world is not open.",
+      "zh-TW": "這個世界尚未開啟。",
+      ja: "このワールドは開かれていません。",
     },
     hint: {
-      en: "Open the save from the library.",
-      "zh-TW": "請從世界庫開啟這個存檔。",
-      ja: "ライブラリからセーブを開いてください。",
+      en: "Open it from Worlds → My worlds.",
+      "zh-TW": "請到「世界 → 我的世界」開啟它。",
+      ja: "「ワールド → マイワールド」から開いてください。",
     },
   },
   "legacy-land-changed": {
@@ -79,14 +79,14 @@ export const LAND_HISTORY_ERRORS: Record<string, ErrorText> = {
   },
   "progress-no-world": {
     message: {
-      en: "This save has no world yet, so it keeps no world progress.",
-      "zh-TW": "這個存檔還沒有世界，所以沒有世界進度。",
-      ja: "このセーブにはまだワールドがないため、ワールドの進行状況はありません。",
+      en: "This save has no world history yet, so it keeps no world progress.",
+      "zh-TW": "這個存檔還沒有世界的歷史，所以沒有世界進度。",
+      ja: "このセーブにはまだワールドの歴史がないため、ワールドの進行状況はありません。",
     },
     hint: {
-      en: "Open the save in Play once; its world is made then.",
-      "zh-TW": "在遊戲中開啟這個存檔一次，世界就會建立。",
-      ja: "一度プレイでセーブを開くと、ワールドが作られます。",
+      en: "Play it once; its history is made then.",
+      "zh-TW": "玩一次，它的歷史就會建立。",
+      ja: "一度遊ぶと、歴史が作られます。",
     },
   },
   "chapter-told": {
@@ -134,9 +134,9 @@ export const LAND_HISTORY_ERRORS: Record<string, ErrorText> = {
       ja: "この端末にはこの世界の別の歴史がすでにあります。両方とも残しました。",
     },
     hint: {
-      en: "The backup's copy is kept aside, unmerged, as restored-<time>.jsonl in this world's history folder.",
-      "zh-TW": "備份裡的那份另存為這個世界歷史資料夾中的 restored-<時間>.jsonl，沒有合併。",
-      ja: "バックアップ側の写しは、この世界の歴史フォルダに restored-<時刻>.jsonl として統合せずに残しました。",
+      en: "The backup's copy is kept aside as restored-<time>.jsonl; nothing was merged.",
+      "zh-TW": "備份裡的那份另存為 restored-<時間>.jsonl，沒有合併。",
+      ja: "バックアップ側の写しは restored-<時刻>.jsonl として別に残しました。統合はしていません。",
     },
   },
 };

@@ -1,5 +1,5 @@
 // Errors about image providers and picture licences (rev 6 phase 4, D4): the device's choice in
-// Settings → Images, commercial mode, the self-hosted Qwen-Image server, and publishing a revision
+// Settings → Advanced settings → Images, commercial mode, the self-hosted Qwen-Image server, and publishing a revision
 // whose new pictures need redrawing. The original English (with the server address, the start
 // command or the list of pictures) stays visible as the error's detail.
 
@@ -13,9 +13,9 @@ export const IMAGES_ERRORS: Record<string, ErrorText> = {
       ja: "この画像プロバイダーのライセンスは商用利用を認めておらず、商用モードがオンです。",
     },
     hint: {
-      en: "Choose an image provider whose licence allows commercial use in Settings → Images.",
-      "zh-TW": "請到「設定 → 圖片」選擇授權允許商業使用的圖片提供者。",
-      ja: "「設定 → 画像」で商用利用できるライセンスの画像プロバイダーを選んでください。",
+      en: "Choose an image provider whose licence allows commercial use in Settings → Advanced settings → Images.",
+      "zh-TW": "請到「設定 → 進階設定 → 圖片」選擇授權允許商業使用的圖片提供者。",
+      ja: "「設定 → 詳細設定 → 画像」で商用利用できるライセンスの画像プロバイダーを選んでください。",
     },
   },
   "image-licence-redraw": {
@@ -25,9 +25,9 @@ export const IMAGES_ERRORS: Record<string, ErrorText> = {
       ja: "商用モードがオンです：公開する前に、いくつかの新しい画像を描き直す必要があります。",
     },
     hint: {
-      en: "Draw them again with a provider whose licence allows commercial use (Settings → Images), or use your own files.",
-      "zh-TW": "請用授權允許商業使用的提供者重畫（設定 → 圖片），或改用你自己的檔案。",
-      ja: "商用利用できるライセンスのプロバイダーで描き直すか（設定 → 画像）、自分のファイルを使ってください。",
+      en: "Draw them again with a provider whose licence allows commercial use (Settings → Advanced settings → Images), or use your own files.",
+      "zh-TW": "請用授權允許商業使用的提供者重畫（設定 → 進階設定 → 圖片），或改用你自己的檔案。",
+      ja: "商用利用できるライセンスのプロバイダーで描き直すか（設定 → 詳細設定 → 画像）、自分のファイルを使ってください。",
     },
   },
   "cartridge-picture-empty": {
@@ -117,9 +117,9 @@ export const IMAGES_ERRORS: Record<string, ErrorText> = {
       ja: "保存された画像プロバイダーの選択を使えませんでした。",
     },
     hint: {
-      en: "Choose an image provider in Settings → Images.",
-      "zh-TW": "請到「設定 → 圖片」選擇圖片提供者。",
-      ja: "「設定 → 画像」で画像プロバイダーを選んでください。",
+      en: "Choose an image provider in Settings → Advanced settings → Images.",
+      "zh-TW": "請到「設定 → 進階設定 → 圖片」選擇圖片提供者。",
+      ja: "「設定 → 詳細設定 → 画像」で画像プロバイダーを選んでください。",
     },
   },
   "image-choice-write-failed": {

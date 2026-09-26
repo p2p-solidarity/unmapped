@@ -9,9 +9,9 @@ export const DEPTHS = {
     ja: "深層へ進む",
   },
   depthsNote: {
-    en: "Below the ending, every floor is generated from this save's seed and gets harder.",
-    "zh-TW": "結局之下的每一層都由這個存檔的種子生成，越往下越難。",
-    ja: "エンディングの下の階層はこのセーブのシードから生成され、深いほど難しくなります。",
+    en: "Below the ending, every floor is new and gets harder.",
+    "zh-TW": "結局之下的每一層都是新的，越往下越難。",
+    ja: "エンディングの下の階層は毎回新しく作られ、深いほど難しくなります。",
   },
   descending: {
     en: "Descending to B{depth}…",

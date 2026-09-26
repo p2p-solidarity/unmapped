@@ -145,9 +145,9 @@ export const BUNDLE_ERRORS: Record<string, ErrorText> = {
       ja: "そのサービスはこのワールドの写しを持つだけで、書き込みません。",
     },
     hint: {
-      en: "An owner moves the world there first (Worlds → World files).",
-      "zh-TW": "請主人先把世界搬過去（世界 → 世界檔案）。",
-      ja: "先に持ち主がワールドを移してください（ワールド → ワールドファイル）。",
+      en: "An owner has to move the world there first.",
+      "zh-TW": "要先由主人把世界搬過去。",
+      ja: "先に持ち主がワールドを移す必要があります。",
     },
   },
   "move-link-invalid": {
@@ -193,9 +193,9 @@ export const BUNDLE_ERRORS: Record<string, ErrorText> = {
       ja: "このワールドは共有されたことがないので、移すものがありません。",
     },
     hint: {
-      en: "Share it on a world service from the device that made it.",
-      "zh-TW": "請在建立它的裝置上，把它分享到世界服務。",
-      ja: "つくった端末から、ワールドサービスで共有してください。",
+      en: "Share it with an invite link from the device that made it.",
+      "zh-TW": "請在建立它的裝置上，用邀請連結分享它。",
+      ja: "つくった端末から、招待リンクで共有してください。",
     },
   },
   // ── A report's problems (verifyWorldBundle) ──────────────────────────────────────────────
@@ -206,9 +206,9 @@ export const BUNDLE_ERRORS: Record<string, ErrorText> = {
   ),
   "bundle-hash-mismatch": {
     message: {
-      en: "A file does not match its listed hash.",
-      "zh-TW": "有檔案和清單上的雜湊不符。",
-      ja: "一覧のハッシュと合わないファイルがあります。",
+      en: "A file is not the one world.json lists.",
+      "zh-TW": "有檔案和 world.json 列出的不一樣。",
+      ja: "world.json に載っているものと違うファイルがあります。",
     },
     hint: ALTERED,
   },
@@ -270,9 +270,9 @@ export const BUNDLE_ERRORS: Record<string, ErrorText> = {
   },
   "bundle-entry-ignored": {
     message: {
-      en: "An entry of the history does not fold.",
-      "zh-TW": "歷史中有一筆紀錄無法折疊進世界。",
-      ja: "歴史の記録のうち、ワールドに畳み込めないものがあります。",
+      en: "An entry of the history does not fit the world.",
+      "zh-TW": "歷史中有一筆紀錄和世界對不上。",
+      ja: "歴史の記録のうち、ワールドに合わないものがあります。",
     },
     hint: ALTERED,
   },
@@ -286,31 +286,31 @@ export const BUNDLE_ERRORS: Record<string, ErrorText> = {
   },
   "bundle-genesis-pack-missing": {
     message: {
-      en: "The file carries no cartridge pack.",
-      "zh-TW": "檔案沒有附上卡匣內容包。",
-      ja: "カートリッジのパックが入っていません。",
+      en: "The file does not carry the world's own pack.",
+      "zh-TW": "檔案沒有附上世界本身的內容包。",
+      ja: "ワールド本体のパックが入っていません。",
     },
     hint: FRESH_EXPORT,
   },
   "bundle-genesis-pack-mismatch": {
     message: {
-      en: "The cartridge pack is another revision than the world's.",
-      "zh-TW": "卡匣內容包不是這個世界的那個版本。",
-      ja: "カートリッジのパックがワールドの版と違います。",
+      en: "The world's own pack is another version than the world's.",
+      "zh-TW": "世界本身的內容包不是這個世界的那個版本。",
+      ja: "ワールド本体のパックがワールドの版と違います。",
     },
     hint: ALTERED,
   },
   "bundle-genesis-pack-not-announced": {
     message: {
-      en: "The cartridge pack is not the one the world announced.",
-      "zh-TW": "卡匣內容包不是世界宣告的那一個。",
-      ja: "カートリッジのパックがワールドの告げたものと違います。",
+      en: "The world's own pack is not the one its history names.",
+      "zh-TW": "世界本身的內容包不是歷史裡記載的那一個。",
+      ja: "ワールド本体のパックが、歴史に記されたものと違います。",
     },
     hint: ALTERED,
   },
   "bundle-work-pack-mismatch": {
     message: {
-      en: "An AI world's pack is another revision than its place names.",
+      en: "An AI world's pack is another version than its place names.",
       "zh-TW": "有個 AI 世界的內容包和地點記載的版本不同。",
       ja: "AI ワールドのパックが場所の記す版と違います。",
     },
@@ -326,9 +326,9 @@ export const BUNDLE_ERRORS: Record<string, ErrorText> = {
   },
   "bundle-blob-name": {
     message: {
-      en: "A pack is not named by its own hash.",
-      "zh-TW": "有個內容包的名稱不是它自己的雜湊。",
-      ja: "自分のハッシュで名付けられていないパックがあります。",
+      en: "A pack's name does not match what is in it.",
+      "zh-TW": "有個內容包的名稱和內容對不上。",
+      ja: "名前と中身が合わないパックがあります。",
     },
     hint: ALTERED,
   },

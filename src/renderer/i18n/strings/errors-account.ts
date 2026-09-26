@@ -7,9 +7,9 @@ import type { ErrorText } from "./errors";
 import { HINT } from "./errors-hints";
 
 const SIGN_IN_AGAIN = {
-  en: "Sign in again in Settings → Account.",
-  "zh-TW": "請到「設定 → 帳號」重新登入。",
-  ja: "「設定 → アカウント」でもう一度サインインしてください。",
+  en: "Sign in again in Settings → Advanced settings → Account.",
+  "zh-TW": "請到「設定 → 進階設定 → 帳號」重新登入。",
+  ja: "「設定 → 詳細設定 → アカウント」でもう一度サインインしてください。",
 };
 
 const ASK_OPERATOR = {
@@ -97,10 +97,10 @@ export const ACCOUNT_ERRORS: Record<string, ErrorText> = {
       ja: "このデバイスは生成ゲートウェイにサインインしていません。",
     },
     hint: {
-      en: "Sign in in Settings → Account, add UNMAPPED_GATEWAY_KEY to .env, or use your own key or a local model in Settings → Model.",
+      en: "Sign in in Settings → Advanced settings → Account, add UNMAPPED_GATEWAY_KEY to .env, or use your own key or a local model in Settings → Model.",
       "zh-TW":
-        "請到「設定 → 帳號」登入、在 .env 加入 UNMAPPED_GATEWAY_KEY，或到「設定 → 模型」改用自己的金鑰或本地模型。",
-      ja: "「設定 → アカウント」でサインインするか、.env に UNMAPPED_GATEWAY_KEY を追加するか、「設定 → モデル」で自分のキーかローカルモデルを使ってください。",
+        "請到「設定 → 進階設定 → 帳號」登入、在 .env 加入 UNMAPPED_GATEWAY_KEY，或到「設定 → 模型」改用自己的金鑰或本地模型。",
+      ja: "「設定 → 詳細設定 → アカウント」でサインインするか、.env に UNMAPPED_GATEWAY_KEY を追加するか、「設定 → モデル」で自分のキーかローカルモデルを使ってください。",
     },
   },
   "auth-challenge-invalid": {
@@ -127,10 +127,10 @@ export const ACCOUNT_ERRORS: Record<string, ErrorText> = {
       ja: "今月の枠を使い切りました。",
     },
     hint: {
-      en: "Use your own key or a local model (Settings → Model), subscribe (Settings → Plan), or wait for the reset.",
+      en: "Use your own key or a local model (Settings → Model), subscribe (Settings → Advanced settings → Plan), or wait for the reset.",
       "zh-TW":
-        "可改用自己的金鑰或本地模型（「設定 → 模型」）、訂閱方案（「設定 → 方案」），或等額度重置。",
-      ja: "自分のキーかローカルモデル（「設定 → モデル」）を使うか、購読する（「設定 → プラン」）か、リセットを待ってください。",
+        "可改用自己的金鑰或本地模型（「設定 → 模型」）、訂閱方案（「設定 → 進階設定 → 方案」），或等額度重置。",
+      ja: "自分のキーかローカルモデル（「設定 → モデル」）を使うか、購読する（「設定 → 詳細設定 → プラン」）か、リセットを待ってください。",
     },
   },
   "gateway-busy": {
@@ -211,8 +211,8 @@ export const ACCOUNT_ERRORS: Record<string, ErrorText> = {
   },
   "gateway-upstream-auth": {
     message: {
-      en: "The gateway's own key for its model provider was refused.",
-      "zh-TW": "閘道本身對模型供應商的金鑰被拒絕了。",
+      en: "The gateway's own key for its model service was refused.",
+      "zh-TW": "閘道本身對模型服務的金鑰被拒絕了。",
       ja: "ゲートウェイ自身のモデル提供元キーが拒否されました。",
     },
     hint: {
@@ -223,32 +223,32 @@ export const ACCOUNT_ERRORS: Record<string, ErrorText> = {
   },
   "gateway-upstream": {
     message: {
-      en: "The gateway's model provider failed on this call.",
-      "zh-TW": "閘道的模型供應商處理這個呼叫時失敗了。",
+      en: "The gateway's model service failed on this call.",
+      "zh-TW": "閘道的模型服務處理這個呼叫時失敗了。",
       ja: "ゲートウェイのモデル提供元がこの呼び出しで失敗しました。",
     },
     hint: ASK_OPERATOR,
   },
   "gateway-upstream-unreachable": {
     message: {
-      en: "The gateway could not reach its model provider.",
-      "zh-TW": "閘道連不上它的模型供應商。",
+      en: "The gateway could not reach its model service.",
+      "zh-TW": "閘道連不上它的模型服務。",
       ja: "ゲートウェイがモデル提供元に接続できませんでした。",
     },
     hint: ASK_OPERATOR,
   },
   "gateway-upstream-model": {
     message: {
-      en: "The gateway's model provider does not serve the model it was asked for.",
-      "zh-TW": "閘道的模型供應商沒有提供所要求的模型。",
+      en: "The gateway's model service does not serve the model it was asked for.",
+      "zh-TW": "閘道的模型服務沒有提供所要求的模型。",
       ja: "ゲートウェイのモデル提供元は求められたモデルを提供していません。",
     },
     hint: ASK_OPERATOR,
   },
   "gateway-upstream-refused": {
     message: {
-      en: "The gateway's model provider refused this request.",
-      "zh-TW": "閘道的模型供應商拒絕了這個請求。",
+      en: "The gateway's model service refused this request.",
+      "zh-TW": "閘道的模型服務拒絕了這個請求。",
       ja: "ゲートウェイのモデル提供元がこのリクエストを拒否しました。",
     },
     hint: HINT.retryModel,
@@ -373,30 +373,30 @@ export const ACCOUNT_ERRORS: Record<string, ErrorText> = {
   },
   "billing-provider": {
     message: {
-      en: "The billing provider could not answer.",
-      "zh-TW": "付款服務供應商無法回應。",
-      ja: "決済プロバイダーが応答できませんでした。",
+      en: "The payment service could not answer.",
+      "zh-TW": "付款服務無法回應。",
+      ja: "決済サービスが応答できませんでした。",
     },
     hint: ASK_OPERATOR,
   },
   "billing-provider-unreachable": {
     message: {
-      en: "The gateway could not reach its billing provider.",
-      "zh-TW": "閘道連不上它的付款服務供應商。",
-      ja: "ゲートウェイが決済プロバイダーに接続できませんでした。",
+      en: "The gateway could not reach its payment service.",
+      "zh-TW": "閘道連不上它的付款服務。",
+      ja: "ゲートウェイが決済サービスに接続できませんでした。",
     },
     hint: ASK_OPERATOR,
   },
   "billing-plan-unknown": {
     message: {
-      en: "The billing provider does not offer that plan any more.",
-      "zh-TW": "付款服務供應商已不再提供這個方案。",
-      ja: "決済プロバイダーはそのプランをもう提供していません。",
+      en: "The payment service does not offer that plan any more.",
+      "zh-TW": "付款服務已不再提供這個方案。",
+      ja: "決済サービスはそのプランをもう提供していません。",
     },
     hint: {
-      en: "Reopen Settings → Plan and choose again.",
-      "zh-TW": "請重新打開「設定 → 方案」再選一次。",
-      ja: "「設定 → プラン」を開き直して、もう一度選んでください。",
+      en: "Reopen Settings → Advanced settings → Plan and choose again.",
+      "zh-TW": "請重新打開「設定 → 進階設定 → 方案」再選一次。",
+      ja: "「設定 → 詳細設定 → プラン」を開き直して、もう一度選んでください。",
     },
   },
   "billing-no-customer": {

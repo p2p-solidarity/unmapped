@@ -149,6 +149,6 @@ export function needsSignIn(): Result<never> {
   return err(
     "account-signed-out",
     "This device is not signed in to the generation gateway.",
-    "Sign in in Settings → Account, or add UNMAPPED_GATEWAY_KEY to .env.",
+    "Sign in in Settings → Advanced settings → Account, or add UNMAPPED_GATEWAY_KEY to .env.",
   );
 }
