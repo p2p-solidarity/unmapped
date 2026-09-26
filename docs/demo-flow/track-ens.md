@@ -33,7 +33,7 @@
 
 操作細節（按鈕、簽名、要等多久）以 `docs/demo/lineage-market.md` 為準。
 
-### 鏈上現況（v2，ENSv2 session 2026-09-26 回報；最終 E2E 紀錄待補）
+### 鏈上現況（v2，Sepolia 真實交易：[milestone-lineage-names](../e2e/milestone-lineage-names/result.md)、[milestone-lineage-relay](../e2e/milestone-lineage-relay/result.md)）
 
 | 項目 | 狀態 |
 | --- | --- |
@@ -42,17 +42,17 @@
 | 改編卡帶 `moss-hollow.aether-land.unmapped.eth`（app 內用 passkey 登記） | 真實 |
 | 存檔 `kidney-run.aether-land.unmapped.eth`，由玩家的 PasskeyAccount 持有（app 內用 passkey 記錄） | 真實 |
 | 名字不帶市場、改編不能早於父世界發行、陌生人不能改別人的存檔名、存檔底下不能再開名字 | 在 Sepolia 真實合約上模擬通過 |
-| 權利金付給名字持有人 | v1 部署上真實發生（5.408 AETHERLAND 付給持有人）；v2 上待最終 E2E |
+| 權利金付給名字持有人 | v2 上真實：5.338 AETHERLAND 付給名字持有人（`0xa2efd93f…86bd`）；v1 上也做過 |
+| 備份在另一台機器還原後，靠雜湊自己找回存檔名字；「用 ENS 名稱開啟」存檔名稱顯示「aether-land@1.3.0 的一個存檔：0 chapters cleared · 1 deed」 | 實機驗證（milestone-lineage-names 第 10–11 步） |
 | 名字轉手後權利金付給新持有人 | 只在模擬中 |
 
 **可以講的故事**：我們一開始撞到 ENSv2 的 `TransferUnsafeUntilRegistryIsEmancipated`——registry 手上還握著能改指向的角色，名字就不能安全轉手。於是改成每個世界都有自己的子名稱 registry，registry 只留兩個角色，連我們自己的合約都無法收回或改指向任何名字。
 
 **live 連結**：https://unmapped-auction.gimmychang.workers.dev ——唯讀的「Lineage Auction House」，直接讀 Sepolia（清算價曲線、出價、池子、家族樹），不需要錢包。
 
-**簽名與 gas（上台前一定要知道）**：Electron 開發版叫不出 Touch ID，所以 app 會開 Chrome／Safari 的本機頁面完成那一次簽名；E2E 用的是虛擬驗證器，**真的按 Touch ID 還沒測過，上台前在 demo 用的 Mac 排練一次**。付 gas 的是 Cloudflare 上的 gas station（app 裡不放私鑰），**它的金鑰要由你本人跑 `wrangler secret put` 設好**，否則 `/status` 會顯示 relayer null、所有鏈上動作都會失敗。
+**簽名與 gas（上台前一定要知道）**：Electron 開發版叫不出 Touch ID，所以 app 會開 Chrome／Safari 的本機頁面完成那一次簽名；E2E 用的是虛擬驗證器，**真的按 Touch ID 還沒測過，上台前在 demo 用的 Mac 排練一次**。付 gas 的是 Cloudflare 上的 gas station（app 裡不放私鑰）；金鑰已設好（部署的 Worker 已送出第一筆真實交易），上台前打開 https://unmapped-relay.gimmychang.workers.dev/status 確認 relayer 不是 null、還有 ETH。
 
 ## 要講清楚、不能講過頭的
 
 - 可以說：卡帶、改編、存檔的名字都在 Sepolia 上用 app 真實登記過；拍賣、結算在 v2 上真實發生；三代分帳與名字轉手只在 Sepolia 真實合約上模擬通過。
-- v2 上的買入與分潤還沒做（v1 上做過）；最終 E2E 之前，講稿不要說「在新合約上買過」。
-- 「用 ENS 名稱開啟」輸入存檔名稱顯示進度點，是 ENSv2 session 回報的功能；上台前排練一次。
+- 「用 ENS 名稱開啟」輸入存檔名稱顯示進度點已實機驗證；E2E 用的是虛擬驗證器，上台前在 demo 用的 Mac 排練一次真的簽名。

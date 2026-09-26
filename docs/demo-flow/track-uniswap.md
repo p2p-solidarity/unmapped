@@ -39,21 +39,21 @@
 
 市場畫面的按鈕與等待時間以 ENSv2 那邊的 `docs/demo/lineage-market.md` 為準（例如改編世界的拍賣大約 10 分鐘，現場發行後要接一個事先拍賣完的世界來示範交易）。app 入口：「世界」→「市場」。
 
-### 鏈上現況（Sepolia 真實交易。v1：[milestone-lineage-demo](../e2e/milestone-lineage-demo/result.md)；v2 name-first：ENSv2 session 2026-09-26 回報，最終 E2E 待補）
+### 鏈上現況（Sepolia 真實交易。v1：[milestone-lineage-demo](../e2e/milestone-lineage-demo/result.md)；v2 name-first：[milestone-lineage-relay](../e2e/milestone-lineage-relay/result.md)、[milestone-lineage-names](../e2e/milestone-lineage-names/result.md)）
 
 | 項目 | 狀態 |
 | --- | --- |
 | **v2（現在 `unmapped.eth` 指向的）** 根世界 aether-land 1.3.0 的 CCA 拍賣 | **已結束**：4 筆 passkey 出價（3 個種子＋1 筆從 app 出、在瀏覽器簽名、由 gas station 送出），清算價 0.018636 USDC（底價 0.009999，**+86%**），募得 9,025 USDC |
 | v2 結算並畢業成 v4 池（app 的「結算拍賣」，不需簽名） | 4 × exit＋4 × claim＋`graduate`（`0xac7221df…3f63`，650,770 gas），池子開在 0.018636；全部經 gas station，app 裡沒有私鑰 |
 | v1（舊部署）根世界拍賣 | 5 筆 passkey 出價，清算 0.018395 USDC（+84%），募得 9,070 USDC |
-| 用 passkey 經池子買入 10 USDC（系統瀏覽器簽名） | v1 上真實：買到 535.39 AETHERLAND，hook 抽 5.408——**剛好 1%**（`0x0aca30e5…d55f`）；v2 上待最終 E2E |
-| 發放分潤給 ENS 名字的持有人 | v1 上真實：5.408 AETHERLAND 付給 `0x8eEC…51C3`（`0x3161c788…d819`）；v2 上待最終 E2E。根世界是第一代，所以 1% 全歸它；50／30／20 的三代分帳看 `bun run lineage:market --dry-run` |
+| 用 passkey 經池子買入 10 USDC（系統瀏覽器簽名，gas station 送出） | v2 上真實：買到 528.45 AETHERLAND，hook 抽 5.338——**剛好 1%**（`0x89794d10…9344`）；v1 上也做過（535.39／5.408） |
+| 發放分潤給 ENS 名字的持有人 | v2 上真實：5.338 AETHERLAND 付給名字持有人（`0xa2efd93f…86bd`）；v1 上也做過（5.408）。根世界是第一代，所以 1% 全歸它；50／30／20 的三代分帳看 `bun run lineage:market --dry-run` |
 | 3 跳買入的權利金 7.30／10.95／18.25（50／30／20 精確） | 只在模擬中 |
 | 玩家不需要錢包、app 也不放私鑰：passkey 擁有一個 PasskeyAccount，main 組好批次、passkey 簽摘要，Cloudflare 上的 gas station 只付 gas；鏈上用 OpenZeppelin WebAuthn＋EIP-7951 P-256 precompile 驗章 | 驗章在 Sepolia 上真實通過；v2 的出價與結算都經 gas station 送出；重放、竄改、別的 passkey 在模擬中被拒，gas station 在本機測試拒絕 6 種惡意請求 |
 
 **台上的圖**：公開的唯讀拍賣頁 https://unmapped-auction.gimmychang.workers.dev（現在顯示 GRADUATED · POOL OPEN）畫出清算價逐塊上升、出價（標 PASSKEY）、池子與家族樹，比 Etherscan 好講。操作手冊：`docs/demo/lineage-market.md`。
 
-**現場要出價**：根世界的池子已經開了，要現場示範拍賣就先發行一個新的改編世界（約 10 分鐘的拍賣；指令與新合約參數以 `docs/demo/lineage-market.md` 為準）。**gas station 的金鑰要由你本人跑 `wrangler secret put` 設好**，否則 `/status` 顯示 relayer null、所有鏈上動作都會失敗。
+**現場要出價**：根世界的池子已經開了，要現場示範拍賣就先發行一個新的改編世界（約 10 分鐘的拍賣；指令與新合約參數以 `docs/demo/lineage-market.md` 為準）。gas station 的金鑰已設好（部署的 Worker 已送出第一筆真實交易）；上台前打開 https://unmapped-relay.gimmychang.workers.dev/status 確認 relayer 不是 null、還有 ETH。
 
 **簽名**：Electron 開發版叫不出 Touch ID，所以 app 會在 Chrome／Safari 開一個本機頁面完成那一次簽名。E2E 用的是虛擬驗證器，**真的用手指按 Touch ID 還沒測過——上台前在 demo 用的 Mac 上排練一次**。
 
@@ -62,4 +62,4 @@
 - 可以說：合約已在 Sepolia 真實部署；發行、拍賣、畢業、多跳交易、權利金、名字轉手、四種拒絕情境已在真實合約上模擬通過。
 - 模擬裡每場拍賣只有一個出價者；Sepolia 上的真實拍賣：v1 5 筆出價 +84%、v2 4 筆出價 +86%。畢業失敗（`MigrationFailed`）和 exact-output 交易沒有跑過。被問到價格發現時照實說。
 - 已知限制（評審可能問）：registry 持有的全範圍流動性目前不能提出，LP 手續費也沒人收；沒用到的 LP 儲備歸世界擁有者。
-- 可以說「app 裡用 passkey 出價、結算、買入、發放分潤都在 Sepolia 真實交易過」（買入與分潤是在 v1 上）；三代分帳與名字轉手仍只在模擬中。
+- 可以說「app 裡用 passkey 出價、結算、買入、發放分潤都在 Sepolia 真實交易過，app 裡沒有私鑰」；三代分帳與名字轉手仍只在模擬中。

@@ -20,7 +20,7 @@
 - 照 [setup.md](setup.md) 準備：`.env` 放 `OPENAI_API_KEY`；A、B 兩個視窗各用拋棄式資料夾；兩邊到「設定 → 信令伺服器」存本機 `ws://127.0.0.1:4444`。
 - **介面語言**：給國際評審建議用英文介面（「設定」→ 語言 English），世界內容就會用英文寫；想保留中文世界也可以，講稿不用改。下面每個按鈕都列出英文／繁中。
 - B 先用「世界 → 新遊戲 → 開始」（Worlds → New game → Start）開好內建世界，等原點顯影完成。
-- 市場：根世界 `aether-land.unmapped.eth` 已在 v2 合約上拍賣完、池子已開；**gas station 的金鑰要由你本人跑 `wrangler secret put` 設好**（`/status` 不能是 relayer null）；passkey 帳戶先領好測試 USDC。
+- 市場：根世界 `aether-land.unmapped.eth` 已在 v2 合約上拍賣完、池子已開；gas station 已上線，錄之前打開 https://unmapped-relay.gimmychang.workers.dev/status 確認 relayer 不是 null、還有 ETH；passkey 帳戶先領好測試 USDC。
 - 買入時 app 會打開系統瀏覽器完成簽名。這一步在錄影的 Mac 上**先排練一次**（E2E 用的是虛擬驗證器）。
 - 每一幕分開錄，最後剪在一起；每一段都錄長一點，剪的時候只拿掉等待。
 
@@ -65,7 +65,7 @@
 
 ### 2:10–2:45 ENSv2：名字就是世界的身分
 - **畫面**：Worlds → Cartridges（世界 → 卡帶）：內建世界那一行 `aether-land.unmapped.eth` · points at this version；Worlds → Saves（世界 → 存檔）→ ENS name for this save（這個存檔的 ENS 名稱）→ Record with passkey（用 passkey 記錄）→ 出現 `<save>.aether-land.unmapped.eth`。再切到公開拍賣頁 https://unmapped-auction.gimmychang.workers.dev 的家族樹。
-- **選拍（先排練）**：Worlds → Cartridges → Open by ENS name（用 ENS 名稱開啟）輸入 `aether-land.unmapped.eth`。這條「名字 → 對到本機版本」的分支在鏈上有真名字後還沒實機看過；排練時對得上才用，對不上就不放。
+- **選拍**：Worlds → Cartridges → Open by ENS name（用 ENS 名稱開啟）輸入存檔名稱，畫面說出那個存檔的進度點（[milestone-lineage-names](../e2e/milestone-lineage-names/result.md) 已實機驗證）。
 - **投影片 3（4 點）**：
   - A world's name holds only its id, version and sha256
   - The app opens a world only if the hash matches the bytes
@@ -84,7 +84,7 @@
   - Passkey smart account — no wallet, no ETH
 - **講稿**：
   > Each world's token is launched with Uniswap's Continuous Clearing Auction, priced in its parent's token. Our first world took four passkey bids and cleared 86% above its floor, then graduated into a v4 pool. I buy with a passkey — no wallet, no ETH, and no key inside the app: a gas station only pays gas and can't change what I signed. Our hook takes exactly one percent, and it pays whoever holds the world's ENS name.
-- 實測（Sepolia 真實交易）：v2 根世界 4 筆出價、清算 0.018636 USDC（+86%）、募得 9,025 USDC、經 gas station 結算並開池（ENSv2 session 回報，最終 E2E 待補）；「剛好 1%」與分潤付給名字持有人是在 v1 上實測（10 USDC 買到 535.39，hook 抽 5.408，[milestone-lineage-demo](../e2e/milestone-lineage-demo/result.md)）——v2 上的買入完成前，錄影時先排練一次。
+- 實測（Sepolia 真實交易，[milestone-lineage-relay](../e2e/milestone-lineage-relay/result.md)）：v2 根世界 4 筆出價、清算 0.018636 USDC（+86%）、募得 9,025 USDC、經 gas station 結算並開池；10 USDC 買到 528.45，hook 抽 5.338（剛好 1%），分潤付給名字持有人。
 
 ### 3:20–3:35 收尾
 - **畫面**：回到 A 的大地，B 站在旁邊。
