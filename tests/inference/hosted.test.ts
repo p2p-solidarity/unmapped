@@ -13,10 +13,17 @@
 //   4. A mid-stream `data: {"error": …}` event is read as a finished answer, or loses its code.
 //   5. A refused token reads as `auth` (which would never sign the device out), or a 402 loses
 //      its reset date.
+//   6. A picture through the gateway carries an id main never logged (a fresh one instead of the
+//      caller's look / asset request id), so its gateway line cannot be matched to main's `[look]`
+//      or `[image]` line (p4-images-hosted); or two pictures go out under one id, and the gateway
+//      refuses the second as a replay.
 
 import { createServer, type Server, type ServerResponse } from "node:http";
+import { hostedImageProvider } from "@main/images/hosted";
 import { streamChat } from "@main/inference/client";
+import { LICENCES } from "@shared/licence";
 import type { ChatRequest, InferenceConfig } from "@shared/llm";
+import { REQUEST_ID } from "@shared/quota";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 const TOKEN = `ugk_${"a".repeat(52)}`;
@@ -192,5 +199,49 @@ describe("the gateway's errors (4, 5)", () => {
     const result = await run();
     expect(!result.ok && result.error.code).toBe("quota-exhausted");
     expect(!result.ok && result.error.message).toContain("2026-10-01T00:00:00.000Z");
+  });
+});
+
+describe("a hosted picture's request id (6)", () => {
+  const apache = LICENCES.find((record) => record.id === "apache-2.0");
+  if (apache === undefined) throw new Error("apache-2.0 is a built-in licence record");
+  // Built per draw: the server's port is known only once it listens.
+  const pictures = () =>
+    hostedImageProvider(
+      {
+        base: `${base}/v1`,
+        token: { key: TOKEN, source: "saved" },
+        model: {
+          id: "image-a",
+          object: "model",
+          owned_by: "gateway",
+          kind: "image",
+          default: true,
+          licence: apache,
+        },
+      },
+      (bytes) => bytes,
+      "low",
+    );
+  const draw = (requestId?: string) =>
+    pictures().generate("a lighthouse", new AbortController().signal, {
+      kind: "concept",
+      ...(requestId === undefined ? {} : { requestId }),
+    });
+
+  it("sends the caller's id for each picture, and a fresh valid one when there is none", async () => {
+    answer = json(200, {
+      created: 0,
+      data: [{ b64_json: Buffer.from("png").toString("base64") }],
+      usage: { input_tokens: 50, output_tokens: 4000 },
+    });
+    const looks = ["1c4d30c2-aaaa-4bbb-8ccc-000000000001", "687cc743-aaaa-4bbb-8ccc-000000000002"];
+    for (const id of looks) expect((await draw(id)).ok).toBe(true);
+    expect((await draw()).ok).toBe(true);
+    const ids = seen.map((call) => call.headers["x-request-id"]);
+    expect(ids.slice(0, 2)).toEqual(looks);
+    expect(String(ids[2])).toMatch(REQUEST_ID);
+    expect(new Set(ids).size).toBe(3);
+    expect(seen.every((call) => call.headers["x-unmapped-purpose"] === "image")).toBe(true);
   });
 });

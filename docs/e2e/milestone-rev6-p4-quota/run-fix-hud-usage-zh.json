@@ -1,0 +1,16 @@
+{
+  "app": "A (CDP 9340) in Play after run-fix-hud-usage.json: back to the title, UI language 繁體中文 (Settings), Continue, the HUD usage panel in zh-TW, then English again",
+  "actions": [
+    {"clickText": "← Home"}, {"wait": 2500},
+    {"clickText": "Settings"}, {"wait": 1200},
+    {"clickText": "繁體中文"}, {"wait": 1200},
+    {"hold": "Escape", "ms": 80}, {"wait": 800},
+    {"clickText": "繼續"}, {"wait": 7000},
+    {"eval": "document.querySelector('[data-usage-line]')?.innerText ?? null"},
+    {"clickText": "用量"}, {"wait": 1500},
+    {"eval": "(() => { const h = [...document.querySelectorAll('h2')].find((e) => e.innerText === 'AI 用量'); return h?.parentElement?.innerText ?? null; })()"},
+    {"wait": 300},
+    {"shot": "docs/e2e/milestone-rev6-p4-quota/fix-06-hud-usage-zh.jpg"},
+    {"clickText": "關閉"}, {"wait": 500}
+  ]
+}

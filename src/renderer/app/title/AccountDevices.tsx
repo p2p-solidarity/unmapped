@@ -3,7 +3,9 @@
 // the shared worlds this device owns (`world.addOwner`, D5). The approving device types only the code
 // the new device shows; the gateway answers which key asked for it (looking up never spends the
 // code), and the person compares that fingerprint with the one on the new device's screen before
-// approving. Keys are public; nothing here is a secret.
+// approving. Keys are public; nothing here is a secret. Adding and removing are offered only when
+// this computer's key is in the account (`canChangeDevices`): the gateway refuses a statement signed
+// by any other key, e.g. under a `.env` token of an account this key has left.
 
 import { formatDateTime, useT } from "@renderer/i18n";
 import { Button, ErrorBlock, space, Text, TextField } from "@renderer/ui";
@@ -46,6 +48,64 @@ async function addCoOwner(worlds: OwnedWorld[], key: string): Promise<Result<num
   return ok(done);
 }
 
+/** Typing another device's code, looking it up, comparing fingerprints and approving it. */
+function ApproveDevice({
+  code,
+  busy,
+  found,
+  lookupError,
+  onCode,
+  onLookUp,
+  onApprove,
+}: {
+  code: string;
+  busy: boolean;
+  found: PairingLookup | null;
+  lookupError: AppError | null;
+  onCode(code: string): void;
+  onLookUp(): void;
+  onApprove(): void;
+}): JSX.Element {
+  const t = useT();
+  return (
+    <>
+      <Text variant="label">{t("account.approveHeading")}</Text>
+      <Text variant="caption" tone="dim">
+        {t("account.approveNote")}
+      </Text>
+      <TextField
+        label={t("account.codeField")}
+        mono
+        autoComplete="off"
+        spellCheck={false}
+        value={code}
+        onChange={(event) => onCode(event.target.value)}
+      />
+      <div>
+        <Button disabled={busy || code.trim() === ""} onClick={onLookUp}>
+          {t("account.lookUp")}
+        </Button>
+      </div>
+      {lookupError !== null ? <ErrorBlock error={lookupError} /> : null}
+      {found !== null ? (
+        <div
+          data-pairing-found=""
+          style={{ display: "flex", flexDirection: "column", gap: space.xs }}
+        >
+          <Text variant="caption" tone="accent" mono>
+            {t("account.lookedUp", { fingerprint: found.fingerprint })}
+          </Text>
+          <div>
+            <Button variant="primary" disabled={busy} onClick={onApprove}>
+              {t("account.approve")}
+            </Button>
+          </div>
+        </div>
+      ) : null}
+    </>
+  );
+}
+
 export function AccountDevices({
   status,
   run,
@@ -63,6 +123,7 @@ export function AccountDevices({
   const [offerError, setOfferError] = useState<AppError | null>(null);
   const [coOwned, setCoOwned] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
+  const canChange = status.session.canChangeDevices;
 
   const lookUp = async () => {
     setFound(null);
@@ -115,54 +176,36 @@ export function AccountDevices({
             <Text variant="caption" tone="accent">
               {t("account.thisComputer")}
             </Text>
-          ) : (
+          ) : canChange ? (
             <Button
               variant="ghost"
               onClick={() => void run(() => window.seed.gateway.removeDevice(device.key))}
             >
               {t("account.removeDevice")}
             </Button>
-          )}
+          ) : null}
         </div>
       ))}
 
-      <Text variant="label">{t("account.approveHeading")}</Text>
-      <Text variant="caption" tone="dim">
-        {t("account.approveNote")}
-      </Text>
-      <TextField
-        label={t("account.codeField")}
-        mono
-        autoComplete="off"
-        spellCheck={false}
-        value={code}
-        onChange={(event) => {
-          setCode(event.target.value);
-          setFound(null);
-          setLookupError(null);
-        }}
-      />
-      <div>
-        <Button disabled={busy || code.trim() === ""} onClick={() => void lookUp()}>
-          {t("account.lookUp")}
-        </Button>
-      </div>
-      {lookupError !== null ? <ErrorBlock error={lookupError} /> : null}
-      {found !== null ? (
-        <div
-          data-pairing-found=""
-          style={{ display: "flex", flexDirection: "column", gap: space.xs }}
-        >
-          <Text variant="caption" tone="accent" mono>
-            {t("account.lookedUp", { fingerprint: found.fingerprint })}
-          </Text>
-          <div>
-            <Button variant="primary" disabled={busy} onClick={() => void approve()}>
-              {t("account.approve")}
-            </Button>
-          </div>
-        </div>
-      ) : null}
+      {canChange ? (
+        <ApproveDevice
+          code={code}
+          busy={busy}
+          found={found}
+          lookupError={lookupError}
+          onCode={(next) => {
+            setCode(next);
+            setFound(null);
+            setLookupError(null);
+          }}
+          onLookUp={() => void lookUp()}
+          onApprove={() => void approve()}
+        />
+      ) : (
+        <Text variant="caption" tone="dim">
+          {t("account.devicesReadOnly")}
+        </Text>
+      )}
       {approved !== null ? (
         <Text variant="caption" tone="success">
           {t("account.approved")}

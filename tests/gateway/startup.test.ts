@@ -10,6 +10,8 @@
 //   4. A second gateway runs on the same data dir (two writers would fork the ledger).
 //   5. A torn last ledger line stops the start; a malformed line in the middle is guessed at.
 //   6. CORS answers an origin that is not in GATEWAY_WEB_ORIGINS, or ever answers the webhook.
+//   7. A refused start writes into the data dir first — the lock, gateway-key.json, admin-secret —
+//      so a start the operator still has to fix leaves secrets behind (found by p4-licence).
 
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -230,6 +232,44 @@ describe("damaged files (5)", () => {
     );
     expect(refusedWith(h.dir)).toBe("gateway-ledger-damaged");
     expect(existsSync(accounts)).toBe(true);
+  });
+});
+
+describe("a refused start writes nothing (7)", () => {
+  it("leaves the data dir as the operator left it, or never makes it", () => {
+    const operatorFiles = ["costs.json", "upstreams.json"];
+    const cases: Array<[string, (dir: string) => void, Record<string, string>]> = [
+      [
+        "gateway-noncommercial-upstream",
+        (dir) =>
+          writeSetup(
+            dir,
+            withModel({ id: "qwen-image-2.1", kind: "image", licence: "qwen-research" }),
+          ),
+        { GATEWAY_COMMERCIAL: "1" },
+      ],
+      ["gateway-billing-incomplete", (dir) => writeSetup(dir), { STRIPE_SECRET_KEY: "sk_test_a1" }],
+      [
+        "gateway-costs-invalid",
+        (dir) => {
+          writeSetup(dir);
+          writeFileSync(join(dir, "costs.json"), "{ not json");
+        },
+        {},
+      ],
+    ];
+    for (const [code, setup, env] of cases) {
+      const dir = tempDir();
+      setup(dir);
+      expect(refusedWith(dir, env)).toBe(code);
+      expect(readdirSync(dir).sort()).toEqual(operatorFiles);
+    }
+    const empty = tempDir();
+    expect(refusedWith(empty)).toBe("gateway-no-upstreams");
+    expect(readdirSync(empty)).toEqual([]);
+    const missing = join(tempDir(), "not-made-yet");
+    expect(openWith({ dir: missing }).opened.ok).toBe(false);
+    expect(existsSync(missing)).toBe(false);
   });
 });
 

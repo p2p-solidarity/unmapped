@@ -133,6 +133,12 @@ export const ACCOUNT = {
   },
   thisComputer: { en: "this computer", "zh-TW": "這台電腦", ja: "このコンピュータ" },
   removeDevice: { en: "Remove", "zh-TW": "移除", ja: "削除" },
+  devicesReadOnly: {
+    en: "This computer's key is not in this account, so it cannot add or remove devices: the gateway accepts those only from a device listed above.",
+    "zh-TW":
+      "這台電腦的金鑰不在這個帳號裡，所以無法加入或移除裝置：閘道只接受上面列出的裝置這麼做。",
+    ja: "このコンピューターの鍵はこのアカウントに含まれていないため、デバイスの追加や削除はできません。ゲートウェイは上に並ぶデバイスからの操作だけを受け付けます。",
+  },
   // ── The allowance ────────────────────────────────────────────────────────────────────────────
   quotaHeading: {
     en: "Allowance this month ({period})",

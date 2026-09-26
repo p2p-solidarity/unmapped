@@ -66,3 +66,14 @@ licence record), `unknownB` = a 64 × 64 canvas fill, `hosted` = a p4-images-hos
 - Refusal through a screen: Create's Build (the one screen that publishes a picture) needs a
   model-written story and origin scene, which the fixture cannot give; covered via the same IPC.
 - The gateway's `/v1/status` `commercial: true` as the switch (only the build switch was used).
+
+## Fixes after the run
+
+Re-checked 2026-09-26 13:21–13:27 JST on the snapshot of milestone-rev6-p4-quota's "Fixes after the
+run" (A on a fresh `udA`, commercial mode off). Replay: `run-fix-picture-check.json`; the gateway
+start below.
+
+| Found | Fix | Re-checked |
+| --- | --- | --- |
+| 1. A 0-byte `look.png` was published | `src/main/images/pictureBytes.ts`, called by the publish licence step (`licenseCartridge`): a picture a revision adds or changes must be a PNG that decodes (signature, chunk CRCs, IHDR, IDAT inflating to the size the header gives, IEND); one kept byte for byte from its parent is not re-judged. Codes `cartridge-picture-empty` / `cartridge-picture-undecodable`, in `errors-images.ts` (en / zh-TW / ja) | `e2e-picture@1.0.0` with 0 bytes → `cartridge-picture-empty` "assets/look.png is empty (0 bytes)."; 13 bytes of text → `cartridge-picture-undecodable` "… it is not a PNG (no PNG signature)."; the fixture PNG cut to 89 bytes → `cartridge-picture-undecodable` "… a chunk is cut off."; each logged `[licence] cartridge e2e-picture@1.0.0 · look.png · refused · <code>`, nothing written. The whole 179-byte PNG → published `sha256:78c0d179…`; a sketch drawn through the gateway just before (`[look] done 7d4e61c4…`, 1,832 bytes, 512 × 512) → `e2e-picture@1.0.1` published `sha256:563335ff…`, `apache-2.0 · commercial · added` |
+| 3. A refused commercial gateway wrote its secrets | `openGateway` reads the operator files and decides every refusal (`checkStartup`) before the lock, `gateway-key.json` or `admin-secret`; `tests/gateway/startup.test.ts` item 7 | `GATEWAY_COMMERCIAL=1 bun run gateway …` on a dir holding only `costs.json` + `upstreams.json` (this folder's commercial files) → the same refusal, exit 1, and the dir still holds only those two files (`gateway-commercial-refused-fix.txt`) |

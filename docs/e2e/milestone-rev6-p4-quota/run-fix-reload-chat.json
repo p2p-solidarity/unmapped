@@ -1,0 +1,13 @@
+{
+  "app": "A (CDP 9340), signed in, granted 40,000, in Create's idea step of the draft from run-fix-idea; before the run: curl -X POST 'http://127.0.0.1:8791/__fixture/mode?to=hang-stream'",
+  "checks": "item 1: a hosted call still streaming when its page reloads is aborted by main, and the gateway releases its hold (release … abort)",
+  "actions": [
+    {"clickText": "Write the world"},
+    {"wait": 2500},
+    {"eval": "document.body.innerText.includes('Writing') || document.body.innerText.includes('Cancel') ? 'running' : document.body.innerText.slice(0, 300)"},
+    {"shot": "docs/e2e/milestone-rev6-p4-quota/fix-01-hanging-call.jpg"},
+    {"eval": "setTimeout(() => location.reload(), 50); 'reloading'"},
+    {"wait": 4000},
+    {"eval": "document.body.innerText.slice(0, 120)"}
+  ]
+}

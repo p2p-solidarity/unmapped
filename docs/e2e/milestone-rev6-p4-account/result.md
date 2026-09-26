@@ -89,3 +89,16 @@ from `gateway.log.txt` (settle/release) and the gateway's `ledger.jsonl` / `acco
   correctly absent; offering it is part of the phase-3/D5 flows.
 - A passkey on the gateway's web page (desktop `file://` builds cannot run WebAuthn; not in this
   plan item).
+
+## Fixes after the run
+
+Re-checked 2026-09-26 13:27–13:29 JST on the snapshot of milestone-rev6-p4-quota's "Fixes after the
+run": A (`udA`, signed in with its own key, account `adkobukz2moam7ayhxgwiuizpke`, key
+`FJHY-IX3S-CY2J-67IX`), then B on a fresh `udB` (key `I2JB-TSOM-S5OJ-6LQA`, in no account) started
+with `UNMAPPED_GATEWAY_KEY` = `bun run gateway -- token <account> --label e2e-fix-env` (written to a
+0600 file, never printed, deleted after). Replay: `run-fix-a-devices.json` on A, then
+`run-english.json` and `run-fix-env-devices.json` on B.
+
+| Found | Fix | Re-checked |
+| --- | --- | --- |
+| 2. An `.env` sign-in whose key is not in the account was offered Remove and Add another device | `AccountSession` (signed in) carries `canChangeDevices`: main sets it when this computer's key is one of the account's keys, the only key main signs add / remove statements with (the gateway refuses any other: `account-key-not-member`). Settings → Account shows the devices read-only otherwise | A: "Add another device", code field and "Look up this code" shown (`fix-a-devices`). B: "Signed in with UNMAPPED_GATEWAY_KEY from .env · account adkobukz2moam7ayhxgwiuizpke", the device row `FJHY-IX3S-CY2J-67IX` with no "Remove", no "Add another device", and "This computer's key is not in this account, so it cannot add or remove devices: the gateway accepts those only from a device listed above."; the panel has no buttons (`fix-b-env-devices`). B's key was never in the account rather than removed from it; the rule is the same (the key is not listed) |

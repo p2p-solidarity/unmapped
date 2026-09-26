@@ -50,6 +50,10 @@ export async function originRoute(config: InferenceConfig): Promise<OriginRoute>
 
 export interface BuildReadiness {
   route: OriginRoute;
+  /**
+   * What main's route resolved the next chat to (`gateway.route()`): the gateway's model on the
+   * hosted route, never the blank "gateway default" of the setting; the setting when it has none.
+   */
   kind: ProviderKind;
   model: string;
   /** The bible and the chapters always go through chat, so the chat model must answer. */
@@ -61,12 +65,17 @@ export interface BuildReadiness {
 /** Asks the provider the build will actually use; the Create screen shows the answer. */
 export async function buildReadiness(): Promise<Result<BuildReadiness>> {
   const config = await window.seed.inference.getConfig();
-  const [route, probe] = await Promise.all([originRoute(config), window.seed.inference.probe()]);
+  const [route, probe, where] = await Promise.all([
+    originRoute(config),
+    window.seed.inference.probe(),
+    window.seed.gateway.route(),
+  ]);
   if (!probe.ok) return probe;
+  const next = where.ok ? where.value.next : null;
   return ok({
     route,
-    kind: config.kind,
-    model: config.model,
+    kind: next?.kind ?? config.kind,
+    model: next?.model ?? config.model,
     reachable: probe.value.reachable,
     latencyMs: probe.value.latencyMs,
     context: probe.value.context,

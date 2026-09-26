@@ -1,0 +1,12 @@
+{
+  "app": "A (CDP 9340) at the look step after run-fix-look-ids, granted another 40,000 (80,000 in all); before the run: curl -X POST 'http://127.0.0.1:8791/__fixture/mode?to=hang-headers' (the fixture never answers a picture)",
+  "checks": "item 1 for pictures: three look sketches still drawing when the page reloads are aborted by main, and the gateway releases each hold under the same id",
+  "actions": [
+    {"clickText": "Draw again (keeps the chosen one)"},
+    {"wait": 2500},
+    {"shot": "docs/e2e/milestone-rev6-p4-images-hosted/fix-01-drawing.jpg"},
+    {"eval": "setTimeout(() => location.reload(), 50); 'reloading'"},
+    {"wait": 4000},
+    {"eval": "document.body.innerText.slice(0, 120)"}
+  ]
+}

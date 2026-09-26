@@ -31,6 +31,7 @@ import { readContextWindow } from "./context";
 import { isDeadTokenCode } from "./hostedErrors";
 import { initKeyStore, readKeyRecord } from "./keyStore";
 import { registerModelIpc } from "./modelIpc";
+import { pageRequests } from "./pageRequests";
 import { probe } from "./probe";
 import { type RouteDeps, routeFor, routeView } from "./route";
 import { SceneArtifactService } from "./sceneArtifactService";
@@ -273,7 +274,7 @@ export function registerInferenceIpc(ctx: MainContext): void {
 
   registerModelIpc(ctx);
 
-  ipcMain.handle(IPC.inference.chat, async (_event, raw: unknown): Promise<Result<void>> => {
+  ipcMain.handle(IPC.inference.chat, async (event, raw: unknown): Promise<Result<void>> => {
     const parsed = chatRequestSchema.safeParse(raw);
     if (!parsed.success) return invalid("chat request");
     const request: ChatRequest = parsed.data;
@@ -289,9 +290,11 @@ export function registerInferenceIpc(ctx: MainContext): void {
     process.stdout.write(
       `[inference] chat ${request.id} · ${request.messages.length} messages · ${request.tools.length} tools\n`,
     );
+    // The page that asked owns the call: a reload, navigation, crash or close aborts it.
+    const untrack = pageRequests.track(event.sender, controller, `[inference] abort ${request.id}`);
     // Deliberately not awaited: the invoke resolves as soon as the stream is registered so the
     // renderer can start listening; every outcome reaches it as a ChatEvent.
-    void runChat(request, controller);
+    void runChat(request, controller).finally(untrack);
     return ok(undefined);
   });
 
@@ -316,6 +319,11 @@ export function registerInferenceIpc(ctx: MainContext): void {
       }
       const controller = new AbortController();
       sceneInflight.set(intent.requestId, controller);
+      const untrack = pageRequests.track(
+        event.sender,
+        controller,
+        `[inference] abort scene ${intent.requestId}`,
+      );
       const send = (payload: GenerationEvent): void => {
         if (!event.sender.isDestroyed()) event.sender.send(IPC.inference.sceneEvent, payload);
       };
@@ -368,6 +376,7 @@ export function registerInferenceIpc(ctx: MainContext): void {
         send({ type: "error", requestId: intent.requestId, error });
         return fail(error);
       } finally {
+        untrack();
         sceneInflight.delete(intent.requestId);
       }
     },

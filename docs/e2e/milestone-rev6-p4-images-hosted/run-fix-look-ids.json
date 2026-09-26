@@ -1,0 +1,34 @@
+{
+ "app": "A (CDP 9340), signed in, granted 40,000, at the title; the fixture upstream in mode `usage` (curl -X POST 'http://127.0.0.1:8791/__fixture/mode?to=usage')",
+ "note": "The first eval writes the look step's world cards through window.seed.createDrafts.save (test data typed by hand, as in run-a1-sketches.json): the fixture model only answers 'Hello.'.",
+ "checks": "item 2: each picture's gateway request id is main's [look] id",
+ "actions": [
+  {
+   "eval": "(async () => {\n  // Test data typed by hand (E2E only): the world cards the look step needs, because the fixture\n  // model answers only \"Hello.\" and so never writes them. Saved through the app's own IPC.\n  const list = await window.seed.createDrafts.list();\n  if (!list.ok) return list;\n  const entry = list.value.find((e) => e.kind !== \"broken\" && JSON.stringify(e).includes(\"A river delta\"));\n  const id = entry?.draftId ?? entry?.draft?.draftId;\n  const read = await window.seed.createDrafts.read(id);\n  if (!read.ok) return read;\n  const d = read.value;\n  d.world = {\n    fields: {\n      premise: \"A river delta where lantern keepers trade salt for stories.\",\n      tone: \"Quiet, warm, a little wistful.\",\n      rules: [\"Lanterns are never left dark.\", \"Salt pays for every story.\"],\n      taboos: [\"No one crosses the delta at night without a lantern.\"],\n      naming: \"Short names taken from boats and tides.\",\n      voice: \"Plain speech with river sayings.\",\n      look: \"Reed-roofed stilt houses, paper lanterns, grey-green water, low evening light.\",\n    },\n    edited: [\"premise\", \"tone\", \"rules\", \"taboos\", \"naming\", \"voice\", \"look\"],\n    basis: { name: d.idea.name, intent: d.idea.intent, material: d.idea.story, language: d.idea.language, fights: d.idea.play.fights },\n    rev: 1,\n  };\n  d.step = \"look\";\n  const saved = await window.seed.createDrafts.save(d);\n  return saved.ok ? { draftId: saved.value.draftId, step: saved.value.step, look: saved.value.world.fields.look } : saved;\n})()"
+  },
+  {
+   "clickText": "Create World"
+  },
+  {
+   "wait": 1500
+  },
+  {
+   "clickText": "Continue"
+  },
+  {
+   "wait": 2000
+  },
+  {
+   "clickText": "Draw sketches"
+  },
+  {
+   "wait": 6000
+  },
+  {
+   "eval": "({ images: [...document.querySelectorAll('img')].filter(i => i.src.startsWith('data:image/png')).map(i => ({ w: i.naturalWidth, h: i.naturalHeight })) })"
+  },
+  {
+   "shot": "docs/e2e/milestone-rev6-p4-images-hosted/fix-02-sketches.jpg"
+  }
+ ]
+}

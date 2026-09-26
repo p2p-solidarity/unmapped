@@ -1,0 +1,11 @@
+{
+  "app": "A (CDP 9340, udA) signed in with its own device key (saved), at the title",
+  "checks": "item 4, the positive half: a device whose key is in the account is offered adding devices",
+  "actions": [
+    {"clickText": "Settings"}, {"wait": 2000},
+    {"eval": "(() => { const a = document.querySelector('[data-account]'); const h = [...a.querySelectorAll('span')].find((s) => s.innerText === 'Devices in this account'); h?.scrollIntoView({block: 'start'}); return { text: a.innerText.slice(a.innerText.indexOf('Devices')), buttons: [...a.querySelectorAll('button')].map((b) => b.innerText) }; })()"},
+    {"wait": 300},
+    {"shot": "docs/e2e/milestone-rev6-p4-account/fix-a-devices.jpg"},
+    {"hold": "Escape", "ms": 80}, {"wait": 800}
+  ]
+}

@@ -5,9 +5,9 @@
 // allowance. Its model is the chosen one when the gateway lists it for images, else the gateway's
 // default image model, and the picture carries that model's licence record from `/v1/models`.
 //
-// Like chat: X-Request-Id (a fresh id per picture) and X-Unmapped-Purpose `image`, no world scope,
-// no silent retry; a refused token is forgotten so `.env`'s token is used next, and the allowance is
-// read again after every call (the hooks main's account service sets).
+// Like chat: X-Request-Id (the caller's id for this picture, else a fresh one) and X-Unmapped-Purpose
+// `image`, no world scope, no silent retry; a refused token is forgotten so `.env`'s token is used
+// next, and the allowance is read again after every call (the hooks main's account service sets).
 
 import { randomUUID } from "node:crypto";
 import { hostedError } from "@main/inference/hostedErrors";
@@ -79,7 +79,9 @@ export function hostedImageProvider(
         output_format: "png" as const,
         n: 1,
       };
-      const headers = { [REQUEST_ID_HEADER]: randomUUID(), [PURPOSE_HEADER]: "image" };
+      // The caller's picture id, so the gateway's line matches main's `[look]` / `[image]` line.
+      const requestId = options.requestId ?? randomUUID();
+      const headers = { [REQUEST_ID_HEADER]: requestId, [PURPOSE_HEADER]: "image" };
       const started = performance.now();
       try {
         // The token goes only to the configured gateway; a metered call is never retried silently.

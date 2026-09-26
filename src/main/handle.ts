@@ -3,7 +3,7 @@
 // instead of an unhandled rejection in the renderer.
 
 import { err, fail, type Result, toError } from "@shared/result";
-import { ipcMain } from "electron";
+import { type IpcMainInvokeEvent, ipcMain } from "electron";
 import type { z } from "zod";
 
 export function invalidPayload(channel: string, error: z.ZodError): Result<never> {
@@ -15,18 +15,19 @@ export function invalidPayload(channel: string, error: z.ZodError): Result<never
 
 /**
  * Registers a handler whose renderer arguments are validated as a tuple and whose return value is
- * a `Result`. `schema` parses the raw `args` array, so arity is checked too.
+ * a `Result`. `schema` parses the raw `args` array, so arity is checked too. `event` names the page
+ * that asked (a request it owns ends with it: inference/pageRequests.ts).
  */
 export function handle<S extends z.ZodType<readonly unknown[]>, T>(
   channel: string,
   schema: S,
-  run: (input: z.output<S>) => Promise<Result<T>> | Result<T>,
+  run: (input: z.output<S>, event: IpcMainInvokeEvent) => Promise<Result<T>> | Result<T>,
 ): void {
-  ipcMain.handle(channel, async (_event, ...args: unknown[]): Promise<Result<T>> => {
+  ipcMain.handle(channel, async (event, ...args: unknown[]): Promise<Result<T>> => {
     const parsed = schema.safeParse(args);
     if (!parsed.success) return invalidPayload(channel, parsed.error);
     try {
-      return await run(parsed.data);
+      return await run(parsed.data, event);
     } catch (error) {
       return fail(toError(error, "ipc-failed"));
     }

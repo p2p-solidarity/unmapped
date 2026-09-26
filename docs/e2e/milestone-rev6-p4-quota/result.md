@@ -87,3 +87,36 @@ the gateway, 0 input and 0 output tokens" (read by the eval in the first, interr
 - "B watching A's `granted` stream adds no gateway line" and "a rumor batch leaves B's allowance
   alone until B turns on the rumor switch": they need an attached shared world with claims and
   beats (phase 3's service), outside this run's assignment.
+
+## Fixes after the run
+
+Re-checked 2026-09-26 13:22–13:26 JST from a snapshot of the shared working tree (rsync of main
+`51817a3` + other sessions' uncommitted edits + these fixes, `node_modules` symlinked, a private
+Vite `cacheDir`, no `.env`), a fresh gateway data dir with this folder's `gateway-upstreams.json` /
+`gateway-costs.json`, the fixture upstream on 8791, and a fresh A (`udA`) on 9340, every key blank.
+Replay: `run-english.json`, `run-fix-signin.json`, `run-fix-idea.json`, `bun run gateway -- grant
+<account> 40000`, fixture `hang-stream`, `run-fix-reload-chat.json`, `run-fix-account-after.json`.
+Account `adkobukz2moam7ayhxgwiuizpke`.
+
+| Found | Fix | Re-checked |
+| --- | --- | --- |
+| 3. A hosted call outlived its page | `src/main/inference/pageRequests.ts`: every chat, Apple scene, look and AI-world picture request is tracked by the WebContents that asked; a main-frame cross-document navigation (reload), a crash or a closed window aborts them (all providers). Isolated failures in `tests/inference/pageRequests.test.ts` | "Write the world" on `hang-stream` → ledger `reserve ede0eeb9… credits 16970` 04:24:02.294Z (`fix-01-hanging-call`); `location.reload()` → main `[inference] abort ede0eeb9… · page navigated`, `fail ede0eeb9… · bible · hosted test-chat · 2901 ms · aborted`; gateway `release adkobukz2moam7ayhxgwiuizpke ede0eeb9… abort` 04:24:05.194Z; usage line `outcome "aborted"`; Account "0 of 40,000 gateway credits used · 0 held for calls running" (`fix-01-after-reload-account`) |
+| 4. No model name on the hosted route | `buildReadiness` (`narrative/originScene.ts`) names the provider and model main's route resolved (`gateway.route().next`) | Idea step: "Using hosted · test-chat (2 ms)" (`fix-07-idea-model`) |
+| 5. "This draft: N calls" counted refusals | `@shared/usage`: only `outcome: done` lines are calls (and give `ms` / unreported); `failed` and `aborted` are counted apart and shown on their own line; `tests/shared/usage.test.ts` item 6 | No allowance, "Write the world" → `fail b8ba21f0… · 22 ms · quota-exhausted`, ledger line `outcome "failed"`, no tokens; the line reads "This draft: 0 calls · 0 in / 0 out · 0 cached · Not counted as calls: 1 that ended without an answer (1 refused or failed, 0 cancelled). No tokens were recorded for them." (`fix-06-draft-usage`) |
+
+Follow-up (13:34–13:37 JST), a report from another session's run: the HUD usage panel read
+"未計入呼叫次數：NaN 次…（undefined 次…）". Cause: a dev session whose main was built before the
+summary split (electron-vite does not rebuild main) serving its old summary to a renderer that had
+hot-reloaded the new panel; ledger lines always carry `outcome`, so no ledger is short of it. The
+panel now reads the two counts as 0 when a summary lacks them (`apart()` in `hud/UsagePanel.tsx`).
+Checked both ways on the same A, a new game of the built-in world (Worlds → New game → Start; the
+chapter writer's calls answered, a witnessing refused `quota-exhausted`), `run-fix-hud-usage.json`:
+- main built with the old `@shared/usage`, new renderer (the reported skew): "This world: 4 calls ·
+  60 in / 90 out · 15 cached", no NaN / undefined anywhere (`fix-06-hud-usage-stale-main`);
+- main restarted on the new one: "This world: 6 calls · 120 in / 180 out · 30 cached · Not counted
+  as calls: 2 that ended without an answer (2 refused or failed, 0 cancelled)…", By purpose
+  Chapter 6, the two witnessing lines listed as failed (`fix-06-hud-usage`); in zh-TW
+  (`run-fix-hud-usage-zh.json`): "本世界：6 次 · 輸入 120 / 輸出 180 · 快取 30 ·
+  未計入呼叫次數：2 次沒有得到回答（2 次被拒絕或失敗，0 次已取消），沒有為它們記錄任何 token。"
+  (`fix-06-hud-usage-zh`). The panel is taller than the window there and its top is cut off; that
+  layout is older than this change.

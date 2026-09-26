@@ -1,0 +1,11 @@
+{
+  "app": "A (CDP 9340, fresh userData udA) from the snapshot tree, English already set (run-english.json), at the title",
+  "actions": [
+    {"clickText": "Settings"}, {"wait": 1500},
+    {"eval": "document.querySelector('[data-account]').scrollIntoView({block: 'center'}); document.querySelector('[data-account]').innerText"},
+    {"clickText": "Sign in with this device"},
+    {"wait": 2500},
+    {"eval": "(() => { const a = document.querySelector('[data-account]'); return { account: a.dataset.account, text: a.innerText, route: document.querySelector('[data-route]')?.innerText }; })()"},
+    {"hold": "Escape", "ms": 80}, {"wait": 800}
+  ]
+}

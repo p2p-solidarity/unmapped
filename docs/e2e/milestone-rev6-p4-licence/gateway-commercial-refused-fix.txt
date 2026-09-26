@@ -1,0 +1,8 @@
+# GATEWAY_COMMERCIAL=1 bun run gateway -- --port 8788 --data $SP/gw-commercial   (after the startup-order fix)
+# $SP/gw-commercial before: costs.json upstreams.json
+$ bun --tsconfig-override tsconfig.node.json src/gateway/main.ts --port "8788" --data "$SP/gw-commercial"
+gateway: GATEWAY_COMMERCIAL=1, but qwen-image-2.1 (qwen-research) may not be sold.
+  Stop serving those models, or unset GATEWAY_COMMERCIAL.
+Internal error: directory mismatch for directory "$SP/tree/tsconfig.node.json", fd 3. You don't need to do anything, but this indicates a bug.
+error: script "gateway" exited with code 1
+# exit 1; $SP/gw-commercial after: costs.json upstreams.json (no admin-secret, gateway-key.json or gateway.lock); 8788 not listening

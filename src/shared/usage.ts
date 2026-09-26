@@ -4,7 +4,10 @@
 // no prompt, no answer and no key is ever written here.
 //
 // A world's total is every line of its scope, plus the lines of the scopes linked into it (the
-// Create draft a world was built from). The ledger only grows; a summary is always derived.
+// Create draft a world was built from). The ledger only grows; a summary is always derived. A call
+// counts as a call only when it answered (`outcome: done`): one refused before any tokens (no
+// allowance, signed out, no route), failed or cancelled is counted apart by its outcome — main
+// records no tokens for it, so it is never "a call without reported tokens" either (Rule 2).
 
 import { z } from "zod";
 
@@ -135,13 +138,18 @@ export function parseUsageLines(text: string): { lines: UsageLine[]; skipped: nu
 }
 
 export interface UsageTotals {
+  /** Calls that answered (`outcome: done`); `ms` is theirs, and so is every token main records. */
   calls: number;
   input: number;
   output: number;
   cached: number;
   ms: number;
-  /** Calls whose provider reported no token counts: their tokens are unknown, not zero. */
+  /** Answered calls whose provider reported no token counts: unknown, not zero. */
   unreported: number;
+  /** Calls that ended without an answer: refused before any tokens, or failed. Not calls. */
+  failed: number;
+  /** Calls cancelled before they answered (by the player, or their page going away). Not calls. */
+  aborted: number;
 }
 
 export interface UsageSummary extends UsageTotals {
@@ -156,14 +164,23 @@ export interface UsageSummary extends UsageTotals {
 export const RECENT_USAGE = 12;
 
 function emptyTotals(): UsageTotals {
-  return { calls: 0, input: 0, output: 0, cached: 0, ms: 0, unreported: 0 };
+  return { calls: 0, input: 0, output: 0, cached: 0, ms: 0, unreported: 0, failed: 0, aborted: 0 };
 }
 
 function add(totals: UsageTotals, record: UsageRecord): void {
-  totals.calls += 1;
+  // Tokens a line carries count whatever its outcome (main records them only for answers today).
   totals.input += record.input ?? 0;
   totals.output += record.output ?? 0;
   totals.cached += record.cached ?? 0;
+  if (record.outcome === "failed") {
+    totals.failed += 1;
+    return;
+  }
+  if (record.outcome === "aborted") {
+    totals.aborted += 1;
+    return;
+  }
+  totals.calls += 1;
   totals.ms += record.ms;
   if (record.input === null && record.output === null) totals.unreported += 1;
 }

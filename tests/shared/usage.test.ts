@@ -6,6 +6,9 @@
 //   4. The Create draft a world was built from is not counted toward it — or a link cycle
 //      (draft → world → draft) never terminates.
 //   5. Repair rounds of one program lose their tokens (the old `usage: null`).
+//   6. A call that ended without an answer — refused before any tokens (`quota-exhausted`, signed
+//      out), failed or cancelled; the ledger's `outcome` — counts as a call, and as one "without
+//      reported tokens", so Create's "This draft: 8 calls" counted refusals (p4-quota).
 
 import { runProgram } from "@renderer/narrative/program";
 import { ok } from "@shared/result";
@@ -109,5 +112,30 @@ describe("usage ledger", () => {
     expect(program.ok).toBe(true);
     if (!program.ok) return;
     expect(program.value.usage).toEqual({ prompt: 60, completion: 15, cached: 4 });
+  });
+
+  it("counts only answered calls as calls, and the rest apart by outcome (6)", () => {
+    const nothing = { input: null, output: null, cached: null };
+    const summary = summarizeUsage(
+      [
+        call(draft, { purpose: "bible", provider: "hosted", model: "test-chat" }),
+        call(draft, { purpose: "bible", provider: "hosted", ...nothing, outcome: "failed" }),
+        call(draft, { purpose: "bible", provider: "hosted", ...nothing, outcome: "failed" }),
+        call(draft, { purpose: "story", provider: "hosted", ...nothing, outcome: "aborted" }),
+      ],
+      draft,
+    );
+    expect(summary).toMatchObject({ calls: 1, failed: 2, aborted: 1, unreported: 0 });
+    expect(summary.input).toBe(100);
+    expect(summary.ms).toBe(1500);
+    expect(summary.byPurpose.bible).toMatchObject({ calls: 1, failed: 2, aborted: 0 });
+    expect(summary.byPurpose.story).toMatchObject({ calls: 0, aborted: 1 });
+    // Every line is still listed, with its outcome.
+    expect(summary.recent.map((record) => record.outcome)).toEqual([
+      "aborted",
+      "failed",
+      "failed",
+      "done",
+    ]);
   });
 });

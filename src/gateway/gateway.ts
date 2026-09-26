@@ -1,5 +1,6 @@
-// Opens a gateway over its data dir (rev 6 phase 4): the lock, its key, the stores folded into
-// memory, the upstreams and costs checked, and every start-up refusal — all before a port is bound.
+// Opens a gateway over its data dir (rev 6 phase 4): the upstreams and costs checked and every
+// start-up refusal decided first, then the lock, its key and the stores folded into memory — all
+// before a port is bound, and nothing written for a start that is refused.
 // Runtime-neutral (web `Request` / `Response`), so tests drive it in vitest and `main.ts` serves it
 // with Bun.
 //
@@ -130,6 +131,15 @@ export interface Gateway {
 export function openGateway(options: GatewayOptions): Result<Gateway> {
   const clock = options.clock ?? new SystemClock();
   const log = options.log ?? (() => {});
+  // Every operator file is read and every start-up refusal decided before anything is written: a
+  // refused start leaves the data dir as it found it (no lock, no gateway key, no admin secret).
+  const saved = readSavedKeys(options.data);
+  const upstreams = loadUpstreams(options.data, saved, options.env);
+  if (!upstreams.ok) return upstreams;
+  const costs = loadCosts(options.data);
+  if (!costs.ok) return costs;
+  const decision = checkStartup(options.env, saved, upstreams.value);
+  if (!decision.ok) return decision;
   const stores = openStores(options.data, clock, options.listen);
   if (!stores.ok) return stores;
   const { accounts, ledger } = stores.value;
@@ -140,13 +150,6 @@ export function openGateway(options: GatewayOptions): Result<Gateway> {
   const admin = loadAdminSecret(options.data, true);
   if (!admin.ok) return fail(admin);
   if (admin.value === null) return fail(err("gateway-internal", "No admin secret was made."));
-  const saved = readSavedKeys(options.data);
-  const upstreams = loadUpstreams(options.data, saved, options.env);
-  if (!upstreams.ok) return fail(upstreams);
-  const costs = loadCosts(options.data);
-  if (!costs.ok) return fail(costs);
-  const decision = checkStartup(options.env, saved, upstreams.value);
-  if (!decision.ok) return fail(decision);
   const fetchFn: Fetch = options.fetch ?? ((input, init) => fetch(input, init));
   const makeBilling =
     options.billing ??

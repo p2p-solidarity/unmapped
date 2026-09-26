@@ -30,6 +30,7 @@ import type { MainContext } from "../context";
 import { handle } from "../handle";
 import { selectImageProvider } from "../images/registry";
 import { recordWorkPicture, workLicensing } from "../images/workLicences";
+import { pageRequests } from "../inference/pageRequests";
 import { recordUsage } from "../usage/ipc";
 import {
   createDraft,
@@ -325,7 +326,7 @@ export function registerWorksIpc(ctx: MainContext): void {
       z.string().regex(REQUEST_ID),
       lookSourceSchema.nullable().optional(),
     ]),
-    async ([draftId, assetId, requestId, from]) => {
+    async ([draftId, assetId, requestId, from], event) => {
       if (imageInflight.has(requestId)) {
         return err("duplicate-request", `Picture request ${requestId} is already running.`);
       }
@@ -357,14 +358,17 @@ export function registerWorksIpc(ctx: MainContext): void {
       const provider = selected.value;
       const controller = new AbortController();
       imageInflight.set(requestId, controller);
+      // The page that asked owns the picture (a reload aborts it), and its id is the gateway's.
+      const untrack = pageRequests.track(event.sender, controller, `[image] abort ${requestId}`);
       const started = Date.now();
       const image = await provider
         .generate(
           prompt,
           controller.signal,
-          look.reference === undefined ? {} : { reference: look.reference },
+          look.reference === undefined ? { requestId } : { reference: look.reference, requestId },
         )
         .finally(() => {
+          untrack();
           imageInflight.delete(requestId);
         });
       await recordUsage(ctx, {

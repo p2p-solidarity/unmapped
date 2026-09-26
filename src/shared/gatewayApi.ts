@@ -49,6 +49,12 @@ export type AccountSession =
       source: "saved" | "env";
       account: string;
       devices: AccountDeviceView[];
+      /**
+       * This computer's key is one of `devices`, so the gateway accepts the add / remove statements
+       * main signs with it. False for a `.env` token of an account this key is not (or no longer)
+       * in: approving a code or removing a device is refused, so neither is offered.
+       */
+      canChangeDevices: boolean;
     };
 
 /** A pairing this device asked for: the code to type on a device already in the account. */

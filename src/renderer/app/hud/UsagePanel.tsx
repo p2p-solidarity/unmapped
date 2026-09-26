@@ -1,6 +1,7 @@
 // What this world's model calls cost, read back from main's usage ledger (@shared/usage): one line
 // for the HUD and Create, and a panel with the total by purpose and the latest calls. Every number
-// is one main recorded; a provider that reported no tokens is shown as such, never as zero.
+// is one main recorded; a provider that reported no tokens is shown as such, never as zero, and a
+// call that gave no answer (refused, failed, cancelled) is shown apart, never counted as a call.
 
 import { formatNumber, formatTime, type StringKey, useT } from "@renderer/i18n";
 import { useUsageSummary } from "@renderer/llm";
@@ -50,6 +51,35 @@ function totalsLine(totals: UsageTotals): Record<string, string | number> {
   };
 }
 
+/**
+ * The calls set apart by outcome. A summary without the counts comes from a main process older
+ * than the split (a dev session whose main was not restarted): it still counted those calls as
+ * calls, so none are apart there — never `undefined` or NaN on the screen.
+ */
+function apart(totals: UsageTotals): { failed: number; aborted: number } {
+  const count = (n: number | undefined): number => (typeof n === "number" ? n : 0);
+  return { failed: count(totals.failed), aborted: count(totals.aborted) };
+}
+
+/** Anything in the ledger for this scope, answered or not. */
+function anyCall(totals: UsageTotals): boolean {
+  const { failed, aborted } = apart(totals);
+  return totals.calls + failed + aborted > 0;
+}
+
+/** The calls that gave no answer, apart from the count (null when there are none). */
+function Unanswered({ totals }: { totals: UsageTotals }): JSX.Element | null {
+  const t = useT();
+  const { failed, aborted } = apart(totals);
+  const n = failed + aborted;
+  if (n === 0) return null;
+  return (
+    <Text variant="caption" tone="dim">
+      {t("usage.unanswered", { n, failed, aborted })}
+    </Text>
+  );
+}
+
 /** One line: the world's (or the draft's) total so far; opens the breakdown when given `onOpen`. */
 export function UsageLine({
   scope,
@@ -71,7 +101,7 @@ export function UsageLine({
           style={{ display: "flex", alignItems: "center", gap: space.sm, flexWrap: "wrap" }}
         >
           <Text variant="caption" tone="muted" mono>
-            {value.calls === 0
+            {!anyCall(value)
               ? t(draft ? "usage.draftNone" : "usage.none")
               : t(draft ? "usage.draftLine" : "usage.worldLine", totalsLine(value))}
           </Text>
@@ -80,6 +110,7 @@ export function UsageLine({
               {t("usage.open")}
             </Button>
           )}
+          <Unanswered totals={value} />
         </div>
       )}
     </StatePanel>
@@ -143,8 +174,9 @@ export function UsageDetails({
           {(value) => (
             <div style={{ display: "flex", flexDirection: "column", gap: space.md }}>
               <Text variant="body" mono>
-                {value.calls === 0 ? t("usage.none") : t("usage.worldLine", totalsLine(value))}
+                {!anyCall(value) ? t("usage.none") : t("usage.worldLine", totalsLine(value))}
               </Text>
+              <Unanswered totals={value} />
               {value.unreported === 0 ? null : (
                 <Text variant="caption" tone="dim">
                   {t("usage.unreported", { n: value.unreported })}
@@ -155,7 +187,7 @@ export function UsageDetails({
                   {t("usage.skipped", { n: value.skipped })}
                 </Text>
               )}
-              {value.calls === 0 ? null : (
+              {!anyCall(value) ? null : (
                 <>
                   <Text variant="label" tone="accent">
                     {t("usage.byPurpose")}
@@ -182,29 +214,31 @@ export function UsageDetails({
                       </tr>
                     </thead>
                     <tbody>
-                      {Object.entries(value.byPurpose).map(([purpose, totals]) => (
-                        <tr key={purpose} data-usage-purpose={purpose}>
-                          <td style={{ ...cell, textAlign: "left" }}>
-                            <Text variant="caption">
-                              {t(PURPOSE_LABEL[purpose as UsagePurpose])}
-                            </Text>
-                          </td>
-                          {[
-                            formatNumber(totals.calls),
-                            formatNumber(totals.input),
-                            formatNumber(totals.output),
-                            formatNumber(totals.cached),
-                            t("usage.seconds", { s: seconds(totals.ms) }),
-                          ].map((text, at) => (
-                            // biome-ignore lint/suspicious/noArrayIndexKey: fixed columns, in order
-                            <td key={`${purpose}-${at}`} style={cell}>
-                              <Text variant="caption" mono>
-                                {text}
+                      {Object.entries(value.byPurpose)
+                        .filter(([, totals]) => totals.calls > 0)
+                        .map(([purpose, totals]) => (
+                          <tr key={purpose} data-usage-purpose={purpose}>
+                            <td style={{ ...cell, textAlign: "left" }}>
+                              <Text variant="caption">
+                                {t(PURPOSE_LABEL[purpose as UsagePurpose])}
                               </Text>
                             </td>
-                          ))}
-                        </tr>
-                      ))}
+                            {[
+                              formatNumber(totals.calls),
+                              formatNumber(totals.input),
+                              formatNumber(totals.output),
+                              formatNumber(totals.cached),
+                              t("usage.seconds", { s: seconds(totals.ms) }),
+                            ].map((text, at) => (
+                              // biome-ignore lint/suspicious/noArrayIndexKey: fixed columns, in order
+                              <td key={`${purpose}-${at}`} style={cell}>
+                                <Text variant="caption" mono>
+                                  {text}
+                                </Text>
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
                     </tbody>
                   </table>
                   <Text variant="label" tone="accent">

@@ -1,0 +1,10 @@
+{
+  "app": "A (CDP 9340) after the reload, at the title",
+  "actions": [
+    {"clickText": "Settings"}, {"wait": 2000},
+    {"eval": "(() => { const q = document.querySelector('[data-quota]'); q.scrollIntoView({block: 'center'}); return q.innerText; })()"},
+    {"wait": 300},
+    {"shot": "docs/e2e/milestone-rev6-p4-quota/fix-01-after-reload-account.jpg"},
+    {"hold": "Escape", "ms": 80}, {"wait": 800}
+  ]
+}

@@ -24,6 +24,12 @@ export const USAGE = {
     "zh-TW": "這份草稿還沒有任何模型呼叫。",
     ja: "この下書きではまだモデルを呼び出していません。",
   },
+  unanswered: {
+    en: "Not counted as calls: {n} that ended without an answer ({failed} refused or failed, {aborted} cancelled). No tokens were recorded for them.",
+    "zh-TW":
+      "未計入呼叫次數：{n} 次沒有得到回答（{failed} 次被拒絕或失敗，{aborted} 次已取消），沒有為它們記錄任何 token。",
+    ja: "呼び出し回数に含めていません：応答なしで終わった {n} 回（拒否・失敗 {failed} 回、キャンセル {aborted} 回）。これらのトークンは記録されていません。",
+  },
   loading: { en: "Reading usage…", "zh-TW": "正在讀取用量…", ja: "使用量を読み込み中…" },
   unreported: {
     en: "{n} {n|call|calls} without token counts from the provider (not counted as zero).",

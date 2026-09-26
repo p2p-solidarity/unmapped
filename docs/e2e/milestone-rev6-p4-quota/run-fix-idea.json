@@ -1,0 +1,19 @@
+{
+  "app": "A (CDP 9340), signed in, no grant yet (the allowance is 0), at the title",
+  "checks": "item 7: the idea step names the model the route resolved to; item 6: a refused call is shown apart, not counted as a call",
+  "actions": [
+    {"clickText": "Create World"}, {"wait": 1500},
+    {"clickText": "Start a new game"}, {"wait": 2500},
+    {"eval": "(() => { const hit = [...document.querySelectorAll('span, p, div')].filter(e => /^Using /.test(e.innerText ?? '')).sort((a, b) => a.innerText.length - b.innerText.length)[0]; hit?.scrollIntoView({block: 'center'}); return hit?.innerText ?? null; })()"},
+    {"wait": 300},
+    {"shot": "docs/e2e/milestone-rev6-p4-quota/fix-07-idea-model.jpg"},
+    {"clickText": "In one sentence, what is this land?"},
+    {"type": "A river delta where lantern keepers trade salt for stories."},
+    {"wait": 400},
+    {"clickText": "Write the world"},
+    {"wait": 4000},
+    {"eval": "(() => { const line = document.querySelector('[data-usage-line]'); line?.scrollIntoView({block: 'center'}); return { usage: line?.innerText ?? null, error: [...document.querySelectorAll('*')].filter(e => (e.innerText ?? '').includes('quota-exhausted')).sort((a, b) => a.innerText.length - b.innerText.length)[0]?.innerText ?? null }; })()"},
+    {"wait": 300},
+    {"shot": "docs/e2e/milestone-rev6-p4-quota/fix-06-draft-usage.jpg"}
+  ]
+}

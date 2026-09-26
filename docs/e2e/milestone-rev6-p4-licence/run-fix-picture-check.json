@@ -1,0 +1,31 @@
+{
+ "app": "A (CDP 9340), commercial mode off, at the title; the first eval installs the built-in world (window.seed.game.base, what New game calls) for its origin scene; the fixture upstream in mode `usage` for the one sketch drawn",
+ "note": "Publishes through window.seed.cartridges.publish, the IPC Create's Build ends with; no screen reaches a publish with a picture while the model is the fixture.",
+ "checks": "item 3: an empty or undecodable look.png is refused at publish with its own code; a whole one publishes",
+ "actions": [
+  {
+   "eval": "window.seed.game.base().then((r) => r.ok ? r.value.cartridgeId + '@' + r.value.version : r.error.code)"
+  },
+  {
+   "eval": "(() => {\n  // E2E only: publishes a small open-land revision through window.seed.cartridges.publish (the IPC\n  // Create's Build ends with), as run-a1-base-commercial-off.json does, with a look.png that is\n  // empty, not a picture, cut off, or whole, so main's publish-time picture check decides.\n  const bytesOf = (b64) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));\n  const png = bytesOf(\"iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAeklEQVR4nO3PUQkAIBTAwBfVKEYxqiH8OITBAtxm7fN1wwUNaEEDWtCAFjSgBQ1oQQNa0IAWNKAFDWhBA1rQgBY0oAUNaEEDWtCAFjSgBQ1oQQNa0IAWNKAFDWhBA1rQgBY0oAUNaEEDWtCAFjSgBQ1oQQNa0IAWPHYBHwIBadNjfowAAAAASUVORK5CYII=\");\n  const pictures = {\n    empty: new Uint8Array(0),\n    text: new TextEncoder().encode(\"not a picture\"),\n    cut: png.slice(0, Math.floor(png.length / 2)),\n    whole: png,\n  };\n  window.__pub = async (version, picture) => {\n    const { openLandCartridge } = await import(\"/narrative/openLandCartridge.ts\");\n    const base = await window.seed.cartridges.read(\"aether-land\", \"1.3.0\");\n    if (!base.ok) return base;\n    const input = await openLandCartridge({\n      cartridgeId: \"e2e-picture\", version, name: \"E2E picture check\", author: \"e2e\",\n      premise: \"A revision made to exercise the publish-time picture check.\",\n      originSource: base.value.scenes.origin, bible: base.value.bible,\n      createdAt: new Date().toISOString(), look: pictures[picture],\n    });\n    if (!input.ok) return input;\n    const published = await window.seed.cartridges.publish(input.value);\n    if (!published.ok) return { version, picture, bytes: pictures[picture].length, refused: published.error };\n    const rev = await window.seed.cartridges.read(\"e2e-picture\", version);\n    return { version, picture, bytes: pictures[picture].length, published: published.value.contentHash, lookBytes: rev.ok ? rev.value.assets[\"look.png\"].length : null };\n  };\n  return \"defined\";\n})()"
+  },
+  {
+   "eval": "window.__pub('1.0.0', 'empty')"
+  },
+  {
+   "eval": "window.__pub('1.0.0', 'text')"
+  },
+  {
+   "eval": "window.__pub('1.0.0', 'cut')"
+  },
+  {
+   "eval": "window.__pub('1.0.0', 'whole')"
+  },
+  {
+   "eval": "(async () => {\n  // A sketch this app draws through the gateway now (drawLook, the look step's own IPC, on the\n  // draft of run-fix-look-ids; fixture mode `usage`): a real 512 x 512 PNG main wrote must pass the\n  // same check, as a lineage revision of 1.0.0.\n  const drawn = await window.seed.createDrafts.drawLook(\"75769d0f16ddb7b0\", 0, crypto.randomUUID());\n  if (!drawn.ok) return drawn;\n  const looks = await window.seed.createDrafts.looks(\"75769d0f16ddb7b0\");\n  const look = looks.value.find((l) => l.id === drawn.value.id) ?? looks.value[0];\n  const url = look.dataUrl ?? look.url;\n  const bytes = Uint8Array.from(atob(url.slice(url.indexOf(\",\") + 1)), (c) => c.charCodeAt(0));\n  const { openLandCartridge } = await import(\"/narrative/openLandCartridge.ts\");\n  const base = await window.seed.cartridges.read(\"aether-land\", \"1.3.0\");\n  const input = await openLandCartridge({\n    cartridgeId: \"e2e-picture\", version: \"1.0.1\", name: \"E2E picture check\", author: \"e2e\",\n    premise: \"A revision made to exercise the publish-time picture check.\",\n    originSource: base.value.scenes.origin, bible: base.value.bible,\n    createdAt: new Date().toISOString(), look: bytes,\n  });\n  const parent = (await window.seed.cartridges.list()).value.find((m) => m.cartridgeId === \"e2e-picture\" && m.version === \"1.0.0\");\n  const lineage = { kind: \"revision\", parent: { cartridgeId: parent.cartridgeId, version: parent.version, contentHash: parent.contentHash } };\n  const published = await window.seed.cartridges.publish({ ...input.value, manifest: { ...input.value.manifest, lineage } });\n  return published.ok ? { version: \"1.0.1\", look: drawn.value.id, bytes: bytes.length, published: published.value.contentHash } : published;\n})()"
+  },
+  {
+   "eval": "window.seed.cartridges.list().then((r) => r.value.filter((m) => m.cartridgeId === 'e2e-picture').map((m) => m.version))"
+  }
+ ]
+}

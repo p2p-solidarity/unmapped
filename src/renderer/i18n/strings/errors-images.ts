@@ -30,6 +30,30 @@ export const IMAGES_ERRORS: Record<string, ErrorText> = {
       ja: "商用利用できるライセンスのプロバイダーで描き直すか（設定 → 画像）、自分のファイルを使ってください。",
     },
   },
+  "cartridge-picture-empty": {
+    message: {
+      en: "A picture in this world is empty (0 bytes), so it cannot be published.",
+      "zh-TW": "這個世界裡有一張圖片是空的（0 位元組），所以無法發布。",
+      ja: "このワールドの画像のひとつが空（0 バイト）のため、公開できません。",
+    },
+    hint: {
+      en: "Draw the picture again (or pick another) at Create World's Look step, then build again.",
+      "zh-TW": "請在「創造世界」的「看樣子」步驟重畫這張圖片（或改選另一張），再重新建造。",
+      ja: "「世界をつくる」の「見た目」の手順で画像を描き直して（または別の画像を選んで）から、もう一度作ってください。",
+    },
+  },
+  "cartridge-picture-undecodable": {
+    message: {
+      en: "A picture in this world cannot be decoded, so it cannot be published.",
+      "zh-TW": "這個世界裡有一張圖片無法解碼，所以無法發布。",
+      ja: "このワールドの画像のひとつを読み取れないため、公開できません。",
+    },
+    hint: {
+      en: "Draw the picture again (or pick another) at Create World's Look step, then build again.",
+      "zh-TW": "請在「創造世界」的「看樣子」步驟重畫這張圖片（或改選另一張），再重新建造。",
+      ja: "「世界をつくる」の「見た目」の手順で画像を描き直して（または別の画像を選んで）から、もう一度作ってください。",
+    },
+  },
   "image-server-unreachable": {
     message: {
       en: "The image server did not answer.",

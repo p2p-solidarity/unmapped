@@ -1,0 +1,11 @@
+{
+  "app": "B (CDP 9340, fresh userData udB) started with UNMAPPED_GATEWAY_KEY = a CLI token of A's account (bun run gateway -- token <account> --label e2e-fix-env); B's own device key is in no account. English set first (run-english.json), at the title",
+  "checks": "item 4: a .env sign-in whose device key is not in the account is shown the devices read-only: no Remove, no Add another device",
+  "actions": [
+    {"clickText": "Settings"}, {"wait": 2500},
+    {"eval": "(() => { const a = document.querySelector('[data-account]'); const h = [...a.querySelectorAll('span')].find((s) => s.innerText === 'Devices in this account'); h?.scrollIntoView({block: 'center'}); return { account: a.dataset.account, text: a.innerText, buttons: [...a.querySelectorAll('button')].map((b) => b.innerText), thisDevice: document.body.innerText.match(/This device[^\\n]*/)?.[0] ?? null }; })()"},
+    {"wait": 300},
+    {"shot": "docs/e2e/milestone-rev6-p4-account/fix-b-env-devices.jpg"},
+    {"hold": "Escape", "ms": 80}, {"wait": 800}
+  ]
+}

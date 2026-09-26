@@ -63,3 +63,15 @@ six image lines.
   world needs model-written code, and the fixture only answers "Hello.".
 - `images.edit` with a reference picture through the gateway: the look step draws without a
   reference; a world's later pictures would use one.
+
+## Fixes after the run
+
+Re-checked 2026-09-26 13:24–13:25 JST on the same snapshot, gateway and A as milestone-rev6-p4-quota's
+"Fixes after the run" (account `adkobukz2moam7ayhxgwiuizpke`, granted 40,000 then 40,000 more).
+Replay: `run-fix-look-ids.json` (fixture `usage`), then fixture `hang-headers` and
+`run-fix-reload-look.json`.
+
+| Found | Fix | Re-checked |
+| --- | --- | --- |
+| 2. Picture ids differ between main and the gateway | `ImageOptions.requestId`: Create's look request and an AI world's asset request pass their own id; `hostedImageProvider` sends it as `X-Request-Id` (a fresh one only without); one id per picture. `tests/inference/hosted.test.ts` item 6 | "Draw sketches" → main `[look] done 46781b26…`, `0d795730…`, `e5335dc6…` (hosted · test-image, 30–35 ms) ↔ ledger `reserve` / `settle` and gateway `settle … credits 10000/10000 (usage)` under exactly those three ids (`fix-02-sketches`) |
+| (quota item 3, for pictures) A picture outlived its page | The same page tracking as chat (`pageRequests`) in `createDraftsIpc` and `works/ipc` | "Draw again" on `hang-headers` → ledger `reserve` 123d3359…, d63d8ab6…, 693e7602… (04:25:12Z, 10,000 each; `fix-01-drawing`); reload → main `[look] abort <id> · page navigated` ×3, `[look] fail <id> · ~3000 ms · cancelled` ×3; gateway `release … abort` for the same three ids at 04:25:15.160–.161Z. Ledger at the end: 2 grant, 8 reserve, 4 settle, 4 release — every hold ended; Account "40,000 of 80,000 … 0 held" |

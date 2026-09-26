@@ -1,0 +1,15 @@
+{
+  "app": "A (CDP 9340, udA) in Play on a new game of the built-in world (Worlds → New game → Start); its first calls are the chapter writer's (answered 'Hello.') and a witnessing refused quota-exhausted",
+  "checks": "item 6 follow-up: the HUD usage line and panel never show NaN / undefined; answered calls are calls, the rest are set apart",
+  "shot": "pass the shot name as the last action's file when replaying",
+  "actions": [
+    {"eval": "(() => { const l = document.querySelector('[data-usage-line]'); return l?.innerText ?? null; })()"},
+    {"clickText": "Usage"},
+    {"wait": 1500},
+    {"eval": "(() => { const h = [...document.querySelectorAll('h2')].find((e) => e.innerText === 'AI usage'); const card = h?.parentElement; return card?.innerText ?? null; })()"},
+    {"wait": 300},
+    {"shot": "docs/e2e/milestone-rev6-p4-quota/fix-06-hud-usage.jpg"},
+    {"clickText": "Close"},
+    {"wait": 500}
+  ]
+}

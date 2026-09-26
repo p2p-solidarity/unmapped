@@ -156,6 +156,9 @@ export class AccountService {
           fingerprint: keyFingerprint(entry.key),
           thisDevice: entry.key === me,
         })),
+        // changeKey signs with this device's key, and the gateway takes a statement only from a
+        // key in the account (`account-key-not-member`).
+        canChangeDevices: view.value.keys.some((entry) => entry.key === me),
       },
     });
   }

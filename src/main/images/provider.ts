@@ -46,6 +46,12 @@ export interface ImageOptions {
    * "concept": a whole opaque scene, kept at CONCEPT_SIDE.
    */
   kind?: "asset" | "concept";
+  /**
+   * The caller's id for this one picture (Create's look request, an AI world's asset request): the
+   * id main logs it under, sent as the gateway's X-Request-Id so both lines match. One id per
+   * picture — the gateway refuses a second call with an id it has seen.
+   */
+  requestId?: string;
 }
 
 /** One image model. Swapping the model is swapping this object, nothing else. */

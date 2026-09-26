@@ -7,6 +7,8 @@
 //
 // With commercial mode on, a revision that adds or changes a picture whose licence is not
 // commercial is refused ("redraw these"); inherited pictures are listed in the audit, not refused.
+// A picture it adds or changes must also be one: an empty or undecodable file is refused first
+// (./pictureBytes.ts), whatever the mode.
 // Installs, migrations and mod revisions publish in main without this step: they carry exact
 // revisions (or their base's assets, licences.json included) unchanged.
 
@@ -31,6 +33,7 @@ import { publishCartridgeRevision, readCartridgeRevision } from "../cartridges/s
 import { readLookLicences } from "../workspaces/createLooks";
 import { logAudit, refuseRedraw } from "./audit";
 import { commercialMode, type EnvLike } from "./commercial";
+import { checkPublishedPicture } from "./pictureBytes";
 
 export interface CartridgeLicenceDirs {
   cartridgesDir: string;
@@ -84,13 +87,20 @@ export async function licenseCartridge(
   const hashes = Object.fromEntries(
     Object.entries(pictures).map(([path, bytes]) => [path, sha256(bytes)]),
   );
-  const file = licencePictures(
-    hashes,
-    await parentLicences(dirs.cartridgesDir, input.manifest.lineage?.parent ?? null),
-    await readLookLicences(dirs.workspacesDir),
-  );
+  const what = `cartridge ${input.manifest.cartridgeId}@${input.manifest.version}`;
+  const parent = await parentLicences(dirs.cartridgesDir, input.manifest.lineage?.parent ?? null);
+  // An added or changed picture must decode; one kept byte for byte from the parent is the parent's
+  // (listed like its licence), never a reason to refuse this revision.
+  for (const [path, bytes] of Object.entries(pictures)) {
+    if (parent?.has(hashes[path] as ContentHash) === true) continue;
+    const checked = checkPublishedPicture(path, bytes);
+    if (checked.ok) continue;
+    process.stdout.write(`[licence] ${what} · ${path} · refused · ${checked.error.code}\n`);
+    return checked;
+  }
+  const file = licencePictures(hashes, parent, await readLookLicences(dirs.workspacesDir));
   const audit = licenceAudit(file, licenceTable(), await commercialMode(env));
-  logAudit(`cartridge ${input.manifest.cartridgeId}@${input.manifest.version}`, audit);
+  logAudit(what, audit);
   if (audit.blocked.length > 0) return refuseRedraw(audit.blocked, audit.commercial);
   const encoded = new TextEncoder().encode(`${canonicalJson(file)}\n`);
   return ok({ ...input, assets: { ...pictures, [LICENCES_FILE]: encoded } });

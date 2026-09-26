@@ -1,8 +1,10 @@
 // IPC for Create a game drafts. The renderer is untrusted (Rule 6): every argument is checked
 // here, and a whole draft is checked again against its schema by the store before it is written.
 // The look step's pictures are drawn here, in main, where the image key lives: from the draft as
-// main last saved it, recorded in the usage ledger under the draft, and cancellable by request id.
-// Each is drawn by the device's chosen image provider and kept with its licence record (D4).
+// main last saved it, recorded in the usage ledger under the draft, and cancellable by request id —
+// or by the page that asked going away (a reload, a crash). The request id is the picture's own id
+// everywhere: main's `[look]` line and, through the gateway, its X-Request-Id and ledger line. Each
+// is drawn by the device's chosen image provider and kept with its licence record (D4).
 
 import {
   createDraftSchema,
@@ -18,6 +20,7 @@ import { z } from "zod";
 import type { MainContext } from "../context";
 import { handle } from "../handle";
 import { selectImageProvider } from "../images/registry";
+import { pageRequests } from "../inference/pageRequests";
 import { recordUsage } from "../usage/ipc";
 import {
   createCreateDraft,
@@ -69,7 +72,7 @@ export function registerCreateDraftsIpc(ctx: MainContext): void {
         .max(LOOK_VIEWS - 1),
       z.string().regex(REQUEST_ID),
     ]),
-    async ([draftId, view, requestId]): Promise<Result<LookPicture>> => {
+    async ([draftId, view, requestId], event): Promise<Result<LookPicture>> => {
       if (inflight.has(requestId)) {
         return err("duplicate-request", `Picture request ${requestId} is already running.`);
       }
@@ -86,10 +89,14 @@ export function registerCreateDraftsIpc(ctx: MainContext): void {
       const provider = selected.value;
       const controller = new AbortController();
       inflight.set(requestId, controller);
+      const untrack = pageRequests.track(event.sender, controller, `[look] abort ${requestId}`);
       const started = Date.now();
       const image = await provider
-        .generate(prompt.value, controller.signal, { quality: "low", kind: "concept" })
-        .finally(() => inflight.delete(requestId));
+        .generate(prompt.value, controller.signal, { quality: "low", kind: "concept", requestId })
+        .finally(() => {
+          untrack();
+          inflight.delete(requestId);
+        });
       const ms = Date.now() - started;
       await recordUsage(ctx, {
         tag: { purpose: "image", scope: { kind: "create", id: draftId } },
