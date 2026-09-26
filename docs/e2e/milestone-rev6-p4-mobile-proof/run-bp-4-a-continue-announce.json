@@ -1,0 +1,13 @@
+{
+  "part": "BP-4 (app A relaunched on the same userData with this change): title → Continue opens W1, attached earlier with no `pack`; the sync announces the built-in pack; read the fold and the status (wall-clock times for BP-5)",
+  "actions": [
+    {"wait": 1500},
+    {"eval": "(() => ({ buttons: [...document.querySelectorAll('button')].filter(b => b.getClientRects().length > 0).map(b => b.innerText.trim()).filter(Boolean).slice(0, 8), lang: document.documentElement.lang }))()"},
+    {"eval": "window.__t0 = Date.now(); 'CONTINUE_AT ' + window.__t0"},
+    {"clickText": "Continue"},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance && S.useLandStore.getState().progress !== null) return { playMs: Date.now() - window.__t0, instance: s.activeInstance.instance?.meta?.instanceId ?? null }; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + S.useSessionStore.getState().screen })()"},
+    {"eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); let seen = null; for (let i = 0; i < 120; i++) { const w = S.useHistoryStore.getState().world.value; const n = H.worldNow(); if (seen === null && n?.pack) seen = Date.now() - window.__t0; if (w && w.status.link === 'online' && w.status.pending === 0 && n?.pack && !Object.values(n.events).some(e => e.kind === 'pack' && e.pending)) return JSON.stringify({ packFirstSeenMs: seen, sequencedMs: Date.now() - window.__t0, sequencedAt: Date.now() }); await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"},
+    {"eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; const n = H.worldNow(); const kinds = Object.values(n.events).sort((a, b) => a.n - b.n).map(e => e.n + ':' + e.kind + (e.pending ? '(pending)' : '')).join(' '); const pk = Object.values(n.events).filter(e => e.kind === 'pack'); return JSON.stringify({ world: w.worldId, link: w.status.link, role: w.status.role, me: w.status.me, pending: w.status.pending, refused: w.status.refused, error: w.status.error, head: n.head.n, pack: n.pack, packEvents: pk.map(e => ({ n: e.n, author: e.author })), kinds }) })()"},
+    {"shot": "__SHOTS__/__TAG__-a-02-announced.jpg"}
+  ]
+}

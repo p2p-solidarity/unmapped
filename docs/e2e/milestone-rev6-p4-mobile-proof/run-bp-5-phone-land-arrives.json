@@ -1,0 +1,19 @@
+{
+  "part": "BP-5 (phone, still on W1 from BP-3, never reloaded): wait for the land to be drawn once the `pack` entry arrives (started before BP-4; wall-clock time), then the pack kept in IndexedDB, the stores, and one stick drag",
+  "actions": [
+    {"viewport": {"width": 375, "height": 812, "scale": 2, "mobile": true}},
+    {"eval": "window.__w0 = Date.now(); JSON.stringify({ canvas: !!document.querySelector('canvas'), line: document.body.innerText.split('\\n').slice(0, 2).join(' | ') })"},
+    {"repeat": {"times": 480, "until": "!!document.querySelector('canvas')", "actions": [{"wait": 250}]}},
+    {"eval": "'DRAWN_AT ' + Date.now() + ' after ' + (Date.now() - window.__w0) + ' ms of watching'"},
+    {"wait": 1500},
+    {"eval": "(async () => { const b = await window.seed.world.badges(); const id = b.value[0].worldId; const r = await window.seed.world.read(id); const now = r.value.snapshot.now; return JSON.stringify({ world: id, head: now.head.n, pack: now.pack, link: r.value.status.link, text: document.body.innerText.split('\\n').slice(0, 3).join(' | ') }); })()"},
+    {"eval": "(async () => { const s = await import('/@fs/__REPO__/src/renderer/state/index.ts'); const inst = s.useSessionStore.getState().activeInstance; const l = s.useLandStore.getState(); const c = document.querySelector('canvas'); return JSON.stringify({screen: s.useSessionStore.getState().screen, look: s.useEngineStore.getState().landLook, canvas: c && {label: c.getAttribute('aria-label'), w: c.width, h: c.height}, seed: inst && inst.instance.save.seed, cartridge: inst && inst.cartridge.manifest.cartridgeId + '@' + inst.cartridge.manifest.version, scene: s.useWorldStore.getState().scene.status === 'ready' ? s.useWorldStore.getState().scene.value.contract?.sceneId : null, landMode: l.mode, chunk: s.useEngineStore.getState().chunk}); })()"},
+    {"eval": "new Promise((resolve) => { const open = indexedDB.open('unmapped-browser'); open.onsuccess = () => { const db = open.result; const tx = db.transaction(['blobs', 'entries', 'outbox'], 'readonly'); const out = {}; const b = tx.objectStore('blobs').getAll(); b.onsuccess = () => { out.blobs = b.result.map((r) => [r.hash, r.bytes.byteLength ?? r.bytes.length]); }; const e = tx.objectStore('entries').count(); e.onsuccess = () => { out.entries = e.result; }; const o = tx.objectStore('outbox').getAll(); o.onsuccess = () => { out.outbox = o.result.map((r) => r.events.length); }; tx.oncomplete = () => resolve(JSON.stringify(out)); }; open.onerror = () => resolve('no db'); })"},
+    {"eval": "(async () => { const m = await import('/@fs/__REPO__/src/renderer/engine/playerProbe.ts'); const p = m.samplePlayer(); return JSON.stringify(p && {sceneId: p.sceneId, x: +p.x.toFixed(3), z: +p.z.toFixed(3), yaw: +p.yaw.toFixed(3)}); })()"},
+    {"shot": "__SHOTS__/__TAG__-p-01-land.jpg"},
+    {"touch": {"drag": [[78, 734], [128, 734]], "ms": 120, "hold": 1500}},
+    {"wait": 300},
+    {"eval": "(async () => { const m = await import('/@fs/__REPO__/src/renderer/engine/playerProbe.ts'); const p = m.samplePlayer(); return JSON.stringify(p && {sceneId: p.sceneId, x: +p.x.toFixed(3), z: +p.z.toFixed(3), yaw: +p.yaw.toFixed(3)}); })()"},
+    {"shot": "__SHOTS__/__TAG__-p-02-walked.jpg"}
+  ]
+}

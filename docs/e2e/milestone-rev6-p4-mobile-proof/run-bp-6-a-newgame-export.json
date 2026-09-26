@@ -1,0 +1,27 @@
+{
+  "part": "BP-6 (app A, this change): leave W1; Worlds → New game → Start makes W2 (local only, no `pack`); leave Play; Worlds → World files → W2's Export .world (AETHER_TEST_WORLD_PATH answers the save dialog with $PK/files/w2-before.world)",
+  "actions": [
+    {"hold": {"from": "(() => [...document.querySelectorAll('[data-layer], [role=dialog]')].some(l => l.getClientRects().length > 0) ? 'Escape' : null)()"}, "ms": 80},
+    {"wait": 500},
+    {"hold": "Escape", "ms": 80},
+    {"wait": 1500},
+    {"clickText": "Worlds"},
+    {"wait": 1200},
+    {"clickText": "Start"},
+    {"eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance && s.activeInstance.instance?.meta?.instanceId !== 'puvp-wtse-mui2gtsx' && S.useLandStore.getState().progress !== null) return { ms: Date.now() - t0, instance: s.activeInstance.instance?.meta?.instanceId ?? null, cartridge: s.activeInstance.cartridge.manifest.cartridgeId + '@' + s.activeInstance.cartridge.manifest.version }; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + S.useSessionStore.getState().screen })()"},
+    {"wait": 2500},
+    {"eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); window.__w2 = { id: n.world, name: n.genesis.body.name }; const kinds = Object.values(n.events).sort((a, b) => a.n - b.n).map(e => e.n + ':' + e.kind).join(' '); return JSON.stringify({ world: n.world, name: n.genesis.body.name, cartridge: n.genesis.body.cartridge, head: n.head.n, pack: n.pack, kinds }) })()"},
+    {"hold": {"from": "(() => [...document.querySelectorAll('[data-layer], [role=dialog]')].some(l => l.getClientRects().length > 0) ? 'Escape' : null)()"}, "ms": 80},
+    {"wait": 500},
+    {"hold": "Escape", "ms": 80},
+    {"wait": 1500},
+    {"clickText": "Worlds"},
+    {"wait": 1000},
+    {"clickText": "World files"},
+    {"wait": 1500},
+    {"eval": "(() => { const t = document.body.innerText; const at = t.indexOf('Worlds on this device'); return t.slice(at, at + 600) })()"},
+    {"eval": "(() => { const btns = [...document.querySelectorAll('button')].filter(b => b.innerText.trim() === 'Export .world'); const mine = btns.filter(b => { let box = b.parentElement; while (box && !box.innerText.includes(window.__w2.name)) box = box.parentElement; return box && btns.filter(x => box.contains(x)).length === 1; }); if (mine.length !== 1) return 'rows: ' + btns.length + ', matched: ' + mine.length; mine[0].scrollIntoView({ block: 'center' }); mine[0].click(); return 'clicked Export .world in the row of ' + window.__w2.name })()"},
+    {"eval": "(async () => { for (let i = 0; i < 80; i++) { const t = document.body.innerText; if (/Wrote .*KiB/.test(t) || /Error/.test(t)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('Worlds on this device'); return t.slice(at, at + 900) })()"},
+    {"shot": "__SHOTS__/__TAG__-a-03-exported-before.jpg"}
+  ]
+}

@@ -864,10 +864,13 @@ window.seed.bundle.{ list(), export(worldId), inspect(), import(token, name), mo
   non-extractable WebCrypto Ed25519 key; the invite secret is used once and never stored.
 - Blobs are verified by hash and kept in an IndexedDB LRU that never drops an outbox; `sw.js` caches
   only the page's own GETs. The service needs `--browser-origin <page origin>` to serve it blobs.
-- `MobileShell` + `TouchPad` get a `PhoneDevice` from the page. The phone's land view
-  (`LandView2D` over the stores `history/showWorldLand.ts` fills; the proof's second pass) is being
-  wired and has no E2E run; `NoteComposer` needs the player's tile, so it sends only once the land
-  is drawn.
+- `MobileShell` + `TouchPad` get a `PhoneDevice` from the page. The phone's land view is
+  `LandView2D` over the stores `history/showWorldLand.ts` fills (E2E: milestone-rev6-p4-mobile-proof,
+  second pass); `NoteComposer` needs the player's tile, so it sends only once the land is drawn.
+- The phone draws a world from its `pack` event. A world on a built-in revision gets one when its
+  first current owner's device attaches it, or on that device's next open of an older shared world
+  (`main/histories/builtInPack.ts`): the same reproducible bytes a `.world` export carries
+  (`packPinnedRevision`), blob first, never a second `pack`.
 
 ### Environment variables added in phases 3–4
 | Var | Read by | Meaning |

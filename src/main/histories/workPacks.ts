@@ -5,6 +5,8 @@
 //   history is refused (`work-received`): it is theirs, and the place maker never offers it. When
 //   the world is attached and online the blob is uploaded too, so friends can fetch it; offline it
 //   waits in the blob store for `uploadOwnPacks`.
+// - `sendPackOnce`: one pack up to a service, once (`packWorkFor`, and ./builtInPack before it
+//   announces a built-in world's cartridge pack).
 // - `uploadOwnPacks`: every pack this device announced (the cartridge pack while it owns the world,
 //   the AI works of its own places and chapters, sequenced or still in the outbox) that the
 //   world's service has not confirmed yet. Attach runs it, and so does every reconnect (D11: the
@@ -24,6 +26,7 @@ import { type AppError, err, ok, type Result } from "@shared/result";
 import type { WorkRef } from "@shared/works";
 import { z } from "zod";
 import { readBlob } from "../blobs/store";
+import type { DeviceKey } from "../identity/deviceKey";
 import { uploadBlob } from "./blobClient";
 import type { HostCore } from "./core";
 import { locked, readJsonFile, writeJsonAtomic } from "./fsx";
@@ -76,24 +79,30 @@ export async function packWorkFor(
   if (url === undefined || core.sync.get(worldId)?.link !== "online") return hash;
   const key = await core.deps.key();
   if (!key.ok) return key;
-  const { dir } = world.value;
-  // In the same queue as `uploadOwnPacks`, so a reconnect's pass never sends it a second time.
-  const sent = await locked(`packs:${worldId}`, async (): Promise<Result<void>> => {
-    if ((await confirmedPacks(dir, url)).has(hash.value)) return ok(undefined);
-    const bytes = await readBlob(core.blobsDir, hash.value);
+  const sent = await sendPackOnce(core, world.value, url, hash.value, key.value);
+  return sent.ok ? hash : sent;
+}
+
+/**
+ * Uploads one pack from this device's blob store to `url`, unless that service confirmed it
+ * already, and notes it as confirmed. In the same queue as `uploadOwnPacks`, so a reconnect's pass
+ * never sends it a second time.
+ */
+export function sendPackOnce(
+  core: Pick<HostCore, "blobsDir" | "deps">,
+  world: Pick<LoadedWorld, "id" | "dir">,
+  url: string,
+  hash: ContentHash,
+  key: DeviceKey,
+): Promise<Result<void>> {
+  return locked(`packs:${world.id}`, async (): Promise<Result<void>> => {
+    if ((await confirmedPacks(world.dir, url)).has(hash)) return ok(undefined);
+    const bytes = await readBlob(core.blobsDir, hash);
     if (!bytes.ok) return bytes;
-    const up = await uploadBlob(
-      url,
-      worldId,
-      hash.value,
-      bytes.value,
-      key.value,
-      core.deps.fetchImpl,
-    );
-    if (up.ok) await confirmPack(dir, url, hash.value);
+    const up = await uploadBlob(url, world.id, hash, bytes.value, key, core.deps.fetchImpl);
+    if (up.ok) await confirmPack(world.dir, url, hash);
     return up;
   });
-  return sent.ok ? hash : sent;
 }
 
 // ── Packs this device announced, uploaded once per service ──────────────────────────────────

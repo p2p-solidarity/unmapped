@@ -9,7 +9,8 @@
 //      atomically — the one rewrite a log ever gets, and it changes no entry but its receipt — and
 //      writes link.json with the pinned key;
 //   5. uploads the packs the history announces (cartridge, AI works) for friends to fetch, noting
-//      each one the service confirmed (./workPacks), so the reconnect that follows sends none again.
+//      each one the service confirmed (./workPacks), so the reconnect that follows sends none again;
+//      a world on a shipped built-in revision, which has no `pack` event, first gets one (./builtInPack).
 //
 // Anything unexpected leaves the local log exactly as it was. Any owner attaches (phase 4, D5: a
 // co-owner too); a world already on a service is moved instead (`rehostWorld`, bundles/move.ts).
@@ -26,6 +27,7 @@ import { err, ok, type Result } from "@shared/result";
 import type { WorldStatus } from "@shared/worldApi";
 import { FRAME_LIMITS, type FromService, WORLD_PROTOCOL } from "@shared/worldProtocol";
 import { rehostWorld } from "../bundles/move";
+import { announceBuiltInPack } from "./builtInPack";
 import type { HostCore } from "./core";
 import { isLocalOnly } from "./loaded";
 import { readLog, writeLink, writeLog } from "./logStore";
@@ -207,14 +209,17 @@ export async function attachWorld(
   });
   core.hub.unwant(url, token);
   if (!result.ok) return result;
+  // A shipped built-in revision has no `pack` event: announce one now, so a phone can draw the land
+  // (./builtInPack). It waits in the outbox until the sync below opens the world.
+  const announced = await announceBuiltInPack(core, worldId, url);
   return core.withWorld(worldId, async (world) => {
     core.emitEntries(world, world.tail, true);
     startSync(core, world);
     // Noted as confirmed per pack, so the reconnect that follows sends none of them again.
     const packs = await uploadOwnPacks(core, world, url);
     const status = await core.status(world, key);
-    const failed = packs.failed[0];
-    if (failed !== undefined) status.error = failed.error;
+    const failed = announced.ok ? packs.failed[0]?.error : announced.error;
+    if (failed !== undefined) status.error = failed;
     await core.emitStatus(world);
     return ok(status);
   });

@@ -1,0 +1,20 @@
+{
+  "part": "BP-1 (app A, origin/main code, fresh userData): Settings in the system language (zh-TW) → English; add ws://127.0.0.1:8799 under Shared worlds; Save; Test (the button under that field, clicked through the DOM as in milestone-rev6-p4-chain-live/run-a-settings.json)",
+  "actions": [
+    {"clickText": "設定"},
+    {"wait": 1000},
+    {"clickText": "English"},
+    {"wait": 1500},
+    {"eval": "(() => { const ta = [...document.querySelectorAll('textarea')].find(t => (t.closest('label')?.innerText ?? '').includes('World services') || (t.labels?.[0]?.innerText ?? '').includes('World services')); if (!ta) return 'no field'; ta.scrollIntoView({block: 'center'}); ta.focus(); return ta === document.activeElement })()"},
+    {"type": "ws://127.0.0.1:8799"},
+    {"wait": 300},
+    {"clickText": "Save"},
+    {"wait": 400},
+    {"eval": "(() => { const field = [...document.querySelectorAll('textarea')].find(t => t.value.includes('ws://127.0.0.1:8799')); let box = field; while (box && ![...box.querySelectorAll('button')].some(b => b.innerText.trim() === 'Test')) box = box.parentElement; const btn = [...box.querySelectorAll('button')].find(b => b.innerText.trim() === 'Test'); btn.scrollIntoView({block: 'center'}); btn.click(); return 'clicked the Shared worlds Test' })()"},
+    {"wait": 2500},
+    {"eval": "(() => { const t = document.body.innerText; const at = t.indexOf('ws://127.0.0.1:8799\\n'); return at < 0 ? 'no probe line' : t.slice(at, at + 300) })()"},
+    {"eval": "localStorage.getItem('unwritten.worldServices')"},
+    {"eval": "(() => { const s = [...document.querySelectorAll('section')].find(x => x.innerText.startsWith('Model')); return s ? s.innerText.slice(0, 400) : 'no Model section' })()"},
+    {"shot": "__SHOTS__/bp-a-00-settings.jpg"}
+  ]
+}

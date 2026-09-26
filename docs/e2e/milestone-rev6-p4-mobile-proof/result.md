@@ -231,7 +231,7 @@ phone, and no fake witness was added.
 4. **A built-in world announces no pack.** The desktop's genesis plan leaves the `pack` event out for
    a shipped revision (`dsl/history/migrate.ts`). A real desktop world on aether-land 1.3.0 would
    show `browser-pack-none` on a phone. The seed script announces one, so this run does not show the
-   gap.
+   gap. (Fixed later: "Built-in worlds on the phone" below.)
 5. **Pass 1's run files replay against `6887c98` only.** The composer now leaves a note on the tile
    underfoot instead of offering place chips, so `run-offline.json`'s tap on "Home (0, 0)" finds
    nothing today.
@@ -419,3 +419,197 @@ added and the database version did not change.
 `bun run typecheck` (all four projects), `bun run lint` (1,098 files), `bun run lines`,
 `bunx vitest run tests/browser` (3 files, 9 tests) and `bun run browser:build` (1.75 MB script,
 0.38 s) all pass on the working tree with this fix.
+
+## Built-in worlds on the phone
+
+A world started with New game on the built-in `aether-land` had no `pack` event. The genesis plan
+leaves it out for a shipped revision (`dsl/history/migrate.ts`), because a desktop joiner installs
+that revision from its own build. A phone has no build, so it showed `browser-pack-none` and drew no
+land (pass 2, "Found on the way" 4).
+
+Now the owner's device announces the pinned revision's pack once the world is shared
+(`src/main/histories/builtInPack.ts`). It packs the revision with `packPinnedRevision`, which the
+`.world` export uses too. It uploads the blob first and only then signs the `pack`. This happens in
+two places:
+
+- **At attach** (`attach.ts`).
+- **For a world attached before this change:** whenever the owner's device opens it with the
+  service's whole log in hand (`syncWorld.ts`, on `opened` at the head or on the `entries` that
+  reach it).
+
+This run shows both, on one userData:
+
+- W1 is shared by origin/main code. A phone that joins it gets `browser-pack-none`.
+- A is relaunched with this change, and **Continue** alone makes it announce the pack. The phone,
+  never reloaded, then draws the land by itself.
+- W2 is shared with this change and has its `pack` from attach. A fresh phone joins it and walks.
+- Every pack hash equals the `.world` export's genesis pack, and the service's own export has the
+  same one.
+
+### Replay (built-in pack)
+
+`run-bp.json` has the env, the ports, the model and the whole sequence. `bp-tools.txt` holds
+`run.sh`, `svc-state.sh`, `close-browser.ts`, `vite.page.mts`, the origin/main pack script and the
+`electron.vite.config.ts` edit.
+
+```bash
+PK=<scratch dir>; R=<repo root>; D=docs/e2e/milestone-rev6-p4-mobile-proof
+mkdir -p $PK/{snap,snap-main,svc,udA,files,chrome-1,chrome-2,logs}
+git -C $R archive origin/main | tar -x -C $PK/snap-main          # 81601d2: before the change
+git -C $R archive origin/main | tar -x -C $PK/snap               # plus the change's files (run-bp.json)
+for s in snap snap-main; do ln -s $R/node_modules $R/.env $PK/$s/; done
+# both snapshots: renderer cacheDir .vite-cache, port 5193 strictPort (bp-tools.txt)
+echo '{"kind":"llamacpp","baseUrl":"http://127.0.0.1:8098/v1","model":"local","apiKeyEnv":null,"sidecar":null}' > $PK/udA/inference.json
+(cd $PK/snap && UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8799 --data $PK/svc \
+  --browser-origin http://localhost:5192 &)
+(cd $PK/snap && bunx vite --config $PK/vite.page.mts &)                          # the phone page, 5192
+appA() { (cd $PK/$1 && env OPENAI_API_KEY= THESYS_API_KEY= UNMAPPED_GATEWAY_URL= UNMAPPED_GATEWAY_KEY= \
+  UNWRITTEN_PRIVATE_KEY= UNWRITTEN_LINEAGE_RELAY= UNWRITTEN_LINEAGE_REGISTRY= AETHER_TEST_USER_DATA=$PK/udA \
+  AETHER_TEST_WORLD_PATH=$PK/files/$2.world bunx electron-vite dev --remoteDebuggingPort 9343 &); }
+phone() { ~/Library/Caches/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-mac-arm64/chrome-headless-shell \
+  --remote-debugging-port=9344 --user-data-dir=$PK/$1 --no-first-run --window-size=375,812 http://localhost:5192/ & }
+appA snap-main old
+$PK/run.sh 9343 run-bp-1-a-settings.json bp
+$PK/run.sh 9343 run-bp-2-a-newgame-share.json bp-old          # W1; its INVITE line → $PK/invite-w1.txt
+phone chrome-1; $PK/run.sh 9344 run-bp-3-phone-join-none.json bp-old $PK/invite-w1.txt
+bun $PK/close-browser.ts 9343; appA snap w2-before
+$PK/run.sh 9344 run-bp-5-phone-land-arrives.json bp-w1 &      # the phone watches first
+$PK/run.sh 9343 run-bp-4-a-continue-announce.json bp-w1
+$PK/run.sh 9343 run-bp-6-a-newgame-export.json bp-w2          # W2 and w2-before.world
+$PK/run.sh 9343 run-bp-7-a-share-w2.json bp-w2                # its INVITE line → $PK/invite-w2.txt
+pkill -f chrome-1; phone chrome-2; $PK/run.sh 9344 run-bp-8-phone-join-w2.json bp-w2 $PK/invite-w2.txt
+bun $PK/close-browser.ts 9343; appA snap w2-after
+$PK/run.sh 9343 run-bp-9-a-reopen-export.json bp-w2
+(cd $PK/snap && bun run service -- export <W1 id> --data $PK/svc --out $PK/files/w1-service.world)
+(cd $PK/snap-main && bun --tsconfig-override tsconfig.node.json scripts/.pk/main-pack.ts)
+```
+
+**Environment:**
+
+- **Code:** two `git archive` snapshots of origin/main `81601d2`. The before snapshot is that
+  alone. The after snapshot adds this change's seven files, byte for byte the ones in the tree.
+  The eighth file, `builtIn.ts`, changed only in its header comment, after the run.
+- **Ports:**
+  - A: CDP 9343, renderer 5193.
+  - Phone: CDP 9344, page 5192.
+  - Service: 8799, test mode, with `--browser-origin http://localhost:5192`.
+- **A:** one fresh userData for all three launches, UI switched to English in BP-1.
+- **Phone:** Playwright's `chrome-headless-shell` 1243, 375 × 812 at device scale 2 with touch
+  emulation, UI language `en`.
+
+**Model: none.**
+
+- A's `inference.json` names a loopback port nothing listens on, and the model keys are blanked in
+  its environment.
+- The HUD said "UNREACHABLE llamacpp · local" and "No model calls counted for this world yet."
+  (`bp-w1-a-02`). The origin stayed unwritten ("The model is not reachable, so new land stays
+  unwritten") and chapter prefetch showed `story-model-offline`.
+- `udA` has no `usage.jsonl` at the end. The phone drew each world's seeded ground and the gate
+  marker, nothing witnessed.
+
+**Input:**
+
+- A: clicks, typed text and the E and Escape keys. Three clicks go through the DOM because the
+  button's text is not unique on the page: the Shared worlds **Test**, and **Export .world** in
+  one world's row (twice).
+- Phone: touch and typed text only.
+- Evals only read: the stores, `worldNow()`, `window.seed.world.read/badges`, IndexedDB and
+  `samplePlayer()`.
+
+`bp-driver.txt` has every driver output (invite links left out), the service's files after the run,
+and the three `.world` manifests with their `verify-world` reports.
+
+### What was checked (built-in pack)
+
+Every pack below is `sha256:c0fcdf1af0a1d9dad2fbba2cbe9ad8ed62b6d2d2059d3d4ea6f7e89511c925c0`,
+**4,875 bytes**. It is the pack of `aether-land@1.3.0`
+(`sha256:57f17e0d…e81b`), and pass 2's seed script made the same one (row S). A's device key is
+`kymitdlv…`.
+
+| # | Expected | Observed |
+| --- | --- | --- |
+| BP-2 | Before the change: New game, then Share, gives a history with no `pack` | W1 `hptzkfaa…` "無界之地 · PUVP-WTSE" is `aether-land@1.3.0`. Online **510 ms** after Share. After 10.5 s: head 3 = `genesis profile sequencer`, `pack: null`, 0 waiting (`bp-old-a-01`). The service holds no blob |
+| BP-3 | …so a phone that joins cannot draw it | Join took **352 ms** to reach `Error · browser-pack-none`, "This world's maker has not shared its cartridge with the world yet.", with no canvas. The page's fold: head 4 (its `member.join`), `pack: null`, online, member (`bp-old-p-00`) |
+| BP-4 | With the change, the owner's next open of that already-shared world announces the pack. The blob goes up first | Title → **Continue**: Play in 419 ms. The `pack` was in A's fold and sequenced as **n 5**, 471 ms after the click, author A, 0 waiting, 0 refused, no error (`bp-w1-a-02`). The service's `blobs.txt` for W1 lists the blob at 4,875 B, and `blobs/c0fcdf1a…` hashes to its name. A's `uploaded-packs.json` notes it for `ws://127.0.0.1:8799` |
+| BP-5 | The phone, left open on the error, draws the land when that entry arrives, with no reload | Canvas at **800 ms** after A's Continue click, and 329 ms after A saw the pack sequenced (polled every 250 ms). The bar reads `Online · Entry 5`. Stores: screen `play`, look `pixel`, canvas 750 × 1624, seed `PUVPWTSE`, `aether-land@1.3.0`, scene `origin`, mode `history`, chunk (0, 0). IndexedDB `blobs: [c0fcdf1a…, 4875]`, entries 5, outbox empty (`bp-w1-p-01`) |
+| BP-5 | The touch stick walks it | Probe (8.5, 8.5), then a 50 px drag held 1.5 s, then **(15.766, 8.5)**, yaw 1.571: **Δx = +7.266 tiles** (`bp-w1-p-02`) |
+| BP-6 | A new built-in world's `.world`, exported before it is shared, packs the revision itself | W2 `h4jazrup…` "無界之地 · YATG-NFUK": head 2, `pack: null`. Worlds → World files → its **Export .world** wrote `w2-before.world` (7 KiB) (`bp-w2-a-03`). `world.json` `genesisPack` is **the same hash**, and the file carries `blobs/c0fcdf1a…` at 4,875 B. `verify-world`: signature valid, 2 entries, no problems |
+| BP-7 | Sharing a built-in world with the change announces the pack at attach | Share → Online in **811 ms**. By 815 ms: head 4 = `genesis profile sequencer pack`, the `pack` with **the same hash**, 0 waiting, 0 refused (`bp-w2-a-01`). The service lists the blob for W2 too (one file in `blobs/`, 4,875 B) |
+| BP-8 | A fresh phone joins W2 and draws and walks the land | Join took **377 ms** to canvas plus `Online · Entry 5`. Fold: pack = **the same hash**, member, no `browser-pack` error. Stores: seed `YATGNFUK`, `aether-land@1.3.0`, scene `origin`, mode `history`. IndexedDB `blobs: [c0fcdf1a…, 4875]` (`bp-w2-p-01`). Stick: 8.5 → **15.5**, **Δx = +7.0 tiles** (`bp-w2-p-02`) |
+| BP-9 | Never a second `pack`: A relaunched again, both worlds opened and synced | Continue → W2: head 6 (the phone's `member.join`, A's `visit`), pack events **[4]** only. Saves → W1: head 5, pack events **[5]** only. Both 0 waiting, 0 refused. The service's logs after the run have **1** `pack` in each world |
+| BP-9 | The file and the service agree | `w2-after.world`, exported after sharing: `genesisPack` **the same hash**, the one the `pack` names; 6 entries, `verify-world` no problems (`bp-w2-a-04`). `service -- export` of W1 gives `genesisPack` **the same hash**, 5 entries, verify ok. origin/main's own code path, which installs 1.3.0 as `ensureBaseGame` does and packs it with `packCartridgeReproducibly` (`main-pack.ts`), also gives **the same hash**, 4,875 B |
+
+### Found on the way (built-in pack)
+
+1. **The first `Browser.close` at the end did not quit A.** DevTools accepted it, but the app
+   stayed up. A second call, about a minute later, quit it. The two earlier quits in this run each
+   took one call. This was not looked into here, because the quit path is another session's work.
+2. **Clicking a save's row can resume it at once.** In Worlds → Saves, the click on W1's row
+   opened W1 without **Resume**. The row was already the selected one, and a click on the
+   selected row resumes. `run-bp-9` leaves the Resume click out.
+
+### Code of this change
+
+- **`src/main/histories/builtInPack.ts`** (new): `announceBuiltInPack` and `announceWhenDue`.
+  - Admit accepts a `pack` from any owner at any time; its one rule is the cartridge hash.
+    Refusing a repeat there would change what earlier builds admitted, which means a
+    `PHYSICS_VERSION` bump.
+  - So the writer makes sure there is never a second one:
+    - only while the fold, outbox included, has no `pack`;
+    - only from a device that holds the service's whole log;
+    - only the world's first current owner writes it (`currentOwners(now)[0]`), so two owners'
+      devices opening together never both do; any owner still uploads it (`ownPacks`);
+    - one pass per world at a time, and the fold is checked again under the world's lock before
+      signing.
+  - The blob goes up (`sendPackOnce`) before the event is signed.
+  - A failed pass is logged and tried again at the next `opened`, not on every entry.
+- **`attach.ts`:** announces after a successful attach and before the first upload pass. A
+  failure shows as the attach status's error.
+- **`syncWorld.ts`:** calls `announceWhenDue` on `opened` when the device is at the service's head,
+  and on `entries` that bring it there.
+- **`packs.ts`:** `packPinnedRevision(deps, ref)`. It installs a shipped revision first, packs the
+  installed revision reproducibly, and gives null when the installed content hash is not the
+  genesis's. `bundles/export.ts` now uses it, so the export and the announcement share one code
+  path.
+- **`workPacks.ts`:** `sendPackOnce` is taken out of `packWorkFor`, in the same `packs:<world>`
+  queue as `uploadOwnPacks`.
+- **`builtIn.ts`:** the header comment only.
+
+### Isolated test (`tests/main/builtin-pack.test.ts`)
+
+It covers the failures E2E cannot reach. Each is named in the file's failure list:
+
+- two passes started together sign two `pack`s;
+- a pack queued or sequenced gets another at the next open;
+- a co-owner's device announces a second one. The test also checks that once the maker is removed,
+  the next owner announces it;
+- the `pack` is announced although the service refused the blob;
+- a genesis that pins `aether-land@1.3.0` under another content hash gets the shipped revision's
+  pack, which admit alone would accept.
+
+With the first-owner check loosened to "any owner", failure 3 goes red. With the upload result
+ignored, failure 4 goes red.
+
+### Not run (built-in pack)
+
+- **Two owners' devices opening one pack-less world at the same moment.** Only the isolated test
+  covers this.
+- **A pass that fails at attach and is retried at the next `opened`.** The service accepted every
+  upload in this run.
+- **A desktop joiner of a built-in world that now has a `pack`.** `receiveCartridge` still
+  installs from its own build before looking at any pack, and that is not changed here.
+- **Real hardware and other languages.** No real phone was used, and no zh-TW or ja page was seen.
+
+### Checks (built-in pack)
+
+`bun run check` passes on the after snapshot (origin/main `81601d2` plus this change, with
+`electron.vite.config.ts` back to origin/main's):
+
+- typecheck;
+- lint (1,100 files);
+- lines;
+- vitest: 161 files, 826 tests.
+
+It passes on the working tree too, with every session's work in progress: 1,104 files and 162 test
+files with 831 tests. An earlier run on the tree was red on another session's
+`src/renderer/narrative/witness.ts(85,77): error TS2554`, which that session has since fixed.

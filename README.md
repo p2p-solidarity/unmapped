@@ -437,8 +437,8 @@ signposts, and a note is left on the tile you stand on. Everything is kept in th
 IndexedDB, so the page reloads and walks with no network and no page server, and notes written
 offline go out when the service answers. The page has no model, Create, talking, chapters, places,
 export or chain. The world service needs `--browser-origin <page origin>` to serve it packs. A
-world that starts from the built-in cartridge announces no pack yet, so the phone cannot draw it
-(`browser-pack-none`).
+world started from the built-in cartridge gets its pack when its owner shares it (or next opens a
+world shared before), so the phone draws it too.
 
 ## Mods
 
@@ -554,7 +554,7 @@ screenshots.
 | Pictures through the gateway, each with a licence record | ✅ verified with a test image model; an AI-world asset and a reference picture not run | [p4-images-hosted](docs/e2e/milestone-rev6-p4-images-hosted/result.md) |
 | Commercial mode: a non-commercial provider cannot be chosen, a new picture of unknown licence blocks publishing, a gateway in commercial mode refuses to start with a non-commercial model | ✅ verified; publishing driven through the app's publish call, not a screen | [p4-licence](docs/e2e/milestone-rev6-p4-licence/result.md) |
 | Light chain: a real service's beat fingerprints recorded on Sepolia, and the door comparing them | ✅ verified live: the contract deployed, a service opened a stream and recorded 3 beats, and the door read "The chain matches your copy at entry 6"; a changed copy reads "differs" (through main's reader) | [p4-chain](docs/e2e/milestone-rev6-p4-chain/result.md) · [p4-chain-live](docs/e2e/milestone-rev6-p4-chain-live/result.md) |
-| Phone-sized browser proof: join by invite, the land, walking by touch, notes offline and after a reload, seeing a desktop player | ✅ verified in a headless 375 × 812 browser on the dev page; no real phone; a world on the built-in cartridge cannot be drawn yet (no pack) | [p4-mobile-proof](docs/e2e/milestone-rev6-p4-mobile-proof/result.md) |
+| Phone-sized browser proof: join by invite, the land, walking by touch, notes offline and after a reload, seeing a desktop player | ✅ verified in a headless 375 × 812 browser on the dev page, including a world on the built-in cartridge; no real phone | [p4-mobile-proof](docs/e2e/milestone-rev6-p4-mobile-proof/result.md) |
 | No servers at all: no screen asks for an account; walking, notes, the door with no world service, and `.world` export, offline check and import on a second device | ✅ verified; later, Apple's on-device model (inside the app) wrote Create's world cards, but its 4K context refuses a witness (`model-context-too-small`); llama.cpp and Ollama were not installed | [p4-no-servers](docs/e2e/milestone-rev6-p4-no-servers/result.md) · [integrated-journey](docs/e2e/milestone-rev6-integrated-journey/result.md) |
 | One world through everything: Create → play → share → watch a place written together → co-owner → a phone joins and walks → `.world` to another device → Apple on-device → quit and continue | ✅ verified in one run; 0 renderer errors on six clients; the same 21-entry history on the service and every device; 12 paid calls | [integrated-journey](docs/e2e/milestone-rev6-integrated-journey/result.md) |
 | Stripe checkout (test mode and live), Qwen-Image on your own GPU endpoint | ⏳ not run; each needs a person | — |

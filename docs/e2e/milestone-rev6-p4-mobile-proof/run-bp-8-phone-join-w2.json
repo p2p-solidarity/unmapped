@@ -1,0 +1,109 @@
+{
+  "part": "BP-8 (phone, a fresh profile): join W2 — shared by this change, so its `pack` is in the log from attach — the land is drawn, the pack is fetched by hash and kept, and the touch stick walks (run-p2-land.json's P2-A up to the walked shot, with the fold read added)",
+  "actions": [
+    {
+      "viewport": {
+        "width": 375,
+        "height": 812,
+        "scale": 2,
+        "mobile": true
+      }
+    },
+    {
+      "eval": "location.reload()"
+    },
+    {
+      "wait": 3000
+    },
+    {
+      "shot": "__SHOTS__/__TAG__-p-00-join.jpg"
+    },
+    {
+      "touch": {
+        "tapText": "Invite link"
+      }
+    },
+    {
+      "type": "__INVITE__"
+    },
+    {
+      "touch": {
+        "tapText": "Your name in this world"
+      }
+    },
+    {
+      "type": "Rin"
+    },
+    {
+      "eval": "window.__t0 = performance.now(); 'mark'"
+    },
+    {
+      "touch": {
+        "tapText": "Join"
+      }
+    },
+    {
+      "repeat": {
+        "times": 80,
+        "until": "!!document.querySelector('canvas') && /^Online/m.test(document.body.innerText)",
+        "actions": [
+          {
+            "wait": 250
+          }
+        ]
+      }
+    },
+    {
+      "eval": "Math.round(performance.now() - window.__t0)"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "eval": "document.body.innerText.split('\\n').slice(0, 3).join(' | ')"
+    },
+    {
+      "eval": "(async () => { const s = await import('/@fs/__REPO__/src/renderer/state/index.ts'); const inst = s.useSessionStore.getState().activeInstance; const l = s.useLandStore.getState(); const c = document.querySelector('canvas'); return JSON.stringify({screen: s.useSessionStore.getState().screen, look: s.useEngineStore.getState().landLook, canvas: c && {label: c.getAttribute('aria-label'), w: c.width, h: c.height}, seed: inst && inst.instance.save.seed, cartridge: inst && inst.cartridge.manifest.cartridgeId + '@' + inst.cartridge.manifest.version, scene: s.useWorldStore.getState().scene.status === 'ready' ? s.useWorldStore.getState().scene.value.contract?.sceneId : null, landMode: l.mode, chunks: Object.keys(l.chunks), notes: l.notes.length, chunk: s.useEngineStore.getState().chunk}); })()"
+    },
+    {
+      "eval": "new Promise((resolve) => { const open = indexedDB.open('unmapped-browser'); open.onsuccess = () => { const db = open.result; const tx = db.transaction(['blobs', 'places', 'entries', 'outbox'], 'readonly'); const out = {}; const b = tx.objectStore('blobs').getAll(); b.onsuccess = () => { out.blobs = b.result.map((r) => [r.hash, r.bytes.byteLength ?? r.bytes.length]); }; const p = tx.objectStore('places').getAll(); p.onsuccess = () => { out.places = p.result.map((r) => ({sceneId: r.position.sceneId, x: +r.position.x.toFixed(3), z: +r.position.z.toFixed(3)})); }; const e = tx.objectStore('entries').count(); e.onsuccess = () => { out.entries = e.result; }; const o = tx.objectStore('outbox').getAll(); o.onsuccess = () => { out.outbox = o.result.map((r) => r.events.length); }; tx.oncomplete = () => resolve(JSON.stringify(out)); }; open.onerror = () => resolve('no db'); })"
+    },
+    {
+      "eval": "(async () => { const m = await import('/@fs/__REPO__/src/renderer/engine/playerProbe.ts'); const p = m.samplePlayer(); return JSON.stringify(p && {sceneId: p.sceneId, x: +p.x.toFixed(3), z: +p.z.toFixed(3), yaw: +p.yaw.toFixed(3)}); })()"
+    },
+    {
+      "eval": "(async () => { const b = await window.seed.world.badges(); const id = b.value[0].worldId; const r = await window.seed.world.read(id); const now = r.value.snapshot.now; return JSON.stringify({ world: id, head: now.head.n, pack: now.pack, link: r.value.status.link, role: r.value.status.role, error: document.body.innerText.includes('browser-pack') }); })()"
+    },
+    {
+      "shot": "__SHOTS__/__TAG__-p-01-land.jpg"
+    },
+    {
+      "touch": {
+        "drag": [
+          [
+            78,
+            734
+          ],
+          [
+            128,
+            734
+          ]
+        ],
+        "ms": 120,
+        "hold": 1500
+      }
+    },
+    {
+      "wait": 300
+    },
+    {
+      "eval": "(async () => { const m = await import('/@fs/__REPO__/src/renderer/engine/playerProbe.ts'); const p = m.samplePlayer(); return JSON.stringify(p && {sceneId: p.sceneId, x: +p.x.toFixed(3), z: +p.z.toFixed(3), yaw: +p.yaw.toFixed(3)}); })()"
+    },
+    {
+      "eval": "(async () => { const s = await import('/@fs/__REPO__/src/renderer/state/index.ts'); const inst = s.useSessionStore.getState().activeInstance; const l = s.useLandStore.getState(); const c = document.querySelector('canvas'); return JSON.stringify({screen: s.useSessionStore.getState().screen, look: s.useEngineStore.getState().landLook, canvas: c && {label: c.getAttribute('aria-label'), w: c.width, h: c.height}, seed: inst && inst.instance.save.seed, cartridge: inst && inst.cartridge.manifest.cartridgeId + '@' + inst.cartridge.manifest.version, scene: s.useWorldStore.getState().scene.status === 'ready' ? s.useWorldStore.getState().scene.value.contract?.sceneId : null, landMode: l.mode, chunks: Object.keys(l.chunks), notes: l.notes.length, chunk: s.useEngineStore.getState().chunk}); })()"
+    },
+    {
+      "shot": "__SHOTS__/__TAG__-p-02-walked.jpg"
+    }
+  ]
+}

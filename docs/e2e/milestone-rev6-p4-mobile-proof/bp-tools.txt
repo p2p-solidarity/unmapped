@@ -1,0 +1,74 @@
+# Built-in pack run (BP): the helper files the replay uses, as they were during the run.
+
+# electron.vite.config.ts in both snapshots (renderer section)
+51,53d50
+<     // E2E snapshot only: a private Vite cache and a fixed dev port (same origin across relaunches).
+<     cacheDir: resolve(__dirname, ".vite-cache"),
+<     server: { port: 5193, strictPort: true },
+
+# vite.page.mts (next to the snapshots; the phone page's server on 5192)
+// E2E only: the phone page's dev server = the p4-mobile-proof e2e config (no watcher, no HMR) on
+// 5192, plus a private Vite cache, so the shared node_modules/.vite is never rewritten.
+import { fileURLToPath } from "node:url";
+import base from "./snap/vite.browser.config.ts";
+const at = (path) => fileURLToPath(new URL(path, import.meta.url));
+export default { ...base, cacheDir: at("./snap/.vite-page-cache"), server: { ...base.server,
+  port: 5192, hmr: false, watch: null, fs: { allow: [at("./snap"), "$REPO/node_modules"] } } };
+
+# run.sh <cdp port> <run file> [tag] [invite file] (literal replaces, never sed)
+#!/bin/bash
+# run.sh <cdp port> <run file> [tag] [invite file] — replays one run file with literal replaces.
+PK=$PK
+D=$REPO/docs/e2e/milestone-rev6-p4-mobile-proof
+TEXT=$(python3 -c "
+import sys
+t = open(sys.argv[1]).read()
+inv = open(sys.argv[3]).read().strip() if sys.argv[3] else '__INVITE__'
+print(t.replace('__INVITE__', inv).replace('__SHOTS__', sys.argv[4]).replace('__TAG__', sys.argv[2]).replace('/__REPO__', sys.argv[5]))
+" "$D/$2" "${3:-bp}" "${4:-}" "$D" "$PK/snap")
+cd $PK/snap && CDP_PORT=$1 bun scripts/cdp-drive.ts "$TEXT"
+
+# svc-state.sh <service data dir> (reads the service's files only)
+#!/bin/bash
+# svc-state.sh <service data dir>: each world's log (n:kind, pack bodies) and blobs, read only.
+for w in "$1"/worlds/*/; do
+  id=$(basename $w)
+  echo "world $id"
+  bun -e 'const fs=require("fs"); const lines=fs.readFileSync(process.argv[1],"utf8").trim().split("\n"); const out=[]; for (const l of lines) { const e=JSON.parse(l); out.push(e.n+":"+e.event.kind+(e.event.kind==="pack"?"("+e.event.body.pack+" "+e.event.body.bytes+" B, cartridge "+e.event.body.cartridge.slice(0,19)+"…, by "+e.event.author.slice(0,9)+"…, rt "+e.rt+")":"")); } console.log("  log: "+out.join(" ")); console.log("  pack events: "+lines.filter(l=>JSON.parse(l).event.kind==="pack").length);' "$w/log.jsonl"
+  echo "  blobs.txt: $(cat $w/blobs.txt 2>/dev/null | tr '\n' ' ')"
+done
+for b in "$1"/blobs/*; do [ -f "$b" ] && echo "blob $(basename $b) $(stat -f %z $b) B sha256 $(shasum -a 256 $b | cut -c1-64)"; done
+
+# close-browser.ts <cdp port> (quits an Electron app through its browser target)
+// Closes an Electron app through its browser-level DevTools target (GET /json/version).
+const port = Number(process.argv[2]);
+const v = (await (await fetch(`http://127.0.0.1:${port}/json/version`)).json()) as { webSocketDebuggerUrl: string };
+const ws = new WebSocket(v.webSocketDebuggerUrl);
+await new Promise((r) => ws.addEventListener("open", r, { once: true }));
+ws.send(JSON.stringify({ id: 1, method: "Browser.close" }));
+await new Promise((r) => setTimeout(r, 1500));
+process.exit(0);
+
+# snap-main/scripts/.pk/main-pack.ts (origin/main's own code path to the built-in pack)
+// origin/main's own path to a built-in genesis pack (bundles/export.ts `genesisPack` before this
+// change): install the shipped 1.3.0 into a throwaway dir as `ensureBaseGame` does
+// (`publishCartridgeRevision`), read it back, pack it reproducibly, hash it. main/game/base.ts itself
+// imports electron, so its install loop is repeated here for the newest revision only.
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { publishCartridgeInputSchema } from "../../src/main/cartridges/schemas";
+import { publishCartridgeRevision, readCartridgeRevision } from "../../src/main/cartridges/store";
+import v130 from "../../src/main/game/aether-land-1.3.0.json";
+import { packCartridgeReproducibly } from "../../src/main/histories/packs";
+import { contentHash } from "../../src/shared/history/ids";
+
+const dir = join(mkdtempSync(join(tmpdir(), "main-pack-")), "cartridges");
+const input = publishCartridgeInputSchema.parse(v130);
+const published = await publishCartridgeRevision(dir, input);
+if (!published.ok) throw new Error(published.error.message);
+const revision = await readCartridgeRevision(dir, "aether-land", "1.3.0");
+if (!revision.ok) throw new Error(revision.error.message);
+const bytes = packCartridgeReproducibly(revision.value);
+if (!bytes.ok) throw new Error(bytes.error.message);
+console.log(JSON.stringify({ revision: `${revision.value.manifest.cartridgeId}@${revision.value.manifest.version}`, contentHash: revision.value.manifest.contentHash, pack: contentHash(bytes.value), bytes: bytes.value.length }));

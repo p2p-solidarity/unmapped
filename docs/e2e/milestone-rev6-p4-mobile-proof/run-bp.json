@@ -1,0 +1,45 @@
+{
+  "flow": "rev6-p4-mobile-proof · built-in pack: a world started with New game on the built-in aether-land gets its cartridge pack announced by its owner's device once it is shared, and a phone draws its land",
+  "date": "2026-09-26",
+  "tree": {
+    "snap-main": "git archive origin/main 81601d2 (the code before this change)",
+    "snap": "git archive origin/main 81601d2 plus this change: src/main/histories/{builtInPack,attach,syncWorld,workPacks,packs}.ts, src/main/bundles/export.ts, tests/main/builtin-pack.test.ts",
+    "both": "node_modules and .env symlinked from the repo; electron.vite.config.ts renderer gets cacheDir .vite-cache and server port 5193 strictPort (bp-tools.txt)"
+  },
+  "ports": { "appA CDP": 9343, "appA renderer": 5193, "phone CDP": 9344, "phone page": 5192, "service": 8799 },
+  "env": {
+    "service": "(cd $PK/snap && UNMAPPED_SERVICE_TEST=1 bun run service -- --port 8799 --data $PK/svc --browser-origin http://localhost:5192) — a fresh empty --data",
+    "page": "(cd $PK/snap && bunx vite --config $PK/vite.page.mts) — the repo's browser config on 5192, no watcher, no HMR, a private cache",
+    "appA": "(cd $PK/<snap-main|snap> && env OPENAI_API_KEY= THESYS_API_KEY= UNMAPPED_GATEWAY_URL= UNMAPPED_GATEWAY_KEY= UNWRITTEN_PRIVATE_KEY= UNWRITTEN_LINEAGE_RELAY= UNWRITTEN_LINEAGE_REGISTRY= AETHER_TEST_USER_DATA=$PK/udA AETHER_TEST_WORLD_PATH=$PK/files/<name>.world bunx electron-vite dev --remoteDebuggingPort 9343); $PK/udA is one fresh userData for all three launches, with inference.json written before the first",
+    "inference.json": {"kind": "llamacpp", "baseUrl": "http://127.0.0.1:8098/v1", "model": "local", "apiKeyEnv": null, "sidecar": null},
+    "phone": "~/Library/Caches/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-mac-arm64/chrome-headless-shell --remote-debugging-port=9344 --user-data-dir=$PK/chrome-<1|2> (fresh) --no-first-run --window-size=375,812 http://localhost:5192/",
+    "driver": "$PK/run.sh <port> <run file> <tag> [invite file] (bp-tools.txt): cdp-drive.ts with literal replaces of __INVITE__, __SHOTS__, __TAG__ and /__REPO__ (= $PK/snap)"
+  },
+  "model": "none: A's inference.json names a loopback port nothing listens on, the HUD said \"UNREACHABLE llamacpp · local\" and \"No model calls counted for this world yet.\", and udA has no usage.jsonl at the end. The service and the page never call a model.",
+  "sequence": [
+    "start the service and the page server",
+    "launch A from snap-main (AETHER_TEST_WORLD_PATH $PK/files/old.world, unused)",
+    "run.sh 9343 run-bp-1-a-settings.json bp",
+    "run.sh 9343 run-bp-2-a-newgame-share.json bp-old  → W1; save the INVITE line to $PK/invite-w1.txt",
+    "launch the phone on $PK/chrome-1; run.sh 9344 run-bp-3-phone-join-none.json bp-old $PK/invite-w1.txt",
+    "bun close-browser.ts 9343 (A quits); svc-state.sh $PK/svc",
+    "launch A from snap (AETHER_TEST_WORLD_PATH $PK/files/w2-before.world)",
+    "run.sh 9344 run-bp-5-phone-land-arrives.json bp-w1 &   (the phone watches first, in the background)",
+    "run.sh 9343 run-bp-4-a-continue-announce.json bp-w1",
+    "run.sh 9343 run-bp-6-a-newgame-export.json bp-w2  → W2 and $PK/files/w2-before.world",
+    "run.sh 9343 run-bp-7-a-share-w2.json bp-w2  → save the INVITE line to $PK/invite-w2.txt",
+    "stop the phone on chrome-1; launch it on a fresh $PK/chrome-2; run.sh 9344 run-bp-8-phone-join-w2.json bp-w2 $PK/invite-w2.txt",
+    "bun close-browser.ts 9343; launch A from snap (AETHER_TEST_WORLD_PATH $PK/files/w2-after.world)",
+    "run.sh 9343 run-bp-9-a-reopen-export.json bp-w2",
+    "(cd $PK/snap && bun run service -- export <W1 id> --data $PK/svc --out $PK/files/w1-service.world)",
+    "(cd $PK/snap-main && bun --tsconfig-override tsconfig.node.json scripts/.pk/main-pack.ts)",
+    "(cd $PK/snap && bun run verify-world -- $PK/files/<w2-before|w2-after|w1-service>.world --json); unzip -p <file> world.json",
+    "stop everything: close-browser.ts 9343 (twice this run, see result.md), the phone, then the page and service by their ports; lsof on 9343, 9344, 8799, 5192 and 5193 finds nothing"
+  ],
+  "parts": [
+    "run-bp-1-a-settings.json", "run-bp-2-a-newgame-share.json", "run-bp-3-phone-join-none.json",
+    "run-bp-4-a-continue-announce.json", "run-bp-5-phone-land-arrives.json", "run-bp-6-a-newgame-export.json",
+    "run-bp-7-a-share-w2.json", "run-bp-8-phone-join-w2.json", "run-bp-9-a-reopen-export.json"
+  ],
+  "records": ["bp-driver.txt (every driver output, invite links left out, plus the service state and the three .world manifests)", "bp-tools.txt"]
+}

@@ -1,0 +1,100 @@
+{
+  "part": "BP-9 (app A relaunched again, this change, AETHER_TEST_WORLD_PATH = $PK/files/w2-after.world): Continue opens W2 and syncs — no second `pack`; Worlds → Saves → W1's row (clicking the focused row resumes it) opens W1 and syncs — no second `pack`; Worlds → World files → W2's Export .world",
+  "actions": [
+    {
+      "wait": 1500
+    },
+    {
+      "clickText": "Continue"
+    },
+    {
+      "eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance && S.useLandStore.getState().progress !== null) return { ms: Date.now() - t0, instance: s.activeInstance.instance?.meta?.instanceId ?? null }; await new Promise(r => setTimeout(r, 250)); } return 'timeout' })()"
+    },
+    {
+      "wait": 5000
+    },
+    {
+      "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; const n = H.worldNow(); return JSON.stringify({ world: w.worldId, link: w.status.link, pending: w.status.pending, refused: w.status.refused, error: w.status.error, head: n.head.n, packEvents: Object.values(n.events).filter(e => e.kind === 'pack').map(e => e.n + (e.pending ? '(pending)' : '')), pack: n.pack?.pack ?? null }) })()"
+    },
+    {
+      "hold": {
+        "from": "(() => [...document.querySelectorAll('[data-layer], [role=dialog]')].some(l => l.getClientRects().length > 0) ? 'Escape' : null)()"
+      },
+      "ms": 80
+    },
+    {
+      "wait": 500
+    },
+    {
+      "hold": "Escape",
+      "ms": 80
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "clickText": "Worlds"
+    },
+    {
+      "wait": 1000
+    },
+    {
+      "clickText": "Saves"
+    },
+    {
+      "wait": 1200
+    },
+    {
+      "clickText": "無界之地 · PUVP-WTSE"
+    },
+    {
+      "wait": 500
+    },
+    {
+      "eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance?.instance?.meta?.instanceId === 'puvp-wtse-mui2gtsx' && S.useLandStore.getState().progress !== null) return { ms: Date.now() - t0, instance: s.activeInstance.instance.meta.instanceId }; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + S.useSessionStore.getState().activeInstance?.instance?.meta?.instanceId })()"
+    },
+    {
+      "wait": 5000
+    },
+    {
+      "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); const w = S.useHistoryStore.getState().world.value; const n = H.worldNow(); return JSON.stringify({ world: w.worldId, link: w.status.link, pending: w.status.pending, refused: w.status.refused, error: w.status.error, head: n.head.n, packEvents: Object.values(n.events).filter(e => e.kind === 'pack').map(e => e.n + (e.pending ? '(pending)' : '')), pack: n.pack?.pack ?? null }) })()"
+    },
+    {
+      "hold": {
+        "from": "(() => [...document.querySelectorAll('[data-layer], [role=dialog]')].some(l => l.getClientRects().length > 0) ? 'Escape' : null)()"
+      },
+      "ms": 80
+    },
+    {
+      "wait": 500
+    },
+    {
+      "hold": "Escape",
+      "ms": 80
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "clickText": "Worlds"
+    },
+    {
+      "wait": 1000
+    },
+    {
+      "clickText": "World files"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "eval": "(() => { const btns = [...document.querySelectorAll('button')].filter(b => b.innerText.trim() === 'Export .world'); const mine = btns.filter(b => { let box = b.parentElement; while (box && !box.innerText.includes('YATG-NFUK')) box = box.parentElement; return box && btns.filter(x => box.contains(x)).length === 1; }); if (mine.length !== 1) return 'rows: ' + btns.length + ', matched: ' + mine.length; mine[0].scrollIntoView({ block: 'center' }); mine[0].click(); return 'clicked Export .world in the row of YATG-NFUK' })()"
+    },
+    {
+      "eval": "(async () => { for (let i = 0; i < 80; i++) { const t = document.body.innerText; if (/Wrote .*KiB/.test(t) || /Error/.test(t)) break; await new Promise(r => setTimeout(r, 250)); } const t = document.body.innerText; const at = t.indexOf('Worlds on this device'); return t.slice(at, at + 900) })()"
+    },
+    {
+      "shot": "__SHOTS__/__TAG__-a-04-exported-after.jpg"
+    }
+  ]
+}

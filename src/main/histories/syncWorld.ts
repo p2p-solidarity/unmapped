@@ -9,7 +9,8 @@
 // submit is harmless (ids are content addresses). A `rejected` own event moves from the outbox to
 // refused.jsonl, where it stays listed until the player dismisses it; so does the whole outbox when
 // the service says this key was removed (`access-removed`, D8). Every time the world comes
-// online, the packs this device announced and the service has not confirmed go up (./workPacks).
+// online, the packs this device announced and the service has not confirmed go up (./workPacks),
+// and a shared built-in world with no `pack` gets one from its first owner (./builtInPack).
 
 import { verifyLog } from "@shared/history/log";
 import { ownershipOf } from "@shared/history/owners";
@@ -23,6 +24,7 @@ import {
   type WorldStreamEvent,
 } from "@shared/worldApi";
 import { type FromService, WORLD_PROTOCOL } from "@shared/worldProtocol";
+import { announceWhenDue } from "./builtInPack";
 import type { HostCore } from "./core";
 import { appendVerified, type LoadedWorld } from "./loaded";
 import { appendRefused, writeLink, writeOutbox } from "./logStore";
@@ -138,6 +140,8 @@ async function onOpened(
   // Packs this device announced while offline (an otherworld placed, a cartridge pack that failed
   // at attach) go up now; in the background, so the world's lock is not held for the upload.
   if (url !== "") void uploadOwnPacks(core, world, url);
+  // A built-in world shared with no `pack` yet gets one once the whole log is here (./builtInPack).
+  if (frame.head.n === world.cursor.n) announceWhenDue(core, world, url, true);
 }
 
 async function onEntries(
@@ -174,6 +178,7 @@ async function onEntries(
   core.emitEntries(world, added);
   await core.emitStatus(world);
   void receiveWorks(core, world);
+  if (frame.head.n === world.cursor.n) announceWhenDue(core, world, urlOf(world) ?? "", false);
 }
 
 /**

@@ -1,0 +1,74 @@
+{
+  "part": "BP-7 (app A, this change): back to the title; Continue opens W2 (local only, exported in BP-6); E at home opens the door; Share on 127.0.0.1:8799; wait for Online, nothing waiting and the fold's `pack`; read the fold; Create an invite and print it",
+  "actions": [
+    {
+      "hold": "Escape",
+      "ms": 80
+    },
+    {
+      "wait": 800
+    },
+    {
+      "hold": {
+        "from": "(() => document.body.innerText.includes('Continue') ? null : 'Escape')()"
+      },
+      "ms": 80
+    },
+    {
+      "wait": 1200
+    },
+    {
+      "clickText": "Continue"
+    },
+    {
+      "eval": "(async () => { const S = await import('/state/index.ts'); const t0 = Date.now(); for (let i = 0; i < 160; i++) { const s = S.useSessionStore.getState(); if (s.screen === 'play' && s.activeInstance && s.activeInstance.instance?.meta?.instanceId !== 'puvp-wtse-mui2gtsx' && S.useLandStore.getState().progress !== null) return { ms: Date.now() - t0, instance: s.activeInstance.instance?.meta?.instanceId ?? null, cartridge: s.activeInstance.cartridge.manifest.cartridgeId + '@' + s.activeInstance.cartridge.manifest.version + ' ' + s.activeInstance.cartridge.manifest.contentHash }; await new Promise(r => setTimeout(r, 250)); } return 'timeout: ' + S.useSessionStore.getState().screen })()"
+    },
+    {
+      "wait": 2500
+    },
+    {
+      "eval": "(async () => { const H = await import('/history/index.ts'); const n = H.worldNow(); const kinds = Object.values(n?.events ?? {}).sort((a, b) => a.n - b.n).map(e => e.n + ':' + e.kind).join(' '); return JSON.stringify({ world: n?.world, head: n?.head.n, pack: n?.pack ?? null, kinds }) })()"
+    },
+    {
+      "hold": "KeyE",
+      "ms": 120
+    },
+    {
+      "wait": 1200
+    },
+    {
+      "eval": "(() => { const l = document.querySelector('[data-layer=door]'); if (!l) return 'no door layer'; const t = l.innerText; return t.slice(t.indexOf('Sharing'), t.indexOf('Sharing') + 400) })()"
+    },
+    {
+      "eval": "window.__t0 = performance.now(); 'mark'"
+    },
+    {
+      "clickText": "Share on 127.0.0.1:8799"
+    },
+    {
+      "eval": "(async () => { for (let i = 0; i < 120; i++) { const l = document.querySelector('[data-layer=door]'); const t = l ? l.innerText : ''; if (/Online/.test(t) && /Invites/.test(t)) return { ms: Math.round(performance.now() - window.__t0) }; await new Promise(r => setTimeout(r, 250)); } const l = document.querySelector('[data-layer=door]'); return 'timeout: ' + (l ? l.innerText.slice(0, 1500) : 'no door') })()"
+    },
+    {
+      "eval": "(async () => { const H = await import('/history/index.ts'); const S = await import('/state/index.ts'); for (let i = 0; i < 40; i++) { const w = S.useHistoryStore.getState().world.value; if (w && w.status.link === 'online' && w.status.pending === 0 && (H.worldNow()?.pack ?? null) !== null) break; await new Promise(r => setTimeout(r, 250)); } const w = S.useHistoryStore.getState().world.value; const n = H.worldNow(); const kinds = Object.values(n?.events ?? {}).sort((a, b) => a.n - b.n).map(e => e.n + ':' + e.kind + (e.pending ? '(pending)' : '')).join(' '); return JSON.stringify({ ms: Math.round(performance.now() - window.__t0), world: w.worldId, link: w.status.link, url: w.status.url, role: w.status.role, pending: w.status.pending, refused: w.status.refused, error: w.status.error, head: n.head.n, pack: n.pack ?? null, kinds }) })()"
+    },
+    {
+      "shot": "__SHOTS__/__TAG__-a-01-shared.jpg"
+    },
+    {
+      "clickText": "Create an invite"
+    },
+    {
+      "eval": "(async () => { for (let i = 0; i < 40; i++) { const l = document.querySelector('[data-layer=door]'); const m = l && /unmapped:\\/\\/join\\?i=[A-Za-z0-9_\\-]+&k=[A-Za-z0-9_\\-]+(&o=[A-Za-z0-9_\\-]+)?/.exec([...l.querySelectorAll('input, textarea')].map(x => x.value).join('\\n') + '\\n' + l.innerText); if (m) { window.__invite = m[0]; return m[0].length; } await new Promise(r => setTimeout(r, 250)); } return 'no link' })()"
+    },
+    {
+      "eval": "'INVITE ' + window.__invite"
+    },
+    {
+      "hold": "Escape",
+      "ms": 80
+    },
+    {
+      "wait": 500
+    }
+  ]
+}

@@ -1,8 +1,9 @@
 // Exporting a `.world` from this device (rev 6 phase 4, D5): any member holding the log may. Main
 // reads the sequenced log (never the outbox, the save, the pin or progress), gathers the packs the
 // history names from the blob store — the latest `pack` event's cartridge pack or, for a world on a
-// shipped built-in revision (which has none), the pinned revision packed here with P3's
-// reproducible `packCartridge`; every AI work a place or chapter opens — and signs world.json with
+// shipped built-in revision that has none (never shared yet: ../histories/builtInPack), the pinned
+// revision packed here (`packPinnedRevision`, the same bytes its owner announces once it is shared);
+// every AI work a place or chapter opens — and signs world.json with
 // the device key. A pack missing from the blob store is packed again from the installed revision
 // and accepted only when it hashes to what the history announced. The file is verified by the same
 // checks an importer runs before it is handed back.
@@ -10,18 +11,14 @@
 import { readdir } from "node:fs/promises";
 import { bundleWorks, verifyWorldFile } from "@dsl/history/worldBundle";
 import { type BundleBlob, buildWorldBundle } from "@dsl/history/worldBundleWrite";
-import type { ContentHash } from "@shared/cartridge";
-import { contentHash } from "@shared/history/ids";
 import { isOwner } from "@shared/history/owners";
 import { err, ok, type Result } from "@shared/result";
 import type { BundleWorld, WorldBundleReport } from "@shared/worldBundle";
 import { readBlob } from "../blobs/store";
-import { readCartridgeRevision } from "../cartridges/store";
-import { isBuiltIn } from "../histories/builtIn";
 import type { HostCore } from "../histories/core";
 import { isLocalOnly, type LoadedWorld } from "../histories/loaded";
 import { readLog } from "../histories/logStore";
-import { packCartridgeReproducibly, storeWorkPack } from "../histories/packs";
+import { packPinnedRevision, storeWorkPack } from "../histories/packs";
 import { isWorldId } from "../histories/paths";
 
 function missing(what: string): Result<never> {
@@ -40,25 +37,13 @@ async function genesisPack(core: HostCore, world: LoadedWorld): Promise<Result<B
     if (stored.ok) return ok({ hash: announced, bytes: stored.value });
   }
   const ref = world.genesis.body.cartridge;
-  if (announced === null && isBuiltIn(ref)) {
-    const base = await core.deps.ensureBaseGame();
-    if (!base.ok) return base;
-  }
-  const revision = await readCartridgeRevision(
-    core.deps.cartridgesDir,
-    ref.cartridgeId,
-    ref.version,
-  );
-  if (!revision.ok || revision.value.manifest.contentHash !== ref.contentHash) {
-    return missing(`The cartridge ${ref.cartridgeId}@${ref.version}`);
-  }
-  const bytes = packCartridgeReproducibly(revision.value);
-  if (!bytes.ok) return bytes;
-  const hash = contentHash(bytes.value) as ContentHash;
-  if (announced !== null && hash !== announced) {
+  const packed = await packPinnedRevision(core.deps, ref);
+  if (!packed.ok) return packed;
+  if (packed.value === null) return missing(`The cartridge ${ref.cartridgeId}@${ref.version}`);
+  if (announced !== null && packed.value.hash !== announced) {
     return missing(`The cartridge pack the world announced`);
   }
-  return ok({ hash, bytes: bytes.value });
+  return ok(packed.value);
 }
 
 /** Every work pack the history names, from the blob store or packed again from `works/`. */

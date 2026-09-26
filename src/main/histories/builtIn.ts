@@ -1,7 +1,8 @@
-// Which cartridge revisions ship with the app (D6, D10): a world on one of them needs no `pack`
-// event, and a friend joining it installs the revision from their own build (`ensureBaseGame`),
-// never from a blob. The list mirrors `main/game/base.ts`'s SHIPPED; the wiring pass exports that
-// list and this file reads it instead.
+// Which cartridge revisions ship with the app (D6, D10): a world on one of them starts with no
+// `pack` event, and a desktop friend joining it installs the revision from their own build
+// (`ensureBaseGame`), never from a blob. A phone has no build, so once such a world is shared its
+// owner announces the pinned revision's pack after all (./builtInPack). The list mirrors
+// `main/game/base.ts`'s SHIPPED; the wiring pass exports that list and this file reads it instead.
 
 import type { CartridgeRef } from "@shared/cartridge";
 import v100 from "../game/aether-land-1.0.0.json";

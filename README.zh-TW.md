@@ -375,7 +375,7 @@ usage.jsonl                       每次模型呼叫一行：用途、模型、t
 （<kbd>Y</kbd>）打開這個世界的地方、留言與路標，留言會留在你腳下那一格。所有東西都存在瀏覽器的 IndexedDB，
 所以沒有網路、也沒有網頁伺服器時，網頁照樣能重開、能走動，離線寫的留言會在服務回應後送出。網頁裡沒有模型、
 創作、對話、章節、地點、匯出或鏈。世界服務要加上 `--browser-origin <網頁的 origin>` 才會把包提供給它。從內建
-卡帶開始的世界目前不會宣告卡帶包，所以手機還畫不出來（`browser-pack-none`）。
+卡帶開始的世界，在主人分享時（或下次打開先前分享的世界時）會宣告卡帶包，手機也畫得出來。
 
 ## Mod
 
@@ -477,7 +477,7 @@ skills: [skills]
 | 經由閘道畫圖，每張都有授權紀錄 | ✅ 已驗證（測試用圖片模型）；AI 世界的素材與參考圖未跑 | [p4-images-hosted](docs/e2e/milestone-rev6-p4-images-hosted/result.md) |
 | 商業模式：不能選非商用的提供者、授權未知的新圖片會擋下發布、商業模式的閘道遇到非商用模型時拒絕啟動 | ✅ 已驗證；發布是透過 app 的發布呼叫驅動，不是畫面 | [p4-licence](docs/e2e/milestone-rev6-p4-licence/result.md) |
 | 輕量鏈：把真實服務的節拍指紋記錄在 Sepolia 上，門邊拿來比對 | ✅ 實際上鏈驗證：合約已部署，服務開串流並記錄 3 個節拍，門邊顯示「The chain matches your copy at entry 6」；改過的副本（經 main 的讀取）判為不同 | [p4-chain](docs/e2e/milestone-rev6-p4-chain/result.md) · [p4-chain-live](docs/e2e/milestone-rev6-p4-chain-live/result.md) |
-| 手機大小的瀏覽器證明：用邀請加入、畫出大地、觸控走動、離線與重開後留言、看到桌面版的玩家 | ✅ 已驗證（無頭瀏覽器 375 × 812，開發版網頁）；沒有在真的手機上跑；從內建卡帶開始的世界還畫不出來（沒有卡帶包） | [p4-mobile-proof](docs/e2e/milestone-rev6-p4-mobile-proof/result.md) |
+| 手機大小的瀏覽器證明：用邀請加入、畫出大地、觸控走動、離線與重開後留言、看到桌面版的玩家 | ✅ 已驗證（無頭瀏覽器 375 × 812，開發版網頁），包含從內建卡帶開始的世界；沒有在真的手機上跑 | [p4-mobile-proof](docs/e2e/milestone-rev6-p4-mobile-proof/result.md) |
 | 完全沒有伺服器：沒有任何畫面要求帳號；走動、留言、沒有世界服務時的門，以及 `.world` 匯出、離線驗證與在第二台裝置匯入 | ✅ 已驗證；之後 Apple 裝置端模型（在應用程式內）寫出了「創造世界」的世界卡片，但它 4K 的上下文會拒絕見證（`model-context-too-small`）；這台沒有安裝 llama.cpp 與 Ollama | [p4-no-servers](docs/e2e/milestone-rev6-p4-no-servers/result.md) · [integrated-journey](docs/e2e/milestone-rev6-integrated-journey/result.md) |
 | 一個世界走完全程：創造世界 → 遊玩 → 分享 → 兩人一起看一個地方被寫出來 → 共同擁有者 → 手機加入並走動 → `.world` 帶到另一台裝置 → Apple 裝置端模型 → 關閉後繼續 | ✅ 一次跑完並驗證；六個用戶端的前端 0 個錯誤；服務與每台裝置上是同一份 21 筆的歷史；付費呼叫 12 次 | [integrated-journey](docs/e2e/milestone-rev6-integrated-journey/result.md) |
 | Stripe 結帳（測試模式與正式）、在你自己的 GPU 端點上跑 Qwen-Image | ⏳ 未跑；每一項都需要人來做 | — |
