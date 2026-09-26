@@ -1,6 +1,7 @@
-// A world's shared history (rev 6 phase 3, D1–D4, D8, D13–D14): the event envelope, one body per
-// event kind, the sequenced log entry, the verdicts the fold receives, and `WorldNow` — what the
-// pure fold (./fold) derives from a genesis plus its log. The zod schemas for every body are in
+// A world's shared history (rev 6 phase 3, D1–D4, D8, D13–D14; phase 4 D5–D6: co-owners and the
+// chain opt-in): the event envelope, one body per event kind, the sequenced log entry, the verdicts
+// the fold receives, and `WorldNow` — what the pure fold (./fold) derives from a genesis plus its
+// log. The zod schemas for every body are in
 // ./bodies; they are typed against these interfaces, so a change here that the schemas do not
 // follow fails the typecheck. `WorldNow` is plain JSON (snapshots, D4).
 
@@ -36,6 +37,10 @@ export const EVENT_KINDS = [
   "deed",
   "beat",
   "rumor",
+  // Phase 4 (D5, D6; world protocol 2): co-owners and the chain opt-in, all owner kinds.
+  "owner.add",
+  "owner.remove",
+  "chain",
 ] as const;
 export type EventKind = (typeof EVENT_KINDS)[number];
 
@@ -110,6 +115,21 @@ export interface InviteRevokeBody {
 
 export interface MemberRemoveBody {
   key: string;
+}
+
+/** D5: makes `key` a co-owner. Any owner writes it; a key that already owns the world is refused. */
+export interface OwnerAddBody {
+  key: string;
+}
+
+/** D5: `key` stops being an owner from this n on. Any owner writes it; never the last owner. */
+export interface OwnerRemoveBody {
+  key: string;
+}
+
+/** D6's opt-in: whether the world service records this world's beats on chain (latest wins). */
+export interface ChainBody {
+  record: boolean;
 }
 
 /**
@@ -298,6 +318,9 @@ export interface EventBodies {
   deed: DeedBody;
   beat: BeatBody;
   rumor: RumorBody;
+  "owner.add": OwnerAddBody;
+  "owner.remove": OwnerRemoveBody;
+  chain: ChainBody;
 }
 
 /** The envelope around every body (D2). A type alias, so an event is also a `StoredEvent`. */
@@ -417,6 +440,25 @@ export interface GiftNow extends Folded<GiftBody> {
   taken: { by: string; id: string; pending: boolean } | null;
 }
 
+/**
+ * D5: a key that owns, or owned, the world. The genesis author starts as the only one; an owner's
+ * `owner.add` makes another; `owner.remove` ends that (it may be added again later).
+ */
+export interface OwnerNow {
+  key: string;
+  /** n of the entry that first made this key an owner (1: the genesis author). Never moves. */
+  n: number;
+  /** n of the `owner.remove` that ended its last time as an owner; null while it is one. */
+  removed: number | null;
+  /**
+   * The `owner.add` that first made it an owner (null for the genesis author). Each one's author
+   * was an owner before it, so following them always leads back to the genesis author: the path
+   * an invite by this key carries in `&o=`.
+   */
+  added: HistoryEventOf<"owner.add"> | null;
+  pending: boolean;
+}
+
 export interface MemberNow {
   key: string;
   name: string;
@@ -459,7 +501,12 @@ export interface IgnoredEntry {
 export interface WorldNow {
   world: string;
   genesis: GenesisEvent;
+  /** The genesis author, who sequences a local-only world. Who owns the world now: `owners`. */
   owner: string;
+  /** D5: every key that owns or owned the world, by key; `removed === null` owns it now. */
+  owners: Record<string, OwnerNow>;
+  /** D6: the latest `chain` event's body, or null (no opt-in: nothing is recorded). */
+  provenance: ChainBody | null;
   /** The last sequenced entry folded ({ n: 0, chain: world } before any). */
   head: Head;
   /** Receipt time of the head entry; null before any. */

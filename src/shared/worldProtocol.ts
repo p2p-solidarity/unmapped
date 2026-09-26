@@ -16,11 +16,50 @@ import { inviteSchema } from "./history/bodies";
 import { storedEventSchema } from "./history/event";
 import { AUTHOR_KEY, CHAIN, EVENT_ID, NONCE, SIGNATURE, utf8Length } from "./history/ids";
 import { logEntrySchema } from "./history/log";
-import type { Head, Invite, LogEntry, StoredEvent } from "./history/types";
+import type { Head, Invite, LogEntry, StoredEvent, WorldNow } from "./history/types";
 import type { AppError } from "./result";
 import { err, ok, type Result } from "./result";
 
-export const WORLD_PROTOCOL = 1;
+/**
+ * 2 (phase 4, D5–D6): co-owners (`owner.add`, `owner.remove`) and the chain opt-in (`chain`). A
+ * protocol-1 build skips those kinds as "from a newer build", so it would refuse what a co-owner
+ * writes and fold such a world differently: the service refuses its `open` (`protocol-newer`).
+ */
+export const WORLD_PROTOCOL = 2;
+
+/** The oldest protocol a service still serves: worlds without the protocol-2 kinds fold alike. */
+export const WORLD_PROTOCOL_MIN = 1;
+
+/** The lowest protocol that folds `now`'s history as this build does. */
+export function protocolFor(now: Pick<WorldNow, "owners" | "provenance">): number {
+  return Object.keys(now.owners).length > 1 || now.provenance !== null ? 2 : 1;
+}
+
+/**
+ * Why a client speaking `protocol` may not open or keep reading the world `now` (D5), or null:
+ * a protocol this service does not speak (`protocol-unsupported`), or one older than the world's
+ * history needs (`protocol-newer`).
+ */
+export function protocolRefusal(
+  now: Pick<WorldNow, "owners" | "provenance">,
+  protocol: number,
+): AppError | null {
+  if (protocol < WORLD_PROTOCOL_MIN || protocol > WORLD_PROTOCOL) {
+    return {
+      code: "protocol-unsupported",
+      message: `This service speaks world protocols ${WORLD_PROTOCOL_MIN}–${WORLD_PROTOCOL}, not ${protocol}.`,
+      hint: "Use a build of UNMAPPED that matches the service.",
+    };
+  }
+  const needs = protocolFor(now);
+  return protocol >= needs
+    ? null
+    : {
+        code: "protocol-newer",
+        message: `This world has co-owners or a chain opt-in (world protocol ${needs}); this build speaks ${protocol}.`,
+        hint: "Update UNMAPPED to open it.",
+      };
+}
 
 export const FRAME_MAX_BYTES = 256 * 1024;
 

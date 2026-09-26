@@ -13,6 +13,11 @@
 //
 // Geometry that needs trigonometry stays with the writer: a place's `at` (`placeSpot`) and a
 // continued chapter's gate (`trailPlace`) are only checked to be free here.
+//
+// Owners (phase 4, D5): who owns the world is `now.owners`, changed only by `owner.add` /
+// `owner.remove` under `ownerChange` (./owners), the one rule `verifyLog`'s ownership pass runs
+// too. An owner is never removed as a member, and an invite is good while its signer owns the
+// world.
 
 import { canonicalJson } from "../canonical";
 import { type ChunkCoord, chunkKey } from "../chunks";
@@ -23,6 +28,7 @@ import { computeBeat } from "./beat";
 import { HISTORY_LIMITS } from "./bodies";
 import { chunkStands, dayOf } from "./decay";
 import { placeIdOf, sameChunk, timeMs } from "./ids";
+import { currentOwners, isOwner, ownerChange } from "./owners";
 import { rumorKey, validateRumor } from "./rumor";
 import { inviteSigned, joinProofValid } from "./sign";
 import type {
@@ -53,6 +59,9 @@ const UNHIDEABLE: readonly EventKind[] = [
   "invite.revoke",
   "member.remove",
   "beat",
+  "owner.add",
+  "owner.remove",
+  "chain",
 ];
 
 const isVariant = (now: WorldNow, id: string): boolean => now.events[id]?.status === "variant";
@@ -172,9 +181,10 @@ export function deedKey(author: string, body: DeedBody): string {
 }
 
 /**
- * D8: an invite admits `joiner` at receipt time `rt` when it is for this world, the owner signed
- * it, it has not expired, it was not revoked earlier in the log, it has uses left, and the proof
- * shows the joiner holds the invite's one-time secret (bound to the joiner's own key).
+ * D8: an invite admits `joiner` at receipt time `rt` when it is for this world, one of its owners
+ * signed it (and still owns it: phase 4 D5), it has not expired, it was not revoked earlier in the
+ * log, it has uses left, and the proof shows the joiner holds the invite's one-time secret (bound
+ * to the joiner's own key).
  */
 export function verifyInvite(
   now: WorldNow,
@@ -187,8 +197,8 @@ export function verifyInvite(
   if (invite.world !== now.world) {
     return err("invite-wrong-world", "This invite is for another world.");
   }
-  if (invite.by !== now.owner) {
-    return err("invite-not-owner", "This invite was not made by the world's owner.");
+  if (!isOwner(now, invite.by)) {
+    return err("invite-not-owner", "This invite was not made by one of the world's owners.");
   }
   if (!inviteSigned(invite)) {
     return err("invite-sig-invalid", "This invite's signature does not verify.", again);
@@ -363,9 +373,18 @@ function admitKind(now: WorldNow, event: HistoryEvent, rt: string): Result<Admis
         : LIVE;
     }
     case "member.remove":
-      return event.body.key === now.owner
-        ? err("member-remove-owner", "The owner cannot remove themself.")
+      return isOwner(now, event.body.key)
+        ? err(
+            "member-remove-owner",
+            "An owner is not removed as a member.",
+            "Remove them as an owner first.",
+          )
         : LIVE;
+    case "owner.add":
+    case "owner.remove": {
+      const changed = ownerChange(currentOwners(now), event);
+      return changed.ok ? LIVE : changed;
+    }
     case "member.join": {
       const current = Object.keys(now.members).filter((key) => now.removed[key] === undefined);
       if (current.length >= HISTORY_LIMITS.members) {

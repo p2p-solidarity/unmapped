@@ -35,6 +35,21 @@ const JOIN_PREFIX = "unmapped-join:v1\n";
 const WS_PREFIX = "unmapped-ws:v1\n";
 const BLOB_PREFIX = "unmapped-blob:v1\n";
 
+/** What an event's author signs: the purpose line and the event id. */
+export function eventSignedText(id: string): string {
+  return `${EVENT_PREFIX}${id}`;
+}
+
+/** What a device signs to authenticate a WebSocket (D9 `auth`). */
+export function wsAuthText(nonce: string, serviceKey: string): string {
+  return `${WS_PREFIX}${nonce}\n${serviceKey}`;
+}
+
+/** What a device signs for a blob request (D9): method, path, time and the body's sha256. */
+export function blobAuthText(method: string, path: string, ts: number, body: Uint8Array): string {
+  return `${BLOB_PREFIX}${method.toUpperCase()}\n${path}\n${ts}\n${sha256Hex(body)}`;
+}
+
 /** How far a blob request's timestamp may be from the service clock (D9). */
 export const BLOB_AUTH_SKEW_S = 300;
 
@@ -76,7 +91,7 @@ export function signEvent<K extends EventKind>(
   secretKey: Uint8Array,
 ): HistoryEventOf<K> {
   const id = eventIdOf(unsigned);
-  return { ...unsigned, id, sig: signText(secretKey, `${EVENT_PREFIX}${id}`) } as HistoryEventOf<K>;
+  return { ...unsigned, id, sig: signText(secretKey, eventSignedText(id)) } as HistoryEventOf<K>;
 }
 
 /** D5 step 2: the id is the hash of the content, and the author signed that id. */
@@ -86,7 +101,7 @@ export function verifyEvent(event: StoredEvent): Result<void> {
   }
   const author = typeof event.author === "string" ? event.author : "";
   const sig = typeof event.sig === "string" ? event.sig : "";
-  if (!verifyText(author, `${EVENT_PREFIX}${event.id}`, sig)) {
+  if (!verifyText(author, eventSignedText(event.id), sig)) {
     return err("event-sig-invalid", "The event is not signed by its author.");
   }
   return ok(undefined);
@@ -138,15 +153,11 @@ export function joinProofValid(invite: Invite, proof: string, joiner: string): b
 
 /** D9 `auth`: Ed25519 over "unmapped-ws:v1\n" + nonce + "\n" + service key. */
 export function signWsAuth(secretKey: Uint8Array, nonce: string, serviceKey: string): string {
-  return signText(secretKey, `${WS_PREFIX}${nonce}\n${serviceKey}`);
+  return signText(secretKey, wsAuthText(nonce, serviceKey));
 }
 
 export function verifyWsAuth(key: string, sig: string, nonce: string, serviceKey: string): boolean {
-  return verifyText(key, `${WS_PREFIX}${nonce}\n${serviceKey}`, sig);
-}
-
-function blobText(method: string, path: string, ts: number, body: Uint8Array): string {
-  return `${BLOB_PREFIX}${method.toUpperCase()}\n${path}\n${ts}\n${sha256Hex(body)}`;
+  return verifyText(key, wsAuthText(nonce, serviceKey), sig);
 }
 
 /** `X-Unmapped-Auth: <key>.<ts>.<sig>` for a blob request; `ts` in whole seconds. */
@@ -155,7 +166,7 @@ export function blobAuthHeader(
   request: { method: string; path: string; ts: number; body: Uint8Array },
 ): string {
   const { method, path, ts, body } = request;
-  return `${authorKeyFor(secretKey)}.${ts}.${signText(secretKey, blobText(method, path, ts, body))}`;
+  return `${authorKeyFor(secretKey)}.${ts}.${signText(secretKey, blobAuthText(method, path, ts, body))}`;
 }
 
 /** The key that signed a blob request, if the header is valid and `nowS` is within ±300 s. */
@@ -170,7 +181,7 @@ export function readBlobAuth(
   if (Math.abs(request.nowS - ts) > BLOB_AUTH_SKEW_S) {
     return err("blob-auth-stale", "The blob request's time is too far from the service's.");
   }
-  if (!verifyText(key, blobText(request.method, request.path, ts, request.body), sig)) {
+  if (!verifyText(key, blobAuthText(request.method, request.path, ts, request.body), sig)) {
     return err("blob-auth-invalid", "The blob request's signature does not verify.");
   }
   return ok(key);

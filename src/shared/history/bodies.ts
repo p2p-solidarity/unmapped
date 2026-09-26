@@ -52,6 +52,8 @@ export const HISTORY_LIMITS = {
   inviteUses: { min: 1, max: 20 },
   /** Per world (D5): members, and places (`PLACE_LIMITS.max`, now counted per world). */
   members: 64,
+  /** Owners at once, the genesis author included (phase 4 D5). */
+  owners: 16,
   places: PLACE_LIMITS.max,
   signpostsPerAuthorChunk: 3,
   rumorSlots: 6,
@@ -396,4 +398,7 @@ export const BODY_SCHEMAS: { [K in EventKind]: z.ZodType<EventBodies[K]> } = {
       .max(HISTORY_LIMITS.rumorSlots - 1),
     text: line(HISTORY_LIMITS.rumorChars),
   }),
+  "owner.add": z.strictObject({ key: authorKey }),
+  "owner.remove": z.strictObject({ key: authorKey }),
+  chain: z.strictObject({ record: z.boolean() }),
 };

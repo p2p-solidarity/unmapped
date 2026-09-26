@@ -8,6 +8,10 @@
 //   5. The beat changes (rev 6 phase 3, D13, D14, D18): care points, the decay table, the fog
 //      thresholds, the season length or the rumor slot picker — every client and the world
 //      service would fold the same history differently.
+//   6. An admit rule starts refusing an entry an earlier build admitted, or admits one it refused
+//      (rev 6 phase 4, D5: validators count as physics) — a world's history would fold one way on
+//      the old build and another on the new. Co-owners (world protocol 2) must leave every rule
+//      over the phase-3 kinds as it was.
 // When this fails on purpose: bump PHYSICS_VERSION, keep the old generators reachable for worlds
 // pinned to the old one (PHYSICS_SUPPORTED), and record the new fingerprint below.
 
@@ -38,7 +42,13 @@ import {
   RUMOR_SHOW_BEATS,
   RUMOR_WRITE_BEATS,
 } from "@shared/history/rumor";
-import { authorKeyFor, signatureVerdict, signEvent } from "@shared/history/sign";
+import {
+  authorKeyFor,
+  signatureVerdict,
+  signEvent,
+  signInvite,
+  signJoinProof,
+} from "@shared/history/sign";
 import type {
   EventBodies,
   EventKind,
@@ -66,6 +76,15 @@ const RECORDED: Record<number, string> = {
  */
 const BEAT_RECORDED: Record<number, string> = {
   1: "sha256:4fe10b1f0780096109ab86ee9177bdee4788b40504768ae646fdd5affb1c41d4",
+};
+
+/**
+ * What admit decides over one scripted history of the phase-3 kinds (door, conflicts, spots, quotas,
+ * parents, each refused once and admitted once). Recorded under version 1 on the build before the
+ * phase-4 owner kinds (HEAD f764630). Never edit an entry; add one for a new version.
+ */
+const ADMIT_RECORDED: Record<number, string> = {
+  1: "sha256:b1ff333be1d8f6b4c10a32d9f8d781d981d827492517016670f5a1dcc2c08344",
 };
 
 const SEEDS = [0, 1, 12_345, seedFromText("aether-land"), seedFromText("K7QM-2PXD")];
@@ -269,6 +288,151 @@ function beatHistory(seed: number): unknown[] {
   return out;
 }
 
+const WRITER = sha256Bytes("physics:writer");
+const PASSER = sha256Bytes("physics:passer");
+const TICKET = sha256Bytes("physics:ticket");
+
+/** A small land's door and rules over one day: what each event became (live, variant, refused). */
+function admitHistory(): unknown {
+  const owner = authorKeyFor(BEATER);
+  const hash = `sha256:${"cd".repeat(32)}` as const;
+  const genesis: GenesisEvent = signEvent(
+    {
+      v: 1,
+      world: "",
+      kind: "genesis",
+      author: owner,
+      at: dayAt(0),
+      seen: 0,
+      body: {
+        name: "Admit",
+        cartridge: { cartridgeId: "admit", version: "1.0.0", contentHash: hash },
+        seed: "seed-admit",
+        language: "en",
+        physicsVersion: 1,
+        createdAt: dayAt(0),
+        access: "friends",
+        gates: [{ id: "e1", cx: 4, cz: 0 }],
+        from: { instanceId: "admit-1" },
+      },
+    },
+    BEATER,
+  );
+  let now: WorldNow = emptyNow(genesis);
+  let cursor: LogCursor = logStart(genesis.id);
+  const append = (event: StoredEvent) => {
+    const entry = sequenceEvent(cursor, event, dayAt(1), null);
+    cursor = { n: entry.n, chain: entry.chain, rt: entry.rt };
+    now = applyEntry(now, entry, signatureVerdict(event));
+  };
+  const put = <K extends EventKind>(
+    kind: K,
+    body: EventBodies[K],
+    who = BEATER,
+    seen = now.head.n,
+  ) => {
+    const unsigned = {
+      v: 1,
+      world: genesis.id,
+      kind,
+      author: authorKeyFor(who),
+      at: dayAt(1),
+      seen,
+    };
+    const event = signEvent({ ...unsigned, body } as UnsignedEventOf<K>, who);
+    append(event);
+    return event;
+  };
+  const witness = (name: string) => ({
+    cx: 2,
+    cz: 0,
+    scene: "S",
+    dialogues: { ada: "D" },
+    lore: [],
+    index: {
+      name,
+      npcs: [{ id: "ada", name: "Ada", role: "elder" as const }],
+      errands: [],
+      keepsakes: [],
+    },
+  });
+  const note = {
+    coord: { cx: 1, cz: 1, x: 2, z: 3 },
+    anchors: [],
+    text: "N",
+    contests: null,
+    name: "P",
+  };
+  const side = (cx: number, cz: number) => ({
+    kind: "side" as const,
+    title: "P",
+    at: { cx, cz },
+    seed: 1,
+    source: "S",
+  });
+  append(genesis);
+  put("note", note, PASSER);
+  const invite = signInvite(
+    {
+      v: 1,
+      world: genesis.id,
+      svc: "wss://s.example",
+      by: owner,
+      key: authorKeyFor(TICKET),
+      nonce: "abcdefghijklmnop",
+      exp: dayAt(30),
+      uses: 1,
+    },
+    BEATER,
+  );
+  const proof = signJoinProof(TICKET, invite, authorKeyFor(WRITER));
+  put("member.join", { invite, name: "Writer", proof }, WRITER);
+  put("member.join", { invite, name: "Again", proof }, WRITER);
+  put("access", { policy: "public" }, WRITER);
+  put("access", { policy: "public" });
+  put("note", note, PASSER);
+  put("witness", witness("Visitor"), PASSER);
+  const seenBefore = now.head.n;
+  put("witness", witness("First"), WRITER);
+  put("witness", witness("Knew"));
+  put("witness", witness("Race"), BEATER, seenBefore);
+  put("member.remove", { key: owner });
+  put("hide", { id: genesis.id, hidden: true });
+  put("place", side(0, 0));
+  put("place", side(70, 0));
+  put("place", side(3, 3));
+  for (let index = 0; index < 4; index += 1) {
+    put("signpost", { coord: { cx: 1, cz: 1, x: 0, z: index }, text: "S", toward: null }, PASSER);
+  }
+  const item = {
+    id: "i",
+    name: "Lamp",
+    kind: "charm" as const,
+    power: 1,
+    perk: "",
+    curse: null,
+    meshDna: [],
+    archetype: [],
+    flavor: "",
+  };
+  const gift = put("gift", { coord: { cx: 1, cz: 1, x: 5, z: 5 }, item, for: null, words: "" });
+  put("gift.take", { gift: gift.id }, PASSER);
+  put("gift.take", { gift: gift.id }, WRITER);
+  put("visit", { chunks: [{ cx: 2, cz: 0 }] }, PASSER);
+  put("visit", { chunks: [{ cx: 2, cz: 0 }] }, PASSER);
+  put("deed", { what: "place.crossed", ref: genesis.id });
+  const fingerprint = `sha256:${"0".repeat(64)}`;
+  put(
+    "beat",
+    { upTo: now.head.n, at: dayAt(1), season: 0, fog: [], slots: [], fingerprint },
+    PASSER,
+  );
+  put("member.remove", { key: authorKeyFor(WRITER) });
+  put("note", note, WRITER);
+  const events = Object.values(now.events).map((ref) => [ref.n, ref.kind, ref.status, ref.author]);
+  return { ignored: now.ignored, events };
+}
+
 function beatFingerprintOfPhysics(): string {
   const constants = {
     CARE_POINTS,
@@ -308,6 +472,14 @@ describe("physics version", () => {
       beatFingerprintOfPhysics(),
       "the beat's constants or output changed: bump PHYSICS_VERSION and record it",
     ).toBe(BEAT_RECORDED[PHYSICS_VERSION]);
+  });
+
+  it("admits and refuses exactly what the recorded build did (6)", () => {
+    const text = JSON.stringify(admitHistory());
+    expect(
+      `sha256:${createHash("sha256").update(text).digest("hex")}`,
+      "an admit rule changed: bump PHYSICS_VERSION, keep the old rule for worlds pinned to it",
+    ).toBe(ADMIT_RECORDED[PHYSICS_VERSION]);
   });
 
   it("produces exactly the recorded land, fights, lore and dungeons (1–3)", () => {

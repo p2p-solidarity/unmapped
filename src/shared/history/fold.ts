@@ -40,8 +40,11 @@ import type {
   WorldNow,
 } from "./types";
 
-/** Bumps with any change to the fold, admit, beat or rumor rules: older snapshots are refolded. */
-export const FOLD_VERSION = 1;
+/**
+ * Bumps with any change to the fold, admit, beat or rumor rules: older snapshots are refolded.
+ * 2: co-owners and the chain opt-in (phase 4 D5, D6: `owners`, `provenance`).
+ */
+export const FOLD_VERSION = 2;
 
 const ORIGIN: ChunkCoord = { cx: 0, cz: 0 };
 
@@ -74,6 +77,10 @@ export function emptyNow(genesis: GenesisEvent): WorldNow {
     world: genesis.id,
     genesis,
     owner: genesis.author,
+    owners: {
+      [genesis.author]: { key: genesis.author, n: 1, removed: null, added: null, pending: false },
+    },
+    provenance: null,
     head: { n: 0, chain: genesis.id },
     rt: null,
     genesisRt: null,
@@ -109,6 +116,7 @@ export function emptyNow(genesis: GenesisEvent): WorldNow {
 function cloneNow(now: WorldNow): WorldNow {
   return {
     ...now,
+    owners: { ...now.owners },
     hidden: { ...now.hidden },
     members: { ...now.members },
     removed: { ...now.removed },
@@ -363,6 +371,25 @@ function apply(draft: WorldNow, event: HistoryEvent, step: Step, admission: Admi
       contest(draft.rumors, key, folded(event.body), admission);
       break;
     }
+    case "owner.add": {
+      const { key } = event.body;
+      const known = draft.owners[key];
+      draft.owners[key] =
+        known === undefined
+          ? { key, n: step.n, removed: null, added: event, pending: step.pending }
+          : { ...known, removed: null, pending: step.pending };
+      break;
+    }
+    case "owner.remove": {
+      const known = draft.owners[event.body.key];
+      if (known !== undefined) {
+        draft.owners[event.body.key] = { ...known, removed: step.n, pending: step.pending };
+      }
+      break;
+    }
+    case "chain":
+      draft.provenance = event.body;
+      break;
     case "genesis":
       break;
   }
@@ -454,6 +481,14 @@ export function withPending(now: WorldNow, outbox: readonly PendingEvent[], rt: 
     draft.pending += 1;
   }
   return draft;
+}
+
+/**
+ * D6's opt-in, for the service's chain recorder: whether the world's latest `chain` event says
+ * `record: true` (a world without one records nothing).
+ */
+export function chainRecording(now: Pick<WorldNow, "provenance">): boolean {
+  return now.provenance?.record === true;
 }
 
 /** How many log entries this build skipped as written by a newer one (D18). */

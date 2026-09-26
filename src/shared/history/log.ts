@@ -5,15 +5,23 @@
 // stays in the log (the chain needs it) and the fold skips it.
 //
 // Receipts (D2, exact): rsig(n) = base64url(Ed25519(K, "unmapped-receipt:v1\n" + chain(n))).
-// Let s1 < s2 < … be the n of the log's admitted `sequencer` entries (the owner's, verified, first
+// Let s1 < s2 < … be the n of the log's admitted `sequencer` entries (an owner's, verified, first
 // of each id); si installs Ki = its body.key. No sequencer entry: every rsig is null (a local-only
 // world). n < s2 (every n when there is only s1): K1, which covers the uploaded prefix 1..s1 that
 // attach re-receipts. si ≤ n < si+1: Ki. Once a log has s1, no rsig in it is null.
+//
+// Owners (phase 4, D5): a `sequencer` is admitted only when its author owned the world at its n,
+// and co-owners come and go by `owner.add` / `owner.remove`. So the schedule is built over an
+// ownership pass (./owners): the genesis, then each owner change in log order, with only what an
+// owner kind's verdict needs. The pass and the schedule walk the log together, each `sequencer`
+// checked against the owners of the entries before it; a rehost by a co-owner switches keys from
+// its own entry on, and a `sequencer` by an owner removed before it installs nothing.
 
 import { z } from "zod";
 import { err, ok, type Result } from "../result";
 import { readEvent, storedEventSchema } from "./event";
 import { CHAIN, chainNext, ISO_TIME, SIGNATURE, timeMs } from "./ids";
+import { type Ownership, ownershipOfGenesis, ownershipStep } from "./owners";
 import { signReceipt, verifyEvent, verifyReceipt } from "./sign";
 import type { LogEntry, StoredEvent } from "./types";
 
@@ -69,33 +77,55 @@ export interface ReceiptKey {
 
 /**
  * The key a `sequencer` entry installs, when it counts: it reads, verifies, belongs to `world`, was
- * written by `owner` and claims to have seen only earlier entries — what `admit` requires of it.
+ * written by one of `owners` (the owners before its n; a lone key is the genesis author alone) and
+ * claims to have seen only earlier entries — what `admit` requires of it.
  */
-export function sequencerKeyOf(entry: LogEntry, world: string, owner: string): string | null {
+export function sequencerKeyOf(
+  entry: LogEntry,
+  world: string,
+  owners: string | readonly string[],
+): string | null {
   const read = readEvent(entry.event);
   if (!read.ok || read.value.kind !== "sequencer") return null;
   const event = read.value;
-  if (event.world !== world || event.author !== owner || event.seen >= entry.n) return null;
+  const owned =
+    typeof owners === "string" ? event.author === owners : owners.includes(event.author);
+  if (event.world !== world || !owned || event.seen >= entry.n) return null;
   return verifyEvent(event).ok ? event.body.key : null;
 }
 
 /**
- * D2: the receipt schedule of `entries`, continuing `known` (the schedule of the entries before
- * them). A repeated sequencer event (same id) installs nothing.
+ * D2 over D5's ownership pass: the receipt schedule of `entries`, continuing `known` (the schedule
+ * of the entries before them) and `ownership` (who owned the world before them), and who owns it
+ * after them. A repeated sequencer event (same id) installs nothing.
  */
+export function logSchedule(
+  world: string,
+  ownership: Ownership,
+  entries: readonly LogEntry[],
+  known: readonly ReceiptKey[] = [],
+): { schedule: ReceiptKey[]; ownership: Ownership } {
+  const schedule = [...known];
+  let owned = ownership;
+  for (const entry of entries) {
+    if (!schedule.some((step) => step.id === entry.event.id)) {
+      const key = sequencerKeyOf(entry, world, owned.owners);
+      if (key !== null) schedule.push({ n: entry.n, id: entry.event.id, key });
+    }
+    owned = ownershipStep(owned, entry, world);
+  }
+  return { schedule, ownership: owned };
+}
+
+/** D2: the receipt schedule alone (`owner`: the genesis author, or the ownership so far). */
 export function receiptSchedule(
   world: string,
-  owner: string,
+  owner: string | Ownership,
   entries: readonly LogEntry[],
   known: readonly ReceiptKey[] = [],
 ): ReceiptKey[] {
-  const schedule = [...known];
-  for (const entry of entries) {
-    if (schedule.some((step) => step.id === entry.event.id)) continue;
-    const key = sequencerKeyOf(entry, world, owner);
-    if (key !== null) schedule.push({ n: entry.n, id: entry.event.id, key });
-  }
-  return schedule;
+  const start = typeof owner === "string" ? ownershipOfGenesis(owner) : owner;
+  return logSchedule(world, start, entries, known).schedule;
 }
 
 /** The key entry `n`'s receipt must verify with, or null when the log has no sequencer. */
@@ -139,43 +169,58 @@ export function verifyEntry(
 export interface LogCheck {
   cursor: LogCursor;
   schedule: ReceiptKey[];
+  /** Who owns the world after these entries (D5): continue a later batch from it. */
+  ownership: Ownership;
+}
+
+export interface LogOptions {
+  from?: LogCursor;
+  /** Who owned the world at `from` (a `LogCheck`'s, or `ownershipOf` the sequenced fold). */
+  ownership?: Ownership;
+  /** The genesis author, when `ownership` is not known: right only while it is the one owner. */
+  owner?: string;
+  schedule?: readonly ReceiptKey[];
 }
 
 /**
- * Every entry in order: the receipt schedule first (from the `sequencer` entries), then each
- * entry against it. From the start, `entries[0]` must be the genesis (its author is the owner).
- * Continuing from `from`, pass the `owner` and the `schedule` so far. A batch that installs the
- * first key (s1) re-receipts everything before it: verify the whole log again from the start.
+ * Every entry in order: the ownership pass and the receipt schedule (from the owner changes and
+ * the `sequencer` entries), then each entry against it. From the start, `entries[0]` must be the
+ * genesis (its author is the first owner). Continuing from `from`, pass the `ownership` and the
+ * `schedule` so far. A batch that installs the first key (s1) re-receipts everything before it:
+ * verify the whole log again from the start.
  */
 export function verifyLog(
   world: string,
   entries: readonly LogEntry[],
-  options: { from?: LogCursor; owner?: string; schedule?: readonly ReceiptKey[] } = {},
+  options: LogOptions = {},
 ): Result<LogCheck> {
   const from = options.from ?? logStart(world);
-  let owner = options.owner;
-  if (owner === undefined) {
-    const first = entries[0];
-    const genesis = first?.n === 1 && first.event.id === world ? readEvent(first.event) : null;
-    if (genesis === null || !genesis.ok || genesis.value.kind !== "genesis") {
-      return err("log-no-genesis", "The log does not start with its world's genesis.");
+  let start = options.ownership;
+  if (start === undefined) {
+    let owner = options.owner;
+    if (owner === undefined) {
+      const first = entries[0];
+      const genesis = first?.n === 1 && first.event.id === world ? readEvent(first.event) : null;
+      if (genesis === null || !genesis.ok || genesis.value.kind !== "genesis") {
+        return err("log-no-genesis", "The log does not start with its world's genesis.");
+      }
+      owner = genesis.value.author;
     }
-    owner = genesis.value.author;
+    start = ownershipOfGenesis(owner);
   }
   if ((options.schedule?.length ?? 0) === 0 && from.n > 0) {
-    const installs = entries.some((entry) => sequencerKeyOf(entry, world, owner) !== null);
-    if (installs) {
+    if (logSchedule(world, start, entries).schedule.length > 0) {
       return err("log-attach-partial", "This batch attaches the world; verify the whole log.");
     }
   }
-  const schedule = receiptSchedule(world, owner, entries, options.schedule ?? []);
+  const { schedule, ownership } = logSchedule(world, start, entries, options.schedule ?? []);
   let cursor = from;
   for (const entry of entries) {
     const next = verifyEntry(cursor, entry, receiptKeyAt(schedule, entry.n));
     if (!next.ok) return next;
     cursor = next.value;
   }
-  return ok({ cursor, schedule });
+  return ok({ cursor, schedule, ownership });
 }
 
 /**
