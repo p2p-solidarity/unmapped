@@ -1,7 +1,8 @@
-// Where each save's world lives, for Worlds → Saves (rev 6 phase 3, WP8): local (only this device
-// keeps it), shared on a service (this device's world), or joined from its owner. Read from main
-// (`world.badges`: the saves' world pins and the histories they name, never a migration) each time
-// the library loads. A row shows the line once known; the selected save's detail shows every state.
+// Where each world lives, for Worlds → My worlds (rev 6 phase 3, WP8): only on this device, shared
+// with friends, or joined from its owner — never which service (badgeText in land/worldDoor). Read
+// from main (`world.badges`: the saves' world pins and the histories they name, never a migration)
+// each time the library loads; a world's 更多 shows every state. The badge also names the world's
+// id (匯出 .world) and tells Join a world which worlds can walk over to a friend's.
 
 import { useT } from "@renderer/i18n";
 import { ErrorBlock, Text } from "@renderer/ui";
@@ -41,20 +42,7 @@ function useBadgeLine(): (badge: WorldBadge) => string {
   return (badge) => badgeText(t, badge.kind, badge.url, badge.ownerName ?? shortKey(badge.owner));
 }
 
-/** In a save's row: the line once the badges are read, nothing before. */
-export function RowBadge({
-  badges,
-  instanceId,
-}: {
-  badges: Badges;
-  instanceId: string;
-}): JSX.Element | null {
-  const line = useBadgeLine();
-  const badge = badges.status === "ready" ? badges.value.get(instanceId) : undefined;
-  return badge === undefined ? null : <span className="g-meta">{line(badge)}</span>;
-}
-
-/** In the selected save's detail: loading, the error, the line, or that it has no history yet. */
+/** In a world's 更多: loading, the error, the line, or that it has no history yet. */
 export function DetailBadge({
   badges,
   instanceId,

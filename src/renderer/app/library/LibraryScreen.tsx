@@ -1,7 +1,8 @@
-// Title → Worlds: the one library screen. The sections on the left (./sections: New game on the
-// built-in world, saves, cartridges, continent, and the legacy archive when there is one); the
-// chosen section's panel on the right. Pressing a section opens it and moves focus into its panel;
-// Esc (or ← Title) goes back to the title. Everything comes from useLibrary's one Loadable.
+// Title → Worlds: the one library screen. The sections on the left (./sections: My worlds, Join a
+// world, the market, and the legacy archive when there is one); the chosen section's panel on the
+// right. The screen opens with the first panel's main button focused (My worlds: 開始 on a new
+// adventure), and pressing a section opens it and moves focus into its panel; Esc (or ← Title)
+// goes back to the title. Everything comes from useLibrary's one Loadable.
 
 import { useT } from "@renderer/i18n";
 import { useSessionStore } from "@renderer/state";
@@ -18,8 +19,12 @@ export function LibraryScreen(): JSX.Element {
   const setScreen = useSessionStore((state) => state.setScreen);
   const { data, refresh } = useLibrary();
   const [sectionId, setSectionId] = useState(SECTIONS[0]?.id ?? "");
-  /** Bumped when a section is pressed, so its panel takes the focus once it has rendered. */
-  const [entered, setEntered] = useState(0);
+  /**
+   * Bumped when a section is pressed, so its panel takes the focus once it has rendered. It starts
+   * at 1: the first panel's main button has the focus when the screen opens (the nav holds it until
+   * that button exists).
+   */
+  const [entered, setEntered] = useState(1);
   const navRef = useRef<HTMLElement>(null);
   const panelRef = useRef<HTMLElement>(null);
 

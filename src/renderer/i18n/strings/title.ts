@@ -1,5 +1,6 @@
 // The title screen (Continue · Worlds · Create World · Settings), the Settings panel, and the lines
-// the Worlds library shows for New Game, cartridges, the archive and ENS names; also the workspace.
+// the Worlds library shows inside a world's 更多 (a new adventure's seed, a world's versions,
+// drafts, files and backups) and in the archive; also the workspace.
 
 import type { Phrase } from "./phrase";
 
@@ -13,24 +14,20 @@ export const TITLE = {
   hintSelect: { en: "Select", "zh-TW": "選擇", ja: "選択" },
   hintConfirm: { en: "Confirm", "zh-TW": "確定", ja: "決定" },
   leaveRoomFailed: {
-    en: "Could not leave the hosted room: {reason}",
-    "zh-TW": "無法離開你主持的房間：{reason}",
-    ja: "ホストしているルームから退出できませんでした：{reason}",
+    en: "Could not stop playing with friends: {reason}",
+    "zh-TW": "無法結束和朋友一起玩：{reason}",
+    ja: "友だちとのプレイを終えられませんでした：{reason}",
   },
 
   // ── New Game (seed) ────────────────────────────────────────────────────────────────────────
   preparingLand: { en: "Preparing the land…", "zh-TW": "正在準備大地…", ja: "大地を準備中…" },
-  newGameHeading: {
-    en: "{name} · New Game",
-    "zh-TW": "{name} · 新遊戲",
-    ja: "{name} · はじめから",
-  },
   seedIntro: {
-    en: "Every seed is a different land of the same game. The same seed is the same land for anyone who types it.",
-    "zh-TW": "每個種子都是同一款遊戲裡的另一片大地。任何人輸入相同的種子，都會走進同一片大地。",
-    ja: "シードごとに、同じゲームの別の大地が生まれます。同じシードを入力すれば、誰でも同じ大地に立てます。",
+    en: "Every seed is a different land of the same game. The same seed is the same land for anyone who types it. Leave it empty for a new land.",
+    "zh-TW":
+      "每個種子都是同一款遊戲裡的另一片大地。任何人輸入相同的種子，都會走進同一片大地。留白就是一片新的大地。",
+    ja: "シードごとに、同じゲームの別の大地が生まれます。同じシードを入力すれば、誰でも同じ大地に立てます。空欄なら新しい大地です。",
   },
-  seedLabel: { en: "Seed", "zh-TW": "種子", ja: "シード" },
+  seedLabel: { en: "Seed (optional)", "zh-TW": "指定種子（選填）", ja: "シード（任意）" },
   landLanguage: {
     en: "Language — everyone you meet on this land speaks it",
     "zh-TW": "語言——這片大地上遇見的每個人都說這種語言",
@@ -45,67 +42,44 @@ export const TITLE = {
   openingLand: { en: "Opening the land…", "zh-TW": "正在開啟大地…", ja: "大地を開いています…" },
   start: { en: "Start", "zh-TW": "開始", ja: "始める" },
 
-  // ── Cartridges ─────────────────────────────────────────────────────────────────────────────
-  readingCartridges: {
-    en: "Reading cartridges…",
-    "zh-TW": "正在讀取卡帶…",
-    ja: "カートリッジを読み込み中…",
-  },
-  noCartridges: {
-    en: "No cartridges yet.",
-    "zh-TW": "還沒有卡帶。",
-    ja: "カートリッジはまだありません。",
-  },
+  // ── A world's 更多 (My worlds) ─────────────────────────────────────────────────────────────
   oldSaves: {
-    en: "{n} {n|save|saves} from an older build can't be opened by this build and were left untouched: {names}",
-    "zh-TW": "有 {n} 個舊版存檔無法由這個版本開啟，已原封不動保留：{names}",
-    ja: "旧バージョンのセーブ {n} 件はこのバージョンでは開けないため、そのまま残してあります：{names}",
+    en: "{n} {n|world|worlds} from an older app can't be opened by this one and {n|was|were} left untouched: {names}",
+    "zh-TW": "有 {n} 個舊版 App 的世界無法用這個版本開啟，已原封不動保留：{names}",
+    ja: "古いアプリのワールド {n} 件はこのアプリでは開けないため、そのまま残してあります：{names}",
   },
-  kindCartridge: { en: "Cartridge", "zh-TW": "卡帶", ja: "カートリッジ" },
-  kindDraft: { en: "Draft", "zh-TW": "草稿", ja: "下書き" },
   needsEngine: {
-    en: "incompatible · needs engine {version}",
-    "zh-TW": "不相容 · 需要引擎 {version}",
-    ja: "非対応 · エンジン {version} が必要",
+    en: "Needs a newer app (engine {version})",
+    "zh-TW": "要更新 App 才能玩（引擎 {version}）",
+    ja: "アプリの更新が必要です（エンジン {version}）",
   },
   needsSaveSchema: {
-    en: "incompatible · needs save schema {version}",
-    "zh-TW": "不相容 · 需要存檔格式 {version}",
-    ja: "非対応 · セーブ形式 {version} が必要",
+    en: "Needs a newer app (data format {version})",
+    "zh-TW": "要更新 App 才能玩（資料格式 {version}）",
+    ja: "アプリの更新が必要です（データ形式 {version}）",
   },
-  compatible: { en: "compatible · {kits}", "zh-TW": "相容 · {kits}", ja: "対応 · {kits}" },
   originalRevision: { en: "original revision", "zh-TW": "原始版本", ja: "オリジナル版" },
   lineageOf: { en: "{kind} of {parent}", "zh-TW": "{parent} 的{kind}", ja: "{parent} の{kind}" },
   lineageRevision: { en: "revision", "zh-TW": "修訂版", ja: "改訂版" },
   lineageRemix: { en: "remix", "zh-TW": "改編版", ja: "リミックス" },
   lineageLegacyImport: { en: "legacy import", "zh-TW": "舊格式匯入", ja: "旧形式からの移行" },
-  noRuns: {
-    en: "No runs for this exact revision",
-    "zh-TW": "這個版本還沒有遊玩進度",
-    ja: "この版のプレイはまだありません",
-  },
-  runs: {
-    en: "{n} {n|run|runs}: {names}",
-    "zh-TW": "{n} 個遊玩進度：{names}",
-    ja: "プレイ {n} 件：{names}",
-  },
   edit: { en: "Edit", "zh-TW": "編輯", ja: "編集" },
   remix: { en: "Remix", "zh-TW": "改編", ja: "リミックス" },
   exportCartridge: {
-    en: "Export .cartridge",
-    "zh-TW": "匯出 .cartridge",
-    ja: ".cartridge を書き出す",
+    en: "Export this world (.cartridge)",
+    "zh-TW": "匯出這個世界（.cartridge）",
+    ja: "このワールドを書き出す（.cartridge）",
   },
-  backupSave: { en: "Backup save", "zh-TW": "備份存檔", ja: "セーブをバックアップ" },
+  backupSave: { en: "Back up", "zh-TW": "備份", ja: "バックアップ" },
   upgradeTo: { en: "Upgrade to {version}", "zh-TW": "升級到 {version}", ja: "{version} に更新" },
   newId: { en: "New ID", "zh-TW": "新 ID", ja: "新しい ID" },
   titleField: { en: "Title", "zh-TW": "標題", ja: "タイトル" },
   author: { en: "Author", "zh-TW": "作者", ja: "作者" },
   create: { en: "Create", "zh-TW": "建立", ja: "作成" },
   importCartridge: {
-    en: "Import .cartridge",
-    "zh-TW": "匯入 .cartridge",
-    ja: ".cartridge を読み込む",
+    en: "Import a world (.cartridge)",
+    "zh-TW": "匯入世界（.cartridge）",
+    ja: "ワールドを読み込む（.cartridge）",
   },
   restoreBackup: { en: "Restore backup", "zh-TW": "還原備份", ja: "バックアップから復元" },
   exportedTo: {
@@ -148,7 +122,7 @@ export const TITLE = {
   platform: { en: "Platform", "zh-TW": "平台", ja: "動作環境" },
   worldsFolder: { en: "Worlds", "zh-TW": "世界資料夾", ja: "ワールド保存先" },
 
-  // ── Settings → Signaling servers (a per-device preference) ──────────────────────────────────
+  // ── Settings → Advanced settings → Signaling servers (a per-device preference) ──────────────────────────────────
   signalingHeading: {
     en: "Signaling servers",
     "zh-TW": "信令伺服器",
@@ -157,8 +131,8 @@ export const TITLE = {
   signalingIntro: {
     en: "Friends find each other through a signaling server before their worlds connect directly. Two machines meet only if they share at least one server. This list is for this device only.",
     "zh-TW":
-      "夥伴們會先透過信令伺服器找到彼此，世界才會直接相連。兩台機器至少要共用一個伺服器才能相遇。這份清單只屬於這台裝置。",
-    ja: "仲間同士はまずシグナリングサーバーを通じて互いを見つけ、それから世界が直接つながります。2 台の端末は、少なくとも 1 つのサーバーを共有しているときだけ出会えます。このリストはこの端末だけの設定です。",
+      "朋友們會先透過信令伺服器找到彼此，世界才會直接相連。兩台機器至少要共用一個伺服器才能相遇。這份清單只屬於這台裝置。",
+    ja: "友だち同士はまずシグナリングサーバーを通じて互いを見つけ、それから世界が直接つながります。2 台の端末は、少なくとも 1 つのサーバーを共有しているときだけ出会えます。このリストはこの端末だけの設定です。",
   },
   signalingUsingDefault: {
     en: "This device uses the default servers.",
@@ -201,9 +175,9 @@ export const TITLE = {
     ja: "この端末に保存しました。",
   },
   signalingApplyNote: {
-    en: "Changes apply the next time you open your door or walk through a friend's.",
-    "zh-TW": "變更會在下次敞開你的門或穿過夥伴的門時生效。",
-    ja: "変更は、次に自分の扉を開くか仲間の扉をくぐったときに反映されます。",
+    en: "Changes apply the next time you invite friends or join a world.",
+    "zh-TW": "變更會在下次邀請朋友或加入世界時生效。",
+    ja: "変更は、次に友だちを招待するかワールドに参加したときに反映されます。",
   },
 
   // ── Workspace (remix / revision editor) ────────────────────────────────────────────────────
@@ -253,34 +227,6 @@ export const TITLE = {
     ja: "world.oui を解析できませんでした — F12 でコンソールを開いてエラーを確認してください",
   },
 
-  // ── Cartridge ENS names (Sepolia ENSv2) ─────────────────────────────────────────────────────
+  // ── A world's ENS name (Sepolia ENSv2) ──────────────────────────────────────────────────────
   ensName: { en: "ENS", "zh-TW": "ENS", ja: "ENS" },
-  ensChecking: { en: "asking Sepolia…", "zh-TW": "正在查詢 Sepolia…", ja: "Sepolia に照会中…" },
-  ensOpenHeading: { en: "Open by ENS name", "zh-TW": "用 ENS 名稱開啟", ja: "ENS 名で開く" },
-  ensOpenPlaceholder: {
-    en: "a cartridge's ENS name",
-    "zh-TW": "卡帶的 ENS 名稱",
-    ja: "カートリッジの ENS 名",
-  },
-  ensLookUp: { en: "Look up", "zh-TW": "查詢", ja: "照会" },
-  ensOpenIdle: {
-    en: "A cartridge's ENS name leads to its exact revision.",
-    "zh-TW": "卡帶的 ENS 名稱會指向它確切的版本。",
-    ja: "カートリッジの ENS 名は、その正確な版を指します。",
-  },
-  ensNotCartridge: {
-    en: "This name does not point at a cartridge.",
-    "zh-TW": "這個名稱沒有指向任何卡帶。",
-    ja: "この名前はカートリッジを指していません。",
-  },
-  ensInLibrary: {
-    en: "{ref} is in your library.",
-    "zh-TW": "{ref} 已在你的收藏裡。",
-    ja: "{ref} はライブラリにあります。",
-  },
-  ensNotInLibrary: {
-    en: "{ref} is not in your library. Import its .cartridge file; it must hash to {hash}.",
-    "zh-TW": "{ref} 不在你的收藏裡。請匯入它的 .cartridge 檔，雜湊必須是 {hash}。",
-    ja: "{ref} はライブラリにありません。.cartridge ファイルを読み込んでください。ハッシュは {hash} である必要があります。",
-  },
 } as const satisfies Record<string, Phrase>;

@@ -1,173 +1,245 @@
-// Worlds → Join a world (rev 6 phase 3, D8, D11, WP8): paste the invite link a friend sent, look at
-// the world it leads to (main reads and verifies its history on the service the invite names,
-// writing nothing), then join: main redeems the invite, fetches and checks the cartridge, makes the
-// save, and Play opens it. A save of that world already on this device (restored from its owner)
-// is joined in place; a device that already belongs to the world just opens its save. Every refusal
-// (a damaged or revoked link, an unreachable service, newer physics…) shows its own hint. A move
-// link (`unmapped://world?w=…&svc=…`, rev 6 phase 4 D5) pasted here follows a world this device
-// holds to the service an owner moved it to — only when that service's log extends this device's.
+// Worlds → Join a world: one field for whatever a friend gave (./joinInput). An ENS name is looked
+// up first — a save's name leads to its join code, a world's name offers to play that world; a join
+// code brings one of My worlds over to the friend's (./BringLine, ./bring: the world opens first,
+// then `joinContinentByCode`); an invite link shows the world and joins it (./InviteJoin); a move
+// link follows a world this device holds to where its owner moved it (only when that log extends
+// ours). A `.world` file is folded under 更多. One Escape handler: it closes the world picker, then
+// puts away what was looked at, then leaves for the title.
 
-import { formatDateTime, translate, useT } from "@renderer/i18n";
-import { playerName, setPlayerName } from "@renderer/net/room";
-import { serviceLabel } from "@renderer/net/worldServices";
+import { translate, useT } from "@renderer/i18n";
+import { joinContinentByCode } from "@renderer/net/continentActions";
 import { useSessionStore } from "@renderer/state";
-import { Button, ErrorBlock, Surface, space, Text, TextField } from "@renderer/ui";
-import type { InvitePreview, WorldJoined } from "@shared/worldApi";
-import { isMoveLink, type WorldMoved } from "@shared/worldBundle";
-import { type JSX, useState } from "react";
-import { shortKey, useAction } from "../land/worldDoor";
+import { Button, ErrorBlock, StatePanel, space, Text, TextField } from "@renderer/ui";
+import { ROOM_CODE_LENGTH } from "@shared/doorCode";
+import type { AppError } from "@shared/result";
+import type { InvitePreview } from "@shared/worldApi";
+import type { WorldMoved } from "@shared/worldBundle";
+import { type JSX, useMemo, useState } from "react";
+import { useAction } from "../land/worldDoor";
 import { useKeys } from "../shell/useKeys";
-import { openInstance } from "../useInstanceLoader";
+import { EnsWorldCard } from "../title/CartridgeName";
+import { isCancelled } from "../title/useLibrary";
+import { BringLine, bringable } from "./BringLine";
+import { bringWorld } from "./bring";
 import { AUTOFOCUS } from "./focus";
+import { InviteJoin } from "./InviteJoin";
+import { lookupJoinName, type NameTarget, readJoinInput } from "./joinInput";
+import { rowNames, worldList } from "./rows";
+import { useSaveEnsNames } from "./saveNames";
 import type { SectionProps } from "./sections";
+import { playWorld } from "./startWorld";
+import { useWorldBadges } from "./WorldBadges";
+import { WorldFileImport } from "./WorldFileImport";
+import { MoreButton } from "./WorldRow";
 
-const column = { display: "flex", flexDirection: "column", gap: space.xs } as const;
-const row = { display: "flex", flexWrap: "wrap", gap: space.xs, alignItems: "center" } as const;
+const column = { display: "flex", flexDirection: "column", gap: space.sm } as const;
 
-const POLICY = {
-  private: "world.accessPrivate",
-  friends: "world.accessFriends",
-  public: "world.accessPublic",
-} as const;
+type Working = null | "name" | "opening" | "world";
 
-function PreviewCard({ world }: { world: InvitePreview }): JSX.Element {
+export function JoinWorld({ data, refresh, onClose }: SectionProps): JSX.Element {
   const t = useT();
-  return (
-    <Surface variant="inset" padding="md" style={column}>
-      <Text variant="title" as="h3">
-        {world.name}
-      </Text>
-      <Text variant="body">
-        {t("world.joinOwner", { owner: world.ownerName ?? shortKey(world.owner) })}
-      </Text>
-      <Text variant="caption" tone="muted">
-        {t("world.joinService", { service: serviceLabel(world.service) })}
-      </Text>
-      <Text variant="caption" tone="muted">
-        {t("world.joinDoor", { policy: t(POLICY[world.access]) })}
-      </Text>
-      <Text variant="caption" tone="muted">
-        {t("world.joinSize", { members: world.members, head: world.head })}
-      </Text>
-      <Text variant="caption" tone="dim">
-        {t("world.joinInvite", {
-          left: world.left,
-          uses: world.uses,
-          exp: formatDateTime(world.exp),
-        })}
-      </Text>
-      {world.member ? (
-        <Text variant="caption" tone="success">
-          {t("world.joinMember")}
-        </Text>
-      ) : world.restored === null ? null : (
-        <Text variant="caption" tone="accent">
-          {t("world.joinRestored", { name: world.restored.name })}
-        </Text>
-      )}
-    </Surface>
-  );
-}
-
-export function JoinWorld({ refresh, onClose }: SectionProps): JSX.Element {
-  const t = useT();
-  const [link, setLink] = useState("");
-  const [name, setName] = useState(playerName);
+  const [text, setText] = useState("");
+  const [working, setWorking] = useState<Working>(null);
+  const [error, setError] = useState<AppError | null>(null);
+  const [named, setNamed] = useState<Extract<NameTarget, { kind: "world" }> | null>(null);
+  const [chosenId, setChosenId] = useState<string | null>(null);
+  const [picking, setPicking] = useState(false);
+  const [more, setMore] = useState(false);
   const look = useAction<InvitePreview>();
-  const join = useAction<WorldJoined>();
-  // A move link (phase 4, D5): a world this device holds moved to another service.
   const move = useAction<WorldMoved>();
-  const moving = isMoveLink(link);
+  const badges = useWorldBadges(data);
+  const input = readJoinInput(text);
 
-  const reset = (): void => {
-    setLink("");
+  const library = data.status === "ready" ? data.value : null;
+  const saves = useMemo(
+    () => (library === null ? [] : bringable(library.instances, badges)),
+    [library, badges],
+  );
+  const chosen = saves.find((save) => save.instanceId === chosenId) ?? saves[0] ?? null;
+  // Which world goes is known only once the worlds and where they live are read; before that a
+  // press would start a new land instead of bringing the player's own.
+  const known = data.status === "ready" && (badges.status === "ready" || badges.status === "error");
+  const ensNames = useSaveEnsNames(chosen === null ? [] : [chosen.instanceId]);
+  const names = useMemo(() => {
+    const out = new Map<string, string>();
+    if (library === null) return out;
+    const named = rowNames(worldList(library, null).rows, ensNames, (name, n) =>
+      t("library.numbered", { name, n }),
+    );
+    for (const save of library.instances) {
+      out.set(save.instanceId, named.get(`save:${save.instanceId}`) ?? save.name);
+    }
+    return out;
+  }, [library, ensNames, t]);
+
+  const clear = (): void => {
+    setError(null);
+    setNamed(null);
     look.clear();
-    join.clear();
     move.clear();
   };
-  // Esc first puts a looked-at link away, then leaves for the title.
-  useKeys({ Escape: () => (look.state.status === "idle" ? onClose() : reset()) });
+  const looked = look.state.status !== "idle" || named !== null || error !== null;
+  useKeys({
+    Escape: () => {
+      if (picking) setPicking(false);
+      else if (looked) clear();
+      else if (working === null) onClose();
+    },
+  });
 
-  const world = look.state.status === "ready" ? look.state.value : null;
-  const trimmed = name.trim();
-  const busy =
-    look.state.status === "loading" ||
-    join.state.status === "loading" ||
-    move.state.status === "loading";
-
-  const enter = (joined: WorldJoined, title: string): void => {
-    useSessionStore.getState().toast("success", translate("world.joined", { name: title }));
-    void refresh().then(() => openInstance(joined.instanceId));
+  /** Brings the chosen world (or a new land) over to the friend behind `code`. */
+  const walk = async (code: string): Promise<void> => {
+    setWorking("opening");
+    const done = await bringWorld(chosen?.instanceId ?? null, () => joinContinentByCode(code));
+    setWorking(null);
+    if (!done.ok) setError(done.error);
   };
+
+  const go = async (): Promise<void> => {
+    if (input === null || working !== null) return;
+    if ((input.kind === "code" || input.kind === "name") && !known) return;
+    clear();
+    if (input.kind === "code") return walk(input.code);
+    if (input.kind === "invite") {
+      await look.run(() => window.seed.world.preview(input.link));
+      return;
+    }
+    if (input.kind === "move") {
+      const result = await move.run(() => window.seed.bundle.move(input.link));
+      if (result?.ok) void refresh();
+      return;
+    }
+    setWorking("name");
+    const target = await lookupJoinName(input.name);
+    setWorking(null);
+    if (!target.ok) return setError(target.error);
+    if (target.value.kind === "code") return walk(target.value.code);
+    setNamed(target.value);
+  };
+
+  const playNamed = (manifest: Parameters<typeof playWorld>[0]): void => {
+    setWorking("world");
+    void playWorld(manifest).then((result) => {
+      setWorking(null);
+      if (!result.ok) setError(result.error);
+    });
+  };
+
+  const importNamed = (): void => {
+    setWorking("world");
+    void window.seed.cartridges.importPack().then(async (result) => {
+      setWorking(null);
+      if (!result.ok) {
+        if (!isCancelled(result.error.code)) setError(result.error);
+        return;
+      }
+      const ref = `${result.value.cartridgeId}@${result.value.version}`;
+      useSessionStore.getState().toast("success", translate("title.imported", { name: ref }));
+      await refresh();
+    });
+  };
+
+  const button =
+    input?.kind === "invite"
+      ? t("world.joinLook")
+      : input?.kind === "move"
+        ? t("bundle.moveFollow")
+        : t("library.joinButton");
+  const kindLine =
+    input === null
+      ? text.trim() === ""
+        ? null
+        : t("library.kindUnknown", { n: ROOM_CODE_LENGTH })
+      : input.kind === "code"
+        ? t("library.kindCode")
+        : input.kind === "name"
+          ? t("library.kindName")
+          : input.kind === "invite"
+            ? t("library.kindInvite")
+            : t("bundle.moveDetected");
+  const bringing = input?.kind === "code" || input?.kind === "name";
+  const busy =
+    working !== null || look.state.status === "loading" || move.state.status === "loading";
 
   return (
     <>
       <h2 className="g-heading">{t("world.sectionJoin")}</h2>
-      <Text variant="caption" tone="dim">
-        {t("world.joinIntro")}
-      </Text>
+      <Text tone="muted">{t("world.joinIntro")}</Text>
       <div style={column}>
         <TextField
           className={AUTOFOCUS}
-          label={t("world.inviteLink")}
+          label={t("world.joinField")}
           mono
           spellCheck={false}
+          autoCapitalize="none"
+          autoCorrect="off"
           autoComplete="off"
-          value={link}
+          value={text}
           onChange={(event) => {
-            setLink(event.target.value);
-            look.clear();
-            join.clear();
-            move.clear();
+            setText(event.target.value);
+            clear();
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !event.repeat) void go();
           }}
         />
-        {moving ? (
-          <Text variant="caption" tone="accent">
-            {t("bundle.moveDetected")}
+        {kindLine === null ? null : (
+          <Text variant="caption" tone={input === null ? "dim" : "accent"}>
+            {kindLine}
           </Text>
+        )}
+        {bringing ? (
+          <StatePanel state={data} loadingText={t("library.readingSaves")}>
+            {() => (
+              <BringLine
+                saves={saves}
+                chosen={chosen}
+                names={names}
+                picking={picking}
+                busy={busy}
+                onPicking={setPicking}
+                onChoose={setChosenId}
+              />
+            )}
+          </StatePanel>
         ) : null}
-        <div style={row}>
-          {moving ? (
+        <div className="row-actions">
+          <Button
+            variant={look.state.status === "ready" ? "secondary" : "primary"}
+            disabled={input === null || busy || (bringing && !known)}
+            onClick={() => void go()}
+          >
+            {working === "name"
+              ? t("library.nameChecking")
+              : working === "opening"
+                ? t("library.opening")
+                : button}
+          </Button>
+          {looked ? (
             <Button
-              variant="primary"
+              variant="ghost"
               disabled={busy}
               onClick={() => {
-                void move
-                  .run(() => window.seed.bundle.move(link.trim()))
-                  .then((result) => {
-                    if (result === null || !result.ok) return;
-                    const { url, added } = result.value;
-                    const text = translate("bundle.moveFollowed", {
-                      service: serviceLabel(url),
-                      added,
-                    });
-                    useSessionStore.getState().toast("success", text);
-                    void refresh();
-                  });
+                setText("");
+                clear();
               }}
             >
-              {t("bundle.moveFollow")}
-            </Button>
-          ) : (
-            <Button
-              variant={world === null ? "primary" : "secondary"}
-              disabled={link.trim() === "" || busy}
-              onClick={() => {
-                join.clear();
-                void look.run(() => window.seed.world.preview(link.trim()));
-              }}
-            >
-              {t("world.joinLook")}
-            </Button>
-          )}
-          {look.state.status === "idle" ? null : (
-            <Button variant="ghost" disabled={busy} onClick={reset}>
               {t("world.joinOther")}
             </Button>
-          )}
+          ) : null}
         </div>
       </div>
 
+      {error === null ? null : <ErrorBlock error={error} />}
+      {look.state.status === "loading" ? (
+        <Text variant="caption" tone="muted">
+          {t("world.joinLooking")}
+        </Text>
+      ) : look.state.status === "error" ? (
+        <ErrorBlock error={look.state.error} />
+      ) : look.state.status === "ready" && input?.kind === "invite" ? (
+        <InviteJoin link={input.link} world={look.state.value} refresh={refresh} />
+      ) : null}
       {move.state.status === "loading" ? (
         <Text variant="caption" tone="muted">
           {t("bundle.moveFollowing")}
@@ -176,72 +248,24 @@ export function JoinWorld({ refresh, onClose }: SectionProps): JSX.Element {
         <ErrorBlock error={move.state.error} />
       ) : move.state.status === "ready" ? (
         <Text variant="caption" tone="success">
-          {t("bundle.moveFollowed", {
-            service: serviceLabel(move.state.value.url),
-            added: move.state.value.added,
-          })}
+          {t("bundle.moveFollowed", { added: move.state.value.added })}
         </Text>
       ) : null}
-
-      {look.state.status === "loading" ? (
-        <Text variant="caption" tone="muted">
-          {t("world.joinLooking")}
-        </Text>
-      ) : look.state.status === "error" ? (
-        <ErrorBlock error={look.state.error} />
-      ) : null}
-
-      {world === null ? null : (
-        <div style={{ ...column, gap: space.sm }}>
-          <PreviewCard world={world} />
-          {world.member && world.restored !== null ? (
-            <div style={row}>
-              <Button
-                variant="primary"
-                onClick={() => {
-                  if (world.restored !== null) void openInstance(world.restored.instanceId);
-                }}
-              >
-                {t("world.joinOpen", { name: world.restored.name })}
-              </Button>
-            </div>
-          ) : (
-            <>
-              <TextField
-                label={t("world.joinName")}
-                maxLength={60}
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-              />
-              <div style={row}>
-                <Button
-                  variant="primary"
-                  disabled={trimmed === "" || busy}
-                  onClick={() => {
-                    const into = world.restored?.instanceId;
-                    void join
-                      .run(() => window.seed.world.join(link.trim(), trimmed, into))
-                      .then((result) => {
-                        if (result === null || !result.ok) return;
-                        setPlayerName(trimmed);
-                        enter(result.value, world.name);
-                      });
-                  }}
-                >
-                  {t("world.joinGo")}
-                </Button>
-              </div>
-            </>
-          )}
-          {join.state.status === "loading" ? (
-            <Text variant="caption" tone="muted">
-              {t("world.joining")}
-            </Text>
-          ) : join.state.status === "error" ? (
-            <ErrorBlock error={join.state.error} />
-          ) : null}
-        </div>
+      {named === null ? null : (
+        <EnsWorldCard
+          name={named.name}
+          pointer={named.pointer}
+          cartridges={library?.cartridges ?? []}
+          busy={busy}
+          onPlay={playNamed}
+          onImport={importNamed}
+        />
       )}
+
+      <div className="row-actions">
+        <MoreButton open={more} onToggle={() => setMore(!more)} label={t("library.joinMore")} />
+      </div>
+      {more ? <WorldFileImport refresh={refresh} /> : null}
     </>
   );
 }

@@ -1,56 +1,30 @@
-// Worlds → Cartridges: published cartridges and draft workspaces in one list (saves have their own
-// section). A row's focus selects it, pressing the selected row plays / opens it, R starts a remix
-// of the selected cartridge. A cartridge also shows its ENS name, and a name can be followed back
-// to the revision it points at. Import / export of .cartridge files live here.
+// What a world (one cartridge id) offers besides playing it, shown inside the 更多 of the one My
+// worlds row that stands for it: its ENS name first (and the market), what it is, its versions to
+// start from the beginning, its drafts, remixing it, and exporting it as a `.cartridge`. The player
+// sees "world" and "version" here, never "cartridge". The remix form's state belongs to the panel,
+// whose one Escape handler closes it (library/sections.ts).
 
 import { errorLine, type StringKey, type Translate, useT } from "@renderer/i18n";
 import { useSessionStore } from "@renderer/state";
-import { Button, StatePanel, Text, TextField } from "@renderer/ui";
+import { Button, Text, TextField } from "@renderer/ui";
 import {
   type CartridgeLineage,
   type CartridgeManifest,
   ENGINE_API_VERSION,
   SAVE_SCHEMA_VERSION,
-  type WorkspaceMeta,
 } from "@shared/cartridge";
-import { type JSX, useRef, useState } from "react";
-import { AUTOFOCUS, useArrowFocus } from "../library/focus";
-import type { SectionProps } from "../library/sections";
-import { useKeys } from "../shell/useKeys";
-import { hydrateInstance } from "../useInstanceLoader";
-import { CartridgeNameLine, OpenByEnsName } from "./CartridgeName";
-import { isCancelled, type LibraryData } from "./useLibrary";
+import type { JSX } from "react";
+import { isCompatible, type WorldGroup } from "../library/rows";
+import { playWorld } from "../library/startWorld";
+import { CartridgeNameLine } from "./CartridgeName";
+import { isCancelled } from "./useLibrary";
 
-type Entry =
-  | { kind: "cartridge"; key: string; manifest: CartridgeManifest }
-  | { kind: "draft"; key: string; workspace: WorkspaceMeta };
-
-interface RemixDraft {
+export interface RemixDraft {
   source: CartridgeManifest;
   targetCartridgeId: string;
   name: string;
   author: string;
 }
-
-function entries(library: LibraryData): Entry[] {
-  return [
-    ...library.cartridges.map((manifest) => ({
-      kind: "cartridge" as const,
-      key: `cart:${manifest.cartridgeId}@${manifest.version}`,
-      manifest,
-    })),
-    ...library.workspaces.map((workspace) => ({
-      kind: "draft" as const,
-      key: `draft:${workspace.workspaceId}`,
-      workspace,
-    })),
-  ];
-}
-
-const KIND_LABEL: Record<Entry["kind"], StringKey> = {
-  cartridge: "title.kindCartridge",
-  draft: "title.kindDraft",
-};
 
 const LINEAGE_LABEL: Record<CartridgeLineage["kind"], StringKey> = {
   revision: "title.lineageRevision",
@@ -63,103 +37,48 @@ export function lineageLabel(kind: CartridgeLineage["kind"], t: Translate): stri
   return t(LINEAGE_LABEL[kind]);
 }
 
-function entryTitle(entry: Entry): string {
-  if (entry.kind === "cartridge") return entry.manifest.name;
-  return entry.workspace.name;
-}
-
-function compatibilityLabel(manifest: CartridgeManifest, t: Translate): string {
+/** Why this app cannot play a revision; null when it can. */
+function needsLine(manifest: CartridgeManifest, t: Translate): string | null {
   if (manifest.engineApiVersion > ENGINE_API_VERSION) {
     return t("title.needsEngine", { version: manifest.engineApiVersion });
   }
   if (manifest.saveSchemaVersion !== SAVE_SCHEMA_VERSION) {
     return t("title.needsSaveSchema", { version: manifest.saveSchemaVersion });
   }
-  const kits =
-    manifest.formatVersion === 1
-      ? manifest.requiredKits
-      : manifest.definition.capabilityProfile.contexts.map((context) => context.contextId);
-  return t("title.compatible", { kits: kits.join(", ") });
+  return null;
 }
 
-export function isCompatible(manifest: CartridgeManifest): boolean {
-  return (
-    manifest.engineApiVersion <= ENGINE_API_VERSION &&
-    manifest.saveSchemaVersion === SAVE_SCHEMA_VERSION
-  );
+export interface WorldMoreProps {
+  group: WorldGroup;
+  /** The version the row's own button starts, left out of "start from the beginning". */
+  plays: CartridgeManifest | null;
+  busy: boolean;
+  setBusy(busy: boolean): void;
+  remix: RemixDraft | null;
+  setRemix(remix: RemixDraft | null): void;
 }
 
-export function CartridgesPanel({ data, refresh, onClose }: SectionProps): JSX.Element {
+export function WorldMore(props: WorldMoreProps): JSX.Element | null {
+  const { group, plays, busy, setBusy, remix, setRemix } = props;
   const t = useT();
   const toast = useSessionStore((state) => state.toast);
   const openWorkspace = useSessionStore((state) => state.openWorkspace);
-  const [cursor, setCursor] = useState(0);
-  const [remix, setRemix] = useState<RemixDraft | null>(null);
-  const [busy, setBusy] = useState(false);
-  const listRef = useRef<HTMLDivElement>(null);
+  const newest = group.revisions[0];
+  if (newest === undefined) return null;
+  const others = group.revisions.filter(
+    (manifest) => plays === null || manifest.version !== plays.version,
+  );
+  const remixing = remix !== null && remix.source.cartridgeId === group.cartridgeId;
 
-  const list = data.status === "ready" ? entries(data.value) : [];
-  const selected = list[Math.min(cursor, list.length - 1)];
-  const library = data.status === "ready" ? data.value : null;
-  const matchingRuns =
-    selected?.kind === "cartridge" && library !== null
-      ? library.instances.filter(
-          (instance) => instance.cartridge.contentHash === selected.manifest.contentHash,
-        )
-      : [];
-
-  const newRun = (manifest: CartridgeManifest): void => {
+  const start = (manifest: CartridgeManifest): void => {
     setBusy(true);
-    void (async () => {
-      const result = await window.seed.instances.create({
-        cartridgeId: manifest.cartridgeId,
-        version: manifest.version,
-        name: `${manifest.name} run`,
-      });
+    void playWorld(manifest).then((result) => {
       setBusy(false);
-      if (!result.ok) return toast("danger", errorLine(result.error));
-      const hydrated = hydrateInstance(result.value);
-      if (!hydrated.ok) return toast("danger", errorLine(hydrated.error));
-      useSessionStore.getState().setScreen("play");
-    })();
-  };
-
-  const confirm = (entry: Entry | undefined): void => {
-    if (entry === undefined || busy) return;
-    if (entry.kind === "cartridge") {
-      if (isCompatible(entry.manifest)) newRun(entry.manifest);
-    } else openWorkspace(entry.workspace.workspaceId);
-  };
-
-  const startRemix = (entry: Entry | undefined): void => {
-    if (entry?.kind !== "cartridge") return;
-    setRemix({
-      source: entry.manifest,
-      targetCartridgeId: `${entry.manifest.cartridgeId}-remix`,
-      name: `${entry.manifest.name} Remix`,
-      author: "",
+      if (!result.ok) toast("danger", errorLine(result.error));
     });
   };
 
-  const createRemix = (): void => {
-    if (remix === null) return;
-    setBusy(true);
-    void (async () => {
-      const result = await window.seed.workspaces.create({
-        sourceCartridgeId: remix.source.cartridgeId,
-        sourceVersion: remix.source.version,
-        mode: "remix",
-        targetCartridgeId: remix.targetCartridgeId,
-        name: remix.name,
-        author: remix.author,
-      });
-      setBusy(false);
-      if (!result.ok) return toast("danger", errorLine(result.error));
-      openWorkspace(result.value.meta.workspaceId);
-    })();
-  };
-
-  const exportCartridge = (manifest: CartridgeManifest): void => {
+  const exportWorld = (manifest: CartridgeManifest): void => {
     setBusy(true);
     void window.seed.cartridges
       .exportPack(manifest.cartridgeId, manifest.version)
@@ -173,178 +92,169 @@ export function CartridgesPanel({ data, refresh, onClose }: SectionProps): JSX.E
       });
   };
 
-  const importCartridge = (): void => {
+  const createRemix = (draft: RemixDraft): void => {
     setBusy(true);
-    void window.seed.cartridges.importPack().then(async (result) => {
-      setBusy(false);
-      if (!result.ok) {
-        if (!isCancelled(result.error.code)) toast("danger", errorLine(result.error));
-        return;
-      }
-      toast(
-        "success",
-        t("title.imported", { name: `${result.value.cartridgeId}@${result.value.version}` }),
-      );
-      await refresh();
-    });
+    void window.seed.workspaces
+      .create({
+        sourceCartridgeId: draft.source.cartridgeId,
+        sourceVersion: draft.source.version,
+        mode: "remix",
+        targetCartridgeId: draft.targetCartridgeId,
+        name: draft.name,
+        author: draft.author,
+      })
+      .then((result) => {
+        setBusy(false);
+        if (!result.ok) return toast("danger", errorLine(result.error));
+        setRemix(null);
+        openWorkspace(result.value.meta.workspaceId);
+      });
   };
 
-  useKeys({
-    Escape: () => (remix === null ? onClose() : setRemix(null)),
-    ...(remix === null ? { KeyR: () => startRemix(selected) } : {}),
-  });
-  useArrowFocus(listRef, { enabled: remix === null });
-
+  const lineage = newest.lineage ?? null;
+  const parent = lineage?.parent ?? null;
   return (
     <>
-      <h2 className="g-heading">{t("library.sectionCartridges")}</h2>
-      <StatePanel state={data} loadingText={t("title.readingCartridges")}>
-        {() =>
-          list.length === 0 ? (
-            <Text tone="dim">{t("title.noCartridges")}</Text>
-          ) : (
-            <div className="carts g-scroll" ref={listRef}>
-              {list.map((entry, index) => (
-                <Button
-                  key={entry.key}
-                  className={index === 0 ? `cart-row ${AUTOFOCUS}` : "cart-row"}
-                  variant="tile"
-                  active={entry.key === selected?.key}
-                  onFocus={() => setCursor(index)}
-                  onMouseEnter={() => setCursor(index)}
-                  onClick={() => (entry.key === selected?.key ? confirm(entry) : setCursor(index))}
-                >
-                  <strong>{entryTitle(entry)}</strong>
-                  <span className="g-meta">
-                    {entry.kind === "cartridge"
-                      ? `${t(KIND_LABEL.cartridge)} · ${entry.manifest.version}`
-                      : t(KIND_LABEL.draft)}
-                  </span>
-                </Button>
-              ))}
-            </div>
-          )
-        }
-      </StatePanel>
-
-      {selected === undefined ? null : (
-        <div className="detail" key={selected.key}>
-          {selected.kind === "cartridge" ? (
-            <>
-              <Text tone="muted">{selected.manifest.description}</Text>
-              <div className="route">
-                {(selected.manifest.formatVersion === 1
-                  ? selected.manifest.story.scenes
-                  : selected.manifest.definition.narrative.scenes.map((scene) => ({
-                      id: scene.sceneId,
-                      title: scene.title,
-                    }))
-                ).map((scene) => (
-                  <span key={scene.id}>{scene.title}</span>
-                ))}
-              </div>
-              <span className="g-meta">
-                {selected.manifest.author} · {selected.manifest.cartridgeId}@
-                {selected.manifest.version}
-              </span>
-              <span className="g-meta">{compatibilityLabel(selected.manifest, t)}</span>
-              <span className="g-meta">
-                {selected.manifest.lineage?.parent == null
-                  ? t("title.originalRevision")
-                  : t("title.lineageOf", {
-                      kind: lineageLabel(selected.manifest.lineage.kind, t),
-                      parent: `${selected.manifest.lineage.parent.cartridgeId}@${selected.manifest.lineage.parent.version}`,
-                    })}
-              </span>
-              <span className="g-meta">
-                {matchingRuns.length === 0
-                  ? t("title.noRuns")
-                  : t("title.runs", {
-                      n: matchingRuns.length,
-                      names: matchingRuns.map((run) => run.name).join(", "),
-                    })}
-              </span>
-              <CartridgeNameLine manifest={selected.manifest} />
-            </>
-          ) : null}
-          {selected.kind === "draft" ? (
-            <span className="g-meta">
-              {lineageLabel(selected.workspace.mode, t)} → {selected.workspace.targetCartridgeId}
-            </span>
-          ) : null}
-
-          {remix === null ? (
-            <div className="row-actions">
-              <Button
-                variant="primary"
-                disabled={
-                  busy || (selected.kind === "cartridge" && !isCompatible(selected.manifest))
-                }
-                onClick={() => confirm(selected)}
-              >
-                {selected.kind === "cartridge" ? t("common.play") : t("title.edit")}
-              </Button>
-              {selected.kind === "cartridge" ? (
-                <Button disabled={busy} hotkey="R" onClick={() => startRemix(selected)}>
-                  {t("title.remix")}
-                </Button>
-              ) : null}
-              {selected.kind === "cartridge" ? (
-                <Button
-                  variant="ghost"
-                  disabled={busy}
-                  onClick={() => exportCartridge(selected.manifest)}
-                >
-                  {t("title.exportCartridge")}
-                </Button>
-              ) : null}
-            </div>
-          ) : (
-            <div className="form-grid">
-              <TextField
-                label={t("title.newId")}
-                mono
-                value={remix.targetCartridgeId}
-                onChange={(event) => setRemix({ ...remix, targetCartridgeId: event.target.value })}
-              />
-              <TextField
-                label={t("title.titleField")}
-                value={remix.name}
-                onChange={(event) => setRemix({ ...remix, name: event.target.value })}
-              />
-              <TextField
-                label={t("title.author")}
-                autoFocus
-                value={remix.author}
-                onChange={(event) => setRemix({ ...remix, author: event.target.value })}
-              />
-              <div className="row-actions">
-                <Button
-                  variant="primary"
-                  disabled={busy || remix.author.trim() === ""}
-                  onClick={createRemix}
-                >
-                  {t("title.create")}
-                </Button>
-                <Button variant="ghost" onClick={() => setRemix(null)}>
-                  {t("common.cancel")}
-                </Button>
-              </div>
-            </div>
-          )}
+      <CartridgeNameLine manifest={newest} />
+      <Text variant="label" tone="muted">
+        {t("library.aboutWorld")}
+      </Text>
+      {newest.description === "" ? null : <Text tone="muted">{newest.description}</Text>}
+      <span className="g-meta">
+        {`${newest.author} · ${t("library.versionRow", { version: newest.version })}`}
+      </span>
+      <span className="g-meta">
+        {parent === null || lineage === null
+          ? t("title.originalRevision")
+          : t("title.lineageOf", {
+              kind: lineageLabel(lineage.kind, t),
+              parent: `${parent.cartridgeId}@${parent.version}`,
+            })}
+      </span>
+      {remixing ? (
+        <RemixForm draft={remix} busy={busy} onChange={setRemix} onCreate={createRemix} />
+      ) : (
+        <div className="row-actions">
+          <Button
+            variant="ghost"
+            disabled={busy}
+            onClick={() =>
+              setRemix({
+                source: newest,
+                targetCartridgeId: `${newest.cartridgeId}-remix`,
+                name: `${newest.name} Remix`,
+                author: "",
+              })
+            }
+          >
+            {t("title.remix")}
+          </Button>
+          <Button variant="ghost" disabled={busy} onClick={() => exportWorld(newest)}>
+            {t("title.exportCartridge")}
+          </Button>
         </div>
       )}
+      {others.length === 0 ? null : (
+        <>
+          <Text variant="label" tone="muted">
+            {t("library.versionsHeading")}
+          </Text>
+          {others.map((manifest) => {
+            const needs = needsLine(manifest, t);
+            return (
+              <div key={manifest.version} className="world-line">
+                <span>{t("library.versionRow", { version: manifest.version })}</span>
+                {needs === null ? null : <span className="g-meta">{needs}</span>}
+                <Button
+                  variant="secondary"
+                  disabled={busy || !isCompatible(manifest)}
+                  onClick={() => start(manifest)}
+                >
+                  {t("title.start")}
+                </Button>
+              </div>
+            );
+          })}
+        </>
+      )}
+      <DraftLines drafts={group.drafts} busy={busy} />
+    </>
+  );
+}
+
+/** Drafts (authoring copies) of a world: open one to go on editing it. */
+export function DraftLines({
+  drafts,
+  busy,
+}: {
+  drafts: readonly { workspaceId: string; name: string; mode: CartridgeLineage["kind"] }[];
+  busy: boolean;
+}): JSX.Element | null {
+  const t = useT();
+  const openWorkspace = useSessionStore((state) => state.openWorkspace);
+  if (drafts.length === 0) return null;
+  return (
+    <>
+      {drafts.map((draft) => (
+        <div key={draft.workspaceId} className="world-line">
+          <span>{t("library.draftRow", { name: draft.name })}</span>
+          <span className="g-meta">{lineageLabel(draft.mode, t)}</span>
+          <Button
+            variant="secondary"
+            disabled={busy}
+            onClick={() => openWorkspace(draft.workspaceId)}
+          >
+            {t("title.edit")}
+          </Button>
+        </div>
+      ))}
+    </>
+  );
+}
+
+function RemixForm({
+  draft,
+  busy,
+  onChange,
+  onCreate,
+}: {
+  draft: RemixDraft;
+  busy: boolean;
+  onChange(draft: RemixDraft | null): void;
+  onCreate(draft: RemixDraft): void;
+}): JSX.Element {
+  const t = useT();
+  return (
+    <div className="form-grid">
+      <TextField
+        label={t("title.newId")}
+        mono
+        value={draft.targetCartridgeId}
+        onChange={(event) => onChange({ ...draft, targetCartridgeId: event.target.value })}
+      />
+      <TextField
+        label={t("title.titleField")}
+        value={draft.name}
+        onChange={(event) => onChange({ ...draft, name: event.target.value })}
+      />
+      <TextField
+        label={t("title.author")}
+        autoFocus
+        value={draft.author}
+        onChange={(event) => onChange({ ...draft, author: event.target.value })}
+      />
       <div className="row-actions">
-        <Button variant="ghost" disabled={busy} onClick={importCartridge}>
-          {t("title.importCartridge")}
+        <Button
+          variant="primary"
+          disabled={busy || draft.author.trim() === ""}
+          onClick={() => onCreate(draft)}
+        >
+          {t("title.create")}
+        </Button>
+        <Button variant="ghost" onClick={() => onChange(null)}>
+          {t("common.cancel")}
         </Button>
       </div>
-      <OpenByEnsName
-        cartridges={library?.cartridges ?? []}
-        busy={busy}
-        onPlay={newRun}
-        onImport={importCartridge}
-      />
-    </>
+    </div>
   );
 }

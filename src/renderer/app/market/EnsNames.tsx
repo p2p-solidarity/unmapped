@@ -1,9 +1,9 @@
 // ENS names in the lineage tree, written with the player's passkey (no wallet; the gas station
-// pays): a cartridge revision's name (CartridgeEns.tsx, shown in Worlds → Cartridges and right after
-// Create builds a world) and the player's own save (`<save>.<cartridge>.<root>`, shown in Worlds →
-// Saves), which also carries the save's door number so friends can walk in by name. Main reads
-// every value that goes on chain from disk; this only shows what a name says and asks for the one
-// signature.
+// pays): a world's name (CartridgeEns.tsx, in a world's 更多 in Worlds → My worlds and right after
+// Create builds a world) and the player's own save (`<save>.<cartridge>.<root>`, in the same 更多),
+// which also carries the save's join code so friends can join by name. Main reads every value that
+// goes on chain from disk; this only shows what a name says and asks for the one signature. The
+// name that records the save is also told to My worlds (`onName`), which shows it first.
 
 import { useT } from "@renderer/i18n";
 import { useSessionStore } from "@renderer/state";
@@ -12,6 +12,7 @@ import { cartridgeLabel } from "@shared/ensNames";
 import type { EnsNameStatus, SaveNameView } from "@shared/market";
 import { errored, idle, type Loadable, loading, ready } from "@shared/result";
 import { type JSX, useCallback, useEffect, useRef, useState } from "react";
+import { recordedSaveName } from "../library/saveNames";
 import {
   busyLabel,
   SetupNote,
@@ -47,8 +48,17 @@ function doorLine(t: T, save: EnsNameStatus, own: string): string {
   return t("market.saveDoorNone", { own });
 }
 
-/** A save's own ENS name: record it, move it to the save's latest checkpoint, or give it the door. */
-export function SaveEnsBlock({ instanceId }: { instanceId: string }): JSX.Element | null {
+/**
+ * A save's own ENS name: record it, move it to the save's latest checkpoint, or give it the join
+ * code. `onName` hears the name that records this save (null: none) whenever a read says so.
+ */
+export function SaveEnsBlock({
+  instanceId,
+  onName,
+}: {
+  instanceId: string;
+  onName?: (name: string | null) => void;
+}): JSX.Element | null {
   const t = useT();
   const toast = useSessionStore((state) => state.toast);
   const signer = usePasskeySigner();
@@ -60,13 +70,20 @@ export function SaveEnsBlock({ instanceId }: { instanceId: string }): JSX.Elemen
   const invalid = label !== null && asking === null;
 
   const seq = useRef(0);
+  const tell = useRef(onName);
+  tell.current = onName;
 
   const read = useCallback(async () => {
     const at = ++seq.current;
     setView((before) => (before.status === "ready" ? before : loading()));
     const result = await window.seed.market.saveName(instanceId, asking, key);
     // Only the newest answer lands: an older label's reply never replaces the one asked last.
-    if (at === seq.current) setView(result.ok ? ready(result.value) : errored(result.error));
+    if (at !== seq.current) return;
+    setView(result.ok ? ready(result.value) : errored(result.error));
+    if (!result.ok) return;
+    // A typed label that records nothing says nothing about the save's own name.
+    const name = recordedSaveName(result.value);
+    if (name !== null || asking === null) tell.current?.(name);
   }, [instanceId, asking, key]);
   // After a signature that first linked the passkey, the handler's own `read` still has no key:
   // re-read through the newest one.

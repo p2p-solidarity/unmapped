@@ -66,3 +66,43 @@
     margin-left: -24px;
   }
 }
+
+/* My worlds: one list of worlds, each a name, one main button and 更多 (library/WorldRow.tsx). */
+.world-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.world-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--g-border);
+}
+
+.world-row__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.world-row__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* A line inside 更多 that offers one thing: a version to start, a draft to edit. */
+.world-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+}
+
+.world-line > span:first-child {
+  flex: 1;
+  min-width: 0;
+}
